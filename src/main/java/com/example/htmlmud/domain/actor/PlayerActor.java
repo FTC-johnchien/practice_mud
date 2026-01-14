@@ -52,7 +52,7 @@ public class PlayerActor extends VirtualActor<ActorMessage> {
     // 只處理字串輸入 (Input)
     if (cmd instanceof GameCommand.Input(var text)) {
       String cleanText = text.trim();
-      log.info("[Trace:{} State:{}] Input: {}", traceId, state, cleanText);
+      log.info("[Trace:{}] [State:{}] Input: {}", traceId, state, cleanText);
 
       // 根據當前狀態分流
       switch (state) {
@@ -60,7 +60,7 @@ public class PlayerActor extends VirtualActor<ActorMessage> {
         case REGISTER_USERNAME -> handleRegisterUsername(cleanText);
         case REGISTER_PASSWORD -> handleRegisterPassword(cleanText);
         case LOGIN_PASSWORD -> handleLoginPassword(cleanText);
-        case IN_GAME -> handleGameLogic(cleanText);
+        case IN_GAME -> handleGameLogic(cleanText, traceId);
       }
     }
 
@@ -159,11 +159,11 @@ public class PlayerActor extends VirtualActor<ActorMessage> {
   private void enterGame() {
     state = State.IN_GAME;
     // 未來這裡可以加入 WorldManager.joinRoom()
-    handleGameLogic("look"); // 自動看一次環境
+    handleGameLogic("look", "system-init"); // 自動看一次環境
   }
 
   // 6. 遊戲中邏輯 (Look, Kill, Move...)
-  private void handleGameLogic(String input) {
+  private void handleGameLogic(String input, String traceId) {
     String[] parts = handleStringInput(input);
     String action = parts[0].toLowerCase();
 
@@ -182,7 +182,10 @@ public class PlayerActor extends VirtualActor<ActorMessage> {
           reply("你要殺誰？");
         }
       }
-      default -> reply("我不懂 '%s' 是什麼意思。".formatted(action));
+      default -> {
+        log.info("[Trace:{}] Unknown command: {}", traceId, action);
+        reply("我不懂 '%s' 是什麼意思。".formatted(action));
+      }
     }
   }
 
