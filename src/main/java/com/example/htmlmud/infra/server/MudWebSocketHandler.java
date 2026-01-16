@@ -33,7 +33,7 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
   @Override
   public void afterConnectionEstablished(WebSocketSession session) {
     // 1. 連線建立，啟動 Actor
-    var actor = new PlayerActor(session.getId(), session, playerService);
+    var actor = new PlayerActor(session.getId(), session, playerService, objectMapper);
     actor.start();
     activeActors.put(session.getId(), actor);
   }
@@ -52,18 +52,12 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
     try {
       log.info("[Trace:{}] Payload: {}", traceId, message.getPayload());
 
-      // 將字串包裝成 json
-      String jsonInput = """
-          { "type": "INPUT", "text": "%s" }
-          """.formatted(message.getPayload());
-
       // 解析 JSON
-      GameCommand cmd = objectMapper.readValue(jsonInput, GameCommand.class);
+      GameCommand cmd = objectMapper.readValue(message.getPayload(), GameCommand.class);
 
       // 投遞給 Actor
       PlayerActor actor = activeActors.get(session.getId());
       if (actor != null) {
-
         ActorMessage envelope = new ActorMessage(traceId, cmd);
         actor.send(envelope);
       } else {

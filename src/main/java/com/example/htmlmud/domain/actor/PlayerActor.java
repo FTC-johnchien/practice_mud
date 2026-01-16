@@ -1,12 +1,16 @@
 package com.example.htmlmud.domain.actor;
 
 import java.io.IOException;
+import java.util.Map;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.domain.actor.core.VirtualActor;
+import com.example.htmlmud.infra.util.AnsiColor;
+import com.example.htmlmud.infra.util.ColorText;
 import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.GameCommand;
 import com.example.htmlmud.service.PlayerService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 // PlayerActor 處理的訊息類型就是 GameCommand
@@ -23,16 +27,19 @@ public class PlayerActor extends VirtualActor<ActorMessage> {
 
   private final WebSocketSession session;
   private final PlayerService playerService;
+  private final ObjectMapper objectMapper;
 
   // Actor 內部狀態 (State Machine Context)
   private State state = State.CONNECTED;
   private String tempUsername; // 暫存正在處理的帳號名
   private String playerName = "Unassigned";
 
-  public PlayerActor(String sessionId, WebSocketSession session, PlayerService playerService) {
+  public PlayerActor(String sessionId, WebSocketSession session, PlayerService playerService,
+      ObjectMapper objectMapper) {
     super("player-" + sessionId);
     this.session = session; // 在建構時就存起來了
     this.playerService = playerService;
+    this.objectMapper = objectMapper;
   }
 
   @Override
@@ -168,7 +175,17 @@ public class PlayerActor extends VirtualActor<ActorMessage> {
     String action = parts[0].toLowerCase();
 
     switch (action) {
-      case "look" -> reply("你看見四週一片漆黑，遠方似乎有微弱的火光。");
+      case "look" -> {
+        // 範例：組合一個多彩的房間描述
+        StringBuilder sb = new StringBuilder();
+        sb.append(ColorText.wrap(AnsiColor.BRIGHT_WHITE, AnsiColor.BOLD, "=== 新手村廣場 ===\n"));
+        sb.append(ColorText.wrap(AnsiColor.LIGHT_GREY, "這是一個鋪著石板的廣場，四週有些破舊。\n"));
+        sb.append("這裡有一個 ").append(ColorText.npc("村長")).append(" 站在噴泉旁。\n");
+        sb.append("地上掉落了一把 ").append(ColorText.item("生鏽的鐵劍")).append("。\n");
+        sb.append("往北可以看到陰森的 ").append(ColorText.wrap(AnsiColor.DARK_GREY, "黑暗森林")).append("。");
+
+        reply(sb.toString());
+      } // reply("你看見四週一片漆黑，遠方似乎有微弱的火光。");
       case "help" -> reply("可用指令: look, say, quit");
       case "say" -> reply("你說道: " + (parts.length > 1 ? input.substring(4) : "..."));
       case "quit" -> {
@@ -209,21 +226,15 @@ public class PlayerActor extends VirtualActor<ActorMessage> {
   // }
 
   private void reply(String msg) {
-    // MVP 階段：直接回傳 JSON 包裹的字串
-    // 這樣前端只要解析 { "type": "TEXT", "content": "..." } 即可
-    // 未來要加血條更新時，可以改傳 { "type": "UPDATE", "hp": 100 }
-    // String jsonResponse = """
-    // { "type": "TEXT", "content": "%s" }
-    // """.formatted(msg);
-
-    // 這裡呼叫的是 session 的方法
-    // 這與當初是哪個 Thread 收進來的完全無關
     try {
       if (session.isOpen()) {
-        session.sendMessage(new TextMessage(msg));
+        // 使用 Map 來建立結構，Jackson 會自動處理所有特殊字元的轉義
+        String json = objectMapper.writeValueAsString(Map.of("type", "TEXT", "content", msg));
+
+        session.sendMessage(new TextMessage(json));
       }
     } catch (IOException e) {
-      log.error("Failed to send message to client", e);
+      log.error("Reply failed", e);
     }
   }
 
