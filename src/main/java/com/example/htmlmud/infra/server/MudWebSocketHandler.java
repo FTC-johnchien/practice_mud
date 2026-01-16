@@ -24,7 +24,7 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
   private final PlayerService playerService;
 
   // 簡單的 Actor 註冊表 (未來可以用 Caffeine Cache 或 Service 管理)
-  private final Map<String, PlayerActor> activeActors = new ConcurrentHashMap<>();
+  private final Map<Long, PlayerActor> activeActors = new ConcurrentHashMap<>();
 
   public MudWebSocketHandler(PlayerService playerService) {
     this.playerService = playerService;
@@ -33,9 +33,10 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
   @Override
   public void afterConnectionEstablished(WebSocketSession session) {
     // 1. 連線建立，啟動 Actor
-    var actor = new PlayerActor(session.getId(), session, playerService, objectMapper);
+    Long dbId = System.currentTimeMillis();
+    var actor = new PlayerActor(dbId, session, null, objectMapper, playerService);
     actor.start();
-    activeActors.put(session.getId(), actor);
+    activeActors.put(dbId, actor);
   }
 
   @Override
