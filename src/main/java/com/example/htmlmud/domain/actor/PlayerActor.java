@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Map;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.logic.command.CommandDispatcher;
 import com.example.htmlmud.domain.model.GameObjectId;
 import com.example.htmlmud.domain.model.PlayerRecord;
@@ -11,23 +12,14 @@ import com.example.htmlmud.domain.model.json.LivingState;
 import com.example.htmlmud.infra.util.AnsiColor;
 import com.example.htmlmud.infra.util.ColorText;
 import com.example.htmlmud.protocol.ActorMessage;
+import com.example.htmlmud.protocol.ConnectionState;
 import com.example.htmlmud.protocol.GameCommand;
-import com.example.htmlmud.service.PlayerService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 // PlayerActor 處理的訊息類型就是 GameCommand
 @Slf4j
 public class PlayerActor extends LivingActor {
-
-  // 定義連線狀態
-  private enum State {
-    CONNECTED, // 剛連線：等待輸入帳號 或 'new'
-    REGISTER_USERNAME, // 註冊中：等待輸入新帳號
-    REGISTER_PASSWORD, // 註冊中：等待輸入新密碼
-    LOGIN_PASSWORD, // 登入中：等待輸入密碼
-    IN_GAME // 遊戲中：正常遊玩
-  }
 
   private final WebSocketSession session;
   // private PlayerService playerService;
@@ -37,7 +29,7 @@ public class PlayerActor extends LivingActor {
   private boolean isDirty = false;
 
   // Actor 內部狀態 (State Machine Context)
-  private State state = State.CONNECTED;
+  private ConnectionState state = ConnectionState.CONNECTED;
   private String tempUsername; // 暫存正在處理的帳號名
   private String playerName = "Unassigned";
 
@@ -63,23 +55,25 @@ public class PlayerActor extends LivingActor {
   @Override
   protected void handleMessage(ActorMessage msg) {
     // 這裡已經是 Single Thread 環境，完全不用 synchronized
-    String traceId = msg.traceId(); // 拿到 Trace ID 了！
-    GameCommand cmd = msg.command(); // 拿到實際指令
+    // 使用 ScopedValue 重新綁定從信封拿到的 traceId
+    ScopedValue.where(MudContext.TRACE_ID, msg.traceId()).run(() -> {
+      GameCommand cmd = msg.command();
 
-    // 只處理字串輸入 (Input)
-    if (cmd instanceof GameCommand.Input(var text)) {
-      String cleanText = text.trim();
-      log.info("[Trace:{}] [State:{}] Input: {}", traceId, state, cleanText);
+      // 只處理字串輸入 (Input)
+      if (cmd instanceof GameCommand.Input(var text)) {
+        String cleanText = text.trim();
+        log.info("[State:{}] Input: {}", state, cleanText);
 
-      // 根據當前狀態分流
-      switch (state) {
-        case CONNECTED -> handleConnected(cleanText);
-        case REGISTER_USERNAME -> handleRegisterUsername(cleanText);
-        case REGISTER_PASSWORD -> handleRegisterPassword(cleanText);
-        case LOGIN_PASSWORD -> handleLoginPassword(cleanText);
-        case IN_GAME -> handleGameLogic(cleanText, traceId);
+        // 根據當前狀態分流
+        switch (state) {
+          case CONNECTED -> handleConnected(cleanText);
+          case REGISTER_USERNAME -> handleRegisterUsername(cleanText);
+          case REGISTER_PASSWORD -> handleRegisterPassword(cleanText);
+          case LOGIN_PASSWORD -> handleLoginPassword(cleanText);
+          case PLAYING -> handleGameLogic(cleanText, msg.traceId());
+        }
       }
-    }
+    });
 
     // 這裡是由 Actor 的 Virtual Thread 執行的
     // Actor 直接操作 session 物件發送資料
@@ -124,7 +118,7 @@ public class PlayerActor extends LivingActor {
   // 1. 剛連線
   private void handleConnected(String input) {
     if ("new".equalsIgnoreCase(input)) {
-      state = State.REGISTER_USERNAME;
+      state = ConnectionState.REGISTER_USERNAME;
       reply("【註冊流程】請輸入您想使用的帳號名稱：");
     } else {
       // 視為嘗試登入
@@ -154,7 +148,7 @@ public class PlayerActor extends LivingActor {
     // }
 
     this.tempUsername = input;
-    state = State.REGISTER_PASSWORD;
+    state = ConnectionState.REGISTER_PASSWORD;
     reply("帳號 '%s' 可用。請設定您的密碼：".formatted(input));
   }
 
@@ -184,7 +178,7 @@ public class PlayerActor extends LivingActor {
 
   // 5. 進入遊戲 (轉場)
   private void enterGame() {
-    state = State.IN_GAME;
+    state = ConnectionState.PLAYING;
     // 未來這裡可以加入 WorldManager.joinRoom()
     handleGameLogic("look", "system-init"); // 自動看一次環境
   }
@@ -268,4 +262,22 @@ public class PlayerActor extends LivingActor {
     return text.trim().split("\\s+");
   }
 
+  // 【關鍵】當玩家換瀏覽器重連時，呼叫這個方法
+  public void attachSession(WebSocketSession newSession) {
+    // 1. 關閉舊連線 (如果還開著)
+    if (this.session != null && this.session.isOpen()) {
+      try {
+        this.session.close();
+      } catch (Exception e) {
+      }
+    }
+
+    // 2. 換上新連線
+    // this.session = newSession;
+
+    // 3. 可以在這裡主動推播：「歡迎回來，連線已恢復」
+    reply("=== 連線已恢復 ===");
+    // 自動執行一次 Look，讓玩家知道自己在哪
+    handleGameLogic("look", "user-relink");
+  }
 }
