@@ -21,7 +21,15 @@ public record GameObjectId(Type type, long id) {
     return new GameObjectId(Type.PLAYER, id);
   }
 
+  public static GameObjectId npc(long id) {
+    return new GameObjectId(Type.NPC, id);
+  }
+
   public static GameObjectId mob(long id) {
     return new GameObjectId(Type.MOB, id);
+  }
+
+  public static GameObjectId item(long id) {
+    return new GameObjectId(Type.ITEM, id);
   }
 }

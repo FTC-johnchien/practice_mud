@@ -4,8 +4,9 @@ import java.io.IOException;
 import java.util.Map;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
-import com.example.htmlmud.domain.actor.core.VirtualActor;
+import com.example.htmlmud.domain.model.GameObjectId;
 import com.example.htmlmud.domain.model.PlayerRecord;
+import com.example.htmlmud.domain.model.json.LivingState;
 import com.example.htmlmud.infra.util.AnsiColor;
 import com.example.htmlmud.infra.util.ColorText;
 import com.example.htmlmud.protocol.ActorMessage;
@@ -16,7 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 
 // PlayerActor 處理的訊息類型就是 GameCommand
 @Slf4j
-public class PlayerActor extends VirtualActor<ActorMessage> {
+public class PlayerActor extends LivingActor {
+
   // 定義連線狀態
   private enum State {
     CONNECTED, // 剛連線：等待輸入帳號 或 'new'
@@ -27,8 +29,8 @@ public class PlayerActor extends VirtualActor<ActorMessage> {
   }
 
   private final WebSocketSession session;
-  private final PlayerService playerService;
-  private final ObjectMapper objectMapper;
+  private PlayerService playerService;
+  private ObjectMapper objectMapper;
   private PlayerRecord currentData; // 記憶體中的最新狀態
   private boolean isDirty = false;
 
@@ -37,9 +39,18 @@ public class PlayerActor extends VirtualActor<ActorMessage> {
   private String tempUsername; // 暫存正在處理的帳號名
   private String playerName = "Unassigned";
 
-  public PlayerActor(String sessionId, WebSocketSession session, PlayerService playerService,
-      ObjectMapper objectMapper) {
-    super("player-" + sessionId);
+  public PlayerActor(Long dbId, WebSocketSession session, LivingState state) {
+    // ID 組合：PLAYER + dbId
+    super(GameObjectId.player(dbId), state);
+    this.session = session; // 在建構時就存起來了
+    // this.playerService = playerService;
+    // this.objectMapper = objectMapper;
+  }
+
+  public PlayerActor(Long dbId, WebSocketSession session, LivingState state,
+      ObjectMapper objectMapper, PlayerService playerService) {
+    // ID 組合：PLAYER + dbId
+    super(GameObjectId.player(dbId), state);
     this.session = session; // 在建構時就存起來了
     this.playerService = playerService;
     this.objectMapper = objectMapper;
@@ -101,6 +112,13 @@ public class PlayerActor extends VirtualActor<ActorMessage> {
     // log.error("[Trace:{}] Error", traceId, e);
     // }
   }
+
+  @Override
+  protected void onDeath(GameObjectId killerId) {
+    reply("你已經死亡！即將在重生點復活...");
+    // 玩家死亡邏輯：掉經驗、傳送回城
+  }
+
 
   // --- 狀態處理邏輯 ---
 
