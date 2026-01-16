@@ -5,6 +5,7 @@ import java.util.Map;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.domain.actor.core.VirtualActor;
+import com.example.htmlmud.domain.model.PlayerRecord;
 import com.example.htmlmud.infra.util.AnsiColor;
 import com.example.htmlmud.infra.util.ColorText;
 import com.example.htmlmud.protocol.ActorMessage;
@@ -28,6 +29,8 @@ public class PlayerActor extends VirtualActor<ActorMessage> {
   private final WebSocketSession session;
   private final PlayerService playerService;
   private final ObjectMapper objectMapper;
+  private PlayerRecord currentData; // 記憶體中的最新狀態
+  private boolean isDirty = false;
 
   // Actor 內部狀態 (State Machine Context)
   private State state = State.CONNECTED;
