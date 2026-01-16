@@ -4,7 +4,7 @@ import com.example.htmlmud.domain.model.json.LivingState;
 import com.example.htmlmud.infra.persistence.entity.PlayerEntity;
 
 // 這是在 Actor 之間傳遞的快照 (Snapshot)
-public record PlayerRecord(Long id, String username, String nickname, Long currentRoomId,
+public record PlayerRecord(String id, String username, String nickname, Integer currentRoomId,
     LivingState state // 注意：如果是 Record，這裡最好是 Deep Copy 後的資料
 ) {
   // 提供一個靜態工廠方法從 Entity 轉換

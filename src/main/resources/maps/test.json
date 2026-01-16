@@ -1,0 +1,67 @@
+{
+  "id": "area_newbie",
+  "name": "迷霧森林邊境",
+  "level_min": 1,
+  "level_max": 5,
+  "reset_interval": 15,
+  "rooms": [
+    {
+      "id": 1001,
+      "title": "村莊廣場",
+      "desc": "這裡是新手村的中心，中央有一口乾枯的古井。往北可以看到村長的房子，往東則是一條陰暗的小徑。",
+      "flags": ["SAFE", "OUTDOORS"],
+      "exits": {
+        "north": { "to": 1002 },
+        "east": { "to": 1005 }
+      }
+    },
+    {
+      "id": 1002,
+      "title": "村長小屋前",
+      "desc": "一間簡樸的木屋矗立在眼前，門口掛著一盞老舊的風燈。",
+      "flags": ["SAFE"],
+      "exits": {
+        "south": {
+            "to": 1001,
+            "door": "iron_gate",
+            "locked": true,
+            "key": "key_village_01"
+        }
+      }
+    },
+    {
+      "id": 1005,
+      "title": "陰暗小徑盡頭",
+      "desc": "路到了盡頭，四周雜草叢生，空氣中瀰漫著危險的氣息。",
+      "flags": ["OUTDOORS", "NO_RECALL"],
+      "exits": {
+        "west": { "to": 1001 }
+      }
+    }
+  ],
+  "mob_resets": [
+    {
+      "mob_id": "mob_goblin_king",
+      "room_id": 1005,
+      "max_qty": 1,
+      "items": [
+        {
+          "item_id": "eq_golden_armor",
+          "slot": "body",
+          "chance": 0.5
+        },
+        {
+          "item_id": "wpn_rusty_sword",
+          "slot": "weapon",
+          "chance": 1.0
+        }
+      ]
+    },
+    {
+      "mob_id": "mob_wild_dog",
+      "room_id": 1001,
+      "max_qty": 3,
+      "items": []
+    }
+  ]
+}

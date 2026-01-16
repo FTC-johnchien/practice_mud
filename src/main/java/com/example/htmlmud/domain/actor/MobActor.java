@@ -13,8 +13,8 @@ public class MobActor extends LivingActor {
   private final List<Long> dropItemIds;
   private final Map<GameObjectId, Integer> aggroTable = new HashMap<>();
 
-  public MobActor(long instanceId, LivingState state, List<Long> drops) {
-    super(GameObjectId.mob(instanceId), state);
+  public MobActor(String instanceId, LivingState state, List<Long> drops) {
+    super(instanceId, state);
     this.dropItemIds = drops;
   }
 

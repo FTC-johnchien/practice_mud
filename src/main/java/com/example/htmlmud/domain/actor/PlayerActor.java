@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Map;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+import com.example.htmlmud.domain.logic.command.CommandDispatcher;
 import com.example.htmlmud.domain.model.GameObjectId;
 import com.example.htmlmud.domain.model.PlayerRecord;
 import com.example.htmlmud.domain.model.json.LivingState;
@@ -29,8 +30,9 @@ public class PlayerActor extends LivingActor {
   }
 
   private final WebSocketSession session;
-  private PlayerService playerService;
-  private ObjectMapper objectMapper;
+  // private PlayerService playerService;
+
+
   private PlayerRecord currentData; // 記憶體中的最新狀態
   private boolean isDirty = false;
 
@@ -39,20 +41,14 @@ public class PlayerActor extends LivingActor {
   private String tempUsername; // 暫存正在處理的帳號名
   private String playerName = "Unassigned";
 
-  public PlayerActor(Long dbId, WebSocketSession session, LivingState state) {
-    // ID 組合：PLAYER + dbId
-    super(GameObjectId.player(dbId), state);
-    this.session = session; // 在建構時就存起來了
-    // this.playerService = playerService;
-    // this.objectMapper = objectMapper;
-  }
+  private final ObjectMapper objectMapper;
 
-  public PlayerActor(Long dbId, WebSocketSession session, LivingState state,
-      ObjectMapper objectMapper, PlayerService playerService) {
-    // ID 組合：PLAYER + dbId
-    super(GameObjectId.player(dbId), state);
-    this.session = session; // 在建構時就存起來了
-    this.playerService = playerService;
+  private CommandDispatcher commandDispatcher;
+
+  public PlayerActor(String id, WebSocketSession session, LivingState state,
+      ObjectMapper objectMapper) {
+    super(id, state);
+    this.session = session;
     this.objectMapper = objectMapper;
   }
 
@@ -119,6 +115,9 @@ public class PlayerActor extends LivingActor {
     // 玩家死亡邏輯：掉經驗、傳送回城
   }
 
+  public void sendText(String text) {
+    reply(text);
+  }
 
   // --- 狀態處理邏輯 ---
 
@@ -129,13 +128,13 @@ public class PlayerActor extends LivingActor {
       reply("【註冊流程】請輸入您想使用的帳號名稱：");
     } else {
       // 視為嘗試登入
-      if (playerService.exists(input)) {
-        this.tempUsername = input;
-        state = State.LOGIN_PASSWORD;
-        reply("帳號存在，請輸入密碼：");
-      } else {
-        reply("找不到帳號 '%s'。請重新輸入，或輸入 'new' 註冊。".formatted(input));
-      }
+      // if (playerService.exists(input)) {
+      // this.tempUsername = input;
+      // state = State.LOGIN_PASSWORD;
+      // reply("帳號存在，請輸入密碼：");
+      // } else {
+      // reply("找不到帳號 '%s'。請重新輸入，或輸入 'new' 註冊。".formatted(input));
+      // }
     }
   }
 
@@ -145,14 +144,14 @@ public class PlayerActor extends LivingActor {
       reply("帳號長度需大於 3 個字元，請重試：");
       return;
     }
-    if (playerService.isReservedWord(input)) {
-      reply("'%s' 是系統保留字，請換一個：".formatted(input));
-      return;
-    }
-    if (playerService.exists(input)) {
-      reply("'%s' 已經被註冊了，請換一個：".formatted(input));
-      return;
-    }
+    // if (playerService.isReservedWord(input)) {
+    // reply("'%s' 是系統保留字，請換一個：".formatted(input));
+    // return;
+    // }
+    // if (playerService.exists(input)) {
+    // reply("'%s' 已經被註冊了，請換一個：".formatted(input));
+    // return;
+    // }
 
     this.tempUsername = input;
     state = State.REGISTER_PASSWORD;
@@ -166,8 +165,8 @@ public class PlayerActor extends LivingActor {
       return;
     }
 
-    playerService.register(tempUsername, input);
-    log.info("User registered: {}", tempUsername);
+    // playerService.register(tempUsername, input);
+    // log.info("User registered: {}", tempUsername);
 
     reply("註冊成功！已自動為您登入。");
     enterGame();
@@ -175,12 +174,12 @@ public class PlayerActor extends LivingActor {
 
   // 4. 登入 - 驗證密碼
   private void handleLoginPassword(String input) {
-    if (playerService.verifyPassword(tempUsername, input)) {
-      reply("登入成功！歡迎回來，%s".formatted(tempUsername));
-      enterGame();
-    } else {
-      reply("密碼錯誤，請重新輸入：");
-    }
+    // if (playerService.verifyPassword(tempUsername, input)) {
+    // reply("登入成功！歡迎回來，%s".formatted(tempUsername));
+    // enterGame();
+    // } else {
+    // reply("密碼錯誤，請重新輸入：");
+    // }
   }
 
   // 5. 進入遊戲 (轉場)
@@ -245,6 +244,7 @@ public class PlayerActor extends LivingActor {
   // // // 可以增加失敗計數器，防止爆破
   // // }
   // }
+
 
   private void reply(String msg) {
     try {

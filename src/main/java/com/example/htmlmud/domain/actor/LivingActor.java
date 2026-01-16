@@ -5,6 +5,7 @@ import com.example.htmlmud.domain.model.GameObjectId;
 import com.example.htmlmud.domain.model.json.LivingState;
 import com.example.htmlmud.protocol.ActorMessage;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 // 泛型 T 讓我們可以在子類別擴充更多 Message 類型
@@ -12,19 +13,29 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class LivingActor extends VirtualActor<ActorMessage> {
 
   @Getter
-  protected final GameObjectId objectId;
+  protected final String id;
+
+  @Getter
+  protected final String name;
+
+  @Getter
+  protected final String displayName;
 
   // 所有生物都有狀態 (HP/MP)
   @Getter
   protected final LivingState state;
 
   // 所有生物都在某個房間 (可能是 null)
-  protected RoomActor currentRoom;
+  @Getter
+  @Setter
+  protected int currentRoomId;
 
-  public LivingActor(GameObjectId objectId, LivingState state) {
-    super(objectId.toString()); // Actor Name: "PLAYER:1"
-    this.objectId = objectId;
+  public LivingActor(String id, LivingState state) {
+    super(id); // Actor Name: "PLAYER:1"
+    this.id = id;
     this.state = state;
+    this.name = state.name;
+    this.displayName = state.displayName;
   }
 
   // --- 共用行為邏輯 ---
@@ -35,13 +46,12 @@ public abstract class LivingActor extends VirtualActor<ActorMessage> {
       return;
 
     this.state.hp -= amount;
-    log.info("{} took {} damage from {}. HP: {}/{}", objectId, amount, attackerId, state.hp,
-        state.maxHp);
+    log.info("{} took {} damage from {}. HP: {}/{}", id, amount, attackerId, state.hp, state.maxHp);
 
     // 發送訊息給房間 (讓其他人看到噴血)
-    if (currentRoom != null) {
-      // currentRoom.broadcast(...);
-    }
+    // if (currentRoom != null) {
+    // currentRoom.broadcast(...);
+    // }
 
     if (state.hp <= 0) {
       die(attackerId);
@@ -52,7 +62,7 @@ public abstract class LivingActor extends VirtualActor<ActorMessage> {
   protected void die(GameObjectId killerId) {
     this.state.hp = 0;
     this.state.isDead = true;
-    log.info("{} has been slain by {}!", objectId, killerId);
+    log.info("{} has been slain by {}!", id, killerId);
 
     onDeath(killerId); // 樣板方法 (Template Method)，給子類別實作掉寶或重生地
   }
