@@ -40,19 +40,25 @@ public sealed interface DomainEvent permits DomainEvent.SessionEvent, DomainEven
   /**
    * 系統指令與認證事件
    */
-  sealed interface SystemEvent extends DomainEvent permits SystemEvent.Register, SystemEvent.Login,
-      SystemEvent.Authenticate, SystemEvent.Logout {
+  sealed interface SystemEvent extends DomainEvent
+      permits SystemEvent.Authenticate, SystemEvent.RegisterUsername, SystemEvent.RegisterPassword,
+      SystemEvent.Login, SystemEvent.Logout {
 
     String sessionId();
 
-    record Register(String sessionId, String[] words, Instant occurredOn) implements SystemEvent {
-    }
-
-    record Login(String sessionId, String[] words, Instant occurredOn) implements SystemEvent {
-    }
-
-    record Authenticate(String sessionId, String[] words, Instant occurredOn)
+    record RegisterUsername(String sessionId, String input, Instant occurredOn)
         implements SystemEvent {
+    }
+
+    record RegisterPassword(String sessionId, String input, Instant occurredOn)
+        implements SystemEvent {
+    }
+
+
+    record Login(String sessionId, String input, Instant occurredOn) implements SystemEvent {
+    }
+
+    record Authenticate(String sessionId, String input, Instant occurredOn) implements SystemEvent {
     }
 
     record Logout(String sessionId, PlayerActor player, Instant occurredOn) implements SystemEvent {

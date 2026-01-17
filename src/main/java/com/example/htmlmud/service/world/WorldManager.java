@@ -1,30 +1,33 @@
 package com.example.htmlmud.service.world;
 
+import java.io.IOException;
+import java.net.http.WebSocket;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.stereotype.Service;
+import org.springframework.web.socket.WebSocketSession;
+import com.example.htmlmud.domain.actor.PlayerActor;
+import com.example.htmlmud.domain.actor.RoomActor;
+import com.example.htmlmud.domain.context.MudKeys;
 import com.example.htmlmud.domain.model.map.Area;
 import com.example.htmlmud.domain.model.map.Room;
-import com.example.htmlmud.domain.actor.RoomActor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.ResourcePatternResolver;
-import org.springframework.stereotype.Service;
-
-import java.io.IOException;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
 public class WorldManager {
 
-  private final ObjectMapper objectMapper;
   private final ResourcePatternResolver resourceResolver;
 
   // 1. Static Data Cache: 存放唯讀的 Room 設定檔 (POJO/Record)
@@ -37,10 +40,16 @@ public class WorldManager {
 
   // 3. Write-Behind Queue: 存放待寫入資料庫的變更
   private final BlockingQueue<RoomStateUpdate> persistenceQueue = new LinkedBlockingQueue<>();
+
+  // 快取：ID -> Player 實體
+  private final ConcurrentHashMap<String, PlayerActor> activePlayers = new ConcurrentHashMap<>();
+
   private volatile boolean isRunning = true;
 
-  public WorldManager(ObjectMapper objectMapper, ResourcePatternResolver resourceResolver) {
-    this.objectMapper = objectMapper;
+  @Autowired
+  private ObjectMapper objectMapper;
+
+  public WorldManager(ResourcePatternResolver resourceResolver) {
     this.resourceResolver = resourceResolver;
 
     // 設定 Caffeine Cache
@@ -103,6 +112,21 @@ public class WorldManager {
 
   // 定義存檔請求的封包 (Record)
   public record RoomStateUpdate(int roomId, String dataToSave) {
+  }
+
+  public void addPlayer(PlayerActor actor) {
+    activePlayers.put(actor.getId(), actor);
+  }
+
+  public PlayerActor getPlayer(WebSocketSession session) {
+    String playerId = (String) session.getAttributes().get(MudKeys.PLAYER_ID);
+    return getPlayer(playerId);
+  }
+
+  public PlayerActor getPlayer(String playerId) {
+    // TODO 若 playerActor 不存在，則需要從資料庫載入並建立
+
+    return activePlayers.get(playerId);
   }
 
   /**

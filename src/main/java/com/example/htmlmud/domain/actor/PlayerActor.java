@@ -15,6 +15,8 @@ import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.ConnectionState;
 import com.example.htmlmud.protocol.GameCommand;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 // PlayerActor 處理的訊息類型就是 GameCommand
@@ -24,20 +26,30 @@ public class PlayerActor extends LivingActor {
   private final WebSocketSession session;
   // private PlayerService playerService;
 
+  @Getter
+  private final ObjectMapper objectMapper;
+
 
   private PlayerRecord currentData; // 記憶體中的最新狀態
   private boolean isDirty = false;
 
   // Actor 內部狀態 (State Machine Context)
-  private ConnectionState state = ConnectionState.CONNECTED;
-  private String tempUsername; // 暫存正在處理的帳號名
-  private String playerName = "Unassigned";
+  @Getter
+  @Setter
+  private ConnectionState connectionState = ConnectionState.CONNECTED;
 
-  private final ObjectMapper objectMapper;
+  @Setter
+  private String tempUsername; // 暫存正在處理的帳號名
+
+  @Setter
+  private String tempPassword; // 暫存正在處理的密碼
+
+
+  // private String playerName = "Unassigned";
 
   private CommandDispatcher commandDispatcher;
 
-  public PlayerActor(String id, WebSocketSession session, LivingState state,
+  public PlayerActor(String id, LivingState state, WebSocketSession session,
       ObjectMapper objectMapper) {
     super(id, state);
     this.session = session;
@@ -65,12 +77,12 @@ public class PlayerActor extends LivingActor {
         log.info("[State:{}] Input: {}", state, cleanText);
 
         // 根據當前狀態分流
-        switch (state) {
+        switch (connectionState) {
           case CONNECTED -> handleConnected(cleanText);
           case REGISTER_USERNAME -> handleRegisterUsername(cleanText);
           case REGISTER_PASSWORD -> handleRegisterPassword(cleanText);
           case LOGIN_PASSWORD -> handleLoginPassword(cleanText);
-          case PLAYING -> handleGameLogic(cleanText, msg.traceId());
+          case IN_GAME -> handleGameLogic(cleanText, msg.traceId());
         }
       }
     });
@@ -118,7 +130,7 @@ public class PlayerActor extends LivingActor {
   // 1. 剛連線
   private void handleConnected(String input) {
     if ("new".equalsIgnoreCase(input)) {
-      state = ConnectionState.REGISTER_USERNAME;
+      connectionState = ConnectionState.REGISTER_USERNAME;
       reply("【註冊流程】請輸入您想使用的帳號名稱：");
     } else {
       // 視為嘗試登入
@@ -148,7 +160,7 @@ public class PlayerActor extends LivingActor {
     // }
 
     this.tempUsername = input;
-    state = ConnectionState.REGISTER_PASSWORD;
+    connectionState = ConnectionState.REGISTER_PASSWORD;
     reply("帳號 '%s' 可用。請設定您的密碼：".formatted(input));
   }
 
@@ -178,7 +190,7 @@ public class PlayerActor extends LivingActor {
 
   // 5. 進入遊戲 (轉場)
   private void enterGame() {
-    state = ConnectionState.PLAYING;
+    connectionState = ConnectionState.IN_GAME;
     // 未來這裡可以加入 WorldManager.joinRoom()
     handleGameLogic("look", "system-init"); // 自動看一次環境
   }
@@ -214,7 +226,7 @@ public class PlayerActor extends LivingActor {
         }
       }
       default -> {
-        log.info("[Trace:{}] Unknown command: {}", traceId, action);
+        log.info("Unknown command: {}", action);
         reply("我不懂 '%s' 是什麼意思。".formatted(action));
       }
     }
@@ -255,7 +267,7 @@ public class PlayerActor extends LivingActor {
 
   // --- 這裡實現您的 "純字串" 邏輯 ---
   private String[] handleStringInput(String text) {
-    log.info("Player {} input: {}", playerName, text);
+    log.info("Player {} input: {}", name, text);
 
     // 簡單的傳統 MUD 解析方式
     // 未來這裡可以抽換成更高級的 Parser，但介面(Input text)不用變

@@ -51,10 +51,16 @@
                 try {
                     const msg = JSON.parse(event.data);
 
-                    if (msg.type === 'TEXT') {
-                        // 3. 使用 ansi_up 將後端的 ANSI code 轉為 HTML
-                        const html = ansi_up.ansi_to_html(msg.content);
-                        appendHtml(html);
+                    // 處理模式切換：USER_MODE 為一般文字，PWD_MODE 為密碼隱碼
+                    if (msg.type === 'USER_MODE') {
+                        input.type = 'text';
+                    } else if (msg.type === 'PWD_MODE') {
+                        input.type = 'password';
+                    }
+
+                    // 只要訊息包含內容就進行顯示 (包含 TEXT, USER_MODE, PWD_MODE 的提示字)
+                    if (msg.content) {
+                        appendHtml(ansi_up.ansi_to_html(msg.content));
                     }
                 } catch (e) {
                     console.error("解析訊息失敗:", event.data);
@@ -104,9 +110,9 @@
 
                 socket.send(payload);
 
-                // 在本地顯示自己輸入的指令 (模擬 echo，選用青色)
-                // 這裡我們手動加一點顏色區分
-                appendHtml('<span style="color:#00ffff">> ' + text + '</span>');
+                // 在本地顯示自己輸入的指令 (如果是密碼模式則顯示隱碼 *)
+                const displayValue = input.type === 'password' ? '*'.repeat(text.length) : text;
+                appendHtml('<span style="color:#00ffff">> ' + displayValue + '</span>');
 
                 input.value = '';
             }

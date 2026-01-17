@@ -13,17 +13,17 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class LivingActor extends VirtualActor<ActorMessage> {
 
   @Getter
-  protected final String id;
+  protected String id;
 
   @Getter
-  protected final String name;
+  protected String name;
 
   @Getter
-  protected final String displayName;
+  protected String displayName;
 
   // 所有生物都有狀態 (HP/MP)
   @Getter
-  protected final LivingState state;
+  protected LivingState state;
 
   // 所有生物都在某個房間 (可能是 null)
   @Getter
@@ -34,8 +34,14 @@ public abstract class LivingActor extends VirtualActor<ActorMessage> {
     super(id); // Actor Name: "PLAYER:1"
     this.id = id;
     this.state = state;
-    this.name = state.name;
-    this.displayName = state.displayName;
+  }
+
+  // 供子類別 (PlayerActor) 呼叫，用來切換數據
+  protected void swapIdentity(String newId, String name, String displayName, LivingState state) {
+    this.id = newId;
+    this.name = name;
+    this.displayName = displayName;
+    this.state = state;
   }
 
   // --- 共用行為邏輯 ---

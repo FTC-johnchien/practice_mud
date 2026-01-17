@@ -5,8 +5,6 @@ import java.util.Map;
 
 // 這個物件會被序列化存入 players.state_json 和 mobs.state_json
 public class LivingState {
-  public String name;
-  public String displayName;
   public int level = 1;
   public int hp;
   public int maxHp;

@@ -6,7 +6,9 @@ import org.springframework.stereotype.Component;
 import com.example.htmlmud.domain.event.DomainEvent;
 import com.example.htmlmud.domain.event.MobEvents;
 import com.example.htmlmud.domain.event.PlayerEvents;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 public class AuditLogEventListener {
   @Async // <--- 關鍵：丟到另一個 Thread (或 Virtual Thread) 執行
@@ -22,6 +24,6 @@ public class AuditLogEventListener {
     };
 
     // 模擬寫入 DB
-    System.out.println("[AUDIT LOG] " + event.occurredOn() + " - " + logMsg);
+    log.info("[AUDIT LOG] " + event.occurredOn() + " - " + logMsg);
   }
 }

@@ -1,14 +1,11 @@
 package com.example.htmlmud.domain.context;
 
-import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.domain.actor.PlayerActor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class MudContext {
   // 1. 當前操作的玩家 Actor (最重要的)
   public static final ScopedValue<PlayerActor> CURRENT_PLAYER = ScopedValue.newInstance();
-
-  public static final ScopedValue<WebSocketSession> WEB_SOCKET_SESSION = ScopedValue.newInstance();
 
   // 2. 當前的 Trace ID (除錯用)
   public static final ScopedValue<String> TRACE_ID = ScopedValue.newInstance();

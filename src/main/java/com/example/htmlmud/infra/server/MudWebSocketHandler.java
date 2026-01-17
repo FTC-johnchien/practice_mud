@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -26,6 +27,8 @@ import com.example.htmlmud.protocol.RoomMessage;
 import com.example.htmlmud.service.PlayerService;
 import com.example.htmlmud.service.auth.AuthService;
 import com.example.htmlmud.service.world.WorldManager;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,27 +52,69 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
 
   @Override
   public void afterConnectionEstablished(WebSocketSession session) {
+    String sessionId = session.getId();
+
+    // 放入一個空的Actor維持一致性 (Guest階段)
+    PlayerActor actor = new PlayerActor(sessionId, new LivingState(), session, objectMapper);
+    session.getAttributes().put(MudKeys.PLAYER_ID, sessionId);
     sessionRegistry.register(session);
-    eventPublisher.publishEvent(new SessionEvent.Established(session.getId(), Instant.now()));
+
+    worldManager.addPlayer(actor);
+
+    eventPublisher.publishEvent(new SessionEvent.Established(sessionId, Instant.now()));
   }
 
   @Override
   protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-    String[] input = parseInput(message.getPayload());
-    ConnectionState state = (ConnectionState) session.getAttributes()
-        .getOrDefault(MudKeys.CONNECTION_STATE, ConnectionState.CONNECTED);
-
-    switch (state) {
-      case CONNECTED -> eventPublisher
-          .publishEvent(new SystemEvent.Authenticate(session.getId(), input, Instant.now()));
-      case REGISTER_USERNAME -> handleRegisterUsername(session, message);
-      case REGISTER_PASSWORD -> handleRegisterPassword(session, message);
-      case LOGIN_PASSWORD -> handleLoginPassword(session, message);
-      case PLAYING -> handleGameLogic(session, message);
+    String playerId = (String) session.getAttributes().get(MudKeys.PLAYER_ID);
+    if (playerId == null) {
+      session.close(CloseStatus.NOT_ACCEPTABLE);
+      return;
+    }
+    PlayerActor actor = worldManager.getPlayer(playerId);
+    if (actor == null) {
+      session.close(CloseStatus.NOT_ACCEPTABLE);
+      return;
     }
 
-    // 收到訊息，使用 ScopedValue 綁定 TraceID (用於 Handler 內的 Log)
+    // 解析 JSON
+    GameCommand cmd = objectMapper.readValue(message.getPayload(), GameCommand.class);
+    // 1. 使用 Pattern Matching 直接取出 text，避免使用 cmd.toString()
+    if (!(cmd instanceof GameCommand.Input(var text))) {
+      return;
+    }
+
+    String[] input = parseInput(text);
+
+    // 這次的 trace id
     String traceId = UUID.randomUUID().toString().substring(0, 8);
+
+    // 在處理開始前
+    MDC.put("traceId", traceId);
+    try {
+      ScopedValue.where(MudContext.TRACE_ID, traceId).where(MudContext.CURRENT_PLAYER, actor)
+          .run(() -> {
+            switch (actor.getConnectionState()) {
+              case CONNECTED -> eventPublisher.publishEvent(
+                  new SystemEvent.Authenticate(session.getId(), input[0], Instant.now()));
+              case REGISTER_USERNAME -> eventPublisher.publishEvent(
+                  new SystemEvent.RegisterUsername(session.getId(), input[0], Instant.now()));
+              case REGISTER_PASSWORD -> eventPublisher.publishEvent(
+                  new SystemEvent.RegisterPassword(session.getId(), input[0], Instant.now()));
+              case LOGIN_PASSWORD -> eventPublisher
+                  .publishEvent(new SystemEvent.Login(session.getId(), input[0], Instant.now()));
+              case IN_GAME -> actor.send(new ActorMessage(traceId, cmd));
+            }
+          });
+    } finally {
+      // 務必在結束後清除，避免執行緒池污染
+      MDC.clear();
+    }
+
+
+
+    // 收到訊息，使用 ScopedValue 綁定 TraceID (用於 Handler 內的 Log)
+
     // ScopedValue.where(MudContext.TRACE_ID, traceId).run(() -> {
 
     // ScopedValue.where(MudContext.TRACE_ID, traceId)
