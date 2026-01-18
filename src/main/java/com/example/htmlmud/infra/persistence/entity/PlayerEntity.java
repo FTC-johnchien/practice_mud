@@ -26,7 +26,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CharacterEntity {
+public class PlayerEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)

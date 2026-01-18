@@ -297,24 +297,9 @@ public class PlayerActor extends LivingActor {
 
   // 供 GuestBehavior 呼叫：變身為正式玩家
   public void upgradeIdentity(PlayerRecord record) {
-
-    // 1. 修改父類別欄位 (Shell Pattern)
-    // 假設 LivingActor 有提供 protected setObjectId / setState 方法
-    // 或者用您原本的 swapIdentity
-    this.swapIdentity(record.id(), record.state()); // state 是 reference，後續修改會直接反應
-
-    // 2. 修改 PlayerActor 特有欄位
-    // this.username = record.username();
-    // this.nickname = record.nickname();
-    this.currentRoomId = record.currentRoomId();
-
+    this.fromRecord(record);
     this.become(new InGameBehavior(services, dispatcher));
-
-    // 3. 清理暫存
-    // this.tempUsername = null;
-    // this.tempPassword = null;
-
-    log.info("Actor 變身成功: {} ({})", "this.nickname", this.id);
+    log.info("Actor 變身成功: {} (InGameBehavior)", this.name);
   }
 
   public void replaceSession(WebSocketSession newSession) {
@@ -344,17 +329,33 @@ public class PlayerActor extends LivingActor {
     reply("登入成功！");
   }
 
-  // 將當前 Actor 狀態打包成不可變的 Record
-  public PlayerRecord toRecord() {
-    return new PlayerRecord(this.id, "", "", this.currentRoomId,
-        // 【關鍵】這裡必須 Deep Copy，否則 Persistence Thread 寫入時
-        // Actor Thread 可能同時在改這個物件，導致 ConcurrentModificationException
-        this.state.deepCopy());
-  }
-
   // 觸發存檔的輔助方法
   public void save() {
     services.playerPersistenceService().saveAsync(this.toRecord());
   }
 
+
+  public PlayerRecord toRecord() {
+    // 您必須確保 LivingState 有實作 deepCopy，否則會發生併發修改例外
+    return new PlayerRecord(this.id, // ID
+        this.name, // Username
+        this.displayName, // Nickname
+        this.currentRoomId, // Room
+        this.state.deepCopy() // 【關鍵】深層複製 State
+    );
+  }
+
+  public void fromRecord(PlayerRecord record) {
+    // 1. 更新基礎資料
+    this.name = record.name();
+    this.displayName = record.displayName();
+    this.currentRoomId = record.currentRoomId();
+
+    // 2. 更新狀態 (直接替換引用)
+    // 因為 Record 是從 DB 讀出來的新物件，這裡的 state 是全新的，可以直接拿來用
+    this.swapIdentity(record.id(), record.state());
+
+    // 3. 標記為已登入
+    this.id = record.id();
+  }
 }

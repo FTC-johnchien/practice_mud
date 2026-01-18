@@ -296,13 +296,11 @@ public class GuestBehavior implements PlayerBehavior {
     UserEntity userEntity = services.authService().login(tempUsername, tempPassword);
     log.info("玩家登入成功: {} {}", userEntity.getId(), userEntity.getUsername());
 
-    // 載入 character
+    // 載入 player
     try {
       PlayerRecord record =
-          services.playerService().loadCharacter(userEntity.getId(), userEntity.getUsername());
-      log.info("1");
+          services.playerService().loadRecord(userEntity.getId(), userEntity.getUsername());
       actor.upgradeIdentity(record);
-      log.info("2");
       actor.setConnectionState(ConnectionState.IN_GAME);
 
       // 在 PlayerActor.java 中

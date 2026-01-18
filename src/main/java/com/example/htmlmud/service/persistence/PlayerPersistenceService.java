@@ -1,8 +1,9 @@
 package com.example.htmlmud.service.persistence;
 
 import com.example.htmlmud.domain.model.PlayerRecord;
-import com.example.htmlmud.infra.persistence.entity.CharacterEntity;
-import com.example.htmlmud.infra.persistence.repository.CharacterRepository;
+import com.example.htmlmud.infra.mapper.PlayerMapper;
+import com.example.htmlmud.infra.persistence.entity.PlayerEntity;
+import com.example.htmlmud.infra.persistence.repository.PlayerRepository;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 @RequiredArgsConstructor
 public class PlayerPersistenceService {
 
-  private final CharacterRepository playerRepository;
+  private final PlayerMapper mapper; // 注入 MapStruct
+  private final PlayerRepository playerRepository;
 
   // 1. 緩衝佇列 (Thread-Safe)
   // LinkedBlockingQueue 是最適合生產者-消費者模式的結構
@@ -105,10 +107,9 @@ public class PlayerPersistenceService {
       // 直接用 CharacterRepo 查 (查出來的物件本來就沒有密碼)
       playerRepository.findById(rec.id()).ifPresent(entity -> {
 
-        // 更新遊戲數據
-        entity.setDisplayName(rec.displayName());
-        entity.setState(rec.state());
-        entity.setCurrentRoomId(rec.currentRoomId());
+        // Record -> Entity (MapStruct 自動更新)
+        // 這行程式碼取代了原本手寫的 entity.setNickname(), entity.setState()...
+        mapper.updateEntityFromRecord(rec, entity);
 
         // 存檔
         playerRepository.save(entity);
@@ -138,10 +139,10 @@ public class PlayerPersistenceService {
 
   // --- 輔助方法：DTO 轉換 ---
   // 將 Record 轉回 Entity 準備存檔
-  private CharacterEntity toEntity(PlayerRecord r) {
+  private PlayerEntity toEntity(PlayerRecord r) {
     // 注意：這裡我們建立一個新的 Entity 物件，只填入 ID 和要更新的欄位
     // Hibernate save() 檢查 ID 存在會執行 merge/update
-    return CharacterEntity.builder().id(r.id()).name(r.name()) // 雖然通常不改 username，但 JPA 需要
+    return PlayerEntity.builder().id(r.id()).name(r.name()) // 雖然通常不改 username，但 JPA 需要
         .displayName(r.displayName()).currentRoomId(r.currentRoomId()).state(r.state()) // 更新 JSON
                                                                                         // 狀態
         // .inventory(r.inventory()) // 未來加入

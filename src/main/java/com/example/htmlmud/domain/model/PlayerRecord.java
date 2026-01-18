@@ -1,7 +1,7 @@
 package com.example.htmlmud.domain.model;
 
 import com.example.htmlmud.domain.model.json.LivingState;
-import com.example.htmlmud.infra.persistence.entity.CharacterEntity;
+import com.example.htmlmud.infra.persistence.entity.PlayerEntity;
 
 // 這是在 Actor 之間傳遞的快照 (Snapshot)
 public record PlayerRecord(String id, String name, String displayName, Integer currentRoomId,
@@ -13,4 +13,5 @@ public record PlayerRecord(String id, String name, String displayName, Integer c
   // // state 防止副作用
   // );
   // }
+
 }
