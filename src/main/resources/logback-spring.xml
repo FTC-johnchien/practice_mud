@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <!-- 定義日誌格式，關鍵在於 %X{traceId} -->
-    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [%X{traceId}] - %msg%n" />
+    <property name="LOG_PATTERN" value="%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [%X{actorName}-%X{traceId}] - %msg%n" />
 
     <!-- 控制台輸出 -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">

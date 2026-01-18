@@ -1,25 +1,30 @@
 package com.example.htmlmud.domain.actor;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import org.hibernate.cache.spi.support.AbstractReadWriteAccess.Item;
 import com.example.htmlmud.domain.actor.core.VirtualActor; // 引用您的基礎類別
-import com.example.htmlmud.domain.model.map.Room;
+import com.example.htmlmud.domain.model.map.RoomTemplate;
+import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.RoomMessage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 // 1. 繼承 VirtualActor，並指定泛型為 RoomMessage
 public class RoomActor extends VirtualActor<RoomMessage> {
 
   @Getter
-  private final Room template;
+  private final RoomTemplate template;
 
   // 房間內的玩家 (Runtime State)
   private final Map<String, PlayerActor> players = new ConcurrentHashMap<>();
 
-  public RoomActor(Room template) {
+  private final List<Item> items = new ArrayList<>(); // 地上的物品
+
+  public RoomActor(RoomTemplate template) {
     // 2. 傳入 Actor 名稱給父類別 (方便 Log 排查)
     super("room-" + template.id());
     this.template = template;
@@ -75,6 +80,18 @@ public class RoomActor extends VirtualActor<RoomMessage> {
         PlayerActor speaker = players.get(sourceId);
         String name = (speaker != null) ? speaker.getDisplayName() : "有人";
         broadcast(name + ": " + content);
+      }
+      case RoomMessage.TryPickItem(var itemId, var picker) -> {
+        // 【關鍵併發控制】
+        // var item = items.stream().filter(i -> i.id.equals(itemId)).findFirst();
+        // if (item.isPresent()) {
+        // items.remove(item.get());
+        // 回覆給 Command: 成功
+        // picker.send(new ActorMessage("...", new InternalCommand.PickSuccess(item.get())));
+        // } else {
+        // 回覆給 Command: 失敗
+        // picker.send(new ActorMessage("...", new InternalCommand.PickFail("東西不在了")));
+        // }
       }
     }
   }

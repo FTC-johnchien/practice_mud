@@ -1,8 +1,7 @@
 package com.example.htmlmud.service.world;
 
 import java.io.IOException;
-import java.net.http.WebSocket;
-import java.util.Map;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -15,8 +14,9 @@ import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.domain.actor.PlayerActor;
 import com.example.htmlmud.domain.actor.RoomActor;
 import com.example.htmlmud.domain.context.MudKeys;
+import com.example.htmlmud.domain.model.GameObjectId;
 import com.example.htmlmud.domain.model.map.Area;
-import com.example.htmlmud.domain.model.map.Room;
+import com.example.htmlmud.domain.model.map.RoomTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -32,7 +32,7 @@ public class WorldManager {
 
   // 1. Static Data Cache: 存放唯讀的 Room 設定檔 (POJO/Record)
   // 雖然伺服器通常會載入全地圖，但 Caffeine 可以幫我們管理記憶體上限
-  private final Cache<Integer, Room> staticRoomCache;
+  private final Cache<Integer, RoomTemplate> staticRoomCache;
 
   // 2. Runtime Actors: 存放正在運作的 RoomActor
   // 使用 ConcurrentHashMap 確保並發存取安全
@@ -74,7 +74,7 @@ public class WorldManager {
           log.info("Loading Area: {} ({}) - {} rooms", area.name(), area.id(), area.rooms().size());
 
           // 將房間放入 Cache，建立全域索引
-          for (Room room : area.rooms()) {
+          for (RoomTemplate room : area.rooms()) {
             staticRoomCache.put(room.id(), room);
           }
         } catch (IOException e) {
@@ -93,10 +93,11 @@ public class WorldManager {
    * 核心方法：取得或創建 RoomActor 這是進入遊戲世界的入口
    */
   public RoomActor getRoomActor(int roomId) {
+    log.info("getRoomActor roomId: {}", roomId);
     // 1. 如果 Actor 已經存在，直接回傳
     return activeRooms.computeIfAbsent(roomId, id -> {
       // 2. 如果 Actor 不存在，從 Static Cache 拿資料並 new 一個
-      Room roomData = staticRoomCache.getIfPresent(id);
+      RoomTemplate roomData = staticRoomCache.getIfPresent(id);
       if (roomData == null) {
         throw new IllegalArgumentException("Room ID not found: " + id);
       }
@@ -128,6 +129,11 @@ public class WorldManager {
 
     return activePlayers.get(playerId);
   }
+
+  public void removePlayer(String playerId) {
+    activePlayers.remove(playerId);
+  }
+
 
   /**
    * RoomActor 呼叫此方法來請求存檔，不會阻塞 Actor 的運作
@@ -171,5 +177,30 @@ public class WorldManager {
     isRunning = false;
     // 實際專案中這裡應該要把 Queue 裡的剩餘資料 flush 到資料庫
     log.info("WorldManager shutting down...");
+  }
+
+  /**
+   * 對房間內的所有人廣播訊息 (除了來源者自己)
+   *
+   * @param roomId 房間 ID
+   * @param message 訊息內容
+   * @param excludeActorId 不想收到廣播的人 (通常是移動者本人)，可為 null
+   */
+  public void broadcastToRoom(Integer roomId, String message, String excludeActorId) {
+    List<PlayerActor> actors = getActorsInRoom(roomId); // 假設您已有此方法
+
+    for (PlayerActor actor : actors) {
+      if (excludeActorId != null && actor.getId().equals(excludeActorId)) {
+        continue;
+      }
+      // 直接發送文字
+      actor.sendText(message);
+    }
+  }
+
+  // 簡單的 getActorsInRoom 實作參考 (效率較差，之後可用 Map<RoomId, Set<ActorId>> 優化)
+  public List<PlayerActor> getActorsInRoom(Integer roomId) {
+    return activePlayers.values().stream().filter(a -> roomId.equals(a.getCurrentRoomId()))
+        .toList();
   }
 }

@@ -15,10 +15,12 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import com.example.htmlmud.domain.actor.PlayerActor;
 import com.example.htmlmud.domain.actor.RoomActor;
+import com.example.htmlmud.domain.context.GameServices;
 import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.context.MudKeys;
 import com.example.htmlmud.domain.event.DomainEvent.SessionEvent;
 import com.example.htmlmud.domain.event.DomainEvent.SystemEvent;
+import com.example.htmlmud.domain.logic.command.CommandDispatcher;
 import com.example.htmlmud.domain.model.json.LivingState;
 import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.ConnectionState;
@@ -30,88 +32,93 @@ import com.example.htmlmud.service.world.WorldManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class MudWebSocketHandler extends TextWebSocketHandler {
 
   private static final String DELIMITER_REGEX = "[ \t,.:;?!\"']+";
 
-  @Autowired
-  private ObjectMapper objectMapper;
-
-  @Autowired
-  private WorldManager worldManager;
-
-  @Autowired
-  private ApplicationEventPublisher eventPublisher;
-
-  @Autowired
-  private SessionRegistry sessionRegistry;
+  private final SessionRegistry sessionRegistry;
+  private final GameServices services;
+  private final CommandDispatcher dispatcher;
 
   @Override
   public void afterConnectionEstablished(WebSocketSession session) {
-    String sessionId = session.getId();
+    try {
 
-    // 放入一個空的Actor維持一致性 (Guest階段)
-    PlayerActor actor = new PlayerActor(sessionId, new LivingState(), session, objectMapper);
-    session.getAttributes().put(MudKeys.PLAYER_ID, sessionId);
-    sessionRegistry.register(session);
+      // Guest階段 使用工廠方法建立 Guest Actor (ID=0)
+      // 將必要的 Service 注入給 Actor，讓 Actor 擁有處理業務的能力
+      PlayerActor actor = PlayerActor.createGuest(session, services, dispatcher);
 
-    worldManager.addPlayer(actor);
+      // 啟動 Actor 的虛擬執行緒 (Virtual Thread)
+      actor.start();
 
-    eventPublisher.publishEvent(new SessionEvent.Established(sessionId, Instant.now()));
+      // 註冊到網路層 SessionRegistry
+      sessionRegistry.register(session, actor);
+
+      log.info("連線建立: {} (Guest Actor Created)", session.getId());
+      // eventPublisher.publishEvent(new SessionEvent.Established(session.getId(), Instant.now()));
+    } catch (Exception e) {
+      log.error("連線初始化失敗", e);
+      try {
+        session.close();
+      } catch (Exception ignored) {
+      }
+    }
   }
 
   @Override
   protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-    String playerId = (String) session.getAttributes().get(MudKeys.PLAYER_ID);
-    if (playerId == null) {
-      session.close(CloseStatus.NOT_ACCEPTABLE);
-      return;
-    }
-    PlayerActor actor = worldManager.getPlayer(playerId);
-    if (actor == null) {
-      session.close(CloseStatus.NOT_ACCEPTABLE);
-      return;
-    }
 
-    // 解析 JSON
-    GameCommand cmd = objectMapper.readValue(message.getPayload(), GameCommand.class);
-    // 1. 使用 Pattern Matching 直接取出 text，避免使用 cmd.toString()
-    if (!(cmd instanceof GameCommand.Input(var text))) {
-      return;
-    }
-
-    String[] input = parseInput(text);
-
-    // 這次的 trace id
+    // A. 產生 Trace ID (所有 Log 追蹤的源頭)
+    // 使用短 UUID 方便閱讀，實務上可用完整的 UUID
     String traceId = UUID.randomUUID().toString().substring(0, 8);
 
-    // 在處理開始前
-    MDC.put("traceId", traceId);
     try {
-      ScopedValue.where(MudContext.TRACE_ID, traceId).where(MudContext.CURRENT_PLAYER, actor)
-          .run(() -> {
-            switch (actor.getConnectionState()) {
-              case CONNECTED -> eventPublisher.publishEvent(
-                  new SystemEvent.Authenticate(session.getId(), input[0], Instant.now()));
-              case REGISTER_USERNAME -> eventPublisher.publishEvent(
-                  new SystemEvent.RegisterUsername(session.getId(), input[0], Instant.now()));
-              case REGISTER_PASSWORD -> eventPublisher.publishEvent(
-                  new SystemEvent.RegisterPassword(session.getId(), input[0], Instant.now()));
-              case LOGIN_PASSWORD -> eventPublisher
-                  .publishEvent(new SystemEvent.Login(session.getId(), input[0], Instant.now()));
-              case IN_GAME -> actor.send(new ActorMessage(traceId, cmd));
-            }
-          });
-    } finally {
-      // 務必在結束後清除，避免執行緒池污染
-      MDC.clear();
+      PlayerActor actor = sessionRegistry.get(session.getId());
+      if (actor != null) {
+        // C. 解析指令 (JSON -> Record)
+        GameCommand cmd =
+            services.objectMapper().readValue(message.getPayload(), GameCommand.class);
+
+        // D. 裝入信封並投遞
+        // 這裡不綁定 ScopedValue，因為要跨執行緒傳遞
+        actor.send(new ActorMessage(traceId, cmd));
+      } else {
+        // 找不到 Actor，通常代表連線異常或已被踢除
+        log.warn("[{}] 收到訊息但找不到 Actor，關閉連線: {}", traceId, session.getId());
+        session.close();
+      }
+    } catch (Exception e) {
+      // JSON 解析失敗或其他錯誤
+      log.error("[{}] 訊息處理錯誤: {}", traceId, e.getMessage());
+      // 選擇性：回傳錯誤訊息給 Client
     }
 
 
+    /*
+     * // 解析 JSON GameCommand cmd = objectMapper.readValue(message.getPayload(), GameCommand.class);
+     * // 1. 使用 Pattern Matching 直接取出 text，避免使用 cmd.toString() if (!(cmd instanceof
+     * GameCommand.Input(var text))) { return; }
+     *
+     * String[] input = parseInput(text);
+     *
+     * // 在處理開始前 MDC.put("traceId", traceId); try { ScopedValue.where(MudContext.TRACE_ID,
+     * traceId).where(MudContext.CURRENT_PLAYER, actor) .run(() -> { switch
+     * (actor.getConnectionState()) { case CONNECTED -> eventPublisher.publishEvent( new
+     * SystemEvent.Authenticate(session.getId(), input[0], Instant.now())); case CREATING_USER ->
+     * eventPublisher.publishEvent( new SystemEvent.RegisterUsername(session.getId(), input[0],
+     * Instant.now())); case CREATING_PASS -> eventPublisher.publishEvent( new
+     * SystemEvent.RegisterPassword(session.getId(), input[0], Instant.now())); case ENTERING_PASS
+     * -> eventPublisher .publishEvent(new SystemEvent.Login(session.getId(), input[0],
+     * Instant.now())); case PLAYING -> actor.send(new ActorMessage(traceId, cmd)); } }); } finally
+     * { // 務必在結束後清除，避免執行緒池污染 MDC.clear(); }
+     *
+     */
 
     // 收到訊息，使用 ScopedValue 綁定 TraceID (用於 Handler 內的 Log)
 
@@ -188,9 +195,20 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
 
   @Override
   public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-    sessionRegistry.unregister(session.getId());
-    eventPublisher.publishEvent(new SessionEvent.Closed(session.getId(), status.getReason(),
-        status.getCode(), Instant.now()));
+
+    // 從 Registry 移除並取得 Actor
+    PlayerActor actor = sessionRegistry.remove(session.getId());
+
+    if (actor != null) {
+      log.info("連線關閉: {} (Actor: {})", session.getId(), actor.getId());
+
+      // 通知 Actor 執行清理邏輯
+      // (如果是 Guest 則直接停止，如果是正式玩家則觸發存檔與從 WorldManager 移除)
+      actor.handleDisconnect();
+    }
+
+    // eventPublisher.publishEvent(new SessionEvent.Closed(session.getId(), status.getReason(),
+    // status.getCode(), Instant.now()));
   }
 
   /**

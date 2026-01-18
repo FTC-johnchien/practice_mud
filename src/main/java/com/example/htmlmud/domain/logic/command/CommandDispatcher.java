@@ -1,94 +1,94 @@
 package com.example.htmlmud.domain.logic.command;
 
-import java.util.concurrent.CompletableFuture;
-import org.springframework.stereotype.Service;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.springframework.stereotype.Component;
 import com.example.htmlmud.domain.actor.PlayerActor;
-import com.example.htmlmud.domain.actor.RoomActor;
-import com.example.htmlmud.domain.model.map.RoomExit;
-import com.example.htmlmud.protocol.RoomMessage;
-import com.example.htmlmud.service.world.WorldManager;
+import com.example.htmlmud.domain.logic.command.annotation.CommandAlias;
+import com.example.htmlmud.domain.logic.command.impl.MoveCommand;
+import com.example.htmlmud.domain.model.Direction;
+import lombok.extern.slf4j.Slf4j;
 
-@Service
+@Slf4j
+@Component
 public class CommandDispatcher {
 
-  private final WorldManager worldManager;
+  // 指令註冊表: "look" -> LookCommand Object
+  private final Map<String, PlayerCommand> commandMap = new HashMap<>();
 
-  public CommandDispatcher(WorldManager worldManager) {
-    this.worldManager = worldManager;
-  }
+  // Spring 會自動注入所有實作 PlayerCommand 的 Bean (LookCommand, MoveCommand...)
+  public CommandDispatcher(List<PlayerCommand> commands) {
+    for (PlayerCommand cmd : commands) {
+      // 1. 註冊主鍵 (例如 "look", "move")
+      register(cmd.getKey(), cmd);
 
-  public void dispatch(PlayerActor player, String input) {
-    String[] parts = input.trim().split("\\s+", 2);
-    String command = parts[0].toLowerCase();
-    String argument = (parts.length > 1) ? parts[1] : "";
+      // 2. 【核心修改】檢查是否有 Alias 註解
+      if (cmd.getClass().isAnnotationPresent(CommandAlias.class)) {
+        CommandAlias annotation = cmd.getClass().getAnnotation(CommandAlias.class);
 
-    switch (command) {
-      case "look", "l" -> handleLook(player);
-      case "move", "m", "n", "s", "e", "w" -> handleMove(player, command, argument); // 支援簡寫
-      case "say" -> handleSay(player, argument);
-      default -> player.sendText("你是誰？你想去哪？(未知的指令)");
+        // 3. 註冊所有別名
+        for (String alias : annotation.value()) {
+          register(alias, cmd);
+        }
+      }
+
+      // 額外處理 MoveCommand 的方向縮寫 (因為這不是單純的別名，還涉及參數轉換)
+      // 建議還是保留在程式碼裡特殊處理，或者用另一種 @DirectionAlias 處理
+      registerDirectionAliases(commands);
     }
   }
 
-  // --- 實作 Look 指令 ---
-  private void handleLook(PlayerActor player) {
-    int roomId = player.getCurrentRoomId();
-    RoomActor room = worldManager.getRoomActor(roomId);
-
-    // 1. 建立 Future 接收結果
-    CompletableFuture<String> future = new CompletableFuture<>();
-
-    // 2. 發送訊息給房間 (非同步)
-    room.send(new RoomMessage.Look(player.getId(), future));
-
-    // 3. 當房間回傳結果時，傳送給玩家 (這段會在 Platform Thread 或 VT 上執行)
-    future.thenAccept(description -> player.sendText(description));
+  private void register(String key, PlayerCommand cmd) {
+    commandMap.put(key.toLowerCase(), cmd);
   }
 
-  // --- 實作 Move 指令 ---
-  private void handleMove(PlayerActor player, String cmd, String arg) {
-    // 處理方向縮寫
-    String direction = switch (cmd) {
-      case "n" -> "north";
-      case "s" -> "south";
-      case "e" -> "east";
-      case "w" -> "west";
-      default -> (arg.isEmpty() ? cmd : arg); // 如果是 "move north"
-    };
+  // 處理方向鍵 (n, s, e, w)
+  private void registerDirectionAliases(List<PlayerCommand> commands) {
+    // 找到 MoveCommand
+    PlayerCommand moveCmd =
+        commands.stream().filter(c -> c.getKey().equals("move")).findFirst().orElse(null);
 
-    // 1. 檢查當前房間是否有這個出口
-    // 注意：這裡我們直接讀取 Template，因為這是不變的，不需要問 RoomActor (效能優化)
-    RoomActor currentRoom = worldManager.getRoomActor(player.getCurrentRoomId());
-    RoomExit exit = currentRoom.getTemplate().exits().get(direction);
+    if (moveCmd != null) {
+      for (Direction d : Direction.values()) {
+        register(d.getShortName(), moveCmd); // n, s, e, w
+        register(d.getFullName(), moveCmd); // north, south...
+      }
+    }
+  }
 
-    if (exit == null) {
-      player.sendText("那個方向沒有路。");
+  /**
+   * 核心派發邏輯
+   *
+   * @param input 玩家輸入的原始字串，例如 "look north" 或 "kill goblin"
+   */
+  public void dispatch(PlayerActor actor, String input) {
+    if (input == null || input.isBlank())
       return;
+
+    // 1. 切割字串： "kill goblin" -> key="kill", args="goblin"
+    String[] parts = input.trim().split("\\s+", 2); // 只切成兩份
+    String key = parts[0].toLowerCase();
+    String args = parts.length > 1 ? parts[1] : "";
+
+    log.info("key:{}, args:{}", key, args);
+    // 2. 查找指令
+    PlayerCommand command = commandMap.get(key);
+
+    if (command != null) {
+      // 【關鍵修正】
+      // 如果玩家輸入的是 "n"，我們需要把 "n" 當作參數傳給 MoveCommand
+      // 或者是 MoveCommand 內部 logic 要知道 "n" 等於 "move n"
+      if (command instanceof MoveCommand && Direction.parse(key) != null) {
+        // 如果指令本身就是方向 (例如輸入 "n")，把 key 當作 args 傳進去
+        command.execute(actor, key);
+      } else {
+        // 否則正常執行 (例如 "move north")
+        command.execute(actor, args);
+      }
+    } else {
+      // 4. 找不到指令的預設處理
+      actor.reply("我不懂 '" + key + "' 是什麼意思。輸入 'help' 查看指令列表。");
     }
-
-    // TODO: 檢查門是否上鎖 (ex: if (exit.locked()) ...)
-
-    // 2. 執行移動邏輯 (兩階段提交：先離開，再進入)
-    int oldRoomId = player.getCurrentRoomId();
-    int newRoomId = exit.targetRoomId();
-
-    // 2a. 通知舊房間：玩家離開
-    currentRoom.send(new RoomMessage.PlayerLeave(player.getId()));
-
-    // 2b. 更新玩家狀態
-    player.setCurrentRoomId(newRoomId);
-
-    // 2c. 通知新房間：玩家進入
-    RoomActor newRoom = worldManager.getRoomActor(newRoomId);
-    CompletableFuture<Void> enterFuture = new CompletableFuture<>();
-    newRoom.send(new RoomMessage.PlayerEnter(player, enterFuture));
-
-    // 2d. 進入完成後，自動執行 Look
-    enterFuture.thenRun(() -> handleLook(player));
-  }
-
-  private void handleSay(PlayerActor player, String content) {
-    RoomActor room = worldManager.getRoomActor(player.getCurrentRoomId());
-    room.send(new RoomMessage.Say(player.getId(), content));
   }
 }

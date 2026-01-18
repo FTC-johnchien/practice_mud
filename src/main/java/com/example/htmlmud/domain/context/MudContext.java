@@ -22,7 +22,7 @@ public class MudContext {
 
   // 輔助方法：取得當前 TraceId，沒綁定就回傳 "SYSTEM"
   public static String traceId() {
-    return TRACE_ID.isBound() ? TRACE_ID.get() : "SYSTEM";
+    return TRACE_ID.isBound() ? TRACE_ID.get() : "UNKNOWN";
   }
 
 }

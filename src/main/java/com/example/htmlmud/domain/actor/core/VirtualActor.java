@@ -12,6 +12,7 @@ public abstract class VirtualActor<T> {
   // 每個 Actor 都有自己的信箱
   protected final BlockingQueue<T> mailbox = new LinkedBlockingQueue<>();
   private final AtomicBoolean running = new AtomicBoolean(true);
+  private final AtomicBoolean started = new AtomicBoolean(false);
   private final String actorName;
 
   public VirtualActor(String actorName) {
@@ -20,7 +21,11 @@ public abstract class VirtualActor<T> {
 
   // 啟動 Actor：這會生成一個專屬的 Virtual Thread
   public void start() {
-    Thread.ofVirtual().name("actor-" + actorName).start(this::runLoop);
+    if (started.compareAndSet(false, true)) {
+      Thread.ofVirtual().name("actor-" + actorName).start(this::runLoop);
+    } else {
+      log.warn("Actor [{}] 已經啟動，忽略重複的啟動請求。", actorName);
+    }
   }
 
   // 非阻塞投遞訊息 (給外部呼叫用)
@@ -36,7 +41,6 @@ public abstract class VirtualActor<T> {
       while (running.get()) {
         // 這裡會 Block，虛擬執行緒會 Unmount，不佔用 OS Thread
         T message = mailbox.take();
-        log.info("take -----------------------------------------------------");
         handleMessage(message);
       }
     } catch (InterruptedException e) {

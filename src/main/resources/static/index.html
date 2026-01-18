@@ -52,11 +52,15 @@
                     const msg = JSON.parse(event.data);
 
                     // 處理模式切換：USER_MODE 為一般文字，PWD_MODE 為密碼隱碼
-                    if (msg.type === 'USER_MODE') {
-                        input.type = 'text';
-                    } else if (msg.type === 'PWD_MODE') {
+                    if (msg.type === 'PWD_MODE') {
                         input.type = 'password';
+                    } else {
+                        input.type = 'text';
                     }
+
+                    // if (msg.type === 'USER_MODE') {
+                    //     input.type = 'text';
+                    // }
 
                     // 只要訊息包含內容就進行顯示 (包含 TEXT, USER_MODE, PWD_MODE 的提示字)
                     if (msg.content) {

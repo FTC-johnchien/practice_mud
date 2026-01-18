@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 // 2. 房間 (Room)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record Room(int id, // e.g., 1001
+public record RoomTemplate(int id, // e.g., 1001
     String title, // e.g., "村莊廣場"
     @JsonProperty("desc") String description, // 描述
     List<String> flags, // e.g., ["SAFE", "OUTDOORS"]
