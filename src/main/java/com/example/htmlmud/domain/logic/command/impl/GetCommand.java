@@ -7,14 +7,13 @@ import com.example.htmlmud.domain.context.GameServices;
 import com.example.htmlmud.domain.logic.command.PlayerCommand;
 import com.example.htmlmud.domain.logic.command.annotation.CommandAlias;
 import com.example.htmlmud.protocol.RoomMessage;
+import com.example.htmlmud.service.world.WorldManager;
 import lombok.RequiredArgsConstructor;
 
 @Component
 @CommandAlias("get")
 @RequiredArgsConstructor
 public class GetCommand implements PlayerCommand {
-
-  private final GameServices services;
 
   @Override
   public String getKey() {
@@ -31,7 +30,7 @@ public class GetCommand implements PlayerCommand {
 
     // 2. 找到房間 Actor
     Integer roomId = actor.getCurrentRoomId();
-    RoomActor room = services.worldManager().getRoomActor(roomId);
+    RoomActor room = actor.getWorldManager().getRoomActor(roomId);
 
     // 3. 發送請求 (這是非同步的)
     // 注意：這裡有兩種做法

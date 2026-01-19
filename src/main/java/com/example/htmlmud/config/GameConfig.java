@@ -14,10 +14,35 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Configuration
 public class GameConfig {
   @Bean
-  public GameServices gameServices(AuthService authService, PlayerService playerService,
-      PlayerPersistenceService dispatcher, WorldManager worldManager, ObjectMapper objectMapper,
-      ApplicationEventPublisher eventPublisher, ScheduledExecutorService scheduler) {
-    return new GameServices(authService, playerService, dispatcher, worldManager, objectMapper,
-        eventPublisher, scheduler);
+  public GameServices gameServices(
+
+      AuthService authService,
+
+      PlayerService playerService,
+
+      PlayerPersistenceService dispatcher,
+
+      // WorldManager worldManager,
+
+      ObjectMapper objectMapper,
+
+      ApplicationEventPublisher eventPublisher,
+
+      ScheduledExecutorService scheduler) {
+    return new GameServices(
+
+        authService,
+
+        playerService,
+
+        dispatcher,
+
+        // worldManager,
+
+        objectMapper,
+
+        eventPublisher,
+
+        scheduler);
   }
 }

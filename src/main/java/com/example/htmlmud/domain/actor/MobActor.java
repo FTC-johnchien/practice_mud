@@ -17,15 +17,15 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class MobActor extends LivingActor {
 
+  // 仇恨列表 (Key: 攻擊者 ID字串, Value: 仇恨值)
+  // 因為 ID 已改為 UUID String，這裡的 Key 也同步調整為 String
+  protected final Map<String, Integer> aggroTable = new HashMap<>();
+
   @Getter
   private final MobTemplate template;
 
   private ScheduledFuture<?> aiTask; // Heartbeat 排程
   private MobBehavior behavior; // AI 行為 (策略模式)
-
-  // 仇恨列表 (Key: 攻擊者 ID字串, Value: 仇恨值)
-  // 因為 ID 已改為 UUID String，這裡的 Key 也同步調整為 String
-  protected final Map<String, Integer> aggroTable = new HashMap<>();
 
   /**
    * 建構子： 1. 接收 Template 與 Services 2. 自動生成 UUID 3. 自動從 Template 建立 LivingState
@@ -36,9 +36,6 @@ public class MobActor extends LivingActor {
     super(UUID.randomUUID().toString(), createInitialState(template), gameServices);
 
     this.template = template;
-    this.name = this.template.name();
-    this.displayName = this.template.name();
-    // this.description = this.template.description();
 
     // 初始化行為
     initBehavior();
@@ -164,7 +161,7 @@ public class MobActor extends LivingActor {
     super.onDeath(killerId);
     stopHeartbeat();
 
-    log.info("{} died. Killer: {}", this.name, killerId);
+    log.info("{} died. Killer: {}", this.template.name(), killerId);
     // 觸發掉寶、給予經驗值等邏輯...
   }
 

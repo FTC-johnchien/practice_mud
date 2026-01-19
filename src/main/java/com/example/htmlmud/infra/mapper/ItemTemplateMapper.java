@@ -2,11 +2,16 @@ package com.example.htmlmud.infra.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
 import com.example.htmlmud.domain.model.map.ItemTemplate;
 import com.example.htmlmud.infra.persistence.entity.ItemTemplateEntity;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = "spring",
+    // 忽略沒對應到的欄位 (重要！防止 MapStruct 報錯說 record 缺欄位)
+    unmappedTargetPolicy = ReportingPolicy.IGNORE,
+    // 當來源是 null 時不覆蓋目標 (選用，視需求而定)
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface ItemTemplateMapper {
 
   // 1. Entity -> Record (載入時用)

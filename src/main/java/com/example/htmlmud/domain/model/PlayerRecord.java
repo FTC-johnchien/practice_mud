@@ -10,7 +10,7 @@ public record PlayerRecord(
 
     String name,
 
-    String displayName,
+    String nickname,
 
     Integer currentRoomId,
 

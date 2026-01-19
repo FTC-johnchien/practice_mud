@@ -21,6 +21,7 @@ import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.json.LivingState;
 import com.example.htmlmud.domain.actor.MobActor;
 import com.example.htmlmud.domain.model.PlayerRecord;
+import com.example.htmlmud.domain.model.RoomStateRecord;
 import com.example.htmlmud.domain.model.map.Area;
 import com.example.htmlmud.domain.model.map.ItemTemplate;
 import com.example.htmlmud.domain.model.map.RoomTemplate;
@@ -29,10 +30,10 @@ import com.example.htmlmud.domain.model.map.MobTemplate;
 import com.example.htmlmud.domain.model.map.MobReset;
 import com.example.htmlmud.infra.mapper.PlayerMapper;
 import com.example.htmlmud.infra.persistence.entity.ItemTemplateEntity;
-import com.example.htmlmud.infra.persistence.entity.PlayerEntity;
-import com.example.htmlmud.infra.persistence.entity.RoomEntity;
+import com.example.htmlmud.infra.persistence.entity.CharacterEntity;
+import com.example.htmlmud.infra.persistence.entity.RoomStateEntity;
 import com.example.htmlmud.infra.persistence.repository.ItemTemplateRepository;
-import com.example.htmlmud.infra.persistence.repository.RoomRepository;
+import com.example.htmlmud.infra.persistence.repository.RoomStateRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -49,7 +50,7 @@ public class WorldManager {
   // private final GameServices gameServices;
   private final ObjectMapper objectMapper;
   private final ResourcePatternResolver resourceResolver;
-  private final RoomRepository roomRepository;
+  private final RoomStateRepository roomStateRepository;
   private final ItemTemplateRepository itemTemplateRepository;
   private final ItemTemplateMapper itemTemplateMapper;
 
@@ -144,17 +145,16 @@ public class WorldManager {
   // 啟動時載入世界
   @PostConstruct
   public void loadWorld2() {
-    List<RoomEntity> entities = roomRepository.findAll();
+    List<RoomStateEntity> entities = roomStateRepository.findAll();
 
-    for (RoomEntity e : entities) {
+    for (RoomStateEntity e : entities) {
       // 1. 構建靜態 Template
-      RoomTemplate tpl = new RoomTemplate(e.getId(), e.getName(), e.getDescription(),
-          new ArrayList<>(), e.getExits(), new ConcurrentHashMap<>());
+      RoomStateRecord tpl = new RoomStateRecord(e.getId(), e.getDroppedItems());
 
       // 2. 構建動態 Actor (注入掉落物)
-      RoomActor actor = new RoomActor(tpl, e.getDroppedItems());
+      // RoomActor actor = new RoomActor(tpl, e.getDroppedItems());
 
-      activeRooms.put(e.getId(), actor);
+      // activeRooms.put(e.getId(), actor);
     }
   }
 
@@ -283,37 +283,37 @@ public class WorldManager {
    * @param templateId 物品原型 ID
    * @param randomize 是否進行隨機數值浮動
    */
-  public GameItem createItem(int templateId, boolean randomize) {
-    ItemTemplate tpl = loadItemTemplate(templateId);
+  // public GameItem createItem(int templateId, boolean randomize) {
+  // ItemTemplate tpl = loadItemTemplate(templateId);
 
-    GameItem item = new GameItem();
-    item.setId(UUID.randomUUID().toString());
-    item.setTemplateId(tpl.id());
-    item.setCurrentDurability(tpl.maxDurability());
-    item.setAmount(1);
+  // GameItem item = new GameItem();
+  // item.setId(UUID.randomUUID().toString());
+  // item.setTemplateId(tpl.id());
+  // item.setCurrentDurability(tpl.maxDurability());
+  // item.setAmount(1);
 
-    // --- 處理隨機邏輯 (RNG) ---
-    if (randomize) {
-      // 1. 隨機浮動耐久度 (例如：全新 ~ 80% 新)
-      // item.setCurrentDurability(...);
+  // // --- 處理隨機邏輯 (RNG) ---
+  // if (randomize) {
+  // // 1. 隨機浮動耐久度 (例如：全新 ~ 80% 新)
+  // // item.setCurrentDurability(...);
 
-      // 2. 隨機詞綴 (例如 10% 機率出現 +1 攻擊)
-      if (ThreadLocalRandom.current().nextDouble() < 0.1) {
-        item.getDynamicProps().put("attack_bonus", 1);
-        item.getDynamicProps().put("quality", "RARE");
-      }
-    }
+  // // 2. 隨機詞綴 (例如 10% 機率出現 +1 攻擊)
+  // if (ThreadLocalRandom.current().nextDouble() < 0.1) {
+  // item.getDynamicProps().put("attack_bonus", 1);
+  // item.getDynamicProps().put("quality", "RARE");
+  // }
+  // }
 
-    return item;
-  }
+  // return item;
+  // }
 
-  public ItemTemplate loadItemTemplate(int templateId) {
-    // 1. DB -> Entity
-    ItemTemplateEntity entity = itemTemplateRepository.findById(templateId).orElseThrow(
-        () -> new IllegalArgumentException("ItemTemplate ID not found: " + templateId));
+  // public ItemTemplate loadItemTemplate(int templateId) {
+  // // 1. DB -> Entity
+  // ItemTemplateEntity entity = itemTemplateRepository.findById(templateId).orElseThrow(
+  // () -> new IllegalArgumentException("ItemTemplate ID not found: " + templateId));
 
-    // 2. Entity -> Record (MapStruct 自動轉)
-    // 注意：這裡得到的 Record 內含的 State 是 Entity 裡解序列化出來的
-    return itemTemplateMapper.toRecord(entity);
-  }
+  // // 2. Entity -> Record (MapStruct 自動轉)
+  // // 注意：這裡得到的 Record 內含的 State 是 Entity 裡解序列化出來的
+  // return itemTemplateMapper.toRecord(entity);
+  // }
 }

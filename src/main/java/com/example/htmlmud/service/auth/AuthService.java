@@ -8,9 +8,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.example.htmlmud.domain.model.json.LivingState;
-import com.example.htmlmud.infra.persistence.entity.PlayerEntity;
+import com.example.htmlmud.infra.persistence.entity.CharacterEntity;
 import com.example.htmlmud.infra.persistence.entity.UserEntity;
-import com.example.htmlmud.infra.persistence.repository.PlayerRepository;
+import com.example.htmlmud.infra.persistence.repository.CharacterRepository;
 import com.example.htmlmud.infra.persistence.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ public class AuthService {
 
   private final UserRepository userRepository;
 
-  private final PlayerRepository playerRepository;
+  private final CharacterRepository playerRepository;
 
 
   public boolean exists(String username) {
@@ -40,7 +40,7 @@ public class AuthService {
    * 註冊新帳號
    */
   @Transactional
-  public PlayerEntity register(String username, String rawPassword) {
+  public CharacterEntity register(String username, String rawPassword) {
     if (userRepository.existsByUsername(username)) {
       throw new IllegalArgumentException("帳號已存在");
     }
@@ -50,16 +50,16 @@ public class AuthService {
         .passwordHash(passwordEncoder.encode(rawPassword)).createdAt(now).lastLoginAt(now).build();
     userRepository.save(newUser);
 
-    PlayerEntity playerEntity = new PlayerEntity();
-    playerEntity.setAccountId(newUser.getId());
-    playerEntity.setName(username);
-    playerEntity.setDisplayName(username);
-    playerEntity.setCurrentRoomId(0);
-    playerEntity.setState(new LivingState());
-    playerEntity.setCreatedAt(now);
-    playerEntity.setModifyAt(now);
+    CharacterEntity characterEntity = new CharacterEntity();
+    characterEntity.setUid(newUser.getId());
+    characterEntity.setName(username);
+    // characterEntity.setNickname(username);
+    characterEntity.setCurrentRoomId(0);
+    characterEntity.setState(new LivingState());
+    characterEntity.setCreatedAt(now);
+    characterEntity.setModifyAt(now);
 
-    return playerRepository.save(playerEntity);
+    return playerRepository.save(characterEntity);
   }
 
   /**

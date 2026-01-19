@@ -13,7 +13,9 @@ public record MobTemplate(
 
     MobKind kind,
 
-    String description,
+    String roomDescription,
+
+    String lookDescription,
 
     int maxHp,
 

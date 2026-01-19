@@ -12,7 +12,8 @@ import lombok.Data;
 public class ItemTemplateEntity {
 
   @Id
-  private Integer id;
+  @Column(nullable = false, columnDefinition = "INT(11) UNSIGNED")
+  private long id;
 
   private String name;
 

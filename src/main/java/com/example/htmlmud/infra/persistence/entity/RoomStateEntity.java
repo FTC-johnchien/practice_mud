@@ -13,24 +13,13 @@ import jakarta.persistence.Table;
 import lombok.Data;
 
 @Entity
-@Table(name = "rooms")
+@Table(name = "rooms_state")
 @Data
-public class RoomEntity {
+public class RoomStateEntity {
 
   @Id
-  private Integer id;
-
-  private Integer worldId;
-
-  private Integer areaId;
-
-  private String name;
-
-  private String description;
-
-  @JdbcTypeCode(SqlTypes.JSON)
-  @Column(name = "exits_json")
-  private Map<String, RoomExit> exits;
+  @Column(nullable = false, columnDefinition = "INT(11) UNSIGNED")
+  private long id;
 
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "dropped_items_json")

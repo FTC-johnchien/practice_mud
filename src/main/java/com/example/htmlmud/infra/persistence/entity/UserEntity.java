@@ -21,9 +21,11 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class UserEntity {
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Integer id;
+  @Column(columnDefinition = "INT(11) UNSIGNED NOT NULL AUTO_INCREMENT")
+  private long id;
 
   @Column(unique = true, nullable = false)
   private String username;

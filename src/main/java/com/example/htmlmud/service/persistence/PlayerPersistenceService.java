@@ -2,8 +2,8 @@ package com.example.htmlmud.service.persistence;
 
 import com.example.htmlmud.domain.model.PlayerRecord;
 import com.example.htmlmud.infra.mapper.PlayerMapper;
-import com.example.htmlmud.infra.persistence.entity.PlayerEntity;
-import com.example.htmlmud.infra.persistence.repository.PlayerRepository;
+import com.example.htmlmud.infra.persistence.entity.CharacterEntity;
+import com.example.htmlmud.infra.persistence.repository.CharacterRepository;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class PlayerPersistenceService {
 
   private final PlayerMapper mapper; // 注入 MapStruct
-  private final PlayerRepository playerRepository;
+  private final CharacterRepository playerRepository;
 
   // 1. 緩衝佇列 (Thread-Safe)
   // LinkedBlockingQueue 是最適合生產者-消費者模式的結構
@@ -135,21 +135,5 @@ public class PlayerPersistenceService {
     }
 
     log.info("PersistenceService shutdown complete.");
-  }
-
-  // --- 輔助方法：DTO 轉換 ---
-  // 將 Record 轉回 Entity 準備存檔
-  private PlayerEntity toEntity(PlayerRecord r) {
-    // 注意：這裡我們建立一個新的 Entity 物件，只填入 ID 和要更新的欄位
-    // Hibernate save() 檢查 ID 存在會執行 merge/update
-    return PlayerEntity.builder().id(r.id()).name(r.name()) // 雖然通常不改 username，但 JPA 需要
-        .displayName(r.displayName()).currentRoomId(r.currentRoomId()).state(r.state()) // 更新 JSON
-                                                                                        // 狀態
-        // .inventory(r.inventory()) // 未來加入
-        // .lastLoginAt(LocalDateTime.now()) // 順便更新最後活動時間
-        // 密碼等敏感欄位如果是 null，要小心不要覆蓋掉 DB 裡的舊資料
-        // 實務上建議：如果是 null，先查 DB 再填，或者使用 @DynamicUpdate
-        // 但簡單起見，這裡假設 Record 包含了所有資料
-        .build();
   }
 }

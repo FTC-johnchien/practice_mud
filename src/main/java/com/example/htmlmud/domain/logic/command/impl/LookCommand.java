@@ -12,6 +12,7 @@ import com.example.htmlmud.domain.logic.command.annotation.CommandAlias;
 import com.example.htmlmud.domain.model.MobKind;
 import com.example.htmlmud.infra.util.AnsiColor;
 import com.example.htmlmud.infra.util.ColorText;
+import com.example.htmlmud.service.world.WorldManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,9 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @CommandAlias({"l", "see", "ls"}) // 支援 l, see, ls
 public class LookCommand implements PlayerCommand {
-
-  // 注入聚合服務，獲取 WorldManager
-  private final GameServices services;
 
   @Override
   public String getKey() {
@@ -35,7 +33,7 @@ public class LookCommand implements PlayerCommand {
     Integer roomId = actor.getCurrentRoomId();
 
     // 2. 查詢房間資料 (使用 WorldManager)
-    RoomActor roomActor = services.worldManager().getRoomActor(roomId);
+    RoomActor roomActor = actor.getWorldManager().getRoomActor(roomId);
 
     if (roomActor == null) {
       actor.reply("你處於一片虛空之中... (RoomID: " + roomId + " 不存在)");
@@ -79,7 +77,7 @@ public class LookCommand implements PlayerCommand {
 
     // 1. 篩選出 其他玩家 (亮藍色，排除自己)
     List<String> otherPlayerNames = players.stream().filter(p -> !p.getId().equals(actor.getId()))
-        .map(p -> ColorText.wrap(AnsiColor.BRIGHT_BLUE, p.getDisplayName())).toList();
+        .map(p -> ColorText.wrap(AnsiColor.BRIGHT_BLUE, p.getNickname())).toList();
 
     // 2. 篩選出 NPC (綠色顯示)
     List<String> npcNames = mobs.stream().filter(m -> m.getTemplate().kind() == MobKind.FRIENDLY)

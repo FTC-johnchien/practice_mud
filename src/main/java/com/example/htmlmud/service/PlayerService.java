@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.actor.PlayerActor;
 import com.example.htmlmud.domain.model.PlayerRecord;
 import com.example.htmlmud.infra.mapper.PlayerMapper;
-import com.example.htmlmud.infra.persistence.entity.PlayerEntity;
-import com.example.htmlmud.infra.persistence.repository.PlayerRepository;
+import com.example.htmlmud.infra.persistence.entity.CharacterEntity;
+import com.example.htmlmud.infra.persistence.repository.CharacterRepository;
 import com.example.htmlmud.infra.persistence.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -17,7 +17,7 @@ public class PlayerService {
 
   private final UserRepository userRepository;
 
-  private final PlayerRepository playerRepository;
+  private final CharacterRepository characterRepository;
 
   private final PlayerMapper mapper; // 注入 MapStruct
 
@@ -41,10 +41,10 @@ public class PlayerService {
     return stored != null && stored.equals(password);
   }
 
-  public PlayerRecord loadRecord(Integer accountId, String username) {
+  public PlayerRecord loadRecord(long uid, String username) {
     // 1. DB -> Entity
-    PlayerEntity entity = playerRepository.findByAccountIdAndName(accountId, username).orElseThrow(
-        () -> new IllegalArgumentException("角色不存在 accountId:" + accountId + ", name:" + username));
+    CharacterEntity entity = characterRepository.findByUidAndName(uid, username)
+        .orElseThrow(() -> new IllegalArgumentException("角色不存在 uid:" + uid + ", name:" + username));
 
     // 2. Entity -> Record (MapStruct 自動轉)
     // 注意：這裡得到的 Record 內含的 State 是 Entity 裡解序列化出來的

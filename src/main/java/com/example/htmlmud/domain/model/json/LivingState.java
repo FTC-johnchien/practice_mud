@@ -8,6 +8,8 @@ import java.util.Map;
 // 這個物件會被序列化存入 players.state_json 和 mobs.state_json
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LivingState {
+  public String gender;
+
   public int level = 1;
   public int hp;
   public int maxHp;

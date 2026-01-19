@@ -22,27 +22,28 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "characters",
-    indexes = {@Index(name = "idx_account_id_name", columnList = "account_id,name", unique = true)})
+    indexes = {@Index(name = "idx_uid_name", columnList = "uid,name", unique = true)})
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PlayerEntity {
+public class CharacterEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   private String id;
 
   // 邏輯關聯 (這裡存 ID 比較簡單，避免 N+1 或 Lazy Loading 問題)
-  @Column(name = "account_id", nullable = false)
-  private Integer accountId;
+  @Column(nullable = false, columnDefinition = "INT(11) UNSIGNED")
+  private long uid;
 
   private String name;
 
-  private String displayName;
+  private String nickname;
 
-  private String gender;
+  @Column(name = "look_description")
+  private String lookDescription;
 
   @Column(name = "current_room_id")
   private Integer currentRoomId;

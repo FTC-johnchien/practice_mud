@@ -58,4 +58,29 @@ public class ColorText {
   public static String heal(int amount) {
     return wrap(AnsiColor.NATURE_GREEN, String.valueOf(amount));
   }
+
+  // 房間名稱 (藍色)
+  public static String room(String name) {
+    return wrap(AnsiColor.BLUE, name);
+  }
+
+  // 房間描述 (白色)
+  public static String roomDesc(String desc) {
+    return wrap(AnsiColor.WHITE, desc);
+  }
+
+  // 出口名稱 (紫色)
+  public static String exit(String name) {
+    return wrap(AnsiColor.PURPLE, name);
+  }
+
+  // 物品描述 (白色)
+  public static String itemDesc(String desc) {
+    return wrap(AnsiColor.WHITE, desc);
+  }
+
+  // 物品稀有度 (紫色)
+  public static String rarity(String rarity) {
+    return wrap(AnsiColor.PURPLE, rarity);
+  }
 }

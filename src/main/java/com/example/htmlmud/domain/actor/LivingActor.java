@@ -2,7 +2,6 @@ package com.example.htmlmud.domain.actor;
 
 import com.example.htmlmud.domain.actor.core.VirtualActor;
 import com.example.htmlmud.domain.context.GameServices;
-import com.example.htmlmud.domain.model.GameObjectId;
 import com.example.htmlmud.domain.model.json.LivingState;
 import com.example.htmlmud.protocol.ActorMessage;
 import lombok.Getter;
@@ -19,13 +18,6 @@ public abstract class LivingActor extends VirtualActor<ActorMessage> {
   @Getter
   protected String id;
 
-  @Getter
-  protected String name;
-
-  @Getter
-  @Setter
-  protected String displayName;
-
   // 所有生物都有狀態 (HP/MP)
   @Getter
   protected LivingState state;
@@ -35,19 +27,15 @@ public abstract class LivingActor extends VirtualActor<ActorMessage> {
   @Setter
   protected int currentRoomId;
 
+  // 用來記錄進入房間的時間戳記 (奈秒精度以防同時進入)
+  @Getter
+  private long lastEnterRoomTime;
+
   public LivingActor(String id, LivingState state, GameServices services) {
     super(id); // Actor Name: "PLAYER:1"
     this.id = id;
     this.state = state;
     this.services = services;
-  }
-
-  // 供子類別 (PlayerActor) 呼叫，用來切換數據
-  protected void swapIdentity(String newId, String name, String displayName, LivingState state) {
-    this.id = newId;
-    this.name = name;
-    this.displayName = displayName;
-    this.state = state;
   }
 
   // --- 共用行為邏輯 ---
@@ -93,5 +81,10 @@ public abstract class LivingActor extends VirtualActor<ActorMessage> {
   // 定義抽象方法，子類別必須實作
   protected void onDeath(String killerId) {
 
+  }
+
+  // 當怪物進入房間時呼叫此方法
+  protected void markEnterRoom() {
+    this.lastEnterRoomTime = System.nanoTime();
   }
 }

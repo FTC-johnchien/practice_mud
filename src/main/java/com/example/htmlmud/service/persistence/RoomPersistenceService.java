@@ -7,8 +7,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.model.PlayerRecord;
 import com.example.htmlmud.domain.model.RoomStateRecord;
-import com.example.htmlmud.infra.persistence.entity.RoomEntity;
-import com.example.htmlmud.infra.persistence.repository.RoomRepository;
+import com.example.htmlmud.infra.persistence.entity.RoomStateEntity;
+import com.example.htmlmud.infra.persistence.repository.RoomStateRepository;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class RoomPersistenceService {
 
-  private final RoomRepository roomRepository;
+  private final RoomStateRepository roomRepository;
 
   // 1. 緩衝佇列 (Thread-Safe)
   // LinkedBlockingQueue 是最適合生產者-消費者模式的結構
@@ -56,7 +56,7 @@ public class RoomPersistenceService {
    * 3. 消費者迴圈 (批次寫入邏輯)
    */
   private void processQueue() {
-    log.info("Write-Behind DB Writer started.");
+    log.info("Write-Behind DB Writer Room started.");
 
     // 用來暫存批次資料的 List
     List<RoomStateRecord> batch = new ArrayList<>();

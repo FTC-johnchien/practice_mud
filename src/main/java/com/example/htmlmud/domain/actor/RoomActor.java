@@ -1,6 +1,7 @@
 package com.example.htmlmud.domain.actor;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,9 +37,6 @@ public class RoomActor extends VirtualActor<RoomMessage> {
     if (initialItems != null) {
       this.items.addAll(initialItems);
     }
-
-    // 3. 啟動 Actor (這會呼叫父類別的 start -> runLoop)
-    this.start();
   }
 
   // --- 實作父類別的抽象方法 ---
@@ -50,8 +48,8 @@ public class RoomActor extends VirtualActor<RoomMessage> {
       case RoomMessage.PlayerEnter(var player, var future) -> {
         log.info("Player {} entered room", player.getId());
         players.add(player);
-        broadcastToOthers(player.getId(), "看到 " + player.getDisplayName() + " 走了進來。");
-        log.debug("Player {} entered room {}", player.getDisplayName(), template.id());
+        broadcastToOthers(player.getId(), "看到 " + player.getNickname() + " 走了進來。");
+        log.debug("Player {} entered room {}", player.getNickname(), template.id());
         if (future != null)
           future.complete(null);
       }
@@ -59,7 +57,7 @@ public class RoomActor extends VirtualActor<RoomMessage> {
       case RoomMessage.PlayerLeave(var playerId) -> {
         players.stream().filter(p -> p.getId().equals(playerId)).findFirst().ifPresent(p -> {
           if (players.remove(p))
-            broadcastToOthers(playerId, p.getDisplayName() + " 離開了。");
+            broadcastToOthers(playerId, p.getNickname() + " 離開了。");
         });
       }
 
@@ -76,7 +74,7 @@ public class RoomActor extends VirtualActor<RoomMessage> {
 
         StringBuilder others = new StringBuilder();
         players.stream().filter(p -> !p.getId().equals(playerId))
-            .forEach(p -> others.append(p.getDisplayName()).append(" "));
+            .forEach(p -> others.append(p.getNickname()).append(" "));
 
         if (!others.isEmpty()) {
           sb.append("\u001B[35m[這裡有]: \u001B[0m").append(others).append("\r\n");
@@ -87,7 +85,7 @@ public class RoomActor extends VirtualActor<RoomMessage> {
       case RoomMessage.Say(var sourceId, var content) -> {
         PlayerActor speaker =
             players.stream().filter(p -> p.getId().equals(sourceId)).findFirst().orElse(null);
-        String name = (speaker != null) ? speaker.getDisplayName() : "有人";
+        String name = (speaker != null) ? speaker.getNickname() : "有人";
         broadcast(name + ": " + content);
       }
       case RoomMessage.TryPickItem(var itemId, var picker) -> {
@@ -106,12 +104,6 @@ public class RoomActor extends VirtualActor<RoomMessage> {
   }
 
   // --- 物品操作邏輯 ---
-
-  public void dropItem(GameItem item) {
-    items.add(item);
-    // 標記為 Dirty (需要存檔)
-    // WorldManager.markDirty(this.template.id());
-  }
 
   // public Optional<Item> pickItem(String keyword) {
   // 簡單搜尋邏輯
@@ -135,5 +127,69 @@ public class RoomActor extends VirtualActor<RoomMessage> {
   // 產生快照 (只存變動的部分)
   public RoomStateRecord toRecord() {
     return new RoomStateRecord(template.id(), new ArrayList<>(items));
+  }
+
+  public void addPlayer(PlayerActor player) {
+    player.markEnterRoom();
+    players.add(player);
+  }
+
+  public void removePlayer(PlayerActor player) {
+    players.remove(player);
+  }
+
+  public List<PlayerActor> getPlayersSnapshot() {
+    List<PlayerActor> players = new ArrayList<>(this.players);
+    players.sort(Comparator.comparing(PlayerActor::getNickname));
+    return players;
+  }
+
+  public void dropItem(GameItem item) {
+    items.add(item);
+    // 標記為 Dirty (需要存檔)
+    // WorldManager.markDirty(this.template.id());
+  }
+
+  public void removeItem(GameItem item) {
+    items.remove(item);
+    // 標記為 Dirty (需要存檔)
+    // WorldManager.markDirty(this.template.id());
+  }
+
+  public List<GameItem> getItemsSnapshot() {
+    return new ArrayList<>(items);
+  }
+
+
+
+  /**
+   * 處理怪物進入
+   */
+  public void addMob(MobActor mob) {
+    // 標記時間
+    mob.markEnterRoom();
+    mobs.add(mob);
+  }
+
+  /**
+   * 處理怪物離開
+   */
+  public void removeMob(MobActor mob) {
+    mobs.remove(mob);
+  }
+
+  /**
+   * 獲取有序快照 排序規則：先根據進入時間 (老鳥在前)，如果時間一樣，再比對 ID
+   */
+  public List<MobActor> getMobsSnapshot() {
+    // 1. 複製 (O(N))
+    List<MobActor> snapshot = new ArrayList<>(this.mobs);
+
+    // 2. 排序 (O(N log N))
+    // 對於一個房間通常只有 10~50 隻怪來說，這個開銷微乎其微
+    snapshot.sort(Comparator.comparingLong(MobActor::getLastEnterRoomTime) // 先比時間
+        .thenComparing(MobActor::getId)); // 時間相同比 ID (確保絕對順序)
+
+    return snapshot;
   }
 }

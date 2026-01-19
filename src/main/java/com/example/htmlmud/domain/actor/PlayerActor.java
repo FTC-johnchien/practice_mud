@@ -19,6 +19,7 @@ import com.example.htmlmud.domain.model.PlayerRecord;
 import com.example.htmlmud.domain.model.json.LivingState;
 import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.ConnectionState;
+import com.example.htmlmud.service.world.WorldManager;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -28,40 +29,56 @@ import lombok.extern.slf4j.Slf4j;
 public class PlayerActor extends LivingActor {
 
   @Getter
-  private final CommandDispatcher dispatcher;
+  private final CommandDispatcher commandDispatcher;
+
+  @Getter
+  private final WorldManager worldManager;
 
   @Getter
   private WebSocketSession session;
 
 
-  // 【關鍵】當前的行為腦
+  // 當前的行為腦
   private PlayerBehavior currentBehavior;
 
-  private boolean isDirty = false;
+  @Getter
+  @Setter
+  private String name;
+
+  @Getter
+  @Setter
+  private String nickname;
+
+  @Getter
+  @Setter
+  private String lookDescription;
+
 
   // Actor 內部狀態 (State Machine Context)
   @Getter
   @Setter
   private ConnectionState connectionState = ConnectionState.CONNECTED;
 
-  private CommandDispatcher commandDispatcher;
 
+  // 背包
+  @Getter
   private List<GameItem> inventory = new ArrayList<>();
 
+  private boolean isDirty = false;
 
-
-  public PlayerActor(WebSocketSession session, String id, LivingState state,
-      GameServices gameServices, CommandDispatcher dispatcher) {
+  private PlayerActor(WebSocketSession session, String id, LivingState state,
+      GameServices gameServices, CommandDispatcher commandDispatcher, WorldManager worldManager) {
     super(id, state, gameServices);
     this.session = session;
-    this.dispatcher = dispatcher;
+    this.worldManager = worldManager;
+    this.commandDispatcher = commandDispatcher;
   }
 
   // 工廠方法
   public static PlayerActor createGuest(WebSocketSession session, GameServices gameServices,
-      CommandDispatcher dispatcher) {
-    PlayerActor actor =
-        new PlayerActor(session, session.getId(), new LivingState(), gameServices, dispatcher);
+      CommandDispatcher commandDispatcher, WorldManager worldManager) {
+    PlayerActor actor = new PlayerActor(session, session.getId(), new LivingState(), gameServices,
+        commandDispatcher, worldManager);
     // 初始設定為 GuestBehavior
     actor.become(new GuestBehavior(gameServices));
     actor.inventory = new ArrayList<>();
@@ -303,7 +320,7 @@ public class PlayerActor extends LivingActor {
   // 供 GuestBehavior 呼叫：變身為正式玩家
   public void upgradeIdentity(PlayerRecord record) {
     this.fromRecord(record);
-    this.become(new InGameBehavior(services, dispatcher));
+    this.become(new InGameBehavior(services, commandDispatcher));
     log.info("Actor 變身成功: {} (InGameBehavior)", this.name);
   }
 
@@ -344,7 +361,7 @@ public class PlayerActor extends LivingActor {
     // 您必須確保 LivingState 有實作 deepCopy，否則會發生併發修改例外
     return new PlayerRecord(this.id, // ID
         this.name, // Username
-        this.displayName, // Nickname
+        this.nickname, // Nickname
         this.currentRoomId, // Room
         this.state.deepCopy(), // 【關鍵】深層複製 State
         new ArrayList<GameItem>(this.inventory) // Inventory
@@ -354,7 +371,7 @@ public class PlayerActor extends LivingActor {
   public void fromRecord(PlayerRecord record) {
     // 1. 更新基礎資料
     this.name = record.name();
-    this.displayName = record.displayName();
+    this.nickname = record.nickname();
     this.currentRoomId = record.currentRoomId();
     this.inventory = record.inventory();
 
