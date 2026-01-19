@@ -9,6 +9,8 @@ public record MobTemplate(
 
     String name,
 
+    String[] aliases,
+
     MobKind kind,
 
     String description,

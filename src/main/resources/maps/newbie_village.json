@@ -8,6 +8,7 @@
     {
       "id": 1,
       "name": "村長",
+      "aliases": ["oldman", "old_man"],
       "kind": "FRIENDLY",
       "description": "一位和藹可親的老人，守護著這個村莊。",
       "maxHp": 500,
@@ -19,6 +20,7 @@
     },
     {
       "id": 2,
+      "aliases": ["goblin"],
       "name": "小哥布林",
       "kind": "AGGRESSIVE",
       "description": "一隻綠皮膚的小怪物，看起來很不友善。",
@@ -31,6 +33,7 @@
     {
       "id": 3,
       "name": "大哥布林",
+      "aliases": ["goblin"],
       "kind": "AGGRESSIVE",
       "description": "一隻體形較大的綠皮膚怪物，看起來很不友善。",
       "maxHp": 100,

@@ -115,7 +115,7 @@ public class WorldManager {
 
                 for (int i = 0; i < reset.maxQty(); i++) {
                   // 建立 MobActor 並設定初始房間
-                  MobActor mobActor = new MobActor(mobTpl, new LivingState(), null);
+                  MobActor mobActor = new MobActor(mobTpl, null);
                   log.info("Spawned Mob: {} in Room: {}", mobTpl.name(), reset.roomId());
                   mobActor.setCurrentRoomId(reset.roomId());
                   log.info("MobTemplate:{}", objectMapper.writeValueAsString(mobActor));
