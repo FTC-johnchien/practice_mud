@@ -1,6 +1,7 @@
 package com.example.htmlmud.domain.actor;
 
 import com.example.htmlmud.domain.actor.core.VirtualActor;
+import com.example.htmlmud.domain.context.GameServices;
 import com.example.htmlmud.domain.model.GameObjectId;
 import com.example.htmlmud.domain.model.json.LivingState;
 import com.example.htmlmud.protocol.ActorMessage;
@@ -13,12 +14,16 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class LivingActor extends VirtualActor<ActorMessage> {
 
   @Getter
+  protected GameServices services;
+
+  @Getter
   protected String id;
 
   @Getter
   protected String name;
 
   @Getter
+  @Setter
   protected String displayName;
 
   // 所有生物都有狀態 (HP/MP)
@@ -30,10 +35,11 @@ public abstract class LivingActor extends VirtualActor<ActorMessage> {
   @Setter
   protected int currentRoomId;
 
-  public LivingActor(String id, LivingState state) {
+  public LivingActor(String id, LivingState state, GameServices services) {
     super(id); // Actor Name: "PLAYER:1"
     this.id = id;
     this.state = state;
+    this.services = services;
   }
 
   // 供子類別 (PlayerActor) 呼叫，用來切換數據
@@ -47,7 +53,7 @@ public abstract class LivingActor extends VirtualActor<ActorMessage> {
   // --- 共用行為邏輯 ---
 
   // 1. 受傷處理
-  public void takeDamage(int amount, GameObjectId attackerId) {
+  public void takeDamage(int amount, String attackerId) {
     if (state.isDead)
       return;
 
@@ -65,7 +71,7 @@ public abstract class LivingActor extends VirtualActor<ActorMessage> {
   }
 
   // 2. 死亡處理
-  protected void die(GameObjectId killerId) {
+  protected void die(String killerId) {
     this.state.hp = 0;
     this.state.isDead = true;
     log.info("{} has been slain by {}!", id, killerId);
@@ -80,6 +86,12 @@ public abstract class LivingActor extends VirtualActor<ActorMessage> {
     this.state.hp = Math.min(state.hp + amount, state.maxHp);
   }
 
+  protected void onAttacked(LivingActor attacker, int damage) {
+
+  }
+
   // 定義抽象方法，子類別必須實作
-  protected abstract void onDeath(GameObjectId killerId);
+  protected void onDeath(String killerId) {
+
+  }
 }

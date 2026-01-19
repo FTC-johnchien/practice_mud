@@ -1,41 +1,38 @@
 package com.example.htmlmud.service.persistence;
 
-import com.example.htmlmud.domain.model.PlayerRecord;
-import com.example.htmlmud.infra.mapper.PlayerMapper;
-import com.example.htmlmud.infra.persistence.entity.PlayerEntity;
-import com.example.htmlmud.infra.persistence.repository.PlayerRepository;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import org.springframework.stereotype.Service;
+import com.example.htmlmud.domain.model.PlayerRecord;
+import com.example.htmlmud.domain.model.RoomStateRecord;
+import com.example.htmlmud.infra.persistence.entity.RoomEntity;
+import com.example.htmlmud.infra.persistence.repository.RoomRepository;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PlayerPersistenceService {
+public class RoomPersistenceService {
 
-  private final PlayerMapper mapper; // 注入 MapStruct
-  private final PlayerRepository playerRepository;
+  private final RoomRepository roomRepository;
 
   // 1. 緩衝佇列 (Thread-Safe)
   // LinkedBlockingQueue 是最適合生產者-消費者模式的結構
-  private final BlockingQueue<PlayerRecord> saveQueue = new LinkedBlockingQueue<>();
+  private final BlockingQueue<RoomStateRecord> saveQueue = new LinkedBlockingQueue<>();
 
   // 控制迴圈的旗標
   private volatile boolean running = true;
 
+
   /**
    * 【對外 API】非同步存檔 Actor 呼叫這個方法時，幾乎是瞬間完成的。
    */
-  public void saveAsync(PlayerRecord record) {
+  public void saveAsync(RoomStateRecord record) {
     if (record == null)
       return;
 
@@ -45,13 +42,14 @@ public class PlayerPersistenceService {
     }
   }
 
+
   /**
    * 2. 啟動背景消費者執行緒 使用 @PostConstruct 在 Bean 建立後自動執行
    */
   @PostConstruct
   public void init() {
     // 啟動一個虛擬執行緒來專門處理存檔
-    Thread.ofVirtual().name("db-writer-player").start(this::processQueue);
+    Thread.ofVirtual().name("db-writer-room").start(this::processQueue);
   }
 
   /**
@@ -61,13 +59,13 @@ public class PlayerPersistenceService {
     log.info("Write-Behind DB Writer started.");
 
     // 用來暫存批次資料的 List
-    List<PlayerRecord> batch = new ArrayList<>();
+    List<RoomStateRecord> batch = new ArrayList<>();
 
     while (running) {
       try {
         // A. 從佇列取出一筆 (如果空的，這裡會阻塞等待，節省 CPU)
         // 使用 poll 設定超時，這樣我們可以定期檢查 running 狀態或處理剩餘批次
-        PlayerRecord record = saveQueue.poll(1, java.util.concurrent.TimeUnit.SECONDS);
+        RoomStateRecord record = saveQueue.poll(1, java.util.concurrent.TimeUnit.SECONDS);
 
         if (record != null) {
           batch.add(record);
@@ -99,20 +97,20 @@ public class PlayerPersistenceService {
   /**
    * 4. 實際寫入資料庫
    */
-  private void flushBatch(List<PlayerRecord> batch) {
+  private void flushBatch(List<RoomStateRecord> batch) {
     if (batch.isEmpty())
       return;
 
-    for (PlayerRecord rec : batch) {
+    for (RoomStateRecord rec : batch) {
       // 直接用 CharacterRepo 查 (查出來的物件本來就沒有密碼)
-      playerRepository.findById(rec.id()).ifPresent(entity -> {
+      roomRepository.findById(rec.id()).ifPresent(entity -> {
 
-        // Record -> Entity (MapStruct 自動更新)
-        // 這行程式碼取代了原本手寫的 entity.setNickname(), entity.setState()...
-        mapper.updateEntityFromRecord(rec, entity);
+        // entity.setId(rec.id());
+        // entity.setDroppedItems(rec.items());
+        // entity.setItems(rec.items());
 
         // 存檔
-        playerRepository.save(entity);
+        roomRepository.save(entity);
       });
     }
   }
@@ -126,7 +124,7 @@ public class PlayerPersistenceService {
     running = false; // 停止迴圈讀取
 
     // 把佇列中剩下的全部寫完
-    List<PlayerRecord> remaining = new ArrayList<>();
+    List<RoomStateRecord> remaining = new ArrayList<>();
     saveQueue.drainTo(remaining);
 
     if (!remaining.isEmpty()) {
@@ -137,19 +135,4 @@ public class PlayerPersistenceService {
     log.info("PersistenceService shutdown complete.");
   }
 
-  // --- 輔助方法：DTO 轉換 ---
-  // 將 Record 轉回 Entity 準備存檔
-  private PlayerEntity toEntity(PlayerRecord r) {
-    // 注意：這裡我們建立一個新的 Entity 物件，只填入 ID 和要更新的欄位
-    // Hibernate save() 檢查 ID 存在會執行 merge/update
-    return PlayerEntity.builder().id(r.id()).name(r.name()) // 雖然通常不改 username，但 JPA 需要
-        .displayName(r.displayName()).currentRoomId(r.currentRoomId()).state(r.state()) // 更新 JSON
-                                                                                        // 狀態
-        // .inventory(r.inventory()) // 未來加入
-        // .lastLoginAt(LocalDateTime.now()) // 順便更新最後活動時間
-        // 密碼等敏感欄位如果是 null，要小心不要覆蓋掉 DB 裡的舊資料
-        // 實務上建議：如果是 null，先查 DB 再填，或者使用 @DynamicUpdate
-        // 但簡單起見，這裡假設 Record 包含了所有資料
-        .build();
-  }
 }

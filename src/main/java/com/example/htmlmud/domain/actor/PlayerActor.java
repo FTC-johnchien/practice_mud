@@ -1,6 +1,8 @@
 package com.example.htmlmud.domain.actor;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import org.slf4j.MDC;
 import org.springframework.web.socket.TextMessage;
@@ -11,11 +13,10 @@ import com.example.htmlmud.domain.actor.behavior.PlayerBehavior;
 import com.example.htmlmud.domain.context.GameServices;
 import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.logic.command.CommandDispatcher;
+import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.GameObjectId;
 import com.example.htmlmud.domain.model.PlayerRecord;
 import com.example.htmlmud.domain.model.json.LivingState;
-import com.example.htmlmud.infra.util.AnsiColor;
-import com.example.htmlmud.infra.util.ColorText;
 import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.ConnectionState;
 import lombok.Getter;
@@ -26,13 +27,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PlayerActor extends LivingActor {
 
-  private final GameServices services;
-
   @Getter
   private final CommandDispatcher dispatcher;
 
   @Getter
   private WebSocketSession session;
+
 
   // 【關鍵】當前的行為腦
   private PlayerBehavior currentBehavior;
@@ -46,11 +46,14 @@ public class PlayerActor extends LivingActor {
 
   private CommandDispatcher commandDispatcher;
 
-  public PlayerActor(String id, WebSocketSession session, LivingState state,
+  private List<GameItem> inventory = new ArrayList<>();
+
+
+
+  public PlayerActor(WebSocketSession session, String id, LivingState state,
       GameServices gameServices, CommandDispatcher dispatcher) {
-    super(id, state);
+    super(id, state, gameServices);
     this.session = session;
-    this.services = gameServices;
     this.dispatcher = dispatcher;
   }
 
@@ -58,9 +61,11 @@ public class PlayerActor extends LivingActor {
   public static PlayerActor createGuest(WebSocketSession session, GameServices gameServices,
       CommandDispatcher dispatcher) {
     PlayerActor actor =
-        new PlayerActor(session.getId(), session, new LivingState(), gameServices, dispatcher);
+        new PlayerActor(session, session.getId(), new LivingState(), gameServices, dispatcher);
     // 初始設定為 GuestBehavior
     actor.become(new GuestBehavior(gameServices));
+    actor.inventory = new ArrayList<>();
+    actor.start(); // 確保 session 已賦值後再啟動
     return actor;
   }
 
@@ -140,7 +145,7 @@ public class PlayerActor extends LivingActor {
   }
 
   @Override
-  protected void onDeath(GameObjectId killerId) {
+  protected void onDeath(String killerId) {
     reply("你已經死亡！即將在重生點復活...");
     // 玩家死亡邏輯：掉經驗、傳送回城
   }
@@ -341,7 +346,8 @@ public class PlayerActor extends LivingActor {
         this.name, // Username
         this.displayName, // Nickname
         this.currentRoomId, // Room
-        this.state.deepCopy() // 【關鍵】深層複製 State
+        this.state.deepCopy(), // 【關鍵】深層複製 State
+        new ArrayList<GameItem>(this.inventory) // Inventory
     );
   }
 
@@ -350,6 +356,8 @@ public class PlayerActor extends LivingActor {
     this.name = record.name();
     this.displayName = record.displayName();
     this.currentRoomId = record.currentRoomId();
+    this.inventory = record.inventory();
+
 
     // 2. 更新狀態 (直接替換引用)
     // 因為 Record 是從 DB 讀出來的新物件，這裡的 state 是全新的，可以直接拿來用

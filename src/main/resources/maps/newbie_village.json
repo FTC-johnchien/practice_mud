@@ -1,0 +1,120 @@
+{
+  "id": "area_newbie",
+  "name": "新手村",
+  "level_min": 1,
+  "level_max": 10,
+  "reset_interval": 15,
+  "mob_templates": [
+    {
+      "id": 1,
+      "name": "村長",
+      "kind": "FRIENDLY",
+      "description": "一位和藹可親的老人，守護著這個村莊。",
+      "maxHp": 500,
+      "level": 50,
+      "expReward": 0,
+      "isAggressive": false,
+      "isInvincible": true,
+      "dialogues": ["歡迎來到新手村！", "最近外面的森林不太平靜..."]
+    },
+    {
+      "id": 2,
+      "name": "小哥布林",
+      "kind": "AGGRESSIVE",
+      "description": "一隻綠皮膚的小怪物，看起來很不友善。",
+      "maxHp": 30,
+      "level": 1,
+      "expReward": 10,
+      "isAggressive": true,
+      "isInvincible": false
+    },
+    {
+      "id": 3,
+      "name": "大哥布林",
+      "kind": "AGGRESSIVE",
+      "description": "一隻體形較大的綠皮膚怪物，看起來很不友善。",
+      "maxHp": 100,
+      "level": 3,
+      "expReward": 30,
+      "isAggressive": true,
+      "isInvincible": false
+    }
+  ],
+  "rooms": [
+    {
+      "id": 1001,
+      "name": "村莊廣場",
+      "desc": "這是新手村的中心廣場，噴水池在中央緩緩流動。陽光灑在石板路上，顯得格外寧靜。往西可以看到村長的房子，往東則是一條陰暗的小徑。",
+      "flags": ["SAFE", "OUTDOORS"],
+      "exits": {
+        "north": { "to": 1002 },
+        "west": { "to": 1004 },
+        "east": { "to": 1005 }
+      }
+    },
+    {
+      "id": 1002,
+      "name": "村北小路",
+      "desc": "一條通往北方森林的小徑，兩旁長滿了雜草。",
+      "flags": ["OUTDOORS"],
+      "exits": {
+        "south": { "to": 1001 },
+        "north": { "to": 1003 }
+      }
+    },
+    {
+      "id": 1003,
+      "name": "森林入口",
+      "desc": "這裡已經可以感受到森林的陰森氣息，偶爾傳來怪物的低吼聲。",
+      "flags": ["OUTDOORS"],
+      "exits": {
+        "south": { "to": 1002 }
+      }
+    },
+    {
+      "id": 1004,
+      "name": "村長小屋前",
+      "desc": "一間簡樸的木屋矗立在眼前，門口掛著一盞老舊的風燈。",
+      "flags": ["SAFE"],
+      "exits": {
+        "east": {
+            "to": 1001,
+            "door": "iron_gate",
+            "locked": true,
+            "key": "key_village_01"
+        }
+      }
+    },
+    {
+      "id": 1005,
+      "name": "陰暗小徑盡頭",
+      "desc": "路到了盡頭，四周雜草叢生，空氣中瀰漫著危險的氣息。",
+      "flags": ["OUTDOORS", "NO_RECALL"],
+      "exits": {
+        "west": { "to": 1001 }
+      }
+    }
+  ],
+  "mob_resets": [
+    {
+      "mob_id": 1,
+      "room_id": 1001,
+      "max_qty": 1
+    },
+    {
+      "mob_id": 2,
+      "room_id": 1003,
+      "max_qty": 3
+    },
+    {
+      "mob_id": 3,
+      "room_id": 1005,
+      "max_qty": 3
+    },
+    {
+      "mob_id": 2,
+      "room_id": 1005,
+      "max_qty": 3
+    }
+  ]
+}

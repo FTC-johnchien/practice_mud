@@ -1,8 +1,10 @@
 package com.example.htmlmud.infra.persistence.entity;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.json.LivingState;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -52,9 +54,9 @@ public class PlayerEntity {
   @Column(name = "state_json")
   private LivingState state;
 
-  // @JdbcTypeCode(SqlTypes.JSON)
-  // @Column(name = "inventory_json")
-  // public PlayerInventory inventory; // 背包系統 對應 inventory_json
+  @JdbcTypeCode(SqlTypes.JSON)
+  @Column(name = "inventory_json")
+  private List<GameItem> inventory; // 背包系統
 
   // @JdbcTypeCode(SqlTypes.JSON)
   // @Column(name = "skills_json")

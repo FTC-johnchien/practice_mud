@@ -2,7 +2,6 @@ package com.example.htmlmud.service;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import org.apache.catalina.User;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.actor.PlayerActor;
 import com.example.htmlmud.domain.model.PlayerRecord;
@@ -42,18 +41,10 @@ public class PlayerService {
     return stored != null && stored.equals(password);
   }
 
-  // 檢查輸入是否為系統保留字 (防止玩家取名叫做 "new" 或 "quit")
-  public boolean isReservedWord(String input) {
-    return switch (input.trim().toLowerCase()) {
-      case "new", "quit", "exit", "login", "look", "kill", "move", "help" -> true;
-      default -> false;
-    };
-  }
-
   public PlayerRecord loadRecord(Integer accountId, String username) {
     // 1. DB -> Entity
-    PlayerEntity entity = playerRepository.findByAccountIdAndName(accountId, username)
-        .orElseThrow(() -> new IllegalArgumentException("角色不存在"));
+    PlayerEntity entity = playerRepository.findByAccountIdAndName(accountId, username).orElseThrow(
+        () -> new IllegalArgumentException("角色不存在 accountId:" + accountId + ", name:" + username));
 
     // 2. Entity -> Record (MapStruct 自動轉)
     // 注意：這裡得到的 Record 內含的 State 是 Entity 裡解序列化出來的
