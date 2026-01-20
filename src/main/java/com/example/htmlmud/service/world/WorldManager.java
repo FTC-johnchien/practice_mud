@@ -1,37 +1,30 @@
 package com.example.htmlmud.service.world;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.WebSocketSession;
-import com.example.htmlmud.domain.actor.MobActor;
 import com.example.htmlmud.domain.actor.PlayerActor;
 import com.example.htmlmud.domain.actor.RoomActor;
 import com.example.htmlmud.domain.context.MudKeys;
-import com.example.htmlmud.domain.model.RoomStateRecord;
-import com.example.htmlmud.domain.model.map.Population;
 import com.example.htmlmud.domain.model.map.MobTemplate;
 import com.example.htmlmud.domain.model.map.RoomExit;
 import com.example.htmlmud.domain.model.map.RoomTemplate;
-import com.example.htmlmud.domain.model.map.Zone;
+import com.example.htmlmud.domain.model.map.ZoneTemplate;
 import com.example.htmlmud.infra.mapper.ItemTemplateMapper;
-import com.example.htmlmud.infra.persistence.entity.RoomStateEntity;
 import com.example.htmlmud.infra.persistence.repository.ItemTemplateRepository;
 import com.example.htmlmud.infra.persistence.repository.RoomStateRepository;
+import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
 import com.example.htmlmud.infra.util.IdUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WorldManager {
 
-  // private final GameServices gameServices;
+  // private final WorldFactory worldFactory;
   private final ObjectMapper objectMapper;
   private final ResourcePatternResolver resourceResolver;
   private final RoomStateRepository roomStateRepository;
@@ -50,14 +43,16 @@ public class WorldManager {
 
   // 1. Static Data Cache: 存放唯讀的 Room 設定檔 (POJO/Record)
   // 雖然伺服器通常會載入全地圖，但 Caffeine 可以幫我們管理記憶體上限
-  private final Cache<String, RoomTemplate> staticRoomCache =
-      Caffeine.newBuilder().maximumSize(10_000) // 假設地圖上限
-          .expireAfterAccess(1, TimeUnit.HOURS) // 沒人用的房間資料可被釋放 (視需求)
-          .recordStats().build();
+  // private final Cache<String, RoomTemplate> staticRoomCache =
+  // Caffeine.newBuilder().maximumSize(10_000) // 假設地圖上限
+  // .expireAfterAccess(1, TimeUnit.HOURS) // 沒人用的房間資料可被釋放 (視需求)
+  // .recordStats().build();
 
   // 怪物原型快取
-  private final Cache<String, MobTemplate> staticMobCache =
-      Caffeine.newBuilder().maximumSize(5_000).expireAfterAccess(1, TimeUnit.HOURS).build();
+  // private final Cache<String, MobTemplate> staticMobCache =
+  // Caffeine.newBuilder().maximumSize(5_000).expireAfterAccess(1, TimeUnit.HOURS).build();
+
+  private final TemplateRepository templateRepo;
 
   // 2. Runtime Actors: 存放正在運作的 RoomActor
   // 使用 ConcurrentHashMap 確保並發存取安全
@@ -79,135 +74,140 @@ public class WorldManager {
   public void loadWorld() {
     log.info("Starting World Loading...");
 
-    // 讀取 room 資料
-    loadRooms();
+    // 讀取 global 資料
 
-    // 讀取 mob 資料
+    // 讀取 newbie_village 資料
+    loadZone("newbie_village");
 
-    // 讀取 item 資料
+
 
     // 啟動 Write-Behind 消費者執行緒
     // startPersistenceWorker();
   }
 
-  private void loadRooms() {
-    String zoneId = "newbie_village"; // test
 
+  private void loadZone(String zone) {
     try {
 
-      // 讀取 room 資料
-      Resource[] resources = resourceResolver.getResources("classpath:data/zones/**/rooms.json");
-      for (Resource res : resources) {
-        // 使用 TypeReference 來正確讀取 JSON 陣列為 List<RoomTemplate>
-        List<RoomTemplate> rooms = objectMapper.readValue(res.getInputStream(),
-            new TypeReference<List<RoomTemplate>>() {});
-
-        for (RoomTemplate room : rooms) {
-          log.info("{}", objectMapper.writeValueAsString(room));
-          // 更新exits里的targetRoomId
-          if (room.exits() != null) {
-            for (Map.Entry<String, RoomExit> entry : room.exits().entrySet()) {
-              RoomExit roomExit = entry.getValue();
-              String newTargetRoomId = IdUtils.resolveId(zoneId, roomExit.targetRoomId());
-              RoomExit newRoomExit = roomExit.toBuilder().targetRoomId(newTargetRoomId).build();
-              entry.setValue(newRoomExit);
-            }
-          }
-
-          // 更新 room.id
-          String newRoomId = zoneId + ":" + room.id();
-          RoomTemplate newRoom = room.toBuilder().id(newRoomId).build();
-          staticRoomCache.put(newRoomId, newRoom);
-        }
+      // 讀取 zone 資料
+      Resource resource =
+          resourceResolver.getResource("classpath:data/zones/" + zone + "/manifest.json");
+      if (resource == null) {
+        log.error("Zone manifest not found: {}", zone);
+        return;
       }
+      ZoneTemplate zoneTemplate =
+          objectMapper.readValue(resource.getInputStream(), ZoneTemplate.class);
+      log.info("{}", objectMapper.writeValueAsString(zoneTemplate));
+      templateRepo.registerZone(zoneTemplate);
+      String zoneId = zoneTemplate.id();
+
+      // 讀取 room 資料
+      resource = resourceResolver.getResource("classpath:data/zones/" + zone + "/rooms.json");
+      if (resource == null) {
+        log.error("Zone rooms not found: {}", zone);
+        return;
+      }
+
+      // 使用 TypeReference 來正確讀取 JSON 陣列為 Set<RoomTemplate>
+      Set<RoomTemplate> rooms = objectMapper.readValue(resource.getInputStream(),
+          new TypeReference<Set<RoomTemplate>>() {});
+
+      for (RoomTemplate room : rooms) {
+        log.info("{}", objectMapper.writeValueAsString(room));
+        // 更新exits里的targetRoomId
+        if (room.exits() != null) {
+          for (Map.Entry<String, RoomExit> entry : room.exits().entrySet()) {
+            RoomExit roomExit = entry.getValue();
+            String newTargetRoomId = IdUtils.resolveId(zoneId, roomExit.targetRoomId());
+            RoomExit newRoomExit = roomExit.toBuilder().targetRoomId(newTargetRoomId).build();
+            entry.setValue(newRoomExit);
+          }
+        }
+
+        // 更新 room.id
+        String newRoomId = zoneId + ":" + room.id();
+        RoomTemplate newRoom = room.toBuilder().id(newRoomId).zoneId(zoneId).build();
+        templateRepo.registerRoom(newRoom);
+      }
+
+
+      // 讀取 mob 資料
+      resource = resourceResolver.getResource("classpath:data/zones/" + zone + "/mobs.json");
+      if (resource == null) {
+        log.error("Zone mobs not found: {}", zone);
+        return;
+      }
+
+      Set<MobTemplate> mobs = objectMapper.readValue(resource.getInputStream(),
+          new TypeReference<Set<MobTemplate>>() {});
+      for (MobTemplate mob : mobs) {
+        log.info("{}", objectMapper.writeValueAsString(mob));
+
+        String newMobId = zoneId + ":" + mob.id();
+        MobTemplate newMob = mob.toBuilder().id(newMobId).build();
+        templateRepo.registerMob(newMob);
+      }
+
+
+      // 讀取 item 資料
 
     } catch (IOException e) {
       log.error("Could not read rooms resources", e);
     }
   }
-
-  public void loadWorld_old() {
-    log.info("Starting World Loading...");
-    try {
-      // 讀取 classpath:maps/ 下所有的 json
-
-      // 讀取 mob 資料
-
-      // 讀取 item 資料
-
-      // 讀取 room 資料
-
-      Resource[] resources = resourceResolver.getResources("classpath:maps/*.json");
-      // Resource[] resources = resourceResolver.getResources("classpath:maps/**/*.json");
-
-
-      for (Resource res : resources) {
-        try {
-          Zone zone = objectMapper.readValue(res.getInputStream(), Zone.class);
-          String zoneId = zone.id();
-          log.info("Loading Zone: {} ({}) - {} rooms", zone.name(), zoneId, zone.rooms().size());
-
-          // 將房間放入 Cache，建立全域索引
-          for (RoomTemplate room : zone.rooms()) {
-
-            // 更新exits里的targetRoomId
-            for (Map.Entry<String, RoomExit> entry : room.exits().entrySet()) {
-              RoomExit roomExit = entry.getValue();
-              String newTargetRoomId = zoneId + ":" + roomExit.targetRoomId();
-              RoomExit newRoomExit = roomExit.toBuilder().targetRoomId(newTargetRoomId).build();
-              entry.setValue(newRoomExit);
-            }
-
-            String newRoomId = zoneId + ":" + room.id();
-            RoomTemplate newRoom = room.toBuilder().id(newRoomId).build();
-            staticRoomCache.put(newRoomId, newRoom);
-          }
-
-          // 將怪物原型放入 Cache
-          log.info("zone.mobTemplates().size: {}", zone.mobTemplates().size());
-          for (MobTemplate mob : zone.mobTemplates()) {
-            String newMobId = zoneId + ":" + mob.id();
-            MobTemplate newMob = mob.toBuilder().id(newMobId).build();
-            staticMobCache.put(newMobId, newMob);
-          }
-
-          // 3. 根據 mob_resets 產生怪物實體
-          if (zone.mobResets() != null) {
-            for (Population reset : zone.mobResets()) {
-
-              MobTemplate mobTpl =
-                  staticMobCache.getIfPresent(zoneId + ":" + reset.mobTemplateId());
-
-              if (mobTpl != null) {
-                RoomActor roomActor = getRoomActor(zoneId + ":" + reset.roomId());
-
-                for (int i = 0; i < reset.count(); i++) {
-                  // 建立 MobActor 並設定初始房間
-                  MobActor mobActor = new MobActor(mobTpl, null);
-                  log.info("Spawned Mob: {} in Room: {}", mobTpl.name(), reset.roomId());
-                  mobActor.setCurrentRoomId(roomActor.getId());
-                  log.info("MobTemplate:{}", objectMapper.writeValueAsString(mobActor));
-
-                  // 把 mob 塞到房間里
-                  roomActor.getMobs().add(mobActor);
-                  mobActor.start();
-                }
-              } else {
-                log.info("MobTemplate is null");
-              }
-            }
-          }
-        } catch (IOException e) {
-          log.error("Failed to load map file: {}", res.getFilename(), e);
-        }
-      }
-    } catch (IOException e) {
-      log.error("Could not read map resources", e);
-    }
-
-    // 啟動 Write-Behind 消費者執行緒
-    startPersistenceWorker();
-  }
+  /*
+   * public void loadWorld_old() { log.info("Starting World Loading..."); try { // 讀取
+   * classpath:maps/ 下所有的 json
+   *
+   * // 讀取 mob 資料
+   *
+   * // 讀取 item 資料
+   *
+   * // 讀取 room 資料
+   *
+   * Resource[] resources = resourceResolver.getResources("classpath:maps/*.json"); // Resource[]
+   * resources = resourceResolver.getResources("classpath:maps/** /*.json");
+   *
+   *
+   * for (Resource res : resources) { try { ZoneTemplate zone =
+   * objectMapper.readValue(res.getInputStream(), ZoneTemplate.class); String zoneId = zone.id();
+   * log.info("Loading Zone: {} ({}) - {} rooms", zone.name(), zoneId, zone.rooms().size());
+   *
+   * // 將房間放入 Cache，建立全域索引 for (RoomTemplate room : zone.rooms()) {
+   *
+   * // 更新exits里的targetRoomId for (Map.Entry<String, RoomExit> entry : room.exits().entrySet()) {
+   * RoomExit roomExit = entry.getValue(); String newTargetRoomId = zoneId + ":" +
+   * roomExit.targetRoomId(); RoomExit newRoomExit =
+   * roomExit.toBuilder().targetRoomId(newTargetRoomId).build(); entry.setValue(newRoomExit); }
+   *
+   * String newRoomId = zoneId + ":" + room.id(); RoomTemplate newRoom =
+   * room.toBuilder().id(newRoomId).build(); staticRoomCache.put(newRoomId, newRoom); }
+   *
+   * // 將怪物原型放入 Cache log.info("zone.mobTemplates().size: {}", zone.mobTemplates().size()); for
+   * (MobTemplate mob : zone.mobTemplates()) { String newMobId = zoneId + ":" + mob.id();
+   * MobTemplate newMob = mob.toBuilder().id(newMobId).build(); staticMobCache.put(newMobId,
+   * newMob); }
+   *
+   * // 3. 根據 mob_resets 產生怪物實體 if (zone.mobResets() != null) { for (Population reset :
+   * zone.mobResets()) {
+   *
+   * MobTemplate mobTpl = staticMobCache.getIfPresent(zoneId + ":" + reset.mobTemplateId());
+   *
+   * if (mobTpl != null) { RoomActor roomActor = getRoomActor(zoneId + ":" + reset.roomId());
+   *
+   * for (int i = 0; i < reset.count(); i++) { // 建立 MobActor 並設定初始房間 MobActor mobActor = new
+   * MobActor(mobTpl, null); log.info("Spawned Mob: {} in Room: {}", mobTpl.name(), reset.roomId());
+   * mobActor.setCurrentRoomId(roomActor.getId()); log.info("MobTemplate:{}",
+   * objectMapper.writeValueAsString(mobActor));
+   *
+   * // 把 mob 塞到房間里 roomActor.getMobs().add(mobActor); mobActor.start(); } } else {
+   * log.info("MobTemplate is null"); } } } } catch (IOException e) {
+   * log.error("Failed to load map file: {}", res.getFilename(), e); } } } catch (IOException e) {
+   * log.error("Could not read map resources", e); }
+   *
+   * // 啟動 Write-Behind 消費者執行緒 startPersistenceWorker(); }
+   */
 
   // 啟動時載入世界
   /*
@@ -231,20 +231,27 @@ public class WorldManager {
     // 1. 如果 Actor 已經存在，直接回傳
     return activeRooms.computeIfAbsent(roomId, id -> {
       // 2. 如果 Actor 不存在，從 Static Cache 拿資料並 new 一個
-      RoomTemplate roomData = staticRoomCache.getIfPresent(id);
+      RoomTemplate roomData = templateRepo.findRoom(id).orElse(null);
       if (roomData == null) {
-        log.error("Room ID not found: " + id);
-        // throw new IllegalArgumentException("Room ID not found: " + id);
+        log.error("RoomTemplate ID not found: " + id);
         return null;
       }
-      // 創建新的 Actor，並注入 persistence callback
-      // return new RoomActor(roomData, this::enqueueSave);
-      return new RoomActor(roomData, new ArrayList<>());
+      ZoneTemplate zoneData = templateRepo.findZone(roomData.zoneId()).orElse(null);
+      if (zoneData == null) {
+        log.error("ZoneTemplate ID not found: " + roomData.zoneId());
+        return null;
+      }
+
+      return new RoomActor(roomData, zoneData);
     });
   }
 
   public MobTemplate getMobTemplate(String mobId) {
-    return staticMobCache.getIfPresent(mobId);
+    return templateRepo.findMob(mobId).orElseThrow(() -> {
+      log.error("MobTemplate ID not found: " + mobId);
+      // return new IllegalArgumentException("MobTemplate ID not found: " + mobId);
+      return null;
+    });
   }
 
   // ==========================================

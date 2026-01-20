@@ -1,6 +1,6 @@
 package com.example.htmlmud.domain.model.map;
 
-import java.util.List;
+import java.util.Set;
 import com.example.htmlmud.domain.model.MobKind;
 import lombok.Builder;
 
@@ -15,13 +15,15 @@ public record MobTemplate(
 
     MobKind kind,
 
-    String roomDescription,
-
-    String lookDescription,
+    int level,
 
     int maxHp,
 
-    int level,
+    int damage,
+
+    String roomDescription,
+
+    String lookDescription,
 
     int expReward, // 死亡給多少經驗
 
@@ -29,7 +31,7 @@ public record MobTemplate(
 
     boolean isInvincible, // 是否無敵
 
-    List<String> dialogues, // 預設對話庫
+    Set<String> dialogues, // 預設對話庫
     // 掉落表 ID, 商店列表 ID...
     Integer shopId) {
 }

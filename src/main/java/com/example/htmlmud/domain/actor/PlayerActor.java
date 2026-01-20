@@ -25,9 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PlayerActor extends LivingActor {
 
-  // @Getter
-  // private final WorldManager worldManager;
-
   @Getter
   private WebSocketSession session;
 
@@ -64,7 +61,6 @@ public class PlayerActor extends LivingActor {
       GameServices gameServices) {
     super(id, state, gameServices);
     this.session = session;
-    // this.worldManager = worldManager;
   }
 
   // 工廠方法
@@ -310,7 +306,7 @@ public class PlayerActor extends LivingActor {
   // 供 GuestBehavior 呼叫：變身為正式玩家
   public void upgradeIdentity(PlayerRecord record) {
     this.fromRecord(record);
-    this.become(new InGameBehavior(services, services.commandDispatcher()));
+    this.become(new InGameBehavior(services));
     log.info("Actor 變身成功: {} (InGameBehavior)", this.name);
   }
 

@@ -9,6 +9,8 @@ import com.example.htmlmud.domain.actor.core.VirtualActor; // 引用您的基礎
 import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.RoomStateRecord;
 import com.example.htmlmud.domain.model.map.RoomTemplate;
+import com.example.htmlmud.domain.model.map.SpawnRule;
+import com.example.htmlmud.domain.model.map.ZoneTemplate;
 import com.example.htmlmud.protocol.RoomMessage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,12 @@ public class RoomActor extends VirtualActor<RoomMessage> {
   @Getter
   private final RoomTemplate template;
 
+  @Getter
+  private final ZoneTemplate zoneTemplate;
+
+  @Getter
+  private final Set<SpawnRule> spawnRules;
+
   // 房間內的玩家 (Runtime State)
   @Getter
   private final Set<PlayerActor> players = ConcurrentHashMap.newKeySet();
@@ -32,11 +40,18 @@ public class RoomActor extends VirtualActor<RoomMessage> {
 
   private final List<GameItem> items = new ArrayList<>(); // 地上的物品
 
-  public RoomActor(RoomTemplate template, List<GameItem> initialItems) {
+  public RoomActor(RoomTemplate template, ZoneTemplate zoneTemplate) {
+    this(template, zoneTemplate, new ArrayList<>());
+  }
+
+  public RoomActor(RoomTemplate template, ZoneTemplate zoneTemplate, List<GameItem> initialItems) {
     // 2. 傳入 Actor 名稱給父類別 (方便 Log 排查)
     super("room-" + template.id());
     this.id = template.id();
     this.template = template;
+    this.zoneTemplate = zoneTemplate;
+    // 從 Template 複製規則 (因為這是固定的)
+    this.spawnRules = template.spawnRules();
 
     if (initialItems != null) {
       this.items.addAll(initialItems);
@@ -198,5 +213,41 @@ public class RoomActor extends VirtualActor<RoomMessage> {
         .thenComparingLong(MobActor::getLastEnterRoomTime).thenComparing(MobActor::getId));
 
     return snapshot;
+  }
+
+  /**
+   * 房間初次載入時的生怪邏輯
+   */
+  public void spawnInitialMobs() {
+    if (spawnRules == null)
+      return;
+
+    for (SpawnRule rule : spawnRules) {
+      // 處理機率 (例如：稀有怪只有 10% 機率出現)
+      if (Math.random() > rule.respawnChance()) {
+        continue;
+      }
+
+      // 根據數量生成
+      for (int i = 0; i < rule.count(); i++) {
+        spawnOneMob(rule);
+      }
+    }
+  }
+
+  private void spawnOneMob(SpawnRule rule) {
+    // 1. 呼叫工廠產生 MobActor (這裡會給予 UUID)
+    // MobActor mob = services.mobFactory().createMob(rule.mobTemplateId());
+
+    // // 2. 設定位置
+    // mob.setCurrentRoomId(this.id);
+
+    // // 3. 加入房間列表
+    // this.mobs.add(mob);
+
+    // // 4. 啟動怪物的 AI
+    // mob.start();
+
+    // log.debug("Spawned {} in room {}", mob.getTemplate().name(), this.id);
   }
 }

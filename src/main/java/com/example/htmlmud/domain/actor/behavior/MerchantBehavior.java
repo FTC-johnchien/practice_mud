@@ -26,7 +26,7 @@ public class MerchantBehavior implements MobBehavior {
       // 處理購買
     } else {
       // 隨機講一句話
-      String dialog = self.getTemplate().dialogues().get(0);
+      String dialog = self.getTemplate().dialogues().iterator().next();
       self.sayToRoom(dialog);
     }
   }

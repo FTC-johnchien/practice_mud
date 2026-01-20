@@ -75,6 +75,6 @@ public class CharacterEntity {
   protected void onCreate() {
     createdAt = LocalDateTime.now();
     if (currentRoomId == null)
-      currentRoomId = "newbie:starting_square"; // 預設新手村
+      currentRoomId = "newbie_village:entrance"; // 預設新手村
   }
 }

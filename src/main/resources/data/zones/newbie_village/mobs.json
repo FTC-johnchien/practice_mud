@@ -6,6 +6,7 @@
     "kind": "FRIENDLY",
     "level": 10,
     "maxHp": 500,
+    "damage": 50,
     "roomDescription": "一位穿著制服的警衛正警惕地看著四周。",
     "lookDescription": "他看起來受過嚴格訓練，身上的盔甲擦得發亮。",
     "equipment": {
