@@ -31,8 +31,8 @@ public class MoveCommand implements PlayerCommand {
     }
 
     // 2. 取得當前房間
-    Integer currentRoomId = actor.getCurrentRoomId();
-    RoomActor currentRoom = actor.getWorldManager().getRoomActor(currentRoomId);
+    String currentRoomId = actor.getCurrentRoomId();
+    RoomActor currentRoom = actor.getServices().worldManager().getRoomActor(currentRoomId);
 
     if (currentRoom == null) {
       actor.reply("你在一片虛空中，無法移動。");
@@ -50,26 +50,36 @@ public class MoveCommand implements PlayerCommand {
       return;
     }
 
+    // 檢查要去的房間是否存在
+    String targetRoomId = exit.targetRoomId();
+    RoomActor targetRoom = actor.getServices().worldManager().getRoomActor(targetRoomId);
+
+    if (targetRoom == null) {
+      actor.reply("前方房間 " + targetRoomId + " 施工中，無法前往。");
+      return;
+    }
+
+
     // --- 移動成功，開始處理流程 ---
 
     // 4. 舊房間廣播 (離場)
     String leaveMsg = ColorText.wrap(AnsiColor.YELLOW,
         actor.getNickname() + " 往 " + dir.getDisplayName() + " 離開了。");
-    actor.getWorldManager().broadcastToRoom(currentRoomId, leaveMsg, actor.getId());
+    actor.getServices().worldManager().broadcastToRoom(currentRoomId, leaveMsg, actor.getId());
 
     // 5. 更新玩家位置
     // 注意：這裡只改記憶體，State Pattern + Write-Behind 會負責存檔
-    int targetRoomId = exit.targetRoomId();
+    // String targetRoomId = exit.targetRoomId();
     actor.setCurrentRoomId(targetRoomId);
 
     // 6. 新房間廣播 (進場)
     // 計算反方向 (例如往北走，新房間的人會看到你從南方來)
     String arriveMsg = ColorText.wrap(AnsiColor.YELLOW,
         actor.getNickname() + " 從 " + dir.opposite().getDisplayName() + " 過來了。");
-    actor.getWorldManager().broadcastToRoom(targetRoomId, arriveMsg, actor.getId());
+    actor.getServices().worldManager().broadcastToRoom(targetRoomId, arriveMsg, actor.getId());
 
     // 7. 自動 Look (讓玩家看到新環境)
     // 直接調用 Dispatcher 執行 look 指令
-    actor.getCommandDispatcher().dispatch(actor, "look");
+    actor.getServices().commandDispatcher().dispatch(actor, "look");
   }
 }

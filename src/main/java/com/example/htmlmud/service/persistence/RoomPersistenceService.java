@@ -38,7 +38,7 @@ public class RoomPersistenceService {
 
     // 丟入佇列，如果不滿就立刻返回，不會阻塞
     if (!saveQueue.offer(record)) {
-      log.error("存檔佇列已滿！可能資料庫寫入過慢，資料遺失風險: {}", record.id());
+      log.error("存檔佇列已滿！可能資料庫寫入過慢，資料遺失風險: roomId:{} zoneId:{}", record.roomId(), record.zoneId());
     }
   }
 
@@ -103,7 +103,7 @@ public class RoomPersistenceService {
 
     for (RoomStateRecord rec : batch) {
       // 直接用 CharacterRepo 查 (查出來的物件本來就沒有密碼)
-      roomRepository.findById(rec.id()).ifPresent(entity -> {
+      roomRepository.findByRoomIdAndZoneId(rec.roomId(), rec.zoneId()).ifPresent(entity -> {
 
         // entity.setId(rec.id());
         // entity.setDroppedItems(rec.items());

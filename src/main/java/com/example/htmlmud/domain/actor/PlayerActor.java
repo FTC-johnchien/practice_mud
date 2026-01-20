@@ -12,14 +12,11 @@ import com.example.htmlmud.domain.actor.behavior.InGameBehavior;
 import com.example.htmlmud.domain.actor.behavior.PlayerBehavior;
 import com.example.htmlmud.domain.context.GameServices;
 import com.example.htmlmud.domain.context.MudContext;
-import com.example.htmlmud.domain.logic.command.CommandDispatcher;
 import com.example.htmlmud.domain.model.GameItem;
-import com.example.htmlmud.domain.model.GameObjectId;
 import com.example.htmlmud.domain.model.PlayerRecord;
 import com.example.htmlmud.domain.model.json.LivingState;
 import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.ConnectionState;
-import com.example.htmlmud.service.world.WorldManager;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -28,11 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PlayerActor extends LivingActor {
 
-  @Getter
-  private final CommandDispatcher commandDispatcher;
-
-  @Getter
-  private final WorldManager worldManager;
+  // @Getter
+  // private final WorldManager worldManager;
 
   @Getter
   private WebSocketSession session;
@@ -67,22 +61,18 @@ public class PlayerActor extends LivingActor {
   private boolean isDirty = false;
 
   private PlayerActor(WebSocketSession session, String id, LivingState state,
-      GameServices gameServices, CommandDispatcher commandDispatcher, WorldManager worldManager) {
+      GameServices gameServices) {
     super(id, state, gameServices);
     this.session = session;
-    this.worldManager = worldManager;
-    this.commandDispatcher = commandDispatcher;
+    // this.worldManager = worldManager;
   }
 
   // 工廠方法
-  public static PlayerActor createGuest(WebSocketSession session, GameServices gameServices,
-      CommandDispatcher commandDispatcher, WorldManager worldManager) {
-    PlayerActor actor = new PlayerActor(session, session.getId(), new LivingState(), gameServices,
-        commandDispatcher, worldManager);
+  public static PlayerActor createGuest(WebSocketSession session, GameServices gameServices) {
+    PlayerActor actor = new PlayerActor(session, session.getId(), new LivingState(), gameServices);
     // 初始設定為 GuestBehavior
     actor.become(new GuestBehavior(gameServices));
     actor.inventory = new ArrayList<>();
-    actor.start(); // 確保 session 已賦值後再啟動
     return actor;
   }
 
@@ -320,7 +310,7 @@ public class PlayerActor extends LivingActor {
   // 供 GuestBehavior 呼叫：變身為正式玩家
   public void upgradeIdentity(PlayerRecord record) {
     this.fromRecord(record);
-    this.become(new InGameBehavior(services, commandDispatcher));
+    this.become(new InGameBehavior(services, services.commandDispatcher()));
     log.info("Actor 變身成功: {} (InGameBehavior)", this.name);
   }
 
@@ -338,7 +328,7 @@ public class PlayerActor extends LivingActor {
 
     // 3. 重發當前環境資訊
     this.sendText("\u001B[33m[系統] 連線已恢復。\u001B[0m");
-    this.commandDispatcher.dispatch(this, "look");
+    this.services.commandDispatcher().dispatch(this, "look");
   }
 
   private void handleLoginSuccess(PlayerRecord record) {

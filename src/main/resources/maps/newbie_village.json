@@ -1,12 +1,12 @@
 {
-  "id": "area_newbie",
+  "id": "newbie",
   "name": "新手村",
   "level_min": 1,
   "level_max": 10,
   "reset_interval": 15,
   "mob_templates": [
     {
-      "id": 1,
+      "id": "village_chief",
       "name": "村長",
       "aliases": ["old man", "man", "old"],
       "kind": "FRIENDLY",
@@ -20,11 +20,11 @@
       "dialogues": ["歡迎來到新手村！", "最近外面的森林不太平靜..."]
     },
     {
-      "id": 2,
-      "name": "小哥布林",
-      "aliases": ["small goblin", "goblin"],
+      "id": "goblin",
+      "name": "哥布林",
+      "aliases": ["goblin"],
       "kind": "AGGRESSIVE",
-      "room_description": "小哥布林正在跟隨著大哥布林走著。",
+      "room_description": "哥布林正在跟隨著大哥布林走著。",
       "look_description": "一隻綠皮膚的小怪物，看起來很不友善。",
       "maxHp": 30,
       "level": 1,
@@ -33,7 +33,7 @@
       "isInvincible": false
     },
     {
-      "id": 3,
+      "id": "big_goblin",
       "name": "大哥布林",
       "aliases": ["big goblin", "goblin"],
       "kind": "AGGRESSIVE",
@@ -48,43 +48,43 @@
   ],
   "rooms": [
     {
-      "id": 1001,
+      "id": "starting_square",
       "name": "村莊廣場",
       "desc": "這是新手村的中心廣場，噴水池在中央緩緩流動。陽光灑在石板路上，顯得格外寧靜。往西可以看到村長的房子，往東則是一條陰暗的小徑。",
       "flags": ["SAFE", "OUTDOORS"],
       "exits": {
-        "north": { "to": 1002 },
-        "west": { "to": 1004 },
-        "east": { "to": 1005 }
+        "north": { "to": "north_of_the_village" },
+        "west": { "to": "in_front_of_the_village_chief's_hut" },
+        "east": { "to": "end_of_the_dark_path" }
       }
     },
     {
-      "id": 1002,
+      "id": "north_of_the_village",
       "name": "村北小路",
       "desc": "一條通往北方森林的小徑，兩旁長滿了雜草。",
       "flags": ["OUTDOORS"],
       "exits": {
-        "south": { "to": 1001 },
-        "north": { "to": 1003 }
+        "south": { "to": "starting_square" },
+        "north": { "to": "forest_entrance" }
       }
     },
     {
-      "id": 1003,
+      "id": "forest_entrance",
       "name": "森林入口",
       "desc": "這裡已經可以感受到森林的陰森氣息，偶爾傳來怪物的低吼聲。",
       "flags": ["OUTDOORS"],
       "exits": {
-        "south": { "to": 1002 }
+        "south": { "to": "north_of_the_village" }
       }
     },
     {
-      "id": 1004,
+      "id": "in_front_of_the_village_chief's_hut",
       "name": "村長小屋前",
       "desc": "一間簡樸的木屋矗立在眼前，門口掛著一盞老舊的風燈。",
       "flags": ["SAFE"],
       "exits": {
         "east": {
-            "to": 1001,
+            "to": "starting_square",
             "door": "iron_gate",
             "locked": true,
             "key": "key_village_01"
@@ -92,34 +92,34 @@
       }
     },
     {
-      "id": 1005,
+      "id": "end_of_the_dark_path",
       "name": "陰暗小徑盡頭",
       "desc": "路到了盡頭，四周雜草叢生，空氣中瀰漫著危險的氣息。",
       "flags": ["OUTDOORS", "NO_RECALL"],
       "exits": {
-        "west": { "to": 1001 }
+        "west": { "to": "starting_square" }
       }
     }
   ],
   "mob_resets": [
     {
-      "mob_id": 1,
-      "room_id": 1001,
+      "mob_id": "village_chief",
+      "room_id": "starting_square",
       "max_qty": 1
     },
     {
-      "mob_id": 2,
-      "room_id": 1003,
+      "mob_id": "goblin",
+      "room_id": "forest_entrance",
       "max_qty": 3
     },
     {
-      "mob_id": 3,
-      "room_id": 1005,
-      "max_qty": 3
+      "mob_id": "big_goblin",
+      "room_id": "end_of_the_dark_path",
+      "max_qty": 2
     },
     {
-      "mob_id": 2,
-      "room_id": 1005,
+      "mob_id": "goblin",
+      "room_id": "end_of_the_dark_path",
       "max_qty": 3
     }
   ]

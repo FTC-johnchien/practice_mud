@@ -5,15 +5,13 @@ import org.springframework.stereotype.Component;
 import com.example.htmlmud.domain.actor.MobActor;
 import com.example.htmlmud.domain.actor.PlayerActor;
 import com.example.htmlmud.domain.actor.RoomActor;
-import com.example.htmlmud.domain.context.GameServices;
 import com.example.htmlmud.domain.logic.command.PlayerCommand;
 import com.example.htmlmud.domain.logic.command.annotation.CommandAlias;
 import com.example.htmlmud.domain.logic.util.TargetSelector;
-import com.example.htmlmud.service.world.WorldManager;
 import lombok.RequiredArgsConstructor;
 
 @Component
-@CommandAlias("kill")
+@CommandAlias("k")
 @RequiredArgsConstructor
 public class KillCommand implements PlayerCommand {
 
@@ -32,7 +30,7 @@ public class KillCommand implements PlayerCommand {
     }
 
     // 1. 取得房間內的怪物列表
-    RoomActor room = actor.getWorldManager().getRoomActor(actor.getCurrentRoomId());
+    RoomActor room = actor.getServices().worldManager().getRoomActor(actor.getCurrentRoomId());
     // 這裡假設 room 有 getMobsSnapshot() 回傳 List<MobActor>
     // 注意：為了線程安全，這裡最好是 Snapshot 或是能確保讀取安全的列表
     List<MobActor> mobsInRoom = room.getMobsSnapshot();

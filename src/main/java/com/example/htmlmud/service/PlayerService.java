@@ -41,7 +41,7 @@ public class PlayerService {
     return stored != null && stored.equals(password);
   }
 
-  public PlayerRecord loadRecord(long uid, String username) {
+  public PlayerRecord loadRecord(String uid, String username) {
     // 1. DB -> Entity
     CharacterEntity entity = characterRepository.findByUidAndName(uid, username)
         .orElseThrow(() -> new IllegalArgumentException("角色不存在 uid:" + uid + ", name:" + username));

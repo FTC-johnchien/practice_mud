@@ -5,8 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.example.htmlmud.infra.persistence.entity.CharacterEntity;
 
 public interface CharacterRepository extends JpaRepository<CharacterEntity, String> {
-  Optional<CharacterEntity> findByUidAndName(long uid, String name);
+  Optional<CharacterEntity> findByUidAndName(String uid, String name);
 
-  boolean existsByUidAndName(long uid, String name);
+  boolean existsByUidAndName(String uid, String name);
 
 }

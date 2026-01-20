@@ -12,7 +12,7 @@ public record PlayerRecord(
 
     String nickname,
 
-    Integer currentRoomId,
+    String currentRoomId,
 
     // 注意：如果是 Record，這裡最好是 Deep Copy 後的資料
     LivingState state,

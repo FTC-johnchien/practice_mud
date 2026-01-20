@@ -2,10 +2,12 @@ package com.example.htmlmud.domain.model.map;
 
 import java.util.List;
 import com.example.htmlmud.domain.model.MobKind;
+import lombok.Builder;
 
+@Builder(toBuilder = true)
 public record MobTemplate(
 
-    int id,
+    String id,
 
     String name,
 

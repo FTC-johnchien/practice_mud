@@ -3,37 +3,31 @@ package com.example.htmlmud.service.world;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.WebSocketSession;
-import com.example.htmlmud.domain.context.GameServices;
+import com.example.htmlmud.domain.actor.MobActor;
 import com.example.htmlmud.domain.actor.PlayerActor;
 import com.example.htmlmud.domain.actor.RoomActor;
 import com.example.htmlmud.domain.context.MudKeys;
-import com.example.htmlmud.domain.model.GameItem;
-import com.example.htmlmud.domain.model.json.LivingState;
-import com.example.htmlmud.domain.actor.MobActor;
-import com.example.htmlmud.domain.model.PlayerRecord;
 import com.example.htmlmud.domain.model.RoomStateRecord;
-import com.example.htmlmud.domain.model.map.Area;
-import com.example.htmlmud.domain.model.map.ItemTemplate;
-import com.example.htmlmud.domain.model.map.RoomTemplate;
-import com.example.htmlmud.infra.mapper.ItemTemplateMapper;
+import com.example.htmlmud.domain.model.map.Population;
 import com.example.htmlmud.domain.model.map.MobTemplate;
-import com.example.htmlmud.domain.model.map.MobReset;
-import com.example.htmlmud.infra.mapper.PlayerMapper;
-import com.example.htmlmud.infra.persistence.entity.ItemTemplateEntity;
-import com.example.htmlmud.infra.persistence.entity.CharacterEntity;
+import com.example.htmlmud.domain.model.map.RoomExit;
+import com.example.htmlmud.domain.model.map.RoomTemplate;
+import com.example.htmlmud.domain.model.map.Zone;
+import com.example.htmlmud.infra.mapper.ItemTemplateMapper;
 import com.example.htmlmud.infra.persistence.entity.RoomStateEntity;
 import com.example.htmlmud.infra.persistence.repository.ItemTemplateRepository;
 import com.example.htmlmud.infra.persistence.repository.RoomStateRepository;
+import com.example.htmlmud.infra.util.IdUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -56,18 +50,18 @@ public class WorldManager {
 
   // 1. Static Data Cache: 存放唯讀的 Room 設定檔 (POJO/Record)
   // 雖然伺服器通常會載入全地圖，但 Caffeine 可以幫我們管理記憶體上限
-  private final Cache<Integer, RoomTemplate> staticRoomCache =
+  private final Cache<String, RoomTemplate> staticRoomCache =
       Caffeine.newBuilder().maximumSize(10_000) // 假設地圖上限
           .expireAfterAccess(1, TimeUnit.HOURS) // 沒人用的房間資料可被釋放 (視需求)
           .recordStats().build();
 
   // 怪物原型快取
-  private final Cache<Integer, MobTemplate> staticMobCache =
+  private final Cache<String, MobTemplate> staticMobCache =
       Caffeine.newBuilder().maximumSize(5_000).expireAfterAccess(1, TimeUnit.HOURS).build();
 
   // 2. Runtime Actors: 存放正在運作的 RoomActor
   // 使用 ConcurrentHashMap 確保並發存取安全
-  private final ConcurrentHashMap<Integer, RoomActor> activeRooms = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, RoomActor> activeRooms = new ConcurrentHashMap<>();
 
   // 3. Write-Behind Queue: 存放待寫入資料庫的變更
   private final BlockingQueue<RoomStateUpdate> persistenceQueue = new LinkedBlockingQueue<>();
@@ -82,43 +76,116 @@ public class WorldManager {
   /**
    * 伺服器啟動時載入地圖
    */
-  @PostConstruct
   public void loadWorld() {
+    log.info("Starting World Loading...");
+
+    // 讀取 room 資料
+    loadRooms();
+
+    // 讀取 mob 資料
+
+    // 讀取 item 資料
+
+    // 啟動 Write-Behind 消費者執行緒
+    // startPersistenceWorker();
+  }
+
+  private void loadRooms() {
+    String zoneId = "newbie_village"; // test
+
+    try {
+
+      // 讀取 room 資料
+      Resource[] resources = resourceResolver.getResources("classpath:data/zones/**/rooms.json");
+      for (Resource res : resources) {
+        // 使用 TypeReference 來正確讀取 JSON 陣列為 List<RoomTemplate>
+        List<RoomTemplate> rooms = objectMapper.readValue(res.getInputStream(),
+            new TypeReference<List<RoomTemplate>>() {});
+
+        for (RoomTemplate room : rooms) {
+          log.info("{}", objectMapper.writeValueAsString(room));
+          // 更新exits里的targetRoomId
+          if (room.exits() != null) {
+            for (Map.Entry<String, RoomExit> entry : room.exits().entrySet()) {
+              RoomExit roomExit = entry.getValue();
+              String newTargetRoomId = IdUtils.resolveId(zoneId, roomExit.targetRoomId());
+              RoomExit newRoomExit = roomExit.toBuilder().targetRoomId(newTargetRoomId).build();
+              entry.setValue(newRoomExit);
+            }
+          }
+
+          // 更新 room.id
+          String newRoomId = zoneId + ":" + room.id();
+          RoomTemplate newRoom = room.toBuilder().id(newRoomId).build();
+          staticRoomCache.put(newRoomId, newRoom);
+        }
+      }
+
+    } catch (IOException e) {
+      log.error("Could not read rooms resources", e);
+    }
+  }
+
+  public void loadWorld_old() {
     log.info("Starting World Loading...");
     try {
       // 讀取 classpath:maps/ 下所有的 json
+
+      // 讀取 mob 資料
+
+      // 讀取 item 資料
+
+      // 讀取 room 資料
+
       Resource[] resources = resourceResolver.getResources("classpath:maps/*.json");
+      // Resource[] resources = resourceResolver.getResources("classpath:maps/**/*.json");
+
 
       for (Resource res : resources) {
         try {
-          Area area = objectMapper.readValue(res.getInputStream(), Area.class);
-          log.info("Loading Area: {} ({}) - {} rooms", area.name(), area.id(), area.rooms().size());
+          Zone zone = objectMapper.readValue(res.getInputStream(), Zone.class);
+          String zoneId = zone.id();
+          log.info("Loading Zone: {} ({}) - {} rooms", zone.name(), zoneId, zone.rooms().size());
 
           // 將房間放入 Cache，建立全域索引
-          for (RoomTemplate room : area.rooms()) {
-            staticRoomCache.put(room.id(), room);
+          for (RoomTemplate room : zone.rooms()) {
+
+            // 更新exits里的targetRoomId
+            for (Map.Entry<String, RoomExit> entry : room.exits().entrySet()) {
+              RoomExit roomExit = entry.getValue();
+              String newTargetRoomId = zoneId + ":" + roomExit.targetRoomId();
+              RoomExit newRoomExit = roomExit.toBuilder().targetRoomId(newTargetRoomId).build();
+              entry.setValue(newRoomExit);
+            }
+
+            String newRoomId = zoneId + ":" + room.id();
+            RoomTemplate newRoom = room.toBuilder().id(newRoomId).build();
+            staticRoomCache.put(newRoomId, newRoom);
           }
 
           // 將怪物原型放入 Cache
-          log.info("area.mobTemplates().size: {}", area.mobTemplates().size());
-          for (MobTemplate mob : area.mobTemplates()) {
-            staticMobCache.put(mob.id(), mob);
+          log.info("zone.mobTemplates().size: {}", zone.mobTemplates().size());
+          for (MobTemplate mob : zone.mobTemplates()) {
+            String newMobId = zoneId + ":" + mob.id();
+            MobTemplate newMob = mob.toBuilder().id(newMobId).build();
+            staticMobCache.put(newMobId, newMob);
           }
 
           // 3. 根據 mob_resets 產生怪物實體
-          if (area.mobResets() != null) {
-            for (MobReset reset : area.mobResets()) {
+          if (zone.mobResets() != null) {
+            for (Population reset : zone.mobResets()) {
 
-              MobTemplate mobTpl = staticMobCache.getIfPresent(reset.mobTemplateId());
+              MobTemplate mobTpl =
+                  staticMobCache.getIfPresent(zoneId + ":" + reset.mobTemplateId());
 
               if (mobTpl != null) {
-                RoomActor roomActor = getRoomActor(reset.roomId());
+                RoomActor roomActor = getRoomActor(zoneId + ":" + reset.roomId());
 
-                for (int i = 0; i < reset.maxQty(); i++) {
+                for (int i = 0; i < reset.count(); i++) {
                   // 建立 MobActor 並設定初始房間
                   MobActor mobActor = new MobActor(mobTpl, null);
                   log.info("Spawned Mob: {} in Room: {}", mobTpl.name(), reset.roomId());
-                  mobActor.setCurrentRoomId(reset.roomId());
+                  mobActor.setCurrentRoomId(roomActor.getId());
                   log.info("MobTemplate:{}", objectMapper.writeValueAsString(mobActor));
 
                   // 把 mob 塞到房間里
@@ -143,32 +210,32 @@ public class WorldManager {
   }
 
   // 啟動時載入世界
-  @PostConstruct
-  public void loadWorld2() {
-    List<RoomStateEntity> entities = roomStateRepository.findAll();
+  /*
+   * public void loadWorld2() { List<RoomStateEntity> entities = roomStateRepository.findAll();
+   *
+   * for (RoomStateEntity e : entities) { // 1. 構建靜態 Template RoomStateRecord tpl = new
+   * RoomStateRecord(e.getRoomId(), e.getZoneId(), e.getDroppedItems());
+   *
+   * // 2. 構建動態 Actor (注入掉落物) // RoomActor actor = new RoomActor(tpl, e.getDroppedItems());
+   *
+   * // activeRooms.put(e.getId(), actor); } }
+   */
 
-    for (RoomStateEntity e : entities) {
-      // 1. 構建靜態 Template
-      RoomStateRecord tpl = new RoomStateRecord(e.getId(), e.getDroppedItems());
 
-      // 2. 構建動態 Actor (注入掉落物)
-      // RoomActor actor = new RoomActor(tpl, e.getDroppedItems());
-
-      // activeRooms.put(e.getId(), actor);
-    }
-  }
 
   /**
    * 核心方法：取得或創建 RoomActor 這是進入遊戲世界的入口
    */
-  public RoomActor getRoomActor(int roomId) {
+  public RoomActor getRoomActor(String roomId) {
     log.info("getRoomActor roomId: {}", roomId);
     // 1. 如果 Actor 已經存在，直接回傳
     return activeRooms.computeIfAbsent(roomId, id -> {
       // 2. 如果 Actor 不存在，從 Static Cache 拿資料並 new 一個
       RoomTemplate roomData = staticRoomCache.getIfPresent(id);
       if (roomData == null) {
-        throw new IllegalArgumentException("Room ID not found: " + id);
+        log.error("Room ID not found: " + id);
+        // throw new IllegalArgumentException("Room ID not found: " + id);
+        return null;
       }
       // 創建新的 Actor，並注入 persistence callback
       // return new RoomActor(roomData, this::enqueueSave);
@@ -176,7 +243,7 @@ public class WorldManager {
     });
   }
 
-  public MobTemplate getMobTemplate(int mobId) {
+  public MobTemplate getMobTemplate(String mobId) {
     return staticMobCache.getIfPresent(mobId);
   }
 
@@ -259,7 +326,7 @@ public class WorldManager {
    * @param message 訊息內容
    * @param excludeActorId 不想收到廣播的人 (通常是移動者本人)，可為 null
    */
-  public void broadcastToRoom(Integer roomId, String message, String excludeActorId) {
+  public void broadcastToRoom(String roomId, String message, String excludeActorId) {
     List<PlayerActor> actors = getActorsInRoom(roomId); // 假設您已有此方法
 
     for (PlayerActor actor : actors) {
@@ -272,7 +339,7 @@ public class WorldManager {
   }
 
   // 簡單的 getActorsInRoom 實作參考 (效率較差，之後可用 Map<RoomId, Set<ActorId>> 優化)
-  public List<PlayerActor> getActorsInRoom(Integer roomId) {
+  public List<PlayerActor> getActorsInRoom(String roomId) {
     return activePlayers.values().stream().filter(a -> roomId.equals(a.getCurrentRoomId()))
         .toList();
   }

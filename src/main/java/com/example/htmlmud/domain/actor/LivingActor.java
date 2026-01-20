@@ -25,7 +25,7 @@ public abstract class LivingActor extends VirtualActor<ActorMessage> {
   // 所有生物都在某個房間 (可能是 null)
   @Getter
   @Setter
-  protected int currentRoomId;
+  protected String currentRoomId;
 
   // 用來記錄進入房間的時間戳記 (奈秒精度以防同時進入)
   @Getter

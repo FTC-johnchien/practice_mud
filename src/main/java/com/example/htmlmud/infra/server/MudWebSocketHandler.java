@@ -8,10 +8,8 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import com.example.htmlmud.domain.actor.PlayerActor;
 import com.example.htmlmud.domain.context.GameServices;
-import com.example.htmlmud.domain.logic.command.CommandDispatcher;
 import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.GameCommand;
-import com.example.htmlmud.service.world.WorldManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,8 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class MudWebSocketHandler extends TextWebSocketHandler {
   private final GameServices gameServices;
-  private final WorldManager worldManager;
-  private final CommandDispatcher commandDispatcher;
   private final SessionRegistry sessionRegistry;
 
   @Override
@@ -30,8 +26,7 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
 
       // Guest階段 使用工廠方法建立 Guest Actor (ID=0)
       // 將必要的 Service 注入給 Actor，讓 Actor 擁有處理業務的能力
-      PlayerActor actor =
-          PlayerActor.createGuest(session, gameServices, commandDispatcher, worldManager);
+      PlayerActor actor = PlayerActor.createGuest(session, gameServices);
 
       // 啟動 Actor 的虛擬執行緒 (Virtual Thread)
       actor.start();

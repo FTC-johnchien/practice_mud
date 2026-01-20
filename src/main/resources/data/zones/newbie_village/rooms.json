@@ -1,0 +1,116 @@
+[
+  {
+    "id": "entrance",
+    "name": "村莊入口",
+    "description": "一道簡陋的木門標誌著村莊的邊界。北邊通往廣場。",
+    "exits": {
+      "north": "square",
+      "south": "dark_forest:clearing"
+    },
+    "population": [
+      {
+        "mobId": "village_guard",
+        "count": 2,
+        "respawnChance": 1.0
+      }
+    ]
+  },
+  {
+    "id": "square",
+    "name": "中央廣場",
+    "description": "村莊的中心，有一口古老的水井。",
+    "exits": {
+      "north": "north_of_the_village",
+      "south": "entrance",
+      "east": "front_of_village_elder_house",
+      "west": "inn",
+      "down": {
+        "targetId": "basement",
+        "isHidden": true,
+        "doorName": "地板下的暗門"
+      }
+    },
+    "items": [ "newbie_village:village_bread" ],
+    "population": [
+      {
+        "mobId": "wild_rat",
+        "count": 1,
+        "respawnChance": 0.3
+      }
+    ]
+  },
+  {
+    "id": "north_of_the_village",
+    "name": "村北小路",
+    "description": "一條通往北方森林的小徑，兩旁長滿了雜草。",
+    "exits": {
+      "north": "forest_entrance",
+      "south": "square"
+    },
+    "population": [
+      {
+        "mobId": "wild_rat",
+        "count": 1,
+        "respawnChance": 0.3
+      }
+    ]
+  },
+  {
+    "id": "forest_entrance",
+    "name": "森林入口",
+    "description": "這裡已經可以感受到森林的陰森氣息，偶爾傳來怪物的低吼聲。",
+    "flags": ["OUTDOORS"],
+    "exits": {
+      "south": "north_of_the_village"
+    },
+    "population": [
+      {
+        "mobId": "wild_rat",
+        "count": 2,
+        "respawnChance": 1
+      }
+    ]
+  },
+  {
+    "id": "front_of_village_elder_house",
+    "name": "村長小屋前",
+    "description": "一間簡樸的木屋矗立在眼前，門口掛著一盞老舊的風燈。",
+    "flags": ["OUTDOORS"],
+    "exits": {
+      "east": {
+        "targetId": "village_elder_house",
+        "doorName": "厚重的鐵門",
+        "isLocked": true,
+        "isHidden": false,
+        "keyId": "village_elder_key",
+        "pickProof": true
+      },
+      "west": "square",
+      "north": "the_dark_path"
+    }
+  },
+  {
+    "id": "village_elder_house",
+    "name": "村長小屋",
+    "description": "test。",
+    "exits": {
+      "west": "front_of_village_elder_house"
+    }
+  },
+  {
+    "id": "basement",
+    "name": "地下室",
+    "description": "地下室空無一物。",
+    "exits": {
+      "up": "square"
+    }
+  },
+  {
+    "id": "the_dark_path",
+    "name": "陰暗小徑",
+    "description": "四周陰暗雜草叢生，空氣中瀰漫著危險的氣息。",
+    "exits": {
+      "south": "front_of_village_elder_house"
+    }
+  }
+]

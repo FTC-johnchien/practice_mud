@@ -17,7 +17,7 @@ public class GameItem {
   private String id;
 
   // 2. 指向樣板的指標 (只存 ID)
-  private int templateId;
+  private String templateId;
 
   private int level;
 

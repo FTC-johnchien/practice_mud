@@ -1,0 +1,8 @@
+{
+  "zoneId": "newbie_village",
+  "title": "新手村",
+  "levelRange": { "min": 1, "max": 5 },
+  "respawnRate": 60,
+  "authors": ["Admin", "BuilderBob"],
+  "flags": ["SAFE_ZONE", "NO_PVP"]
+}

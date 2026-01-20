@@ -35,8 +35,8 @@ public class CharacterEntity {
   private String id;
 
   // 邏輯關聯 (這裡存 ID 比較簡單，避免 N+1 或 Lazy Loading 問題)
-  @Column(nullable = false, columnDefinition = "INT(11) UNSIGNED")
-  private long uid;
+  @Column(nullable = false)
+  private String uid;
 
   private String name;
 
@@ -46,7 +46,7 @@ public class CharacterEntity {
   private String lookDescription;
 
   @Column(name = "current_room_id")
-  private Integer currentRoomId;
+  private String currentRoomId;
 
   // 關鍵：自動將 Java 物件序列化為 MySQL JSON
   // 使用 MySQL 8.4 JSON 類型儲存擴充資料 (例如: HP, Mana, EXP, 背包)
@@ -74,7 +74,7 @@ public class CharacterEntity {
   @PrePersist
   protected void onCreate() {
     createdAt = LocalDateTime.now();
-    if (currentRoomId == 0)
-      currentRoomId = 1001; // 預設新手村
+    if (currentRoomId == null)
+      currentRoomId = "newbie:starting_square"; // 預設新手村
   }
 }

@@ -23,9 +23,8 @@ import lombok.Setter;
 public class UserEntity {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(columnDefinition = "INT(11) UNSIGNED NOT NULL AUTO_INCREMENT")
-  private long id;
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private String id;
 
   @Column(unique = true, nullable = false)
   private String username;

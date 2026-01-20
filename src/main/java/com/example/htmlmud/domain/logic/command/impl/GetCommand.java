@@ -29,8 +29,8 @@ public class GetCommand implements PlayerCommand {
     }
 
     // 2. 找到房間 Actor
-    Integer roomId = actor.getCurrentRoomId();
-    RoomActor room = actor.getWorldManager().getRoomActor(roomId);
+    String roomId = actor.getCurrentRoomId();
+    RoomActor room = actor.getServices().worldManager().getRoomActor(roomId);
 
     // 3. 發送請求 (這是非同步的)
     // 注意：這裡有兩種做法

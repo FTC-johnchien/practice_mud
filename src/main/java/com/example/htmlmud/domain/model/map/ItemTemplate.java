@@ -5,7 +5,7 @@ import java.util.Map;
 // 5. 物品/裝備重置 (ItemReset)
 public record ItemTemplate(
 
-    int id,
+    String id,
 
     String name, // "鐵劍"
 

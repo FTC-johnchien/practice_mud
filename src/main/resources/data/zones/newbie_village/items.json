@@ -1,0 +1,28 @@
+[
+  {
+    "id": "rusty_sword",
+    "name": "生鏽的鐵劍",
+    "type": "WEAPON",
+    "slot": "MAIN_HAND",
+    "keywords": ["sword", "rusty", "weapon"],
+    "description": "一把缺口的鐵劍，看起來隨時會斷掉。",
+    "stats": {
+      "damage": 5,
+      "attackSpeed": 1.2
+    },
+    "value": 10,
+    "quality": "COMMON"
+  },
+  {
+    "id": "village_bread",
+    "name": "村莊烤麵包",
+    "type": "CONSUMABLE",
+    "keywords": ["bread", "food"],
+    "description": "剛出爐的麵包，聞起來很香。",
+    "behavior": {
+      "effect": "HEAL",
+      "value": 20
+    },
+    "value": 2
+  }
+]

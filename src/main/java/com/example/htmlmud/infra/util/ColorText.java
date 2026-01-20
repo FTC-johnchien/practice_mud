@@ -39,9 +39,9 @@ public class ColorText {
     return wrap(AnsiColor.RED, AnsiColor.BOLD, name);
   }
 
-  // 玩家名稱 (白色高亮)
+  // 玩家名稱 (亮藍色)
   public static String player(String name) {
-    return wrap(AnsiColor.BRIGHT_WHITE, name);
+    return wrap(AnsiColor.BRIGHT_BLUE, name);
   }
 
   // 物品 (金色)
@@ -59,19 +59,19 @@ public class ColorText {
     return wrap(AnsiColor.NATURE_GREEN, String.valueOf(amount));
   }
 
-  // 房間名稱 (藍色)
+  // 房間名稱 (亮白色)
   public static String room(String name) {
-    return wrap(AnsiColor.BLUE, name);
+    return wrap(AnsiColor.BRIGHT_WHITE, name);
   }
 
-  // 房間描述 (白色)
+  // 房間描述 (預設色/灰色)
   public static String roomDesc(String desc) {
-    return wrap(AnsiColor.WHITE, desc);
+    return wrap(AnsiColor.LIGHT_GREY, desc);
   }
 
-  // 出口名稱 (紫色)
+  // 出口名稱 (黃色)
   public static String exit(String name) {
-    return wrap(AnsiColor.PURPLE, name);
+    return wrap(AnsiColor.YELLOW, name);
   }
 
   // 物品描述 (白色)

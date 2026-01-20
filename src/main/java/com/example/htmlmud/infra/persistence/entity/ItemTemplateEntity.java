@@ -2,6 +2,8 @@ package com.example.htmlmud.infra.persistence.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
@@ -12,8 +14,8 @@ import lombok.Data;
 public class ItemTemplateEntity {
 
   @Id
-  @Column(nullable = false, columnDefinition = "INT(11) UNSIGNED")
-  private long id;
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private String id;
 
   private String name;
 

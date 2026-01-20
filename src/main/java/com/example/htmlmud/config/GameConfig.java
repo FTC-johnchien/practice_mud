@@ -5,6 +5,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import com.example.htmlmud.domain.context.GameServices;
+import com.example.htmlmud.domain.logic.command.CommandDispatcher;
 import com.example.htmlmud.service.PlayerService;
 import com.example.htmlmud.service.auth.AuthService;
 import com.example.htmlmud.service.persistence.PlayerPersistenceService;
@@ -22,11 +23,13 @@ public class GameConfig {
 
       PlayerPersistenceService dispatcher,
 
-      // WorldManager worldManager,
+      WorldManager worldManager,
 
       ObjectMapper objectMapper,
 
       ApplicationEventPublisher eventPublisher,
+
+      CommandDispatcher commandDispatcher,
 
       ScheduledExecutorService scheduler) {
     return new GameServices(
@@ -37,11 +40,13 @@ public class GameConfig {
 
         dispatcher,
 
-        // worldManager,
+        worldManager,
 
         objectMapper,
 
         eventPublisher,
+
+        commandDispatcher,
 
         scheduler);
   }

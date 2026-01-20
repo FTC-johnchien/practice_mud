@@ -18,6 +18,9 @@ import lombok.extern.slf4j.Slf4j;
 public class RoomActor extends VirtualActor<RoomMessage> {
 
   @Getter
+  private final String id;
+
+  @Getter
   private final RoomTemplate template;
 
   // 房間內的玩家 (Runtime State)
@@ -32,6 +35,7 @@ public class RoomActor extends VirtualActor<RoomMessage> {
   public RoomActor(RoomTemplate template, List<GameItem> initialItems) {
     // 2. 傳入 Actor 名稱給父類別 (方便 Log 排查)
     super("room-" + template.id());
+    this.id = template.id();
     this.template = template;
 
     if (initialItems != null) {
@@ -126,7 +130,10 @@ public class RoomActor extends VirtualActor<RoomMessage> {
 
   // 產生快照 (只存變動的部分)
   public RoomStateRecord toRecord() {
-    return new RoomStateRecord(template.id(), new ArrayList<>(items));
+    String[] args = template.id().split(":");
+    String zoneId = args[0];
+    String roomId = args[1];
+    return new RoomStateRecord(roomId, zoneId, new ArrayList<>(items));
   }
 
   public void addPlayer(PlayerActor player) {
@@ -186,9 +193,9 @@ public class RoomActor extends VirtualActor<RoomMessage> {
     List<MobActor> snapshot = new ArrayList<>(this.mobs);
 
     // 2. 排序 (O(N log N))
-    // 對於一個房間通常只有 10~50 隻怪來說，這個開銷微乎其微
-    snapshot.sort(Comparator.comparingLong(MobActor::getLastEnterRoomTime) // 先比時間
-        .thenComparing(MobActor::getId)); // 時間相同比 ID (確保絕對順序)
+    // 排序規則：名稱 -> 進入時間 -> ID
+    snapshot.sort(Comparator.comparing((MobActor m) -> m.getTemplate().name())
+        .thenComparingLong(MobActor::getLastEnterRoomTime).thenComparing(MobActor::getId));
 
     return snapshot;
   }
