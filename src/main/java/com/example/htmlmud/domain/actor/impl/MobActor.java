@@ -127,7 +127,18 @@ public class MobActor extends LivingActor {
 
   public void tick() {
     // 委派給 Behavior
-    behavior.onTick(this);
+    // behavior.onTick(this);
+
+    long now = System.currentTimeMillis();
+
+    // 1. 戰鬥邏輯
+    if (this.state.isInCombat) {
+      processCombatRound(now);
+    } else {
+      // 2. 非戰鬥邏輯 (巡邏、回復 HP)
+      // processRegen();
+      behavior.onTick(this);
+    }
   }
 
   // --- 互動與事件 ---
@@ -188,5 +199,30 @@ public class MobActor extends LivingActor {
 
   public void attack(LivingActor target) {
     // 實作：發送 AttackMessage 給 target
+  }
+
+  private void processCombatRound(long now) {
+    // 檢查攻擊冷卻
+    if (now < this.state.nextAttackTime) {
+      return;
+    }
+
+    // 取得當前最高仇恨目標
+    String targetId = getHighestAggroTarget();
+    if (targetId == null) {
+      this.state.isInCombat = false; // 沒目標，脫離戰鬥
+      return;
+    }
+
+    // 從房間取得目標 Actor (這裡需要 WorldManager 協助，或 RoomActor 傳遞)
+    // 假設這段邏輯在 RoomActor 處理會更好，但若在 Mob 處理：
+    // LivingActor target = services.worldManager().getRoomActor(currentRoomId).findActor(targetId);
+
+    // 為了簡單，假設我們能取到 target
+    // int dmg = combatService.calculateDamage(this, target);
+    // target.onAttacked(this, dmg);
+
+    // 重設冷卻時間
+    this.state.nextAttackTime = now + this.state.attackSpeed;
   }
 }

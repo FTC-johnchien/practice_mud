@@ -168,6 +168,26 @@ public class RoomActor extends VirtualActor<RoomMessage> {
     return players;
   }
 
+  /**
+   * 房間的週期性邏輯更新
+   */
+  public void tick() {
+    // 1. 驅動房間內的 Mobs
+    for (MobActor mob : mobs) {
+      mob.tick();
+    }
+
+    // 2. 驅動房間內的 Players (如果需要自動回血/DoT)
+    for (PlayerActor player : players) {
+      // player.tick();
+    }
+
+    // 3. 處理房間本身的邏輯 (例如生怪)
+    spawnInitialMobs();
+
+    // 未來可以在這裡處理：怪物重生計時、物品腐爛、環境效果等
+  }
+
   public void dropItem(GameItem item) {
     items.add(item);
     // 標記為 Dirty (需要存檔)

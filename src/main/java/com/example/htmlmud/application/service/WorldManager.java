@@ -19,6 +19,7 @@ import com.example.htmlmud.domain.model.map.MobTemplate;
 import com.example.htmlmud.domain.model.map.RoomExit;
 import com.example.htmlmud.domain.model.map.RoomTemplate;
 import com.example.htmlmud.domain.model.map.ZoneTemplate;
+import com.example.htmlmud.domain.service.CombatService;
 import com.example.htmlmud.infra.mapper.ItemTemplateMapper;
 import com.example.htmlmud.infra.persistence.repository.ItemTemplateRepository;
 import com.example.htmlmud.infra.persistence.repository.RoomStateRepository;
@@ -42,6 +43,9 @@ public class WorldManager {
 
   @Getter
   private final PlayerService playerService;
+
+  @Getter
+  private final CombatService combatService;
 
   @Getter
   private final WorldFactory worldFactory; // 注入 Factory
@@ -71,6 +75,7 @@ public class WorldManager {
 
   // 2. Runtime Actors: 存放正在運作的 RoomActor
   // 使用 ConcurrentHashMap 確保並發存取安全
+  @Getter
   private final ConcurrentHashMap<String, RoomActor> activeRooms = new ConcurrentHashMap<>();
 
   // 3. Write-Behind Queue: 存放待寫入資料庫的變更

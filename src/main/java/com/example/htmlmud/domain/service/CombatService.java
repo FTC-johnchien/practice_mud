@@ -10,7 +10,7 @@ public class CombatService {
 
   /**
    * 執行一次攻擊判定
-   * 
+   *
    * @return 造成的傷害值 (0 代表未命中或被格擋)
    */
   public int calculateDamage(LivingActor attacker, LivingActor defender) {
@@ -19,7 +19,7 @@ public class CombatService {
 
     // 1. 命中判定 (範例：敏捷越高，命中越高)
     // 假設基礎命中 80% + (攻方敏捷 - 守方敏捷)%
-    double hitChance = 0.8 + ((attState.dex - defState.dex) * 0.01);
+    double hitChance = 0.8 + ((attState.agi - defState.agi) * 0.01);
     if (ThreadLocalRandom.current().nextDouble() > hitChance) {
       return -1; // -1 代表 Miss
     }
