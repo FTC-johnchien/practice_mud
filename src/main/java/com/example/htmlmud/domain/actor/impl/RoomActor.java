@@ -30,8 +30,9 @@ public class RoomActor extends VirtualActor<RoomMessage> {
   @Getter
   private final ZoneTemplate zoneTemplate;
 
-  @Getter
-  private final Set<SpawnRule> spawnRules;
+  private final Set<SpawnRule> mobSpawnRules;
+
+  private final Set<SpawnRule> itemSpawnRules;
 
   private final WorldFactory worldFactory;
 
@@ -43,26 +44,26 @@ public class RoomActor extends VirtualActor<RoomMessage> {
   @Getter
   private final Set<MobActor> mobs = ConcurrentHashMap.newKeySet();
 
-  private final List<GameItem> items = new ArrayList<>(); // 地上的物品
+  @Getter
+  private final Set<GameItem> items = ConcurrentHashMap.newKeySet(); // 地上的物品
+
 
   public RoomActor(RoomTemplate template, ZoneTemplate zoneTemplate, WorldFactory worldFactory) {
-    this(template, zoneTemplate, new ArrayList<>(), worldFactory);
-  }
-
-  public RoomActor(RoomTemplate template, ZoneTemplate zoneTemplate, List<GameItem> initialItems,
-      WorldFactory worldFactory) {
-    // 2. 傳入 Actor 名稱給父類別 (方便 Log 排查)
     super("room-" + template.id());
     this.id = template.id();
     this.template = template;
     this.zoneTemplate = zoneTemplate;
     // 從 Template 複製規則 (因為這是固定的)
-    this.spawnRules = template.spawnRules();
+    this.mobSpawnRules = template.mobSpawnRules();
+    this.itemSpawnRules = template.itemSpawnRules();
     this.worldFactory = worldFactory;
 
-    if (initialItems != null) {
-      this.items.addAll(initialItems);
-    }
+    // 初始生怪
+    spawnInitial("mob", mobSpawnRules);
+
+    // 初始物品
+    spawnInitial("item", itemSpawnRules);
+
   }
 
   // --- 實作父類別的抽象方法 ---
@@ -190,7 +191,7 @@ public class RoomActor extends VirtualActor<RoomMessage> {
     }
 
     // 3. 處理房間本身的邏輯 (例如生怪)
-    spawnInitialMobs();
+    checkSpawn();
 
     // 未來可以在這裡處理：怪物重生計時、物品腐爛、環境效果等
   }
@@ -244,14 +245,18 @@ public class RoomActor extends VirtualActor<RoomMessage> {
     return snapshot;
   }
 
+  private void checkSpawn() {
+
+  }
+
   /**
    * 房間初次載入時的生怪邏輯
    */
-  public void spawnInitialMobs() {
-    if (spawnRules == null)
+  private void spawnInitial(String type, Set<SpawnRule> rules) {
+    if (rules == null)
       return;
 
-    for (SpawnRule rule : spawnRules) {
+    for (SpawnRule rule : rules) {
       // 處理機率 (例如：稀有怪只有 10% 機率出現)
       if (Math.random() > rule.respawnChance()) {
         continue;
@@ -259,24 +264,37 @@ public class RoomActor extends VirtualActor<RoomMessage> {
 
       // 根據數量生成
       for (int i = 0; i < rule.count(); i++) {
-        spawnOneMob(rule);
+        switch (type) {
+          case "mob":
+            spawnOneMob(rule);
+            break;
+          case "item":
+            spawnOneItem(rule);
+            break;
+        }
       }
     }
   }
 
   private void spawnOneMob(SpawnRule rule) {
     // 1. 呼叫工廠產生 MobActor (這裡會給予 UUID)
-    MobActor mob = worldFactory.createMob(rule.mobTemplateId());
+    MobActor mob = worldFactory.createMob(rule.id());
 
     // // 2. 設定位置
-    // mob.setCurrentRoomId(this.id);
+    mob.setCurrentRoomId(this.id);
 
     // // 3. 加入房間列表
-    // this.mobs.add(mob);
+    this.mobs.add(mob);
 
     // // 4. 啟動怪物的 AI
-    // mob.start();
+    mob.start();
 
-    // log.debug("Spawned {} in room {}", mob.getTemplate().name(), this.id);
+    log.debug("Spawned {} in room {}", mob.getTemplate().name(), this.id);
   }
+
+  private void spawnOneItem(SpawnRule rule) {
+    GameItem item = worldFactory.createItem(rule.id());
+
+  }
+
 }

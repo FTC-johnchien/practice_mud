@@ -9,7 +9,7 @@
     },
     "population": [
       {
-        "mobId": "village_guard",
+        "id": "village_guard",
         "count": 2,
         "respawnChance": 1.0
       }
@@ -30,10 +30,17 @@
         "doorName": "地板下的暗門"
       }
     },
-    "items": [ "newbie_village:village_bread" ],
+    "items": [
+      {
+        "id": "newbie_village:village_bread",
+        "count": 3,
+        "respawnChance": 0.8,
+        "isHidden": false
+      }
+    ],
     "population": [
       {
-        "mobId": "wild_rat",
+        "id": "wild_rat",
         "count": 1,
         "respawnChance": 0.3
       }
@@ -49,7 +56,7 @@
     },
     "population": [
       {
-        "mobId": "wild_rat",
+        "id": "wild_rat",
         "count": 1,
         "respawnChance": 0.3
       }
@@ -65,7 +72,7 @@
     },
     "population": [
       {
-        "mobId": "wild_rat",
+        "id": "wild_rat",
         "count": 2,
         "respawnChance": 1
       }

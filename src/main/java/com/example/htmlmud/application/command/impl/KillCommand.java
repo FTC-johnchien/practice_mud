@@ -3,17 +3,20 @@ package com.example.htmlmud.application.command.impl;
 import java.util.List;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
+import com.example.htmlmud.application.command.annotation.CommandAlias;
 import com.example.htmlmud.application.command.parser.TargetSelector;
+import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.MobActor;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
-import com.example.htmlmud.domain.logic.command.annotation.CommandAlias;
 import lombok.RequiredArgsConstructor;
 
 @Component
 @CommandAlias("k")
 @RequiredArgsConstructor
 public class KillCommand implements PlayerCommand {
+
+  private final WorldManager worldManager;
 
   private final TargetSelector targetSelector; // 注入工具
 
@@ -30,7 +33,7 @@ public class KillCommand implements PlayerCommand {
     }
 
     // 1. 取得房間內的怪物列表
-    RoomActor room = actor.getManager().getRoomActor(actor.getCurrentRoomId());
+    RoomActor room = worldManager.getRoomActor(actor.getCurrentRoomId());
     // 這裡假設 room 有 getMobsSnapshot() 回傳 List<MobActor>
     // 注意：為了線程安全，這裡最好是 Snapshot 或是能確保讀取安全的列表
     List<MobActor> mobsInRoom = room.getMobsSnapshot();

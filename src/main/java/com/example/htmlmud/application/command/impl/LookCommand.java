@@ -3,10 +3,11 @@ package com.example.htmlmud.application.command.impl;
 import java.util.List;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
+import com.example.htmlmud.application.command.annotation.CommandAlias;
+import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.MobActor;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
-import com.example.htmlmud.domain.logic.command.annotation.CommandAlias;
 import com.example.htmlmud.domain.model.MobKind;
 import com.example.htmlmud.infra.util.AnsiColor;
 import com.example.htmlmud.infra.util.ColorText;
@@ -18,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @CommandAlias({"l", "see", "ls"}) // 支援 l, see, ls
 public class LookCommand implements PlayerCommand {
+
+  private final WorldManager worldManager;
 
   @Override
   public String getKey() {
@@ -32,7 +35,7 @@ public class LookCommand implements PlayerCommand {
     log.info("args:{}", args);
 
     // 2. 查詢房間資料 (使用 WorldManager)
-    RoomActor roomActor = actor.getManager().getRoomActor(roomId);
+    RoomActor roomActor = worldManager.getRoomActor(roomId);
 
     if (roomActor == null) {
       actor.reply("你處於一片虛空之中... (RoomID: " + roomId + " 不存在)");

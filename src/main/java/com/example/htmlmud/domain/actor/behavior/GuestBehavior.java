@@ -6,7 +6,9 @@ import java.util.Optional;
 import org.slf4j.MDC;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+import com.example.htmlmud.application.service.AuthService;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
+import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.context.MudKeys;
 import com.example.htmlmud.domain.model.PlayerRecord;
 import com.example.htmlmud.infra.persistence.entity.UserEntity;
@@ -17,10 +19,12 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@RequiredArgsConstructor
+// @RequiredArgsConstructor
 public class GuestBehavior implements PlayerBehavior {
 
   private static final int MAX_AUTH_RETRIES = 5;
+
+  private final AuthService authService;
 
   @Setter
   private String tempUsername; // 暫存正在處理的帳號名
@@ -28,34 +32,31 @@ public class GuestBehavior implements PlayerBehavior {
   @Setter
   private String tempPassword; // 暫存正在處理的密碼
 
+  public GuestBehavior(AuthService authService) {
+    this.authService = authService;
+  }
 
   @Override
   public PlayerBehavior handle(PlayerActor actor, GameCommand cmd) {
-    MDC.put("actorName", "GUEST");
-
-    try {
-      // 目前只處理文字輸入 (Input)
-      if (cmd instanceof GameCommand.Input(var text)) {
-        switch (actor.getConnectionState()) {
-          case CONNECTED -> doConnected(actor, text);
-          case CREATING_USERNAME -> doCreatingUsername(actor, text);
-          case CREATING_PASSWORD -> doCreatingPassword(actor, text);
-          case ENTERING_PASSWORD -> doEnterPassword(actor, text);
-          case ENTERING_CHAR_NAME -> doEnteringCharName(actor, text);
-          case ENTERING_CHAR_GENDER -> {
-          }
-          case ENTERING_CHAR_RACE -> {
-          }
-          case ENTERING_CHAR_CLASS -> {
-          }
-          case ENTERING_CHAR_ATTRIBUTES -> {
-          }
-          case IN_GAME -> {
-          }
+    // 目前只處理文字輸入 (Input)
+    if (cmd instanceof GameCommand.Input(var text)) {
+      switch (actor.getConnectionState()) {
+        case CONNECTED -> doConnected(actor, text);
+        case CREATING_USERNAME -> doCreatingUsername(actor, text);
+        case CREATING_PASSWORD -> doCreatingPassword(actor, text);
+        case ENTERING_PASSWORD -> doEnterPassword(actor, text);
+        case ENTERING_CHAR_NAME -> doEnteringCharName(actor, text);
+        case ENTERING_CHAR_GENDER -> {
+        }
+        case ENTERING_CHAR_RACE -> {
+        }
+        case ENTERING_CHAR_CLASS -> {
+        }
+        case ENTERING_CHAR_ATTRIBUTES -> {
+        }
+        case IN_GAME -> {
         }
       }
-    } finally {
-      MDC.clear();
     }
 
     return null;
@@ -97,7 +98,7 @@ public class GuestBehavior implements PlayerBehavior {
     int retryCount = (int) Optional
         .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
 
-    String errorReason = actor.getManager().getAuthService().validateUsername(input);
+    String errorReason = authService.validateUsername(input);
 
     if (errorReason != null) {
       retryCount++;
@@ -149,7 +150,7 @@ public class GuestBehavior implements PlayerBehavior {
     int retryCount = (int) Optional
         .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
 
-    String errorReason = actor.getManager().getAuthService().validatePassword(input);
+    String errorReason = authService.validatePassword(input);
 
     if (errorReason != null) {
       retryCount++;
@@ -179,7 +180,7 @@ public class GuestBehavior implements PlayerBehavior {
     this.tempPassword = input;
 
     // 新增玩家帳密
-    actor.getManager().getAuthService().register(tempUsername, tempPassword);
+    authService.register(tempUsername, tempPassword);
     log.info("玩家註冊成功: {}", tempUsername);
 
     this.tempUsername = null;
@@ -191,7 +192,6 @@ public class GuestBehavior implements PlayerBehavior {
     actor.sendText(msg);
 
     actor.setConnectionState(ConnectionState.CONNECTED);
-    actor.start();
   }
 
   private void doEnterUsername(PlayerActor actor, String input) {
@@ -203,10 +203,10 @@ public class GuestBehavior implements PlayerBehavior {
     int retryCount = (int) Optional
         .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
 
-    String errorReason = actor.getManager().getAuthService().validateUsername(input);
+    String errorReason = authService.validateUsername(input);
 
     // 如果格式正確，檢查資料庫是否存在該帳號
-    if (errorReason == null && !actor.getManager().getAuthService().exists(input)) {
+    if (errorReason == null && !authService.exists(input)) {
       errorReason = "帳號不存在。";
     }
 
@@ -259,7 +259,7 @@ public class GuestBehavior implements PlayerBehavior {
     int retryCount = (int) Optional
         .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
 
-    String errorReason = actor.getManager().getAuthService().validatePassword(input);
+    String errorReason = authService.validatePassword(input);
 
     if (errorReason != null) {
       retryCount++;
@@ -290,25 +290,11 @@ public class GuestBehavior implements PlayerBehavior {
     // log.info("玩家登入: {} {}", this.tempUsername, this.tempPassword);
 
     // 登入玩家帳密
-    UserEntity userEntity = actor.getManager().getAuthService().login(tempUsername, tempPassword);
-    log.info("玩家登入成功: {} {}", userEntity.getId(), userEntity.getUsername());
+    PlayerRecord record = authService.login(tempUsername, tempPassword);
 
-    // 載入 player
-    try {
-      PlayerRecord record = actor.getManager().getPlayerService().loadRecord(userEntity.getId(),
-          userEntity.getUsername());
-      actor.upgradeIdentity(record);
-      actor.setConnectionState(ConnectionState.IN_GAME);
-
-      // 在 PlayerActor.java 中
-      log.info("當前狀態: {}", actor.getServices().objectMapper().writeValueAsString(actor.getState()));
-
-    } catch (Exception e) {
-      log.error("", e);
-      // 進入角色設定流程
-      doEnteringCharName(actor, input);
-      return;
-    }
+    // 轉變為正式玩家身份
+    actor.upgradeIdentity(record);
+    actor.setConnectionState(ConnectionState.IN_GAME);
   }
 
   private void doEnteringCharName(PlayerActor actor, String input) {

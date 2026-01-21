@@ -20,6 +20,7 @@ import com.example.htmlmud.domain.context.MudKeys;
 import com.example.htmlmud.domain.model.map.MobTemplate;
 import com.example.htmlmud.domain.model.map.RoomExit;
 import com.example.htmlmud.domain.model.map.RoomTemplate;
+import com.example.htmlmud.domain.model.map.SpawnRule;
 import com.example.htmlmud.domain.model.map.ZoneTemplate;
 import com.example.htmlmud.domain.service.CombatService;
 import com.example.htmlmud.infra.mapper.ItemTemplateMapper;
@@ -40,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WorldManager {
 
-  private final ObjectProvider<GameServices> servicesProvider;
+  // private final ObjectProvider<GameServices> servicesProvider;
 
   @Getter
   private final AuthService authService;
@@ -161,6 +162,27 @@ public class WorldManager {
 
       for (RoomTemplate room : rooms) {
         log.info("{}", objectMapper.writeValueAsString(room));
+
+        // 更新房間里的mobSpawnRules
+        if (room.mobSpawnRules() != null) {
+          for (SpawnRule rule : room.mobSpawnRules()) {
+            String newRuleId = zoneId + ":" + rule.id();
+            SpawnRule newRule = rule.toBuilder().id(newRuleId).build();
+            room.mobSpawnRules().add(newRule);
+            room.mobSpawnRules().remove(rule);
+          }
+        }
+
+        // 更新房間里的itemSpawnRules
+        if (room.itemSpawnRules() != null) {
+          for (SpawnRule rule : room.itemSpawnRules()) {
+            String newRuleId = zoneId + ":" + rule.id();
+            SpawnRule newRule = rule.toBuilder().id(newRuleId).build();
+            room.itemSpawnRules().add(newRule);
+            room.itemSpawnRules().remove(rule);
+          }
+        }
+
         // 更新exits里的targetRoomId
         if (room.exits() != null) {
           for (Map.Entry<String, RoomExit> entry : room.exits().entrySet()) {
@@ -244,14 +266,7 @@ public class WorldManager {
     log.info("getRoomActor roomId: {}", roomId);
     // 1. 如果 Actor 已經存在，直接回傳
     return activeRooms.computeIfAbsent(roomId, id -> {
-      RoomActor room = worldFactory.createRoom(id);
-
-      // 可以在這裡觸發初始化事件
-      if (room != null) {
-        room.spawnInitialMobs(); // 讓房間自己去生怪
-      }
-
-      return room;
+      return worldFactory.createRoom(id);
     });
   }
 

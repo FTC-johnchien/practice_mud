@@ -2,8 +2,10 @@ package com.example.htmlmud.application.command.impl;
 
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
+import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
+import com.example.htmlmud.domain.context.GameServices;
 import com.example.htmlmud.domain.model.Direction;
 import com.example.htmlmud.domain.model.map.RoomExit;
 import com.example.htmlmud.infra.util.AnsiColor;
@@ -13,6 +15,11 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class MoveCommand implements PlayerCommand {
+
+  private final WorldManager worldManager;
+
+  private final LookCommand lookCommand;
+
 
   @Override
   public String getKey() {
@@ -32,7 +39,7 @@ public class MoveCommand implements PlayerCommand {
 
     // 2. 取得當前房間
     String currentRoomId = actor.getCurrentRoomId();
-    RoomActor currentRoom = actor.getManager().getRoomActor(currentRoomId);
+    RoomActor currentRoom = worldManager.getRoomActor(currentRoomId);
 
     if (currentRoom == null) {
       actor.reply("你在一片虛空中，無法移動。");
@@ -52,7 +59,7 @@ public class MoveCommand implements PlayerCommand {
 
     // 檢查要去的房間是否存在
     String targetRoomId = exit.targetRoomId();
-    RoomActor targetRoom = actor.getManager().getRoomActor(targetRoomId);
+    RoomActor targetRoom = worldManager.getRoomActor(targetRoomId);
 
     if (targetRoom == null) {
       actor.reply("前方房間 " + targetRoomId + " 施工中，無法前往。");
@@ -65,7 +72,7 @@ public class MoveCommand implements PlayerCommand {
     // 4. 舊房間廣播 (離場)
     String leaveMsg = ColorText.wrap(AnsiColor.YELLOW,
         actor.getNickname() + " 往 " + dir.getDisplayName() + " 離開了。");
-    actor.getManager().broadcastToRoom(currentRoomId, leaveMsg, actor.getId());
+    worldManager.broadcastToRoom(currentRoomId, leaveMsg, actor.getId());
 
     // 5. 更新玩家位置
     // 注意：這裡只改記憶體，State Pattern + Write-Behind 會負責存檔
@@ -76,10 +83,10 @@ public class MoveCommand implements PlayerCommand {
     // 計算反方向 (例如往北走，新房間的人會看到你從南方來)
     String arriveMsg = ColorText.wrap(AnsiColor.YELLOW,
         actor.getNickname() + " 從 " + dir.opposite().getDisplayName() + " 過來了。");
-    actor.getManager().broadcastToRoom(targetRoomId, arriveMsg, actor.getId());
+    worldManager.broadcastToRoom(targetRoomId, arriveMsg, actor.getId());
 
     // 7. 自動 Look (讓玩家看到新環境)
-    // 直接調用 Dispatcher 執行 look 指令
-    actor.getServices().commandDispatcher().dispatch(actor, "look");
+    // 直接調用 LookCommand 執行邏輯
+    lookCommand.execute(actor, "");
   }
 }

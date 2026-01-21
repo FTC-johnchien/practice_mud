@@ -4,9 +4,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Component;
+import com.example.htmlmud.application.command.annotation.CommandAlias;
 import com.example.htmlmud.application.command.impl.MoveCommand;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
-import com.example.htmlmud.domain.logic.command.annotation.CommandAlias;
 import com.example.htmlmud.domain.model.Direction;
 import lombok.extern.slf4j.Slf4j;
 

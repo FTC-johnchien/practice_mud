@@ -1,6 +1,7 @@
 package com.example.htmlmud.application.factory;
 
 import java.util.UUID;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.application.service.WorldManager;
@@ -20,6 +21,11 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class WorldFactory {
+
+  // private final GameServices gameServices;
+
+  // private final WorldManager worldManager;
+  private final ScheduledExecutorService scheduler;
 
   private final TemplateRepository templateRepo;
 
@@ -43,17 +49,12 @@ public class WorldFactory {
     return new RoomActor(roomTpl, zoneTpl, this);
   }
 
-  public MobActor createMob(String templateId) {
-    return createMob(templateId, null, null);
-  }
-
-
   /**
    * 建立怪物 Actor (包含 AI 啟動邏輯)
    */
-  public MobActor createMob(String templateId, WorldManager worldManager,
-      GameServices gameServices) {
+  public MobActor createMob(String templateId) {
     // 1. 查 Template (Record)
+    log.info("createMob templateId: {}", templateId);
     MobTemplate tpl = templateRepo.findMob(templateId).orElse(null);
     if (tpl == null) {
       log.error("MobTemplate ID not found: " + templateId);
@@ -62,7 +63,7 @@ public class WorldFactory {
 
     // 2. new Actor (State 自動生成)
     // MobActor mob = new MobActor(tpl);
-    MobActor mob = new MobActor(tpl, worldManager, gameServices);
+    MobActor mob = new MobActor(tpl, scheduler);
 
     // 3. 這裡可以處理「菁英怪」或「隨機稱號」邏輯
     // if (Math.random() < 0.1) mob.setPrefix("狂暴的");

@@ -2,9 +2,10 @@ package com.example.htmlmud.application.command.impl;
 
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
+import com.example.htmlmud.application.command.annotation.CommandAlias;
+import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
-import com.example.htmlmud.domain.logic.command.annotation.CommandAlias;
 import com.example.htmlmud.protocol.RoomMessage;
 import lombok.RequiredArgsConstructor;
 
@@ -12,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 @CommandAlias("get")
 @RequiredArgsConstructor
 public class GetCommand implements PlayerCommand {
+
+  private final WorldManager worldManager;
 
   @Override
   public String getKey() {
@@ -28,7 +31,7 @@ public class GetCommand implements PlayerCommand {
 
     // 2. 找到房間 Actor
     String roomId = actor.getCurrentRoomId();
-    RoomActor room = actor.getManager().getRoomActor(roomId);
+    RoomActor room = worldManager.getRoomActor(roomId);
 
     // 3. 發送請求 (這是非同步的)
     // 注意：這裡有兩種做法

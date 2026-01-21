@@ -13,12 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class LivingActor extends VirtualActor<ActorMessage> {
 
-  @Getter
-  protected GameServices services;
-
-  @Getter
-  protected WorldManager manager;
-
+  // @Getter
+  // protected GameServices services;
 
   @Getter
   protected String id;
@@ -36,12 +32,11 @@ public abstract class LivingActor extends VirtualActor<ActorMessage> {
   @Getter
   private long lastEnterRoomTime;
 
-  public LivingActor(String id, LivingState state, WorldManager manager, GameServices services) {
+  public LivingActor(String id, LivingState state) {
     super(id); // Actor Name: "PLAYER:1"
     this.id = id;
     this.state = state;
-    this.manager = manager;
-    this.services = services;
+    // this.services = services;
   }
 
   // --- 共用行為邏輯 ---

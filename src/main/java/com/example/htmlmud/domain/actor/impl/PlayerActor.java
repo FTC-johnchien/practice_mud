@@ -19,6 +19,7 @@ import com.example.htmlmud.domain.model.LivingState;
 import com.example.htmlmud.domain.model.PlayerRecord;
 import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.ConnectionState;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,11 @@ public class PlayerActor extends LivingActor {
 
   @Getter
   private WebSocketSession session;
+
+  @Getter
+  private final GameServices services;
+
+  private final WorldManager manager;
 
 
   // 當前的行為腦
@@ -61,8 +67,10 @@ public class PlayerActor extends LivingActor {
 
   private PlayerActor(WebSocketSession session, String id, LivingState state,
       WorldManager worldManager, GameServices gameServices) {
-    super(id, state, worldManager, gameServices);
+    super(id, state);
     this.session = session;
+    this.services = gameServices;
+    this.manager = worldManager;
   }
 
   // 工廠方法
@@ -71,7 +79,8 @@ public class PlayerActor extends LivingActor {
     PlayerActor actor =
         new PlayerActor(session, session.getId(), new LivingState(), worldManager, gameServices);
     // 初始設定為 GuestBehavior
-    actor.become(new GuestBehavior());
+    actor.setName("GUEST");
+    actor.become(new GuestBehavior(worldManager.getAuthService()));
     actor.inventory = new ArrayList<>();
     return actor;
   }
@@ -90,7 +99,7 @@ public class PlayerActor extends LivingActor {
 
     // A. 設定 MDC (給 Log 看)
     MDC.put("traceId", traceId);
-    // MDC.put("actorId", this.id);
+    MDC.put("actorName", this.name);
 
     try {
       // B. 設定 ScopedValue (給 Service 邏輯看)
@@ -165,7 +174,12 @@ public class PlayerActor extends LivingActor {
   private void become(PlayerBehavior nextBehavior) {
     this.currentBehavior = nextBehavior;
     this.currentBehavior.onEnter(this); // 觸發進場事件
-    log.info("{} 切換行為模式至 {}", this.id, nextBehavior.getClass().getSimpleName());
+    try {
+      log.info("{} 切換行為模式至 {} 當前狀態: {}", this.name, nextBehavior.getClass().getSimpleName(),
+          services.objectMapper().writeValueAsString(state));
+    } catch (JsonProcessingException ignored) {
+
+    }
   }
 
   public void handleDisconnect() {

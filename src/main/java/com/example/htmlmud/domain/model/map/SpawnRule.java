@@ -1,11 +1,13 @@
 package com.example.htmlmud.domain.model.map;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
 
-// 4. 怪物重生設定 (MobReset)
+// Mob/Item 重生設定 (Mob/Item Reset)
+@Builder(toBuilder = true)
 public record SpawnRule(
 
-    @JsonProperty("mobId") String mobTemplateId, // 怪物原型 mobTemplateId
+    String id, // 怪物原型 mobTemplateId
 
     int count, // 該房間上限幾隻
 

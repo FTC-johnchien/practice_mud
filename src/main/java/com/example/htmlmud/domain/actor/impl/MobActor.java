@@ -3,6 +3,7 @@ package com.example.htmlmud.domain.actor.impl;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import com.example.htmlmud.application.service.WorldManager;
@@ -21,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MobActor extends LivingActor {
 
+  private final ScheduledExecutorService scheduler;
+
   // 仇恨列表 (Key: 攻擊者 ID字串, Value: 仇恨值)
   // 因為 ID 已改為 UUID String，這裡的 Key 也同步調整為 String
   protected final Map<String, Integer> aggroTable = new HashMap<>();
@@ -31,19 +34,15 @@ public class MobActor extends LivingActor {
   private ScheduledFuture<?> aiTask; // Heartbeat 排程
   private MobBehavior behavior; // AI 行為 (策略模式)
 
-  public MobActor(MobTemplate template) {
-    this(template, null, null);
-  }
-
   /**
    * 建構子： 1. 接收 Template 與 Services 2. 自動生成 UUID 3. 自動從 Template 建立 LivingState
    */
-  public MobActor(MobTemplate template, WorldManager worldManager, GameServices gameServices) {
+  public MobActor(MobTemplate template, ScheduledExecutorService scheduler) {
     // 【修正 1】直接使用 UUID 作為 ID，不再依賴 GameObjectId.mob()
     // 【修正 2】呼叫 helper method 建立初始 State，確保血量與 Template 一致
-    super(UUID.randomUUID().toString(), createInitialState(template), worldManager, gameServices);
-
+    super(UUID.randomUUID().toString(), createInitialState(template));
     this.template = template;
+    this.scheduler = scheduler;
 
     // 初始化行為
     initBehavior();
@@ -106,7 +105,7 @@ public class MobActor extends LivingActor {
       return;
 
     // Scheduler (Platform Thread) 負責定時觸發
-    this.aiTask = services.scheduler().scheduleAtFixedRate(() -> {
+    this.aiTask = scheduler.scheduleAtFixedRate(() -> {
       // Virtual Thread 負責執行邏輯
       Thread.ofVirtual().name("mob-tick-" + this.getId()).start(() -> {
         try {
