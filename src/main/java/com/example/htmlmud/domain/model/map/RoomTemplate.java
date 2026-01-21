@@ -22,7 +22,7 @@ public record RoomTemplate(
 
     Map<String, RoomExit> exits, // Key: 方向 (north, east), Value: 出口詳細資訊
 
-    Set<SpawnRule> spawnRules,
+    @JsonProperty("population") Set<SpawnRule> spawnRules,
 
     List<String> items, // [ "newbie_village:village_bread" ]
 

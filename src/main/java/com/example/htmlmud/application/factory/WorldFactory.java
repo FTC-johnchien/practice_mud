@@ -2,7 +2,6 @@ package com.example.htmlmud.application.factory;
 
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.MobActor;
@@ -14,7 +13,6 @@ import com.example.htmlmud.domain.model.map.MobTemplate;
 import com.example.htmlmud.domain.model.map.RoomTemplate;
 import com.example.htmlmud.domain.model.map.ZoneTemplate;
 import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,10 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class WorldFactory {
-
-  private final ObjectProvider<WorldManager> managerProvider;
-
-  private final ObjectProvider<GameServices> servicesProvider;
 
   private final TemplateRepository templateRepo;
 
@@ -46,13 +40,19 @@ public class WorldFactory {
     }
 
     // 這裡負責組裝：RoomActor 需要 Template + ZoneTemplate
-    return new RoomActor(roomTpl, zoneTpl);
+    return new RoomActor(roomTpl, zoneTpl, this);
   }
+
+  public MobActor createMob(String templateId) {
+    return createMob(templateId, null, null);
+  }
+
 
   /**
    * 建立怪物 Actor (包含 AI 啟動邏輯)
    */
-  public MobActor createMob(String templateId) {
+  public MobActor createMob(String templateId, WorldManager worldManager,
+      GameServices gameServices) {
     // 1. 查 Template (Record)
     MobTemplate tpl = templateRepo.findMob(templateId).orElse(null);
     if (tpl == null) {
@@ -61,7 +61,8 @@ public class WorldFactory {
     }
 
     // 2. new Actor (State 自動生成)
-    MobActor mob = new MobActor(tpl, managerProvider.getObject(), servicesProvider.getObject());
+    // MobActor mob = new MobActor(tpl);
+    MobActor mob = new MobActor(tpl, worldManager, gameServices);
 
     // 3. 這裡可以處理「菁英怪」或「隨機稱號」邏輯
     // if (Math.random() < 0.1) mob.setPrefix("狂暴的");

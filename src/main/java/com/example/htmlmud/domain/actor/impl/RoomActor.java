@@ -5,6 +5,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import com.example.htmlmud.application.factory.WorldFactory;
+import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.core.VirtualActor; // 引用您的基礎類別
 import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.RoomStateRecord;
@@ -31,6 +33,9 @@ public class RoomActor extends VirtualActor<RoomMessage> {
   @Getter
   private final Set<SpawnRule> spawnRules;
 
+  private final WorldFactory worldFactory;
+
+
   // 房間內的玩家 (Runtime State)
   @Getter
   private final Set<PlayerActor> players = ConcurrentHashMap.newKeySet();
@@ -40,11 +45,12 @@ public class RoomActor extends VirtualActor<RoomMessage> {
 
   private final List<GameItem> items = new ArrayList<>(); // 地上的物品
 
-  public RoomActor(RoomTemplate template, ZoneTemplate zoneTemplate) {
-    this(template, zoneTemplate, new ArrayList<>());
+  public RoomActor(RoomTemplate template, ZoneTemplate zoneTemplate, WorldFactory worldFactory) {
+    this(template, zoneTemplate, new ArrayList<>(), worldFactory);
   }
 
-  public RoomActor(RoomTemplate template, ZoneTemplate zoneTemplate, List<GameItem> initialItems) {
+  public RoomActor(RoomTemplate template, ZoneTemplate zoneTemplate, List<GameItem> initialItems,
+      WorldFactory worldFactory) {
     // 2. 傳入 Actor 名稱給父類別 (方便 Log 排查)
     super("room-" + template.id());
     this.id = template.id();
@@ -52,6 +58,7 @@ public class RoomActor extends VirtualActor<RoomMessage> {
     this.zoneTemplate = zoneTemplate;
     // 從 Template 複製規則 (因為這是固定的)
     this.spawnRules = template.spawnRules();
+    this.worldFactory = worldFactory;
 
     if (initialItems != null) {
       this.items.addAll(initialItems);
@@ -259,7 +266,7 @@ public class RoomActor extends VirtualActor<RoomMessage> {
 
   private void spawnOneMob(SpawnRule rule) {
     // 1. 呼叫工廠產生 MobActor (這裡會給予 UUID)
-    // MobActor mob = services.mobFactory().createMob(rule.mobTemplateId());
+    MobActor mob = worldFactory.createMob(rule.mobTemplateId());
 
     // // 2. 設定位置
     // mob.setCurrentRoomId(this.id);

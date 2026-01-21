@@ -31,6 +31,10 @@ public class MobActor extends LivingActor {
   private ScheduledFuture<?> aiTask; // Heartbeat 排程
   private MobBehavior behavior; // AI 行為 (策略模式)
 
+  public MobActor(MobTemplate template) {
+    this(template, null, null);
+  }
+
   /**
    * 建構子： 1. 接收 Template 與 Services 2. 自動生成 UUID 3. 自動從 Template 建立 LivingState
    */
