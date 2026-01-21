@@ -1,7 +1,7 @@
 package com.example.htmlmud.domain.event;
 
 import java.time.Instant;
-import com.example.htmlmud.domain.actor.PlayerActor;
+import com.example.htmlmud.domain.actor.impl.PlayerActor;
 
 /**
  * 領域事件的根介面 使用 sealed 限制只有特定的 record 可以實作它

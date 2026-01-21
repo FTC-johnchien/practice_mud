@@ -1,7 +1,7 @@
 package com.example.htmlmud.domain.actor.behavior;
 
-import com.example.htmlmud.domain.actor.MobActor;
-import com.example.htmlmud.domain.actor.PlayerActor;
+import com.example.htmlmud.domain.actor.impl.MobActor;
+import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor

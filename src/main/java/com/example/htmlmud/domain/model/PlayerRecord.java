@@ -1,7 +1,6 @@
 package com.example.htmlmud.domain.model;
 
 import java.util.List;
-import com.example.htmlmud.domain.model.json.LivingState;
 
 // 這是在 Actor 之間傳遞的快照 (Snapshot)
 public record PlayerRecord(

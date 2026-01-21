@@ -1,6 +1,6 @@
 package com.example.htmlmud.domain.actor.behavior;
 
-import com.example.htmlmud.domain.actor.PlayerActor;
+import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.protocol.GameCommand;
 
 public interface PlayerBehavior {

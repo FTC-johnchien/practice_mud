@@ -1,6 +1,6 @@
 package com.example.htmlmud.domain.context;
 
-import com.example.htmlmud.domain.actor.PlayerActor;
+import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class MudContext {

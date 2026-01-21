@@ -1,8 +1,9 @@
 package com.example.htmlmud.domain.actor;
 
+import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.core.VirtualActor;
 import com.example.htmlmud.domain.context.GameServices;
-import com.example.htmlmud.domain.model.json.LivingState;
+import com.example.htmlmud.domain.model.LivingState;
 import com.example.htmlmud.protocol.ActorMessage;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,6 +15,10 @@ public abstract class LivingActor extends VirtualActor<ActorMessage> {
 
   @Getter
   protected GameServices services;
+
+  @Getter
+  protected WorldManager manager;
+
 
   @Getter
   protected String id;
@@ -31,10 +36,11 @@ public abstract class LivingActor extends VirtualActor<ActorMessage> {
   @Getter
   private long lastEnterRoomTime;
 
-  public LivingActor(String id, LivingState state, GameServices services) {
+  public LivingActor(String id, LivingState state, WorldManager manager, GameServices services) {
     super(id); // Actor Name: "PLAYER:1"
     this.id = id;
     this.state = state;
+    this.manager = manager;
     this.services = services;
   }
 
@@ -84,7 +90,7 @@ public abstract class LivingActor extends VirtualActor<ActorMessage> {
   }
 
   // 當怪物進入房間時呼叫此方法
-  protected void markEnterRoom() {
+  public void markEnterRoom() {
     this.lastEnterRoomTime = System.nanoTime();
   }
 }

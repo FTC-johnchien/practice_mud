@@ -1,8 +1,7 @@
 package com.example.htmlmud.protocol;
 
-// 修正引用路徑：指向 domain.actor
-import com.example.htmlmud.domain.actor.PlayerActor;
 import java.util.concurrent.CompletableFuture;
+import com.example.htmlmud.domain.actor.impl.PlayerActor;
 
 /**
  * 定義所有發送給 RoomActor 的內部訊息協定 使用 Sealed Interface 限制訊息類型，配合 switch pattern matching

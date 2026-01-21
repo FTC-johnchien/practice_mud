@@ -5,7 +5,7 @@ import java.util.List;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import com.example.htmlmud.domain.model.GameItem;
-import com.example.htmlmud.domain.model.json.LivingState;
+import com.example.htmlmud.domain.model.LivingState;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

@@ -2,7 +2,7 @@ package com.example.htmlmud.infra.server;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
-import com.example.htmlmud.domain.actor.PlayerActor;
+import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 

@@ -6,8 +6,7 @@ import java.util.Optional;
 import org.slf4j.MDC;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
-import com.example.htmlmud.domain.actor.PlayerActor;
-import com.example.htmlmud.domain.context.GameServices;
+import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.context.MudKeys;
 import com.example.htmlmud.domain.model.PlayerRecord;
 import com.example.htmlmud.infra.persistence.entity.UserEntity;
@@ -22,8 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 public class GuestBehavior implements PlayerBehavior {
 
   private static final int MAX_AUTH_RETRIES = 5;
-
-  private final GameServices services;
 
   @Setter
   private String tempUsername; // 暫存正在處理的帳號名
@@ -81,8 +78,8 @@ public class GuestBehavior implements PlayerBehavior {
     String msg = "【註冊流程】\r\n只能包含英文字母（不分大小寫），不允許數字、空格或特殊符號。\r\n長度必須在 4 到 20 個字元之間。\r\n請輸入您想使用的帳號名稱:";
     try {
       // 告訴前端：切換輸入模式為帳號 (透過自定義協議，例如 JSON {type: "USER_MODE"})
-      String json =
-          services.objectMapper().writeValueAsString(Map.of("type", "USER_MODE", "content", msg));
+      String json = actor.getServices().objectMapper()
+          .writeValueAsString(Map.of("type", "USER_MODE", "content", msg));
       session.sendMessage(new TextMessage(json));
 
       session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, 0); // 重置計數
@@ -100,7 +97,7 @@ public class GuestBehavior implements PlayerBehavior {
     int retryCount = (int) Optional
         .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
 
-    String errorReason = services.authService().validateUsername(input);
+    String errorReason = actor.getManager().getAuthService().validateUsername(input);
 
     if (errorReason != null) {
       retryCount++;
@@ -133,8 +130,8 @@ public class GuestBehavior implements PlayerBehavior {
     String msg = "【註冊流程】\r\n只能包含英文字母與數字且長度必須在 6 到 32 個字元之間。\r\n請輸入密碼:";
     try {
       // 告訴前端：切換輸入模式為密碼 (透過自定義協議，例如 JSON {type: "PWD_MODE"})
-      String json =
-          services.objectMapper().writeValueAsString(Map.of("type", "PWD_MODE", "content", msg));
+      String json = actor.getServices().objectMapper()
+          .writeValueAsString(Map.of("type", "PWD_MODE", "content", msg));
       session.sendMessage(new TextMessage(json));
 
       actor.setConnectionState(ConnectionState.CREATING_PASSWORD);
@@ -152,7 +149,7 @@ public class GuestBehavior implements PlayerBehavior {
     int retryCount = (int) Optional
         .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
 
-    String errorReason = services.authService().validatePassword(input);
+    String errorReason = actor.getManager().getAuthService().validatePassword(input);
 
     if (errorReason != null) {
       retryCount++;
@@ -182,7 +179,7 @@ public class GuestBehavior implements PlayerBehavior {
     this.tempPassword = input;
 
     // 新增玩家帳密
-    services.authService().register(tempUsername, tempPassword);
+    actor.getManager().getAuthService().register(tempUsername, tempPassword);
     log.info("玩家註冊成功: {}", tempUsername);
 
     this.tempUsername = null;
@@ -206,10 +203,10 @@ public class GuestBehavior implements PlayerBehavior {
     int retryCount = (int) Optional
         .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
 
-    String errorReason = services.authService().validateUsername(input);
+    String errorReason = actor.getManager().getAuthService().validateUsername(input);
 
     // 如果格式正確，檢查資料庫是否存在該帳號
-    if (errorReason == null && !services.authService().exists(input)) {
+    if (errorReason == null && !actor.getManager().getAuthService().exists(input)) {
       errorReason = "帳號不存在。";
     }
 
@@ -243,8 +240,8 @@ public class GuestBehavior implements PlayerBehavior {
     String msg = "請輸入密碼:";
     try {
       // 告訴前端：切換輸入模式為密碼 (透過自定義協議，例如 JSON {type: "PWD_MODE"})
-      String json =
-          services.objectMapper().writeValueAsString(Map.of("type", "PWD_MODE", "content", msg));
+      String json = actor.getServices().objectMapper()
+          .writeValueAsString(Map.of("type", "PWD_MODE", "content", msg));
       session.sendMessage(new TextMessage(json));
 
       actor.setConnectionState(ConnectionState.ENTERING_PASSWORD);
@@ -262,7 +259,7 @@ public class GuestBehavior implements PlayerBehavior {
     int retryCount = (int) Optional
         .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
 
-    String errorReason = services.authService().validatePassword(input);
+    String errorReason = actor.getManager().getAuthService().validatePassword(input);
 
     if (errorReason != null) {
       retryCount++;
@@ -293,18 +290,18 @@ public class GuestBehavior implements PlayerBehavior {
     // log.info("玩家登入: {} {}", this.tempUsername, this.tempPassword);
 
     // 登入玩家帳密
-    UserEntity userEntity = services.authService().login(tempUsername, tempPassword);
+    UserEntity userEntity = actor.getManager().getAuthService().login(tempUsername, tempPassword);
     log.info("玩家登入成功: {} {}", userEntity.getId(), userEntity.getUsername());
 
     // 載入 player
     try {
-      PlayerRecord record =
-          services.playerService().loadRecord(userEntity.getId(), userEntity.getUsername());
+      PlayerRecord record = actor.getManager().getPlayerService().loadRecord(userEntity.getId(),
+          userEntity.getUsername());
       actor.upgradeIdentity(record);
       actor.setConnectionState(ConnectionState.IN_GAME);
 
       // 在 PlayerActor.java 中
-      log.info("當前狀態: {}", services.objectMapper().writeValueAsString(actor.getState()));
+      log.info("當前狀態: {}", actor.getServices().objectMapper().writeValueAsString(actor.getState()));
 
     } catch (Exception e) {
       log.error("", e);
@@ -322,8 +319,8 @@ public class GuestBehavior implements PlayerBehavior {
         "【角色設定流程】\r\n只能包含英文字母（不分大小寫），不允許數字、空格或特殊符號。\r\n長度必須在 2 到 20 個字元之間。\r\n請輸入您想使用的角色名稱:";
     try {
       // 告訴前端：切換輸入模式為帳號 (透過自定義協議，例如 JSON {type: "USER_MODE"})
-      String json =
-          services.objectMapper().writeValueAsString(Map.of("type", "USER_MODE", "content", msg));
+      String json = actor.getServices().objectMapper()
+          .writeValueAsString(Map.of("type", "USER_MODE", "content", msg));
       session.sendMessage(new TextMessage(json));
 
       session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, 0); // 重置計數

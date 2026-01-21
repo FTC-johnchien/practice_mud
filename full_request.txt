@@ -1,0 +1,5238 @@
+﻿角色：資深Java工程師。
+背景：這是我練習用的mud專案。
+我想學習Java Jdk 25及Spring Boot 4.0.1的技術，透過開發一個html mud來邊做邊學。
+1. 開發環境使用Jdk版本為25, spring boot版本為4.0.1, mysql8.4.7
+2. 預計學習的技術如下，Spring Boot WS, Virtual Threads(Loom), Records, Sealed Classes/Interfaces, BlockingQueue, Inheritance(extends), Write-Behind + MySQL 8.4 JSON, Hibernate 6.x + Jackson, Command Pattern, FastUtil, Cache(caffeine), Structured Concurrency(結構化並發), Spring Events(ApplicationEventPublisher), Scoped Values。
+限制：由於是個人學習與開發，暫不考慮以下技術FFM API, Vector API, StringTemplate.STR(vscode引用錯誤)。
+問題：請閱讀以下的程式碼，並針對目錄結構、設計規劃與改善建議給出回覆。
+
+
+--- File: HtmlmudApplication.java ---
+
+package com.example.htmlmud;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class HtmlmudApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(HtmlmudApplication.class, args);
+	}
+
+}
+
+
+--- File: GameConfig.java ---
+
+package com.example.htmlmud.config;
+
+import java.util.concurrent.ScheduledExecutorService;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import com.example.htmlmud.domain.context.GameServices;
+import com.example.htmlmud.domain.logic.command.CommandDispatcher;
+import com.example.htmlmud.service.PlayerService;
+import com.example.htmlmud.service.auth.AuthService;
+import com.example.htmlmud.service.persistence.PlayerPersistenceService;
+import com.example.htmlmud.service.world.WorldManager;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+@Configuration
+public class GameConfig {
+  @Bean
+  public GameServices gameServices(
+
+      AuthService authService,
+
+      PlayerService playerService,
+
+      PlayerPersistenceService dispatcher,
+
+      WorldManager worldManager,
+
+      ObjectMapper objectMapper,
+
+      ApplicationEventPublisher eventPublisher,
+
+      CommandDispatcher commandDispatcher,
+
+      ScheduledExecutorService scheduler) {
+    return new GameServices(
+
+        authService,
+
+        playerService,
+
+        dispatcher,
+
+        worldManager,
+
+        objectMapper,
+
+        eventPublisher,
+
+        commandDispatcher,
+
+        scheduler);
+  }
+}
+
+
+--- File: JacksonConfig.java ---
+
+package com.example.htmlmud.config;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+
+@Configuration
+public class JacksonConfig {
+
+  @Bean
+  @Primary // 蝣箔???身雿輻??ObjectMapper
+  public ObjectMapper objectMapper() {
+    ObjectMapper mapper = new ObjectMapper();
+
+    // 1. 敹賜 JSON 銝剖??其? Java POJO 銝剜???甈? (?踹??啗??銝摰孵??游??
+    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+    // 2. ?迂蝛箇? Bean (???芣??寞??隞嗅??????梢)
+    mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+
+    // 3. (?貊) ??頛詨嚗靘?Debug ?亦? JSON嚗迤撘憓??
+    mapper.enable(SerializationFeature.INDENT_OUTPUT);
+
+    return mapper;
+  }
+}
+
+
+--- File: SchedulerConfig.java ---
+
+package com.example.htmlmud.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+
+@Configuration
+public class SchedulerConfig {
+
+  @Bean(destroyMethod = "shutdown") // 蝣箔?隡箸??券????鞈?
+  public ScheduledExecutorService gameScheduler() {
+    // ?詨??瑁?蝺閮剔 2~4 ?喳??
+    // ???典?靘?"閫貊" 隞餃?嚗祕?銵?銝策 Virtual Thread嚗?
+    // ?隞仿?Scheduler 撟曆?銝?鋡怠雿?銝?閬云憭銵???
+    return Executors.newScheduledThreadPool(4, Thread.ofPlatform().factory());
+  }
+}
+
+
+--- File: SecurityConfig.java ---
+
+package com.example.htmlmud.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+@Configuration
+public class SecurityConfig {
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+  }
+}
+
+
+--- File: WebSocketConfig.java ---
+
+package com.example.htmlmud.config;
+
+import com.example.htmlmud.infra.server.MudWebSocketHandler;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.socket.config.annotation.EnableWebSocket;
+import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
+
+@Configuration
+@EnableWebSocket
+public class WebSocketConfig implements WebSocketConfigurer {
+
+  private final MudWebSocketHandler mudWebSocketHandler;
+
+  public WebSocketConfig(MudWebSocketHandler mudWebSocketHandler) {
+    this.mudWebSocketHandler = mudWebSocketHandler;
+  }
+
+  @Override
+  public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+    registry.addHandler(mudWebSocketHandler, "/ws").setAllowedOrigins("*");
+  }
+}
+
+
+--- File: LivingActor.java ---
+
+package com.example.htmlmud.domain.actor;
+
+import com.example.htmlmud.domain.actor.core.VirtualActor;
+import com.example.htmlmud.domain.context.GameServices;
+import com.example.htmlmud.domain.model.json.LivingState;
+import com.example.htmlmud.protocol.ActorMessage;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+
+// 瘜? T 霈??隞亙摮??交?憭?Message 憿?
+@Slf4j
+public abstract class LivingActor extends VirtualActor<ActorMessage> {
+
+  @Getter
+  protected GameServices services;
+
+  @Getter
+  protected String id;
+
+  // ????拚????(HP/MP)
+  @Getter
+  protected LivingState state;
+
+  // ????拚?冽????(?航??null)
+  @Getter
+  @Setter
+  protected String currentRoomId;
+
+  // ?其?閮??脣?輸????閮?(憟?蝎曉漲隞仿???脣)
+  @Getter
+  private long lastEnterRoomTime;
+
+  public LivingActor(String id, LivingState state, GameServices services) {
+    super(id); // Actor Name: "PLAYER:1"
+    this.id = id;
+    this.state = state;
+    this.services = services;
+  }
+
+  // --- ?梁銵?摩 ---
+
+  // 1. ???
+  public void takeDamage(int amount, String attackerId) {
+    if (state.isDead)
+      return;
+
+    this.state.hp -= amount;
+    log.info("{} took {} damage from {}. HP: {}/{}", id, amount, attackerId, state.hp, state.maxHp);
+
+    // ?潮??舐策?輸? (霈隞犖??渲?)
+    // if (currentRoom != null) {
+    // currentRoom.broadcast(...);
+    // }
+
+    if (state.hp <= 0) {
+      die(attackerId);
+    }
+  }
+
+  // 2. 甇颱滿??
+  protected void die(String killerId) {
+    this.state.hp = 0;
+    this.state.isDead = true;
+    log.info("{} has been slain by {}!", id, killerId);
+
+    onDeath(killerId); // 璅??寞? (Template Method)嚗策摮??亙祕雿?撖嗆?????
+  }
+
+  // 3. 瘝餌???
+  public void heal(int amount) {
+    if (state.isDead)
+      return;
+    this.state.hp = Math.min(state.hp + amount, state.maxHp);
+  }
+
+  protected void onAttacked(LivingActor attacker, int damage) {
+
+  }
+
+  // 摰儔?質情?寞?嚗?憿敹?撖虫?
+  protected void onDeath(String killerId) {
+
+  }
+
+  // ?嗆芰?脣?輸???急迨?寞?
+  protected void markEnterRoom() {
+    this.lastEnterRoomTime = System.nanoTime();
+  }
+}
+
+
+--- File: MobActor.java ---
+
+package com.example.htmlmud.domain.actor;
+
+import com.example.htmlmud.domain.actor.behavior.*;
+import com.example.htmlmud.domain.context.GameServices;
+import com.example.htmlmud.domain.model.json.LivingState;
+import com.example.htmlmud.domain.model.map.MobTemplate;
+import com.example.htmlmud.protocol.ActorMessage;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+
+@Slf4j
+public class MobActor extends LivingActor {
+
+  // 隞?” (Key: ?餅???ID摮葡, Value: 隞??
+  // ? ID 撌脫??UUID String嚗ㄐ??Key 銋?甇亥矽?渡 String
+  protected final Map<String, Integer> aggroTable = new HashMap<>();
+
+  @Getter
+  private final MobTemplate template;
+
+  private ScheduledFuture<?> aiTask; // Heartbeat ??
+  private MobBehavior behavior; // AI 銵 (蝑璅∪?)
+
+  /**
+   * 撱箸?摮? 1. ?交 Template ??Services 2. ?芸??? UUID 3. ?芸?敺?Template 撱箇? LivingState
+   */
+  public MobActor(MobTemplate template, GameServices gameServices) {
+    // ?耨甇?1??乩蝙??UUID 雿 ID嚗???鞈?GameObjectId.mob()
+    // ?耨甇?2???helper method 撱箇??? State嚗Ⅱ靽??? Template 銝??
+    super(UUID.randomUUID().toString(), createInitialState(template), gameServices);
+
+    this.template = template;
+
+    // ??????
+    initBehavior();
+
+    log.debug("Mob created: {} (ID: {})", template.name(), this.getId());
+
+    // ??閬ㄐ蝘駁鈭?this.start()嚗??典???(MobFactory) 撱箇?撖阡?敺??mob.start()
+  }
+
+  // 頛?寞?嚗??Template ?Ｙ?????LivingState
+  private static LivingState createInitialState(MobTemplate tpl) {
+    LivingState state = new LivingState();
+    state.hp = tpl.maxHp();
+    state.maxHp = tpl.maxHp();
+    state.level = tpl.level();
+    // 憒???MP, Stamina 蝑惇?找??臬甇文?憪?
+
+    return state;
+  }
+
+  private void initBehavior() {
+    if (template.shopId() != null) {
+      this.behavior = new MerchantBehavior(template.shopId());
+    } else if (template.isAggressive()) {
+      this.behavior = new AggressiveBehavior();
+    } else {
+      this.behavior = new PassiveBehavior();
+    }
+  }
+
+  // --- ??望??批 ---
+
+  @Override
+  public void start() {
+    super.start(); // ?? Actor 閮雿???
+    // startHeartbeat(); // ?? AI 敹歲
+  }
+
+  @Override
+  public void stop() {
+    stopHeartbeat(); // ?迫 AI
+    super.stop(); // ?迫 Actor
+  }
+
+  // --- 閮?? ---
+
+  @Override
+  protected void handleMessage(ActorMessage msg) {
+    // 1. AI 瘙箇??芸? (靘?嚗??唳?捱摰?阡?)
+    behavior.onMessage(this, msg);
+
+    // 2. 憒??園??交???摩 (憒?Buff 蝯?)嚗閬?瘙??
+    // super.handleMessage(msg);
+  }
+
+  // --- AI 敹歲璈 (Heartbeat) ---
+
+  private void startHeartbeat() {
+    if (aiTask != null && !aiTask.isCancelled())
+      return;
+
+    // Scheduler (Platform Thread) 鞎痊摰?閫貊
+    this.aiTask = services.scheduler().scheduleAtFixedRate(() -> {
+      // Virtual Thread 鞎痊?瑁??摩
+      Thread.ofVirtual().name("mob-tick-" + this.getId()).start(() -> {
+        try {
+          if (this.state.hp > 0) {
+            this.tick();
+          } else {
+            stopHeartbeat();
+          }
+        } catch (Exception e) {
+          log.error("Mob tick error: {}", this.getId(), e);
+        }
+      });
+    }, 1, 3, TimeUnit.SECONDS); // 撱園1蝘?憪?瘥?蝘?甈?
+  }
+
+  private void stopHeartbeat() {
+    if (aiTask != null) {
+      aiTask.cancel(false);
+      aiTask = null;
+    }
+  }
+
+  public void tick() {
+    // 憪晷蝯?Behavior
+    behavior.onTick(this);
+  }
+
+  // --- 鈭???隞?---
+
+  public void onPlayerEnter(PlayerActor player) {
+    behavior.onPlayerEnter(this, player);
+  }
+
+  public void onInteract(PlayerActor player, String command) {
+    behavior.onInteract(this, player, command);
+  }
+
+  @Override
+  public void onAttacked(LivingActor attacker, int damage) {
+    // ?⊥?文?
+    if (template.isInvincible()) {
+      if (attacker instanceof PlayerActor p) {
+        p.sendText(this.template.name() + " 瘥恍垣?∪嚗?);
+      }
+      return;
+    }
+
+    // 1. ??? (?澆?園???
+    super.onAttacked(attacker, damage);
+
+    // 2. 憓?隞??(雿輻 String ID)
+    addAggro(attacker.getId(), damage);
+
+    // 3. ? AI
+    behavior.onDamaged(this, attacker);
+  }
+
+  @Override
+  protected void onDeath(String killerId) {
+    super.onDeath(killerId);
+    stopHeartbeat();
+
+    log.info("{} died. Killer: {}", this.template.name(), killerId);
+    // 閫貊?窄?策鈭?撽潛??摩...
+  }
+
+  // 隞?潛恣??(Key ?寧 String)
+  public void addAggro(String sourceId, int value) {
+    aggroTable.merge(sourceId, value, Integer::sum);
+  }
+
+  // ???嗅?隞?擃璅?ID
+  public String getHighestAggroTarget() {
+    return aggroTable.entrySet().stream().max(Map.Entry.comparingByValue()).map(Map.Entry::getKey)
+        .orElse(null);
+  }
+
+  // 銵撅日?閬?頛?寞? (Facade)
+  public void sayToRoom(String content) {
+    // 撖虫?嚗?敺??RoomActor 銝血誨??
+    // services.worldManager().getRoom(currentRoomId).broadcast(...)
+  }
+
+  public void attack(LivingActor target) {
+    // 撖虫?嚗??AttackMessage 蝯?target
+  }
+}
+
+
+--- File: PlayerActor.java ---
+
+package com.example.htmlmud.domain.actor;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import org.slf4j.MDC;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
+import com.example.htmlmud.domain.actor.behavior.GuestBehavior;
+import com.example.htmlmud.domain.actor.behavior.InGameBehavior;
+import com.example.htmlmud.domain.actor.behavior.PlayerBehavior;
+import com.example.htmlmud.domain.context.GameServices;
+import com.example.htmlmud.domain.context.MudContext;
+import com.example.htmlmud.domain.model.GameItem;
+import com.example.htmlmud.domain.model.PlayerRecord;
+import com.example.htmlmud.domain.model.json.LivingState;
+import com.example.htmlmud.protocol.ActorMessage;
+import com.example.htmlmud.protocol.ConnectionState;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+
+// PlayerActor ?????舫??停??GameCommand
+@Slf4j
+public class PlayerActor extends LivingActor {
+
+  @Getter
+  private WebSocketSession session;
+
+
+  // ?嗅????箄
+  private PlayerBehavior currentBehavior;
+
+  @Getter
+  @Setter
+  private String name;
+
+  @Getter
+  @Setter
+  private String nickname;
+
+  @Getter
+  @Setter
+  private String lookDescription;
+
+
+  // Actor ?折???(State Machine Context)
+  @Getter
+  @Setter
+  private ConnectionState connectionState = ConnectionState.CONNECTED;
+
+
+  // ??
+  @Getter
+  private List<GameItem> inventory = new ArrayList<>();
+
+  private boolean isDirty = false;
+
+  private PlayerActor(WebSocketSession session, String id, LivingState state,
+      GameServices gameServices) {
+    super(id, state, gameServices);
+    this.session = session;
+  }
+
+  // 撌亙??寞?
+  public static PlayerActor createGuest(WebSocketSession session, GameServices gameServices) {
+    PlayerActor actor = new PlayerActor(session, session.getId(), new LivingState(), gameServices);
+    // ??閮剖???GuestBehavior
+    actor.become(new GuestBehavior(gameServices));
+    actor.inventory = new ArrayList<>();
+    return actor;
+  }
+
+  @Override
+  public void start() {
+    super.start();
+    // ???甇∟?閰?
+    reply("甇∟?? Html Mud 銝?嚗?);
+    reply("隢撓??撣唾? ?脰??餃 ??頛詨 'new' ?脰?閮餃?嚗?);
+  }
+
+  @Override
+  protected void handleMessage(ActorMessage msg) {
+    String traceId = msg.traceId();
+
+    // A. 閮剖? MDC (蝯?Log ??
+    MDC.put("traceId", traceId);
+    // MDC.put("actorId", this.id);
+
+    try {
+      // B. 閮剖? ScopedValue (蝯?Service ?摩??
+      ScopedValue.where(MudContext.CURRENT_PLAYER, this).where(MudContext.TRACE_ID, traceId)
+          .run(() -> {
+
+            // C. 憪晷蝯衣??Behavior ??
+            PlayerBehavior next = currentBehavior.handle(this, msg.command());
+
+            // D. ?????
+            if (next != null) {
+              become(next);
+            }
+          });
+    } finally {
+      // E. 皜? MDC
+      MDC.clear();
+    }
+    /*
+     * // ?ㄐ撌脩???Single Thread ?啣?嚗??其???synchronized // 雿輻 ScopedValue ?蝬?敺縑撠?啁? traceId
+     * ScopedValue.where(MudContext.TRACE_ID, msg.traceId()).run(() -> { GameCommand cmd =
+     * msg.command();
+     *
+     * // ?芾???銝脰撓??(Input) if (cmd instanceof GameCommand.Input(var text)) { String cleanText =
+     * text.trim(); log.info("[State:{}] Input: {}", state, cleanText);
+     *
+     * // ?寞??嗅????瘚?// switch (connectionState) { // case CONNECTED -> handleConnected(cleanText); //
+     * case CREATING_USER -> handleRegisterUsername(cleanText); // case CREATING_PASS ->
+     * handleRegisterPassword(cleanText); // case ENTERING_PASS -> handleLoginPassword(cleanText);
+     * // case PLAYING -> handleGameLogic(cleanText, msg.traceId()); // } handleGameLogic(cleanText,
+     * msg.traceId()); } });
+     */
+    // ?ㄐ?舐 Actor ??Virtual Thread ?瑁???
+    // Actor ?湔?? session ?拐辣?潮???
+    // try {
+    // switch (cmd) {
+    // case GameCommand.Login(var user, var pass) -> {
+    // log.info("[Trace:{}] Processing Login: {}", traceId, user);
+    // handleLogin(user, pass);
+    // }
+
+    // // ?詨?嚗????脫?隞日?券ㄐ??
+    // case GameCommand.Input(var text) -> {
+    // log.info("[Trace:{}] Processing Input: {}", traceId, text);
+    // handleStringInput(text);
+    // }
+    // // case GameCommand.Chat(var content) -> {
+    // // log.debug("Chat from {}: {}", playerName, content);
+
+    // // reply("%s 隤? %s".formatted(playerName, content));
+    // // }
+    // // case GameCommand.Move(var dir) -> {
+    // // reply("雿? %s 蝘餃?鈭?甇乓?.formatted(dir));
+    // // }
+    // }
+    // } catch (Exception e) {
+    // log.error("[Trace:{}] Error", traceId, e);
+    // }
+  }
+
+  @Override
+  protected void onDeath(String killerId) {
+    reply("雿歇蝬香鈭∴??喳??券???敺拇暑...");
+    // ?拙振甇颱滿?摩嚗?蝬??????
+  }
+
+  public void sendText(String text) {
+    reply(text);
+  }
+
+  // ????瘜?
+  private void become(PlayerBehavior nextBehavior) {
+    this.currentBehavior = nextBehavior;
+    this.currentBehavior.onEnter(this); // 閫貊?脣鈭辣
+    log.info("{} ??銵璅∪???{}", this.id, nextBehavior.getClass().getSimpleName());
+  }
+
+  public void handleDisconnect() {
+    // 1. ?迫 Actor 餈游?
+    this.stop();
+
+    // 2. 憒?撌脩??餃銝血??冽銝?銝哨?敺??宏??
+    // 瘜冽?嚗ㄐ?臭誑?蝺?霅瑯??辣?脩?箝?
+    // 雿?蝪∪??瘜?湔蝘駁
+    // worldManager.removePlayer(this.getId());
+
+    // 3. 閫貊摮? (Write-Behind)
+    // persistenceService.saveAsync(this.toRecord());
+  }
+
+  // --- ?????頛?---
+  /*
+   * // 1. ??? private void handleConnected(String input) { if ("new".equalsIgnoreCase(input)) {
+   * connectionState = ConnectionState.CREATING_USER; reply("?酉??蝔?頛詨?冽雿輻?董??蝔梧?"); } else { //
+   * 閬?岫?餃 // if (playerService.exists(input)) { // this.tempUsername = input; // state =
+   * State.LOGIN_PASSWORD; // reply("撣唾?摮嚗?頛詨撖Ⅳ嚗?); // } else { //
+   * reply("?曆??啣董??'%s'???頛詨嚗?頛詨 'new' 閮餃???.formatted(input)); // } } }
+   *
+   * // 2. 閮餃? - 瑼Ｘ撣唾? private void handleRegisterUsername(String input) { if (input.length() < 3) {
+   * reply("撣唾??瑕漲?憭扳 3 ????隢?閰佗?"); return; } // if (playerService.isReservedWord(input)) { //
+   * reply("'%s' ?舐頂蝯曹???嚗?????".formatted(input)); // return; // } // if
+   * (playerService.exists(input)) { // reply("'%s' 撌脩?鋡怨酉??嚗?????".formatted(input)); // return; // }
+   *
+   * this.tempUsername = input; connectionState = ConnectionState.ENTERING_PASS;
+   * reply("撣唾? '%s' ?舐??閮剖??函?撖Ⅳ嚗?.formatted(input)); }
+   *
+   * // 3. 閮餃? - 閮剖?撖Ⅳ private void handleRegisterPassword(String input) { if (input.length() < 3) {
+   * reply("撖Ⅳ憭芰嚗??岫嚗?); return; }
+   *
+   * // playerService.register(tempUsername, input); // log.info("User registered: {}",
+   * tempUsername);
+   *
+   * reply("閮餃???嚗歇?芸??箸?餃??); enterGame(); }
+   *
+   * // 4. ?餃 - 撽?撖Ⅳ private void handleLoginPassword(String input) { // if
+   * (playerService.verifyPassword(tempUsername, input)) { //
+   * reply("?餃??嚗迭餈?靘?%s".formatted(tempUsername)); // enterGame(); // } else { //
+   * reply("撖Ⅳ?航炊嚗??頛詨嚗?); // } }
+   *
+   * // 5. ?脣? (頧) private void enterGame() { connectionState = ConnectionState.PLAYING; //
+   * ?芯??ㄐ?臭誑? WorldManager.joinRoom() handleGameLogic("look", "system-init"); // ?芸???甈∠憓?}
+   */
+  // 6. ?銝剝?頛?(Look, Kill, Move...)
+  // private void handleGameLogic(String input, String traceId) {
+  // String[] parts = handleStringInput(input);
+  // String action = parts[0].toLowerCase();
+
+  // switch (action) {
+  // case "look" -> {
+  // // 蝭?嚗?????敶拍??輸??膩
+  // StringBuilder sb = new StringBuilder();
+  // sb.append(ColorText.wrap(AnsiColor.BRIGHT_WHITE, AnsiColor.BOLD, "=== ?唳??誨??===\n"));
+  // sb.append(ColorText.wrap(AnsiColor.LIGHT_GREY, "?銝???輻?撱?嚗??望?鈭?n"));
+  // sb.append("?ㄐ????").append(ColorText.npc("?")).append(" 蝡?湔??n");
+  // sb.append("?唬??鈭???").append(ColorText.item("????)).append("?n");
+  // sb.append("敺?隞亦??圈璉桃? ").append(ColorText.wrap(AnsiColor.DARK_GREY, "暺?璉格?")).append("??);
+
+  // reply(sb.toString());
+  // } // reply("雿?閬??曹???暺??隡潔??凝撘梁??怠???);
+  // case "help" -> reply("?舐?誘: look, say, quit");
+  // case "say" -> reply("雿牧?? " + (parts.length > 1 ? input.substring(4) : "..."));
+  // case "quit" -> {
+  // reply("??嚗?);
+  // // ?ㄐ?臭誑??disconnect ?摩
+  // }
+  // case "kill" -> {
+  // if (parts.length > 1) {
+  // reply("雿???? %s嚗?.formatted(parts[1]));
+  // } else {
+  // reply("雿?畾箄狐嚗?);
+  // }
+  // }
+  // default -> {
+  // log.info("Unknown command: {}", action);
+  // reply("????'%s' ?臭?暻潭???.formatted(action));
+  // }
+  // }
+  // }
+
+  // private void handleLogin(String user, String pass) {
+  // log.info("Player logged in: {}", user);
+
+  // reply("甇∟??脣 MUD 銝?嚗?s??冽???%s".formatted(user, java.time.Instant.now()));
+  // // // 1. ??DB (?? Service)
+  // // PlayerEntity entity = playerRepository.findByUsername(cmd.username());
+
+  // // // 2. 瘥?撖Ⅳ (雿輻 BCrypt)
+  // // if (entity != null && passwordEncoder.matches(cmd.password(), entity.getPasswordHash())) {
+  // // this.isLoggedIn = true;
+  // // this.playerId = entity.getId();
+  // // this.state = loadState(entity); // 頛?拙振鞈?
+  // // send("?餃??嚗?);
+  // // } else {
+  // // send("撣唾???蝣潮隤扎?);
+  // // // ?臭誑憓?憭望?閮?剁??脫迫?
+  // // }
+  // }
+  // ??PlayerActor.java 銝?
+  protected void levelUp() {
+    // 敺?Context ???嗅? Trace ID
+    String currentTraceId = MudContext.traceId();
+
+    // ?潮?隞?
+    // publisher.publishEvent(
+    // new DomainEvent.PlayerLevelUpEvent(currentTraceId, this.objectId.id(), this.state.level));
+  }
+
+  public void reply(String msg) {
+    try {
+      if (session.isOpen()) {
+        // 雿輻 Map 靘遣蝡?瑽?Jackson ??????畾???頧儔
+        String json =
+            services.objectMapper().writeValueAsString(Map.of("type", "TEXT", "content", msg));
+
+        session.sendMessage(new TextMessage(json));
+      }
+    } catch (IOException e) {
+      log.error("Reply failed", e);
+    }
+  }
+
+  // --- ?ㄐ撖衣?函? "蝝?銝? ?摩 ---
+  private String[] handleStringInput(String text) {
+    log.info("Player {} input: {}", name, text);
+
+    // 蝪∪?蝯?MUD 閫???孵?
+    // ?芯??ㄐ?臭誑?賣??擃???Parser嚗?隞(Input text)銝霈?
+    return text.trim().split("\\s+");
+  }
+
+  // 靘?憿 (PlayerActor) ?澆嚗靘????
+  protected void swapIdentity(String newId, LivingState newState) {
+    this.id = newId;
+    this.state = newState;
+  }
+
+  // 靘?GuestBehavior ?澆嚗?頨怎甇???拙振
+  public void upgradeIdentity(PlayerRecord record) {
+    this.fromRecord(record);
+    this.become(new InGameBehavior(services));
+    log.info("Actor 霈澈??: {} (InGameBehavior)", this.name);
+  }
+
+  public void replaceSession(WebSocketSession newSession) {
+    // 1. ????? (憒?????
+    if (this.session != null && this.session.isOpen()) {
+      try {
+        this.session.close();
+      } catch (IOException ignored) {
+      }
+    }
+
+    // 2. ???圈??
+    this.session = newSession;
+
+    // 3. ??嗅??啣?鞈?
+    this.sendText("\u001B[33m[蝟餌絞] ???撌脫敺押u001B[0m");
+    this.services.commandDispatcher().dispatch(this, "look");
+  }
+
+  private void handleLoginSuccess(PlayerRecord record) {
+    // 雿輻?園??亦? protected ?寞?霈澈
+    swapIdentity(record.id(), record.state());
+
+    // 霈澈敺????乩??恣??
+    // WorldManager.joinWorld(this);
+
+    reply("?餃??嚗?);
+  }
+
+  // 閫貊摮????拇瘜?
+  public void save() {
+    services.playerPersistenceService().saveAsync(this.toRecord());
+  }
+
+
+  public PlayerRecord toRecord() {
+    // ?典??Ⅱ靽?LivingState ?祕雿?deepCopy嚗???潛?雿萇靽格靘?
+    return new PlayerRecord(this.id, // ID
+        this.name, // Username
+        this.nickname, // Nickname
+        this.currentRoomId, // Room
+        this.state.deepCopy(), // ???萸楛撅方?鋆?State
+        new ArrayList<GameItem>(this.inventory) // Inventory
+    );
+  }
+
+  public void fromRecord(PlayerRecord record) {
+    // 1. ?湔?箇?鞈?
+    this.name = record.name();
+    this.nickname = record.nickname();
+    this.currentRoomId = record.currentRoomId();
+    this.inventory = record.inventory();
+
+
+    // 2. ?湔???(?湔?踵?撘)
+    // ? Record ?臬? DB 霈?箔???拐辣嚗ㄐ??state ?臬?啁?嚗隞亦?交靘
+    this.swapIdentity(record.id(), record.state());
+
+    // 3. 璅??箏歇?餃
+    this.id = record.id();
+  }
+}
+
+
+--- File: RoomActor.java ---
+
+package com.example.htmlmud.domain.actor;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import com.example.htmlmud.domain.actor.core.VirtualActor; // 撘?函??箇?憿
+import com.example.htmlmud.domain.model.GameItem;
+import com.example.htmlmud.domain.model.RoomStateRecord;
+import com.example.htmlmud.domain.model.map.RoomTemplate;
+import com.example.htmlmud.domain.model.map.SpawnRule;
+import com.example.htmlmud.domain.model.map.ZoneTemplate;
+import com.example.htmlmud.protocol.RoomMessage;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+// 1. 蝜潭 VirtualActor嚗蒂??瘜???RoomMessage
+public class RoomActor extends VirtualActor<RoomMessage> {
+
+  @Getter
+  private final String id;
+
+  @Getter
+  private final RoomTemplate template;
+
+  @Getter
+  private final ZoneTemplate zoneTemplate;
+
+  @Getter
+  private final Set<SpawnRule> spawnRules;
+
+  // ?輸??抒??拙振 (Runtime State)
+  @Getter
+  private final Set<PlayerActor> players = ConcurrentHashMap.newKeySet();
+
+  @Getter
+  private final Set<MobActor> mobs = ConcurrentHashMap.newKeySet();
+
+  private final List<GameItem> items = new ArrayList<>(); // ?唬????
+
+  public RoomActor(RoomTemplate template, ZoneTemplate zoneTemplate) {
+    this(template, zoneTemplate, new ArrayList<>());
+  }
+
+  public RoomActor(RoomTemplate template, ZoneTemplate zoneTemplate, List<GameItem> initialItems) {
+    // 2. ?喳 Actor ?迂蝯衣憿 (?嫣噶 Log ?)
+    super("room-" + template.id());
+    this.id = template.id();
+    this.template = template;
+    this.zoneTemplate = zoneTemplate;
+    // 敺?Template 銴ˊ閬? (???箏???
+    this.spawnRules = template.spawnRules();
+
+    if (initialItems != null) {
+      this.items.addAll(initialItems);
+    }
+  }
+
+  // --- 撖虫??園??亦??質情?寞? ---
+
+  @Override
+  protected void handleMessage(RoomMessage msg) {
+    // ?ㄐ??頛航?銋?銝璅∩?璅??雿??閬撌勗神 loop ??try-catch 鈭?
+    switch (msg) {
+      case RoomMessage.PlayerEnter(var player, var future) -> {
+        log.info("Player {} entered room", player.getId());
+        players.add(player);
+        broadcastToOthers(player.getId(), "? " + player.getNickname() + " 韏唬??脖???);
+        log.debug("Player {} entered room {}", player.getNickname(), template.id());
+        if (future != null)
+          future.complete(null);
+      }
+
+      case RoomMessage.PlayerLeave(var playerId) -> {
+        players.stream().filter(p -> p.getId().equals(playerId)).findFirst().ifPresent(p -> {
+          if (players.remove(p))
+            broadcastToOthers(playerId, p.getNickname() + " ?ａ?鈭?);
+        });
+      }
+
+      case RoomMessage.Look(var playerId, var future) -> {
+        log.info("Player {} Look room", playerId);
+        StringBuilder sb = new StringBuilder();
+        sb.append("\u001B[1;36m").append(template.name()).append("\u001B[0m\r\n");
+        sb.append(template.description()).append("\r\n");
+
+        if (template.exits() != null && !template.exits().isEmpty()) {
+          sb.append("\u001B[33m[?箏]: ").append(String.join(", ", template.exits().keySet()))
+              .append("\u001B[0m\r\n");
+        }
+
+        StringBuilder others = new StringBuilder();
+        players.stream().filter(p -> !p.getId().equals(playerId))
+            .forEach(p -> others.append(p.getNickname()).append(" "));
+
+        if (!others.isEmpty()) {
+          sb.append("\u001B[35m[?ㄐ?: \u001B[0m").append(others).append("\r\n");
+        }
+        future.complete(sb.toString());
+      }
+
+      case RoomMessage.Say(var sourceId, var content) -> {
+        PlayerActor speaker =
+            players.stream().filter(p -> p.getId().equals(sourceId)).findFirst().orElse(null);
+        String name = (speaker != null) ? speaker.getNickname() : "?犖";
+        broadcast(name + ": " + content);
+      }
+      case RoomMessage.TryPickItem(var itemId, var picker) -> {
+        // ???萎蔥?潭?嗚?
+        // var item = items.stream().filter(i -> i.id.equals(itemId)).findFirst();
+        // if (item.isPresent()) {
+        // items.remove(item.get());
+        // ??蝯?Command: ??
+        // picker.send(new ActorMessage("...", new InternalCommand.PickSuccess(item.get())));
+        // } else {
+        // ??蝯?Command: 憭望?
+        // picker.send(new ActorMessage("...", new InternalCommand.PickFail("?梯正銝鈭?)));
+        // }
+      }
+    }
+  }
+
+  // --- ?拙????摩 ---
+
+  // public Optional<Item> pickItem(String keyword) {
+  // 蝪∪???摩
+  // var found = items.stream().filter(i -> isMatch(i, keyword)) // ?撖虫? isMatch
+  // .findFirst();
+
+  // found.ifPresent(items::remove);
+  // return found; // ?ㄐ?敺?閮?閬?閮?Dirty
+  // }
+
+  // --- 頛?寞? (靽?銝?) ---
+
+  private void broadcast(String message) {
+    players.forEach(p -> p.sendText(message));
+  }
+
+  private void broadcastToOthers(String sourceId, String message) {
+    players.stream().filter(p -> !p.getId().equals(sourceId)).forEach(p -> p.sendText(message));
+  }
+
+  // ?Ｙ?敹怎 (?芸?霈????
+  public RoomStateRecord toRecord() {
+    String[] args = template.id().split(":");
+    String zoneId = args[0];
+    String roomId = args[1];
+    return new RoomStateRecord(roomId, zoneId, new ArrayList<>(items));
+  }
+
+  public void addPlayer(PlayerActor player) {
+    player.markEnterRoom();
+    players.add(player);
+  }
+
+  public void removePlayer(PlayerActor player) {
+    players.remove(player);
+  }
+
+  public List<PlayerActor> getPlayersSnapshot() {
+    List<PlayerActor> players = new ArrayList<>(this.players);
+    players.sort(Comparator.comparing(PlayerActor::getNickname));
+    return players;
+  }
+
+  public void dropItem(GameItem item) {
+    items.add(item);
+    // 璅???Dirty (?閬?瑼?
+    // WorldManager.markDirty(this.template.id());
+  }
+
+  public void removeItem(GameItem item) {
+    items.remove(item);
+    // 璅???Dirty (?閬?瑼?
+    // WorldManager.markDirty(this.template.id());
+  }
+
+  public List<GameItem> getItemsSnapshot() {
+    return new ArrayList<>(items);
+  }
+
+
+
+  /**
+   * ???芰?脣
+   */
+  public void addMob(MobActor mob) {
+    // 璅???
+    mob.markEnterRoom();
+    mobs.add(mob);
+  }
+
+  /**
+   * ???芰?ａ?
+   */
+  public void removeMob(MobActor mob) {
+    mobs.remove(mob);
+  }
+
+  /**
+   * ?脣???敹怎 ??閬?嚗??寞??脣?? (?野?典?)嚗?????璅????撠?ID
+   */
+  public List<MobActor> getMobsSnapshot() {
+    // 1. 銴ˊ (O(N))
+    List<MobActor> snapshot = new ArrayList<>(this.mobs);
+
+    // 2. ?? (O(N log N))
+    // ??閬?嚗?蝔?-> ?脣?? -> ID
+    snapshot.sort(Comparator.comparing((MobActor m) -> m.getTemplate().name())
+        .thenComparingLong(MobActor::getLastEnterRoomTime).thenComparing(MobActor::getId));
+
+    return snapshot;
+  }
+
+  /**
+   * ?輸??活頛???芷?頛?
+   */
+  public void spawnInitialMobs() {
+    if (spawnRules == null)
+      return;
+
+    for (SpawnRule rule : spawnRules) {
+      // ??璈? (靘?嚗??芸??10% 璈??箇)
+      if (Math.random() > rule.respawnChance()) {
+        continue;
+      }
+
+      // ?寞??賊???
+      for (int i = 0; i < rule.count(); i++) {
+        spawnOneMob(rule);
+      }
+    }
+  }
+
+  private void spawnOneMob(SpawnRule rule) {
+    // 1. ?澆撌亙??Ｙ? MobActor (?ㄐ?策鈭?UUID)
+    // MobActor mob = services.mobFactory().createMob(rule.mobTemplateId());
+
+    // // 2. 閮剖?雿蔭
+    // mob.setCurrentRoomId(this.id);
+
+    // // 3. ??輸??”
+    // this.mobs.add(mob);
+
+    // // 4. ???芰??AI
+    // mob.start();
+
+    // log.debug("Spawned {} in room {}", mob.getTemplate().name(), this.id);
+  }
+}
+
+
+--- File: AggressiveBehavior.java ---
+
+package com.example.htmlmud.domain.actor.behavior;
+
+import com.example.htmlmud.domain.actor.MobActor;
+import com.example.htmlmud.domain.actor.PlayerActor;
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
+// ?餅?銵
+public class AggressiveBehavior implements MobBehavior {
+
+  @Override
+  public void onPlayerEnter(MobActor self, PlayerActor player) {
+    // 銝餃??芷?頛荔???拙振撠望??
+    // ?潮擛交?隞斤策 BattleSystem
+    self.sayToRoom("皛曉?鳴?" + player.getName());
+    self.attack(player);
+  }
+
+  @Override
+  public void onInteract(MobActor self, PlayerActor player, String command) {
+    self.sayToRoom("?潘?嚗?(摰?韏瑚?銝頝?隤芾店)");
+    self.attack(player);
+  }
+}
+
+
+--- File: GuestBehavior.java ---
+
+package com.example.htmlmud.domain.actor.behavior;
+
+import java.io.IOException;
+import java.util.Map;
+import java.util.Optional;
+import org.slf4j.MDC;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
+import com.example.htmlmud.domain.actor.PlayerActor;
+import com.example.htmlmud.domain.context.GameServices;
+import com.example.htmlmud.domain.context.MudKeys;
+import com.example.htmlmud.domain.model.PlayerRecord;
+import com.example.htmlmud.infra.persistence.entity.UserEntity;
+import com.example.htmlmud.protocol.ConnectionState;
+import com.example.htmlmud.protocol.GameCommand;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+public class GuestBehavior implements PlayerBehavior {
+
+  private static final int MAX_AUTH_RETRIES = 5;
+
+  private final GameServices services;
+
+  @Setter
+  private String tempUsername; // ?怠?甇????董??
+
+  @Setter
+  private String tempPassword; // ?怠?甇?????蝣?
+
+
+  @Override
+  public PlayerBehavior handle(PlayerActor actor, GameCommand cmd) {
+    MDC.put("actorName", "GUEST");
+
+    try {
+      // ?桀??芾???摮撓??(Input)
+      if (cmd instanceof GameCommand.Input(var text)) {
+        switch (actor.getConnectionState()) {
+          case CONNECTED -> doConnected(actor, text);
+          case CREATING_USERNAME -> doCreatingUsername(actor, text);
+          case CREATING_PASSWORD -> doCreatingPassword(actor, text);
+          case ENTERING_PASSWORD -> doEnterPassword(actor, text);
+          case ENTERING_CHAR_NAME -> doEnteringCharName(actor, text);
+          case ENTERING_CHAR_GENDER -> {
+          }
+          case ENTERING_CHAR_RACE -> {
+          }
+          case ENTERING_CHAR_CLASS -> {
+          }
+          case ENTERING_CHAR_ATTRIBUTES -> {
+          }
+          case IN_GAME -> {
+          }
+        }
+      }
+    } finally {
+      MDC.clear();
+    }
+
+    return null;
+  }
+
+  private void doConnected(PlayerActor actor, String input) {
+    log.info("doConnected");
+
+    if ("new".equalsIgnoreCase(input.trim())) {
+      doRegister(actor);
+    } else {
+      doEnterUsername(actor, input);
+    }
+  }
+
+  private void doRegister(PlayerActor actor) {
+    log.info("doRegister");
+
+    WebSocketSession session = actor.getSession();
+    String msg = "?酉??蝔r\n?芾??望?摮?嚗??之撠神嚗?銝?閮望摮征?潭??寞?蝚西??r\n?瑕漲敹???4 ??20 ?????r\n隢撓?交?喃蝙?函?撣唾??迂:";
+    try {
+      // ?迄?垢嚗??撓?交芋撘撣唾? (???芸?蝢拙?霅堆?靘? JSON {type: "USER_MODE"})
+      String json =
+          services.objectMapper().writeValueAsString(Map.of("type", "USER_MODE", "content", msg));
+      session.sendMessage(new TextMessage(json));
+
+      session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, 0); // ?蔭閮
+      actor.setConnectionState(ConnectionState.CREATING_USERNAME);
+    } catch (IOException e) {
+      log.error("doRegister {}", e.getMessage(), e);
+    }
+  }
+
+  public void doCreatingUsername(PlayerActor actor, String input) {
+    log.info("doCreatingUsername");
+    WebSocketSession session = actor.getSession();
+
+    // ???桀???閰行活??
+    int retryCount = (int) Optional
+        .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
+
+    String errorReason = services.authService().validateUsername(input);
+
+    if (errorReason != null) {
+      retryCount++;
+      session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, retryCount);
+
+      if (retryCount >= MAX_AUTH_RETRIES) {
+        log.warn("??? {} 閮餃?撣唾?憭望?甈⊥?? ({})嚗撥?嗡葉?瑯?敺撓?? {}", session.getId(), retryCount, input);
+        actor.sendText("?岫甈⊥??嚗???喳?????);
+        try {
+          session.close();
+        } catch (IOException ignored) {
+        }
+
+        return;
+      }
+
+      log.info("??? {} 閮餃?撣唾?憭望?: {} (?拚?甈⊥: {})", session.getId(), errorReason,
+          MAX_AUTH_RETRIES - retryCount);
+      actor.sendText(errorReason + " (?拚??岫甈⊥: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+      return;
+    }
+
+    // 撽???嚗?蝵株???
+    session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, 0);
+
+    // ?怠?撣唾?
+    this.tempUsername = input;
+
+    // String msg = "隢撓?亙?蝣?";
+    String msg = "?酉??蝔r\n?芾??望?摮??摮??瑕漲敹???6 ??32 ?????r\n隢撓?亙?蝣?";
+    try {
+      // ?迄?垢嚗??撓?交芋撘撖Ⅳ (???芸?蝢拙?霅堆?靘? JSON {type: "PWD_MODE"})
+      String json =
+          services.objectMapper().writeValueAsString(Map.of("type", "PWD_MODE", "content", msg));
+      session.sendMessage(new TextMessage(json));
+
+      actor.setConnectionState(ConnectionState.CREATING_PASSWORD);
+    } catch (IOException e) {
+      log.error("doCreatingUsername {}", e.getMessage(), e);
+    }
+  }
+
+  public void doCreatingPassword(PlayerActor actor, String input) {
+    log.info("doCreatingPassword");
+
+    WebSocketSession session = actor.getSession();
+
+    // ???桀???閰行活??
+    int retryCount = (int) Optional
+        .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
+
+    String errorReason = services.authService().validatePassword(input);
+
+    if (errorReason != null) {
+      retryCount++;
+      session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, retryCount);
+
+      if (retryCount >= MAX_AUTH_RETRIES) {
+        log.warn("??? {} 閮餃?撖Ⅳ憭望?甈⊥?? ({})嚗撥?嗡葉?瑯?敺撓?? {}", session.getId(), retryCount, input);
+        actor.sendText("?岫甈⊥??嚗???喳?????);
+        try {
+          session.close();
+        } catch (IOException ignored) {
+        }
+
+        return;
+      }
+
+      log.info("??? {} 閮餃?撖Ⅳ憭望?: {} (?拚?甈⊥: {})", session.getId(), errorReason,
+          MAX_AUTH_RETRIES - retryCount);
+      actor.sendText(errorReason + " (?拚??岫甈⊥: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+      return;
+    }
+
+    // 撽???嚗宏?方???
+    session.getAttributes().remove(MudKeys.AUTH_RETRY_COUNT_KEY);
+
+    // ?怠?撖Ⅳ
+    this.tempPassword = input;
+
+    // ?啣??拙振撣喳?
+    services.authService().register(tempUsername, tempPassword);
+    log.info("?拙振閮餃???: {}", tempUsername);
+
+    this.tempUsername = null;
+    this.tempPassword = null;
+
+    // String msg = "隢撓?亙?蝣?";
+    String msg = "?酉??蝔r\n閮餃?摰?嚗???餃??;
+    // ?迄?垢嚗??撓?交芋撘撖Ⅳ (???芸?蝢拙?霅堆?靘? JSON {type: "PWD_MODE"})
+    actor.sendText(msg);
+
+    actor.setConnectionState(ConnectionState.CONNECTED);
+    actor.start();
+  }
+
+  private void doEnterUsername(PlayerActor actor, String input) {
+    log.info("doLoginUsername");
+
+    WebSocketSession session = actor.getSession();
+
+    // ???桀???閰行活??
+    int retryCount = (int) Optional
+        .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
+
+    String errorReason = services.authService().validateUsername(input);
+
+    // 憒??澆?甇?Ⅱ嚗炎?亥??澈?臬摮閰脣董??
+    if (errorReason == null && !services.authService().exists(input)) {
+      errorReason = "撣唾?銝??具?;
+    }
+
+    if (errorReason != null) {
+      retryCount++;
+      session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, retryCount);
+
+      if (retryCount >= MAX_AUTH_RETRIES) {
+        log.warn("??? {} ?餃撣唾?憭望?甈⊥?? ({})嚗撥?嗡葉?瑯?敺撓?? {}", session.getId(), retryCount, input);
+        actor.sendText("?岫甈⊥??嚗???喳?????);
+        try {
+          session.close();
+        } catch (IOException ignored) {
+        }
+
+        return;
+      }
+
+      log.info("??? {} ?餃撣唾?憭望?: {} (?拚?甈⊥: {})", session.getId(), errorReason,
+          MAX_AUTH_RETRIES - retryCount);
+      actor.sendText(errorReason + " (?拚??岫甈⊥: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+      return;
+    }
+
+    // 撽???嚗?蝵株???
+    session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, 0);
+
+    // ?怠?撣唾?
+    this.tempUsername = input;
+
+    String msg = "隢撓?亙?蝣?";
+    try {
+      // ?迄?垢嚗??撓?交芋撘撖Ⅳ (???芸?蝢拙?霅堆?靘? JSON {type: "PWD_MODE"})
+      String json =
+          services.objectMapper().writeValueAsString(Map.of("type", "PWD_MODE", "content", msg));
+      session.sendMessage(new TextMessage(json));
+
+      actor.setConnectionState(ConnectionState.ENTERING_PASSWORD);
+    } catch (IOException e) {
+      log.error("msg");
+    }
+  }
+
+  private void doEnterPassword(PlayerActor actor, String input) {
+    log.info("doEnterPassword");
+
+    WebSocketSession session = actor.getSession();
+
+    // ???桀???閰行活??
+    int retryCount = (int) Optional
+        .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
+
+    String errorReason = services.authService().validatePassword(input);
+
+    if (errorReason != null) {
+      retryCount++;
+      session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, retryCount);
+
+      if (retryCount >= MAX_AUTH_RETRIES) {
+        log.warn("??? {} ?餃撖Ⅳ憭望?甈⊥?? ({})嚗撥?嗡葉?瑯?敺撓?? {}", session.getId(), retryCount, input);
+        actor.sendText("?岫甈⊥??嚗???喳?????);
+        try {
+          session.close();
+        } catch (IOException ignored) {
+        }
+
+        return;
+      }
+
+      log.info("??? {} ?餃撖Ⅳ憭望?: {} (?拚?甈⊥: {})", session.getId(), errorReason,
+          MAX_AUTH_RETRIES - retryCount);
+      actor.sendText(errorReason + " (?拚??岫甈⊥: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+      return;
+    }
+
+    // 撽???嚗宏?方???
+    session.getAttributes().remove(MudKeys.AUTH_RETRY_COUNT_KEY);
+
+    // ?怠?撖Ⅳ
+    this.tempPassword = input;
+    // log.info("?拙振?餃: {} {}", this.tempUsername, this.tempPassword);
+
+    // ?餃?拙振撣喳?
+    UserEntity userEntity = services.authService().login(tempUsername, tempPassword);
+    log.info("?拙振?餃??: {} {}", userEntity.getId(), userEntity.getUsername());
+
+    // 頛 player
+    try {
+      PlayerRecord record =
+          services.playerService().loadRecord(userEntity.getId(), userEntity.getUsername());
+      actor.upgradeIdentity(record);
+      actor.setConnectionState(ConnectionState.IN_GAME);
+
+      // ??PlayerActor.java 銝?
+      log.info("?嗅???? {}", services.objectMapper().writeValueAsString(actor.getState()));
+
+    } catch (Exception e) {
+      log.error("", e);
+      // ?脣閫閮剖?瘚?
+      doEnteringCharName(actor, input);
+      return;
+    }
+  }
+
+  private void doEnteringCharName(PlayerActor actor, String input) {
+    log.info("doEnteringCharName");
+
+    WebSocketSession session = actor.getSession();
+    String msg =
+        "???脰身摰?蝔r\n?芾??望?摮?嚗??之撠神嚗?銝?閮望摮征?潭??寞?蝚西??r\n?瑕漲敹???2 ??20 ?????r\n隢撓?交?喃蝙?函?閫?迂:";
+    try {
+      // ?迄?垢嚗??撓?交芋撘撣唾? (???芸?蝢拙?霅堆?靘? JSON {type: "USER_MODE"})
+      String json =
+          services.objectMapper().writeValueAsString(Map.of("type", "USER_MODE", "content", msg));
+      session.sendMessage(new TextMessage(json));
+
+      session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, 0); // ?蔭閮
+      actor.setConnectionState(ConnectionState.ENTERING_CHAR_NAME);
+    } catch (IOException e) {
+      log.error("doRegister {}", e.getMessage(), e);
+    }
+  }
+
+}
+
+
+--- File: InGameBehavior.java ---
+
+package com.example.htmlmud.domain.actor.behavior;
+
+import org.slf4j.MDC;
+import com.example.htmlmud.domain.actor.PlayerActor;
+import com.example.htmlmud.domain.context.GameServices;
+import com.example.htmlmud.protocol.GameCommand;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+public class InGameBehavior implements PlayerBehavior {
+  // ?ㄐ?臭誑瘜典 CommandHandlerRegistry
+
+  private final GameServices services;
+  // private final CommandDispatcher dispatcher;
+
+  @Override
+  public void onEnter(PlayerActor actor) {
+    log.info("InGameBehavior onEnter()");
+    // ?脣???銝甈⊥??
+    // actor.handleGameLogic("look");
+    services.commandDispatcher().dispatch(actor, "look");
+  }
+
+  @Override
+  public PlayerBehavior handle(PlayerActor actor, GameCommand cmd) {
+    log.info("InGameBehavior handle()");
+
+    MDC.put("actorName", actor.getName());
+
+    try {
+      // ?桀??芾???摮撓??(Input)
+      if (cmd instanceof GameCommand.Input(var text)) {
+        // ???萸???鈭斤策 Dispatcher
+        services.commandDispatcher().dispatch(actor, text);
+      }
+      // else if (cmd instanceof GameCommand.Logout) {
+      // actor.reply("?餃銝?..");
+      // actor.handleDisconnect();
+      // // ... ????GuestBehavior ...
+      // }
+    } finally {
+      MDC.clear();
+    }
+
+    return null; // 靽? InGame ???
+  }
+}
+
+
+--- File: MerchantBehavior.java ---
+
+package com.example.htmlmud.domain.actor.behavior;
+
+import com.example.htmlmud.domain.actor.LivingActor;
+import com.example.htmlmud.domain.actor.MobActor;
+import com.example.htmlmud.domain.actor.PlayerActor;
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
+// ??銵
+public class MerchantBehavior implements MobBehavior {
+
+  private final int shopId;
+
+  @Override
+  public void onPlayerEnter(MobActor self, PlayerActor player) {
+    // 蝳株??批???
+    self.sayToRoom("甇∟??嚗?閬眺暺?暻澆?嚗?頛詨 'list' ?亦???)");
+  }
+
+  @Override
+  public void onInteract(MobActor self, PlayerActor player, String command) {
+    if ("list".equalsIgnoreCase(command)) {
+      // 憿舐內???”
+      // ShopService.showList(player, shopId);
+    } else if (command.startsWith("buy")) {
+      // ??鞈潸眺
+    } else {
+      // ?冽?雓??亥店
+      String dialog = self.getTemplate().dialogues().iterator().next();
+      self.sayToRoom(dialog);
+    }
+  }
+
+  @Override
+  public void onDamaged(MobActor self, LivingActor attacker) {
+    // 摰??摩嚗??◤???航?澆霅西?嚗??蝝???(??⊥)
+    self.sayToRoom("銵嚗?鈭箏擛找?嚗?);
+    // Spawn guards...
+  }
+}
+
+
+--- File: MobBehavior.java ---
+
+package com.example.htmlmud.domain.actor.behavior;
+
+import com.example.htmlmud.domain.actor.LivingActor;
+import com.example.htmlmud.domain.actor.MobActor;
+import com.example.htmlmud.domain.actor.PlayerActor;
+import com.example.htmlmud.protocol.ActorMessage;
+
+public interface MobBehavior {
+
+  // 摰?敹歲 (靘?瘥?銝甈?嚗捱摰?衣宏??銵?揣??
+  default void onTick(MobActor self) {}
+
+  // ?嗥摰園脣閬?
+  default void onPlayerEnter(MobActor self, PlayerActor player) {}
+
+  // ?嗥摰嗉??嗡???(靘?頛詨 "talk guard")
+  default void onInteract(MobActor self, PlayerActor player, String command) {}
+
+  // ?嗅??瑟? (隞?潸???
+  default void onDamaged(MobActor self, LivingActor attacker) {}
+
+  // ???閮
+  default void onMessage(MobActor self, ActorMessage msg) {}
+}
+
+
+--- File: PassiveBehavior.java ---
+
+package com.example.htmlmud.domain.actor.behavior;
+
+import com.example.htmlmud.domain.actor.MobActor;
+import com.example.htmlmud.domain.actor.PlayerActor;
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
+// 鋡怠?銵 (銝??NPC)
+public class PassiveBehavior implements MobBehavior {
+
+  // ??PassiveBehavior (銝??NPC) ??onTick
+  public void onTick(MobActor self) {
+    // 5% 璈??冽?蝘餃?
+    if (Math.random() < 0.05) {
+      // ?冽??訾????宏??
+      // self.moveTo(randomExit);
+    }
+
+    // 10% 璈?隤芸丐閰?
+    if (Math.random() < 0.1) {
+      self.sayToRoom("隞予憭拇除?末...");
+    }
+  }
+
+  @Override
+  public void onPlayerEnter(MobActor self, PlayerActor player) {
+
+  }
+
+}
+
+
+--- File: PlayerBehavior.java ---
+
+package com.example.htmlmud.domain.actor.behavior;
+
+import com.example.htmlmud.domain.actor.PlayerActor;
+import com.example.htmlmud.protocol.GameCommand;
+
+public interface PlayerBehavior {
+
+  // ???誘
+  // ??潘?憒???null 隞?”???霈?憒???啁? Behavior嚗誨銵函?????(Become)
+  PlayerBehavior handle(PlayerActor actor, GameCommand cmd);
+
+  // ?嗅??????閫貊 (Optional)
+  default void onEnter(PlayerActor actor) {}
+}
+
+
+--- File: VirtualActor.java ---
+
+package com.example.htmlmud.domain.actor.core;
+
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import com.example.htmlmud.protocol.ActorMessage;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public abstract class VirtualActor<T> {
+
+  // 瘥?Actor ?賣??芸楛?縑蝞?
+  protected final BlockingQueue<T> mailbox = new LinkedBlockingQueue<>();
+  private final AtomicBoolean running = new AtomicBoolean(true);
+  private final AtomicBoolean started = new AtomicBoolean(false);
+  private final String actorName;
+
+  public VirtualActor(String actorName) {
+    this.actorName = actorName;
+  }
+
+  // ?? Actor嚗???銝??撅祉? Virtual Thread
+  public void start() {
+    if (started.compareAndSet(false, true)) {
+      Thread.ofVirtual().name("actor-" + actorName).start(this::runLoop);
+    } else {
+      log.warn("Actor [{}] 撌脩???嚗蕭?仿?銴???隢???, actorName);
+    }
+  }
+
+  // ?憛?????(蝯血??典?怎)
+  public void send(T message) {
+    mailbox.offer(message);
+  }
+
+  // ?詨?餈游?
+  private void runLoop() {
+    log.info("Actor [{}] started on thread: {}", actorName, Thread.currentThread());
+
+    try {
+      while (running.get()) {
+        // ?ㄐ??Block嚗??砍銵???Unmount嚗?雿 OS Thread
+        T message = mailbox.take();
+        handleMessage(message);
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      log.warn("Actor [{}] interrupted.", actorName);
+    } catch (Exception e) {
+      log.error("Actor [{}] encountered unexpected error", actorName, e);
+    }
+  }
+
+  public void stop() {
+    if (running.compareAndSet(true, false)) { // 蝣箔??芸銵?甈?
+      log.info("Stopping Actor [{}]", actorName);
+      // ??嚗銝?葉?瑁??策?瑁?閰?Actor ??Virtual Thread
+      // ? runLoop ?∪ mailbox.take()嚗??? interrupt嚗??偶??券鋆∠?唳??啗???
+      // 瘜冽?嚗?閬???start() ??摮?Thread ?嚗??????Poison Pill
+    }
+  }
+
+  // 摮??亙祕雿擃?頛?
+  protected abstract void handleMessage(T message);
+}
+
+
+--- File: GameServices.java ---
+
+package com.example.htmlmud.domain.context;
+
+import java.util.concurrent.ScheduledExecutorService;
+import org.springframework.context.ApplicationEventPublisher;
+import com.example.htmlmud.domain.logic.command.CommandDispatcher;
+import com.example.htmlmud.service.PlayerService;
+import com.example.htmlmud.service.auth.AuthService;
+import com.example.htmlmud.service.persistence.PlayerPersistenceService;
+import com.example.htmlmud.service.world.WorldManager;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+public record GameServices(
+
+    AuthService authService,
+
+    PlayerService playerService,
+
+    PlayerPersistenceService playerPersistenceService,
+
+    WorldManager worldManager,
+
+    ObjectMapper objectMapper,
+
+    ApplicationEventPublisher eventPublisher,
+
+    CommandDispatcher commandDispatcher,
+
+    ScheduledExecutorService scheduler
+// ?芯?憒?閬? ItemService, SkillService嚗??券ㄐ撠勗末
+// ItemService itemService
+) {
+
+}
+
+
+--- File: MudContext.java ---
+
+package com.example.htmlmud.domain.context;
+
+import com.example.htmlmud.domain.actor.PlayerActor;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+public class MudContext {
+  // 1. ?嗅????摰?Actor (?????
+  public static final ScopedValue<PlayerActor> CURRENT_PLAYER = ScopedValue.newInstance();
+
+  // 2. ?嗅???Trace ID (?日??
+  public static final ScopedValue<String> TRACE_ID = ScopedValue.newInstance();
+
+  public static final ScopedValue<ObjectMapper> OBJECT_MAPPER = ScopedValue.newInstance();
+
+  // 頛?寞?嚗?敺?摰塚?憒?瘝身摰?靘?蝟餌絞?雿平)???箇撣?
+  public static PlayerActor currentPlayer() {
+    if (!CURRENT_PLAYER.isBound()) {
+      throw new IllegalStateException("?嗅?銝?拙振????Context 銝哨?");
+    }
+    return CURRENT_PLAYER.get();
+  }
+
+  // 頛?寞?嚗?敺??TraceId嚗?蝬?撠勗???"SYSTEM"
+  public static String traceId() {
+    return TRACE_ID.isBound() ? TRACE_ID.get() : "UNKNOWN";
+  }
+
+}
+
+
+--- File: MudKeys.java ---
+
+package com.example.htmlmud.domain.context;
+
+public class MudKeys {
+
+  public static final String PLAYER_ID = "MUD_PLAYER_ID";
+
+  public static final String AUTH_RETRY_COUNT_KEY = "AUTH_RETRY_COUNT";
+
+}
+
+
+--- File: DomainEvent.java ---
+
+package com.example.htmlmud.domain.event;
+
+import java.time.Instant;
+import com.example.htmlmud.domain.actor.PlayerActor;
+
+/**
+ * ??鈭辣?隞 雿輻 sealed ??芣??孵???record ?臭誑撖虫?摰?
+ */
+public sealed interface DomainEvent permits DomainEvent.SessionEvent, DomainEvent.SystemEvent,
+    DomainEvent.WorldEvent, PlayerEvents, MobEvents {
+
+  // ???隞園敹??? metadata
+  Instant occurredOn();
+
+  // ?身撖虫?嚗靘踹?敺銝???
+  static Instant now() {
+    return Instant.now();
+  }
+
+  /**
+   * ????賊?鈭辣
+   */
+  sealed interface SessionEvent extends DomainEvent
+      permits SessionEvent.Established, SessionEvent.MessageReceived, SessionEvent.Closed {
+
+    String sessionId();
+
+    record Established(String sessionId, Instant occurredOn) implements SessionEvent {
+    }
+
+    record MessageReceived(String sessionId, String message, Instant occurredOn)
+        implements SessionEvent {
+    }
+
+    record Closed(String sessionId, String reason, int statusCode, Instant occurredOn)
+        implements SessionEvent {
+    }
+  }
+
+  /**
+   * 蝟餌絞?誘??霅?隞?
+   */
+  sealed interface SystemEvent extends DomainEvent
+      permits SystemEvent.Authenticate, SystemEvent.RegisterUsername, SystemEvent.RegisterPassword,
+      SystemEvent.Login, SystemEvent.Logout {
+
+    String sessionId();
+
+    record RegisterUsername(String sessionId, String input, Instant occurredOn)
+        implements SystemEvent {
+    }
+
+    record RegisterPassword(String sessionId, String input, Instant occurredOn)
+        implements SystemEvent {
+    }
+
+
+    record Login(String sessionId, String input, Instant occurredOn) implements SystemEvent {
+    }
+
+    record Authenticate(String sessionId, String input, Instant occurredOn) implements SystemEvent {
+    }
+
+    record Logout(String sessionId, PlayerActor player, Instant occurredOn) implements SystemEvent {
+    }
+  }
+
+  /**
+   * ?銝???鈭辣
+   */
+  sealed interface WorldEvent extends DomainEvent permits WorldEvent.Tick {
+
+    record Tick(long gameTickTime, Instant occurredOn) implements WorldEvent {
+    }
+  }
+
+}
+
+
+--- File: MobEvents.java ---
+
+package com.example.htmlmud.domain.event;
+
+import java.time.Instant;
+import java.util.Map;
+
+public sealed interface MobEvents extends DomainEvent permits MobEvents.MobDead {
+  // ?芰甇颱滿
+  record MobDead(String mobId, String killerId, // 隤唳捏??
+      Map<String, Double> dropItems, // ??拚?閬?
+      Instant occurredOn) implements MobEvents {
+  }
+}
+
+
+--- File: PlayerEvents.java ---
+
+package com.example.htmlmud.domain.event;
+
+import java.time.Instant;
+
+public sealed interface PlayerEvents extends DomainEvent
+    permits PlayerEvents.LoggedIn, PlayerEvents.LoggedOut, PlayerEvents.LevelUp {
+
+  // 1. ?拙振?餃鈭辣
+  record LoggedIn(String playerId, String username, String ipAddress, Instant occurredOn)
+      implements PlayerEvents {
+    public LoggedIn(String playerId, String username, String ipAddress) {
+      this(playerId, username, ipAddress, DomainEvent.now());
+    }
+  }
+
+  // 2. ?拙振?餃鈭辣
+  record LoggedOut(String playerId, Instant occurredOn) implements PlayerEvents {
+    public LoggedOut(String playerId) {
+      this(playerId, DomainEvent.now());
+    }
+  }
+
+  // 3. ?拙振??
+  record LevelUp(String playerId, int newLevel, Instant occurredOn) implements PlayerEvents {
+    public LevelUp(String playerId, int newLevel) {
+      this(playerId, newLevel, DomainEvent.now());
+    }
+  }
+}
+
+
+--- File: CommandDispatcher.java ---
+
+package com.example.htmlmud.domain.logic.command;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.springframework.stereotype.Component;
+import com.example.htmlmud.domain.actor.PlayerActor;
+import com.example.htmlmud.domain.logic.command.annotation.CommandAlias;
+import com.example.htmlmud.domain.logic.command.impl.MoveCommand;
+import com.example.htmlmud.domain.model.Direction;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Component
+public class CommandDispatcher {
+
+  // ?誘閮餃?銵? "look" -> LookCommand Object
+  private final Map<String, PlayerCommand> commandMap = new HashMap<>();
+
+  // Spring ??釣?交??祕雿?PlayerCommand ??Bean (LookCommand, MoveCommand...)
+  public CommandDispatcher(List<PlayerCommand> commands) {
+    for (PlayerCommand cmd : commands) {
+      // 1. 閮餃?銝駁 (靘? "look", "move")
+      register(cmd.getKey(), cmd);
+
+      // 2. ?敹耨?嫘炎?交?行? Alias 閮餉圾
+      if (cmd.getClass().isAnnotationPresent(CommandAlias.class)) {
+        CommandAlias annotation = cmd.getClass().getAnnotation(CommandAlias.class);
+
+        // 3. 閮餃?????
+        for (String alias : annotation.value()) {
+          register(alias, cmd);
+        }
+      }
+
+      // 憿??? MoveCommand ??葬撖?(????臬蝝??亙?嚗?瘨??頧?)
+      // 撱箄降?靽??函?撘Ⅳ鋆∠畾?????虫?蝔?@DirectionAlias ??
+      registerDirectionAliases(commands);
+    }
+  }
+
+  private void register(String key, PlayerCommand cmd) {
+    commandMap.put(key.toLowerCase(), cmd);
+  }
+
+  // ???孵???(n, s, e, w)
+  private void registerDirectionAliases(List<PlayerCommand> commands) {
+    // ?曉 MoveCommand
+    PlayerCommand moveCmd =
+        commands.stream().filter(c -> c.getKey().equals("move")).findFirst().orElse(null);
+
+    if (moveCmd != null) {
+      for (Direction d : Direction.values()) {
+        register(d.getShortName(), moveCmd); // n, s, e, w
+        register(d.getFullName(), moveCmd); // north, south...
+      }
+    }
+  }
+
+  /**
+   * ?詨?瘣曄?摩
+   *
+   * @param input ?拙振頛詨??憪?銝莎?靘? "look north" ??"kill goblin"
+   */
+  public void dispatch(PlayerActor actor, String input) {
+    if (input == null || input.isBlank())
+      return;
+
+    // 1. ?摮葡嚗?"kill goblin" -> key="kill", args="goblin"
+    String[] parts = input.trim().split("\\s+", 2); // ?芸??隞?
+    String key = parts[0].toLowerCase();
+    String args = parts.length > 1 ? parts[1] : "";
+
+    log.info("key:{}, args:{}", key, args);
+    // 2. ?交?誘
+    PlayerCommand command = commandMap.get(key);
+
+    if (command != null) {
+      // ???萎耨甇??
+      // 憒??拙振頛詨? "n"嚗???閬? "n" ?嗡???喟策 MoveCommand
+      // ? MoveCommand ?折 logic 閬??"n" 蝑 "move n"
+      if (command instanceof MoveCommand && Direction.parse(key) != null) {
+        // 憒??誘?祈澈撠望?孵? (靘?頛詨 "n")嚗? key ?嗡? args ?喲脣
+        command.execute(actor, key);
+      } else {
+        // ?血?甇?虜?瑁? (靘? "move north")
+        command.execute(actor, args);
+      }
+    } else {
+      // 4. ?曆??唳?隞斤??身??
+      actor.reply("????'" + key + "' ?臭?暻潭??撓??'help' ?亦??誘?”??);
+    }
+  }
+}
+
+
+--- File: PlayerCommand.java ---
+
+package com.example.htmlmud.domain.logic.command;
+
+import com.example.htmlmud.domain.actor.PlayerActor;
+
+public interface PlayerCommand {
+
+  // 閰脫?隞斤?閫貊?摮?靘? "look", "l"
+  String getKey();
+
+  // ?瑁??摩
+  // actor: 隤啁?箇??誘 (????Context)
+  // args: ?誘? (靘? 'look north' ??'north')
+  void execute(PlayerActor actor, String args);
+
+  // ?膩 (蝯?help ?誘??
+  default String getDescription() {
+    return "?⊥?餈?;
+  }
+}
+
+
+--- File: CommandAlias.java ---
+
+package com.example.htmlmud.domain.logic.command.annotation;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target(ElementType.TYPE) // ?芾?曉憿銝?
+@Retention(RetentionPolicy.RUNTIME) // ?瑁???????霈??
+public @interface CommandAlias {
+  String[] value(); // ?迂?喳憭??靘? {"l", "see"}
+}
+
+
+--- File: GetCommand.java ---
+
+package com.example.htmlmud.domain.logic.command.impl;
+
+import org.springframework.stereotype.Component;
+import com.example.htmlmud.domain.actor.PlayerActor;
+import com.example.htmlmud.domain.actor.RoomActor;
+import com.example.htmlmud.domain.context.GameServices;
+import com.example.htmlmud.domain.logic.command.PlayerCommand;
+import com.example.htmlmud.domain.logic.command.annotation.CommandAlias;
+import com.example.htmlmud.protocol.RoomMessage;
+import com.example.htmlmud.service.world.WorldManager;
+import lombok.RequiredArgsConstructor;
+
+@Component
+@CommandAlias("get")
+@RequiredArgsConstructor
+public class GetCommand implements PlayerCommand {
+
+  @Override
+  public String getKey() {
+    return "get";
+  }
+
+  @Override
+  public void execute(PlayerActor actor, String args) {
+    // 1. ?箸瑼Ｘ
+    if (args.isEmpty()) {
+      actor.reply("雿??蹂?暻潘?");
+      return;
+    }
+
+    // 2. ?曉?輸? Actor
+    String roomId = actor.getCurrentRoomId();
+    RoomActor room = actor.getServices().worldManager().getRoomActor(roomId);
+
+    // 3. ?潮?瘙?(???甇亦?)
+    // 瘜冽?嚗ㄐ?蝔桀?瘜?
+    // ?寞? A: ?澆?銝? (Fire-and-Forget)嚗?? ActorMessage ???
+    // ?寞? B: 雿輻 CompletableFuture 蝑?蝯? (頛閫嚗???Actor 璅∪?銝剛?撠?甇駁?)
+
+    // ?ㄐ蝷箇??渡泵??Actor 蝎曄???"Ask Pattern" (????)
+    // ?箔?蝪∪韏瑁?嚗???閮?RoomActor ????甇亦?摰?寞? (憒??賢???唳???
+    // ?????"AttemptPick" 閮
+
+    room.send(new RoomMessage.TryPickItem(args, actor));
+  }
+}
+
+
+--- File: KillCommand.java ---
+
+package com.example.htmlmud.domain.logic.command.impl;
+
+import java.util.List;
+import org.springframework.stereotype.Component;
+import com.example.htmlmud.domain.actor.MobActor;
+import com.example.htmlmud.domain.actor.PlayerActor;
+import com.example.htmlmud.domain.actor.RoomActor;
+import com.example.htmlmud.domain.logic.command.PlayerCommand;
+import com.example.htmlmud.domain.logic.command.annotation.CommandAlias;
+import com.example.htmlmud.domain.logic.util.TargetSelector;
+import lombok.RequiredArgsConstructor;
+
+@Component
+@CommandAlias("k")
+@RequiredArgsConstructor
+public class KillCommand implements PlayerCommand {
+
+  private final TargetSelector targetSelector; // 瘜典撌亙
+
+  @Override
+  public String getKey() {
+    return "kill";
+  }
+
+  @Override
+  public void execute(PlayerActor actor, String args) {
+    if (args.isBlank()) {
+      actor.reply("雿??餅?隤堆?");
+      return;
+    }
+
+    // 1. ???輸??抒??芰?”
+    RoomActor room = actor.getServices().worldManager().getRoomActor(actor.getCurrentRoomId());
+    // ?ㄐ?身 room ??getMobsSnapshot() ? List<MobActor>
+    // 瘜冽?嚗鈭?蝔??剁??ㄐ?憟賣 Snapshot ??賜Ⅱ靽????函??”
+    List<MobActor> mobsInRoom = room.getMobsSnapshot();
+
+    // 2. 鈭斤策 Selector ??銴?摮葡
+    // args ?航??"red goblin", "elite soldier 2"
+    MobActor target = targetSelector.selectMob(mobsInRoom, args);
+
+    if (target == null) {
+      actor.reply("?ㄐ瘝?? '" + args + "'??);
+      return;
+    }
+
+    // 3. ?瑁??圈洛?摩
+    actor.reply("雿?憪??" + target.getTemplate().name() + "嚗?);
+    target.onAttacked(actor, 10);
+  }
+}
+
+
+--- File: LookCommand.java ---
+
+package com.example.htmlmud.domain.logic.command.impl;
+
+import java.util.List;
+import org.springframework.stereotype.Component;
+import com.example.htmlmud.domain.actor.MobActor;
+import com.example.htmlmud.domain.actor.PlayerActor;
+import com.example.htmlmud.domain.actor.RoomActor;
+import com.example.htmlmud.domain.logic.command.PlayerCommand;
+import com.example.htmlmud.domain.logic.command.annotation.CommandAlias;
+import com.example.htmlmud.domain.model.MobKind;
+import com.example.htmlmud.infra.util.AnsiColor;
+import com.example.htmlmud.infra.util.ColorText;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Component // 閮餃???Spring Bean
+@RequiredArgsConstructor
+@CommandAlias({"l", "see", "ls"}) // ?舀 l, see, ls
+public class LookCommand implements PlayerCommand {
+
+  @Override
+  public String getKey() {
+    return "look";
+  }
+
+  @Override
+  public void execute(PlayerActor actor, String args) {
+    // 1. ???拙振?嗅?雿蔭 ID
+    String roomId = actor.getCurrentRoomId();
+
+    log.info("args:{}", args);
+
+    // 2. ?亥岷?輸?鞈? (雿輻 WorldManager)
+    RoomActor roomActor = actor.getServices().worldManager().getRoomActor(roomId);
+
+    if (roomActor == null) {
+      actor.reply("雿??潔???蝛箔?銝?.. (RoomID: " + roomId + " 銝???");
+      return;
+    }
+
+    // 3. ?Ｙ??輸??膩
+    String roomDescription = buildRoomDescription(actor, roomActor);
+
+
+
+    // 4. ?蝯衣摰?
+    actor.reply(roomDescription);
+  }
+
+  private String buildRoomDescription(PlayerActor actor, RoomActor room) {
+    StringBuilder sb = new StringBuilder();
+
+    // 璅? (鈭桃??
+    sb.append(ColorText.room("=== " + room.getTemplate().name() + " ===")).append("\r\n");
+
+    // ?膩 (?身???啗)
+    sb.append(ColorText.roomDesc(room.getTemplate().description())).append("\r\n");
+
+    // ?箏 (暺)
+    sb.append(ColorText.exit("[?箏]: "));
+    if (room.getTemplate().exits().isEmpty()) {
+      sb.append("??);
+    } else {
+      sb.append(String.join(", ", room.getTemplate().exits().keySet()));
+    }
+    sb.append("\r\n");
+
+    // ???輸??抒?? (?拙振?芰嚗???摨?
+    List<PlayerActor> players = room.getPlayersSnapshot();
+    List<MobActor> mobs = room.getMobsSnapshot();
+    log.info("players: {}, mobs: {}", players.size(), mobs.size());
+
+
+    // 1. 蝭拚???嗡??拙振 (鈭株??莎???芸楛)
+    List<String> otherPlayerNames = players.stream().filter(p -> !p.getId().equals(actor.getId()))
+        .map(p -> ColorText.player(p.getNickname() + "(" + p.getName() + ")")).toList();
+
+    // 2. 蝭拚??NPC (蝬憿舐內)
+    List<String> npcNames = mobs.stream().filter(m -> m.getTemplate().kind() == MobKind.FRIENDLY)
+        .map(m -> ColorText.npc(m.getTemplate().name() + "(" + m.getTemplate().aliases()[0] + ")"))
+        .toList();
+
+    // 3. 蝭拚???芰 (蝝憿舐內)
+    List<String> monsterNames = mobs.stream().filter(
+        m -> m.getTemplate().kind() == MobKind.AGGRESSIVE || m.getTemplate().kind() == MobKind.BOSS)
+        .map(m -> ColorText.mob(m.getTemplate().name() + "(" + m.getTemplate().aliases()[0] + ")")) // 蝝隞?”?梢
+        .toList();
+
+    if (!otherPlayerNames.isEmpty()) {
+      sb.append(ColorText.wrap(AnsiColor.BRIGHT_MAGENTA, "[?拙振]: "))
+          .append(String.join(", ", otherPlayerNames)).append("\r\n");
+    }
+    if (!npcNames.isEmpty()) {
+      sb.append(ColorText.npc("[鈭箇]: ")).append(String.join(", ", npcNames)).append("\r\n");
+    }
+    if (!monsterNames.isEmpty()) {
+      sb.append(ColorText.wrap(AnsiColor.RED, "[?芰]: ")).append(String.join(", ", monsterNames))
+          .append("\r\n");
+    }
+
+    return sb.toString();
+  }
+}
+
+
+--- File: MoveCommand.java ---
+
+package com.example.htmlmud.domain.logic.command.impl;
+
+import org.springframework.stereotype.Component;
+import com.example.htmlmud.domain.actor.PlayerActor;
+import com.example.htmlmud.domain.actor.RoomActor;
+import com.example.htmlmud.domain.logic.command.PlayerCommand;
+import com.example.htmlmud.domain.model.Direction;
+import com.example.htmlmud.domain.model.map.RoomExit;
+import com.example.htmlmud.infra.util.AnsiColor;
+import com.example.htmlmud.infra.util.ColorText;
+import lombok.RequiredArgsConstructor;
+
+@Component
+@RequiredArgsConstructor
+public class MoveCommand implements PlayerCommand {
+
+  @Override
+  public String getKey() {
+    return "move"; // 銝駁??move嚗???閮餃? alias (n, s, e, w)
+  }
+
+  @Override
+  public void execute(PlayerActor actor, String args) {
+    // 1. 閫???孵?
+    // ?拙振?航頛詨 "move north" ??亥撓??"north" (??Dispatcher 頧)
+    Direction dir = Direction.parse(args);
+
+    if (dir == null) {
+      actor.reply("雿?敺?芸?宏??");
+      return;
+    }
+
+    // 2. ???嗅??輸?
+    String currentRoomId = actor.getCurrentRoomId();
+    RoomActor currentRoom = actor.getServices().worldManager().getRoomActor(currentRoomId);
+
+    if (currentRoom == null) {
+      actor.reply("雿銝??蝛箔葉嚗瘜宏??);
+      return;
+    }
+
+    // 3. 瑼Ｘ?箏
+    // ?身 Room.exits ??Map<String, Integer> (key ??direction full name)
+    // Integer nextRoomId = currentRoom.getTemplate().exits().get(dir.getFullName());
+    RoomExit exit = currentRoom.getTemplate().exits().get(dir.getFullName());
+
+
+    if (exit == null) {
+      actor.reply("敺 " + dir.getDisplayName() + " 瘝??箄楝??);
+      return;
+    }
+
+    // 瑼Ｘ閬???血???
+    String targetRoomId = exit.targetRoomId();
+    RoomActor targetRoom = actor.getServices().worldManager().getRoomActor(targetRoomId);
+
+    if (targetRoom == null) {
+      actor.reply("??輸? " + targetRoomId + " ?賢極銝哨??⊥?????);
+      return;
+    }
+
+
+    // --- 蝘餃???嚗?憪???蝔?---
+
+    // 4. ??誨??(?Ｗ)
+    String leaveMsg = ColorText.wrap(AnsiColor.YELLOW,
+        actor.getNickname() + " 敺 " + dir.getDisplayName() + " ?ａ?鈭?);
+    actor.getServices().worldManager().broadcastToRoom(currentRoomId, leaveMsg, actor.getId());
+
+    // 5. ?湔?拙振雿蔭
+    // 瘜冽?嚗ㄐ?芣閮擃?State Pattern + Write-Behind ??鞎砍?瑼?
+    // String targetRoomId = exit.targetRoomId();
+    actor.setCurrentRoomId(targetRoomId);
+
+    // 6. ?唳?誨??(?脣)
+    // 閮????(靘?敺?粥嚗?輸??犖???唬?敺??嫣?)
+    String arriveMsg = ColorText.wrap(AnsiColor.YELLOW,
+        actor.getNickname() + " 敺?" + dir.opposite().getDisplayName() + " ??鈭?);
+    actor.getServices().worldManager().broadcastToRoom(targetRoomId, arriveMsg, actor.getId());
+
+    // 7. ?芸? Look (霈摰嗥??唳?啣?)
+    // ?湔隤輻 Dispatcher ?瑁? look ?誘
+    actor.getServices().commandDispatcher().dispatch(actor, "look");
+  }
+}
+
+
+--- File: TargetSelector.java ---
+
+package com.example.htmlmud.domain.logic.util;
+
+import com.example.htmlmud.domain.actor.MobActor;
+import com.example.htmlmud.domain.model.map.MobTemplate;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+@Component
+public class TargetSelector {
+
+  // ?其?閫?? "name index" (靘?: goblin 2)
+  private static final Pattern TRAILING_NUMBER = Pattern.compile("^(.*)\\s+(\\d+)$");
+
+  // ?其?閫?? "index.name" (靘?: 2.goblin)
+  private static final Pattern DOT_NOTATION = Pattern.compile("^(\\d+)\\.(.*)$");
+
+  /**
+   * 敺?銵其葉?曉蝚血??膩?璅?
+   * 
+   * @param candidates ?輸?鋆∠???芰 (???
+   * @param input ?拙振頛詨??銝?(靘? "elite soldier 3")
+   * @return ?曉??Mob嚗?∪?? null
+   */
+  public MobActor selectMob(List<MobActor> candidates, String input) {
+    if (input == null || input.isBlank())
+      return null;
+
+    // 1. 閫??頛詨嚗??Ｗ "?迂?摮? ??"蝚砍嗾??
+    ParsedTarget parsed = parseInput(input);
+    String keyword = parsed.name.toLowerCase();
+    int targetIndex = parsed.index; // 1-based index
+
+    int matchCount = 0;
+
+    // 2. ?風??
+    for (MobActor mob : candidates) {
+      // 3. 瑼Ｘ?臬?寥?
+      if (isMatch(mob, keyword)) {
+        matchCount++;
+        // 4. 憒??寥?甈⊥蝑?拙振???揣撘?撠望摰?
+        if (matchCount == targetIndex) {
+          return mob;
+        }
+      }
+    }
+
+    return null; // ?曆???
+  }
+
+  private boolean isMatch(MobActor mob, String keyword) {
+    MobTemplate tpl = mob.getTemplate();
+
+    // 閬? A: ?湔瘥? Name (敹賜憭批?撖?
+    if (tpl.name().toLowerCase().contains(keyword))
+      return true;
+
+    // 閬? B: 瘥? Aliases
+    // ?芾? Alias ?”鋆⊥?隞颱?銝??銝?"?" ?拙振頛詨???萄?
+    // 靘? alias=["red goblin king"], input="red goblin" -> true
+    // 靘? alias=["goblin"], input="red" -> false
+    if (tpl.aliases() != null) {
+      for (String alias : tpl.aliases()) {
+        if (alias.toLowerCase().contains(keyword)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  // --- 閫???摩 ---
+
+  private record ParsedTarget(String name, int index) {
+  }
+
+  private ParsedTarget parseInput(String input) {
+    input = input.trim();
+
+    // 瑼Ｘ "2.goblin" ?澆?
+    Matcher dotMatcher = DOT_NOTATION.matcher(input);
+    if (dotMatcher.find()) {
+      int idx = Integer.parseInt(dotMatcher.group(1));
+      String name = dotMatcher.group(2);
+      return new ParsedTarget(name, idx);
+    }
+
+    // 瑼Ｘ "goblin 2" ?澆?
+    Matcher trailMatcher = TRAILING_NUMBER.matcher(input);
+    if (trailMatcher.find()) {
+      String name = trailMatcher.group(1);
+      int idx = Integer.parseInt(trailMatcher.group(2));
+      return new ParsedTarget(name, idx);
+    }
+
+    // ?身: ?曄洵 1 ??
+    return new ParsedTarget(input, 1);
+  }
+}
+
+
+--- File: Direction.java ---
+
+package com.example.htmlmud.domain.model;
+
+import lombok.Getter;
+
+@Getter
+public enum Direction {
+  NORTH("north", "n", "?"),
+
+  SOUTH("south", "s", "?"),
+
+  EAST("east", "e", "?望"),
+
+  WEST("west", "w", "镼踵"),
+
+  NORTHEAST("northeast", "ne", "?勗???),
+
+  NORTHWEST("northwest", "nw", "镼踹???),
+
+  SOUTHEAST("southeast", "se", "?勗???),
+
+  SOUTHWEST("southwest", "sw", "镼踹???),
+
+  UP("up", "u", "銝"),
+
+  DOWN("down", "d", "銝");
+
+  private final String fullName;
+  private final String shortName;
+  private final String displayName;
+
+  Direction(String fullName, String shortName, String displayName) {
+    this.fullName = fullName;
+    this.shortName = shortName;
+    this.displayName = displayName;
+  }
+
+  // 閫??頛詨摮葡 (靘?頛詨 "n" ??"North" ?質?曉)
+  public static Direction parse(String input) {
+    if (input == null)
+      return null;
+    String normalized = input.trim().toLowerCase();
+    for (Direction d : values()) {
+      if (d.fullName.equals(normalized) || d.shortName.equals(normalized)) {
+        return d;
+      }
+    }
+    return null;
+  }
+
+  // ?????(?冽嚗?敺?粥嚗鈭箇??唬?敺?????)
+  public Direction opposite() {
+    return switch (this) {
+      case NORTH -> SOUTH;
+      case SOUTH -> NORTH;
+      case EAST -> WEST;
+      case WEST -> EAST;
+      case NORTHEAST -> SOUTHWEST;
+      case NORTHWEST -> SOUTHEAST;
+      case SOUTHEAST -> NORTHWEST;
+      case SOUTHWEST -> NORTHEAST;
+      case UP -> DOWN;
+      case DOWN -> UP;
+    };
+  }
+}
+
+
+--- File: GameItem.java ---
+
+package com.example.htmlmud.domain.model;
+
+import java.util.HashMap;
+import java.util.Map;
+import com.example.htmlmud.domain.model.map.ItemTemplate;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data // Lombok
+@NoArgsConstructor
+@AllArgsConstructor
+public class GameItem {
+
+  // 1. ?臭?霅 (UUID)
+  // 瘥??蝡?ID嚗靘輯蕭頩?(靘??脫迫銴ˊ Bug)
+  private String id;
+
+  // 2. ??璅???璅?(?芸? ID)
+  private String templateId;
+
+  private int level;
+
+  // 3. ???豢? (????
+  private int currentDurability; // ????
+  private int amount; // ???賊? (憒??航瘞??Ｗ馳)
+
+  // 4. ?冽??詨?閰韌 (Affixes)
+  // 靘?嚗 "attack_bonus": 5, "crafter": "?拙振A" }
+  private Map<String, Object> dynamicProps = new HashMap<>();
+
+  // 頛?寞?嚗?＊蝷箏?蝔?(?撘瑕?蝑?)
+  // e.g., "?萄? (+5)"
+  public String getDisplayName(ItemTemplate tpl) {
+    if (level > 1) {
+      return tpl.name() + " (+" + level + ")";
+    }
+    return tpl.name();
+  }
+
+  // 璆剖??摩?湔撖怠 POJO 鋆?
+  public void decreaseDurability(int amount) {
+    this.currentDurability -= amount;
+    if (this.currentDurability < 0)
+      this.currentDurability = 0;
+  }
+}
+
+
+--- File: MobKind.java ---
+
+package com.example.htmlmud.domain.model;
+
+public enum MobKind {
+  FRIENDLY, // ?? (?, ?犖)
+  NEUTRAL, // 銝剔? (暽? 暺? - 鋡急?????)
+  AGGRESSIVE, // 銝餃??餅? (?亙??? ??
+  BOSS // 擐? (憿舐內??賣??畾???
+}
+
+
+--- File: PlayerRecord.java ---
+
+package com.example.htmlmud.domain.model;
+
+import java.util.List;
+import com.example.htmlmud.domain.model.json.LivingState;
+
+// ???Actor 銋??喲??翰??(Snapshot)
+public record PlayerRecord(
+
+    String id,
+
+    String name,
+
+    String nickname,
+
+    String currentRoomId,
+
+    // 瘜冽?嚗?? Record嚗ㄐ?憟賣 Deep Copy 敺?鞈?
+    LivingState state,
+
+    List<GameItem> inventory
+
+) {
+}
+
+
+--- File: RoomFlag.java ---
+
+package com.example.htmlmud.domain.model;
+
+public enum RoomFlag {
+  // Environment
+  INDOORS, OUTDOORS, DARK, UNDERWATER,
+  // Combat
+  SAFE_ZONE, NO_PVP, ARENA,
+  // Movement
+  NO_RECALL, NO_TELEPORT, PRIVATE,
+  // Special
+  NO_MAGIC, BANK, SHOP
+}
+
+
+--- File: RoomStateRecord.java ---
+
+package com.example.htmlmud.domain.model;
+
+import java.util.List;
+
+public record RoomStateRecord(String roomId, String zoneId, List<GameItem> droppedItems) {
+
+}
+
+
+--- File: LivingState.java ---
+
+package com.example.htmlmud.domain.model.json;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.HashMap;
+import java.util.Map;
+
+// ?隞嗆?鋡怠???摮 players.state_json ??mobs.state_json
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class LivingState {
+  public String gender;
+
+  public int level = 1;
+  public int hp;
+  public int maxHp;
+  public int mp;
+  public int maxMp;
+
+  // ?箇?撅祆?
+  public Map<String, Integer> attributes = new HashMap<>(); // STR, DEX, INT
+
+  // ?圈洛???(銝???DB嚗??舀?閮?@JsonIgnore)
+  @JsonIgnore
+  public transient boolean isDead = false;
+
+  // 撱箸?摮?頛?寞?...
+  @JsonIgnore
+  public boolean isDead() {
+    return hp <= 0;
+  }
+
+  public LivingState deepCopy() {
+    LivingState copy = new LivingState();
+    copy.level = this.level;
+    copy.hp = this.hp;
+    copy.maxHp = this.maxHp;
+    copy.mp = this.mp;
+    copy.maxMp = this.maxMp;
+    // Map 銋?銴ˊ
+    if (this.attributes != null) {
+      copy.attributes = new HashMap<>(this.attributes);
+    }
+    return copy;
+  }
+}
+
+
+--- File: ItemTemplate.java ---
+
+package com.example.htmlmud.domain.model.map;
+
+import java.util.Map;
+
+// 5. ?拙?/鋆??蔭 (ItemReset)
+public record ItemTemplate(
+
+    String id,
+
+    String name, // "?萄?"
+
+    String description, // "銝????萄???
+
+    String slot, // "inventory"(??), "weapon"(??, "body"(頨?...
+
+    int maxDurability, // ?憭扯? 100
+
+    int baseAttack, // ?箇??餅? 10
+
+    int baseDefense, // ?箇??脩戌 10
+
+    double chance, // 0.0 - 1.0 (璈?)
+
+    Map<String, Object> extraProps // ?嗡???撅祆?
+) {
+}
+
+
+--- File: MobTemplate.java ---
+
+package com.example.htmlmud.domain.model.map;
+
+import java.util.Set;
+import com.example.htmlmud.domain.model.MobKind;
+import lombok.Builder;
+
+@Builder(toBuilder = true)
+public record MobTemplate(
+
+    String id,
+
+    String name,
+
+    String[] aliases,
+
+    MobKind kind,
+
+    int level,
+
+    int maxHp,
+
+    int damage,
+
+    String roomDescription,
+
+    String lookDescription,
+
+    int expReward, // 甇颱滿蝯血?撠?撽?
+
+    boolean isAggressive, // ?臬銝餃??餅?
+
+    boolean isInvincible, // ?臬?⊥
+
+    Set<String> dialogues, // ?身撠店摨?
+    // ?銵?ID, ???” ID...
+    Integer shopId) {
+}
+
+
+--- File: RoomExit.java ---
+
+package com.example.htmlmud.domain.model.map;
+
+import com.example.htmlmud.infra.persistence.json.ExitDeserializer;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import lombok.Builder;
+
+// 3. ?箏 (RoomExit) - ?舀?桀??????
+@Builder(toBuilder = true)
+@JsonDeserialize(using = ExitDeserializer.class)
+public record RoomExit(
+
+    @JsonProperty("targetId") String targetRoomId, // ?格??輸? ID
+
+    String doorName, // ???蝔?(null 隞?”?⊿?嚗?仿?)
+
+    boolean isLocked, // ?身?臬銝?
+
+    String keyId, // ?閬??啣? Template ID
+
+    boolean isHidden, // ?臬?梯? (? search)
+
+    boolean pickProof // ?臬?⊥?鋡怎?鞈??
+
+) {
+  // ?箔??嫣噶 JSON 蝪∪神 (憒??芣? targetId)嚗隞仿? Custom Deserializer ??嚗?
+  // ? Java 蝔?蝣潔葉??銝?陛?遣瑽????寞???
+  public static RoomExit of(String targetId) {
+    return new RoomExit(targetId, null, false, null, false, false);
+  }
+}
+
+
+--- File: RoomTemplate.java ---
+
+package com.example.htmlmud.domain.model.map;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
+
+// 2. ?輸? (Room)
+@Builder(toBuilder = true)
+public record RoomTemplate(
+
+    String id, // e.g., square
+
+    String zoneId,
+
+    String name, // e.g., "銝剖亢撱?"
+
+    String description, // ?膩
+
+    List<String> flags, // e.g., ["SAFE", "OUTDOORS"]
+
+    Map<String, RoomExit> exits, // Key: ?孵? (north, east), Value: ?箏閰喟敦鞈?
+
+    Set<SpawnRule> spawnRules,
+
+    List<String> items, // [ "newbie_village:village_bread" ]
+
+    @JsonProperty("extra_data") Map<String, Object> extraData // 憿??游?鞈? (e.g. ?單閫貊?)
+
+) {
+}
+
+
+--- File: SpawnRule.java ---
+
+package com.example.htmlmud.domain.model.map;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+// 4. ?芰??閮剖? (MobReset)
+public record SpawnRule(
+
+    @JsonProperty("mobId") String mobTemplateId, // ?芰?? mobTemplateId
+
+    int count, // 閰脫???嗾??
+
+    int respawnTime, // ??蝘 (-1 隞?”銝???0 隞?”雿輻???閮?
+
+    double respawnChance // ??璈? (0.0 - 1.0)
+
+) {
+}
+
+
+--- File: ZoneTemplate.java ---
+
+package com.example.htmlmud.domain.model.map;
+
+import java.util.List;
+
+// 1. ???(Zone) - ???啣?瑼??寧隞?
+public record ZoneTemplate(
+
+    String id, // e.g., "area_newbie"
+
+    String name, // e.g., "?唳???
+
+    int minLevel,
+
+    int maxLevel,
+
+    int respawnRate, // ?芰???? (蝘?
+
+    List<String> authors, // 雿??臭耨?寡?
+
+    List<String> flags // e.g., ["SAFE", "OUTDOORS"]
+
+) {
+}
+
+
+--- File: ItemTemplateMapper.java ---
+
+package com.example.htmlmud.infra.mapper;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.ReportingPolicy;
+import com.example.htmlmud.domain.model.map.ItemTemplate;
+import com.example.htmlmud.infra.persistence.entity.ItemTemplateEntity;
+
+@Mapper(componentModel = "spring",
+    // 敹賜瘝????雿?(??嚗甇?MapStruct ?梢隤?record 蝻箸?雿?
+    unmappedTargetPolicy = ReportingPolicy.IGNORE,
+    // ?嗡?皞 null ??閬??格? (?貊嚗??瘙?)
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+public interface ItemTemplateMapper {
+
+  // 1. Entity -> Record (頛?)
+  // MapStruct ??????蝔梁?甈? (nickname -> nickname)
+  ItemTemplate toRecord(ItemTemplateEntity entity);
+
+  // 2. Record -> Entity (摮??)
+  // ?ㄐ?虜?舐 "?湔" 璅∪?嚗???"?啣遣"
+  // @MappingTarget 隞?”閬? source ?澆‵??target
+  void updateEntityFromRecord(ItemTemplate source, @MappingTarget ItemTemplateEntity target);
+}
+
+
+--- File: PlayerMapper.java ---
+
+package com.example.htmlmud.infra.mapper;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.ReportingPolicy;
+import com.example.htmlmud.domain.model.PlayerRecord;
+import com.example.htmlmud.infra.persistence.entity.CharacterEntity;
+
+@Mapper(componentModel = "spring",
+    // 敹賜瘝????雿?(??嚗甇?MapStruct ?梢隤?record 蝻箸?雿?
+    unmappedTargetPolicy = ReportingPolicy.IGNORE,
+    // ?嗡?皞 null ??閬??格? (?貊嚗??瘙?)
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+public interface PlayerMapper {
+
+  // 1. Entity -> Record (頛?)
+  // MapStruct ??????蝔梁?甈? (nickname -> nickname)
+  PlayerRecord toRecord(CharacterEntity entity);
+
+  // 2. Record -> Entity (摮??)
+  // ?ㄐ?虜?舐 "?湔" 璅∪?嚗???"?啣遣"
+  // @MappingTarget 隞?”閬? source ?澆‵??target
+  void updateEntityFromRecord(PlayerRecord source, @MappingTarget CharacterEntity target);
+}
+
+
+--- File: CharacterEntity.java ---
+
+package com.example.htmlmud.infra.persistence.entity;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import com.example.htmlmud.domain.model.GameItem;
+import com.example.htmlmud.domain.model.json.LivingState;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "characters",
+    indexes = {@Index(name = "idx_uid_name", columnList = "uid,name", unique = true)})
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CharacterEntity {
+
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private String id;
+
+  // ?摩? (?ㄐ摮?ID 瘥?蝪∪嚗??N+1 ??Lazy Loading ??)
+  @Column(nullable = false)
+  private String uid;
+
+  private String name;
+
+  private String nickname;
+
+  @Column(name = "look_description")
+  private String lookDescription;
+
+  @Column(name = "current_room_id")
+  private String currentRoomId;
+
+  // ?嚗?? Java ?拐辣摨?? MySQL JSON
+  // 雿輻 MySQL 8.4 JSON 憿??脣??游?鞈? (靘?: HP, Mana, EXP, ??)
+  // ?見?芯??啣?撅祆找??其??湔 Table Schema
+  @JdbcTypeCode(SqlTypes.JSON)
+  @Column(name = "state_json")
+  private LivingState state;
+
+  @JdbcTypeCode(SqlTypes.JSON)
+  @Column(name = "inventory_json")
+  private List<GameItem> inventory; // ??蝟餌絞
+
+  // @JdbcTypeCode(SqlTypes.JSON)
+  // @Column(name = "skills_json")
+  // public PlayerSkills skills; // ??賜頂蝯?撠? skills_json
+
+  // @JdbcTypeCode(SqlTypes.JSON)
+  // @Column(name = "config_json")
+  // public PlayerConfig config; // 閮剖?瑼?撠? config_json
+
+  private LocalDateTime createdAt;
+
+  private LocalDateTime modifyAt;
+
+  @PrePersist
+  protected void onCreate() {
+    createdAt = LocalDateTime.now();
+    if (currentRoomId == null)
+      currentRoomId = "newbie_village:entrance"; // ?身?唳???
+  }
+}
+
+
+--- File: ItemTemplateEntity.java ---
+
+package com.example.htmlmud.infra.persistence.entity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.Data;
+
+@Entity
+@Table(name = "item_templates")
+@Data
+public class ItemTemplateEntity {
+
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private String id;
+
+  private String name;
+
+  private String description;
+
+  private String slot;
+
+  @Column(name = "max_durability")
+  private Integer maxDurability;
+
+  @Column(name = "base_attack")
+  private Integer baseAttack;
+
+  @Column(name = "base_defense")
+  private Integer baseDefense;
+
+  private Double chance;
+
+}
+
+
+--- File: RoomStateEntity.java ---
+
+package com.example.htmlmud.infra.persistence.entity;
+
+import java.util.List;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import com.example.htmlmud.domain.model.GameItem;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.Table;
+import lombok.Data;
+
+@Entity
+@Table(name = "rooms_state")
+@IdClass(RoomStateId.class)
+@Data
+public class RoomStateEntity {
+
+  @Id
+  @Column(name = "room_id", nullable = false)
+  private String roomId;
+
+  @Id
+  @Column(name = "zone_id", nullable = false)
+  private String zoneId;
+
+  @JdbcTypeCode(SqlTypes.JSON)
+  @Column(name = "dropped_items_json")
+  private List<GameItem> droppedItems;
+
+}
+
+
+--- File: RoomStateId.java ---
+
+package com.example.htmlmud.infra.persistence.entity;
+
+import java.io.Serializable;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class RoomStateId implements Serializable {
+  private String roomId;
+  private String zoneId;
+}
+
+
+--- File: UserEntity.java ---
+
+package com.example.htmlmud.infra.persistence.entity;
+
+import java.time.LocalDateTime;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "users")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class UserEntity {
+
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private String id;
+
+  @Column(unique = true, nullable = false)
+  private String username;
+
+  @Column(nullable = false)
+  private String passwordHash;
+
+  private LocalDateTime createdAt;
+
+  private LocalDateTime lastLoginAt;
+
+  // ?ㄐ?銝?閬???Character ?”嚗???啁恣??閬?
+}
+
+
+--- File: ExitDeserializer.java ---
+
+package com.example.htmlmud.infra.persistence.json;
+
+import java.io.IOException;
+import com.example.htmlmud.domain.model.map.RoomExit;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonNode;
+
+public class ExitDeserializer extends JsonDeserializer<RoomExit> {
+
+  @Override
+  public RoomExit deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    // 1. ?斗?嗅? JSON Token ?臬?銝脤??舐隞?
+    if (p.currentToken() == JsonToken.VALUE_STRING) {
+      // ?陛撖急芋撘?"north": "square"
+      // ?湔??銝脩??targetId
+      return RoomExit.of(p.getText());
+    } else if (p.currentToken() == JsonToken.START_OBJECT) {
+      // ?底撖急芋撘?"east": { "targetId": "village_elder_house", "doorName": "????", "isLocked": true,
+      // "isHidden": false, "keyId": "village_elder_key", "pickProof": true }
+      // 霈??隞嗥?暺?
+      JsonNode node = p.getCodec().readTree(p);
+
+      // ?芸?霈??"targetId" (??RoomExit ??JsonProperty 銝??嚗?∪?霈??"targetId"
+      String targetId = node.has("targetId") ? node.get("targetId").asText() : null;
+
+      // 霈?憛急?雿?(?? null)
+      String doorName = node.has("doorName") ? node.get("doorName").asText() : null;
+      boolean isLocked = node.has("isLocked") && node.get("isLocked").asBoolean();
+      String keyId = node.has("keyId") ? node.get("keyId").asText() : null;
+      boolean isHidden = node.has("isHidden") && node.get("isHidden").asBoolean();
+      boolean pickProof = node.has("pickProof") && node.get("pickProof").asBoolean();
+
+      return new RoomExit(targetId, doorName, isLocked, keyId, isHidden, pickProof);
+    }
+
+    throw new IOException("Invalid exit format: expected String or Object");
+  }
+}
+
+
+--- File: CharacterRepository.java ---
+
+package com.example.htmlmud.infra.persistence.repository;
+
+import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.example.htmlmud.infra.persistence.entity.CharacterEntity;
+
+public interface CharacterRepository extends JpaRepository<CharacterEntity, String> {
+  Optional<CharacterEntity> findByUidAndName(String uid, String name);
+
+  boolean existsByUidAndName(String uid, String name);
+
+}
+
+
+--- File: ItemTemplateRepository.java ---
+
+package com.example.htmlmud.infra.persistence.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.example.htmlmud.infra.persistence.entity.ItemTemplateEntity;
+
+public interface ItemTemplateRepository extends JpaRepository<ItemTemplateEntity, String> {
+
+}
+
+
+--- File: RoomStateRepository.java ---
+
+package com.example.htmlmud.infra.persistence.repository;
+
+import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.example.htmlmud.infra.persistence.entity.RoomStateEntity;
+import com.example.htmlmud.infra.persistence.entity.RoomStateId;
+
+public interface RoomStateRepository extends JpaRepository<RoomStateEntity, RoomStateId> {
+
+  Optional<RoomStateEntity> findByRoomIdAndZoneId(String roomId, String zoneId);
+
+}
+
+
+--- File: TemplateRepository.java ---
+
+package com.example.htmlmud.infra.persistence.repository;
+
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.stereotype.Component;
+import com.example.htmlmud.domain.model.map.ItemTemplate;
+import com.example.htmlmud.domain.model.map.MobTemplate;
+import com.example.htmlmud.domain.model.map.RoomTemplate;
+import com.example.htmlmud.domain.model.map.ZoneTemplate;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Component
+@RequiredArgsConstructor
+@Slf4j
+public class TemplateRepository {
+
+  // ?脣??????鞈?
+  // Key: 蝯? ID (e.g., "newbie_village:sword")
+  private final Map<String, ZoneTemplate> zoneTemplates = new ConcurrentHashMap<>();
+  private final Map<String, RoomTemplate> roomTemplates = new ConcurrentHashMap<>();
+  private final Map<String, MobTemplate> mobTemplates = new ConcurrentHashMap<>();
+  private final Map<String, ItemTemplate> itemTemplates = new ConcurrentHashMap<>();
+
+  // 閮餃??寞?
+  public void registerZone(ZoneTemplate tpl) {
+    zoneTemplates.put(tpl.id(), tpl);
+  }
+
+  // ?亥岷?寞?
+  public Optional<ZoneTemplate> findZone(String id) {
+    return Optional.ofNullable(zoneTemplates.get(id));
+  }
+
+  // ?蝯?MapLoader ?澆???其?憛怠鞈?
+  public void registerRoom(RoomTemplate tpl) {
+    roomTemplates.put(tpl.id(), tpl);
+  }
+
+  // ?亥岷?寞?
+  public Optional<RoomTemplate> findRoom(String id) {
+    return Optional.ofNullable(roomTemplates.get(id));
+  }
+
+  public void registerMob(MobTemplate tpl) {
+    mobTemplates.put(tpl.id(), tpl);
+  }
+
+  public Optional<MobTemplate> findMob(String id) {
+    return Optional.ofNullable(mobTemplates.get(id));
+  }
+
+  public void registerItem(ItemTemplate tpl) {
+    itemTemplates.put(tpl.id(), tpl);
+  }
+
+  public Optional<ItemTemplate> findItem(String id) {
+    return Optional.ofNullable(itemTemplates.get(id));
+  }
+
+
+  // 瑼Ｘ鞈?摰??(Server ???炎??
+  public void validate() {
+    // 瑼Ｘ room ??exit ?臬??摮??room id
+    // 瑼Ｘ mob ??loot table ?臬??摮??item id
+  }
+}
+
+
+--- File: UserRepository.java ---
+
+package com.example.htmlmud.infra.persistence.repository;
+
+import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.example.htmlmud.infra.persistence.entity.UserEntity;
+
+public interface UserRepository extends JpaRepository<UserEntity, String> {
+
+  Optional<UserEntity> findByUsername(String username);
+
+  boolean existsByUsername(String username);
+
+}
+
+
+--- File: MudWebSocketHandler.java ---
+
+package com.example.htmlmud.infra.server;
+
+import java.util.UUID;
+import org.springframework.stereotype.Component;
+import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.TextWebSocketHandler;
+import com.example.htmlmud.domain.actor.PlayerActor;
+import com.example.htmlmud.domain.context.GameServices;
+import com.example.htmlmud.protocol.ActorMessage;
+import com.example.htmlmud.protocol.GameCommand;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class MudWebSocketHandler extends TextWebSocketHandler {
+  private final GameServices gameServices;
+  private final SessionRegistry sessionRegistry;
+
+  @Override
+  public void afterConnectionEstablished(WebSocketSession session) {
+    try {
+
+      // Guest?挾 雿輻撌亙??寞?撱箇? Guest Actor (ID=0)
+      // 撠?閬? Service 瘜典蝯?Actor嚗? Actor ????璆剖????
+      PlayerActor actor = PlayerActor.createGuest(session, gameServices);
+
+      // ?? Actor ???砍銵? (Virtual Thread)
+      actor.start();
+
+      // 閮餃??啁雯頝臬惜 SessionRegistry
+      sessionRegistry.register(session, actor);
+
+      log.info("???撱箇?: {} (Guest Actor Created)", session.getId());
+      // eventPublisher.publishEvent(new SessionEvent.Established(session.getId(), Instant.now()));
+    } catch (Exception e) {
+      log.error("??????仃??, e);
+      try {
+        session.close();
+      } catch (Exception ignored) {
+      }
+    }
+  }
+
+  @Override
+  protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+
+    // A. ?Ｙ? Trace ID (???Log 餈質馱????
+    // 雿輻??UUID ?嫣噶?梯?嚗祕???舐摰??UUID
+    String traceId = UUID.randomUUID().toString().substring(0, 8);
+
+    try {
+      PlayerActor actor = sessionRegistry.get(session.getId());
+      if (actor != null) {
+        // C. 閫???誘 (JSON -> Record)
+        GameCommand cmd =
+            gameServices.objectMapper().readValue(message.getPayload(), GameCommand.class);
+
+        // D. 鋆靽∪?銝行???
+        // ?ㄐ銝?摰?ScopedValue嚗??箄?頝典銵??喲?
+        actor.send(new ActorMessage(traceId, cmd));
+      } else {
+        // ?曆???Actor嚗虜隞?”????啣虜?歇鋡怨腺??
+        log.warn("[{}] ?嗅閮雿銝 Actor嚗????: {}", traceId, session.getId());
+        session.close();
+      }
+    } catch (Exception e) {
+      // JSON 閫??憭望??隞隤?
+      log.error("[{}] 閮???航炊: {}", traceId, e.getMessage());
+      // ?豢??改???航炊閮蝯?Client
+    }
+  }
+
+  @Override
+  public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+
+    // 敺?Registry 蝘駁銝血?敺?Actor
+    PlayerActor actor = sessionRegistry.remove(session.getId());
+
+    if (actor != null) {
+      log.info("?????: {} (Actor: {})", session.getId(), actor.getId());
+
+      // ? Actor ?瑁?皜??摩
+      // (憒???Guest ??亙?甇ｇ?憒??舀迤撘摰嗅?閫貊摮??? WorldManager 蝘駁)
+      actor.handleDisconnect();
+    }
+  }
+}
+
+
+--- File: SessionRegistry.java ---
+
+package com.example.htmlmud.infra.server;
+
+import org.springframework.stereotype.Component;
+import org.springframework.web.socket.WebSocketSession;
+import com.example.htmlmud.domain.actor.PlayerActor;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+@Component
+public class SessionRegistry {
+
+  private final Map<String, PlayerActor> sessions = new ConcurrentHashMap<>();
+
+  public void register(WebSocketSession session, PlayerActor actor) {
+    sessions.put(session.getId(), actor);
+  }
+
+  public PlayerActor remove(String sessionId) {
+    return sessions.remove(sessionId);
+  }
+
+  public PlayerActor get(String sessionId) {
+    return sessions.get(sessionId);
+  }
+
+  // 憿??嚗腺????Session (靘????餃頦Ｖ犖)
+  // ?蝯梯??嗅??????(??Guest)
+  public int getConnectionCount() {
+    return sessions.size();
+  }
+
+}
+
+
+--- File: WorldInitializer.java ---
+
+package com.example.htmlmud.infra.server;
+
+import com.example.htmlmud.domain.context.GameServices;
+import com.example.htmlmud.service.world.WorldManager;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
+@Slf4j
+@Component
+@Order(1) // 憒?????憪?甇仿?嚗隞交?園?摨?
+@RequiredArgsConstructor
+public class WorldInitializer implements ApplicationRunner {
+
+  // private final WorldManager worldManager;
+  private final GameServices gameServices;
+
+  @Override
+  public void run(ApplicationArguments args) throws Exception {
+    log.info("=== MUD World Initialization Started ===");
+
+    long start = System.currentTimeMillis();
+
+    // 1. 頛?啣? (敺???WorldManager ??@PostConstruct 蝘駁?靘?
+    gameServices.worldManager().loadWorld();
+
+    // 2. (?芯?) ???典?閮???(Tick Loop)
+    // gameLoop.start();
+
+    // 3. (?芯?) 頛 NPC ????璁翰??
+
+    long duration = System.currentTimeMillis() - start;
+    log.info("=== MUD World Ready in {} ms ===", duration);
+  }
+}
+
+
+--- File: AnsiColor.java ---
+
+package com.example.htmlmud.infra.util;
+
+/**
+ * ANSI 憿蝣澆????璅??脯?鈭株???航隞亙? MUD 撣貊??256 ?脫撅?
+ */
+public enum AnsiColor {
+
+  // --- ?批蝣?---
+  RESET("\u001B[0m"), BOLD("\u001B[1m"), // 蝎?
+  DIM("\u001B[2m"), // 撘梢?
+  ITALIC("\u001B[3m"), // ??
+  UNDERLINE("\u001B[4m"), // 銝?蝺?
+  BLINK("\u001B[5m"), // ??
+  INVERSE("\u001B[7m"), // ?
+  HIDDEN("\u001B[8m"), // ?梯?
+  STRIKETHROUGH("\u001B[9m"), // ?芷蝺?
+
+  // --- 璅????(Standard Foreground) ---
+  BLACK("\u001B[30m"), // 撣貊?潭楛??
+  RED("\u001B[31m"), // 撣貊?潛???
+  GREEN("\u001B[32m"), // 撣貊?潛???
+  YELLOW("\u001B[33m"), // 撣貊?潮???
+  BLUE("\u001B[34m"), // 撣貊?潸???
+  MAGENTA("\u001B[35m"), // 撣貊?潛換蝝
+  CYAN("\u001B[36m"), // 撣貊?潮???
+  WHITE("\u001B[37m"), // 撣貊?潛??
+
+  // --- 擃漁???(Bright Foreground) ---
+  BRIGHT_BLACK("\u001B[90m"), // 撣貊?潮?鈭格楛??
+  BRIGHT_RED("\u001B[91m"), // 撣貊?潮?鈭桃???
+  BRIGHT_GREEN("\u001B[92m"), // 撣貊?潮?鈭桃???
+  BRIGHT_YELLOW("\u001B[93m"), // 撣貊?潮?鈭桅???
+  BRIGHT_BLUE("\u001B[94m"), // 撣貊?潮?鈭株???
+  BRIGHT_MAGENTA("\u001B[95m"), // 撣貊?潮?鈭桃換蝝
+  BRIGHT_CYAN("\u001B[96m"), // 撣貊?潮?鈭桅???
+  BRIGHT_WHITE("\u001B[97m"), // 撣貊?潮?鈭桃??
+
+  // --- MUD ?寥 256 ??(Extended Colors) ---
+  // 鋆???虜?刻
+  ORANGE("\u001B[38;5;208m"), // ?唾牧?拙?
+  GOLD("\u001B[38;5;220m"), // ?馳????
+  SILVER("\u001B[38;5;250m"), // ?撟??撅?
+  BRONZE("\u001B[38;5;136m"), // ?馳
+  PINK("\u001B[38;5;205m"), // ?寞?/憟單扯???
+  PURPLE("\u001B[38;5;129m"), // ?脰帘?拙?
+
+  // ???憓虜?刻
+  LAVA_RED("\u001B[38;5;196m"), // ?痔??賢摰?
+  ICE_BLUE("\u001B[38;5;51m"), // ?啣???瘜?
+  NATURE_GREEN("\u001B[38;5;46m"), // ???祥??
+  DARK_GREY("\u001B[38;5;236m"), // ?啣蔣??敶?
+  LIGHT_GREY("\u001B[38;5;244m"), // ?喲??憯?
+  BROWN("\u001B[38;5;94m"), // ?券?野??
+
+  // --- ???(Background) ---
+  BG_BLACK("\u001B[40m"), // 撣貊?潸??航瘛梁
+  BG_RED("\u001B[41m"), // 撣貊?潸??航蝝
+  BG_GREEN("\u001B[42m"), // 撣貊?潸??航蝬
+  BG_YELLOW("\u001B[43m"), // 撣貊?潸??航暺
+  BG_BLUE("\u001B[44m"), // 撣貊?潸??航?
+  BG_MAGENTA("\u001B[45m"), // 撣貊?潸??航蝝怎???
+  BG_CYAN("\u001B[46m"), // 撣貊?潸??航?
+  BG_WHITE("\u001B[47m"); // 撣貊?潸??航?質
+
+  private final String code;
+
+  AnsiColor(String code) {
+    this.code = code;
+  }
+
+  @Override
+  public String toString() {
+    return code;
+  }
+
+  public String getCode() {
+    return code;
+  }
+}
+
+
+--- File: ColorText.java ---
+
+package com.example.htmlmud.infra.util;
+
+public class ColorText {
+
+  // 1. ?箇????寞?
+  public static String wrap(AnsiColor color, String text) {
+    return color + text + AnsiColor.RESET;
+  }
+
+  // 2. 銴?璅?? (靘?嚗?擃???
+  public static String wrap(AnsiColor color, AnsiColor style, String text) {
+    return style + "" + color + text + AnsiColor.RESET;
+  }
+
+  // --- 隤儔??Helper Methods (MUD 撠) ---
+
+  // 蝟餌絞閮 (?)
+  public static String system(String text) {
+    return wrap(AnsiColor.CYAN, text);
+  }
+
+  // ?航炊閮 (蝝)
+  public static String error(String text) {
+    return wrap(AnsiColor.RED, text);
+  }
+
+  // 霅血?閮 (暺)
+  public static String warn(String text) {
+    return wrap(AnsiColor.YELLOW, text);
+  }
+
+  // NPC ?迂 (蝬)
+  public static String npc(String name) {
+    return wrap(AnsiColor.GREEN, name);
+  }
+
+  // ?芰?迂 (蝝蝎?)
+  public static String mob(String name) {
+    return wrap(AnsiColor.RED, AnsiColor.BOLD, name);
+  }
+
+  // ?拙振?迂 (鈭株???
+  public static String player(String name) {
+    return wrap(AnsiColor.BRIGHT_BLUE, name);
+  }
+
+  // ?拙? (?)
+  public static String item(String name) {
+    return wrap(AnsiColor.GOLD, name);
+  }
+
+  // ?瑕拿?詨?(?痔蝝?
+  public static String damage(int dmg) {
+    return wrap(AnsiColor.LAVA_RED, String.valueOf(dmg));
+  }
+
+  // 瘝餌??詨?(?芰蝬?
+  public static String heal(int amount) {
+    return wrap(AnsiColor.NATURE_GREEN, String.valueOf(amount));
+  }
+
+  // ?輸??迂 (鈭桃??
+  public static String room(String name) {
+    return wrap(AnsiColor.BRIGHT_WHITE, name);
+  }
+
+  // ?輸??膩 (?身???啗)
+  public static String roomDesc(String desc) {
+    return wrap(AnsiColor.LIGHT_GREY, desc);
+  }
+
+  // ?箏?迂 (暺)
+  public static String exit(String name) {
+    return wrap(AnsiColor.YELLOW, name);
+  }
+
+  // ?拙??膩 (?質)
+  public static String itemDesc(String desc) {
+    return wrap(AnsiColor.WHITE, desc);
+  }
+
+  // ?拙?蝔?漲 (蝝怨)
+  public static String rarity(String rarity) {
+    return wrap(AnsiColor.PURPLE, rarity);
+  }
+}
+
+
+--- File: IdUtils.java ---
+
+package com.example.htmlmud.infra.util;
+
+public class IdUtils {
+
+  /**
+   * 閫?? ID嚗??詨? ID 頧蝯? ID * @param currentZoneId ?嗅???函????ID (e.g., "newbie_village")
+   * 
+   * @param rawId ?? ID (?航??"square" ??"dark_forest:clearing")
+   * @return 摰??撠?ID
+   */
+  public static String resolveId(String currentZoneId, String rawId) {
+    if (rawId == null || rawId.isBlank()) {
+      return null;
+    }
+    // 憒?撌脩?????撠勗??喳?憪潘??血????韌
+    if (rawId.contains(":")) {
+      return rawId;
+    }
+    return currentZoneId + ":" + rawId;
+  }
+}
+
+
+--- File: ActorMessage.java ---
+
+package com.example.htmlmud.protocol;
+
+public record ActorMessage(String traceId, GameCommand command) {
+
+}
+
+
+--- File: ConnectionState.java ---
+
+package com.example.htmlmud.protocol;
+
+public enum ConnectionState {
+  CONNECTED, // ???嚗?敺撓?亙董????'new'
+  ENTERING_PASSWORD, // 撌脰撓?亙董??蝑?撖Ⅳ
+  CREATING_USERNAME, // 甇?頛詨?啣董??蝔?
+  CREATING_PASSWORD, // 甇?閮剖??啣?蝣?
+  ENTERING_CHAR_NAME, // 甇?頛詨?啗??脣?蝔?
+  ENTERING_CHAR_GENDER, // 甇??豢??批
+  ENTERING_CHAR_RACE, // 甇??豢?蝔格?
+  ENTERING_CHAR_CLASS, // 甇??豢??瑟平
+  ENTERING_CHAR_ATTRIBUTES, // 甇??豢?蝑?
+  IN_GAME // ?銝哨?甇?虜?
+}
+
+
+--- File: GameCommand.java ---
+
+package com.example.htmlmud.protocol;
+
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+// 摰儔憭?喃???JSON ?誘
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonSubTypes({
+    // @JsonSubTypes.Type(value = GameCommand.Login.class, name = "LOGIN"),
+    // @JsonSubTypes.Type(value = GameCommand.Move.class, name = "MOVE"),
+    // @JsonSubTypes.Type(value = GameCommand.Chat.class, name = "CHAT"),
+    @JsonSubTypes.Type(value = GameCommand.Input.class, name = "INPUT") // <--- ?函??詨??瘙?
+})
+public sealed interface GameCommand {
+  // 1. ?餃?誘 (蝬剜?蝯????摰??
+  // record Login(String username, String password) implements GameCommand {
+  // }
+  // 2. ?摮葡?誘 (?函? MVP ?詨?)
+  // ?拙振頛詨 "kill goblin", "look", "north" ?券?賢??券ㄐ??
+  record Input(String text) implements GameCommand {
+  }
+  // record Move(String direction) implements GameCommand {}
+  // record Chat(String content) implements GameCommand {}
+}
+
+
+--- File: RoomMessage.java ---
+
+package com.example.htmlmud.protocol;
+
+// 靽格迤撘頝臬?嚗???domain.actor
+import com.example.htmlmud.domain.actor.PlayerActor;
+import java.util.concurrent.CompletableFuture;
+
+/**
+ * 摰儔???策 RoomActor ??刻??臬?摰?雿輻 Sealed Interface ?閮憿?嚗???switch pattern matching
+ */
+public sealed interface RoomMessage permits RoomMessage.PlayerEnter, RoomMessage.PlayerLeave,
+    RoomMessage.TryPickItem, RoomMessage.Look, RoomMessage.Say {
+
+  /**
+   * ?拙振?脣?輸?
+   *
+   * @param player ?拙振 Actor 撖虫?
+   * @param future ?冽?蝘餃?摰? (?舫)
+   */
+  record PlayerEnter(PlayerActor player, CompletableFuture<Void> future) implements RoomMessage {
+  }
+
+  /**
+   * ?拙振?ａ??輸?
+   *
+   * @param playerId ?ａ??摰?ID
+   */
+  record PlayerLeave(String playerId) implements RoomMessage {
+  }
+
+  /**
+   * ?亦??輸? (Look ?誘)
+   *
+   * @param playerId ?澆?誘?摰?ID (?冽?蕪"?芸楛??芸楛")
+   * @param result ?冽??輸??膩摮葡
+   */
+  record Look(String playerId, CompletableFuture<String> result) implements RoomMessage {
+  }
+
+  /**
+   * 隤芾店/撱?
+   *
+   * @param sourcePlayerId 隤芾店??ID
+   * @param content ?批捆
+   */
+  record Say(String sourcePlayerId, String content) implements RoomMessage {
+  }
+
+  record TryPickItem(String itemId, PlayerActor picker) implements RoomMessage {
+  }
+
+}
+
+
+--- File: PlayerService.java ---
+
+package com.example.htmlmud.service;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.stereotype.Service;
+import com.example.htmlmud.domain.actor.PlayerActor;
+import com.example.htmlmud.domain.model.PlayerRecord;
+import com.example.htmlmud.infra.mapper.PlayerMapper;
+import com.example.htmlmud.infra.persistence.entity.CharacterEntity;
+import com.example.htmlmud.infra.persistence.repository.CharacterRepository;
+import com.example.htmlmud.infra.persistence.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class PlayerService {
+
+  private final UserRepository userRepository;
+
+  private final CharacterRepository characterRepository;
+
+  private final PlayerMapper mapper; // 瘜典 MapStruct
+
+  // 璅⊥ DB: Username -> Password
+  private final Map<String, String> userDb = new ConcurrentHashMap<>();
+
+  // public PlayerService() {
+  // // ?身銝?葫閰血董??(撣唾?: admin, 撖Ⅳ: 123)
+  // userDb.put("admin", "123");
+  // }
+
+
+
+  // public void register(PlayerActor actor) {
+
+  // userDb.put(username.toLowerCase(), password);
+  // }
+
+  public boolean verifyPassword(String username, String password) {
+    String stored = userDb.get(username.toLowerCase());
+    return stored != null && stored.equals(password);
+  }
+
+  public PlayerRecord loadRecord(String uid, String username) {
+    // 1. DB -> Entity
+    CharacterEntity entity = characterRepository.findByUidAndName(uid, username)
+        .orElseThrow(() -> new IllegalArgumentException("閫銝???uid:" + uid + ", name:" + username));
+
+    // 2. Entity -> Record (MapStruct ?芸?頧?
+    // 瘜冽?嚗ㄐ敺??Record ?批??State ??Entity 鋆∟圾摨??靘?
+    return mapper.toRecord(entity);
+  }
+}
+
+
+--- File: AuthService.java ---
+
+package com.example.htmlmud.service.auth;
+
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.example.htmlmud.domain.model.json.LivingState;
+import com.example.htmlmud.infra.persistence.entity.CharacterEntity;
+import com.example.htmlmud.infra.persistence.entity.UserEntity;
+import com.example.htmlmud.infra.persistence.repository.CharacterRepository;
+import com.example.htmlmud.infra.persistence.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class AuthService {
+
+  // ?箇?靽?摮???隞日????萄?嚗?
+  private final Set<String> reservedWords = new HashSet<>(
+      Set.of("new", "quit", "exit", "wizard", "admin", "system", "root", "guest", "player"));
+
+  // 雿輻 BCrypt嚗pring Security ?批遣嚗??撌?new 銝??
+  private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+  private final UserRepository userRepository;
+
+  private final CharacterRepository playerRepository;
+
+
+  public boolean exists(String username) {
+    return userRepository.existsByUsername(username);
+  }
+
+  /**
+   * 閮餃??啣董??
+   */
+  @Transactional
+  public CharacterEntity register(String username, String rawPassword) {
+    if (userRepository.existsByUsername(username)) {
+      throw new IllegalArgumentException("撣唾?撌脣???);
+    }
+
+    LocalDateTime now = LocalDateTime.now();
+    UserEntity newUser = UserEntity.builder().username(username)
+        .passwordHash(passwordEncoder.encode(rawPassword)).createdAt(now).lastLoginAt(now).build();
+    userRepository.save(newUser);
+
+    CharacterEntity characterEntity = new CharacterEntity();
+    characterEntity.setUid(newUser.getId());
+    characterEntity.setName(username);
+    // characterEntity.setNickname(username);
+    characterEntity.setCurrentRoomId(null);
+    characterEntity.setState(new LivingState());
+    characterEntity.setCreatedAt(now);
+    characterEntity.setModifyAt(now);
+
+    return playerRepository.save(characterEntity);
+  }
+
+  /**
+   * ?餃撽?
+   */
+  @Transactional
+  public UserEntity login(String username, String rawPassword) {
+    log.info("login username:{} password: {}", username, rawPassword);
+    UserEntity user = userRepository.findByUsername(username)
+        .orElseThrow(() -> new IllegalArgumentException("撣唾?銝???));
+
+    if (!passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
+      throw new IllegalArgumentException("撖Ⅳ?航炊");
+    }
+
+    // ?湔?敺?交???
+    user.setLastLoginAt(LocalDateTime.now());
+    return userRepository.save(user);
+  }
+
+
+  /**
+   * 撽??冽??血?瘜?
+   *
+   * @return ?航炊閮嚗??????null
+   */
+  public String validateUsername(String input) {
+    if (input == null || input.isEmpty()) {
+      return "撣唾??迂銝?箇征??;
+    }
+    if (!input.matches("^[a-zA-Z]+$")) {
+      return "撣唾??迂?芾??望?摮?嚗??之撠神嚗?銝?閮望摮征?潭??寞?蝚西???;
+    }
+    if (input.length() < 4 || input.length() > 20) {
+      return "撣唾??迂?瑕漲敹???4 ??20 ??????;
+    }
+    if (reservedWords.contains(input.toLowerCase())) {
+      return "?? + input + "?蝟餌絞靽?摮??誘嚗??豢??嗡??迂??;
+    }
+    return null;
+  }
+
+  /**
+   * 撽?撖Ⅳ?臬??
+   *
+   * @param input 頛詨??蝣?
+   * @return ?航炊閮嚗??????null
+   */
+  public String validatePassword(String input) {
+    if (input == null || input.isEmpty()) {
+      return "撖Ⅳ銝?箇征??;
+    }
+    if (!input.matches("^[a-zA-Z0-9]+$")) {
+      return "撖Ⅳ?芾??望?摮??摮?;
+    }
+    if (input.length() < 4 || input.length() > 32) {
+      return "撖Ⅳ?瑕漲敹???4 ??32 ??????;
+    }
+    return null;
+  }
+
+}
+
+
+--- File: AuditLogEventListener.java ---
+
+package com.example.htmlmud.service.event;
+
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+import com.example.htmlmud.domain.event.DomainEvent;
+import com.example.htmlmud.domain.event.MobEvents;
+import com.example.htmlmud.domain.event.PlayerEvents;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Component
+public class AuditLogEventListener {
+  @Async // <--- ?嚗??啣銝??Thread (??Virtual Thread) ?瑁?
+  @EventListener
+  public void logPlayerAction(DomainEvent event) {
+    // ?ㄐ雿輻鈭?switch pattern matching (Java 21+)
+    // ?臭誑?芷??啗?????DomainEvent
+    String logMsg = switch (event) {
+      case PlayerEvents.LoggedIn e -> "雿輻??? " + e.username() + " IP:" + e.ipAddress();
+      case PlayerEvents.LevelUp e -> "?拙振??: " + e.newLevel();
+      case MobEvents.MobDead e -> "?芰甇颱滿: " + e.mobId();
+      default -> "?芰鈭辣: " + event.getClass().getSimpleName();
+    };
+
+    // 璅⊥撖怠 DB
+    log.info("[AUDIT LOG] " + event.occurredOn() + " - " + logMsg);
+  }
+}
+
+
+--- File: PlayerLoginListener.java ---
+
+package com.example.htmlmud.service.event;
+
+import com.example.htmlmud.domain.actor.PlayerActor;
+import com.example.htmlmud.domain.model.json.LivingState;
+import com.example.htmlmud.protocol.RoomMessage;
+import com.example.htmlmud.service.world.WorldManager;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+import org.springframework.web.socket.TextMessage;
+
+import java.util.concurrent.CompletableFuture;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class PlayerLoginListener {
+
+  private final WorldManager worldManager;
+
+  @Autowired
+  private ObjectMapper objectMapper;
+
+  // @EventListener
+  // public void onPlayerLogin(PlayerLoginEvent event) {
+  // var entity = event.getPlayerEntity();
+  // var session = event.getSession();
+
+  // log.info("???拙振?餃鈭辣: {}", entity.getUsername());
+  /*
+   * try { // 1. 撱箇? Actor (?ㄐ??Domain Logic) PlayerActor playerActor = new
+   * PlayerActor(entity.getId(), session, entity.state, objectMapper);
+   *
+   * // 2. 閮剖?銝活雿蔭 playerActor.setCurrentRoomId(entity.getCurrentRoomId());
+   *
+   * // 3. 蝬? Session (霈?WebSocketHandler ?仿???session ?蜓鈭箔?) session.getAttributes().put("actor",
+   * playerActor);
+   *
+   * // 4. 甇∟?閮 playerActor.sendText("\u001B[32m?餃??嚗迭餈???MUD 銝? (Event Driven)?u001B[0m");
+   *
+   * // 5. ?脣?輸??摩 var room = worldManager.getRoomActor(playerActor.getCurrentRoomId()); var future =
+   * new CompletableFuture<Void>();
+   *
+   * // 霈摰園脣?輸? // room.receive(new RoomMessage.PlayerEnter(playerActor, future));
+   *
+   * // ?脣敺??Look // future.thenRun(() -> playerActor.send("look"));
+   *
+   * } catch (Exception e) { log.error("?拙振?餃敺???憭望?", e); try { session.sendMessage(new
+   * TextMessage("蝟餌絞?航炊嚗瘜脣銝?")); } catch (Exception ignored) { } }
+   */
+  // }
+}
+
+
+--- File: QuestEventListener.java ---
+
+package com.example.htmlmud.service.event;
+
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+import com.example.htmlmud.domain.event.PlayerEvents;
+
+@Component
+public class QuestEventListener {
+  @EventListener
+  public void checkLevelUpQuest(PlayerEvents.LevelUp event) {
+    // 瑼Ｘ閰脩摰嗆?行? "? 10 蝝? ?遙??
+    // if (event.newLevel() >= 10) ...
+    System.out.println("隞餃?瑼Ｘ: ?拙振 " + event.playerId() + " ??鈭?);
+  }
+}
+
+
+--- File: SessionEventListener.java ---
+
+package com.example.htmlmud.service.event;
+
+import java.io.IOException;
+import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
+import com.example.htmlmud.domain.actor.PlayerActor;
+import com.example.htmlmud.domain.event.DomainEvent.SessionEvent;
+import com.example.htmlmud.infra.server.SessionRegistry;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Component
+public class SessionEventListener {
+
+  @Autowired
+  private ObjectMapper objectMapper;
+
+  @Autowired
+  private SessionRegistry sessionRegistry;
+
+  @EventListener
+  public void onEstablished(SessionEvent.Established event) throws IOException {
+    log.info("蝟餌絞?嗅???撱箇?鈭辣: {}", event.sessionId());
+
+    PlayerActor actor = sessionRegistry.get(event.sessionId());
+    WebSocketSession session = actor.getSession();
+    // WebSocketSession session = sessionRegistry.get(event.sessionId());
+
+    // String welcomeMsg = """
+    // \u001B[36m
+    // ==========================================
+    // 甇∟?靘 HTML MUD (Java 25 Edition)
+    // ==========================================
+    // \u001B[0m
+    // 隢撓?乩誑銝?隞日?憪?
+    // 1. 閮餃?: \u001B[33mregister <撣唾?> <撖Ⅳ>\u001B[0m
+    // 2. ?餃: \u001B[33mlogin <撣唾?> <撖Ⅳ>\u001B[0m
+    // """;
+    String welcomeMsg = "甇∟?靘 HTML MUD 銝?嚗r\n隢撓?亙董??(?撓??new 閮餃?)嚗?;
+    if (session != null && session.isOpen()) {
+      String json = objectMapper.writeValueAsString(Map.of("type", "TEXT", "content", welcomeMsg));
+
+      session.sendMessage(new TextMessage(json));
+    }
+  }
+
+  @EventListener
+  public void onMessageReceived(SessionEvent.MessageReceived event) {
+    System.out.println("onMessageReceived");
+  }
+
+  @EventListener
+  public void onClosed(SessionEvent.Closed event) {
+    log.info("蝟餌絞?嗅?????鈭辣: {} CloseStatus:{}", event.sessionId(), event.reason());
+  }
+
+}
+
+
+--- File: SystemEventListener.java ---
+
+package com.example.htmlmud.service.event;
+
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
+import com.example.htmlmud.domain.actor.PlayerActor;
+import com.example.htmlmud.domain.context.MudKeys;
+import com.example.htmlmud.domain.event.DomainEvent.SystemEvent;
+import com.example.htmlmud.infra.persistence.repository.UserRepository;
+import com.example.htmlmud.infra.server.SessionRegistry;
+import com.example.htmlmud.protocol.ConnectionState;
+import com.example.htmlmud.service.world.WorldManager;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Component
+public class SystemEventListener {
+
+  private static final int MAX_AUTH_RETRIES = 5;
+
+  // ?箇?靽?摮???隞日????萄?嚗?
+  private final Set<String> reservedWords = new HashSet<>(
+      Set.of("new", "quit", "exit", "wizard", "admin", "system", "root", "guest", "player"));
+
+  @Autowired
+  private ObjectMapper objectMapper;
+
+  @Autowired
+  private WorldManager worldManager;
+
+  @Autowired
+  private SessionRegistry sessionRegistry;
+
+  @Autowired
+  private UserRepository userRepository;
+
+
+
+  @EventListener
+  public void onRegisterUsername(SystemEvent.RegisterUsername event) throws Exception {
+    log.info("onRegisterUsername");
+    PlayerActor actor = sessionRegistry.get(event.sessionId());
+    WebSocketSession session = actor.getSession();
+
+    // WebSocketSession session = sessionRegistry.get(event.sessionId());
+    // PlayerActor actor = worldManager.getPlayer(session);
+
+    // ???桀???閰行活??
+    int retryCount = (int) Optional
+        .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
+
+    String errorReason = validateUsername(event.input());
+
+    if (errorReason != null) {
+      retryCount++;
+      session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, retryCount);
+
+      if (retryCount >= MAX_AUTH_RETRIES) {
+        log.warn("??? {} 閮餃?撣唾?憭望?甈⊥?? ({})嚗撥?嗡葉?瑯?敺撓?? {}", event.sessionId(), retryCount,
+            event.input());
+        actor.sendText("?岫甈⊥??嚗???喳?????);
+        session.close();
+        return;
+      }
+
+      log.info("??? {} 閮餃?撣唾?憭望?: {} (?拚?甈⊥: {})", event.sessionId(), errorReason,
+          MAX_AUTH_RETRIES - retryCount);
+      actor.sendText(errorReason + " (?拚??岫甈⊥: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+      return;
+    }
+
+    // 撽???嚗?蝵株???
+    session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, 0);
+
+    // ?怠?撣唾?
+    // actor.setTempUsername(event.input());
+
+    // String msg = "隢撓?亙?蝣?";
+    String msg = "?酉??蝔r\n?芾??望?摮??摮??瑕漲敹???6 ??32 ?????r\n隢撓?亙?蝣?";
+    // ?迄?垢嚗??撓?交芋撘撖Ⅳ (???芸?蝢拙?霅堆?靘? JSON {type: "PWD_MODE"})
+    String json = objectMapper.writeValueAsString(Map.of("type", "PWD_MODE", "content", msg));
+    session.sendMessage(new TextMessage(json));
+
+    actor.setConnectionState(ConnectionState.CREATING_PASSWORD);
+  }
+
+  @EventListener
+  public void onRegisterPassword(SystemEvent.RegisterPassword event) throws IOException {
+    log.info("onRegisterPassword");
+
+    PlayerActor actor = sessionRegistry.get(event.sessionId());
+    WebSocketSession session = actor.getSession();
+    // WebSocketSession session = sessionRegistry.get(event.sessionId());
+    // PlayerActor actor = worldManager.getPlayer(session);
+
+    // ???桀???閰行活??
+    int retryCount = (int) Optional
+        .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
+
+    String errorReason = validatePassword(event.input());
+
+    if (errorReason != null) {
+      retryCount++;
+      session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, retryCount);
+
+      if (retryCount >= MAX_AUTH_RETRIES) {
+        log.warn("??? {} 閮餃?撖Ⅳ憭望?甈⊥?? ({})嚗撥?嗡葉?瑯?敺撓?? {}", event.sessionId(), retryCount,
+            event.input());
+        actor.sendText("?岫甈⊥??嚗???喳?????);
+        session.close();
+        return;
+      }
+
+      log.info("??? {} 閮餃?撖Ⅳ憭望?: {} (?拚?甈⊥: {})", event.sessionId(), errorReason,
+          MAX_AUTH_RETRIES - retryCount);
+      actor.sendText(errorReason + " (?拚??岫甈⊥: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+      return;
+    }
+
+    // 撽???嚗宏?方???
+    session.getAttributes().remove(MudKeys.AUTH_RETRY_COUNT_KEY);
+
+    // ?怠?撖Ⅳ
+    // actor.setTempPassword(event.input());
+
+    // ?啣??拙振撣喳?
+
+
+    // String msg = "隢撓?亙?蝣?";
+    String msg = "?酉??蝔r\n閮餃?摰?嚗???餃??;
+    // ?迄?垢嚗??撓?交芋撘撖Ⅳ (???芸?蝢拙?霅堆?靘? JSON {type: "PWD_MODE"})
+    actor.sendText(msg);
+
+    actor.setConnectionState(ConnectionState.CONNECTED);
+  }
+
+  @EventListener
+  public void onLogin(SystemEvent.Login event) {
+    log.info("onLogin");
+  }
+
+  @EventListener
+  public void onAuthenticate(SystemEvent.Authenticate event) throws IOException {
+    log.info("onAuthenticate");
+    PlayerActor actor = sessionRegistry.get(event.sessionId());
+    WebSocketSession session = actor.getSession();
+    // WebSocketSession session = sessionRegistry.get(event.sessionId());
+    // PlayerActor actor = worldManager.getPlayer(session);
+
+    if ("new".equalsIgnoreCase(event.input())) {
+      doRegister(session, actor);
+    } else {
+      doLoginUsername(session, actor, event);
+    }
+  }
+
+  @EventListener
+  public void onLogout(SystemEvent.Logout event) {}
+
+
+  private void doRegister(WebSocketSession session, PlayerActor actor) throws IOException {
+    log.info("doRegister");
+
+    String msg = "?酉??蝔r\n?芾??望?摮?嚗??之撠神嚗?銝?閮望摮征?潭??寞?蝚西??r\n?瑕漲敹???4 ??20 ?????r\n隢撓?交?喃蝙?函?撣唾??迂:";
+    // ?迄?垢嚗??撓?交芋撘撣唾? (???芸?蝢拙?霅堆?靘? JSON {type: "USER_MODE"})
+    String json = objectMapper.writeValueAsString(Map.of("type", "USER_MODE", "content", msg));
+    session.sendMessage(new TextMessage(json));
+
+    session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, 0); // ?蔭閮
+    actor.setConnectionState(ConnectionState.CREATING_USERNAME);
+  }
+
+  private void doLoginUsername(WebSocketSession session, PlayerActor actor,
+      SystemEvent.Authenticate event) throws IOException {
+    log.info("doLoginUsername");
+
+    // ???桀???閰行活??
+    int retryCount = (int) Optional
+        .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
+
+    String errorReason = validateUsername(event.input());
+
+    // 憒??澆?甇?Ⅱ嚗炎?亥??澈?臬摮閰脣董??
+    if (errorReason == null && !userRepository.existsByUsername(event.input())) {
+      errorReason = "撣唾?銝??具?;
+    }
+
+    if (errorReason != null) {
+      retryCount++;
+      session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, retryCount);
+
+      if (retryCount >= MAX_AUTH_RETRIES) {
+        log.warn("??? {} 撽?憭望?甈⊥?? ({})嚗撥?嗡葉?瑯?敺撓?? {}", event.sessionId(), retryCount, event.input());
+        actor.sendText("?岫甈⊥??嚗???喳?????);
+        session.close();
+        return;
+      }
+
+      log.info("??? {} 撽?憭望?: {} (?拚?甈⊥: {})", event.sessionId(), errorReason,
+          MAX_AUTH_RETRIES - retryCount);
+      actor.sendText(errorReason + " (?拚??岫甈⊥: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+      return;
+    }
+
+    // 撽???嚗?蝵株???
+    session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, 0);
+
+    // ?怠?撣唾?
+    // actor.setTempUsername(event.input());
+
+    String msg = "隢撓?亙?蝣?";
+    // ?迄?垢嚗??撓?交芋撘撖Ⅳ (???芸?蝢拙?霅堆?靘? JSON {type: "PWD_MODE"})
+    String json = objectMapper.writeValueAsString(Map.of("type", "PWD_MODE", "content", msg));
+    session.sendMessage(new TextMessage(json));
+
+    actor.setConnectionState(ConnectionState.ENTERING_PASSWORD);
+  }
+
+
+  /**
+   * 撽??冽??血?瘜?
+   *
+   * @return ?航炊閮嚗??????null
+   */
+  private String validateUsername(String input) {
+    if (input == null || input.isEmpty()) {
+      return "撣唾??迂銝?箇征??;
+    }
+    if (!input.matches("^[a-zA-Z]+$")) {
+      log.info("{}", input);
+      return "撣唾??迂?芾??望?摮?嚗??之撠神嚗?銝?閮望摮征?潭??寞?蝚西???;
+    }
+    if (input.length() < 4 || input.length() > 20) {
+      return "撣唾??迂?瑕漲敹???4 ??20 ??????;
+    }
+    if (reservedWords.contains(input.toLowerCase())) {
+      return "?? + input + "?蝟餌絞靽?摮??誘嚗??豢??嗡??迂??;
+    }
+    return null;
+  }
+
+  /**
+   * 撽?撖Ⅳ?臬??
+   *
+   * @param input 頛詨??蝣?
+   * @return ?航炊閮嚗??????null
+   */
+  private String validatePassword(String input) {
+    if (input == null || input.isEmpty()) {
+      return "撖Ⅳ銝?箇征??;
+    }
+    if (!input.matches("^[a-zA-Z0-9]+$")) {
+      return "撖Ⅳ?芾??望?摮??摮?;
+    }
+    if (input.length() < 6 || input.length() > 32) {
+      return "撖Ⅳ?瑕漲敹???6 ??32 ??????;
+    }
+    return null;
+  }
+
+}
+
+
+--- File: PlayerPersistenceService.java ---
+
+package com.example.htmlmud.service.persistence;
+
+import com.example.htmlmud.domain.model.PlayerRecord;
+import com.example.htmlmud.infra.mapper.PlayerMapper;
+import com.example.htmlmud.infra.persistence.entity.CharacterEntity;
+import com.example.htmlmud.infra.persistence.repository.CharacterRepository;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class PlayerPersistenceService {
+
+  private final PlayerMapper mapper; // 瘜典 MapStruct
+  private final CharacterRepository playerRepository;
+
+  // 1. 蝺抵?雿? (Thread-Safe)
+  // LinkedBlockingQueue ?舀??拙????瘨祥?芋撘?蝯?
+  private final BlockingQueue<PlayerRecord> saveQueue = new LinkedBlockingQueue<>();
+
+  // ?批餈游???璅?
+  private volatile boolean running = true;
+
+  /**
+   * ??憭?API???郊摮? Actor ?澆?瘜?嚗嗾銋?祇?摰???
+   */
+  public void saveAsync(PlayerRecord record) {
+    if (record == null)
+      return;
+
+    // 銝雿?嚗???皛踹停蝡餈?嚗??憛?
+    if (!saveQueue.offer(record)) {
+      log.error("摮?雿?撌脫遛嚗?質??澈撖怠?嚗??憭梢◢?? {}", record.id());
+    }
+  }
+
+  /**
+   * 2. ???瘨祥?銵? 雿輻 @PostConstruct ??Bean 撱箇?敺?銵?
+   */
+  @PostConstruct
+  public void init() {
+    // ??銝???砍銵?靘????摮?
+    Thread.ofVirtual().name("db-writer-player").start(this::processQueue);
+  }
+
+  /**
+   * 3. 瘨祥?艘??(?寞活撖怠?摩)
+   */
+  private void processQueue() {
+    log.info("Write-Behind DB Writer started.");
+
+    // ?其??怠??寞活鞈???List
+    List<PlayerRecord> batch = new ArrayList<>();
+
+    while (running) {
+      try {
+        // A. 敺????箔?蝑?(憒?蝛箇?嚗ㄐ?憛?敺?蝭??CPU)
+        // 雿輻 poll 閮剖?頞?嚗見?隞亙??炎??running ??????拚??寞活
+        PlayerRecord record = saveQueue.poll(1, java.util.concurrent.TimeUnit.SECONDS);
+
+        if (record != null) {
+          batch.add(record);
+        }
+
+        // B. 瑼Ｘ?臬?閬神??DB (皛輯雲?賊? ??雿?瘝镼蹂?雿???摮???
+        // 璇辣嚗敞蝛遛 50 蝑?OR (雿?蝛箔? 銝?????鞈?)
+        if (batch.size() >= 50 || (record == null && !batch.isEmpty())) {
+          flushBatch(batch);
+        }
+
+        // C. 憿??芸?嚗????ㄐ??敺?嚗???除?券?靘?(Drain)
+        // ?憭批???擃?頛?????
+        if (!saveQueue.isEmpty() && batch.size() < 100) {
+          saveQueue.drainTo(batch, 100 - batch.size());
+          flushBatch(batch); // ?神銝甈?
+        }
+
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        log.warn("DB Writer thread interrupted.");
+        break;
+      } catch (Exception e) {
+        log.error("DB Writer loop error", e);
+      }
+    }
+  }
+
+  /**
+   * 4. 撖阡?撖怠鞈?摨?
+   */
+  private void flushBatch(List<PlayerRecord> batch) {
+    if (batch.isEmpty())
+      return;
+
+    for (PlayerRecord rec : batch) {
+      // ?湔??CharacterRepo ??(?亙靘??拐辣?砌?撠望???蝣?
+      playerRepository.findById(rec.id()).ifPresent(entity -> {
+
+        // Record -> Entity (MapStruct ?芸??湔)
+        // ??蝔?蝣澆?隞????神??entity.setNickname(), entity.setState()...
+        mapper.updateEntityFromRecord(rec, entity);
+
+        // 摮?
+        playerRepository.save(entity);
+      });
+    }
+  }
+
+  /**
+   * 5. ?芷??? (Graceful Shutdown) ??Spring Boot ????蝣箔?雿?鋆∠?鞈??賢神摰?
+   */
+  @PreDestroy
+  public void shutdown() {
+    log.info("Shutting down PersistenceService...");
+    running = false; // ?迫餈游?霈??
+
+    // ???葉?拐???典神摰?
+    List<PlayerRecord> remaining = new ArrayList<>();
+    saveQueue.drainTo(remaining);
+
+    if (!remaining.isEmpty()) {
+      log.info("Flushing remaining {} records...", remaining.size());
+      flushBatch(remaining);
+    }
+
+    log.info("PersistenceService shutdown complete.");
+  }
+}
+
+
+--- File: RoomPersistenceService.java ---
+
+package com.example.htmlmud.service.persistence;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import org.springframework.stereotype.Service;
+import com.example.htmlmud.domain.model.PlayerRecord;
+import com.example.htmlmud.domain.model.RoomStateRecord;
+import com.example.htmlmud.infra.persistence.entity.RoomStateEntity;
+import com.example.htmlmud.infra.persistence.repository.RoomStateRepository;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class RoomPersistenceService {
+
+  private final RoomStateRepository roomRepository;
+
+  // 1. 蝺抵?雿? (Thread-Safe)
+  // LinkedBlockingQueue ?舀??拙????瘨祥?芋撘?蝯?
+  private final BlockingQueue<RoomStateRecord> saveQueue = new LinkedBlockingQueue<>();
+
+  // ?批餈游???璅?
+  private volatile boolean running = true;
+
+
+  /**
+   * ??憭?API???郊摮? Actor ?澆?瘜?嚗嗾銋?祇?摰???
+   */
+  public void saveAsync(RoomStateRecord record) {
+    if (record == null)
+      return;
+
+    // 銝雿?嚗???皛踹停蝡餈?嚗??憛?
+    if (!saveQueue.offer(record)) {
+      log.error("摮?雿?撌脫遛嚗?質??澈撖怠?嚗??憭梢◢?? roomId:{} zoneId:{}", record.roomId(), record.zoneId());
+    }
+  }
+
+
+  /**
+   * 2. ???瘨祥?銵? 雿輻 @PostConstruct ??Bean 撱箇?敺?銵?
+   */
+  @PostConstruct
+  public void init() {
+    // ??銝???砍銵?靘????摮?
+    Thread.ofVirtual().name("db-writer-room").start(this::processQueue);
+  }
+
+  /**
+   * 3. 瘨祥?艘??(?寞活撖怠?摩)
+   */
+  private void processQueue() {
+    log.info("Write-Behind DB Writer Room started.");
+
+    // ?其??怠??寞活鞈???List
+    List<RoomStateRecord> batch = new ArrayList<>();
+
+    while (running) {
+      try {
+        // A. 敺????箔?蝑?(憒?蝛箇?嚗ㄐ?憛?敺?蝭??CPU)
+        // 雿輻 poll 閮剖?頞?嚗見?隞亙??炎??running ??????拚??寞活
+        RoomStateRecord record = saveQueue.poll(1, java.util.concurrent.TimeUnit.SECONDS);
+
+        if (record != null) {
+          batch.add(record);
+        }
+
+        // B. 瑼Ｘ?臬?閬神??DB (皛輯雲?賊? ??雿?瘝镼蹂?雿???摮???
+        // 璇辣嚗敞蝛遛 50 蝑?OR (雿?蝛箔? 銝?????鞈?)
+        if (batch.size() >= 50 || (record == null && !batch.isEmpty())) {
+          flushBatch(batch);
+        }
+
+        // C. 憿??芸?嚗????ㄐ??敺?嚗???除?券?靘?(Drain)
+        // ?憭批???擃?頛?????
+        if (!saveQueue.isEmpty() && batch.size() < 100) {
+          saveQueue.drainTo(batch, 100 - batch.size());
+          flushBatch(batch); // ?神銝甈?
+        }
+
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        log.warn("DB Writer thread interrupted.");
+        break;
+      } catch (Exception e) {
+        log.error("DB Writer loop error", e);
+      }
+    }
+  }
+
+  /**
+   * 4. 撖阡?撖怠鞈?摨?
+   */
+  private void flushBatch(List<RoomStateRecord> batch) {
+    if (batch.isEmpty())
+      return;
+
+    for (RoomStateRecord rec : batch) {
+      // ?湔??CharacterRepo ??(?亙靘??拐辣?砌?撠望???蝣?
+      roomRepository.findByRoomIdAndZoneId(rec.roomId(), rec.zoneId()).ifPresent(entity -> {
+
+        // entity.setId(rec.id());
+        // entity.setDroppedItems(rec.items());
+        // entity.setItems(rec.items());
+
+        // 摮?
+        roomRepository.save(entity);
+      });
+    }
+  }
+
+  /**
+   * 5. ?芷??? (Graceful Shutdown) ??Spring Boot ????蝣箔?雿?鋆∠?鞈??賢神摰?
+   */
+  @PreDestroy
+  public void shutdown() {
+    log.info("Shutting down PersistenceService...");
+    running = false; // ?迫餈游?霈??
+
+    // ???葉?拐???典神摰?
+    List<RoomStateRecord> remaining = new ArrayList<>();
+    saveQueue.drainTo(remaining);
+
+    if (!remaining.isEmpty()) {
+      log.info("Flushing remaining {} records...", remaining.size());
+      flushBatch(remaining);
+    }
+
+    log.info("PersistenceService shutdown complete.");
+  }
+
+}
+
+
+--- File: PlayerStateService.java ---
+
+package com.example.htmlmud.service.player;
+
+import com.example.htmlmud.domain.event.PlayerEvents;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class PlayerStateService {
+
+  private final ApplicationEventPublisher eventPublisher;
+
+  public void processLevelUp(String playerId, int currentExp) {
+    // 1. ?瑁??詨??摩 (閮?蝑???撅祆?..)
+    // int newLevel = calculateLevel(currentExp);
+
+    // 2. ??霈???嚗撣?隞?(?銝??Fact)
+    // ??蝔?蝣潔???隤啗??踝?摰鞎痊隤芥辣鈭????
+    // eventPublisher.publishEvent(new PlayerEvents.LevelUp(playerId, newLevel, null));
+  }
+}
+
+
+--- File: WorldFactory.java ---
+
+package com.example.htmlmud.service.world;
+
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.stereotype.Service;
+import com.example.htmlmud.domain.actor.MobActor;
+import com.example.htmlmud.domain.context.GameServices;
+import com.example.htmlmud.domain.model.map.MobTemplate;
+import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class WorldFactory {
+
+  private final ObjectProvider<GameServices> servicesProvider;
+
+  private final TemplateRepository templateRepo;
+
+  public MobActor createMob(String templateId) {
+    // 1. ??Template (Record)
+    MobTemplate tpl = templateRepo.findMob(templateId).orElse(null);
+    if (tpl == null) {
+      log.error("MobTemplate ID not found: " + templateId);
+      return null;
+    }
+
+    // 2. new Actor (State ?芸???)
+    MobActor mob = new MobActor(tpl, servicesProvider.getObject());
+
+    // 3. ???萸憭?澆 start
+    mob.start();
+
+    return mob;
+  }
+}
+
+
+--- File: WorldManager.java ---
+
+package com.example.htmlmud.service.world;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.stereotype.Service;
+import org.springframework.web.socket.WebSocketSession;
+import com.example.htmlmud.domain.actor.PlayerActor;
+import com.example.htmlmud.domain.actor.RoomActor;
+import com.example.htmlmud.domain.context.MudKeys;
+import com.example.htmlmud.domain.model.map.MobTemplate;
+import com.example.htmlmud.domain.model.map.RoomExit;
+import com.example.htmlmud.domain.model.map.RoomTemplate;
+import com.example.htmlmud.domain.model.map.ZoneTemplate;
+import com.example.htmlmud.infra.mapper.ItemTemplateMapper;
+import com.example.htmlmud.infra.persistence.repository.ItemTemplateRepository;
+import com.example.htmlmud.infra.persistence.repository.RoomStateRepository;
+import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
+import com.example.htmlmud.infra.util.IdUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PreDestroy;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class WorldManager {
+
+  // private final WorldFactory worldFactory;
+  private final ObjectMapper objectMapper;
+  private final ResourcePatternResolver resourceResolver;
+  private final RoomStateRepository roomStateRepository;
+  private final ItemTemplateRepository itemTemplateRepository;
+  private final ItemTemplateMapper itemTemplateMapper;
+
+  // 1. Static Data Cache: 摮?航???Room 閮剖?瑼?(POJO/Record)
+  // ?隡箸??券虜???亙?啣?嚗? Caffeine ?臭誑撟急??恣???園?銝?
+  // private final Cache<String, RoomTemplate> staticRoomCache =
+  // Caffeine.newBuilder().maximumSize(10_000) // ?身?啣?銝?
+  // .expireAfterAccess(1, TimeUnit.HOURS) // 瘝犖?函??輸?鞈??航◤? (閬?瘙?
+  // .recordStats().build();
+
+  // ?芰??敹怠?
+  // private final Cache<String, MobTemplate> staticMobCache =
+  // Caffeine.newBuilder().maximumSize(5_000).expireAfterAccess(1, TimeUnit.HOURS).build();
+
+  private final TemplateRepository templateRepo;
+
+  // 2. Runtime Actors: 摮甇?????RoomActor
+  // 雿輻 ConcurrentHashMap 蝣箔?銝衣摮?摰
+  private final ConcurrentHashMap<String, RoomActor> activeRooms = new ConcurrentHashMap<>();
+
+  // 3. Write-Behind Queue: 摮敺神?亥??澈????
+  private final BlockingQueue<RoomStateUpdate> persistenceQueue = new LinkedBlockingQueue<>();
+
+  // 敹怠?嚗D -> Player 撖阡?
+  private final ConcurrentHashMap<String, PlayerActor> activePlayers = new ConcurrentHashMap<>();
+
+  private volatile boolean isRunning = true;
+
+
+
+  /**
+   * 隡箸??典???頛?啣?
+   */
+  public void loadWorld() {
+    log.info("Starting World Loading...");
+
+    // 霈??global 鞈?
+
+    // 霈??newbie_village 鞈?
+    loadZone("newbie_village");
+
+
+
+    // ?? Write-Behind 瘨祥?銵?
+    // startPersistenceWorker();
+  }
+
+
+  private void loadZone(String zone) {
+    try {
+
+      // 霈??zone 鞈?
+      Resource resource =
+          resourceResolver.getResource("classpath:data/zones/" + zone + "/manifest.json");
+      if (resource == null) {
+        log.error("Zone manifest not found: {}", zone);
+        return;
+      }
+      ZoneTemplate zoneTemplate =
+          objectMapper.readValue(resource.getInputStream(), ZoneTemplate.class);
+      log.info("{}", objectMapper.writeValueAsString(zoneTemplate));
+      templateRepo.registerZone(zoneTemplate);
+      String zoneId = zoneTemplate.id();
+
+      // 霈??room 鞈?
+      resource = resourceResolver.getResource("classpath:data/zones/" + zone + "/rooms.json");
+      if (resource == null) {
+        log.error("Zone rooms not found: {}", zone);
+        return;
+      }
+
+      // 雿輻 TypeReference 靘迤蝣箄???JSON ?????Set<RoomTemplate>
+      Set<RoomTemplate> rooms = objectMapper.readValue(resource.getInputStream(),
+          new TypeReference<Set<RoomTemplate>>() {});
+
+      for (RoomTemplate room : rooms) {
+        log.info("{}", objectMapper.writeValueAsString(room));
+        // ?湔exits??targetRoomId
+        if (room.exits() != null) {
+          for (Map.Entry<String, RoomExit> entry : room.exits().entrySet()) {
+            RoomExit roomExit = entry.getValue();
+            String newTargetRoomId = IdUtils.resolveId(zoneId, roomExit.targetRoomId());
+            RoomExit newRoomExit = roomExit.toBuilder().targetRoomId(newTargetRoomId).build();
+            entry.setValue(newRoomExit);
+          }
+        }
+
+        // ?湔 room.id
+        String newRoomId = zoneId + ":" + room.id();
+        RoomTemplate newRoom = room.toBuilder().id(newRoomId).zoneId(zoneId).build();
+        templateRepo.registerRoom(newRoom);
+      }
+
+
+      // 霈??mob 鞈?
+      resource = resourceResolver.getResource("classpath:data/zones/" + zone + "/mobs.json");
+      if (resource == null) {
+        log.error("Zone mobs not found: {}", zone);
+        return;
+      }
+
+      Set<MobTemplate> mobs = objectMapper.readValue(resource.getInputStream(),
+          new TypeReference<Set<MobTemplate>>() {});
+      for (MobTemplate mob : mobs) {
+        log.info("{}", objectMapper.writeValueAsString(mob));
+
+        String newMobId = zoneId + ":" + mob.id();
+        MobTemplate newMob = mob.toBuilder().id(newMobId).build();
+        templateRepo.registerMob(newMob);
+      }
+
+
+      // 霈??item 鞈?
+
+    } catch (IOException e) {
+      log.error("Could not read rooms resources", e);
+    }
+  }
+  /*
+   * public void loadWorld_old() { log.info("Starting World Loading..."); try { // 霈??
+   * classpath:maps/ 銝??? json
+   *
+   * // 霈??mob 鞈?
+   *
+   * // 霈??item 鞈?
+   *
+   * // 霈??room 鞈?
+   *
+   * Resource[] resources = resourceResolver.getResources("classpath:maps/*.json"); // Resource[]
+   * resources = resourceResolver.getResources("classpath:maps/** /*.json");
+   *
+   *
+   * for (Resource res : resources) { try { ZoneTemplate zone =
+   * objectMapper.readValue(res.getInputStream(), ZoneTemplate.class); String zoneId = zone.id();
+   * log.info("Loading Zone: {} ({}) - {} rooms", zone.name(), zoneId, zone.rooms().size());
+   *
+   * // 撠???Cache嚗遣蝡?揣撘?for (RoomTemplate room : zone.rooms()) {
+   *
+   * // ?湔exits??targetRoomId for (Map.Entry<String, RoomExit> entry : room.exits().entrySet()) {
+   * RoomExit roomExit = entry.getValue(); String newTargetRoomId = zoneId + ":" +
+   * roomExit.targetRoomId(); RoomExit newRoomExit =
+   * roomExit.toBuilder().targetRoomId(newTargetRoomId).build(); entry.setValue(newRoomExit); }
+   *
+   * String newRoomId = zoneId + ":" + room.id(); RoomTemplate newRoom =
+   * room.toBuilder().id(newRoomId).build(); staticRoomCache.put(newRoomId, newRoom); }
+   *
+   * // 撠芰???曉 Cache log.info("zone.mobTemplates().size: {}", zone.mobTemplates().size()); for
+   * (MobTemplate mob : zone.mobTemplates()) { String newMobId = zoneId + ":" + mob.id();
+   * MobTemplate newMob = mob.toBuilder().id(newMobId).build(); staticMobCache.put(newMobId,
+   * newMob); }
+   *
+   * // 3. ?寞? mob_resets ?Ｙ??芰撖阡? if (zone.mobResets() != null) { for (Population reset :
+   * zone.mobResets()) {
+   *
+   * MobTemplate mobTpl = staticMobCache.getIfPresent(zoneId + ":" + reset.mobTemplateId());
+   *
+   * if (mobTpl != null) { RoomActor roomActor = getRoomActor(zoneId + ":" + reset.roomId());
+   *
+   * for (int i = 0; i < reset.count(); i++) { // 撱箇? MobActor 銝西身摰?憪??MobActor mobActor = new
+   * MobActor(mobTpl, null); log.info("Spawned Mob: {} in Room: {}", mobTpl.name(), reset.roomId());
+   * mobActor.setCurrentRoomId(roomActor.getId()); log.info("MobTemplate:{}",
+   * objectMapper.writeValueAsString(mobActor));
+   *
+   * // ??mob 憛?輸???roomActor.getMobs().add(mobActor); mobActor.start(); } } else {
+   * log.info("MobTemplate is null"); } } } } catch (IOException e) {
+   * log.error("Failed to load map file: {}", res.getFilename(), e); } } } catch (IOException e) {
+   * log.error("Could not read map resources", e); }
+   *
+   * // ?? Write-Behind 瘨祥?銵? startPersistenceWorker(); }
+   */
+
+  // ?????乩???
+  /*
+   * public void loadWorld2() { List<RoomStateEntity> entities = roomStateRepository.findAll();
+   *
+   * for (RoomStateEntity e : entities) { // 1. 瑽遣?? Template RoomStateRecord tpl = new
+   * RoomStateRecord(e.getRoomId(), e.getZoneId(), e.getDroppedItems());
+   *
+   * // 2. 瑽遣?? Actor (瘜典??? // RoomActor actor = new RoomActor(tpl, e.getDroppedItems());
+   *
+   * // activeRooms.put(e.getId(), actor); } }
+   */
+
+
+
+  /**
+   * ?詨??寞?嚗?敺??萄遣 RoomActor ??脣?銝????
+   */
+  public RoomActor getRoomActor(String roomId) {
+    log.info("getRoomActor roomId: {}", roomId);
+    // 1. 憒? Actor 撌脩?摮嚗?亙???
+    return activeRooms.computeIfAbsent(roomId, id -> {
+      // 2. 憒? Actor 銝??剁?敺?Static Cache ?輯??蒂 new 銝??
+      RoomTemplate roomData = templateRepo.findRoom(id).orElse(null);
+      if (roomData == null) {
+        log.error("RoomTemplate ID not found: " + id);
+        return null;
+      }
+      ZoneTemplate zoneData = templateRepo.findZone(roomData.zoneId()).orElse(null);
+      if (zoneData == null) {
+        log.error("ZoneTemplate ID not found: " + roomData.zoneId());
+        return null;
+      }
+
+      return new RoomActor(roomData, zoneData);
+    });
+  }
+
+  public MobTemplate getMobTemplate(String mobId) {
+    return templateRepo.findMob(mobId).orElseThrow(() -> {
+      log.error("MobTemplate ID not found: " + mobId);
+      // return new IllegalArgumentException("MobTemplate ID not found: " + mobId);
+      return null;
+    });
+  }
+
+  // ==========================================
+  // Write-Behind Implementation (??甇亙?瑼???
+  // ==========================================
+
+  // 摰儔摮?隢?????(Record)
+  public record RoomStateUpdate(int roomId, String dataToSave) {
+  }
+
+  public void addPlayer(PlayerActor actor) {
+    activePlayers.put(actor.getId(), actor);
+  }
+
+  public PlayerActor getPlayer(WebSocketSession session) {
+    String playerId = (String) session.getAttributes().get(MudKeys.PLAYER_ID);
+    return getPlayer(playerId);
+  }
+
+  public PlayerActor getPlayer(String playerId) {
+    // TODO ??playerActor 銝??剁???閬?鞈?摨怨??乩蒂撱箇?
+
+    return activePlayers.get(playerId);
+  }
+
+  public void removePlayer(String playerId) {
+    activePlayers.remove(playerId);
+  }
+
+
+  /**
+   * RoomActor ?澆甇斗瘜?隢?摮?嚗??憛?Actor ??雿?
+   */
+  public void enqueueSave(int roomId, String data) {
+    persistenceQueue.offer(new RoomStateUpdate(roomId, data));
+  }
+
+  private void startPersistenceWorker() {
+    // 雿輻 Java 21+ Virtual Thread 靘????啣?瑼?
+    Thread.ofVirtual().name("world-persistence-worker").start(() -> {
+      log.info("World Persistence Worker started (Virtual Thread)");
+      while (isRunning) {
+        try {
+          // ?餃??游???脖?
+          RoomStateUpdate update = persistenceQueue.take();
+          processUpdate(update);
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          break;
+        }
+      }
+    });
+  }
+
+  private void processUpdate(RoomStateUpdate update) {
+    // 璅⊥撖怠鞈?摨?(MySQL JSON)
+    // ?芯??ㄐ?釣??JPA Repository
+    try {
+      // 璅⊥ IO 撱園
+      Thread.sleep(10);
+      log.debug("[Write-Behind] Saved room {} state to DB: {}", update.roomId(),
+          update.dataToSave());
+    } catch (Exception e) {
+      log.error("Error saving room state", e);
+    }
+  }
+
+  @PreDestroy
+  public void shutdown() {
+    isRunning = false;
+    // 撖阡?撠?銝剝ㄐ?府閬? Queue 鋆∠??拚?鞈? flush ?啗??澈
+    log.info("WorldManager shutting down...");
+  }
+
+  /**
+   * 撠????犖撱?閮 (?支?靘??撌?
+   *
+   * @param roomId ?輸? ID
+   * @param message 閮?批捆
+   * @param excludeActorId 銝?嗅撱??犖 (?虜?舐宏?鈭?嚗??null
+   */
+  public void broadcastToRoom(String roomId, String message, String excludeActorId) {
+    List<PlayerActor> actors = getActorsInRoom(roomId); // ?身?典歇?迨?寞?
+
+    for (PlayerActor actor : actors) {
+      if (excludeActorId != null && actor.getId().equals(excludeActorId)) {
+        continue;
+      }
+      // ?湔?潮?摮?
+      actor.sendText(message);
+    }
+  }
+
+  // 蝪∪??getActorsInRoom 撖虫???(??頛榆嚗?敺??Map<RoomId, Set<ActorId>> ?芸?)
+  public List<PlayerActor> getActorsInRoom(String roomId) {
+    return activePlayers.values().stream().filter(a -> roomId.equals(a.getCurrentRoomId()))
+        .toList();
+  }
+
+  /**
+   * 撱箇?銝??啁??拙?撖阡?
+   *
+   * @param templateId ?拙??? ID
+   * @param randomize ?臬?脰??冽??詨潭筑??
+   */
+  // public GameItem createItem(int templateId, boolean randomize) {
+  // ItemTemplate tpl = loadItemTemplate(templateId);
+
+  // GameItem item = new GameItem();
+  // item.setId(UUID.randomUUID().toString());
+  // item.setTemplateId(tpl.id());
+  // item.setCurrentDurability(tpl.maxDurability());
+  // item.setAmount(1);
+
+  // // --- ???冽??摩 (RNG) ---
+  // if (randomize) {
+  // // 1. ?冽?瘚桀???摨?(靘?嚗??~ 80% ??
+  // // item.setCurrentDurability(...);
+
+  // // 2. ?冽?閰韌 (靘? 10% 璈??箇 +1 ?餅?)
+  // if (ThreadLocalRandom.current().nextDouble() < 0.1) {
+  // item.getDynamicProps().put("attack_bonus", 1);
+  // item.getDynamicProps().put("quality", "RARE");
+  // }
+  // }
+
+  // return item;
+  // }
+
+  // public ItemTemplate loadItemTemplate(int templateId) {
+  // // 1. DB -> Entity
+  // ItemTemplateEntity entity = itemTemplateRepository.findById(templateId).orElseThrow(
+  // () -> new IllegalArgumentException("ItemTemplate ID not found: " + templateId));
+
+  // // 2. Entity -> Record (MapStruct ?芸?頧?
+  // // 瘜冽?嚗ㄐ敺??Record ?批??State ??Entity 鋆∟圾摨??靘?
+  // return itemTemplateMapper.toRecord(entity);
+  // }
+}
+
+
+--- File: HtmlmudApplicationTests.java ---
+
+package com.example.htmlmud;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class HtmlmudApplicationTests {
+
+	@Test
+	void contextLoads() {
+	}
+
+}
