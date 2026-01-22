@@ -1,12 +1,11 @@
 package com.example.htmlmud.domain.actor.impl;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.LivingActor;
 import com.example.htmlmud.domain.actor.behavior.AggressiveBehavior;
 import com.example.htmlmud.domain.actor.behavior.MerchantBehavior;
@@ -36,6 +35,9 @@ public class MobActor extends LivingActor {
   private ScheduledFuture<?> aiTask; // Heartbeat 排程
   private MobBehavior behavior; // AI 行為 (策略模式)
 
+  // 裝備欄位
+  private Map<EquipmentSlot, GameItem> equipments;
+
   /**
    * 建構子： 1. 接收 Template 與 Services 2. 自動生成 UUID 3. 自動從 Template 建立 LivingState
    */
@@ -44,6 +46,8 @@ public class MobActor extends LivingActor {
     // 【修正 2】呼叫 helper method 建立初始 State，確保血量與 Template 一致
     super(UUID.randomUUID().toString(), template.name(), createInitialState(template), services);
     this.template = template;
+
+    // 處理裝備
 
     // 初始化行為
     initBehavior();
@@ -56,12 +60,34 @@ public class MobActor extends LivingActor {
   // 輔助方法：根據 Template 產生初始的 LivingState
   private static LivingState createInitialState(MobTemplate tpl) {
     LivingState state = new LivingState();
+
+    // 基本屬性設定
+    state.level = tpl.level();
     state.hp = tpl.maxHp();
     state.maxHp = tpl.maxHp();
-    state.level = tpl.level();
-    // 如果有 MP, Stamina 等屬性也可在此初始化
+    state.mp = tpl.maxMp();
+    state.maxMp = tpl.maxMp();
+    state.stamina = tpl.maxStamina();
+    state.maxStamina = tpl.maxStamina();
+    // state.san = tpl.maxSan();
+    // state.maxSan = tpl.maxSan();
+
+    // 戰鬥屬性設定
+    state.damage = tpl.baseDamage();
+    state.defense = tpl.baseDefense();
+    state.attackSpeed = tpl.attackSpeed();
 
     return state;
+  }
+
+  // 處理初期裝備
+  private void initEquipment(MobTemplate tpl) {
+    if (tpl.equipment() != null) {
+      for (String itemId : tpl.equipment().values()) {
+
+        // equip(itemId);
+      }
+    }
   }
 
   private void initBehavior() {
@@ -178,6 +204,7 @@ public class MobActor extends LivingActor {
     // 1. 扣血 (呼叫父類別)
     log.info("damage: {}", damage);
     log.info("this.state.hp: {}", this.state.hp);
+    log.info("this.state.defense: {}", this.state.defense);
     super.onAttacked(attacker, damage);
 
     // 2. 增加仇恨值 (使用 String ID)

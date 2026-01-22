@@ -1,5 +1,6 @@
 package com.example.htmlmud.domain.model.map;
 
+import java.util.Map;
 import java.util.Set;
 import com.example.htmlmud.domain.model.MobKind;
 import lombok.Builder;
@@ -18,6 +19,12 @@ public record MobTemplate(
     int level,
 
     int maxHp,
+
+    int maxMp,
+
+    int maxStamina,
+
+    int maxSan,
 
     String roomDescription,
 
@@ -38,11 +45,11 @@ public record MobTemplate(
     String attackVerb, // 攻擊動詞: "咬", "抓", "揮拳"
     String attackNoun, // 攻擊部位: "尖銳的牙齒", "利爪", "拳頭"
     int baseDamage, // 天生基礎傷害
+    int baseDefense, // 天生防禦力
     int attackSpeed, // 天生攻速
+    int weight, // 天生重量
 
-    Equipment equipment // 装備
-
-
+    Map<String, String> equipment // 装備
 
 ) {
 }

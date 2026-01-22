@@ -14,6 +14,7 @@ import com.example.htmlmud.domain.model.map.RoomTemplate;
 import com.example.htmlmud.domain.model.map.SpawnRule;
 import com.example.htmlmud.domain.model.map.ZoneTemplate;
 import com.example.htmlmud.protocol.RoomMessage;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,6 +37,8 @@ public class RoomActor extends VirtualActor<RoomMessage> {
 
   private final WorldFactory worldFactory;
 
+  private final ObjectMapper objectMapper;
+
 
   // 房間內的玩家 (Runtime State)
   @Getter
@@ -48,7 +51,8 @@ public class RoomActor extends VirtualActor<RoomMessage> {
   private final Set<GameItem> items = ConcurrentHashMap.newKeySet(); // 地上的物品
 
 
-  public RoomActor(RoomTemplate template, ZoneTemplate zoneTemplate, WorldFactory worldFactory) {
+  public RoomActor(RoomTemplate template, ZoneTemplate zoneTemplate, WorldFactory worldFactory,
+      ObjectMapper objectMapper) {
     super("room-" + template.id());
     this.id = template.id();
     this.template = template;
@@ -57,10 +61,13 @@ public class RoomActor extends VirtualActor<RoomMessage> {
     this.mobSpawnRules = template.mobSpawnRules();
     this.itemSpawnRules = template.itemSpawnRules();
     this.worldFactory = worldFactory;
+    this.objectMapper = objectMapper;
+
 
     // 初始生怪
+    log.info("-----------------------------------------------------------------------------------");
     spawnInitial("mob", mobSpawnRules);
-
+    log.info("-----------------------------------------------------------------------------------");
     // 初始物品
     spawnInitial("item", itemSpawnRules);
 
@@ -290,6 +297,11 @@ public class RoomActor extends VirtualActor<RoomMessage> {
   private void spawnOneMob(SpawnRule rule) {
     // 1. 呼叫工廠產生 MobActor (這裡會給予 UUID)
     MobActor mob = worldFactory.createMob(rule.id());
+    try {
+      log.info("{}: {}", mob.getDisplayName(), objectMapper.writeValueAsString(mob.getTemplate()));
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
 
     // // 2. 設定位置
     mob.setCurrentRoomId(this.id);

@@ -32,7 +32,7 @@ public class LivingState {
   // 基礎屬性
   public int str = 5; // 力量 strength (影響 物理傷害、角色負重上限)
   public int intelligence = 5; // 智力 intelligence (影響 魔法傷害、法力上限MP、學習技能的速度)
-  public int agi; // 敏捷 agility (影響 攻擊速度、躲避率Evasion、命中率Hit Rate)
+  public int agi = 5; // 敏捷 agility (影響 攻擊速度、躲避率Evasion、命中率Hit Rate)
   public int con = 5; // 體質 constitution (影響 生命值HP上限、防禦力、體力恢復速度)
   private int wis; // 智慧 wisdom (影響 魔法威力)
   private int dex = 5; // 靈巧 dexterity (影響 物理威力)
@@ -66,8 +66,8 @@ public class LivingState {
   public Map<EquipmentSlot, GameItem> equipment = new HashMap<>();
 
   // 衍生屬性 (快取用，每次穿脫裝備後重新計算 通常不存 DB，由基礎屬性計算，但為了簡單先存這裡)
-  public int damage = 10; // 攻擊力
-  public int defense = 10; // 防禦力
+  public int damage = 1; // 攻擊力
+  public int defense = 0; // 防禦力
   public int attackSpeed = 2000; // 攻擊速度 (毫秒，例如 2000 代表 2秒打一次)
   public int weightCapacity;
 

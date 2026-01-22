@@ -43,6 +43,7 @@ public class KillCommand implements PlayerCommand {
     // 2. 交給 Selector 處理複雜字串
     // args 可能是 "red goblin", "elite soldier 2"
     MobActor target = targetSelector.selectMob(mobsInRoom, args);
+    log.info("name:{} defense: {}", target.getTemplate().name(), target.getState().defense);
 
     if (target == null) {
       actor.reply("這裡沒有看到 '" + args + "'。");

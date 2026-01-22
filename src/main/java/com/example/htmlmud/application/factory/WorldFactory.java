@@ -15,6 +15,7 @@ import com.example.htmlmud.domain.model.map.MobTemplate;
 import com.example.htmlmud.domain.model.map.RoomTemplate;
 import com.example.htmlmud.domain.model.map.ZoneTemplate;
 import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,6 +30,7 @@ public class WorldFactory {
 
   // private final WorldManager worldManager;
   // private final ScheduledExecutorService scheduler;
+  private final ObjectMapper objectMapper;
 
   private final TemplateRepository templateRepo;
 
@@ -49,7 +51,7 @@ public class WorldFactory {
     }
 
     // 這裡負責組裝：RoomActor 需要 Template + ZoneTemplate
-    return new RoomActor(roomTpl, zoneTpl, this);
+    return new RoomActor(roomTpl, zoneTpl, this, objectMapper);
   }
 
   /**
