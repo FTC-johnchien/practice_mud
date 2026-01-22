@@ -5,7 +5,6 @@ import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
-import com.example.htmlmud.domain.context.GameServices;
 import com.example.htmlmud.domain.model.Direction;
 import com.example.htmlmud.domain.model.map.RoomExit;
 import com.example.htmlmud.infra.util.AnsiColor;
@@ -70,6 +69,7 @@ public class MoveCommand implements PlayerCommand {
     // --- 移動成功，開始處理流程 ---
 
     // 4. 舊房間廣播 (離場)
+    currentRoom.removePlayer(actor);
     String leaveMsg = ColorText.wrap(AnsiColor.YELLOW,
         actor.getNickname() + " 往 " + dir.getDisplayName() + " 離開了。");
     worldManager.broadcastToRoom(currentRoomId, leaveMsg, actor.getId());
@@ -81,6 +81,7 @@ public class MoveCommand implements PlayerCommand {
 
     // 6. 新房間廣播 (進場)
     // 計算反方向 (例如往北走，新房間的人會看到你從南方來)
+    targetRoom.addPlayer(actor);
     String arriveMsg = ColorText.wrap(AnsiColor.YELLOW,
         actor.getNickname() + " 從 " + dir.opposite().getDisplayName() + " 過來了。");
     worldManager.broadcastToRoom(targetRoomId, arriveMsg, actor.getId());

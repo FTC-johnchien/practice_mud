@@ -44,7 +44,8 @@ public class MobActor extends LivingActor {
   public MobActor(MobTemplate template, GameServices services) {
     // 【修正 1】直接使用 UUID 作為 ID，不再依賴 GameObjectId.mob()
     // 【修正 2】呼叫 helper method 建立初始 State，確保血量與 Template 一致
-    super(UUID.randomUUID().toString(), template.name(), createInitialState(template), services);
+    String mobId = "mob-" + UUID.randomUUID().toString().substring(0, 8);
+    super(mobId, template.name(), createInitialState(template), services);
     this.template = template;
 
     // 處理裝備
@@ -122,7 +123,7 @@ public class MobActor extends LivingActor {
     behavior.onMessage(this, msg);
 
     // 2. 如果父類別有通用邏輯 (如 Buff 結算)，可視需求呼叫
-    // super.handleMessage(msg);
+    super.handleMessage(msg);
   }
 
   // --- AI 心跳機制 (Heartbeat) ---

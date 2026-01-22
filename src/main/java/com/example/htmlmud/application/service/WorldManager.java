@@ -254,8 +254,7 @@ public class WorldManager {
    * 核心方法：取得或創建 RoomActor 這是進入遊戲世界的入口
    */
   public RoomActor getRoomActor(String roomId) {
-    log.info("getRoomActor roomId: {}", roomId);
-    // 1. 如果 Actor 已經存在，直接回傳
+    // 如果 Actor 已經存在，直接回傳
     return activeRooms.computeIfAbsent(roomId, id -> {
       return worldFactory.createRoom(id);
     });

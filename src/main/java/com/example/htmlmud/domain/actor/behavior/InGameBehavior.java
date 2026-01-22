@@ -20,7 +20,7 @@ public class InGameBehavior implements PlayerBehavior {
 
   @Override
   public PlayerBehavior handle(PlayerActor actor, GameCommand cmd) {
-    log.info("InGameBehavior handle()");
+    // log.info("InGameBehavior handle()");
 
     // 目前只處理文字輸入 (Input)
     if (cmd instanceof GameCommand.Input(var text)) {

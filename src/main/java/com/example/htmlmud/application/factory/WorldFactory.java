@@ -38,6 +38,7 @@ public class WorldFactory {
    * 建立房間 Actor
    */
   public RoomActor createRoom(String roomId) {
+    log.info("createRoom roomId: {}", roomId);
     RoomTemplate roomTpl = templateRepo.findRoom(roomId).orElse(null);
     if (roomTpl == null) {
       log.error("Create Room failed: RoomTemplate not found {}", roomId);
@@ -51,7 +52,9 @@ public class WorldFactory {
     }
 
     // 這裡負責組裝：RoomActor 需要 Template + ZoneTemplate
-    return new RoomActor(roomTpl, zoneTpl, this, objectMapper);
+    RoomActor room = new RoomActor(roomTpl, zoneTpl, this, objectMapper);
+    room.start();
+    return room;
   }
 
   /**

@@ -8,8 +8,8 @@ import java.util.Map;
 // 這個物件會被序列化存入 players.state_json 和 mobs.state_json
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LivingState {
-  public String sex; // 性別
-  public String race; // 種族 (人類、精靈等，通常會給予不同的初始屬性加成)
+  // public String sex; // 性別
+  // public String race; // 種族 (人類、精靈等，通常會給予不同的初始屬性加成)
 
   public int level = 1;
   public int age = 12; // 年齡 age

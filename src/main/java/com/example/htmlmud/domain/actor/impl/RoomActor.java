@@ -13,6 +13,7 @@ import com.example.htmlmud.domain.model.RoomStateRecord;
 import com.example.htmlmud.domain.model.map.RoomTemplate;
 import com.example.htmlmud.domain.model.map.SpawnRule;
 import com.example.htmlmud.domain.model.map.ZoneTemplate;
+import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.RoomMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
@@ -54,20 +55,19 @@ public class RoomActor extends VirtualActor<RoomMessage> {
   public RoomActor(RoomTemplate template, ZoneTemplate zoneTemplate, WorldFactory worldFactory,
       ObjectMapper objectMapper) {
     super("room-" + template.id());
+    this.worldFactory = worldFactory;
+    this.objectMapper = objectMapper;
+
     this.id = template.id();
     this.template = template;
     this.zoneTemplate = zoneTemplate;
     // 從 Template 複製規則 (因為這是固定的)
     this.mobSpawnRules = template.mobSpawnRules();
     this.itemSpawnRules = template.itemSpawnRules();
-    this.worldFactory = worldFactory;
-    this.objectMapper = objectMapper;
-
 
     // 初始生怪
-    log.info("-----------------------------------------------------------------------------------");
     spawnInitial("mob", mobSpawnRules);
-    log.info("-----------------------------------------------------------------------------------");
+
     // 初始物品
     spawnInitial("item", itemSpawnRules);
 
@@ -138,9 +138,36 @@ public class RoomActor extends VirtualActor<RoomMessage> {
         // picker.send(new ActorMessage("...", new InternalCommand.PickFail("東西不在了")));
         // }
       }
+      case RoomMessage.Tick(var tickCount, var timestamp) -> {
+        handleTick(tickCount, timestamp);
+      }
     }
   }
 
+  // 處理邏輯
+  private void handleTick(long tickCount, long timestamp) {
+    log.info("{} tickCount: {}", id, tickCount);
+
+    // === 1. World/Zone 層級邏輯 (例如：每 60 秒檢查一次重生) ===
+    if (tickCount % zoneTemplate.respawnRate() == 0) {
+      checkSpawnRule(); // 檢查是否有怪物死掉很久該重生了
+    }
+
+    // === 2. 轉發給 Actor ===
+    // 過濾掉 "完全沒事做且沒玩家在場" 的怪物
+    if (!players.isEmpty() || mobs.stream().anyMatch(m -> m.getState().isInCombat())) {
+      ActorMessage.Tick msg = new ActorMessage.Tick(tickCount, timestamp);
+
+      for (MobActor mob : mobs) {
+        mob.send(msg);
+      }
+
+      for (PlayerActor player : players) {
+        log.info("send player");
+        player.send(msg);
+      }
+    }
+  }
   // --- 物品操作邏輯 ---
 
   // public Optional<Item> pickItem(String keyword) {
@@ -155,7 +182,7 @@ public class RoomActor extends VirtualActor<RoomMessage> {
   // --- 輔助方法 (保持不變) ---
 
   public void broadcast(String message) {
-    players.forEach(p -> p.sendText(message));
+    players.forEach(p -> p.reply(message));
   }
 
   private void broadcastToOthers(String sourceId, String message) {
@@ -200,7 +227,7 @@ public class RoomActor extends VirtualActor<RoomMessage> {
     }
 
     // 3. 處理房間本身的邏輯 (例如生怪)
-    checkSpawn();
+    checkSpawnRule();
 
     // 未來可以在這裡處理：怪物重生計時、物品腐爛、環境效果等
   }
@@ -263,7 +290,7 @@ public class RoomActor extends VirtualActor<RoomMessage> {
     return snapshot;
   }
 
-  private void checkSpawn() {
+  private void checkSpawnRule() {
 
   }
 
@@ -298,7 +325,8 @@ public class RoomActor extends VirtualActor<RoomMessage> {
     // 1. 呼叫工廠產生 MobActor (這裡會給予 UUID)
     MobActor mob = worldFactory.createMob(rule.id());
     try {
-      log.info("{}: {}", mob.getDisplayName(), objectMapper.writeValueAsString(mob.getTemplate()));
+      log.info("{}: {} - {}", mob.getId(), mob.getName(),
+          objectMapper.writeValueAsString(mob.getTemplate()));
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -312,7 +340,7 @@ public class RoomActor extends VirtualActor<RoomMessage> {
     // // 4. 啟動怪物的 AI
     mob.start();
 
-    log.debug("Spawned {} in room {}", mob.getTemplate().name(), this.id);
+    log.info("Spawned {} in room {}", mob.getTemplate().name(), this.id);
   }
 
   private void spawnOneItem(SpawnRule rule) {

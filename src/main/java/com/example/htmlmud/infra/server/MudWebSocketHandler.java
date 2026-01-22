@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
@@ -24,24 +25,30 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
 
   @Override
   public void afterConnectionEstablished(WebSocketSession session) {
+    // 包裝 Session
+    // 這會自動加上 Lock，確保同時寫入時會排隊，不會噴出 IllegalStateException
+    // 參數說明：session, sendTimeLimit(ms), bufferSizeLimit(bytes)
+    WebSocketSession concurrentSession =
+        new ConcurrentWebSocketSessionDecorator(session, 1000, 64 * 1024);
+
     try {
 
       // Guest階段 使用工廠方法建立 Guest Actor (ID=0)
       // 將必要的 Service 注入給 Actor，讓 Actor 擁有處理業務的能力
-      PlayerActor actor = PlayerActor.createGuest(session, worldManager, gameServices);
+      PlayerActor actor = PlayerActor.createGuest(concurrentSession, worldManager, gameServices);
 
       // 啟動 Actor 的虛擬執行緒 (Virtual Thread)
       actor.start();
 
       // 註冊到網路層 SessionRegistry
-      sessionRegistry.register(session, actor);
+      sessionRegistry.register(concurrentSession, actor);
 
-      log.info("連線建立: {} (Guest Actor Created)", session.getId());
+      log.info("連線建立: {} (Guest Actor Created)", concurrentSession.getId());
       // eventPublisher.publishEvent(new SessionEvent.Established(session.getId(), Instant.now()));
     } catch (Exception e) {
       log.error("連線初始化失敗", e);
       try {
-        session.close();
+        concurrentSession.close();
       } catch (Exception ignored) {
       }
     }
@@ -63,7 +70,7 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
 
         // D. 裝入信封並投遞
         // 這裡不綁定 ScopedValue，因為要跨執行緒傳遞
-        actor.send(new ActorMessage(traceId, cmd));
+        actor.send(new ActorMessage.Command(traceId, cmd));
       } else {
         // 找不到 Actor，通常代表連線異常或已被踢除
         log.warn("[{}] 收到訊息但找不到 Actor，關閉連線: {}", traceId, session.getId());

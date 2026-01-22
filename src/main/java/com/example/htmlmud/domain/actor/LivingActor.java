@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.core.VirtualActor;
+import com.example.htmlmud.domain.actor.impl.MobActor;
 import com.example.htmlmud.domain.context.GameServices;
 import com.example.htmlmud.domain.model.EquipmentSlot;
 import com.example.htmlmud.domain.model.GameItem;
@@ -27,7 +28,7 @@ public abstract class LivingActor extends VirtualActor<ActorMessage> {
 
   @Getter
   @Setter
-  protected String displayName;
+  protected String name;
 
   // 所有生物都有狀態 (HP/MP)
   @Getter
@@ -47,15 +48,65 @@ public abstract class LivingActor extends VirtualActor<ActorMessage> {
   protected List<GameItem> inventory = new ArrayList<>();
 
 
-  public LivingActor(String id, String displayName, LivingState state, GameServices services) {
-    super(id); // Actor Name: "PLAYER:1"
+  public LivingActor(String id, String name, LivingState state, GameServices services) {
+    super(id);
     this.id = id;
-    this.displayName = displayName;
+    this.name = name;
     this.state = state;
     this.services = services;
   }
 
+  @Override
+  protected void handleMessage(ActorMessage msg) {
+    switch (msg) {
+      case ActorMessage.Tick(var tickCount, var timestamp) -> {
+        onTick(tickCount, timestamp);
+      }
+      case ActorMessage.Command(var traceId, var cmd) -> {
+        // services.commandDispatcher().dispatch(this, cmd);
+      }
+      case ActorMessage.Die(var killerId) -> {
+        die(killerId);
+      }
+      case ActorMessage.SendText(var content) -> {
+      }
+    }
+  }
+
+  protected void onTick(long tickCount, long time) {
+
+    // === 1. 戰鬥心跳 (最優先，每秒執行) ===
+    // 頻率：1秒 (因為 WorldPulse 就是 1秒)
+    if (this.state.isInCombat()) {
+      processAutoAttack(time); // 之前討論過的自動攻擊
+    }
+
+    // === 2. 回復/狀態心跳 (Regen Tick) ===
+    // 頻率：每 3 秒執行一次 ( tickCount % 3 == 0 )
+    // 只有沒在戰鬥時才回血，或者戰鬥中回得比較慢
+    if (tickCount % 3 == 0) {
+      processRegen();
+      // processBuffs(); // 檢查 Buff 是否過期
+    }
+
+    // === 3. AI 行為心跳 (AI Tick) ===
+    // 頻率：每 5 秒執行一次
+    // 只有怪物需要，玩家不需要
+    if (this instanceof MobActor mob && tickCount % 5 == 0) {
+      // mob.processAI(); // 例如：隨機移動、喊話
+    }
+  }
+
+  protected void processRegen() {
+    if (state.hp < state.maxHp) {
+      int regenAmount = (int) (state.maxHp * 0.05); // 回復 5%
+      heal(regenAmount);
+    }
+  }
+
   // --- 共用行為邏輯 ---
+
+
 
   // 1. 受傷處理
   public void takeDamage(int amount, String attackerId) {
@@ -76,7 +127,7 @@ public abstract class LivingActor extends VirtualActor<ActorMessage> {
   }
 
   // 2. 死亡處理
-  protected void die(String killerId) {
+  private void die(String killerId) {
     this.state.hp = 0;
     this.state.isDead = true;
     log.info("{} has been slain by {}!", id, killerId);

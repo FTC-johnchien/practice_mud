@@ -62,8 +62,8 @@ public class CombatService {
     // 這裡需要透過 WorldManager 取得真實的 Actor 物件
     RoomActor room = manager.getRoomActor(roomId);
     LivingActor target = room.findActor(targetId);
-    log.info("attacker.getDisplayName:{} target DisplayName:{}", attacker.getDisplayName(),
-        target.getDisplayName());
+    log.info("attacker.getName:{} target getName:{}", attacker.getName(), target.getName());
+
     if (target == null || target.getState().hp <= 0) {
       // stopCombat(); // 目標消失或死亡，停止戰鬥
       return target;
@@ -79,8 +79,8 @@ public class CombatService {
     // 5. 發送訊息給房間所有人
     // attacker.equip(null)
     String verb = "攻擊"; // 或是從 weapon.getVerb() 取得 "揮砍"
-    String msg = String.format("%s 用 %s %s %s，造成 %d 點傷害！", attacker.getDisplayName(), "拳頭", verb,
-        target.getDisplayName(), dmg);
+    String msg = String.format("%s 用 %s %s %s，造成 %d 點傷害！", attacker.getName(), "拳頭", verb,
+        target.getName(), dmg);
     room.broadcast(msg);
 
     return target;

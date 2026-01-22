@@ -2,8 +2,8 @@ package com.example.htmlmud.domain.actor.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.slf4j.MDC;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -19,7 +19,8 @@ import com.example.htmlmud.domain.model.LivingState;
 import com.example.htmlmud.domain.model.PlayerRecord;
 import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.ConnectionState;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.example.htmlmud.protocol.GameCommand;
+import com.example.htmlmud.protocol.RoomMessage;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -35,8 +36,7 @@ public class PlayerActor extends LivingActor {
   private final WorldManager manager;
 
   @Getter
-  @Setter
-  private String name;
+  private String characterId;
 
   @Getter
   @Setter
@@ -59,9 +59,9 @@ public class PlayerActor extends LivingActor {
 
 
 
-  private PlayerActor(WebSocketSession session, String id, String displayName, LivingState state,
+  private PlayerActor(WebSocketSession session, String id, String name, LivingState state,
       WorldManager worldManager, GameServices services) {
-    super(id, displayName, state, services);
+    super(id, name, state, services);
     this.session = session;
     this.manager = worldManager;
   }
@@ -70,9 +70,9 @@ public class PlayerActor extends LivingActor {
   public static PlayerActor createGuest(WebSocketSession session, WorldManager worldManager,
       GameServices gameServices) {
     String name = "GUEST";
-    PlayerActor actor = new PlayerActor(session, session.getId(), name, new LivingState(),
-        worldManager, gameServices);
-    actor.setName(name);
+    String playerId = "player-" + session.getId().substring(0, 8);
+    PlayerActor actor =
+        new PlayerActor(session, playerId, name, new LivingState(), worldManager, gameServices);
     actor.become(new GuestBehavior(worldManager.getAuthService()));
     actor.inventory = new ArrayList<>();
     return actor;
@@ -88,28 +88,43 @@ public class PlayerActor extends LivingActor {
 
   @Override
   protected void handleMessage(ActorMessage msg) {
-    String traceId = msg.traceId();
+    switch (msg) {
+      case ActorMessage.Command(String traceId, GameCommand command) -> {
+        // A. 設定 MDC (給 Log 看)
+        MDC.put("traceId", traceId);
+        MDC.put("actorName", this.name);
 
-    // A. 設定 MDC (給 Log 看)
-    MDC.put("traceId", traceId);
-    MDC.put("actorName", this.name);
+        try {
+          // B. 設定 ScopedValue (給 Service 邏輯看)
+          ScopedValue.where(MudContext.CURRENT_PLAYER, this).where(MudContext.TRACE_ID, traceId)
+              .run(() -> {
+                // C. 委派給當前 Behavior 處理
+                PlayerBehavior next = currentBehavior.handle(this, command);
 
-    try {
-      // B. 設定 ScopedValue (給 Service 邏輯看)
-      ScopedValue.where(MudContext.CURRENT_PLAYER, this).where(MudContext.TRACE_ID, traceId)
-          .run(() -> {
+                // D. 狀態切換
+                if (next != null) {
+                  become(next);
+                }
+              });
+        } finally {
+          // E. 清理 MDC
+          MDC.clear();
+        }
+      }
 
-            // C. 委派給當前 Behavior 處理
-            PlayerBehavior next = currentBehavior.handle(this, msg.command());
+      case ActorMessage.Tick(var tickCount, var timestamp) -> {
+        log.info("player tickCount: {}", tickCount);
+        tick();
+      }
 
-            // D. 狀態切換
-            if (next != null) {
-              become(next);
-            }
-          });
-    } finally {
-      // E. 清理 MDC
-      MDC.clear();
+      case ActorMessage.Die(var killerId) -> {
+        onDeath(killerId);
+      }
+
+      case ActorMessage.SendText(var content) -> {
+        performSendText(content);
+      }
+
     }
     /*
      * // 這裡已經是 Single Thread 環境，完全不用 synchronized // 使用 ScopedValue 重新綁定從信封拿到的 traceId
@@ -280,18 +295,24 @@ public class PlayerActor extends LivingActor {
     // new DomainEvent.PlayerLevelUpEvent(currentTraceId, this.objectId.id(), this.state.level));
   }
 
-  public void reply(String msg) {
-    try {
-      if (session.isOpen()) {
-        // 使用 Map 來建立結構，Jackson 會自動處理所有特殊字元的轉義
+  // 將原本的 sendText 改名或設為私有，避免外部誤用
+  private void performSendText(String msg) {
+    if (session != null && session.isOpen()) {
+      try {
+        // 這裡才是真正寫入 WebSocket 的地方
+        // 因為是在 handleMessage 內執行，保證了 Thread-Safe
         String json =
             services.objectMapper().writeValueAsString(Map.of("type", "TEXT", "content", msg));
 
         session.sendMessage(new TextMessage(json));
+      } catch (IOException e) {
+        log.error("Failed to send message to player {}", id, e);
       }
-    } catch (IOException e) {
-      log.error("Reply failed", e);
     }
+  }
+
+  public void reply(String msg) {
+    this.send(new ActorMessage.SendText(msg));
   }
 
   // --- 這裡實現您的 "純字串" 邏輯 ---
@@ -313,7 +334,11 @@ public class PlayerActor extends LivingActor {
   public void upgradeIdentity(PlayerRecord record) {
     this.fromRecord(record);
     this.become(new InGameBehavior());
-    this.displayName = this.nickname; // 更新顯示名稱
+    this.characterId = record.name();
+    this.name = record.name();
+    if (record.nickname() != null) {
+      this.name = record.nickname();
+    }
 
     // 將玩家放入房間
     RoomActor room = manager.getRoomActor(this.getCurrentRoomId());

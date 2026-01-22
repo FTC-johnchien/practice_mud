@@ -7,7 +7,10 @@ import com.example.htmlmud.domain.actor.impl.PlayerActor;
  * 定義所有發送給 RoomActor 的內部訊息協定 使用 Sealed Interface 限制訊息類型，配合 switch pattern matching
  */
 public sealed interface RoomMessage permits RoomMessage.PlayerEnter, RoomMessage.PlayerLeave,
-    RoomMessage.TryPickItem, RoomMessage.Look, RoomMessage.Say {
+    RoomMessage.TryPickItem, RoomMessage.Look, RoomMessage.Say, RoomMessage.Tick {
+
+  record Tick(long tickCount, long timestamp) implements RoomMessage {
+  }
 
   /**
    * 玩家進入房間
