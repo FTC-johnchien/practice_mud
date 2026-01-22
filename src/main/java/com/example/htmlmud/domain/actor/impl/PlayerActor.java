@@ -32,13 +32,7 @@ public class PlayerActor extends LivingActor {
   private WebSocketSession session;
 
   @Getter
-  private final GameServices services;
-
   private final WorldManager manager;
-
-
-  // 當前的行為腦
-  private PlayerBehavior currentBehavior;
 
   @Getter
   @Setter
@@ -58,28 +52,27 @@ public class PlayerActor extends LivingActor {
   @Setter
   private ConnectionState connectionState = ConnectionState.CONNECTED;
 
-
-  // 背包
-  @Getter
-  private List<GameItem> inventory = new ArrayList<>();
+  // 當前的行為腦
+  private PlayerBehavior currentBehavior;
 
   private boolean isDirty = false;
 
-  private PlayerActor(WebSocketSession session, String id, LivingState state,
-      WorldManager worldManager, GameServices gameServices) {
-    super(id, state);
+
+
+  private PlayerActor(WebSocketSession session, String id, String displayName, LivingState state,
+      WorldManager worldManager, GameServices services) {
+    super(id, displayName, state, services);
     this.session = session;
-    this.services = gameServices;
     this.manager = worldManager;
   }
 
-  // 工廠方法
+  // 工廠方法 初始設定為 GuestBehavior
   public static PlayerActor createGuest(WebSocketSession session, WorldManager worldManager,
       GameServices gameServices) {
-    PlayerActor actor =
-        new PlayerActor(session, session.getId(), new LivingState(), worldManager, gameServices);
-    // 初始設定為 GuestBehavior
-    actor.setName("GUEST");
+    String name = "GUEST";
+    PlayerActor actor = new PlayerActor(session, session.getId(), name, new LivingState(),
+        worldManager, gameServices);
+    actor.setName(name);
     actor.become(new GuestBehavior(worldManager.getAuthService()));
     actor.inventory = new ArrayList<>();
     return actor;
@@ -174,12 +167,7 @@ public class PlayerActor extends LivingActor {
   private void become(PlayerBehavior nextBehavior) {
     this.currentBehavior = nextBehavior;
     this.currentBehavior.onEnter(this); // 觸發進場事件
-    try {
-      log.info("{} 切換行為模式至 {} 當前狀態: {}", this.name, nextBehavior.getClass().getSimpleName(),
-          services.objectMapper().writeValueAsString(state));
-    } catch (JsonProcessingException ignored) {
-
-    }
+    log.info("{} 切換行為模式至 {}", this.name, nextBehavior.getClass().getSimpleName());
   }
 
   public void handleDisconnect() {
@@ -325,7 +313,13 @@ public class PlayerActor extends LivingActor {
   public void upgradeIdentity(PlayerRecord record) {
     this.fromRecord(record);
     this.become(new InGameBehavior());
-    log.info("Actor 變身成功: {} (InGameBehavior)", this.name);
+    this.displayName = this.nickname; // 更新顯示名稱
+
+    // 將玩家放入房間
+    RoomActor room = manager.getRoomActor(this.getCurrentRoomId());
+    room.addPlayer(this);
+
+    log.info("Actor 載入玩家資料 當前狀態: {} {}", this.name, this.nickname);
   }
 
   public void replaceSession(WebSocketSession newSession) {

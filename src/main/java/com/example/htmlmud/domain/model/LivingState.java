@@ -48,15 +48,12 @@ public class LivingState {
   private int potential; // 潛力 (影響 學習特定高級武功的限制)
 
 
-  // 衍生屬性 (通常不存 DB，由基礎屬性計算，但為了簡單先存這裡)
-  public int attackPower; // 攻擊力
-  public int defense; // 防禦力
-  public int attackSpeed; // 攻擊速度 (毫秒，例如 2000 代表 2秒打一次)
-  public int weightCapacity;
-
   // === 戰鬥狀態 ===
   @JsonIgnore
   public transient boolean isInCombat = false;
+  // 當前鎖定的攻擊目標 ID (null 代表沒在打架)
+  @JsonIgnore
+  public transient String combatTargetId;
 
   @JsonIgnore
   public transient long nextAttackTime = 0; // 下一次可以攻擊的時間點 (System.currentTimeMillis)
@@ -65,10 +62,25 @@ public class LivingState {
   @JsonIgnore
   public transient boolean isDead = false;
 
+  // === 裝備欄位 ===
+  public Map<EquipmentSlot, GameItem> equipment = new HashMap<>();
+
+  // 衍生屬性 (快取用，每次穿脫裝備後重新計算 通常不存 DB，由基礎屬性計算，但為了簡單先存這裡)
+  public int damage = 10; // 攻擊力
+  public int defense = 10; // 防禦力
+  public int attackSpeed = 2000; // 攻擊速度 (毫秒，例如 2000 代表 2秒打一次)
+  public int weightCapacity;
+
   // 建構子與輔助方法...
   @JsonIgnore
   public boolean isDead() {
     return hp <= 0;
+  }
+
+  // 判斷是否在戰鬥中
+  @JsonIgnore
+  public boolean isInCombat() {
+    return isInCombat && combatTargetId != null;
   }
 
   public LivingState deepCopy() {
@@ -85,7 +97,7 @@ public class LivingState {
     copy.str = this.str;
     copy.dex = this.dex;
     copy.con = this.con;
-    copy.attackPower = this.attackPower;
+    copy.damage = this.damage;
     copy.defense = this.defense;
     copy.attackSpeed = this.attackSpeed;
     // copy.isDead = this.isDead;

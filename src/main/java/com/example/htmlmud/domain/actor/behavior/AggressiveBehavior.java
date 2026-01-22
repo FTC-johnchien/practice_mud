@@ -1,5 +1,6 @@
 package com.example.htmlmud.domain.actor.behavior;
 
+import com.example.htmlmud.domain.actor.LivingActor;
 import com.example.htmlmud.domain.actor.impl.MobActor;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import lombok.RequiredArgsConstructor;
@@ -20,5 +21,11 @@ public class AggressiveBehavior implements MobBehavior {
   public void onInteract(MobActor self, PlayerActor player, String command) {
     self.sayToRoom("吼！！！(它看起來不想跟你說話)");
     self.attack(player);
+  }
+
+  @Override
+  public void onDamaged(MobActor self, LivingActor attacker) {
+    self.sayToRoom("吼吼吼！！！(它看起來想殺死你)");
+    self.attack(attacker);
   }
 }

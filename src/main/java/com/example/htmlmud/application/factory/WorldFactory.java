@@ -3,6 +3,7 @@ package com.example.htmlmud.application.factory;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.MobActor;
@@ -22,10 +23,12 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WorldFactory {
 
+  private final ObjectProvider<GameServices> servicesProvider;
+
   // private final GameServices gameServices;
 
   // private final WorldManager worldManager;
-  private final ScheduledExecutorService scheduler;
+  // private final ScheduledExecutorService scheduler;
 
   private final TemplateRepository templateRepo;
 
@@ -63,7 +66,7 @@ public class WorldFactory {
 
     // 2. new Actor (State 自動生成)
     // MobActor mob = new MobActor(tpl);
-    MobActor mob = new MobActor(tpl, scheduler);
+    MobActor mob = new MobActor(tpl, servicesProvider.getObject());
 
     // 3. 這裡可以處理「菁英怪」或「隨機稱號」邏輯
     // if (Math.random() < 0.1) mob.setPrefix("狂暴的");
@@ -86,15 +89,15 @@ public class WorldFactory {
 
     GameItem item = new GameItem();
     item.setId(UUID.randomUUID().toString()); // 生成唯一 ID
-    item.setTemplateId(tpl.id());
-    item.setCurrentDurability(tpl.maxDurability());
+    item.setTemplate(tpl);
+    // item.setCurrentDurability(tpl.maxDurability());
     item.setAmount(1);
 
     // --- 處理隨機屬性 (RNG) ---
     // 這是 Factory 最有價值的地方，不要讓 Manager 變髒
-    if (tpl.chance() < 1.0) {
-      // 處理掉落率邏輯...
-    }
+    // if (tpl.chance() < 1.0) {
+    // 處理掉落率/開箱率邏輯...
+    // }
 
     // 範例：10% 機率出現稀有屬性
     if (ThreadLocalRandom.current().nextDouble() < 0.1) {

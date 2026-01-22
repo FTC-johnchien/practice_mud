@@ -10,7 +10,9 @@ import com.example.htmlmud.domain.actor.impl.MobActor;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @CommandAlias("k")
 @RequiredArgsConstructor
@@ -48,7 +50,11 @@ public class KillCommand implements PlayerCommand {
     }
 
     // 3. 執行戰鬥邏輯
-    actor.reply("你開始攻擊 " + target.getTemplate().name() + "！");
-    target.onAttacked(actor, 10);
+    actor.getState().combatTargetId = target.getId();
+    actor.getState().isInCombat = true;
+    log.info("name:{} {}", actor.getName(), actor.getNickname());
+    actor.reply("你對 " + target.getTemplate().name() + " 大喊受死吧 一邊擺出了戰鬥架式！");
+    // actor.reply("你開始攻擊 " + target.getTemplate().name() + "！");
+    target.onAttacked(actor, 0);
   }
 }

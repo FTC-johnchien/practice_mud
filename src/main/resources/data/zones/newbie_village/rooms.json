@@ -118,6 +118,18 @@
     "description": "四周陰暗雜草叢生，空氣中瀰漫著危險的氣息。",
     "exits": {
       "south": "front_of_village_elder_house"
-    }
+    },
+    "population": [
+      {
+        "id": "wild_rat",
+        "count": 1,
+        "respawnChance": 0.3
+      },
+      {
+        "id": "sewer_rat",
+        "count": 2,
+        "respawnChance": 1
+      }
+    ]
   }
 ]

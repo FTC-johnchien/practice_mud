@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import com.example.htmlmud.application.factory.WorldFactory;
-import com.example.htmlmud.application.service.WorldManager;
+import com.example.htmlmud.domain.actor.LivingActor;
 import com.example.htmlmud.domain.actor.core.VirtualActor; // 引用您的基礎類別
 import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.RoomStateRecord;
@@ -30,19 +30,19 @@ public class RoomActor extends VirtualActor<RoomMessage> {
   @Getter
   private final ZoneTemplate zoneTemplate;
 
-  private final Set<SpawnRule> mobSpawnRules;
+  private final List<SpawnRule> mobSpawnRules;
 
-  private final Set<SpawnRule> itemSpawnRules;
+  private final List<SpawnRule> itemSpawnRules;
 
   private final WorldFactory worldFactory;
 
 
   // 房間內的玩家 (Runtime State)
   @Getter
-  private final Set<PlayerActor> players = ConcurrentHashMap.newKeySet();
+  private final List<PlayerActor> players = new ArrayList<>();
 
   @Getter
-  private final Set<MobActor> mobs = ConcurrentHashMap.newKeySet();
+  private final List<MobActor> mobs = new ArrayList<>();
 
   @Getter
   private final Set<GameItem> items = ConcurrentHashMap.newKeySet(); // 地上的物品
@@ -75,7 +75,9 @@ public class RoomActor extends VirtualActor<RoomMessage> {
       case RoomMessage.PlayerEnter(var player, var future) -> {
         log.info("Player {} entered room", player.getId());
         player.markEnterRoom();
-        players.add(player);
+        if (!players.contains(player)) {
+          players.add(player);
+        }
         broadcastToOthers(player.getId(), "看到 " + player.getNickname() + " 走了進來。");
         log.debug("Player {} entered room {}", player.getNickname(), template.id());
         if (future != null)
@@ -145,7 +147,7 @@ public class RoomActor extends VirtualActor<RoomMessage> {
 
   // --- 輔助方法 (保持不變) ---
 
-  private void broadcast(String message) {
+  public void broadcast(String message) {
     players.forEach(p -> p.sendText(message));
   }
 
@@ -161,14 +163,14 @@ public class RoomActor extends VirtualActor<RoomMessage> {
     return new RoomStateRecord(roomId, zoneId, new ArrayList<>(items));
   }
 
-  // public void addPlayer(PlayerActor player) {
-  // player.markEnterRoom();
-  // players.add(player);
-  // }
+  public void addPlayer(PlayerActor player) {
+    player.markEnterRoom();
+    players.add(player);
+  }
 
-  // public void removePlayer(PlayerActor player) {
-  // players.remove(player);
-  // }
+  public void removePlayer(PlayerActor player) {
+    players.remove(player);
+  }
 
   public List<PlayerActor> getPlayersSnapshot() {
     List<PlayerActor> players = new ArrayList<>(this.players);
@@ -187,7 +189,7 @@ public class RoomActor extends VirtualActor<RoomMessage> {
 
     // 2. 驅動房間內的 Players (如果需要自動回血/DoT)
     for (PlayerActor player : players) {
-      // player.tick();
+      player.tick();
     }
 
     // 3. 處理房間本身的邏輯 (例如生怪)
@@ -220,7 +222,16 @@ public class RoomActor extends VirtualActor<RoomMessage> {
   public void addMob(MobActor mob) {
     // 標記時間
     mob.markEnterRoom();
-    mobs.add(mob);
+    if (!mobs.contains(mob)) {
+      mobs.add(mob);
+    }
+  }
+
+  /**
+   * 尋找怪物
+   */
+  public MobActor findMob(String mobId) {
+    return mobs.stream().filter(m -> m.getId().equals(mobId)).findFirst().orElse(null);
   }
 
   /**
@@ -252,7 +263,7 @@ public class RoomActor extends VirtualActor<RoomMessage> {
   /**
    * 房間初次載入時的生怪邏輯
    */
-  private void spawnInitial(String type, Set<SpawnRule> rules) {
+  private void spawnInitial(String type, List<SpawnRule> rules) {
     if (rules == null)
       return;
 
@@ -297,4 +308,21 @@ public class RoomActor extends VirtualActor<RoomMessage> {
 
   }
 
+  public LivingActor findActor(String actorId) {
+
+    // 先檢查mob
+    for (MobActor mob : mobs) {
+      if (mob.getId().equals(actorId)) {
+        return mob;
+      }
+    }
+
+    for (PlayerActor player : players) {
+      if (player.getId().equals(actorId)) {
+        return player;
+      }
+    }
+
+    return null;
+  }
 }

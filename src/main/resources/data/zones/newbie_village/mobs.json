@@ -6,7 +6,11 @@
     "kind": "FRIENDLY",
     "level": 10,
     "maxHp": 500,
+    "attackVerb": "揮拳",
+    "attackNoun": "鐵拳",
+    "baseDamage": 50,
     "damage": 50,
+    "attackSpeed": 2000,
     "roomDescription": "一位穿著制服的警衛正警惕地看著四周。",
     "lookDescription": "他看起來受過嚴格訓練，身上的盔甲擦得發亮。",
     "equipment": {
@@ -24,9 +28,30 @@
     "kind": "AGGRESSIVE",
     "level": 2,
     "maxHp": 30,
-    "damage": 4,
+    "attackVerb": "狠狠地咬了",
+    "attackNoun": "發黃的門牙",
+    "baseDamage": 4,
+    "attackSpeed": 2500,
     "roomDescription": "一隻巨大的野鼠在陰影中磨牙。",
     "lookDescription": "它的眼睛發紅，似乎感染了某種疾病。",
+    "loot": [
+      { "itemId": "newbie_village:village_bread", "chance": 0.1 },
+      { "itemId": "global:gold_coin", "chance": 0.5, "amount": 2 }
+    ]
+  },
+  {
+    "id": "sewer_rat",
+    "name": "下水道老鼠",
+    "aliases": ["rat", "vermin"],
+    "kind": "AGGRESSIVE",
+    "level": 1,
+    "maxHp": 30,
+    "attackVerb": "狠狠地咬了",
+    "attackNoun": "發黃的門牙",
+    "baseDamage": 3,
+    "attackSpeed": 2500,
+    "roomDescription": "一隻巨大的野鼠在陰影中磨牙。",
+    "lookDescription": "它的眼睛在陰影中發亮，似乎一直在盯著你。",
     "loot": [
       { "itemId": "newbie_village:village_bread", "chance": 0.1 },
       { "itemId": "global:gold_coin", "chance": 0.5, "amount": 2 }

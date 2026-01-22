@@ -2,11 +2,12 @@
   {
     "id": "rusty_sword",
     "name": "生鏽的鐵劍",
-    "type": "WEAPON",
-    "slot": "MAIN_HAND",
     "keywords": ["sword", "rusty", "weapon"],
     "description": "一把缺口的鐵劍，看起來隨時會斷掉。",
+    "type": "EQUIPMENT",
     "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "揮砍",
       "damage": 5,
       "attackSpeed": 1.2
     },
@@ -14,15 +15,38 @@
     "quality": "COMMON"
   },
   {
+    "id": "standard_spear",
+    "name": "制式長槍",
+    "keywords": ["sword", "rusty", "weapon"],
+    "description": "一把標準的長槍，看起來保養的很好。",
+    "type": "EQUIPMENT",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "刺",
+      "damage": 10,
+      "attackSpeed": 1.2
+    },
+    "value": 20,
+    "quality": "COMMON"
+  },
+  {
     "id": "village_bread",
     "name": "村莊烤麵包",
-    "type": "CONSUMABLE",
     "keywords": ["bread", "food"],
     "description": "剛出爐的麵包，聞起來很香。",
+    "type": "CONSUMABLE",
     "behavior": {
       "effect": "HEAL",
       "value": 20
     },
     "value": 2
+  },
+  {
+    "id": "village_elder_house_key",
+    "name": "村長小屋的鑰匙",
+    "type": "KEYITEM",
+    "keywords": ["key"],
+    "description": "看起來很有年代感的鑰匙。",
+    "value": 0
   }
 ]

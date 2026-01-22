@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePatternResolver;
@@ -157,45 +158,35 @@ public class WorldManager {
       }
 
       // 使用 TypeReference 來正確讀取 JSON 陣列為 Set<RoomTemplate>
-      Set<RoomTemplate> rooms = objectMapper.readValue(resource.getInputStream(),
-          new TypeReference<Set<RoomTemplate>>() {});
+      List<RoomTemplate> rooms = objectMapper.readValue(resource.getInputStream(),
+          new TypeReference<List<RoomTemplate>>() {});
 
       for (RoomTemplate room : rooms) {
         log.info("{}", objectMapper.writeValueAsString(room));
 
-        // 更新房間里的mobSpawnRules
-        if (room.mobSpawnRules() != null) {
-          for (SpawnRule rule : room.mobSpawnRules()) {
-            String newRuleId = zoneId + ":" + rule.id();
-            SpawnRule newRule = rule.toBuilder().id(newRuleId).build();
-            room.mobSpawnRules().add(newRule);
-            room.mobSpawnRules().remove(rule);
-          }
-        }
+        // 1. 處理 Mob Spawn Rules (使用 Stream 避免 ConcurrentModificationException)
+        List<SpawnRule> updatedMobRules = room.mobSpawnRules() == null ? null
+            : room.mobSpawnRules().stream()
+                .map(rule -> rule.toBuilder().id(IdUtils.resolveId(zoneId, rule.id())).build())
+                .toList();
 
-        // 更新房間里的itemSpawnRules
-        if (room.itemSpawnRules() != null) {
-          for (SpawnRule rule : room.itemSpawnRules()) {
-            String newRuleId = zoneId + ":" + rule.id();
-            SpawnRule newRule = rule.toBuilder().id(newRuleId).build();
-            room.itemSpawnRules().add(newRule);
-            room.itemSpawnRules().remove(rule);
-          }
-        }
+        // 2. 處理 Item Spawn Rules
+        List<SpawnRule> updatedItemRules = room.itemSpawnRules() == null ? null
+            : room.itemSpawnRules().stream()
+                .map(rule -> rule.toBuilder().id(IdUtils.resolveId(zoneId, rule.id())).build())
+                .toList();
 
-        // 更新exits里的targetRoomId
-        if (room.exits() != null) {
-          for (Map.Entry<String, RoomExit> entry : room.exits().entrySet()) {
-            RoomExit roomExit = entry.getValue();
-            String newTargetRoomId = IdUtils.resolveId(zoneId, roomExit.targetRoomId());
-            RoomExit newRoomExit = roomExit.toBuilder().targetRoomId(newTargetRoomId).build();
-            entry.setValue(newRoomExit);
-          }
-        }
+        // 3. 處理 Exits
+        Map<String, RoomExit> updatedExits = room.exits() == null ? null
+            : room.exits().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toBuilder()
+                    .targetRoomId(IdUtils.resolveId(zoneId, e.getValue().targetRoomId())).build()));
 
         // 更新 room.id
         String newRoomId = zoneId + ":" + room.id();
-        RoomTemplate newRoom = room.toBuilder().id(newRoomId).zoneId(zoneId).build();
+        RoomTemplate newRoom = room.toBuilder().id(newRoomId).zoneId(zoneId).exits(updatedExits)
+            .mobSpawnRules(updatedMobRules).itemSpawnRules(updatedItemRules).build();
+
         templateRepo.registerRoom(newRoom);
 
         // init roomActor

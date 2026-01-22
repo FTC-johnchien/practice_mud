@@ -5,6 +5,7 @@ import java.util.Map;
 import com.example.htmlmud.domain.model.map.ItemTemplate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Data // Lombok
@@ -16,16 +17,15 @@ public class GameItem {
   // 每個物品都有獨立 ID，方便追蹤 (例如防止複製 Bug)
   private String id;
 
-  // 2. 指向樣板的指標 (只存 ID)
-  private String templateId;
+  @Getter
+  private ItemTemplate template;
 
+  // 動態數據 (會變的)
   private int level;
-
-  // 3. 動態數據 (會變的)
   private int currentDurability; // 耐久性
   private int amount; // 堆疊數量 (如果是藥水/錢幣)
 
-  // 4. 隨機數值/詞綴 (Affixes)
+  // 隨機數值/詞綴 (Affixes)
   // 例如：{ "attack_bonus": 5, "crafter": "玩家A" }
   private Map<String, Object> dynamicProps = new HashMap<>();
 

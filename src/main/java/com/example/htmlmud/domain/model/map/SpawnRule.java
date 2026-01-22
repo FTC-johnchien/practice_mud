@@ -1,6 +1,5 @@
 package com.example.htmlmud.domain.model.map;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 
 // Mob/Item 重生設定 (Mob/Item Reset)

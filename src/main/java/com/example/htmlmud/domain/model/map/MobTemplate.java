@@ -19,8 +19,6 @@ public record MobTemplate(
 
     int maxHp,
 
-    int damage,
-
     String roomDescription,
 
     String lookDescription,
@@ -33,5 +31,18 @@ public record MobTemplate(
 
     Set<String> dialogues, // 預設對話庫
     // 掉落表 ID, 商店列表 ID...
-    Integer shopId) {
+    Integer shopId,
+
+    // === 天生攻擊定義 (Natural Attack) ===
+    // 如果手上沒武器，就用這個設定
+    String attackVerb, // 攻擊動詞: "咬", "抓", "揮拳"
+    String attackNoun, // 攻擊部位: "尖銳的牙齒", "利爪", "拳頭"
+    int baseDamage, // 天生基礎傷害
+    int attackSpeed, // 天生攻速
+
+    Equipment equipment // 装備
+
+
+
+) {
 }

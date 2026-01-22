@@ -13,16 +13,18 @@ import com.example.htmlmud.domain.actor.behavior.MerchantBehavior;
 import com.example.htmlmud.domain.actor.behavior.MobBehavior;
 import com.example.htmlmud.domain.actor.behavior.PassiveBehavior;
 import com.example.htmlmud.domain.context.GameServices;
+import com.example.htmlmud.domain.model.EquipmentSlot;
+import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.LivingState;
+import com.example.htmlmud.domain.model.map.Equipment;
 import com.example.htmlmud.domain.model.map.MobTemplate;
+import com.example.htmlmud.domain.model.vo.DamageSource;
 import com.example.htmlmud.protocol.ActorMessage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MobActor extends LivingActor {
-
-  private final ScheduledExecutorService scheduler;
 
   // 仇恨列表 (Key: 攻擊者 ID字串, Value: 仇恨值)
   // 因為 ID 已改為 UUID String，這裡的 Key 也同步調整為 String
@@ -37,12 +39,11 @@ public class MobActor extends LivingActor {
   /**
    * 建構子： 1. 接收 Template 與 Services 2. 自動生成 UUID 3. 自動從 Template 建立 LivingState
    */
-  public MobActor(MobTemplate template, ScheduledExecutorService scheduler) {
+  public MobActor(MobTemplate template, GameServices services) {
     // 【修正 1】直接使用 UUID 作為 ID，不再依賴 GameObjectId.mob()
     // 【修正 2】呼叫 helper method 建立初始 State，確保血量與 Template 一致
-    super(UUID.randomUUID().toString(), createInitialState(template));
+    super(UUID.randomUUID().toString(), template.name(), createInitialState(template), services);
     this.template = template;
-    this.scheduler = scheduler;
 
     // 初始化行為
     initBehavior();
@@ -105,7 +106,7 @@ public class MobActor extends LivingActor {
       return;
 
     // Scheduler (Platform Thread) 負責定時觸發
-    this.aiTask = scheduler.scheduleAtFixedRate(() -> {
+    this.aiTask = services.scheduler().scheduleAtFixedRate(() -> {
       // Virtual Thread 負責執行邏輯
       Thread.ofVirtual().name("mob-tick-" + this.getId()).start(() -> {
         try {
@@ -135,6 +136,7 @@ public class MobActor extends LivingActor {
     long now = System.currentTimeMillis();
 
     // 1. 戰鬥邏輯
+    // log.info("this.state.isInCombat: {}", this.state.isInCombat);
     if (this.state.isInCombat) {
       processCombatRound(now);
     } else {
@@ -156,6 +158,15 @@ public class MobActor extends LivingActor {
 
   @Override
   public void onAttacked(LivingActor attacker, int damage) {
+
+    // 檢查是否正在戰鬥
+    if (!this.state.isInCombat) {
+      this.state.isInCombat = true;
+    }
+
+    // TODO 檢查仇恨表，選最高的當對手
+    this.state.combatTargetId = attacker.getId();
+
     // 無敵判定
     if (template.isInvincible()) {
       if (attacker instanceof PlayerActor p) {
@@ -165,6 +176,8 @@ public class MobActor extends LivingActor {
     }
 
     // 1. 扣血 (呼叫父類別)
+    log.info("damage: {}", damage);
+    log.info("this.state.hp: {}", this.state.hp);
     super.onAttacked(attacker, damage);
 
     // 2. 增加仇恨值 (使用 String ID)
@@ -206,16 +219,20 @@ public class MobActor extends LivingActor {
 
   private void processCombatRound(long now) {
     // 檢查攻擊冷卻
+    log.info("this.state.nextAttackTime: {}", this.state.nextAttackTime);
     if (now < this.state.nextAttackTime) {
       return;
     }
 
     // 取得當前最高仇恨目標
+    log.info("getHighestAggroTarget: {}", getHighestAggroTarget());
     String targetId = getHighestAggroTarget();
     if (targetId == null) {
       this.state.isInCombat = false; // 沒目標，脫離戰鬥
       return;
     }
+
+    processAutoAttack(now);
 
     // 從房間取得目標 Actor (這裡需要 WorldManager 協助，或 RoomActor 傳遞)
     // 假設這段邏輯在 RoomActor 處理會更好，但若在 Mob 處理：
@@ -227,5 +244,24 @@ public class MobActor extends LivingActor {
 
     // 重設冷卻時間
     this.state.nextAttackTime = now + this.state.attackSpeed;
+  }
+
+  // 取得當前的攻擊方式
+  public DamageSource getCurrentAttackSource() {
+    // 1. 先檢查主手有沒有武器 (針對 Guard)
+    GameItem weapon = state.equipment.get(EquipmentSlot.MAIN_HAND); // 假設您有實作裝備系統
+
+    if (weapon != null) {
+      // 有武器：回傳武器資訊
+      // 這裡假設 weapon 有對應欄位，或從 Template 查
+      return new DamageSource(weapon.getTemplate().name(),
+          weapon.getTemplate().equipmentProp().attackVer(),
+          weapon.getTemplate().equipmentProp().damage(),
+          weapon.getTemplate().equipmentProp().attackSpeed());
+    }
+
+    // 2. 沒武器：回傳天生武器 (針對 Rat 或 空手的人)
+    return new DamageSource(template.attackNoun(), template.attackVerb(), template.baseDamage(),
+        template.attackSpeed());
   }
 }
