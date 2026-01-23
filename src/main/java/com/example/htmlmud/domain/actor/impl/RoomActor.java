@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import com.example.htmlmud.application.factory.WorldFactory;
 import com.example.htmlmud.domain.actor.LivingActor;
@@ -86,7 +87,7 @@ public class RoomActor extends VirtualActor<RoomMessage> {
           players.add(player);
         }
         broadcastToOthers(player.getId(), "看到 " + player.getNickname() + " 走了進來。");
-        log.debug("Player {} entered room {}", player.getNickname(), template.id());
+        log.info("Player {} entered room {}", player.getNickname(), template.id());
         if (future != null)
           future.complete(null);
       }
@@ -146,7 +147,7 @@ public class RoomActor extends VirtualActor<RoomMessage> {
 
   // 處理邏輯
   private void handleTick(long tickCount, long timestamp) {
-    log.info("{} tickCount: {}", id, tickCount);
+    // log.info("{} tickCount: {}", id, tickCount);
 
     // === 1. World/Zone 層級邏輯 (例如：每 60 秒檢查一次重生) ===
     if (tickCount % zoneTemplate.respawnRate() == 0) {
@@ -163,7 +164,7 @@ public class RoomActor extends VirtualActor<RoomMessage> {
       }
 
       for (PlayerActor player : players) {
-        log.info("send player");
+        // log.info("send player");
         player.send(msg);
       }
     }
@@ -186,7 +187,7 @@ public class RoomActor extends VirtualActor<RoomMessage> {
   }
 
   private void broadcastToOthers(String sourceId, String message) {
-    players.stream().filter(p -> !p.getId().equals(sourceId)).forEach(p -> p.sendText(message));
+    players.stream().filter(p -> !p.getId().equals(sourceId)).forEach(p -> p.reply(message));
   }
 
   // 產生快照 (只存變動的部分)
@@ -210,26 +211,6 @@ public class RoomActor extends VirtualActor<RoomMessage> {
     List<PlayerActor> players = new ArrayList<>(this.players);
     players.sort(Comparator.comparing(PlayerActor::getNickname));
     return players;
-  }
-
-  /**
-   * 房間的週期性邏輯更新
-   */
-  public void tick() {
-    // 1. 驅動房間內的 Mobs
-    for (MobActor mob : mobs) {
-      mob.tick();
-    }
-
-    // 2. 驅動房間內的 Players (如果需要自動回血/DoT)
-    for (PlayerActor player : players) {
-      player.tick();
-    }
-
-    // 3. 處理房間本身的邏輯 (例如生怪)
-    checkSpawnRule();
-
-    // 未來可以在這裡處理：怪物重生計時、物品腐爛、環境效果等
   }
 
   public void dropItem(GameItem item) {
@@ -364,5 +345,30 @@ public class RoomActor extends VirtualActor<RoomMessage> {
     }
 
     return null;
+  }
+
+  // 公開給外部呼叫的方法 -------------------------------------------------------------------------
+  public void enter(PlayerActor player, CompletableFuture<Void> future) {
+    this.send(new RoomMessage.PlayerEnter(player, future));
+  }
+
+  public void leave(String playerId) {
+    this.send(new RoomMessage.PlayerLeave(playerId));
+  }
+
+  public void look(String playerId, CompletableFuture<String> future) {
+    this.send(new RoomMessage.Look(playerId, future));
+  }
+
+  public void say(String sourceId, String content) {
+    this.send(new RoomMessage.Say(sourceId, content));
+  }
+
+  public void tick(long tickCount, long timestamp) {
+    this.send(new RoomMessage.Tick(tickCount, timestamp));
+  }
+
+  public void tryPickItem(String itemId, PlayerActor picker) {
+    this.send(new RoomMessage.TryPickItem(itemId, picker));
   }
 }

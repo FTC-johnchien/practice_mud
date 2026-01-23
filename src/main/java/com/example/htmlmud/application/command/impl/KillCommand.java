@@ -42,13 +42,13 @@ public class KillCommand implements PlayerCommand {
 
     // 2. 交給 Selector 處理複雜字串
     // args 可能是 "red goblin", "elite soldier 2"
+    // TODO pvp的處理
     MobActor target = targetSelector.selectMob(mobsInRoom, args);
-    log.info("name:{} defense: {}", target.getTemplate().name(), target.getState().defense);
-
     if (target == null) {
       actor.reply("這裡沒有看到 '" + args + "'。");
       return;
     }
+    log.info("name:{} defense: {}", target.getTemplate().name(), target.getState().defense);
 
     // 3. 執行戰鬥邏輯
     actor.getState().combatTargetId = target.getId();
@@ -56,6 +56,6 @@ public class KillCommand implements PlayerCommand {
     log.info("name:{} {}", actor.getName(), actor.getNickname());
     actor.reply("你對 " + target.getTemplate().name() + " 大喊受死吧 一邊擺出了戰鬥架式！");
     // actor.reply("你開始攻擊 " + target.getTemplate().name() + "！");
-    target.onAttacked(actor, 0);
+    target.attacked(actor);
   }
 }

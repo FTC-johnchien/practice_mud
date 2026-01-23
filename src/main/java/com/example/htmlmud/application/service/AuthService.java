@@ -60,7 +60,7 @@ public class AuthService {
     CharacterEntity characterEntity = new CharacterEntity();
     characterEntity.setUid(newUser.getId());
     characterEntity.setName(username);
-    // characterEntity.setNickname(username);
+    characterEntity.setNickname(username); // TODO 待處理
     characterEntity.setCurrentRoomId(null);
     characterEntity.setState(new LivingState());
     characterEntity.setCreatedAt(now);

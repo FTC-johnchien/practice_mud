@@ -355,7 +355,7 @@ public class WorldManager {
         continue;
       }
       // 直接發送文字
-      actor.sendText(message);
+      actor.reply(message);
     }
   }
 

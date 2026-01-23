@@ -3,11 +3,13 @@ package com.example.htmlmud.domain.actor.behavior;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import org.slf4j.MDC;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.application.service.AuthService;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
+import com.example.htmlmud.domain.actor.impl.RoomActor;
 import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.context.MudKeys;
 import com.example.htmlmud.domain.model.PlayerRecord;
@@ -39,12 +41,15 @@ public class GuestBehavior implements PlayerBehavior {
   @Override
   public PlayerBehavior handle(PlayerActor actor, GameCommand cmd) {
     // 目前只處理文字輸入 (Input)
+    PlayerBehavior next = null;
     if (cmd instanceof GameCommand.Input(var text)) {
       switch (actor.getConnectionState()) {
         case CONNECTED -> doConnected(actor, text);
         case CREATING_USERNAME -> doCreatingUsername(actor, text);
         case CREATING_PASSWORD -> doCreatingPassword(actor, text);
-        case ENTERING_PASSWORD -> doEnterPassword(actor, text);
+        case ENTERING_PASSWORD -> {
+          next = doEnterPassword(actor, text);
+        }
         case ENTERING_CHAR_NAME -> doEnteringCharName(actor, text);
         case ENTERING_CHAR_GENDER -> {
         }
@@ -59,7 +64,7 @@ public class GuestBehavior implements PlayerBehavior {
       }
     }
 
-    return null;
+    return next;
   }
 
   private void doConnected(PlayerActor actor, String input) {
@@ -106,7 +111,7 @@ public class GuestBehavior implements PlayerBehavior {
 
       if (retryCount >= MAX_AUTH_RETRIES) {
         log.warn("連線 {} 註冊帳號失敗次數過多 ({})，強制中斷。最後輸入: {}", session.getId(), retryCount, input);
-        actor.sendText("嘗試次數過多，連線即將關閉。");
+        actor.reply("嘗試次數過多，連線即將關閉。");
         try {
           session.close();
         } catch (IOException ignored) {
@@ -117,7 +122,7 @@ public class GuestBehavior implements PlayerBehavior {
 
       log.info("連線 {} 註冊帳號失敗: {} (剩餘次數: {})", session.getId(), errorReason,
           MAX_AUTH_RETRIES - retryCount);
-      actor.sendText(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+      actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
       return;
     }
 
@@ -158,7 +163,7 @@ public class GuestBehavior implements PlayerBehavior {
 
       if (retryCount >= MAX_AUTH_RETRIES) {
         log.warn("連線 {} 註冊密碼失敗次數過多 ({})，強制中斷。最後輸入: {}", session.getId(), retryCount, input);
-        actor.sendText("嘗試次數過多，連線即將關閉。");
+        actor.reply("嘗試次數過多，連線即將關閉。");
         try {
           session.close();
         } catch (IOException ignored) {
@@ -169,7 +174,7 @@ public class GuestBehavior implements PlayerBehavior {
 
       log.info("連線 {} 註冊密碼失敗: {} (剩餘次數: {})", session.getId(), errorReason,
           MAX_AUTH_RETRIES - retryCount);
-      actor.sendText(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+      actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
       return;
     }
 
@@ -189,7 +194,7 @@ public class GuestBehavior implements PlayerBehavior {
     // String msg = "請輸入密碼:";
     String msg = "【註冊流程】\r\n註冊完成，請重新登入。";
     // 告訴前端：切換輸入模式為密碼 (透過自定義協議，例如 JSON {type: "PWD_MODE"})
-    actor.sendText(msg);
+    actor.reply(msg);
 
     actor.setConnectionState(ConnectionState.CONNECTED);
   }
@@ -216,7 +221,7 @@ public class GuestBehavior implements PlayerBehavior {
 
       if (retryCount >= MAX_AUTH_RETRIES) {
         log.warn("連線 {} 登入帳號失敗次數過多 ({})，強制中斷。最後輸入: {}", session.getId(), retryCount, input);
-        actor.sendText("嘗試次數過多，連線即將關閉。");
+        actor.reply("嘗試次數過多，連線即將關閉。");
         try {
           session.close();
         } catch (IOException ignored) {
@@ -227,7 +232,7 @@ public class GuestBehavior implements PlayerBehavior {
 
       log.info("連線 {} 登入帳號失敗: {} (剩餘次數: {})", session.getId(), errorReason,
           MAX_AUTH_RETRIES - retryCount);
-      actor.sendText(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+      actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
       return;
     }
 
@@ -250,7 +255,7 @@ public class GuestBehavior implements PlayerBehavior {
     }
   }
 
-  private void doEnterPassword(PlayerActor actor, String input) {
+  private PlayerBehavior doEnterPassword(PlayerActor actor, String input) {
     log.info("doEnterPassword");
 
     WebSocketSession session = actor.getSession();
@@ -267,19 +272,19 @@ public class GuestBehavior implements PlayerBehavior {
 
       if (retryCount >= MAX_AUTH_RETRIES) {
         log.warn("連線 {} 登入密碼失敗次數過多 ({})，強制中斷。最後輸入: {}", session.getId(), retryCount, input);
-        actor.sendText("嘗試次數過多，連線即將關閉。");
+        actor.reply("嘗試次數過多，連線即將關閉。");
         try {
           session.close();
         } catch (IOException ignored) {
         }
 
-        return;
+        return null;
       }
 
       log.info("連線 {} 登入密碼失敗: {} (剩餘次數: {})", session.getId(), errorReason,
           MAX_AUTH_RETRIES - retryCount);
-      actor.sendText(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
-      return;
+      actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+      return null;
     }
 
     // 驗證成功，移除計數
@@ -292,9 +297,8 @@ public class GuestBehavior implements PlayerBehavior {
     // 登入玩家帳密
     PlayerRecord record = authService.login(tempUsername, tempPassword);
 
-    // 轉變為正式玩家身份
-    actor.upgradeIdentity(record);
-    actor.setConnectionState(ConnectionState.IN_GAME);
+    // 變更為正式玩家身份
+    return upgradeIdentity(actor, record);
   }
 
   private void doEnteringCharName(PlayerActor actor, String input) {
@@ -314,6 +318,24 @@ public class GuestBehavior implements PlayerBehavior {
     } catch (IOException e) {
       log.error("doRegister {}", e.getMessage(), e);
     }
+  }
+
+
+  // 供 GuestBehavior 呼叫：由GUEST變更為正式玩家
+  private PlayerBehavior upgradeIdentity(PlayerActor actor, PlayerRecord record) {
+
+    // 資料載入
+    actor.fromRecord(this, record);
+    actor.setConnectionState(ConnectionState.IN_GAME);
+
+    // 裝備?
+
+    // 讓玩家進入資料紀錄的房間
+    RoomActor room = actor.getManager().getRoomActor(actor.getCurrentRoomId());
+    room.enter(actor, new CompletableFuture<Void>());
+
+    log.info("Actor 載入玩家資料 當前狀態: {} {}", actor.getName(), actor.getNickname());
+    return new InGameBehavior();
   }
 
 }

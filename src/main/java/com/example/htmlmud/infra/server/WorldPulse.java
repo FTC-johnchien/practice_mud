@@ -20,7 +20,7 @@ public class WorldPulse {
 
   // 設定基礎頻率為 1000ms (1秒)
   // 這是 "戰鬥心跳" 的速度，也是最小單位
-  @Scheduled(fixedRate = 3000)
+  @Scheduled(fixedRate = 1000)
   public void pulse() {
     long currentTick = globalTickCounter.incrementAndGet();
     long now = System.currentTimeMillis();

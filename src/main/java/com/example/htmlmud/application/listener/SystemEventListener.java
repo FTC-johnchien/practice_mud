@@ -66,14 +66,14 @@ public class SystemEventListener {
       if (retryCount >= MAX_AUTH_RETRIES) {
         log.warn("連線 {} 註冊帳號失敗次數過多 ({})，強制中斷。最後輸入: {}", event.sessionId(), retryCount,
             event.input());
-        actor.sendText("嘗試次數過多，連線即將關閉。");
+        actor.reply("嘗試次數過多，連線即將關閉。");
         session.close();
         return;
       }
 
       log.info("連線 {} 註冊帳號失敗: {} (剩餘次數: {})", event.sessionId(), errorReason,
           MAX_AUTH_RETRIES - retryCount);
-      actor.sendText(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+      actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
       return;
     }
 
@@ -114,14 +114,14 @@ public class SystemEventListener {
       if (retryCount >= MAX_AUTH_RETRIES) {
         log.warn("連線 {} 註冊密碼失敗次數過多 ({})，強制中斷。最後輸入: {}", event.sessionId(), retryCount,
             event.input());
-        actor.sendText("嘗試次數過多，連線即將關閉。");
+        actor.reply("嘗試次數過多，連線即將關閉。");
         session.close();
         return;
       }
 
       log.info("連線 {} 註冊密碼失敗: {} (剩餘次數: {})", event.sessionId(), errorReason,
           MAX_AUTH_RETRIES - retryCount);
-      actor.sendText(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+      actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
       return;
     }
 
@@ -137,7 +137,7 @@ public class SystemEventListener {
     // String msg = "請輸入密碼:";
     String msg = "【註冊流程】\r\n註冊完成，請重新登入。";
     // 告訴前端：切換輸入模式為密碼 (透過自定義協議，例如 JSON {type: "PWD_MODE"})
-    actor.sendText(msg);
+    actor.reply(msg);
 
     actor.setConnectionState(ConnectionState.CONNECTED);
   }
@@ -199,14 +199,14 @@ public class SystemEventListener {
 
       if (retryCount >= MAX_AUTH_RETRIES) {
         log.warn("連線 {} 驗證失敗次數過多 ({})，強制中斷。最後輸入: {}", event.sessionId(), retryCount, event.input());
-        actor.sendText("嘗試次數過多，連線即將關閉。");
+        actor.reply("嘗試次數過多，連線即將關閉。");
         session.close();
         return;
       }
 
       log.info("連線 {} 驗證失敗: {} (剩餘次數: {})", event.sessionId(), errorReason,
           MAX_AUTH_RETRIES - retryCount);
-      actor.sendText(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+      actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
       return;
     }
 

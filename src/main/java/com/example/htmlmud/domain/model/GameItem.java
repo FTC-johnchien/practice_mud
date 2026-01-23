@@ -31,11 +31,11 @@ public class GameItem {
 
   // 輔助方法：獲取顯示名稱 (包含強化等級)
   // e.g., "鐵劍 (+5)"
-  public String getDisplayName(ItemTemplate tpl) {
+  public String getDisplayName() {
     if (level > 1) {
-      return tpl.name() + " (+" + level + ")";
+      return template.name() + " (+" + level + ")";
     }
-    return tpl.name();
+    return template.name();
   }
 
   // 業務邏輯直接寫在 POJO 裡

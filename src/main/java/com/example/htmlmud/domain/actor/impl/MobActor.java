@@ -184,7 +184,7 @@ public class MobActor extends LivingActor {
   }
 
   @Override
-  public void onAttacked(LivingActor attacker, int damage) {
+  protected void onAttacked(LivingActor attacker) {
 
     // 檢查是否正在戰鬥
     if (!this.state.isInCombat) {
@@ -194,22 +194,27 @@ public class MobActor extends LivingActor {
     // TODO 檢查仇恨表，選最高的當對手
     this.state.combatTargetId = attacker.getId();
 
+    // TODO 檢查仇恨表，選最高的當對手
+    // if (this.state.combatTargetId == null) {
+    // this.state.combatTargetId = attacker.getId();
+    // }
+
     // 無敵判定
     if (template.isInvincible()) {
       if (attacker instanceof PlayerActor p) {
-        p.sendText(this.template.name() + " 毫髮無傷！");
+        p.reply(this.template.name() + " 毫髮無傷！");
       }
       return;
     }
 
     // 1. 扣血 (呼叫父類別)
-    log.info("damage: {}", damage);
+    log.info("damage: {}", attacker.getState().damage);
     log.info("this.state.hp: {}", this.state.hp);
     log.info("this.state.defense: {}", this.state.defense);
-    super.onAttacked(attacker, damage);
+    super.onAttacked(attacker);
 
     // 2. 增加仇恨值 (使用 String ID)
-    addAggro(attacker.getId(), damage);
+    addAggro(attacker.getId(), attacker.getState().damage);
 
     // 3. 通知 AI
     behavior.onDamaged(this, attacker);
@@ -217,7 +222,7 @@ public class MobActor extends LivingActor {
 
   @Override
   protected void onDeath(String killerId) {
-    super.onDeath(killerId);
+    // super.onDie(killerId);
     stopHeartbeat();
 
     log.info("{} died. Killer: {}", this.template.name(), killerId);

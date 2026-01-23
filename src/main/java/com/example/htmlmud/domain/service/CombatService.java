@@ -74,7 +74,7 @@ public class CombatService {
     int dmg = calculateDamage(attacker, target);
 
     // 4. 應用傷害
-    target.onAttacked(attacker, dmg);
+    target.attacked(attacker);
 
     // 5. 發送訊息給房間所有人
     // attacker.equip(null)

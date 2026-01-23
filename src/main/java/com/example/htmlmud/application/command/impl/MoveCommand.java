@@ -66,7 +66,7 @@ public class MoveCommand implements PlayerCommand {
     }
 
 
-    // --- 移動成功，開始處理流程 ---
+    // --- 檢查成功，開始處理移動流程 ---
 
     // 4. 舊房間廣播 (離場)
     currentRoom.removePlayer(actor);
