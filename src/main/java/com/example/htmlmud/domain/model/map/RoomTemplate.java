@@ -24,7 +24,7 @@ public record RoomTemplate(
 
     @JsonProperty("population") List<SpawnRule> mobSpawnRules,
 
-    List<SpawnRule> itemSpawnRules,
+    @JsonProperty("items") List<SpawnRule> itemSpawnRules,
 
     @JsonProperty("extra_data") Map<String, Object> extraData // 額外擴充資料 (e.g. 腳本觸發參數)
 

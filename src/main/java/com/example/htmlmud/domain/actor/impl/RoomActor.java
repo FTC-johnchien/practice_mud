@@ -1,22 +1,15 @@
 package com.example.htmlmud.domain.actor.impl;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import com.example.htmlmud.application.factory.WorldFactory;
-import com.example.htmlmud.domain.actor.LivingActor;
+import com.example.htmlmud.application.service.RoomService;
 import com.example.htmlmud.domain.actor.core.VirtualActor; // 引用您的基礎類別
 import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.RoomStateRecord;
 import com.example.htmlmud.domain.model.map.RoomTemplate;
-import com.example.htmlmud.domain.model.map.SpawnRule;
 import com.example.htmlmud.domain.model.map.ZoneTemplate;
-import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.RoomMessage;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,13 +26,7 @@ public class RoomActor extends VirtualActor<RoomMessage> {
   @Getter
   private final ZoneTemplate zoneTemplate;
 
-  private final List<SpawnRule> mobSpawnRules;
-
-  private final List<SpawnRule> itemSpawnRules;
-
-  private final WorldFactory worldFactory;
-
-  private final ObjectMapper objectMapper;
+  private final RoomService roomService;
 
 
   // 房間內的玩家 (Runtime State)
@@ -50,315 +37,85 @@ public class RoomActor extends VirtualActor<RoomMessage> {
   private final List<MobActor> mobs = new ArrayList<>();
 
   @Getter
-  private final Set<GameItem> items = ConcurrentHashMap.newKeySet(); // 地上的物品
+  private final List<GameItem> items = new ArrayList<>(); // 地上的物品
 
 
-  public RoomActor(RoomTemplate template, ZoneTemplate zoneTemplate, WorldFactory worldFactory,
-      ObjectMapper objectMapper) {
+  public RoomActor(RoomTemplate template, ZoneTemplate zoneTemplate, RoomService roomService) {
     super("room-" + template.id());
-    this.worldFactory = worldFactory;
-    this.objectMapper = objectMapper;
+    this.roomService = roomService;
 
     this.id = template.id();
     this.template = template;
     this.zoneTemplate = zoneTemplate;
-    // 從 Template 複製規則 (因為這是固定的)
-    this.mobSpawnRules = template.mobSpawnRules();
-    this.itemSpawnRules = template.itemSpawnRules();
 
-    // 初始生怪
-    spawnInitial("mob", mobSpawnRules);
-
-    // 初始物品
-    spawnInitial("item", itemSpawnRules);
+    roomService.spawnInitial(this);
 
   }
 
   // --- 實作父類別的抽象方法 ---
-
   @Override
   protected void handleMessage(RoomMessage msg) {
     // 這裡的邏輯跟之前一模一樣，但不需要自己寫 loop 和 try-catch 了
     switch (msg) {
-      case RoomMessage.PlayerEnter(var player, var future) -> {
-        log.info("Player {} entered room", player.getId());
-        player.markEnterRoom();
-        if (!players.contains(player)) {
-          players.add(player);
-        }
-        broadcastToOthers(player.getId(), "看到 " + player.getNickname() + " 走了進來。");
-        log.info("Player {} entered room {}", player.getNickname(), template.id());
-        if (future != null)
-          future.complete(null);
+      case RoomMessage.Enter(var actor, var future) -> {
+        roomService.doEnter(this, actor, future);
       }
-
-      case RoomMessage.PlayerLeave(var playerId) -> {
-        players.stream().filter(p -> p.getId().equals(playerId)).findFirst().ifPresent(p -> {
-          if (players.remove(p))
-            broadcastToOthers(playerId, p.getNickname() + " 離開了。");
-        });
+      case RoomMessage.Leave(var actorId) -> {
+        roomService.doLeave(this, actorId);
       }
-
-      case RoomMessage.Look(var playerId, var future) -> {
-        log.info("Player {} Look room", playerId);
-        StringBuilder sb = new StringBuilder();
-        sb.append("\u001B[1;36m").append(template.name()).append("\u001B[0m\r\n");
-        sb.append(template.description()).append("\r\n");
-
-        if (template.exits() != null && !template.exits().isEmpty()) {
-          sb.append("\u001B[33m[出口]: ").append(String.join(", ", template.exits().keySet()))
-              .append("\u001B[0m\r\n");
-        }
-
-        StringBuilder others = new StringBuilder();
-        players.stream().filter(p -> !p.getId().equals(playerId))
-            .forEach(p -> others.append(p.getNickname()).append(" "));
-
-        if (!others.isEmpty()) {
-          sb.append("\u001B[35m[這裡有]: \u001B[0m").append(others).append("\r\n");
-        }
-        future.complete(sb.toString());
-      }
-
+      // 交由 LookCommand 實作
+      // case RoomMessage.Look(var playerId, var future) -> {
+      // roomService.doLook(this, playerId, future);
+      // }
       case RoomMessage.Say(var sourceId, var content) -> {
-        PlayerActor speaker =
-            players.stream().filter(p -> p.getId().equals(sourceId)).findFirst().orElse(null);
-        String name = (speaker != null) ? speaker.getNickname() : "有人";
-        broadcast(name + ": " + content);
+        roomService.doSay(this, sourceId, content);
       }
-
-      case RoomMessage.TryPickItem(var itemId, var picker) -> {
-        // 【關鍵併發控制】
-        // var item = items.stream().filter(i -> i.id.equals(itemId)).findFirst();
-        // if (item.isPresent()) {
-        // items.remove(item.get());
-        // 回覆給 Command: 成功
-        // picker.send(new ActorMessage("...", new InternalCommand.PickSuccess(item.get())));
-        // } else {
-        // 回覆給 Command: 失敗
-        // picker.send(new ActorMessage("...", new InternalCommand.PickFail("東西不在了")));
-        // }
+      case RoomMessage.TryPickItem(var args, var picker, var future) -> {
+        roomService.doTryPickItem(this, args, picker, future);
       }
       case RoomMessage.Tick(var tickCount, var timestamp) -> {
-        handleTick(tickCount, timestamp);
+        roomService.doTick(this, tickCount, timestamp);
       }
+      case RoomMessage.Broadcast(var message) -> {
+        roomService.doBroadcast(this, message);
+      }
+      case RoomMessage.BroadcastToOthers(var sourceId, var message) -> {
+        roomService.doBroadcastToOthers(this, sourceId, message);
+      }
+      case RoomMessage.FindActor(var actorId, var future) -> {
+        roomService.doFindActor(this, actorId, future);
+      }
+      case RoomMessage.GetPlayers(var future) -> {
+        roomService.getPlayersSnapshot(this, future);
+      }
+      case RoomMessage.GetMobs(var future) -> {
+        roomService.getMobsSnapshot(this, future);
+      }
+      case RoomMessage.GetItems(var future) -> {
+        roomService.getItemsSnapshot(this, future);
+      }
+      case RoomMessage.ToRecord(var future) -> {
+        roomService.toRecord(this, future);
+      }
+
     }
   }
+  // ---------------------------------------------------------------------------------------------
 
-  // 處理邏輯
-  private void handleTick(long tickCount, long timestamp) {
-    // log.info("{} tickCount: {}", id, tickCount);
 
-    // === 1. World/Zone 層級邏輯 (例如：每 60 秒檢查一次重生) ===
-    if (tickCount % zoneTemplate.respawnRate() == 0) {
-      checkSpawnRule(); // 檢查是否有怪物死掉很久該重生了
-    }
 
-    // === 2. 轉發給 Actor ===
-    // 過濾掉 "完全沒事做且沒玩家在場" 的怪物
-    if (!players.isEmpty() || mobs.stream().anyMatch(m -> m.getState().isInCombat())) {
-      ActorMessage.Tick msg = new ActorMessage.Tick(tickCount, timestamp);
-
-      for (MobActor mob : mobs) {
-        mob.send(msg);
-      }
-
-      for (PlayerActor player : players) {
-        // log.info("send player");
-        player.send(msg);
-      }
-    }
+  // 公開給外部呼叫的方法 --------------------------------------------------------------------------
+  public void enter(LivingActor actor, CompletableFuture<Void> future) {
+    this.send(new RoomMessage.Enter(actor, future));
   }
-  // --- 物品操作邏輯 ---
 
-  // public Optional<Item> pickItem(String keyword) {
-  // 簡單搜尋邏輯
-  // var found = items.stream().filter(i -> isMatch(i, keyword)) // 需實作 isMatch
-  // .findFirst();
+  public void leave(String actorId) {
+    this.send(new RoomMessage.Leave(actorId));
+  }
 
-  // found.ifPresent(items::remove);
-  // return found; // 這裡回傳後，記得要標記 Dirty
+  // public void look(String playerId, CompletableFuture<String> future) {
+  // this.send(new RoomMessage.Look(playerId, future));
   // }
-
-  // --- 輔助方法 (保持不變) ---
-
-  public void broadcast(String message) {
-    players.forEach(p -> p.reply(message));
-  }
-
-  private void broadcastToOthers(String sourceId, String message) {
-    players.stream().filter(p -> !p.getId().equals(sourceId)).forEach(p -> p.reply(message));
-  }
-
-  // 產生快照 (只存變動的部分)
-  public RoomStateRecord toRecord() {
-    String[] args = template.id().split(":");
-    String zoneId = args[0];
-    String roomId = args[1];
-    return new RoomStateRecord(roomId, zoneId, new ArrayList<>(items));
-  }
-
-  public void addPlayer(PlayerActor player) {
-    player.markEnterRoom();
-    players.add(player);
-  }
-
-  public void removePlayer(PlayerActor player) {
-    players.remove(player);
-  }
-
-  public List<PlayerActor> getPlayersSnapshot() {
-    List<PlayerActor> players = new ArrayList<>(this.players);
-    players.sort(Comparator.comparing(PlayerActor::getNickname));
-    return players;
-  }
-
-  public void dropItem(GameItem item) {
-    items.add(item);
-    // 標記為 Dirty (需要存檔)
-    // WorldManager.markDirty(this.template.id());
-  }
-
-  public void removeItem(GameItem item) {
-    items.remove(item);
-    // 標記為 Dirty (需要存檔)
-    // WorldManager.markDirty(this.template.id());
-  }
-
-  public List<GameItem> getItemsSnapshot() {
-    return new ArrayList<>(items);
-  }
-
-
-
-  /**
-   * 處理怪物進入
-   */
-  public void addMob(MobActor mob) {
-    // 標記時間
-    mob.markEnterRoom();
-    if (!mobs.contains(mob)) {
-      mobs.add(mob);
-    }
-  }
-
-  /**
-   * 尋找怪物
-   */
-  public MobActor findMob(String mobId) {
-    return mobs.stream().filter(m -> m.getId().equals(mobId)).findFirst().orElse(null);
-  }
-
-  /**
-   * 處理怪物離開
-   */
-  public void removeMob(MobActor mob) {
-    mobs.remove(mob);
-  }
-
-  /**
-   * 獲取有序快照 排序規則：先根據進入時間 (老鳥在前)，如果時間一樣，再比對 ID
-   */
-  public List<MobActor> getMobsSnapshot() {
-    // 1. 複製 (O(N))
-    List<MobActor> snapshot = new ArrayList<>(this.mobs);
-
-    // 2. 排序 (O(N log N))
-    // 排序規則：名稱 -> 進入時間 -> ID
-    snapshot.sort(Comparator.comparing((MobActor m) -> m.getTemplate().name())
-        .thenComparingLong(MobActor::getLastEnterRoomTime).thenComparing(MobActor::getId));
-
-    return snapshot;
-  }
-
-  private void checkSpawnRule() {
-
-  }
-
-  /**
-   * 房間初次載入時的生怪邏輯
-   */
-  private void spawnInitial(String type, List<SpawnRule> rules) {
-    if (rules == null)
-      return;
-
-    for (SpawnRule rule : rules) {
-      // 處理機率 (例如：稀有怪只有 10% 機率出現)
-      if (Math.random() > rule.respawnChance()) {
-        continue;
-      }
-
-      // 根據數量生成
-      for (int i = 0; i < rule.count(); i++) {
-        switch (type) {
-          case "mob":
-            spawnOneMob(rule);
-            break;
-          case "item":
-            spawnOneItem(rule);
-            break;
-        }
-      }
-    }
-  }
-
-  private void spawnOneMob(SpawnRule rule) {
-    // 1. 呼叫工廠產生 MobActor (這裡會給予 UUID)
-    MobActor mob = worldFactory.createMob(rule.id());
-    try {
-      log.info("{}: {} - {}", mob.getId(), mob.getName(),
-          objectMapper.writeValueAsString(mob.getTemplate()));
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-
-    // // 2. 設定位置
-    mob.setCurrentRoomId(this.id);
-
-    // // 3. 加入房間列表
-    this.mobs.add(mob);
-
-    // // 4. 啟動怪物的 AI
-    mob.start();
-
-    log.info("Spawned {} in room {}", mob.getTemplate().name(), this.id);
-  }
-
-  private void spawnOneItem(SpawnRule rule) {
-    GameItem item = worldFactory.createItem(rule.id());
-
-  }
-
-  public LivingActor findActor(String actorId) {
-
-    // 先檢查mob
-    for (MobActor mob : mobs) {
-      if (mob.getId().equals(actorId)) {
-        return mob;
-      }
-    }
-
-    for (PlayerActor player : players) {
-      if (player.getId().equals(actorId)) {
-        return player;
-      }
-    }
-
-    return null;
-  }
-
-  // 公開給外部呼叫的方法 -------------------------------------------------------------------------
-  public void enter(PlayerActor player, CompletableFuture<Void> future) {
-    this.send(new RoomMessage.PlayerEnter(player, future));
-  }
-
-  public void leave(String playerId) {
-    this.send(new RoomMessage.PlayerLeave(playerId));
-  }
-
-  public void look(String playerId, CompletableFuture<String> future) {
-    this.send(new RoomMessage.Look(playerId, future));
-  }
 
   public void say(String sourceId, String content) {
     this.send(new RoomMessage.Say(sourceId, content));
@@ -368,7 +125,64 @@ public class RoomActor extends VirtualActor<RoomMessage> {
     this.send(new RoomMessage.Tick(tickCount, timestamp));
   }
 
-  public void tryPickItem(String itemId, PlayerActor picker) {
-    this.send(new RoomMessage.TryPickItem(itemId, picker));
+  public void tryPickItem(String args, PlayerActor picker, CompletableFuture<GameItem> future) {
+    this.send(new RoomMessage.TryPickItem(args, picker, future));
   }
+
+  public void broadcast(String message) {
+    this.send(new RoomMessage.Broadcast(message));
+  }
+
+  public void broadcastToOthers(String actorId, String message) {
+    this.send(new RoomMessage.BroadcastToOthers(actorId, message));
+  }
+
+  public void findActor(String actorId, CompletableFuture<LivingActor> future) {
+    this.send(new RoomMessage.FindActor(actorId, future));
+  }
+
+  public void getPlayers(CompletableFuture<List<PlayerActor>> future) {
+    this.send(new RoomMessage.GetPlayers(future));
+  }
+
+  public void getMobs(CompletableFuture<List<MobActor>> future) {
+    this.send(new RoomMessage.GetMobs(future));
+  }
+
+  public void getItems(CompletableFuture<List<GameItem>> future) {
+    this.send(new RoomMessage.GetItems(future));
+  }
+
+  public void toRecord(CompletableFuture<RoomStateRecord> future) {
+    this.send(new RoomMessage.ToRecord(future));
+  }
+
+  // ---------------------------------------------------------------------------------------------
+
+
+
+  // --- 物品操作邏輯 ---
+
+  // --- 輔助方法 (保持不變) ---
+
+
+
+  // ---------------------------------------------------------------------------------------------
+
+
+
+  private void dropItem(GameItem item) {
+    // 標記為 Dirty (需要存檔)
+    item.setDirty(true);
+    items.add(item);
+
+    // WorldManager.markDirty(this.template.id());
+  }
+
+  private void removeItem(GameItem item) {
+    items.remove(item);
+    // 標記為 Dirty (需要存檔)
+    // WorldManager.markDirty(this.template.id());
+  }
+
 }

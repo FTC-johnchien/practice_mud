@@ -332,7 +332,13 @@ public class GuestBehavior implements PlayerBehavior {
 
     // 讓玩家進入資料紀錄的房間
     RoomActor room = actor.getManager().getRoomActor(actor.getCurrentRoomId());
-    room.enter(actor, new CompletableFuture<Void>());
+    CompletableFuture<Void> future = new CompletableFuture<>();
+    room.enter(actor, future);
+    try {
+      future.orTimeout(1, java.util.concurrent.TimeUnit.SECONDS).join();
+    } catch (Exception e) {
+      log.error("enterRoom", e);
+    }
 
     log.info("Actor 載入玩家資料 當前狀態: {} {}", actor.getName(), actor.getNickname());
     return new InGameBehavior();

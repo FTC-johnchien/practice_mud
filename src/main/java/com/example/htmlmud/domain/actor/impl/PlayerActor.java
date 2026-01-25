@@ -2,15 +2,15 @@ package com.example.htmlmud.domain.actor.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
+import java.util.Optional;
+import java.util.UUID;
 import org.slf4j.MDC;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.application.service.WorldManager;
-import com.example.htmlmud.domain.actor.LivingActor;
 import com.example.htmlmud.domain.actor.behavior.GuestBehavior;
-import com.example.htmlmud.domain.actor.behavior.InGameBehavior;
 import com.example.htmlmud.domain.actor.behavior.PlayerBehavior;
 import com.example.htmlmud.domain.context.GameServices;
 import com.example.htmlmud.domain.context.MudContext;
@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 // PlayerActor 處理的訊息類型就是 GameCommand
 @Slf4j
-public class PlayerActor extends LivingActor {
+public final class PlayerActor extends LivingActor {
 
   @Getter
   private WebSocketSession session;
@@ -36,7 +36,7 @@ public class PlayerActor extends LivingActor {
 
   @Getter
   @Setter
-  private String[] aliases;
+  private List<String> aliases;
 
   @Getter
   @Setter
@@ -71,11 +71,11 @@ public class PlayerActor extends LivingActor {
   public static PlayerActor createGuest(WebSocketSession session, WorldManager worldManager,
       GameServices gameServices) {
     String name = "GUEST";
-    String playerId = "player-" + session.getId().substring(0, 8);
+    String uuid = UUID.randomUUID().toString();
+    String playerId = "p-" + uuid.substring(0, 8) + uuid.substring(9, 11);
     PlayerActor actor =
         new PlayerActor(session, playerId, name, new LivingState(), worldManager, gameServices);
     actor.become(new GuestBehavior(worldManager.getAuthService()));
-    actor.inventory = new ArrayList<>();
     return actor;
   }
 
@@ -89,20 +89,45 @@ public class PlayerActor extends LivingActor {
 
   @Override
   protected void handleMessage(ActorMessage msg) {
-    super.handleMessage(msg);
+    switch (msg) {
+      // 1. 先攔截我專屬的訊息
+      case ActorMessage.PlayerMessage playerMsg -> handlePlayerMessage(playerMsg);
+
+      // 2. 其他的 (LivingMessage 或 MobMessage?) 丟給父類別處理
+      // 父類別會處理 LivingMessage，並忽略 MobMessage
+      default -> super.handleMessage(msg);
+    }
   }
 
-  @Override
-  protected void onTick(long tickCount, long time) {
-    // log.info("player tickCount: {}", tickCount);
-    super.onTick(tickCount, time);
+  private void handlePlayerMessage(ActorMessage.PlayerMessage msg) {
+    switch (msg) {
+      case ActorMessage.Command(var traceId, var cmd) -> {
+        doCommand(traceId, cmd);
+      }
+      case ActorMessage.SendText(var session, var content) -> {
+        doSendText(session, content);
+      }
+      case ActorMessage.SaveData() -> {
+        save();
+      }
+      case ActorMessage.GainExp(var amount) -> {
+        // TODO
+        this.state.exp += amount;
+        // if (this.state.exp >= this.state.nextLevelExp) {
+        // this.levelUp();
+        // }
+      }
+      case ActorMessage.QuestUpdate(var questId, var status) -> {
+        // TODO
+      }
+      default -> log.warn("handlePlayerMessage 收到無法處理的訊息: {} {}", this.id, msg);
+    }
   }
 
-  @Override
-  protected void onCommand(String traceId, GameCommand cmd) {
+  private void doCommand(String traceId, GameCommand cmd) {
     // A. 設定 MDC (給 Log 看)
     MDC.put("traceId", traceId);
-    MDC.put("actorName", this.name);
+    // MDC.put("actorName", this.name);
 
     try {
       // B. 設定 ScopedValue (給 Service 邏輯看)
@@ -122,8 +147,7 @@ public class PlayerActor extends LivingActor {
     }
   }
 
-  @Override
-  protected void onSendText(WebSocketSession session, String msg) {
+  private void doSendText(WebSocketSession session, String msg) {
     if (session != null && session.isOpen()) {
       try {
         String json =
@@ -138,16 +162,55 @@ public class PlayerActor extends LivingActor {
     }
   }
 
+  // 觸發存檔的輔助方法
+  private void save() {
+    manager.getPlayerPersistenceService().saveAsync(this.toRecord());
+  }
+
+
+
+  // @Override
+  // protected void doTick(long tickCount, long time) {
+  // log.info("player tickCount: {}", tickCount);
+  // super.doTick(tickCount, time);
+  // }
+
   @Override
-  protected void onDeath(String killerId) {
+  protected void doDie(String killerId) {
+    this.stop();
     reply("你已經死亡！即將在重生點復活...");
-    super.onDeath(killerId);
+    super.doDie(killerId);
+
 
     // 玩家死亡邏輯：掉經驗、傳送回城
   }
-  // -----------------------------------------------------------------------------------
 
 
+
+  // ---------------------------------------------------------------------------------------------
+
+
+
+  public void addToInventory(GameItem newItem) {
+    // 1. 如果是可堆疊的
+    if (newItem.isStackable()) {
+      // 找找看背包裡有沒有一樣的物品 (比對 TemplateID)
+      Optional<GameItem> existing = this.inventory.stream()
+          .filter(i -> i.getTemplate().id().equals(newItem.getTemplate().id())).findFirst();
+
+      if (existing.isPresent()) {
+        // 2. 找到了：直接加數量 (不會產生新 Record)
+        GameItem stack = existing.get();
+        stack.setAmount(stack.getAmount() + newItem.getAmount());
+
+        // newItem 物件可以丟棄了
+        return;
+      }
+    }
+
+    // 3. 不可堆疊，或是背包還沒有：直接加入清單
+    this.inventory.add(newItem);
+  }
 
   // 狀態切換方法
   private void become(PlayerBehavior nextBehavior) {
@@ -181,10 +244,6 @@ public class PlayerActor extends LivingActor {
     // persistenceService.saveAsync(this.toRecord());
   }
 
-  public void reply(String msg) {
-    this.send(new ActorMessage.SendText(session, msg));
-  }
-
 
 
   // 未整理也
@@ -201,13 +260,8 @@ public class PlayerActor extends LivingActor {
     this.session = newSession;
 
     // 3. 重發當前環境資訊
-    this.onSendText(session, "\u001B[33m[系統] 連線已恢復。\u001B[0m");
+    this.doSendText(session, "\u001B[33m[系統] 連線已恢復。\u001B[0m");
     this.services.commandDispatcher().dispatch(this, "look");
-  }
-
-  // 觸發存檔的輔助方法
-  private void save() {
-    manager.getPlayerPersistenceService().saveAsync(this.toRecord());
   }
 
 
@@ -224,17 +278,20 @@ public class PlayerActor extends LivingActor {
 
   // 只想提供給 GuestBehavior 使用
   public void fromRecord(GuestBehavior behavior, PlayerRecord record) {
-    // 更新玩家基礎資料
+    // 玩家基礎資料(from資料庫)
     this.id = record.id();
     this.name = record.name();
     this.nickname = record.nickname();
     if (this.nickname == null) {
       this.nickname = record.name();
     }
-    this.aliases = new String[] {record.name()};
+    this.aliases = new ArrayList<>(List.of(record.name()));
     this.state = record.state();
     this.currentRoomId = record.currentRoomId();
     this.inventory = record.inventory();
+    if (this.inventory == null) {
+      this.inventory = new ArrayList<>();
+    }
   }
 
 }

@@ -6,13 +6,15 @@ package com.example.htmlmud;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
+@EnableScheduling
 public class HtmlmudApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(HtmlmudApplication.class, args);
-	}
+  public static void main(String[] args) {
+    SpringApplication.run(HtmlmudApplication.class, args);
+  }
 
 }
 
@@ -25,9 +27,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Component;
+import com.example.htmlmud.application.command.annotation.CommandAlias;
 import com.example.htmlmud.application.command.impl.MoveCommand;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
-import com.example.htmlmud.domain.logic.command.annotation.CommandAlias;
 import com.example.htmlmud.domain.model.Direction;
 import lombok.extern.slf4j.Slf4j;
 
@@ -138,15 +140,35 @@ public interface PlayerCommand {
 }
 
 
+--- File: CommandAlias.java ---
+
+package com.example.htmlmud.application.command.annotation;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target(ElementType.TYPE) // 只能放在類別上
+@Retention(RetentionPolicy.RUNTIME) // 執行時期透過反射讀取
+public @interface CommandAlias {
+  String[] value(); // 允許傳入多個別名，例如 {"l", "see"}
+}
+
+
 --- File: GetCommand.java ---
 
 package com.example.htmlmud.application.command.impl;
 
+import java.util.concurrent.CompletableFuture;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
+import com.example.htmlmud.application.command.annotation.CommandAlias;
+import com.example.htmlmud.application.command.parser.TargetSelector;
+import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
-import com.example.htmlmud.domain.logic.command.annotation.CommandAlias;
+import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.protocol.RoomMessage;
 import lombok.RequiredArgsConstructor;
 
@@ -155,6 +177,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class GetCommand implements PlayerCommand {
 
+  private final WorldManager worldManager;
+
+  private final TargetSelector targetSelector; // 注入工具
+
   @Override
   public String getKey() {
     return "get";
@@ -162,26 +188,32 @@ public class GetCommand implements PlayerCommand {
 
   @Override
   public void execute(PlayerActor actor, String args) {
-    // 1. 基本檢查
+    // 基本檢查
     if (args.isEmpty()) {
       actor.reply("你要撿什麼？");
       return;
     }
 
-    // 2. 找到房間 Actor
-    String roomId = actor.getCurrentRoomId();
-    RoomActor room = actor.getManager().getRoomActor(roomId);
+    // 1. 準備 Future 接收結果
+    CompletableFuture<GameItem> future = new CompletableFuture<>();
 
-    // 3. 發送請求 (這是非同步的)
-    // 注意：這裡有兩種做法
-    // 方法 A: 發後不理 (Fire-and-Forget)，結果由 ActorMessage 回傳處理
-    // 方法 B: 使用 CompletableFuture 等待結果 (較直觀，但在 Actor 模型中要小心死鎖)
+    // 2. 發送訊息給房間： "我要撿 'sword' (args)"
+    // 注意：這裡我們還不知道房間到底有沒有劍，只傳字串
+    RoomActor room = worldManager.getRoomActor(actor.getCurrentRoomId());
+    room.send(new RoomMessage.TryPickItem(args, actor, future));
 
-    // 這裡示範更符合 Actor 精神的 "Ask Pattern" (或是透過回呼)
-    // 為了簡單起見，我們假設 RoomActor 有一個同步的安全方法 (如果都在同一台機器)
-    // 或者發送一個 "AttemptPick" 訊息
-
-    room.send(new RoomMessage.TryPickItem(args, actor));
+    // 3. 等待結果 (Virtual Thread 不會卡死)
+    try {
+      GameItem item = future.join();
+      if (item != null) {
+        actor.getInventory().add(item);
+        actor.reply("你撿起了 " + item.getDisplayName());
+      } else {
+        actor.reply("這裡沒有看到 '" + args + "'。");
+      }
+    } catch (Exception e) {
+      actor.reply("發生錯誤:");
+    }
   }
 }
 
@@ -193,17 +225,22 @@ package com.example.htmlmud.application.command.impl;
 import java.util.List;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
+import com.example.htmlmud.application.command.annotation.CommandAlias;
 import com.example.htmlmud.application.command.parser.TargetSelector;
+import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.MobActor;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
-import com.example.htmlmud.domain.logic.command.annotation.CommandAlias;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @CommandAlias("k")
 @RequiredArgsConstructor
 public class KillCommand implements PlayerCommand {
+
+  private final WorldManager worldManager;
 
   private final TargetSelector targetSelector; // 注入工具
 
@@ -220,23 +257,28 @@ public class KillCommand implements PlayerCommand {
     }
 
     // 1. 取得房間內的怪物列表
-    RoomActor room = actor.getManager().getRoomActor(actor.getCurrentRoomId());
+    RoomActor room = worldManager.getRoomActor(actor.getCurrentRoomId());
     // 這裡假設 room 有 getMobsSnapshot() 回傳 List<MobActor>
     // 注意：為了線程安全，這裡最好是 Snapshot 或是能確保讀取安全的列表
     List<MobActor> mobsInRoom = room.getMobsSnapshot();
 
     // 2. 交給 Selector 處理複雜字串
     // args 可能是 "red goblin", "elite soldier 2"
+    // TODO pvp的處理
     MobActor target = targetSelector.selectMob(mobsInRoom, args);
-
     if (target == null) {
       actor.reply("這裡沒有看到 '" + args + "'。");
       return;
     }
+    log.info("name:{} defense: {}", target.getTemplate().name(), target.getState().defense);
 
     // 3. 執行戰鬥邏輯
-    actor.reply("你開始攻擊 " + target.getTemplate().name() + "！");
-    target.onAttacked(actor, 10);
+    actor.getState().combatTargetId = target.getId();
+    actor.getState().isInCombat = true;
+    log.info("name:{} {}", actor.getName(), actor.getNickname());
+    actor.reply("你對 " + target.getTemplate().name() + " 大喊受死吧 一邊擺出了戰鬥架式！");
+    // actor.reply("你開始攻擊 " + target.getTemplate().name() + "！");
+    target.onAttacked(actor);
   }
 }
 
@@ -248,10 +290,12 @@ package com.example.htmlmud.application.command.impl;
 import java.util.List;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
+import com.example.htmlmud.application.command.annotation.CommandAlias;
+import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.MobActor;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
-import com.example.htmlmud.domain.logic.command.annotation.CommandAlias;
+import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.MobKind;
 import com.example.htmlmud.infra.util.AnsiColor;
 import com.example.htmlmud.infra.util.ColorText;
@@ -263,6 +307,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @CommandAlias({"l", "see", "ls"}) // 支援 l, see, ls
 public class LookCommand implements PlayerCommand {
+
+  private final WorldManager worldManager;
 
   @Override
   public String getKey() {
@@ -277,7 +323,7 @@ public class LookCommand implements PlayerCommand {
     log.info("args:{}", args);
 
     // 2. 查詢房間資料 (使用 WorldManager)
-    RoomActor roomActor = actor.getManager().getRoomActor(roomId);
+    RoomActor roomActor = worldManager.getRoomActor(roomId);
 
     if (roomActor == null) {
       actor.reply("你處於一片虛空之中... (RoomID: " + roomId + " 不存在)");
@@ -314,7 +360,8 @@ public class LookCommand implements PlayerCommand {
     // 取得房間內的生物 (玩家與怪物，經過排序)
     List<PlayerActor> players = room.getPlayersSnapshot();
     List<MobActor> mobs = room.getMobsSnapshot();
-    log.info("players: {}, mobs: {}", players.size(), mobs.size());
+    List<GameItem> items = room.getItemsSnapshot();
+    log.info("players: {}, mobs: {} items: {}", players.size(), mobs.size(), items.size());
 
 
     // 1. 篩選出 其他玩家 (亮藍色，排除自己)
@@ -332,6 +379,12 @@ public class LookCommand implements PlayerCommand {
         .map(m -> ColorText.mob(m.getTemplate().name() + "(" + m.getTemplate().aliases()[0] + ")")) // 紅色代表危險
         .toList();
 
+    // items
+    List<String> itemNames = items.stream()
+        .map(i -> ColorText.item(i.getDisplayName() + "(" + i.getTemplate().aliases()[0] + ")"))
+        .toList();
+
+
     if (!otherPlayerNames.isEmpty()) {
       sb.append(ColorText.wrap(AnsiColor.BRIGHT_MAGENTA, "[玩家]: "))
           .append(String.join(", ", otherPlayerNames)).append("\r\n");
@@ -343,6 +396,11 @@ public class LookCommand implements PlayerCommand {
       sb.append(ColorText.wrap(AnsiColor.RED, "[怪物]: ")).append(String.join(", ", monsterNames))
           .append("\r\n");
     }
+    if (!itemNames.isEmpty()) {
+      sb.append(ColorText.wrap(AnsiColor.YELLOW, "[物品]: ")).append(String.join(", ", itemNames))
+          .append("\r\n");
+    }
+
 
     return sb.toString();
   }
@@ -353,8 +411,10 @@ public class LookCommand implements PlayerCommand {
 
 package com.example.htmlmud.application.command.impl;
 
+import java.util.concurrent.CompletableFuture;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
+import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
 import com.example.htmlmud.domain.model.Direction;
@@ -366,6 +426,11 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class MoveCommand implements PlayerCommand {
+
+  private final WorldManager worldManager;
+
+  private final LookCommand lookCommand;
+
 
   @Override
   public String getKey() {
@@ -385,7 +450,7 @@ public class MoveCommand implements PlayerCommand {
 
     // 2. 取得當前房間
     String currentRoomId = actor.getCurrentRoomId();
-    RoomActor currentRoom = actor.getManager().getRoomActor(currentRoomId);
+    RoomActor currentRoom = worldManager.getRoomActor(currentRoomId);
 
     if (currentRoom == null) {
       actor.reply("你在一片虛空中，無法移動。");
@@ -396,16 +461,17 @@ public class MoveCommand implements PlayerCommand {
     // 假設 Room.exits 是 Map<String, Integer> (key 是 direction full name)
     // Integer nextRoomId = currentRoom.getTemplate().exits().get(dir.getFullName());
     RoomExit exit = currentRoom.getTemplate().exits().get(dir.getFullName());
-
-
     if (exit == null) {
       actor.reply("往 " + dir.getDisplayName() + " 沒有出路。");
       return;
     }
 
+    // TODO 檢查出口限制
+
+
     // 檢查要去的房間是否存在
     String targetRoomId = exit.targetRoomId();
-    RoomActor targetRoom = actor.getManager().getRoomActor(targetRoomId);
+    RoomActor targetRoom = worldManager.getRoomActor(targetRoomId);
 
     if (targetRoom == null) {
       actor.reply("前方房間 " + targetRoomId + " 施工中，無法前往。");
@@ -413,27 +479,26 @@ public class MoveCommand implements PlayerCommand {
     }
 
 
-    // --- 移動成功，開始處理流程 ---
+    // --- 檢查成功，開始處理移動流程 ---
 
     // 4. 舊房間廣播 (離場)
+    currentRoom.leave(actor.getId());
     String leaveMsg = ColorText.wrap(AnsiColor.YELLOW,
         actor.getNickname() + " 往 " + dir.getDisplayName() + " 離開了。");
-    actor.getManager().broadcastToRoom(currentRoomId, leaveMsg, actor.getId());
-
-    // 5. 更新玩家位置
-    // 注意：這裡只改記憶體，State Pattern + Write-Behind 會負責存檔
-    // String targetRoomId = exit.targetRoomId();
-    actor.setCurrentRoomId(targetRoomId);
+    worldManager.broadcastToRoom(currentRoomId, leaveMsg, actor.getId());
 
     // 6. 新房間廣播 (進場)
     // 計算反方向 (例如往北走，新房間的人會看到你從南方來)
+    CompletableFuture<Void> future = new CompletableFuture<>();
+    targetRoom.enter(actor, future);
+    future.join();
     String arriveMsg = ColorText.wrap(AnsiColor.YELLOW,
         actor.getNickname() + " 從 " + dir.opposite().getDisplayName() + " 過來了。");
-    actor.getManager().broadcastToRoom(targetRoomId, arriveMsg, actor.getId());
+    worldManager.broadcastToRoom(targetRoomId, arriveMsg, actor.getId());
 
     // 7. 自動 Look (讓玩家看到新環境)
-    // 直接調用 Dispatcher 執行 look 指令
-    actor.getServices().commandDispatcher().dispatch(actor, "look");
+    // 直接調用 LookCommand 執行邏輯
+    lookCommand.execute(actor, "");
   }
 }
 
@@ -442,13 +507,13 @@ public class MoveCommand implements PlayerCommand {
 
 package com.example.htmlmud.application.command.parser;
 
-import com.example.htmlmud.domain.actor.impl.MobActor;
-import com.example.htmlmud.domain.model.map.MobTemplate;
-import org.springframework.stereotype.Component;
-
 import java.util.List;
+import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.springframework.stereotype.Component;
+import com.example.htmlmud.domain.actor.impl.MobActor;
+import com.example.htmlmud.domain.model.GameItem;
 
 @Component
 public class TargetSelector {
@@ -459,55 +524,60 @@ public class TargetSelector {
   // 用來解析 "index.name" (例如: 2.goblin)
   private static final Pattern DOT_NOTATION = Pattern.compile("^(\\d+)\\.(.*)$");
 
+  public GameItem selectItem(List<GameItem> candidates, String input) {
+    return select(candidates, input, this::isMatchItem);
+  }
+
   /**
    * 從列表中找到符合描述的目標
    *
    * @param candidates 房間裡的所有怪物 (或物品)
-   * @param input 玩家輸入的字串 (例如 "elite soldier 3")
+   * @param input 玩家輸入的字串 (例如 "elite soldier 3" 或 "2.goblin")
    * @return 找到的 Mob，若無則回傳 null
    */
   public MobActor selectMob(List<MobActor> candidates, String input) {
+    return select(candidates, input, this::isMatchMob);
+  }
+
+  /**
+   * 通用的選擇邏輯，減少重複程式碼
+   */
+  private <T> T select(List<T> candidates, String input, BiPredicate<T, String> matcher) {
     if (input == null || input.isBlank())
       return null;
 
-    // 1. 解析輸入，分離出 "名稱關鍵字" 和 "第幾個"
     ParsedTarget parsed = parseInput(input);
     String keyword = parsed.name.toLowerCase();
-    int targetIndex = parsed.index; // 1-based index
-
+    int targetIndex = parsed.index;
     int matchCount = 0;
 
-    // 2. 遍歷候選名單
-    for (MobActor mob : candidates) {
-      // 3. 檢查是否匹配
-      if (isMatch(mob, keyword)) {
+    for (T candidate : candidates) {
+      if (matcher.test(candidate, keyword)) {
         matchCount++;
-        // 4. 如果匹配次數等於玩家指定的索引，就是它了
         if (matchCount == targetIndex) {
-          return mob;
+          return candidate;
         }
       }
     }
-
-    return null; // 找不到
+    return null;
   }
 
-  private boolean isMatch(MobActor mob, String keyword) {
-    MobTemplate tpl = mob.getTemplate();
+  private boolean isMatchItem(GameItem item, String keyword) {
+    return isMatch(item.getTemplate().name(), item.getTemplate().aliases(), keyword);
+  }
 
-    // 規則 A: 直接比對 Name (忽略大小寫)
-    if (tpl.name().toLowerCase().contains(keyword))
+  private boolean isMatchMob(MobActor mob, String keyword) {
+    return isMatch(mob.getTemplate().name(), mob.getTemplate().aliases(), keyword);
+  }
+
+  private boolean isMatch(String name, String[] aliases, String keyword) {
+    if (name.toLowerCase().contains(keyword))
       return true;
 
-    // 規則 B: 比對 Aliases
-    // 只要 Alias 列表裡有任何一個字串 "包含" 玩家輸入的關鍵字
-    // 例如 alias=["red goblin king"], input="red goblin" -> true
-    // 例如 alias=["goblin"], input="red" -> false
-    if (tpl.aliases() != null) {
-      for (String alias : tpl.aliases()) {
-        if (alias.toLowerCase().contains(keyword)) {
+    if (aliases != null) {
+      for (String alias : aliases) {
+        if (alias.toLowerCase().contains(keyword))
           return true;
-        }
       }
     }
     return false;
@@ -548,6 +618,7 @@ public class TargetSelector {
 package com.example.htmlmud.application.factory;
 
 import java.util.UUID;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
@@ -561,7 +632,7 @@ import com.example.htmlmud.domain.model.map.MobTemplate;
 import com.example.htmlmud.domain.model.map.RoomTemplate;
 import com.example.htmlmud.domain.model.map.ZoneTemplate;
 import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
-import lombok.Getter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -570,9 +641,13 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WorldFactory {
 
-  private final ObjectProvider<WorldManager> managerProvider;
-
   private final ObjectProvider<GameServices> servicesProvider;
+
+  // private final GameServices gameServices;
+
+  // private final WorldManager worldManager;
+  // private final ScheduledExecutorService scheduler;
+  private final ObjectMapper objectMapper;
 
   private final TemplateRepository templateRepo;
 
@@ -580,6 +655,7 @@ public class WorldFactory {
    * 建立房間 Actor
    */
   public RoomActor createRoom(String roomId) {
+    log.info("createRoom roomId: {}", roomId);
     RoomTemplate roomTpl = templateRepo.findRoom(roomId).orElse(null);
     if (roomTpl == null) {
       log.error("Create Room failed: RoomTemplate not found {}", roomId);
@@ -593,7 +669,9 @@ public class WorldFactory {
     }
 
     // 這裡負責組裝：RoomActor 需要 Template + ZoneTemplate
-    return new RoomActor(roomTpl, zoneTpl);
+    RoomActor room = new RoomActor(roomTpl, zoneTpl, servicesProvider.getObject(), this);
+    room.start();
+    return room;
   }
 
   /**
@@ -601,6 +679,7 @@ public class WorldFactory {
    */
   public MobActor createMob(String templateId) {
     // 1. 查 Template (Record)
+    log.info("createMob templateId: {}", templateId);
     MobTemplate tpl = templateRepo.findMob(templateId).orElse(null);
     if (tpl == null) {
       log.error("MobTemplate ID not found: " + templateId);
@@ -608,7 +687,8 @@ public class WorldFactory {
     }
 
     // 2. new Actor (State 自動生成)
-    MobActor mob = new MobActor(tpl, managerProvider.getObject(), servicesProvider.getObject());
+    // MobActor mob = new MobActor(tpl);
+    MobActor mob = new MobActor(tpl, servicesProvider.getObject());
 
     // 3. 這裡可以處理「菁英怪」或「隨機稱號」邏輯
     // if (Math.random() < 0.1) mob.setPrefix("狂暴的");
@@ -623,6 +703,7 @@ public class WorldFactory {
    * 建立物品實體 (處理隨機數值)
    */
   public GameItem createItem(String templateId) {
+    log.info("templateId:{}", templateId);
     ItemTemplate tpl = templateRepo.findItem(templateId).orElse(null);
     if (tpl == null) {
       log.error("Create Item failed: Template not found {}", templateId);
@@ -631,15 +712,15 @@ public class WorldFactory {
 
     GameItem item = new GameItem();
     item.setId(UUID.randomUUID().toString()); // 生成唯一 ID
-    item.setTemplateId(tpl.id());
-    item.setCurrentDurability(tpl.maxDurability());
+    item.setTemplate(tpl);
+    // item.setCurrentDurability(tpl.maxDurability());
     item.setAmount(1);
 
     // --- 處理隨機屬性 (RNG) ---
     // 這是 Factory 最有價值的地方，不要讓 Manager 變髒
-    if (tpl.chance() < 1.0) {
-      // 處理掉落率邏輯...
-    }
+    // if (tpl.chance() < 1.0) {
+    // 處理掉落率/開箱率邏輯...
+    // }
 
     // 範例：10% 機率出現稀有屬性
     if (ThreadLocalRandom.current().nextDouble() < 0.1) {
@@ -899,14 +980,14 @@ public class SystemEventListener {
       if (retryCount >= MAX_AUTH_RETRIES) {
         log.warn("連線 {} 註冊帳號失敗次數過多 ({})，強制中斷。最後輸入: {}", event.sessionId(), retryCount,
             event.input());
-        actor.sendText("嘗試次數過多，連線即將關閉。");
+        actor.reply("嘗試次數過多，連線即將關閉。");
         session.close();
         return;
       }
 
       log.info("連線 {} 註冊帳號失敗: {} (剩餘次數: {})", event.sessionId(), errorReason,
           MAX_AUTH_RETRIES - retryCount);
-      actor.sendText(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+      actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
       return;
     }
 
@@ -947,14 +1028,14 @@ public class SystemEventListener {
       if (retryCount >= MAX_AUTH_RETRIES) {
         log.warn("連線 {} 註冊密碼失敗次數過多 ({})，強制中斷。最後輸入: {}", event.sessionId(), retryCount,
             event.input());
-        actor.sendText("嘗試次數過多，連線即將關閉。");
+        actor.reply("嘗試次數過多，連線即將關閉。");
         session.close();
         return;
       }
 
       log.info("連線 {} 註冊密碼失敗: {} (剩餘次數: {})", event.sessionId(), errorReason,
           MAX_AUTH_RETRIES - retryCount);
-      actor.sendText(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+      actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
       return;
     }
 
@@ -970,7 +1051,7 @@ public class SystemEventListener {
     // String msg = "請輸入密碼:";
     String msg = "【註冊流程】\r\n註冊完成，請重新登入。";
     // 告訴前端：切換輸入模式為密碼 (透過自定義協議，例如 JSON {type: "PWD_MODE"})
-    actor.sendText(msg);
+    actor.reply(msg);
 
     actor.setConnectionState(ConnectionState.CONNECTED);
   }
@@ -1032,14 +1113,14 @@ public class SystemEventListener {
 
       if (retryCount >= MAX_AUTH_RETRIES) {
         log.warn("連線 {} 驗證失敗次數過多 ({})，強制中斷。最後輸入: {}", event.sessionId(), retryCount, event.input());
-        actor.sendText("嘗試次數過多，連線即將關閉。");
+        actor.reply("嘗試次數過多，連線即將關閉。");
         session.close();
         return;
       }
 
       log.info("連線 {} 驗證失敗: {} (剩餘次數: {})", event.sessionId(), errorReason,
           MAX_AUTH_RETRIES - retryCount);
-      actor.sendText(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+      actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
       return;
     }
 
@@ -1113,11 +1194,15 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.htmlmud.domain.actor.impl.PlayerActor;
+import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.model.LivingState;
+import com.example.htmlmud.domain.model.PlayerRecord;
 import com.example.htmlmud.infra.persistence.entity.CharacterEntity;
 import com.example.htmlmud.infra.persistence.entity.UserEntity;
 import com.example.htmlmud.infra.persistence.repository.CharacterRepository;
 import com.example.htmlmud.infra.persistence.repository.UserRepository;
+import com.example.htmlmud.protocol.ConnectionState;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -1132,6 +1217,9 @@ public class AuthService {
 
   // 使用 BCrypt，Spring Security 內建，或者自己 new 一個
   private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+  private final PlayerService playerService;
+
 
   private final UserRepository userRepository;
 
@@ -1159,7 +1247,7 @@ public class AuthService {
     CharacterEntity characterEntity = new CharacterEntity();
     characterEntity.setUid(newUser.getId());
     characterEntity.setName(username);
-    // characterEntity.setNickname(username);
+    characterEntity.setNickname(username); // TODO 待處理
     characterEntity.setCurrentRoomId(null);
     characterEntity.setState(new LivingState());
     characterEntity.setCreatedAt(now);
@@ -1172,8 +1260,8 @@ public class AuthService {
    * 登入驗證
    */
   @Transactional
-  public UserEntity login(String username, String rawPassword) {
-    log.info("login username:{} password: {}", username, rawPassword);
+  public PlayerRecord login(String username, String rawPassword) {
+    // log.info("login username:{} password: {}", username, rawPassword);
     UserEntity user = userRepository.findByUsername(username)
         .orElseThrow(() -> new IllegalArgumentException("帳號不存在"));
 
@@ -1183,7 +1271,15 @@ public class AuthService {
 
     // 更新最後登入時間
     user.setLastLoginAt(LocalDateTime.now());
-    return userRepository.save(user);
+    userRepository.save(user);
+    log.info("玩家登入成功: {}", username);
+
+    // -----------------------------------------------------------------------------
+    // 進入角色設定流程
+    // -----------------------------------------------------------------------------
+
+    // 取出角色 player 資料
+    return playerService.loadRecord(user.getId(), username);
   }
 
 
@@ -1298,6 +1394,8 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Collectors;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
@@ -1305,11 +1403,15 @@ import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.application.factory.WorldFactory;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
+import com.example.htmlmud.domain.context.GameServices;
 import com.example.htmlmud.domain.context.MudKeys;
+import com.example.htmlmud.domain.model.map.ItemTemplate;
 import com.example.htmlmud.domain.model.map.MobTemplate;
 import com.example.htmlmud.domain.model.map.RoomExit;
 import com.example.htmlmud.domain.model.map.RoomTemplate;
+import com.example.htmlmud.domain.model.map.SpawnRule;
 import com.example.htmlmud.domain.model.map.ZoneTemplate;
+import com.example.htmlmud.domain.service.CombatService;
 import com.example.htmlmud.infra.mapper.ItemTemplateMapper;
 import com.example.htmlmud.infra.persistence.repository.ItemTemplateRepository;
 import com.example.htmlmud.infra.persistence.repository.RoomStateRepository;
@@ -1328,11 +1430,16 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WorldManager {
 
+  // private final ObjectProvider<GameServices> servicesProvider;
+
   @Getter
   private final AuthService authService;
 
   @Getter
   private final PlayerService playerService;
+
+  @Getter
+  private final CombatService combatService;
 
   @Getter
   private final WorldFactory worldFactory; // 注入 Factory
@@ -1362,6 +1469,7 @@ public class WorldManager {
 
   // 2. Runtime Actors: 存放正在運作的 RoomActor
   // 使用 ConcurrentHashMap 確保並發存取安全
+  @Getter
   private final ConcurrentHashMap<String, RoomActor> activeRooms = new ConcurrentHashMap<>();
 
   // 3. Write-Behind Queue: 存放待寫入資料庫的變更
@@ -1408,6 +1516,43 @@ public class WorldManager {
       templateRepo.registerZone(zoneTemplate);
       String zoneId = zoneTemplate.id();
 
+
+      // 讀取 mob 資料
+      resource = resourceResolver.getResource("classpath:data/zones/" + zone + "/mobs.json");
+      if (resource == null) {
+        log.error("Zone mobs not found: {}", zone);
+        return;
+      } else {
+        Set<MobTemplate> mobs = objectMapper.readValue(resource.getInputStream(),
+            new TypeReference<Set<MobTemplate>>() {});
+        for (MobTemplate mob : mobs) {
+          log.info("{}", objectMapper.writeValueAsString(mob));
+
+          String newMobId = zoneId + ":" + mob.id();
+          MobTemplate newMob = mob.toBuilder().id(newMobId).build();
+          templateRepo.registerMob(newMob);
+        }
+      }
+
+
+      // 讀取 item 資料
+      resource = resourceResolver.getResource("classpath:data/zones/" + zone + "/items.json");
+      if (resource == null) {
+        log.error("Zone items not found: {}", zone);
+        return;
+      } else {
+        Set<ItemTemplate> items = objectMapper.readValue(resource.getInputStream(),
+            new TypeReference<Set<ItemTemplate>>() {});
+        for (ItemTemplate item : items) {
+          log.info("{}", objectMapper.writeValueAsString(item));
+
+          String newItemId = zoneId + ":" + item.id();
+          ItemTemplate newItem = item.toBuilder().id(newItemId).build();
+          templateRepo.registerItem(newItem);
+        }
+      }
+
+
       // 讀取 room 資料
       resource = resourceResolver.getResource("classpath:data/zones/" + zone + "/rooms.json");
       if (resource == null) {
@@ -1416,47 +1561,40 @@ public class WorldManager {
       }
 
       // 使用 TypeReference 來正確讀取 JSON 陣列為 Set<RoomTemplate>
-      Set<RoomTemplate> rooms = objectMapper.readValue(resource.getInputStream(),
-          new TypeReference<Set<RoomTemplate>>() {});
+      List<RoomTemplate> rooms = objectMapper.readValue(resource.getInputStream(),
+          new TypeReference<List<RoomTemplate>>() {});
 
       for (RoomTemplate room : rooms) {
         log.info("{}", objectMapper.writeValueAsString(room));
-        // 更新exits里的targetRoomId
-        if (room.exits() != null) {
-          for (Map.Entry<String, RoomExit> entry : room.exits().entrySet()) {
-            RoomExit roomExit = entry.getValue();
-            String newTargetRoomId = IdUtils.resolveId(zoneId, roomExit.targetRoomId());
-            RoomExit newRoomExit = roomExit.toBuilder().targetRoomId(newTargetRoomId).build();
-            entry.setValue(newRoomExit);
-          }
-        }
+
+        // 1. 處理 Mob Spawn Rules (使用 Stream 避免 ConcurrentModificationException)
+        List<SpawnRule> updatedMobRules = room.mobSpawnRules() == null ? null
+            : room.mobSpawnRules().stream()
+                .map(rule -> rule.toBuilder().id(IdUtils.resolveId(zoneId, rule.id())).build())
+                .toList();
+
+        // 2. 處理 Item Spawn Rules
+        List<SpawnRule> updatedItemRules = room.itemSpawnRules() == null ? null
+            : room.itemSpawnRules().stream()
+                .map(rule -> rule.toBuilder().id(IdUtils.resolveId(zoneId, rule.id())).build())
+                .toList();
+
+        // 3. 處理 Exits
+        Map<String, RoomExit> updatedExits = room.exits() == null ? null
+            : room.exits().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toBuilder()
+                    .targetRoomId(IdUtils.resolveId(zoneId, e.getValue().targetRoomId())).build()));
 
         // 更新 room.id
         String newRoomId = zoneId + ":" + room.id();
-        RoomTemplate newRoom = room.toBuilder().id(newRoomId).zoneId(zoneId).build();
+        RoomTemplate newRoom = room.toBuilder().id(newRoomId).zoneId(zoneId).exits(updatedExits)
+            .mobSpawnRules(updatedMobRules).itemSpawnRules(updatedItemRules).build();
+
         templateRepo.registerRoom(newRoom);
+
+        // init roomActor
+        getRoomActor(newRoomId);
       }
-
-
-      // 讀取 mob 資料
-      resource = resourceResolver.getResource("classpath:data/zones/" + zone + "/mobs.json");
-      if (resource == null) {
-        log.error("Zone mobs not found: {}", zone);
-        return;
-      }
-
-      Set<MobTemplate> mobs = objectMapper.readValue(resource.getInputStream(),
-          new TypeReference<Set<MobTemplate>>() {});
-      for (MobTemplate mob : mobs) {
-        log.info("{}", objectMapper.writeValueAsString(mob));
-
-        String newMobId = zoneId + ":" + mob.id();
-        MobTemplate newMob = mob.toBuilder().id(newMobId).build();
-        templateRepo.registerMob(newMob);
-      }
-
-
-      // 讀取 item 資料
 
     } catch (IOException e) {
       log.error("Could not read rooms resources", e);
@@ -1515,35 +1653,13 @@ public class WorldManager {
    * // 啟動 Write-Behind 消費者執行緒 startPersistenceWorker(); }
    */
 
-  // 啟動時載入世界
-  /*
-   * public void loadWorld2() { List<RoomStateEntity> entities = roomStateRepository.findAll();
-   *
-   * for (RoomStateEntity e : entities) { // 1. 構建靜態 Template RoomStateRecord tpl = new
-   * RoomStateRecord(e.getRoomId(), e.getZoneId(), e.getDroppedItems());
-   *
-   * // 2. 構建動態 Actor (注入掉落物) // RoomActor actor = new RoomActor(tpl, e.getDroppedItems());
-   *
-   * // activeRooms.put(e.getId(), actor); } }
-   */
-
-
-
   /**
    * 核心方法：取得或創建 RoomActor 這是進入遊戲世界的入口
    */
   public RoomActor getRoomActor(String roomId) {
-    log.info("getRoomActor roomId: {}", roomId);
-    // 1. 如果 Actor 已經存在，直接回傳
+    // 如果 Actor 已經存在，直接回傳
     return activeRooms.computeIfAbsent(roomId, id -> {
-      RoomActor room = worldFactory.createRoom(id);
-
-      // 可以在這裡觸發初始化事件
-      if (room != null) {
-        room.spawnInitialMobs(); // 讓房間自己去生怪
-      }
-
-      return room;
+      return worldFactory.createRoom(id);
     });
   }
 
@@ -1642,7 +1758,7 @@ public class WorldManager {
         continue;
       }
       // 直接發送文字
-      actor.sendText(message);
+      actor.reply(message);
     }
   }
 
@@ -1703,7 +1819,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import com.example.htmlmud.application.command.CommandDispatcher;
+import com.example.htmlmud.application.command.parser.TargetSelector;
 import com.example.htmlmud.domain.context.GameServices;
+import com.example.htmlmud.domain.service.CombatService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
@@ -1713,20 +1831,32 @@ public class GameConfig {
 
       ObjectMapper objectMapper,
 
-      ApplicationEventPublisher eventPublisher,
+      CombatService combatService,
 
       CommandDispatcher commandDispatcher,
 
-      ScheduledExecutorService scheduler) {
+      ScheduledExecutorService scheduler,
+
+      ApplicationEventPublisher eventPublisher,
+
+      TargetSelector targetSelector
+
+  ) {
     return new GameServices(
 
         objectMapper,
 
-        eventPublisher,
+        combatService,
 
         commandDispatcher,
 
-        scheduler);
+        scheduler,
+
+        eventPublisher,
+
+        targetSelector
+
+    );
   }
 }
 
@@ -1832,110 +1962,11 @@ public class WebSocketConfig implements WebSocketConfigurer {
 }
 
 
---- File: LivingActor.java ---
-
-package com.example.htmlmud.domain.actor;
-
-import com.example.htmlmud.application.service.WorldManager;
-import com.example.htmlmud.domain.actor.core.VirtualActor;
-import com.example.htmlmud.domain.context.GameServices;
-import com.example.htmlmud.domain.model.LivingState;
-import com.example.htmlmud.protocol.ActorMessage;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-
-// 泛型 T 讓我們可以在子類別擴充更多 Message 類型
-@Slf4j
-public abstract class LivingActor extends VirtualActor<ActorMessage> {
-
-  @Getter
-  protected GameServices services;
-
-  @Getter
-  protected WorldManager manager;
-
-
-  @Getter
-  protected String id;
-
-  // 所有生物都有狀態 (HP/MP)
-  @Getter
-  protected LivingState state;
-
-  // 所有生物都在某個房間 (可能是 null)
-  @Getter
-  @Setter
-  protected String currentRoomId;
-
-  // 用來記錄進入房間的時間戳記 (奈秒精度以防同時進入)
-  @Getter
-  private long lastEnterRoomTime;
-
-  public LivingActor(String id, LivingState state, WorldManager manager, GameServices services) {
-    super(id); // Actor Name: "PLAYER:1"
-    this.id = id;
-    this.state = state;
-    this.manager = manager;
-    this.services = services;
-  }
-
-  // --- 共用行為邏輯 ---
-
-  // 1. 受傷處理
-  public void takeDamage(int amount, String attackerId) {
-    if (state.isDead)
-      return;
-
-    this.state.hp -= amount;
-    log.info("{} took {} damage from {}. HP: {}/{}", id, amount, attackerId, state.hp, state.maxHp);
-
-    // 發送訊息給房間 (讓其他人看到噴血)
-    // if (currentRoom != null) {
-    // currentRoom.broadcast(...);
-    // }
-
-    if (state.hp <= 0) {
-      die(attackerId);
-    }
-  }
-
-  // 2. 死亡處理
-  protected void die(String killerId) {
-    this.state.hp = 0;
-    this.state.isDead = true;
-    log.info("{} has been slain by {}!", id, killerId);
-
-    onDeath(killerId); // 樣板方法 (Template Method)，給子類別實作掉寶或重生地
-  }
-
-  // 3. 治療處理
-  public void heal(int amount) {
-    if (state.isDead)
-      return;
-    this.state.hp = Math.min(state.hp + amount, state.maxHp);
-  }
-
-  protected void onAttacked(LivingActor attacker, int damage) {
-
-  }
-
-  // 定義抽象方法，子類別必須實作
-  protected void onDeath(String killerId) {
-
-  }
-
-  // 當怪物進入房間時呼叫此方法
-  public void markEnterRoom() {
-    this.lastEnterRoomTime = System.nanoTime();
-  }
-}
-
-
 --- File: AggressiveBehavior.java ---
 
 package com.example.htmlmud.domain.actor.behavior;
 
+import com.example.htmlmud.domain.actor.impl.LivingActor;
 import com.example.htmlmud.domain.actor.impl.MobActor;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import lombok.RequiredArgsConstructor;
@@ -1957,6 +1988,12 @@ public class AggressiveBehavior implements MobBehavior {
     self.sayToRoom("吼！！！(它看起來不想跟你說話)");
     self.attack(player);
   }
+
+  @Override
+  public void onDamaged(MobActor self, LivingActor attacker) {
+    self.sayToRoom("吼吼吼！！！(它看起來想殺死你)");
+    self.attack(attacker);
+  }
 }
 
 
@@ -1967,10 +2004,14 @@ package com.example.htmlmud.domain.actor.behavior;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import org.slf4j.MDC;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+import com.example.htmlmud.application.service.AuthService;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
+import com.example.htmlmud.domain.actor.impl.RoomActor;
+import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.context.MudKeys;
 import com.example.htmlmud.domain.model.PlayerRecord;
 import com.example.htmlmud.infra.persistence.entity.UserEntity;
@@ -1981,10 +2022,12 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@RequiredArgsConstructor
+// @RequiredArgsConstructor
 public class GuestBehavior implements PlayerBehavior {
 
   private static final int MAX_AUTH_RETRIES = 5;
+
+  private final AuthService authService;
 
   @Setter
   private String tempUsername; // 暫存正在處理的帳號名
@@ -1992,37 +2035,37 @@ public class GuestBehavior implements PlayerBehavior {
   @Setter
   private String tempPassword; // 暫存正在處理的密碼
 
+  public GuestBehavior(AuthService authService) {
+    this.authService = authService;
+  }
 
   @Override
   public PlayerBehavior handle(PlayerActor actor, GameCommand cmd) {
-    MDC.put("actorName", "GUEST");
-
-    try {
-      // 目前只處理文字輸入 (Input)
-      if (cmd instanceof GameCommand.Input(var text)) {
-        switch (actor.getConnectionState()) {
-          case CONNECTED -> doConnected(actor, text);
-          case CREATING_USERNAME -> doCreatingUsername(actor, text);
-          case CREATING_PASSWORD -> doCreatingPassword(actor, text);
-          case ENTERING_PASSWORD -> doEnterPassword(actor, text);
-          case ENTERING_CHAR_NAME -> doEnteringCharName(actor, text);
-          case ENTERING_CHAR_GENDER -> {
-          }
-          case ENTERING_CHAR_RACE -> {
-          }
-          case ENTERING_CHAR_CLASS -> {
-          }
-          case ENTERING_CHAR_ATTRIBUTES -> {
-          }
-          case IN_GAME -> {
-          }
+    // 目前只處理文字輸入 (Input)
+    PlayerBehavior next = null;
+    if (cmd instanceof GameCommand.Input(var text)) {
+      switch (actor.getConnectionState()) {
+        case CONNECTED -> doConnected(actor, text);
+        case CREATING_USERNAME -> doCreatingUsername(actor, text);
+        case CREATING_PASSWORD -> doCreatingPassword(actor, text);
+        case ENTERING_PASSWORD -> {
+          next = doEnterPassword(actor, text);
+        }
+        case ENTERING_CHAR_NAME -> doEnteringCharName(actor, text);
+        case ENTERING_CHAR_GENDER -> {
+        }
+        case ENTERING_CHAR_RACE -> {
+        }
+        case ENTERING_CHAR_CLASS -> {
+        }
+        case ENTERING_CHAR_ATTRIBUTES -> {
+        }
+        case IN_GAME -> {
         }
       }
-    } finally {
-      MDC.clear();
     }
 
-    return null;
+    return next;
   }
 
   private void doConnected(PlayerActor actor, String input) {
@@ -2061,7 +2104,7 @@ public class GuestBehavior implements PlayerBehavior {
     int retryCount = (int) Optional
         .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
 
-    String errorReason = actor.getManager().getAuthService().validateUsername(input);
+    String errorReason = authService.validateUsername(input);
 
     if (errorReason != null) {
       retryCount++;
@@ -2069,7 +2112,7 @@ public class GuestBehavior implements PlayerBehavior {
 
       if (retryCount >= MAX_AUTH_RETRIES) {
         log.warn("連線 {} 註冊帳號失敗次數過多 ({})，強制中斷。最後輸入: {}", session.getId(), retryCount, input);
-        actor.sendText("嘗試次數過多，連線即將關閉。");
+        actor.reply("嘗試次數過多，連線即將關閉。");
         try {
           session.close();
         } catch (IOException ignored) {
@@ -2080,7 +2123,7 @@ public class GuestBehavior implements PlayerBehavior {
 
       log.info("連線 {} 註冊帳號失敗: {} (剩餘次數: {})", session.getId(), errorReason,
           MAX_AUTH_RETRIES - retryCount);
-      actor.sendText(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+      actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
       return;
     }
 
@@ -2113,7 +2156,7 @@ public class GuestBehavior implements PlayerBehavior {
     int retryCount = (int) Optional
         .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
 
-    String errorReason = actor.getManager().getAuthService().validatePassword(input);
+    String errorReason = authService.validatePassword(input);
 
     if (errorReason != null) {
       retryCount++;
@@ -2121,7 +2164,7 @@ public class GuestBehavior implements PlayerBehavior {
 
       if (retryCount >= MAX_AUTH_RETRIES) {
         log.warn("連線 {} 註冊密碼失敗次數過多 ({})，強制中斷。最後輸入: {}", session.getId(), retryCount, input);
-        actor.sendText("嘗試次數過多，連線即將關閉。");
+        actor.reply("嘗試次數過多，連線即將關閉。");
         try {
           session.close();
         } catch (IOException ignored) {
@@ -2132,7 +2175,7 @@ public class GuestBehavior implements PlayerBehavior {
 
       log.info("連線 {} 註冊密碼失敗: {} (剩餘次數: {})", session.getId(), errorReason,
           MAX_AUTH_RETRIES - retryCount);
-      actor.sendText(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+      actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
       return;
     }
 
@@ -2143,7 +2186,7 @@ public class GuestBehavior implements PlayerBehavior {
     this.tempPassword = input;
 
     // 新增玩家帳密
-    actor.getManager().getAuthService().register(tempUsername, tempPassword);
+    authService.register(tempUsername, tempPassword);
     log.info("玩家註冊成功: {}", tempUsername);
 
     this.tempUsername = null;
@@ -2152,10 +2195,9 @@ public class GuestBehavior implements PlayerBehavior {
     // String msg = "請輸入密碼:";
     String msg = "【註冊流程】\r\n註冊完成，請重新登入。";
     // 告訴前端：切換輸入模式為密碼 (透過自定義協議，例如 JSON {type: "PWD_MODE"})
-    actor.sendText(msg);
+    actor.reply(msg);
 
     actor.setConnectionState(ConnectionState.CONNECTED);
-    actor.start();
   }
 
   private void doEnterUsername(PlayerActor actor, String input) {
@@ -2167,10 +2209,10 @@ public class GuestBehavior implements PlayerBehavior {
     int retryCount = (int) Optional
         .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
 
-    String errorReason = actor.getManager().getAuthService().validateUsername(input);
+    String errorReason = authService.validateUsername(input);
 
     // 如果格式正確，檢查資料庫是否存在該帳號
-    if (errorReason == null && !actor.getManager().getAuthService().exists(input)) {
+    if (errorReason == null && !authService.exists(input)) {
       errorReason = "帳號不存在。";
     }
 
@@ -2180,7 +2222,7 @@ public class GuestBehavior implements PlayerBehavior {
 
       if (retryCount >= MAX_AUTH_RETRIES) {
         log.warn("連線 {} 登入帳號失敗次數過多 ({})，強制中斷。最後輸入: {}", session.getId(), retryCount, input);
-        actor.sendText("嘗試次數過多，連線即將關閉。");
+        actor.reply("嘗試次數過多，連線即將關閉。");
         try {
           session.close();
         } catch (IOException ignored) {
@@ -2191,7 +2233,7 @@ public class GuestBehavior implements PlayerBehavior {
 
       log.info("連線 {} 登入帳號失敗: {} (剩餘次數: {})", session.getId(), errorReason,
           MAX_AUTH_RETRIES - retryCount);
-      actor.sendText(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+      actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
       return;
     }
 
@@ -2214,7 +2256,7 @@ public class GuestBehavior implements PlayerBehavior {
     }
   }
 
-  private void doEnterPassword(PlayerActor actor, String input) {
+  private PlayerBehavior doEnterPassword(PlayerActor actor, String input) {
     log.info("doEnterPassword");
 
     WebSocketSession session = actor.getSession();
@@ -2223,7 +2265,7 @@ public class GuestBehavior implements PlayerBehavior {
     int retryCount = (int) Optional
         .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
 
-    String errorReason = actor.getManager().getAuthService().validatePassword(input);
+    String errorReason = authService.validatePassword(input);
 
     if (errorReason != null) {
       retryCount++;
@@ -2231,19 +2273,19 @@ public class GuestBehavior implements PlayerBehavior {
 
       if (retryCount >= MAX_AUTH_RETRIES) {
         log.warn("連線 {} 登入密碼失敗次數過多 ({})，強制中斷。最後輸入: {}", session.getId(), retryCount, input);
-        actor.sendText("嘗試次數過多，連線即將關閉。");
+        actor.reply("嘗試次數過多，連線即將關閉。");
         try {
           session.close();
         } catch (IOException ignored) {
         }
 
-        return;
+        return null;
       }
 
       log.info("連線 {} 登入密碼失敗: {} (剩餘次數: {})", session.getId(), errorReason,
           MAX_AUTH_RETRIES - retryCount);
-      actor.sendText(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
-      return;
+      actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+      return null;
     }
 
     // 驗證成功，移除計數
@@ -2254,25 +2296,10 @@ public class GuestBehavior implements PlayerBehavior {
     // log.info("玩家登入: {} {}", this.tempUsername, this.tempPassword);
 
     // 登入玩家帳密
-    UserEntity userEntity = actor.getManager().getAuthService().login(tempUsername, tempPassword);
-    log.info("玩家登入成功: {} {}", userEntity.getId(), userEntity.getUsername());
+    PlayerRecord record = authService.login(tempUsername, tempPassword);
 
-    // 載入 player
-    try {
-      PlayerRecord record = actor.getManager().getPlayerService().loadRecord(userEntity.getId(),
-          userEntity.getUsername());
-      actor.upgradeIdentity(record);
-      actor.setConnectionState(ConnectionState.IN_GAME);
-
-      // 在 PlayerActor.java 中
-      log.info("當前狀態: {}", actor.getServices().objectMapper().writeValueAsString(actor.getState()));
-
-    } catch (Exception e) {
-      log.error("", e);
-      // 進入角色設定流程
-      doEnteringCharName(actor, input);
-      return;
-    }
+    // 變更為正式玩家身份
+    return upgradeIdentity(actor, record);
   }
 
   private void doEnteringCharName(PlayerActor actor, String input) {
@@ -2294,6 +2321,24 @@ public class GuestBehavior implements PlayerBehavior {
     }
   }
 
+
+  // 供 GuestBehavior 呼叫：由GUEST變更為正式玩家
+  private PlayerBehavior upgradeIdentity(PlayerActor actor, PlayerRecord record) {
+
+    // 資料載入
+    actor.fromRecord(this, record);
+    actor.setConnectionState(ConnectionState.IN_GAME);
+
+    // 裝備?
+
+    // 讓玩家進入資料紀錄的房間
+    RoomActor room = actor.getManager().getRoomActor(actor.getCurrentRoomId());
+    room.enter(actor, new CompletableFuture<Void>());
+
+    log.info("Actor 載入玩家資料 當前狀態: {} {}", actor.getName(), actor.getNickname());
+    return new InGameBehavior();
+  }
+
 }
 
 
@@ -2301,9 +2346,7 @@ public class GuestBehavior implements PlayerBehavior {
 
 package com.example.htmlmud.domain.actor.behavior;
 
-import org.slf4j.MDC;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
-import com.example.htmlmud.domain.context.GameServices;
 import com.example.htmlmud.protocol.GameCommand;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -2316,31 +2359,25 @@ public class InGameBehavior implements PlayerBehavior {
   @Override
   public void onEnter(PlayerActor actor) {
     log.info("InGameBehavior onEnter()");
+
     // 進場時自動看一次房間
-    // actor.handleGameLogic("look");
     actor.getServices().commandDispatcher().dispatch(actor, "look");
   }
 
   @Override
   public PlayerBehavior handle(PlayerActor actor, GameCommand cmd) {
-    log.info("InGameBehavior handle()");
+    // log.info("InGameBehavior handle()");
 
-    MDC.put("actorName", actor.getName());
-
-    try {
-      // 目前只處理文字輸入 (Input)
-      if (cmd instanceof GameCommand.Input(var text)) {
-        // 【關鍵】將文字交給 Dispatcher
-        actor.getServices().commandDispatcher().dispatch(actor, text);
-      }
-      // else if (cmd instanceof GameCommand.Logout) {
-      // actor.reply("登出中...");
-      // actor.handleDisconnect();
-      // // ... 切換回 GuestBehavior ...
-      // }
-    } finally {
-      MDC.clear();
+    // 目前只處理文字輸入 (Input)
+    if (cmd instanceof GameCommand.Input(var text)) {
+      // 【關鍵】將文字交給 Dispatcher
+      actor.getServices().commandDispatcher().dispatch(actor, text);
     }
+    // else if (cmd instanceof GameCommand.Logout) {
+    // actor.reply("登出中...");
+    // actor.handleDisconnect();
+    // // ... 切換回 GuestBehavior ...
+    // }
 
     return null; // 保持 InGame 狀態
   }
@@ -2351,7 +2388,7 @@ public class InGameBehavior implements PlayerBehavior {
 
 package com.example.htmlmud.domain.actor.behavior;
 
-import com.example.htmlmud.domain.actor.LivingActor;
+import com.example.htmlmud.domain.actor.impl.LivingActor;
 import com.example.htmlmud.domain.actor.impl.MobActor;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import lombok.RequiredArgsConstructor;
@@ -2395,7 +2432,7 @@ public class MerchantBehavior implements MobBehavior {
 
 package com.example.htmlmud.domain.actor.behavior;
 
-import com.example.htmlmud.domain.actor.LivingActor;
+import com.example.htmlmud.domain.actor.impl.LivingActor;
 import com.example.htmlmud.domain.actor.impl.MobActor;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.protocol.ActorMessage;
@@ -2423,6 +2460,7 @@ public interface MobBehavior {
 
 package com.example.htmlmud.domain.actor.behavior;
 
+import com.example.htmlmud.domain.actor.impl.LivingActor;
 import com.example.htmlmud.domain.actor.impl.MobActor;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import lombok.RequiredArgsConstructor;
@@ -2450,6 +2488,11 @@ public class PassiveBehavior implements MobBehavior {
 
   }
 
+  @Override
+  public void onDamaged(MobActor self, LivingActor attacker) {
+    self.sayToRoom("吼吼~！！！(它看起來想殺死你)");
+    self.attack(attacker);
+  }
 }
 
 
@@ -2478,7 +2521,6 @@ package com.example.htmlmud.domain.actor.core;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import com.example.htmlmud.protocol.ActorMessage;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -2488,18 +2530,18 @@ public abstract class VirtualActor<T> {
   protected final BlockingQueue<T> mailbox = new LinkedBlockingQueue<>();
   private final AtomicBoolean running = new AtomicBoolean(true);
   private final AtomicBoolean started = new AtomicBoolean(false);
-  private final String actorName;
+  private final String actorId;
 
-  public VirtualActor(String actorName) {
-    this.actorName = actorName;
+  public VirtualActor(String actorId) {
+    this.actorId = actorId;
   }
 
   // 啟動 Actor：這會生成一個專屬的 Virtual Thread
   public void start() {
     if (started.compareAndSet(false, true)) {
-      Thread.ofVirtual().name("actor-" + actorName).start(this::runLoop);
+      Thread.ofVirtual().name(actorId).start(this::runLoop);
     } else {
-      log.warn("Actor [{}] 已經啟動，忽略重複的啟動請求。", actorName);
+      log.warn("[{}] 已經啟動，忽略重複的啟動請求。", actorId);
     }
   }
 
@@ -2510,7 +2552,7 @@ public abstract class VirtualActor<T> {
 
   // 核心迴圈
   private void runLoop() {
-    log.info("Actor [{}] started on thread: {}", actorName, Thread.currentThread());
+    log.info("[{}] started on thread: {}", actorId, Thread.currentThread());
 
     try {
       while (running.get()) {
@@ -2520,15 +2562,15 @@ public abstract class VirtualActor<T> {
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      log.warn("Actor [{}] interrupted.", actorName);
+      log.warn("[{}] interrupted.", actorId);
     } catch (Exception e) {
-      log.error("Actor [{}] encountered unexpected error", actorName, e);
+      log.error("[{}] encountered unexpected error", actorId, e);
     }
   }
 
   public void stop() {
     if (running.compareAndSet(true, false)) { // 確保只執行一次
-      log.info("Stopping Actor [{}]", actorName);
+      log.info("Stopping [{}]", actorId);
       // 重要：送出一個中斷訊號給執行該 Actor 的 Virtual Thread
       // 因為 runLoop 卡在 mailbox.take()，如果不 interrupt，它會永遠卡在那裡直到有新訊息
       // 注意：這需要你在 start() 時保存 Thread 參照，或者發送一個 Poison Pill
@@ -2540,30 +2582,362 @@ public abstract class VirtualActor<T> {
 }
 
 
+--- File: LivingActor.java ---
+
+package com.example.htmlmud.domain.actor.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import org.springframework.web.socket.WebSocketSession;
+import com.example.htmlmud.domain.actor.core.VirtualActor;
+import com.example.htmlmud.domain.context.GameServices;
+import com.example.htmlmud.domain.model.EquipmentSlot;
+import com.example.htmlmud.domain.model.GameItem;
+import com.example.htmlmud.domain.model.ItemType;
+import com.example.htmlmud.domain.model.LivingState;
+import com.example.htmlmud.domain.model.map.ItemTemplate;
+import com.example.htmlmud.protocol.ActorMessage;
+import com.example.htmlmud.protocol.GameCommand;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+
+// 泛型 T 讓我們可以在子類別擴充更多 Message 類型
+@Slf4j
+public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
+    permits PlayerActor, MobActor {
+
+  @Getter
+  protected GameServices services;
+
+  @Getter
+  protected String id;
+
+  @Getter
+  @Setter
+  protected String name;
+
+  // 所有生物都有狀態 (HP/MP)
+  @Getter
+  protected LivingState state;
+
+  // 所有生物都在某個房間 (可能是 null)
+  @Getter
+  @Setter
+  protected String currentRoomId;
+
+  // 用來記錄進入房間的時間戳記 (奈秒精度以防同時進入)
+  @Getter
+  private long lastEnterRoomTime;
+
+  // 背包
+  @Getter
+  protected List<GameItem> inventory = new ArrayList<>();
+
+
+  public LivingActor(String id, String name, LivingState state, GameServices services) {
+    super(id);
+    this.id = id;
+    this.name = name;
+    this.state = state;
+    this.services = services;
+  }
+
+  @Override
+  protected void handleMessage(ActorMessage msg) {
+    switch (msg) {
+      case ActorMessage.Tick(var tickCount, var timestamp) -> {
+        doTick(tickCount, timestamp);
+      }
+      case ActorMessage.Command(var traceId, var cmd) -> {
+        // services.commandDispatcher().dispatch(this, cmd);
+        doCommand(traceId, cmd);
+      }
+      case ActorMessage.Die(var killerId) -> {
+        doDeath(killerId);
+      }
+      case ActorMessage.SendText(var session, var content) -> {
+        doSendText(session, content);
+      }
+      case ActorMessage.OnAttacked(var attacker) -> {
+        doOnAttacked(attacker);
+      }
+      case ActorMessage.Equip(var item, var future) -> {
+        doEquip(item, future);
+      }
+      case ActorMessage.Unequip(var slot, var future) -> {
+        doUnequip(slot, future);
+      }
+    }
+  }
+
+
+  // default 應依自己需求改寫 -----------------------------------------------------------
+  protected void doTick(long tickCount, long time) {
+    // === 1. 戰鬥心跳 (最優先，每秒執行) ===
+    // 頻率：1秒 (因為 WorldPulse 就是 1秒)
+    if (this.state.isInCombat()) {
+      processAutoAttack(time); // 之前討論過的自動攻擊
+    }
+
+    // === 2. 回復/狀態心跳 (Regen Tick) ===
+    // 頻率：每 3 秒執行一次 ( tickCount % 3 == 0 )
+    // 只有沒在戰鬥時才回血，或者戰鬥中回得比較慢
+    if (tickCount % 3 == 0) {
+      processRegen();
+      // processBuffs(); // 檢查 Buff 是否過期
+    }
+
+    // === 3. AI 行為心跳 (AI Tick) ===
+    // 頻率：每 5 秒執行一次
+    // 只有怪物需要，玩家不需要
+    if (this instanceof MobActor mob && tickCount % 5 == 0) {
+      // mob.processAI(); // 例如：隨機移動、喊話
+    }
+  }
+
+  protected void doCommand(String traceId, GameCommand cmd) {}
+
+  protected void doDeath(String killerId) {
+    this.state.hp = 0;
+    this.state.isDead = true;
+    log.info("{} has been slain by {}!", id, killerId);
+  }
+
+  protected void doSendText(WebSocketSession session, String msg) {}
+
+  protected void doOnAttacked(LivingActor attacker) {
+    // 檢查是否正在戰鬥
+    if (!this.state.isInCombat) {
+      this.state.isInCombat = true;
+      this.state.combatTargetId = attacker.getId();
+    }
+  }
+
+  /**
+   * 穿上裝備 (核心邏輯)
+   *
+   * @param item 要穿的物品
+   * @return 成功回傳 true
+   */
+  protected boolean doEquip(GameItem item, CompletableFuture<String> future) {
+    // 1. 取得 ItemTemplate (需要依賴 Service 或是 Item 本身帶有 slot 資訊)
+    // 假設 GameItem 已經從 Template 複製了 slot 資訊，或者這裡去查 Template
+    ItemTemplate tpl = item.getTemplate();
+    if (tpl.type() != ItemType.EQUIPMENT) {
+      future.complete(item.getDisplayName() + " 不是裝備");
+      return false;
+    }
+
+    EquipmentSlot slot = tpl.equipmentProp().slot();
+
+    // 2. 檢查該部位是否已經有裝備？如果有，先脫下來 (Swap)
+    if (state.equipment.containsKey(slot)) {
+      // GameItem oldItem = state.equipment.get(slot);
+      doUnequip(slot, new CompletableFuture<>()); // 先脫舊的
+      if (state.equipment.containsKey(slot)) {
+        future.complete("無法脫下 " + slot.getDisplayName() + "，或背包已滿");
+        return false;
+      }
+    }
+
+    // 3. 從背包移除該物品
+    // 注意：這裡假設 inventory 是 Mutable List
+    if (!inventory.remove(item)) {
+      future.complete(item.getDisplayName() + "不在背包裡");
+      return false; // 物品不在背包裡
+    }
+
+    // 4. 放入裝備欄
+    state.equipment.put(slot, item);
+
+    // 5. 重新計算數值
+    recalculateStats();
+
+    future.complete("你裝上 " + item.getDisplayName());
+    return true;
+  }
+
+  /**
+   * 脫下裝備
+   */
+  protected boolean doUnequip(EquipmentSlot slot, CompletableFuture<String> future) {
+    GameItem item = state.equipment.get(slot);
+    if (item == null) {
+      future.complete("你 " + slot.getDisplayName() + " 上沒有裝備任何東西");
+      return false;
+    }
+
+    // 1. 放入背包
+    inventory.add(item);
+
+    // 2. 從裝備欄移除
+    state.equipment.remove(slot);
+
+    // 3. 重新計算數值
+    recalculateStats();
+
+    future.complete("你將 " + slot.getDisplayName() + " 放入背包");
+    return true;
+  }
+  // -----------------------------------------------------------------------------------
+
+
+  // 實作 defualt 的公開方法給外部呼叫用 --------------------------------------------------
+  public void tick() {
+    this.send(new ActorMessage.Tick(System.currentTimeMillis(), System.nanoTime()));
+  }
+
+  public void command(GameCommand cmd) {
+    this.send(new ActorMessage.Command("internal", cmd));
+  }
+
+  public void death(String killerId) {
+    this.send(new ActorMessage.Die(killerId));
+  }
+
+  // 被攻擊處理
+  public void onAttacked(LivingActor attacker) {
+    this.send(new ActorMessage.OnAttacked(attacker));
+  }
+
+  public CompletableFuture<String> equip(GameItem item) {
+    var future = new CompletableFuture<String>();
+    this.send(new ActorMessage.Equip(item, new CompletableFuture<>()));
+    return future;
+  }
+
+  public CompletableFuture<String> unequip(EquipmentSlot slot) {
+    var future = new CompletableFuture<String>();
+    this.send(new ActorMessage.Unequip(slot, future));
+    return future;
+  }
+
+  // -----------------------------------------------------------------------------------
+
+
+  protected void processAutoAttack(long now) {
+    // 1. 檢查攻速冷卻 (例如 2000ms 一刀)
+    if (now < state.nextAttackTime) {
+      return; // 還在冷卻中
+    }
+
+    LivingActor target =
+        services.combatService().processAutoAttack(this, currentRoomId, state.combatTargetId);
+    if (target == null || target.getState().hp <= 0) {
+      stopCombat(); // 目標消失或死亡，停止戰鬥
+      return;
+    }
+
+    // 6. 設定下一次攻擊時間 (攻速 2秒)
+    state.nextAttackTime = now + 2000;
+  }
+
+  protected void processRegen() {
+    if (state.hp < state.maxHp) {
+      int regenAmount = (int) (state.maxHp * 0.05); // 回復 5%
+      heal(regenAmount);
+    }
+  }
+
+  // 治療處理
+  protected void heal(int amount) {
+    if (state.isDead)
+      return;
+    this.state.hp = Math.min(state.hp + amount, state.maxHp);
+  }
+
+
+
+  // 1. 受傷處理
+  private void takeDamage(int amount, String attackerId) {
+    if (state.isDead)
+      return;
+
+    this.state.hp -= amount;
+    log.info("{} took {} damage from {}. HP: {}/{}", id, amount, attackerId, state.hp, state.maxHp);
+
+    // 發送訊息給房間 (讓其他人看到噴血)
+    // if (currentRoom != null) {
+    // currentRoom.broadcast(...);
+    // }
+
+    if (state.hp <= 0) {
+      death(attackerId);
+    }
+  }
+
+
+
+  // --- 共用行為邏輯 ---
+  // 進入房間時，房間會呼叫此方法來紀錄進入時間戳記
+  public void markEnterRoom() {
+    this.lastEnterRoomTime = System.nanoTime();
+  }
+
+
+  /**
+   * 【重要】重新計算總屬性 每次穿脫裝備、升級、Buff 改變時呼叫
+   */
+  public void recalculateStats() {
+    int atk = 0; // 基礎攻擊力 (可從 Level 算)
+    int def = 0; // 基礎防禦力
+
+    // 遍歷所有裝備
+    for (GameItem item : state.equipment.values()) {
+      ItemTemplate tpl = item.getTemplate();
+      if (tpl != null) {
+        atk += tpl.equipmentProp().damage();
+        def += tpl.equipmentProp().defense();
+
+        // 處理額外屬性 (Bonus Stats)
+        // if (tpl.bonusStats() != null) ...
+      }
+    }
+
+    this.state.damage = atk;
+    this.state.defense = def;
+    log.info("{} stats updated: Atk={}, Def={}", this.name, atk, def);
+  }
+
+
+
+  public void stopCombat() {
+    state.isInCombat = false;
+    state.combatTargetId = null;
+    // this.re("戰鬥結束了。");
+  }
+}
+
+
 --- File: MobActor.java ---
 
 package com.example.htmlmud.domain.actor.impl;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import com.example.htmlmud.application.service.WorldManager;
-import com.example.htmlmud.domain.actor.LivingActor;
 import com.example.htmlmud.domain.actor.behavior.AggressiveBehavior;
 import com.example.htmlmud.domain.actor.behavior.MerchantBehavior;
 import com.example.htmlmud.domain.actor.behavior.MobBehavior;
 import com.example.htmlmud.domain.actor.behavior.PassiveBehavior;
 import com.example.htmlmud.domain.context.GameServices;
+import com.example.htmlmud.domain.model.EquipmentSlot;
+import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.LivingState;
+import com.example.htmlmud.domain.model.map.Equipment;
 import com.example.htmlmud.domain.model.map.MobTemplate;
+import com.example.htmlmud.domain.model.vo.DamageSource;
 import com.example.htmlmud.protocol.ActorMessage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MobActor extends LivingActor {
+public final class MobActor extends LivingActor {
 
   // 仇恨列表 (Key: 攻擊者 ID字串, Value: 仇恨值)
   // 因為 ID 已改為 UUID String，這裡的 Key 也同步調整為 String
@@ -2575,15 +2949,20 @@ public class MobActor extends LivingActor {
   private ScheduledFuture<?> aiTask; // Heartbeat 排程
   private MobBehavior behavior; // AI 行為 (策略模式)
 
+  // 裝備欄位
+  private Map<EquipmentSlot, GameItem> equipments;
+
   /**
    * 建構子： 1. 接收 Template 與 Services 2. 自動生成 UUID 3. 自動從 Template 建立 LivingState
    */
-  public MobActor(MobTemplate template, WorldManager worldManager, GameServices gameServices) {
+  public MobActor(MobTemplate template, GameServices services) {
     // 【修正 1】直接使用 UUID 作為 ID，不再依賴 GameObjectId.mob()
     // 【修正 2】呼叫 helper method 建立初始 State，確保血量與 Template 一致
-    super(UUID.randomUUID().toString(), createInitialState(template), worldManager, gameServices);
-
+    String mobId = "mob-" + UUID.randomUUID().toString().substring(0, 8);
+    super(mobId, template.name(), createInitialState(template), services);
     this.template = template;
+
+    // 處理裝備
 
     // 初始化行為
     initBehavior();
@@ -2596,12 +2975,34 @@ public class MobActor extends LivingActor {
   // 輔助方法：根據 Template 產生初始的 LivingState
   private static LivingState createInitialState(MobTemplate tpl) {
     LivingState state = new LivingState();
+
+    // 基本屬性設定
+    state.level = tpl.level();
     state.hp = tpl.maxHp();
     state.maxHp = tpl.maxHp();
-    state.level = tpl.level();
-    // 如果有 MP, Stamina 等屬性也可在此初始化
+    state.mp = tpl.maxMp();
+    state.maxMp = tpl.maxMp();
+    state.stamina = tpl.maxStamina();
+    state.maxStamina = tpl.maxStamina();
+    // state.san = tpl.maxSan();
+    // state.maxSan = tpl.maxSan();
+
+    // 戰鬥屬性設定
+    state.damage = tpl.baseDamage();
+    state.defense = tpl.baseDefense();
+    state.attackSpeed = tpl.attackSpeed();
 
     return state;
+  }
+
+  // 處理初期裝備
+  private void initEquipment(MobTemplate tpl) {
+    if (tpl.equipment() != null) {
+      for (String itemId : tpl.equipment().values()) {
+
+        // equip(itemId);
+      }
+    }
   }
 
   private void initBehavior() {
@@ -2636,7 +3037,7 @@ public class MobActor extends LivingActor {
     behavior.onMessage(this, msg);
 
     // 2. 如果父類別有通用邏輯 (如 Buff 結算)，可視需求呼叫
-    // super.handleMessage(msg);
+    super.handleMessage(msg);
   }
 
   // --- AI 心跳機制 (Heartbeat) ---
@@ -2671,7 +3072,19 @@ public class MobActor extends LivingActor {
 
   public void tick() {
     // 委派給 Behavior
-    behavior.onTick(this);
+    // behavior.onTick(this);
+
+    long now = System.currentTimeMillis();
+
+    // 1. 戰鬥邏輯
+    // log.info("this.state.isInCombat: {}", this.state.isInCombat);
+    if (this.state.isInCombat) {
+      processCombatRound(now);
+    } else {
+      // 2. 非戰鬥邏輯 (巡邏、回復 HP)
+      // processRegen();
+      behavior.onTick(this);
+    }
   }
 
   // --- 互動與事件 ---
@@ -2685,28 +3098,44 @@ public class MobActor extends LivingActor {
   }
 
   @Override
-  public void onAttacked(LivingActor attacker, int damage) {
+  protected void doOnAttacked(LivingActor attacker) {
+
+    // 檢查是否正在戰鬥
+    if (!this.state.isInCombat) {
+      this.state.isInCombat = true;
+    }
+
+    // TODO 檢查仇恨表，選最高的當對手
+    this.state.combatTargetId = attacker.getId();
+
+    // TODO 檢查仇恨表，選最高的當對手
+    // if (this.state.combatTargetId == null) {
+    // this.state.combatTargetId = attacker.getId();
+    // }
+
     // 無敵判定
     if (template.isInvincible()) {
       if (attacker instanceof PlayerActor p) {
-        p.sendText(this.template.name() + " 毫髮無傷！");
+        p.reply(this.template.name() + " 毫髮無傷！");
       }
       return;
     }
 
     // 1. 扣血 (呼叫父類別)
-    super.onAttacked(attacker, damage);
+    log.info("hp: {} defense: {}  attacker.damage: {}", this.state.hp, this.state.defense,
+        attacker.getState().damage);
+    // super.onAttacked(attacker);
 
     // 2. 增加仇恨值 (使用 String ID)
-    addAggro(attacker.getId(), damage);
+    addAggro(attacker.getId(), attacker.getState().damage);
 
     // 3. 通知 AI
     behavior.onDamaged(this, attacker);
   }
 
   @Override
-  protected void onDeath(String killerId) {
-    super.onDeath(killerId);
+  protected void doDeath(String killerId) {
+    // super.onDie(killerId);
     stopHeartbeat();
 
     log.info("{} died. Killer: {}", this.template.name(), killerId);
@@ -2733,6 +3162,54 @@ public class MobActor extends LivingActor {
   public void attack(LivingActor target) {
     // 實作：發送 AttackMessage 給 target
   }
+
+  private void processCombatRound(long now) {
+    // 檢查攻擊冷卻
+    log.info("this.state.nextAttackTime: {}", this.state.nextAttackTime);
+    if (now < this.state.nextAttackTime) {
+      return;
+    }
+
+    // 取得當前最高仇恨目標
+    log.info("getHighestAggroTarget: {}", getHighestAggroTarget());
+    String targetId = getHighestAggroTarget();
+    if (targetId == null) {
+      this.state.isInCombat = false; // 沒目標，脫離戰鬥
+      return;
+    }
+
+    processAutoAttack(now);
+
+    // 從房間取得目標 Actor (這裡需要 WorldManager 協助，或 RoomActor 傳遞)
+    // 假設這段邏輯在 RoomActor 處理會更好，但若在 Mob 處理：
+    // LivingActor target = services.worldManager().getRoomActor(currentRoomId).findActor(targetId);
+
+    // 為了簡單，假設我們能取到 target
+    // int dmg = combatService.calculateDamage(this, target);
+    // target.onAttacked(this, dmg);
+
+    // 重設冷卻時間
+    this.state.nextAttackTime = now + this.state.attackSpeed;
+  }
+
+  // 取得當前的攻擊方式
+  public DamageSource getCurrentAttackSource() {
+    // 1. 先檢查主手有沒有武器 (針對 Guard)
+    GameItem weapon = state.equipment.get(EquipmentSlot.MAIN_HAND); // 假設您有實作裝備系統
+
+    if (weapon != null) {
+      // 有武器：回傳武器資訊
+      // 這裡假設 weapon 有對應欄位，或從 Template 查
+      return new DamageSource(weapon.getTemplate().name(),
+          weapon.getTemplate().equipmentProp().attackVer(),
+          weapon.getTemplate().equipmentProp().damage(),
+          weapon.getTemplate().equipmentProp().attackSpeed());
+    }
+
+    // 2. 沒武器：回傳天生武器 (針對 Rat 或 空手的人)
+    return new DamageSource(template.attackNoun(), template.attackVerb(), template.baseDamage(),
+        template.attackSpeed());
+  }
 }
 
 
@@ -2742,13 +3219,12 @@ package com.example.htmlmud.domain.actor.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import org.slf4j.MDC;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.application.service.WorldManager;
-import com.example.htmlmud.domain.actor.LivingActor;
 import com.example.htmlmud.domain.actor.behavior.GuestBehavior;
 import com.example.htmlmud.domain.actor.behavior.InGameBehavior;
 import com.example.htmlmud.domain.actor.behavior.PlayerBehavior;
@@ -2759,24 +3235,24 @@ import com.example.htmlmud.domain.model.LivingState;
 import com.example.htmlmud.domain.model.PlayerRecord;
 import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.ConnectionState;
+import com.example.htmlmud.protocol.GameCommand;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 // PlayerActor 處理的訊息類型就是 GameCommand
 @Slf4j
-public class PlayerActor extends LivingActor {
+public final class PlayerActor extends LivingActor {
 
   @Getter
   private WebSocketSession session;
 
-
-  // 當前的行為腦
-  private PlayerBehavior currentBehavior;
+  @Getter
+  private final WorldManager manager;
 
   @Getter
   @Setter
-  private String name;
+  private String[] aliases;
 
   @Getter
   @Setter
@@ -2792,26 +3268,29 @@ public class PlayerActor extends LivingActor {
   @Setter
   private ConnectionState connectionState = ConnectionState.CONNECTED;
 
-
-  // 背包
-  @Getter
-  private List<GameItem> inventory = new ArrayList<>();
+  // 當前的行為腦
+  @Setter
+  private PlayerBehavior currentBehavior;
 
   private boolean isDirty = false;
 
-  private PlayerActor(WebSocketSession session, String id, LivingState state,
-      WorldManager worldManager, GameServices gameServices) {
-    super(id, state, worldManager, gameServices);
+
+
+  private PlayerActor(WebSocketSession session, String id, String name, LivingState state,
+      WorldManager worldManager, GameServices services) {
+    super(id, name, state, services);
     this.session = session;
+    this.manager = worldManager;
   }
 
-  // 工廠方法
+  // 工廠方法 初始設定為 GuestBehavior
   public static PlayerActor createGuest(WebSocketSession session, WorldManager worldManager,
       GameServices gameServices) {
+    String name = "GUEST";
+    String playerId = "player-" + session.getId().substring(0, 8);
     PlayerActor actor =
-        new PlayerActor(session, session.getId(), new LivingState(), worldManager, gameServices);
-    // 初始設定為 GuestBehavior
-    actor.become(new GuestBehavior());
+        new PlayerActor(session, playerId, name, new LivingState(), worldManager, gameServices);
+    actor.become(new GuestBehavior(worldManager.getAuthService()));
     actor.inventory = new ArrayList<>();
     return actor;
   }
@@ -2826,19 +3305,27 @@ public class PlayerActor extends LivingActor {
 
   @Override
   protected void handleMessage(ActorMessage msg) {
-    String traceId = msg.traceId();
+    super.handleMessage(msg);
+  }
 
+  @Override
+  protected void doTick(long tickCount, long time) {
+    // log.info("player tickCount: {}", tickCount);
+    super.doTick(tickCount, time);
+  }
+
+  @Override
+  protected void doCommand(String traceId, GameCommand cmd) {
     // A. 設定 MDC (給 Log 看)
     MDC.put("traceId", traceId);
-    // MDC.put("actorId", this.id);
+    MDC.put("actorName", this.name);
 
     try {
       // B. 設定 ScopedValue (給 Service 邏輯看)
       ScopedValue.where(MudContext.CURRENT_PLAYER, this).where(MudContext.TRACE_ID, traceId)
           .run(() -> {
-
             // C. 委派給當前 Behavior 處理
-            PlayerBehavior next = currentBehavior.handle(this, msg.command());
+            PlayerBehavior next = currentBehavior.handle(this, cmd);
 
             // D. 狀態切換
             if (next != null) {
@@ -2849,65 +3336,54 @@ public class PlayerActor extends LivingActor {
       // E. 清理 MDC
       MDC.clear();
     }
-    /*
-     * // 這裡已經是 Single Thread 環境，完全不用 synchronized // 使用 ScopedValue 重新綁定從信封拿到的 traceId
-     * ScopedValue.where(MudContext.TRACE_ID, msg.traceId()).run(() -> { GameCommand cmd =
-     * msg.command();
-     *
-     * // 只處理字串輸入 (Input) if (cmd instanceof GameCommand.Input(var text)) { String cleanText =
-     * text.trim(); log.info("[State:{}] Input: {}", state, cleanText);
-     *
-     * // 根據當前狀態分流 // switch (connectionState) { // case CONNECTED -> handleConnected(cleanText); //
-     * case CREATING_USER -> handleRegisterUsername(cleanText); // case CREATING_PASS ->
-     * handleRegisterPassword(cleanText); // case ENTERING_PASS -> handleLoginPassword(cleanText);
-     * // case PLAYING -> handleGameLogic(cleanText, msg.traceId()); // } handleGameLogic(cleanText,
-     * msg.traceId()); } });
-     */
-    // 這裡是由 Actor 的 Virtual Thread 執行的
-    // Actor 直接操作 session 物件發送資料
-    // try {
-    // switch (cmd) {
-    // case GameCommand.Login(var user, var pass) -> {
-    // log.info("[Trace:{}] Processing Login: {}", traceId, user);
-    // handleLogin(user, pass);
-    // }
-
-    // // 核心：所有遊戲指令都在這裡處理
-    // case GameCommand.Input(var text) -> {
-    // log.info("[Trace:{}] Processing Input: {}", traceId, text);
-    // handleStringInput(text);
-    // }
-    // // case GameCommand.Chat(var content) -> {
-    // // log.debug("Chat from {}: {}", playerName, content);
-
-    // // reply("%s 說: %s".formatted(playerName, content));
-    // // }
-    // // case GameCommand.Move(var dir) -> {
-    // // reply("你往 %s 移動了一步。".formatted(dir));
-    // // }
-    // }
-    // } catch (Exception e) {
-    // log.error("[Trace:{}] Error", traceId, e);
-    // }
   }
 
   @Override
-  protected void onDeath(String killerId) {
-    reply("你已經死亡！即將在重生點復活...");
-    // 玩家死亡邏輯：掉經驗、傳送回城
+  protected void doSendText(WebSocketSession session, String msg) {
+    if (session != null && session.isOpen()) {
+      try {
+        String json =
+            services.objectMapper().writeValueAsString(Map.of("type", "TEXT", "content", msg));
+
+        // 這裡才是真正寫入 WebSocket 的地方
+        // 因為是在 handleMessage 內執行，保證了 Thread-Safe
+        session.sendMessage(new TextMessage(json));
+      } catch (IOException e) {
+        log.error("Failed to send message to player {}", id, e);
+      }
+    }
   }
 
-  public void sendText(String text) {
-    reply(text);
+  @Override
+  protected void doDeath(String killerId) {
+    reply("你已經死亡！即將在重生點復活...");
+    super.doDeath(killerId);
+
+    // 玩家死亡邏輯：掉經驗、傳送回城
   }
+  // -----------------------------------------------------------------------------------
+
+
 
   // 狀態切換方法
   private void become(PlayerBehavior nextBehavior) {
     this.currentBehavior = nextBehavior;
     this.currentBehavior.onEnter(this); // 觸發進場事件
-    log.info("{} 切換行為模式至 {}", this.id, nextBehavior.getClass().getSimpleName());
+    log.info("{} 切換行為模式至 {}", this.name, nextBehavior.getClass().getSimpleName());
   }
 
+  private void levelUp() {
+    // 從 Context 取得當前 Trace ID
+    String currentTraceId = MudContext.traceId();
+
+    // 發送事件
+    // publisher.publishEvent(
+    // new DomainEvent.PlayerLevelUpEvent(currentTraceId, this.objectId.id(), this.state.level));
+  }
+
+
+
+  // MudWebSocketHandler 在 afterConnectionClosed 時呼叫此方法
   public void handleDisconnect() {
     // 1. 停止 Actor 迴圈
     this.stop();
@@ -2921,140 +3397,14 @@ public class PlayerActor extends LivingActor {
     // persistenceService.saveAsync(this.toRecord());
   }
 
-  // --- 狀態處理邏輯 ---
-  /*
-   * // 1. 剛連線 private void handleConnected(String input) { if ("new".equalsIgnoreCase(input)) {
-   * connectionState = ConnectionState.CREATING_USER; reply("【註冊流程】請輸入您想使用的帳號名稱："); } else { //
-   * 視為嘗試登入 // if (playerService.exists(input)) { // this.tempUsername = input; // state =
-   * State.LOGIN_PASSWORD; // reply("帳號存在，請輸入密碼："); // } else { //
-   * reply("找不到帳號 '%s'。請重新輸入，或輸入 'new' 註冊。".formatted(input)); // } } }
-   *
-   * // 2. 註冊 - 檢查帳號 private void handleRegisterUsername(String input) { if (input.length() < 3) {
-   * reply("帳號長度需大於 3 個字元，請重試："); return; } // if (playerService.isReservedWord(input)) { //
-   * reply("'%s' 是系統保留字，請換一個：".formatted(input)); // return; // } // if
-   * (playerService.exists(input)) { // reply("'%s' 已經被註冊了，請換一個：".formatted(input)); // return; // }
-   *
-   * this.tempUsername = input; connectionState = ConnectionState.ENTERING_PASS;
-   * reply("帳號 '%s' 可用。請設定您的密碼：".formatted(input)); }
-   *
-   * // 3. 註冊 - 設定密碼 private void handleRegisterPassword(String input) { if (input.length() < 3) {
-   * reply("密碼太短，請重試："); return; }
-   *
-   * // playerService.register(tempUsername, input); // log.info("User registered: {}",
-   * tempUsername);
-   *
-   * reply("註冊成功！已自動為您登入。"); enterGame(); }
-   *
-   * // 4. 登入 - 驗證密碼 private void handleLoginPassword(String input) { // if
-   * (playerService.verifyPassword(tempUsername, input)) { //
-   * reply("登入成功！歡迎回來，%s".formatted(tempUsername)); // enterGame(); // } else { //
-   * reply("密碼錯誤，請重新輸入："); // } }
-   *
-   * // 5. 進入遊戲 (轉場) private void enterGame() { connectionState = ConnectionState.PLAYING; //
-   * 未來這裡可以加入 WorldManager.joinRoom() handleGameLogic("look", "system-init"); // 自動看一次環境 }
-   */
-  // 6. 遊戲中邏輯 (Look, Kill, Move...)
-  // private void handleGameLogic(String input, String traceId) {
-  // String[] parts = handleStringInput(input);
-  // String action = parts[0].toLowerCase();
-
-  // switch (action) {
-  // case "look" -> {
-  // // 範例：組合一個多彩的房間描述
-  // StringBuilder sb = new StringBuilder();
-  // sb.append(ColorText.wrap(AnsiColor.BRIGHT_WHITE, AnsiColor.BOLD, "=== 新手村廣場 ===\n"));
-  // sb.append(ColorText.wrap(AnsiColor.LIGHT_GREY, "這是一個鋪著石板的廣場，四週有些破舊。\n"));
-  // sb.append("這裡有一個 ").append(ColorText.npc("村長")).append(" 站在噴泉旁。\n");
-  // sb.append("地上掉落了一把 ").append(ColorText.item("生鏽的鐵劍")).append("。\n");
-  // sb.append("往北可以看到陰森的 ").append(ColorText.wrap(AnsiColor.DARK_GREY, "黑暗森林")).append("。");
-
-  // reply(sb.toString());
-  // } // reply("你看見四週一片漆黑，遠方似乎有微弱的火光。");
-  // case "help" -> reply("可用指令: look, say, quit");
-  // case "say" -> reply("你說道: " + (parts.length > 1 ? input.substring(4) : "..."));
-  // case "quit" -> {
-  // reply("再見！");
-  // // 這裡可以做 disconnect 邏輯
-  // }
-  // case "kill" -> {
-  // if (parts.length > 1) {
-  // reply("你揮劍砍向了 %s！".formatted(parts[1]));
-  // } else {
-  // reply("你要殺誰？");
-  // }
-  // }
-  // default -> {
-  // log.info("Unknown command: {}", action);
-  // reply("我不懂 '%s' 是什麼意思。".formatted(action));
-  // }
-  // }
-  // }
-
-  // private void handleLogin(String user, String pass) {
-  // log.info("Player logged in: {}", user);
-
-  // reply("歡迎進入 MUD 世界，%s。現在時間：%s".formatted(user, java.time.Instant.now()));
-  // // // 1. 查 DB (透過 Service)
-  // // PlayerEntity entity = playerRepository.findByUsername(cmd.username());
-
-  // // // 2. 比對密碼 (使用 BCrypt)
-  // // if (entity != null && passwordEncoder.matches(cmd.password(), entity.getPasswordHash())) {
-  // // this.isLoggedIn = true;
-  // // this.playerId = entity.getId();
-  // // this.state = loadState(entity); // 載入玩家資料
-  // // send("登入成功！");
-  // // } else {
-  // // send("帳號或密碼錯誤。");
-  // // // 可以增加失敗計數器，防止爆破
-  // // }
-  // }
-  // 在 PlayerActor.java 中
-  protected void levelUp() {
-    // 從 Context 取得當前 Trace ID
-    String currentTraceId = MudContext.traceId();
-
-    // 發送事件
-    // publisher.publishEvent(
-    // new DomainEvent.PlayerLevelUpEvent(currentTraceId, this.objectId.id(), this.state.level));
-  }
-
   public void reply(String msg) {
-    try {
-      if (session.isOpen()) {
-        // 使用 Map 來建立結構，Jackson 會自動處理所有特殊字元的轉義
-        String json =
-            services.objectMapper().writeValueAsString(Map.of("type", "TEXT", "content", msg));
-
-        session.sendMessage(new TextMessage(json));
-      }
-    } catch (IOException e) {
-      log.error("Reply failed", e);
-    }
+    this.send(new ActorMessage.SendText(session, msg));
   }
 
-  // --- 這裡實現您的 "純字串" 邏輯 ---
-  private String[] handleStringInput(String text) {
-    log.info("Player {} input: {}", name, text);
 
-    // 簡單的傳統 MUD 解析方式
-    // 未來這裡可以抽換成更高級的 Parser，但介面(Input text)不用變
-    return text.trim().split("\\s+");
-  }
 
-  // 供子類別 (PlayerActor) 呼叫，用來切換數據
-  protected void swapIdentity(String newId, LivingState newState) {
-    this.id = newId;
-    this.state = newState;
-  }
-
-  // 供 GuestBehavior 呼叫：變身為正式玩家
-  public void upgradeIdentity(PlayerRecord record) {
-    this.fromRecord(record);
-    this.become(new InGameBehavior());
-    log.info("Actor 變身成功: {} (InGameBehavior)", this.name);
-  }
-
-  public void replaceSession(WebSocketSession newSession) {
+  // 未整理也
+  private void replaceSession(WebSocketSession newSession) {
     // 1. 關閉舊連線 (如果還開著)
     if (this.session != null && this.session.isOpen()) {
       try {
@@ -3067,27 +3417,17 @@ public class PlayerActor extends LivingActor {
     this.session = newSession;
 
     // 3. 重發當前環境資訊
-    this.sendText("\u001B[33m[系統] 連線已恢復。\u001B[0m");
+    this.doSendText(session, "\u001B[33m[系統] 連線已恢復。\u001B[0m");
     this.services.commandDispatcher().dispatch(this, "look");
   }
 
-  private void handleLoginSuccess(PlayerRecord record) {
-    // 使用父類別的 protected 方法變身
-    swapIdentity(record.id(), record.state());
-
-    // 變身後，才加入世界管理
-    // WorldManager.joinWorld(this);
-
-    reply("登入成功！");
-  }
-
   // 觸發存檔的輔助方法
-  public void save() {
+  private void save() {
     manager.getPlayerPersistenceService().saveAsync(this.toRecord());
   }
 
 
-  public PlayerRecord toRecord() {
+  private PlayerRecord toRecord() {
     // 您必須確保 LivingState 有實作 deepCopy，否則會發生併發修改例外
     return new PlayerRecord(this.id, // ID
         this.name, // Username
@@ -3098,21 +3438,21 @@ public class PlayerActor extends LivingActor {
     );
   }
 
-  public void fromRecord(PlayerRecord record) {
-    // 1. 更新基礎資料
+  // 只想提供給 GuestBehavior 使用
+  public void fromRecord(GuestBehavior behavior, PlayerRecord record) {
+    // 更新玩家基礎資料
+    this.id = record.id();
     this.name = record.name();
     this.nickname = record.nickname();
+    if (this.nickname == null) {
+      this.nickname = record.name();
+    }
+    this.aliases = new String[] {record.name()};
+    this.state = record.state();
     this.currentRoomId = record.currentRoomId();
     this.inventory = record.inventory();
-
-
-    // 2. 更新狀態 (直接替換引用)
-    // 因為 Record 是從 DB 讀出來的新物件，這裡的 state 是全新的，可以直接拿來用
-    this.swapIdentity(record.id(), record.state());
-
-    // 3. 標記為已登入
-    this.id = record.id();
   }
+
 }
 
 
@@ -3123,15 +3463,19 @@ package com.example.htmlmud.domain.actor.impl;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import com.example.htmlmud.application.factory.WorldFactory;
 import com.example.htmlmud.domain.actor.core.VirtualActor; // 引用您的基礎類別
+import com.example.htmlmud.domain.context.GameServices;
 import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.RoomStateRecord;
 import com.example.htmlmud.domain.model.map.RoomTemplate;
 import com.example.htmlmud.domain.model.map.SpawnRule;
 import com.example.htmlmud.domain.model.map.ZoneTemplate;
+import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.RoomMessage;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -3148,122 +3492,286 @@ public class RoomActor extends VirtualActor<RoomMessage> {
   @Getter
   private final ZoneTemplate zoneTemplate;
 
-  @Getter
-  private final Set<SpawnRule> spawnRules;
+  private final List<SpawnRule> mobSpawnRules;
+
+  private final List<SpawnRule> itemSpawnRules;
+
+  private final WorldFactory worldFactory;
+
+  private final GameServices services;
+
 
   // 房間內的玩家 (Runtime State)
   @Getter
-  private final Set<PlayerActor> players = ConcurrentHashMap.newKeySet();
+  private final List<PlayerActor> players = new ArrayList<>();
 
   @Getter
-  private final Set<MobActor> mobs = ConcurrentHashMap.newKeySet();
+  private final List<MobActor> mobs = new ArrayList<>();
 
+  @Getter
   private final List<GameItem> items = new ArrayList<>(); // 地上的物品
 
-  public RoomActor(RoomTemplate template, ZoneTemplate zoneTemplate) {
-    this(template, zoneTemplate, new ArrayList<>());
-  }
 
-  public RoomActor(RoomTemplate template, ZoneTemplate zoneTemplate, List<GameItem> initialItems) {
-    // 2. 傳入 Actor 名稱給父類別 (方便 Log 排查)
+  public RoomActor(RoomTemplate template, ZoneTemplate zoneTemplate, GameServices services,
+      WorldFactory worldFactory) {
     super("room-" + template.id());
+    this.worldFactory = worldFactory;
+    this.services = services;
+
     this.id = template.id();
     this.template = template;
     this.zoneTemplate = zoneTemplate;
     // 從 Template 複製規則 (因為這是固定的)
-    this.spawnRules = template.spawnRules();
+    this.mobSpawnRules = template.mobSpawnRules();
+    this.itemSpawnRules = template.itemSpawnRules();
 
-    if (initialItems != null) {
-      this.items.addAll(initialItems);
-    }
+    // 初始生怪
+    spawnInitial("mob", mobSpawnRules);
+
+    // 初始物品
+    spawnInitial("item", itemSpawnRules);
+
   }
 
   // --- 實作父類別的抽象方法 ---
-
   @Override
   protected void handleMessage(RoomMessage msg) {
     // 這裡的邏輯跟之前一模一樣，但不需要自己寫 loop 和 try-catch 了
     switch (msg) {
-      case RoomMessage.PlayerEnter(var player, var future) -> {
-        log.info("Player {} entered room", player.getId());
-        player.markEnterRoom();
-        players.add(player);
-        broadcastToOthers(player.getId(), "看到 " + player.getNickname() + " 走了進來。");
-        log.debug("Player {} entered room {}", player.getNickname(), template.id());
-        if (future != null)
-          future.complete(null);
+      case RoomMessage.Enter(var actor, var future) -> {
+        doEnter(actor, future);
       }
-
-      case RoomMessage.PlayerLeave(var playerId) -> {
-        players.stream().filter(p -> p.getId().equals(playerId)).findFirst().ifPresent(p -> {
-          if (players.remove(p))
-            broadcastToOthers(playerId, p.getNickname() + " 離開了。");
-        });
+      case RoomMessage.Leave(var actorId) -> {
+        doLeave(actorId);
       }
-
       case RoomMessage.Look(var playerId, var future) -> {
-        log.info("Player {} Look room", playerId);
-        StringBuilder sb = new StringBuilder();
-        sb.append("\u001B[1;36m").append(template.name()).append("\u001B[0m\r\n");
-        sb.append(template.description()).append("\r\n");
-
-        if (template.exits() != null && !template.exits().isEmpty()) {
-          sb.append("\u001B[33m[出口]: ").append(String.join(", ", template.exits().keySet()))
-              .append("\u001B[0m\r\n");
-        }
-
-        StringBuilder others = new StringBuilder();
-        players.stream().filter(p -> !p.getId().equals(playerId))
-            .forEach(p -> others.append(p.getNickname()).append(" "));
-
-        if (!others.isEmpty()) {
-          sb.append("\u001B[35m[這裡有]: \u001B[0m").append(others).append("\r\n");
-        }
-        future.complete(sb.toString());
+        doLook(playerId, future);
       }
-
       case RoomMessage.Say(var sourceId, var content) -> {
-        PlayerActor speaker =
-            players.stream().filter(p -> p.getId().equals(sourceId)).findFirst().orElse(null);
-        String name = (speaker != null) ? speaker.getNickname() : "有人";
-        broadcast(name + ": " + content);
+        doSay(sourceId, content);
+      }
+      case RoomMessage.TryPickItem(var args, var picker, var future) -> {
+        doTryPickItem(args, picker, future);
+      }
+      case RoomMessage.Tick(var tickCount, var timestamp) -> {
+        doTick(tickCount, timestamp);
+      }
+      case RoomMessage.Broadcast(var message) -> {
+        doBroadcast(message);
+      }
+      case RoomMessage.BroadcastToOthers(var sourceId, var message) -> {
+        doBroadcastToOthers(sourceId, message);
+      }
+      case RoomMessage.FindActor(var actorId, var future) -> {
+        doFindActor(actorId, future);
       }
 
-      case RoomMessage.TryPickItem(var itemId, var picker) -> {
-        // 【關鍵併發控制】
-        // var item = items.stream().filter(i -> i.id.equals(itemId)).findFirst();
-        // if (item.isPresent()) {
-        // items.remove(item.get());
-        // 回覆給 Command: 成功
-        // picker.send(new ActorMessage("...", new InternalCommand.PickSuccess(item.get())));
-        // } else {
-        // 回覆給 Command: 失敗
-        // picker.send(new ActorMessage("...", new InternalCommand.PickFail("東西不在了")));
-        // }
+    }
+  }
+
+  private void doEnter(LivingActor actor, CompletableFuture<Void> future) {
+    switch (actor) {
+      case PlayerActor player -> doPlayerEnter(player, future);
+      case MobActor mob -> doMobEnter(mob, future);
+    }
+  }
+
+  private void doPlayerEnter(PlayerActor player, CompletableFuture<Void> future) {
+    log.info("Player {} entered room", player.getName());
+    player.markEnterRoom();
+    if (!players.contains(player)) {
+      players.add(player);
+      player.setCurrentRoomId(this.id);
+    }
+    doBroadcastToOthers(player.getId(), "看到 " + player.getName() + " 走了進來。");
+    log.info("Player {} entered room {}", player.getNickname(), template.id());
+    if (future != null) {
+      future.complete(null);
+    }
+  }
+
+  private void doMobEnter(MobActor mob, CompletableFuture<Void> future) {
+    log.info("Mob {} entered room", mob.getName());
+    mob.markEnterRoom();
+    if (!mobs.contains(mob)) {
+      mobs.add(mob);
+      mob.setCurrentRoomId(this.id);
+    }
+    doBroadcast("看到 " + mob.getName() + " 走了進來。");
+
+    if (future != null) {
+      future.complete(null);
+    }
+  }
+
+  private void doLeave(String actorId) {
+    CompletableFuture<LivingActor> future = new CompletableFuture<>();
+    findActor(actorId, future);
+    LivingActor actor = future.join();
+    if (actor == null) {
+      return;
+    }
+    switch (actor) {
+      case PlayerActor player -> doPlayerLeave(player);
+      case MobActor mob -> doMobLeave(mob);
+    }
+  }
+
+  private void doPlayerLeave(PlayerActor player) {
+    if (players.remove(player)) {
+      doBroadcastToOthers(player.getId(), player.getName() + " 離開了。");
+    }
+  }
+
+  private void doMobLeave(MobActor mob) {
+    if (mobs.remove(mob)) {
+      doBroadcast(mob.getName() + " 離開了。");
+    }
+  }
+
+  private void doLook(String playerId, CompletableFuture<String> future) {
+    log.info("Player {} Look room", playerId);
+
+    StringBuilder sb = new StringBuilder();
+    sb.append("\u001B[1;36m").append(template.name()).append("\u001B[0m\r\n");
+    sb.append(template.description()).append("\r\n");
+
+    if (template.exits() != null && !template.exits().isEmpty()) {
+      sb.append("\u001B[33m[出口]: ").append(String.join(", ", template.exits().keySet()))
+          .append("\u001B[0m\r\n");
+    }
+
+    StringBuilder others = new StringBuilder();
+    players.stream().filter(p -> !p.getId().equals(playerId))
+        .forEach(p -> others.append(p.getNickname()).append(" "));
+
+    if (!others.isEmpty()) {
+      sb.append("\u001B[35m[這裡有]: \u001B[0m").append(others).append("\r\n");
+    }
+    future.complete(sb.toString());
+  }
+
+  private void doSay(String sourceId, String content) {
+    PlayerActor speaker =
+        players.stream().filter(p -> p.getId().equals(sourceId)).findFirst().orElse(null);
+    String name = (speaker != null) ? speaker.getName() : "有人";
+    doBroadcast(name + ": " + content);
+  }
+
+  private void doTryPickItem(String args, PlayerActor picker, CompletableFuture<GameItem> future) {
+    GameItem targetItem = services.targetSelector().selectItem(this.getItemsSnapshot(), args);
+    if (targetItem == null) {
+      // actor.reply("這裡沒有看到 '" + args + "'。");
+      future.complete(null);
+      return;
+    }
+
+    this.items.remove(targetItem);
+
+    // 廣播
+    doBroadcastToOthers(picker.getId(), picker.getName() + " 撿起了 " + targetItem.getDisplayName());
+
+    // 回傳成功
+    future.complete(targetItem);
+  }
+
+  // 處理邏輯
+  private void doTick(long tickCount, long timestamp) {
+    // log.info("{} tickCount: {}", id, tickCount);
+
+    // === 1. World/Zone 層級邏輯 (例如：每 60 秒檢查一次重生) ===
+    if (tickCount % zoneTemplate.respawnRate() == 0) {
+      checkSpawnRule(); // 檢查是否有怪物死掉很久該重生了
+    }
+
+    // === 2. 轉發給 Actor ===
+    // 過濾掉 "完全沒事做且沒玩家在場" 的怪物
+    if (!players.isEmpty() || mobs.stream().anyMatch(m -> m.getState().isInCombat())) {
+      ActorMessage.Tick msg = new ActorMessage.Tick(tickCount, timestamp);
+
+      for (MobActor mob : mobs) {
+        mob.send(msg);
+      }
+
+      for (PlayerActor player : players) {
+        // log.info("send player");
+        player.send(msg);
       }
     }
   }
 
+  private void doBroadcast(String message) {
+    players.forEach(p -> p.reply(message));
+  }
+
+  private void doBroadcastToOthers(String sourceId, String message) {
+    players.stream().filter(p -> !p.getId().equals(sourceId)).forEach(p -> p.reply(message));
+  }
+
+  private void doFindActor(String actorId, CompletableFuture<LivingActor> future) {
+
+    // 先檢查mob
+    for (MobActor mob : mobs) {
+      if (mob.getId().equals(actorId)) {
+        future.complete(mob);
+        return;
+      }
+    }
+
+    for (PlayerActor player : players) {
+      if (player.getId().equals(actorId)) {
+        future.complete(player);
+        return;
+      }
+    }
+
+    future.complete(null);
+  }
+
+
+
+  // 公開給外部呼叫的方法 -------------------------------------------------------------------------
+  public void enter(LivingActor actor, CompletableFuture<Void> future) {
+    this.send(new RoomMessage.Enter(actor, future));
+  }
+
+  public void leave(String actorId) {
+    this.send(new RoomMessage.Leave(actorId));
+  }
+
+  public void look(String playerId, CompletableFuture<String> future) {
+    this.send(new RoomMessage.Look(playerId, future));
+  }
+
+  public void say(String sourceId, String content) {
+    this.send(new RoomMessage.Say(sourceId, content));
+  }
+
+  public void tick(long tickCount, long timestamp) {
+    this.send(new RoomMessage.Tick(tickCount, timestamp));
+  }
+
+  public void tryPickItem(String args, PlayerActor picker, CompletableFuture<GameItem> future) {
+    this.send(new RoomMessage.TryPickItem(args, picker, future));
+  }
+
+  public void broadcast(String message) {
+    this.send(new RoomMessage.Broadcast(message));
+  }
+
+  public void broadcastToOthers(String sourceId, String message) {
+    this.send(new RoomMessage.BroadcastToOthers(sourceId, message));
+  }
+
+  public void findActor(String actorId, CompletableFuture<LivingActor> future) {
+    this.send(new RoomMessage.FindActor(actorId, future));
+  }
+
+
+
   // --- 物品操作邏輯 ---
 
-  // public Optional<Item> pickItem(String keyword) {
-  // 簡單搜尋邏輯
-  // var found = items.stream().filter(i -> isMatch(i, keyword)) // 需實作 isMatch
-  // .findFirst();
-
-  // found.ifPresent(items::remove);
-  // return found; // 這裡回傳後，記得要標記 Dirty
-  // }
-
   // --- 輔助方法 (保持不變) ---
-
-  private void broadcast(String message) {
-    players.forEach(p -> p.sendText(message));
-  }
-
-  private void broadcastToOthers(String sourceId, String message) {
-    players.stream().filter(p -> !p.getId().equals(sourceId)).forEach(p -> p.sendText(message));
-  }
 
   // 產生快照 (只存變動的部分)
   public RoomStateRecord toRecord() {
@@ -3273,53 +3781,10 @@ public class RoomActor extends VirtualActor<RoomMessage> {
     return new RoomStateRecord(roomId, zoneId, new ArrayList<>(items));
   }
 
-  // public void addPlayer(PlayerActor player) {
-  // player.markEnterRoom();
-  // players.add(player);
-  // }
-
-  // public void removePlayer(PlayerActor player) {
-  // players.remove(player);
-  // }
-
   public List<PlayerActor> getPlayersSnapshot() {
     List<PlayerActor> players = new ArrayList<>(this.players);
     players.sort(Comparator.comparing(PlayerActor::getNickname));
     return players;
-  }
-
-  public void dropItem(GameItem item) {
-    items.add(item);
-    // 標記為 Dirty (需要存檔)
-    // WorldManager.markDirty(this.template.id());
-  }
-
-  public void removeItem(GameItem item) {
-    items.remove(item);
-    // 標記為 Dirty (需要存檔)
-    // WorldManager.markDirty(this.template.id());
-  }
-
-  public List<GameItem> getItemsSnapshot() {
-    return new ArrayList<>(items);
-  }
-
-
-
-  /**
-   * 處理怪物進入
-   */
-  public void addMob(MobActor mob) {
-    // 標記時間
-    mob.markEnterRoom();
-    mobs.add(mob);
-  }
-
-  /**
-   * 處理怪物離開
-   */
-  public void removeMob(MobActor mob) {
-    mobs.remove(mob);
   }
 
   /**
@@ -3337,14 +3802,35 @@ public class RoomActor extends VirtualActor<RoomMessage> {
     return snapshot;
   }
 
+  public List<GameItem> getItemsSnapshot() {
+    return new ArrayList<>(items);
+  }
+
+  private void dropItem(GameItem item) {
+    items.add(item);
+    // 標記為 Dirty (需要存檔)
+    // WorldManager.markDirty(this.template.id());
+  }
+
+  private void removeItem(GameItem item) {
+    items.remove(item);
+    // 標記為 Dirty (需要存檔)
+    // WorldManager.markDirty(this.template.id());
+  }
+
+  // TODO
+  private void checkSpawnRule() {
+
+  }
+
   /**
    * 房間初次載入時的生怪邏輯
    */
-  public void spawnInitialMobs() {
-    if (spawnRules == null)
+  private void spawnInitial(String type, List<SpawnRule> rules) {
+    if (rules == null)
       return;
 
-    for (SpawnRule rule : spawnRules) {
+    for (SpawnRule rule : rules) {
       // 處理機率 (例如：稀有怪只有 10% 機率出現)
       if (Math.random() > rule.respawnChance()) {
         continue;
@@ -3352,26 +3838,50 @@ public class RoomActor extends VirtualActor<RoomMessage> {
 
       // 根據數量生成
       for (int i = 0; i < rule.count(); i++) {
-        spawnOneMob(rule);
+        switch (type) {
+          case "mob":
+            spawnOneMob(rule);
+            break;
+          case "item":
+            spawnOneItem(rule);
+            break;
+        }
       }
     }
   }
 
   private void spawnOneMob(SpawnRule rule) {
     // 1. 呼叫工廠產生 MobActor (這裡會給予 UUID)
-    // MobActor mob = services.mobFactory().createMob(rule.mobTemplateId());
+    MobActor mob = worldFactory.createMob(rule.id());
+    try {
+      log.info("{}: {} - {}", mob.getId(), mob.getName(),
+          services.objectMapper().writeValueAsString(mob.getTemplate()));
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
 
     // // 2. 設定位置
-    // mob.setCurrentRoomId(this.id);
+    mob.setCurrentRoomId(this.id);
 
     // // 3. 加入房間列表
-    // this.mobs.add(mob);
+    this.mobs.add(mob);
 
     // // 4. 啟動怪物的 AI
-    // mob.start();
+    mob.start();
 
-    // log.debug("Spawned {} in room {}", mob.getTemplate().name(), this.id);
+    log.info("Spawned {} in room {}", mob.getTemplate().name(), this.id);
   }
+
+  private void spawnOneItem(SpawnRule rule) {
+    GameItem item = worldFactory.createItem(rule.id());
+    if (item == null) {
+      return;
+    }
+
+    this.items.add(item);
+    log.info("Spawned {} in room {}", item.getDisplayName(), this.id);
+  }
+
 }
 
 
@@ -3382,17 +3892,23 @@ package com.example.htmlmud.domain.context;
 import java.util.concurrent.ScheduledExecutorService;
 import org.springframework.context.ApplicationEventPublisher;
 import com.example.htmlmud.application.command.CommandDispatcher;
+import com.example.htmlmud.application.command.parser.TargetSelector;
+import com.example.htmlmud.domain.service.CombatService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public record GameServices(
 
     ObjectMapper objectMapper,
 
-    ApplicationEventPublisher eventPublisher,
+    CombatService combatService,
 
     CommandDispatcher commandDispatcher,
 
-    ScheduledExecutorService scheduler
+    ScheduledExecutorService scheduler,
+
+    ApplicationEventPublisher eventPublisher,
+
+    TargetSelector targetSelector
 
 ) {
 
@@ -3404,28 +3920,24 @@ public record GameServices(
 package com.example.htmlmud.domain.context;
 
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class MudContext {
+
   // 1. 當前操作的玩家 Actor (最重要的)
   public static final ScopedValue<PlayerActor> CURRENT_PLAYER = ScopedValue.newInstance();
 
   // 2. 當前的 Trace ID (除錯用)
   public static final ScopedValue<String> TRACE_ID = ScopedValue.newInstance();
 
-  public static final ScopedValue<ObjectMapper> OBJECT_MAPPER = ScopedValue.newInstance();
-
   // 輔助方法：取得當前玩家，如果沒設定(例如系統背景作業)則拋出異常
   public static PlayerActor currentPlayer() {
-    if (!CURRENT_PLAYER.isBound()) {
-      throw new IllegalStateException("當前不在玩家操作的 Context 中！");
-    }
-    return CURRENT_PLAYER.get();
+    return CURRENT_PLAYER
+        .orElseThrow(() -> new IllegalStateException("錯誤：嘗試在非 Request Scope 獲取 CurrentPlayer"));
   }
 
   // 輔助方法：取得當前 TraceId，沒綁定就回傳 "SYSTEM"
   public static String traceId() {
-    return TRACE_ID.isBound() ? TRACE_ID.get() : "UNKNOWN";
+    return TRACE_ID.orElse("UNKNOWN");
   }
 
 }
@@ -3574,19 +4086,42 @@ public sealed interface PlayerEvents extends DomainEvent
 }
 
 
---- File: CommandAlias.java ---
+--- File: ConsumableProp.java ---
 
-package com.example.htmlmud.domain.logic.command.annotation;
+package com.example.htmlmud.domain.model;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+public record ConsumableProp(
 
-@Target(ElementType.TYPE) // 只能放在類別上
-@Retention(RetentionPolicy.RUNTIME) // 執行時期透過反射讀取
-public @interface CommandAlias {
-  String[] value(); // 允許傳入多個別名，例如 {"l", "see"}
+    String effect,
+
+    int value
+
+) {
+}
+
+
+--- File: DamageType.java ---
+
+package com.example.htmlmud.domain.model;
+
+/**
+ * 枚举，表示战斗系统中的不同伤害类型。
+ */
+public enum DamageType {
+  /**
+   * 物理伤害，通常来自武器或徒手攻击。
+   */
+  PHYSICAL,
+
+  /**
+   * 魔法伤害，来自法术或附魔物品。
+   */
+  MAGICAL,
+
+  /**
+   * 内伤，影响气或精神，通常能穿透物理护甲。
+   */
+  INTERNAL
 }
 
 
@@ -3659,6 +4194,151 @@ public enum Direction {
 }
 
 
+--- File: Effect.java ---
+
+package com.example.htmlmud.domain.model;
+
+public enum Effect {
+
+  // debuffs
+  POISONED("中毒"), // 中毒
+  STUNED("昏迷"), // 昏迷
+  SILENCED("禁言"), // 禁言
+  FEAR("恐懼"), // 恐懼
+  SLOW("減速"), // 減速
+  WEAKENED("虛弱"), // 虛弱
+  CURSED("詛咒"), // 詛咒
+  BURNING("燃燒"), // 燃燒
+  FROZEN("冰凍"), // 冰凍
+  PARALYZED("麻痺"), // 麻痺
+  CONFUSED("混亂"), // 混亂
+  ENTANGLED("糾纏"), // 糾纏
+  DISEASED("疾病"), // 疾病
+  FATIGUED("疲勞"), // 疲勞
+  CHARMED("魅惑"), // 魅惑
+  POOR_VISION("視力不良"), // 視力不良
+  DEAFENED("失聰"), // 失聰
+  BLINDED("失明"), // 失明
+  SAPPED("能量耗盡"), // 能量耗盡
+  ANCHORED("定身"), // 定身
+  CURSED_WEAPON("詛咒武器"), // 詛咒武器
+
+  // buffs
+  HEALING("治療"), // 治療
+  REGENERATION("再生"), // 再生
+  HASTE("加速"), // 加速
+  SANCTUARY("聖護"), // 聖護
+  STRENGTHEN("強化"), // 強化
+  SHIELD("盾牌"), // 盾牌
+  INVIGORATE("振奮"), // 振奮
+  PROTECTION("保護"), // 保護
+  BLESSING("祝福"), // 祝福
+  FORTITUDE("堅韌"), // 堅韌
+  CLARITY("清晰"), // 清晰
+  SWIFTNESS("敏捷"), // 敏捷
+  RESISTANCE("抵抗"), // 抵抗
+  LUCK("幸運"), // 幸運
+  VISION("視野"), // 視野
+  ENERGY_BOOST("能量提升"), // 能量提升
+  COURAGE("勇氣"), // 勇氣
+  TRANQUILITY("寧靜"), // 寧靜
+  FURY("狂怒"), // 狂怒
+  BRAVERY("勇敢"), // 勇敢
+  FOCUSING("專注中"), // 專注中
+
+  // neutral
+  INVISIBLE("隱形"); // 隱形
+
+  private final String description;
+
+  Effect(String description) {
+    this.description = description;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+}
+
+
+--- File: EquipmentProp.java ---
+
+package com.example.htmlmud.domain.model;
+
+public record EquipmentProp(
+
+    EquipmentSlot slot, // 裝備位置
+
+    String attackVer, // 攻擊動詞: "咬", "抓", "揮拳"
+
+    int damage, // 基礎傷害
+
+    int defense, // 基礎防禦
+
+    int weight, // 重量
+
+    int attackSpeed, // 攻速
+
+    int maxDurability // 最大耐久 100
+
+) {
+}
+
+
+--- File: EquipmentSlot.java ---
+
+package com.example.htmlmud.domain.model;
+
+// 裝備部位 (這也是一種 Enum)
+public enum EquipmentSlot {
+
+  // 裝備部位
+  HEAD("頭部"),
+
+  FACE("臉部"),
+
+  NECK("頸部"),
+
+  SHOULDERS("肩部"),
+
+  ARMS("手臂"),
+
+  WRISTS("腕部"),
+
+  HANDS("手部"),
+
+  BODY("身體"),
+
+  CHEST("胸部"),
+
+  BACK("背部"),
+
+  WAIST("腰部"),
+
+  LEGS("腿部"),
+
+  FEET("腳部"),
+
+  FINGER_1("戒指1"), FINGER_2("戒指2"),
+
+
+  // 武器部位
+  MAIN_HAND("主手"),
+
+  OFF_HAND("副手");
+
+  private final String displayName;
+
+  EquipmentSlot(String displayName) {
+    this.displayName = displayName;
+  }
+
+  public String getDisplayName() {
+    return displayName;
+  }
+}
+
+
 --- File: GameItem.java ---
 
 package com.example.htmlmud.domain.model;
@@ -3668,6 +4348,7 @@ import java.util.Map;
 import com.example.htmlmud.domain.model.map.ItemTemplate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Data // Lombok
@@ -3679,26 +4360,25 @@ public class GameItem {
   // 每個物品都有獨立 ID，方便追蹤 (例如防止複製 Bug)
   private String id;
 
-  // 2. 指向樣板的指標 (只存 ID)
-  private String templateId;
+  @Getter
+  private ItemTemplate template;
 
+  // 動態數據 (會變的)
   private int level;
-
-  // 3. 動態數據 (會變的)
   private int currentDurability; // 耐久性
   private int amount; // 堆疊數量 (如果是藥水/錢幣)
 
-  // 4. 隨機數值/詞綴 (Affixes)
+  // 隨機數值/詞綴 (Affixes)
   // 例如：{ "attack_bonus": 5, "crafter": "玩家A" }
   private Map<String, Object> dynamicProps = new HashMap<>();
 
   // 輔助方法：獲取顯示名稱 (包含強化等級)
   // e.g., "鐵劍 (+5)"
-  public String getDisplayName(ItemTemplate tpl) {
+  public String getDisplayName() {
     if (level > 1) {
-      return tpl.name() + " (+" + level + ")";
+      return template.name() + " (+" + level + ")";
     }
-    return tpl.name();
+    return template.name();
   }
 
   // 業務邏輯直接寫在 POJO 裡
@@ -3706,6 +4386,63 @@ public class GameItem {
     this.currentDurability -= amount;
     if (this.currentDurability < 0)
       this.currentDurability = 0;
+  }
+}
+
+
+--- File: ItemLocation.java ---
+
+package com.example.htmlmud.domain.model;
+
+public enum ItemLocation {
+
+  GROUND("地上"),
+
+  INVENTORY("背包中"),
+
+  EQUIPPED("裝備中"),
+
+  CONTAINER("在容器內");
+
+  private final String description;
+
+  ItemLocation(String description) {
+    this.description = description;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+}
+
+
+--- File: ItemType.java ---
+
+package com.example.htmlmud.domain.model;
+
+/**
+ * 物品類型定義
+ */
+public enum ItemType {
+  /** 裝備類 */
+  EQUIPMENT("裝備"),
+  /** 消耗品 (藥水、食物等) */
+  CONSUMABLE("消耗品"),
+  /** 關鍵物品 (任務道具、鑰匙) */
+  KEY_ITEM("關鍵物品"),
+  /** 材料 (鍛造、煉金原料) */
+  MATERIAL("材料"),
+  /** 其他 */
+  OTHER("其他");
+
+  private final String description;
+
+  ItemType(String description) {
+    this.description = description;
+  }
+
+  public String getDescription() {
+    return description;
   }
 }
 
@@ -3722,25 +4459,79 @@ import java.util.Map;
 // 這個物件會被序列化存入 players.state_json 和 mobs.state_json
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LivingState {
-  public String gender;
+  // public String sex; // 性別
+  // public String race; // 種族 (人類、精靈等，通常會給予不同的初始屬性加成)
 
   public int level = 1;
+  public int age = 12; // 年齡 age
+  public int maxAge = 100; // 最大年齡
   public int hp;
   public int maxHp;
   public int mp;
   public int maxMp;
+  public int stamina; // 體力值
+  public int maxStamina; // 最大體力值
+  private int qi = 50; // 氣 (用於武功傷害計算)
+  private int maxQi; // 最大氣值
+  private int san; // 理智值
+  private int maxSan; // 最大理智值
+
+  private int exp = 0; // 經驗值
+  private int combatExp = 0; // 戰鬥經驗值
+
 
   // 基礎屬性
-  public Map<String, Integer> attributes = new HashMap<>(); // STR, DEX, INT
+  public int str = 5; // 力量 strength (影響 物理傷害、角色負重上限)
+  public int intelligence = 5; // 智力 intelligence (影響 魔法傷害、法力上限MP、學習技能的速度)
+  public int agi = 5; // 敏捷 agility (影響 攻擊速度、躲避率Evasion、命中率Hit Rate)
+  public int con = 5; // 體質 constitution (影響 生命值HP上限、防禦力、體力恢復速度)
+  private int wis; // 智慧 wisdom (影響 魔法威力)
+  private int dex = 5; // 靈巧 dexterity (影響 物理威力)
+  private int cha; // 魅力 charisma
+  private int luk; // 福緣 luck
+  private int karma; // 因果 karma
+  private int spi; // 靈性 spirit
+  private int cou; // 膽識 courage
+  private int conce; // 定力 concentration
+  private int app; // 容貌 appearance
+
+  private int reputation; // 名聲 (影響 與 NPC 的互動)
+  private int potential; // 潛力 (影響 學習特定高級武功的限制)
+
+
+  // === 戰鬥狀態 ===
+  @JsonIgnore
+  public transient boolean isInCombat = false;
+  // 當前鎖定的攻擊目標 ID (null 代表沒在打架)
+  @JsonIgnore
+  public transient String combatTargetId;
+
+  @JsonIgnore
+  public transient long nextAttackTime = 0; // 下一次可以攻擊的時間點 (System.currentTimeMillis)
 
   // 戰鬥狀態 (不存入 DB，或是標記 @JsonIgnore)
   @JsonIgnore
   public transient boolean isDead = false;
 
+  // === 裝備欄位 ===
+  public Map<EquipmentSlot, GameItem> equipment = new HashMap<>();
+
+  // 衍生屬性 (快取用，每次穿脫裝備後重新計算 通常不存 DB，由基礎屬性計算，但為了簡單先存這裡)
+  public int damage = 1; // 攻擊力
+  public int defense = 0; // 防禦力
+  public int attackSpeed = 2000; // 攻擊速度 (毫秒，例如 2000 代表 2秒打一次)
+  public int weightCapacity;
+
   // 建構子與輔助方法...
   @JsonIgnore
   public boolean isDead() {
     return hp <= 0;
+  }
+
+  // 判斷是否在戰鬥中
+  @JsonIgnore
+  public boolean isInCombat() {
+    return isInCombat && combatTargetId != null;
   }
 
   public LivingState deepCopy() {
@@ -3751,11 +4542,53 @@ public class LivingState {
     copy.mp = this.mp;
     copy.maxMp = this.maxMp;
     // Map 也要複製
-    if (this.attributes != null) {
-      copy.attributes = new HashMap<>(this.attributes);
-    }
+    // if (this.attributes != null) {
+    // copy.attributes = new HashMap<>(this.attributes);
+    // }
+    copy.str = this.str;
+    copy.dex = this.dex;
+    copy.con = this.con;
+    copy.damage = this.damage;
+    copy.defense = this.defense;
+    copy.attackSpeed = this.attackSpeed;
+    // copy.isDead = this.isDead;
+    // copy.isInCombat = this.isInCombat;
+    // copy.nextAttackTime = this.nextAttackTime;
     return copy;
   }
+}
+
+
+--- File: LivingState2.java ---
+
+package com.example.htmlmud.domain.model;
+
+public enum LivingState2 {
+
+  STANDING("站立"),
+
+  SITTING("坐下"),
+
+  RESTING("躺下休息"),
+
+  SLEEPING("睡覺"),
+
+  FIGHTING("戰鬥中"),
+
+  STUNNED("暈眩"),
+
+  DEAD("死亡");
+
+  private final String description;
+
+  LivingState2(String description) {
+    this.description = description;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+
 }
 
 
@@ -3824,32 +4657,96 @@ public record RoomStateRecord(String roomId, String zoneId, List<GameItem> dropp
 }
 
 
+--- File: Equipment.java ---
+
+package com.example.htmlmud.domain.model.map;
+
+import lombok.Builder;
+
+@Builder(toBuilder = true)
+public record Equipment(
+
+    String head, // 頭部
+
+    String face, // 臉部
+
+    String neck, // 頸部
+
+    String shoulders, // 肩部
+
+    String arms, // 手臂
+
+    String wrists, // 腕部
+
+    String hands, // 手部
+
+    String body, // 身體
+
+    String chest, // 胸部
+
+    String back, // 背部
+
+    String waist, // 腰部
+
+    String legs, // 腿部
+
+    String feet, // 脚部
+
+    String finger_1, // 戒指1
+
+    String finger_2, // 戒指2
+
+    String mainHand, // 主手
+
+    String offHand // 副手
+) {
+}
+
+
 --- File: ItemTemplate.java ---
 
 package com.example.htmlmud.domain.model.map;
 
 import java.util.Map;
+import com.example.htmlmud.domain.model.EquipmentSlot;
+import com.example.htmlmud.domain.model.ConsumableProp;
+import com.example.htmlmud.domain.model.EquipmentProp;
+import com.example.htmlmud.domain.model.ItemLocation;
+import com.example.htmlmud.domain.model.ItemType;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
 
 // 5. 物品/裝備重置 (ItemReset)
+@Builder(toBuilder = true)
 public record ItemTemplate(
 
     String id,
 
     String name, // "鐵劍"
 
+    @JsonProperty("keywords") String[] aliases,
+
     String description, // "一把普通的鐵劍。"
 
-    String slot, // "inventory"(背包), "weapon"(手), "body"(身)...
+    // ItemLocation location, // "inventory"(背包), "weapon"(手), "body"(身)...
 
-    int maxDurability, // 最大耐久 100
+    ItemType type,
 
-    int baseAttack, // 基礎攻擊 10
+    EquipmentProp equipmentProp, // 装備屬性
 
-    int baseDefense, // 基礎防禦 10
+    ConsumableProp consumableProp, // 消秏品屬性
 
-    double chance, // 0.0 - 1.0 (機率)
+    String quality, // 品質 common,
+
+    int value, // 價值
+
+    int level, // 等級
+
+    // 屬性加成 (例如：力量+5)
+    Map<String, Integer> bonusStats,
 
     Map<String, Object> extraProps // 其他靜態屬性
+
 ) {
 }
 
@@ -3858,6 +4755,7 @@ public record ItemTemplate(
 
 package com.example.htmlmud.domain.model.map;
 
+import java.util.Map;
 import java.util.Set;
 import com.example.htmlmud.domain.model.MobKind;
 import lombok.Builder;
@@ -3877,7 +4775,11 @@ public record MobTemplate(
 
     int maxHp,
 
-    int damage,
+    int maxMp,
+
+    int maxStamina,
+
+    int maxSan,
 
     String roomDescription,
 
@@ -3891,7 +4793,20 @@ public record MobTemplate(
 
     Set<String> dialogues, // 預設對話庫
     // 掉落表 ID, 商店列表 ID...
-    Integer shopId) {
+    Integer shopId,
+
+    // === 天生攻擊定義 (Natural Attack) ===
+    // 如果手上沒武器，就用這個設定
+    String attackVerb, // 攻擊動詞: "咬", "抓", "揮拳"
+    String attackNoun, // 攻擊部位: "尖銳的牙齒", "利爪", "拳頭"
+    int baseDamage, // 天生基礎傷害
+    int baseDefense, // 天生防禦力
+    int attackSpeed, // 天生攻速
+    int weight, // 天生重量
+
+    Map<String, String> equipment // 装備
+
+) {
 }
 
 
@@ -3956,9 +4871,9 @@ public record RoomTemplate(
 
     Map<String, RoomExit> exits, // Key: 方向 (north, east), Value: 出口詳細資訊
 
-    Set<SpawnRule> spawnRules,
+    @JsonProperty("population") List<SpawnRule> mobSpawnRules,
 
-    List<String> items, // [ "newbie_village:village_bread" ]
+    @JsonProperty("items") List<SpawnRule> itemSpawnRules,
 
     @JsonProperty("extra_data") Map<String, Object> extraData // 額外擴充資料 (e.g. 腳本觸發參數)
 
@@ -3970,12 +4885,13 @@ public record RoomTemplate(
 
 package com.example.htmlmud.domain.model.map;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
 
-// 4. 怪物重生設定 (MobReset)
+// Mob/Item 重生設定 (Mob/Item Reset)
+@Builder(toBuilder = true)
 public record SpawnRule(
 
-    @JsonProperty("mobId") String mobTemplateId, // 怪物原型 mobTemplateId
+    String id, // 怪物原型 mobTemplateId
 
     int count, // 該房間上限幾隻
 
@@ -4011,6 +4927,123 @@ public record ZoneTemplate(
     List<String> flags // e.g., ["SAFE", "OUTDOORS"]
 
 ) {
+}
+
+
+--- File: DamageSource.java ---
+
+package com.example.htmlmud.domain.model.vo;
+
+public record DamageSource(
+
+    String name, // 來源名稱 (ex: "生鏽鐵劍", "巨大的門牙")
+    String verb, // 動詞 (ex: "揮砍", "咬")
+    int damage, // 數值
+    int speed // 攻速
+
+) {
+}
+
+
+--- File: CombatService.java ---
+
+package com.example.htmlmud.domain.service;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadLocalRandom;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.stereotype.Service;
+import com.example.htmlmud.application.service.WorldManager;
+import com.example.htmlmud.domain.actor.impl.LivingActor;
+import com.example.htmlmud.domain.actor.impl.RoomActor;
+import com.example.htmlmud.domain.context.GameServices;
+import com.example.htmlmud.domain.model.LivingState;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class CombatService {
+
+  private final ObjectProvider<WorldManager> servicesProvider;
+
+  /**
+   * 執行一次攻擊判定
+   *
+   * @return 造成的傷害值 (0 代表未命中或被格擋)
+   */
+  public int calculateDamage(LivingActor attacker, LivingActor defender) {
+    LivingState attState = attacker.getState();
+    LivingState defState = defender.getState();
+
+    // 1. 命中判定 (範例：敏捷越高，命中越高)
+    // 假設基礎命中 80% + (攻方敏捷 - 守方敏捷)%
+    double hitChance = 0.8 + ((attState.agi - defState.agi) * 0.01);
+    if (ThreadLocalRandom.current().nextDouble() > hitChance) {
+      return -1; // -1 代表 Miss
+    }
+
+    // 2. 傷害公式 (範例：攻擊力 - 防禦力，浮動 10%)
+    log.info("attState.damage:{} defState.defense:{}", attState.damage, defState.defense);
+    int rawDmg = attState.damage - defState.defense;
+    if (rawDmg <= 0)
+      rawDmg = 1; // 至少造成 1 點傷害
+
+    // 加入浮動 (0.9 ~ 1.1)
+    double variance = 0.9 + (ThreadLocalRandom.current().nextDouble() * 0.2);
+    int finalDmg = (int) (rawDmg * variance);
+
+    return finalDmg;
+  }
+
+  /**
+   * 計算獲得經驗值 (範例)
+   */
+  public int calculateExp(LivingActor mob, LivingActor player) {
+    return mob.getState().level * 10;
+  }
+
+  public LivingActor processAutoAttack(LivingActor attacker, String roomId, String targetId) {
+    WorldManager manager = servicesProvider.getObject();
+
+    // 1. 檢查攻速冷卻
+    // 2. 檢查目標是否還在房間裡 / 是否還活著
+    // 這裡需要透過 WorldManager 取得真實的 Actor 物件
+    RoomActor room = manager.getRoomActor(roomId);
+    CompletableFuture<LivingActor> future = new CompletableFuture<>();
+    room.findActor(targetId, future);
+    LivingActor target = future.join();
+    log.info("attacker.getName:{} target getName:{}", attacker.getName(), target.getName());
+
+    if (target == null || target.getState().hp <= 0) {
+      stopCombat(attacker, target); // 目標消失或死亡，停止戰鬥
+      return target;
+    }
+
+    // 3. 執行攻擊 (呼叫 CombatService)
+    // 這裡會用到我們上一輪討論的 DamageSource
+    int dmg = calculateDamage(attacker, target);
+
+    // 4. 應用傷害
+    // target.onAttacked(attacker);
+
+    // 5. 發送訊息給房間所有人
+    // attacker.equip(null)
+    String verb = "攻擊"; // 或是從 weapon.getVerb() 取得 "揮砍"
+    String msg = String.format("%s 用 %s %s %s，造成 %d 點傷害！", attacker.getName(), "拳頭", verb,
+        target.getName(), dmg);
+    room.broadcast(msg);
+
+    return target;
+  }
+
+  public void stopCombat(LivingActor attacker, LivingActor target) {
+    attacker.getState().isInCombat = false;
+    attacker.getState().combatTargetId = null;
+    target.getState().isInCombat = false;
+    target.getState().combatTargetId = null;
+  }
 }
 
 
@@ -4812,6 +5845,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
@@ -4831,24 +5865,30 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
 
   @Override
   public void afterConnectionEstablished(WebSocketSession session) {
+    // 包裝 Session
+    // 這會自動加上 Lock，確保同時寫入時會排隊，不會噴出 IllegalStateException
+    // 參數說明：session, sendTimeLimit(ms), bufferSizeLimit(bytes)
+    WebSocketSession concurrentSession =
+        new ConcurrentWebSocketSessionDecorator(session, 1000, 64 * 1024);
+
     try {
 
       // Guest階段 使用工廠方法建立 Guest Actor (ID=0)
       // 將必要的 Service 注入給 Actor，讓 Actor 擁有處理業務的能力
-      PlayerActor actor = PlayerActor.createGuest(session, worldManager, gameServices);
+      PlayerActor actor = PlayerActor.createGuest(concurrentSession, worldManager, gameServices);
 
       // 啟動 Actor 的虛擬執行緒 (Virtual Thread)
       actor.start();
 
       // 註冊到網路層 SessionRegistry
-      sessionRegistry.register(session, actor);
+      sessionRegistry.register(concurrentSession, actor);
 
-      log.info("連線建立: {} (Guest Actor Created)", session.getId());
+      log.info("連線建立: {} (Guest Actor Created)", concurrentSession.getId());
       // eventPublisher.publishEvent(new SessionEvent.Established(session.getId(), Instant.now()));
     } catch (Exception e) {
       log.error("連線初始化失敗", e);
       try {
-        session.close();
+        concurrentSession.close();
       } catch (Exception ignored) {
       }
     }
@@ -4870,7 +5910,7 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
 
         // D. 裝入信封並投遞
         // 這裡不綁定 ScopedValue，因為要跨執行緒傳遞
-        actor.send(new ActorMessage(traceId, cmd));
+        actor.send(new ActorMessage.Command(traceId, cmd));
       } else {
         // 找不到 Actor，通常代表連線異常或已被踢除
         log.warn("[{}] 收到訊息但找不到 Actor，關閉連線: {}", traceId, session.getId());
@@ -4976,6 +6016,71 @@ public class WorldInitializer implements ApplicationRunner {
     long duration = System.currentTimeMillis() - start;
     log.info("=== MUD World Ready in {} ms ===", duration);
   }
+}
+
+
+--- File: WorldPulse.java ---
+
+package com.example.htmlmud.infra.server;
+
+import java.util.concurrent.atomic.AtomicLong;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+import com.example.htmlmud.application.service.WorldManager;
+import com.example.htmlmud.protocol.RoomMessage;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class WorldPulse {
+
+  private final WorldManager worldManager;
+
+  // 全域計數器，伺服器啟動後開始累加
+  private final AtomicLong globalTickCounter = new AtomicLong(0);
+
+  // 設定基礎頻率為 1000ms (1秒)
+  // 這是 "戰鬥心跳" 的速度，也是最小單位
+  @Scheduled(fixedRate = 5000)
+  public void pulse() {
+    long currentTick = globalTickCounter.incrementAndGet();
+    long now = System.currentTimeMillis();
+
+    // 優化：只對「活躍」的房間發送
+    worldManager.getActiveRooms().values().forEach(room -> {
+
+      // Active Room 定義：有玩家在裡面，重生時間，或者有未結束的戰鬥/腳本
+      boolean isRespawnTick = (currentTick % room.getZoneTemplate().respawnRate() == 0);
+      if (!room.getPlayers().isEmpty() || isRespawnTick
+          || room.getMobs().stream().anyMatch(m -> m.getState().isInCombat())) {
+        room.send(new RoomMessage.Tick(currentTick, now));
+      }
+    });
+
+    // 可選：每 60 秒印一次 Log 確保心臟還在跳
+    if (currentTick % 60 == 0) {
+      log.debug("World Pulse alive. Tick: {}", currentTick);
+
+    }
+  }
+
+  // 每 1000 毫秒 (1秒) 執行一次
+  // @Scheduled(fixedRate = 1000)
+  // public void tick() {
+  // // 只針對「有人」或「活躍」的房間進行更新，效能最佳化
+  // worldManager.getActiveRooms().values().forEach(room -> {
+  // // 使用 Virtual Thread 並行處理每個房間的邏輯
+  // Thread.ofVirtual().name("room-tick-" + room.getId()).start(() -> {
+  // try {
+  // room.tick();
+  // } catch (Exception e) {
+  // log.error("Room tick error: {}", room.getId(), e);
+  // }
+  // });
+  // });
+  // }
 }
 
 
@@ -5181,7 +6286,42 @@ public class IdUtils {
 
 package com.example.htmlmud.protocol;
 
-public record ActorMessage(String traceId, GameCommand command) {
+import java.util.concurrent.CompletableFuture;
+import org.springframework.web.socket.WebSocketSession;
+import com.example.htmlmud.domain.actor.impl.LivingActor;
+import com.example.htmlmud.domain.model.EquipmentSlot;
+import com.example.htmlmud.domain.model.GameItem;
+
+public sealed interface ActorMessage
+    permits ActorMessage.Tick, ActorMessage.Command, ActorMessage.Die, ActorMessage.SendText,
+    ActorMessage.OnAttacked, ActorMessage.Equip, ActorMessage.Unequip {
+
+  /**
+   * 心跳訊息
+   *
+   * @param tickCount 全域累計的 Tick 次數 (用來取餘數判斷頻率)
+   * @param timestamp 當前時間戳
+   */
+  record Tick(long tickCount, long timestamp) implements ActorMessage {
+  }
+
+  record Command(String traceId, GameCommand command) implements ActorMessage {
+  }
+
+  record Die(String killerId) implements ActorMessage {
+  }
+
+  record SendText(WebSocketSession session, String content) implements ActorMessage {
+  }
+
+  record OnAttacked(LivingActor actor) implements ActorMessage {
+  }
+
+  record Equip(GameItem item, CompletableFuture<String> future) implements ActorMessage {
+  }
+
+  record Unequip(EquipmentSlot slot, CompletableFuture<String> future) implements ActorMessage {
+  }
 
 }
 
@@ -5237,29 +6377,35 @@ public sealed interface GameCommand {
 package com.example.htmlmud.protocol;
 
 import java.util.concurrent.CompletableFuture;
+import com.example.htmlmud.domain.actor.impl.LivingActor;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
+import com.example.htmlmud.domain.model.GameItem;
 
 /**
  * 定義所有發送給 RoomActor 的內部訊息協定 使用 Sealed Interface 限制訊息類型，配合 switch pattern matching
  */
-public sealed interface RoomMessage permits RoomMessage.PlayerEnter, RoomMessage.PlayerLeave,
-    RoomMessage.TryPickItem, RoomMessage.Look, RoomMessage.Say {
+public sealed interface RoomMessage permits RoomMessage.Enter, RoomMessage.Leave,
+    RoomMessage.TryPickItem, RoomMessage.Look, RoomMessage.Say, RoomMessage.Tick,
+    RoomMessage.Broadcast, RoomMessage.BroadcastToOthers, RoomMessage.FindActor {
 
-  /**
-   * 玩家進入房間
-   *
-   * @param player 玩家 Actor 實例
-   * @param future 用於通知移動完成 (可選)
-   */
-  record PlayerEnter(PlayerActor player, CompletableFuture<Void> future) implements RoomMessage {
+  record Tick(long tickCount, long timestamp) implements RoomMessage {
   }
 
   /**
-   * 玩家離開房間
+   * LivingActor進入房間
    *
-   * @param playerId 離開的玩家 ID
+   * @param LivingActor 實例
+   * @param future 用於通知移動完成 (可選)
    */
-  record PlayerLeave(String playerId) implements RoomMessage {
+  record Enter(LivingActor actor, CompletableFuture<Void> future) implements RoomMessage {
+  }
+
+  /**
+   * LivingActor離開房間
+   *
+   * @param actorId 離開的 Actor ID
+   */
+  record Leave(String actorId) implements RoomMessage {
   }
 
   /**
@@ -5280,7 +6426,17 @@ public sealed interface RoomMessage permits RoomMessage.PlayerEnter, RoomMessage
   record Say(String sourcePlayerId, String content) implements RoomMessage {
   }
 
-  record TryPickItem(String itemId, PlayerActor picker) implements RoomMessage {
+  record TryPickItem(String itemId, PlayerActor picker, CompletableFuture<GameItem> future)
+      implements RoomMessage {
+  }
+
+  record Broadcast(String message) implements RoomMessage {
+  }
+
+  record BroadcastToOthers(String sourceId, String message) implements RoomMessage {
+  }
+
+  record FindActor(String actorId, CompletableFuture<LivingActor> future) implements RoomMessage {
   }
 
 }

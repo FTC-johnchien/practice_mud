@@ -1,11 +1,13 @@
 package com.example.htmlmud.application.command.impl;
 
+import java.util.concurrent.CompletableFuture;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
 import com.example.htmlmud.domain.model.Direction;
+import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.map.RoomExit;
 import com.example.htmlmud.infra.util.AnsiColor;
 import com.example.htmlmud.infra.util.ColorText;
@@ -49,12 +51,13 @@ public class MoveCommand implements PlayerCommand {
     // 假設 Room.exits 是 Map<String, Integer> (key 是 direction full name)
     // Integer nextRoomId = currentRoom.getTemplate().exits().get(dir.getFullName());
     RoomExit exit = currentRoom.getTemplate().exits().get(dir.getFullName());
-
-
     if (exit == null) {
       actor.reply("往 " + dir.getDisplayName() + " 沒有出路。");
       return;
     }
+
+    // TODO 檢查出口限制
+
 
     // 檢查要去的房間是否存在
     String targetRoomId = exit.targetRoomId();
@@ -69,19 +72,16 @@ public class MoveCommand implements PlayerCommand {
     // --- 檢查成功，開始處理移動流程 ---
 
     // 4. 舊房間廣播 (離場)
-    currentRoom.removePlayer(actor);
+    currentRoom.leave(actor.getId());
     String leaveMsg = ColorText.wrap(AnsiColor.YELLOW,
         actor.getNickname() + " 往 " + dir.getDisplayName() + " 離開了。");
     worldManager.broadcastToRoom(currentRoomId, leaveMsg, actor.getId());
 
-    // 5. 更新玩家位置
-    // 注意：這裡只改記憶體，State Pattern + Write-Behind 會負責存檔
-    // String targetRoomId = exit.targetRoomId();
-    actor.setCurrentRoomId(targetRoomId);
-
     // 6. 新房間廣播 (進場)
     // 計算反方向 (例如往北走，新房間的人會看到你從南方來)
-    targetRoom.addPlayer(actor);
+    CompletableFuture<Void> future = new CompletableFuture<>();
+    targetRoom.enter(actor, future);
+    future.orTimeout(1, java.util.concurrent.TimeUnit.SECONDS).join();
     String arriveMsg = ColorText.wrap(AnsiColor.YELLOW,
         actor.getNickname() + " 從 " + dir.opposite().getDisplayName() + " 過來了。");
     worldManager.broadcastToRoom(targetRoomId, arriveMsg, actor.getId());

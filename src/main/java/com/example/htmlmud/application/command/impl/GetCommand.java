@@ -1,20 +1,27 @@
 package com.example.htmlmud.application.command.impl;
 
+import java.util.concurrent.CompletableFuture;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.application.command.annotation.CommandAlias;
+import com.example.htmlmud.application.command.parser.TargetSelector;
 import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
+import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.protocol.RoomMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @CommandAlias("get")
 @RequiredArgsConstructor
 public class GetCommand implements PlayerCommand {
 
   private final WorldManager worldManager;
+
+  private final TargetSelector targetSelector; // 注入工具
 
   @Override
   public String getKey() {
@@ -29,19 +36,35 @@ public class GetCommand implements PlayerCommand {
       return;
     }
 
-    // 找到房間 Actor
-    String roomId = actor.getCurrentRoomId();
-    RoomActor room = worldManager.getRoomActor(roomId);
+    // 1. 準備 Future 接收結果
+    CompletableFuture<GameItem> future = new CompletableFuture<>();
 
-    // 發送請求 (這是非同步的)
-    // 注意：這裡有兩種做法
-    // 方法 A: 發後不理 (Fire-and-Forget)，結果由 ActorMessage 回傳處理
-    // 方法 B: 使用 CompletableFuture 等待結果 (較直觀，但在 Actor 模型中要小心死鎖)
+    // 2. 發送訊息給房間： "我要撿 'sword' (args)"
+    // 注意：這裡我們還不知道房間到底有沒有劍，只傳字串
+    RoomActor room = worldManager.getRoomActor(actor.getCurrentRoomId());
+    room.tryPickItem(args, actor, future);
+    // room.send(new RoomMessage.TryPickItem(args, actor, future));
 
-    // 這裡示範更符合 Actor 精神的 "Ask Pattern" (或是透過回呼)
-    // 為了簡單起見，我們假設 RoomActor 有一個同步的安全方法 (如果都在同一台機器)
-    // 或者發送一個 "AttemptPick" 訊息
+    // 3. 等待結果 (Virtual Thread 不會卡死)
+    try {
+      GameItem item = future.orTimeout(1, java.util.concurrent.TimeUnit.SECONDS).join();
+      if (item != null) {
+        actor.getInventory().add(item);
+        actor.reply("你撿起了 " + item.getDisplayName());
+      } else {
+        actor.reply("這裡沒有看到 '" + args + "'。");
+      }
+    } catch (Exception e) {
+      log.error("get error", e);
+      actor.reply("發生錯誤:");
+    }
 
-    room.send(new RoomMessage.TryPickItem(args, actor));
+    // null actor.reply("這裡沒有看到 '" + args + "'。");
+
+    // 房間通知
+    // picker.reply("你撿起了 " + targetItem.getDisplayName());
+    // doBroadcastToOthers(roomActor, picker.getId(),
+    // picker.getName() + " 撿起了 " + targetItem.getDisplayName());
+
   }
 }

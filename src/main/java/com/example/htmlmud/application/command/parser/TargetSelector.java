@@ -1,12 +1,12 @@
 package com.example.htmlmud.application.command.parser;
 
-import com.example.htmlmud.domain.actor.impl.MobActor;
-import com.example.htmlmud.domain.model.map.MobTemplate;
-import org.springframework.stereotype.Component;
-
 import java.util.List;
+import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.springframework.stereotype.Component;
+import com.example.htmlmud.domain.actor.impl.MobActor;
+import com.example.htmlmud.domain.model.GameItem;
 
 @Component
 public class TargetSelector {
@@ -17,55 +17,60 @@ public class TargetSelector {
   // 用來解析 "index.name" (例如: 2.goblin)
   private static final Pattern DOT_NOTATION = Pattern.compile("^(\\d+)\\.(.*)$");
 
+  public GameItem selectItem(List<GameItem> candidates, String input) {
+    return select(candidates, input, this::isMatchItem);
+  }
+
   /**
    * 從列表中找到符合描述的目標
    *
    * @param candidates 房間裡的所有怪物 (或物品)
-   * @param input 玩家輸入的字串 (例如 "elite soldier 3")
+   * @param input 玩家輸入的字串 (例如 "elite soldier 3" 或 "2.goblin")
    * @return 找到的 Mob，若無則回傳 null
    */
   public MobActor selectMob(List<MobActor> candidates, String input) {
+    return select(candidates, input, this::isMatchMob);
+  }
+
+  /**
+   * 通用的選擇邏輯，減少重複程式碼
+   */
+  private <T> T select(List<T> candidates, String input, BiPredicate<T, String> matcher) {
     if (input == null || input.isBlank())
       return null;
 
-    // 1. 解析輸入，分離出 "名稱關鍵字" 和 "第幾個"
     ParsedTarget parsed = parseInput(input);
     String keyword = parsed.name.toLowerCase();
-    int targetIndex = parsed.index; // 1-based index
-
+    int targetIndex = parsed.index;
     int matchCount = 0;
 
-    // 2. 遍歷候選名單
-    for (MobActor mob : candidates) {
-      // 3. 檢查是否匹配
-      if (isMatch(mob, keyword)) {
+    for (T candidate : candidates) {
+      if (matcher.test(candidate, keyword)) {
         matchCount++;
-        // 4. 如果匹配次數等於玩家指定的索引，就是它了
         if (matchCount == targetIndex) {
-          return mob;
+          return candidate;
         }
       }
     }
-
-    return null; // 找不到
+    return null;
   }
 
-  private boolean isMatch(MobActor mob, String keyword) {
-    MobTemplate tpl = mob.getTemplate();
+  private boolean isMatchItem(GameItem item, String keyword) {
+    return isMatch(item.getTemplate().name(), item.getTemplate().aliases(), keyword);
+  }
 
-    // 規則 A: 直接比對 Name (忽略大小寫)
-    if (tpl.name().toLowerCase().contains(keyword))
+  private boolean isMatchMob(MobActor mob, String keyword) {
+    return isMatch(mob.getTemplate().name(), mob.getTemplate().aliases(), keyword);
+  }
+
+  private boolean isMatch(String name, List<String> aliases, String keyword) {
+    if (name.toLowerCase().contains(keyword))
       return true;
 
-    // 規則 B: 比對 Aliases
-    // 只要 Alias 列表裡有任何一個字串 "包含" 玩家輸入的關鍵字
-    // 例如 alias=["red goblin king"], input="red goblin" -> true
-    // 例如 alias=["goblin"], input="red" -> false
-    if (tpl.aliases() != null) {
-      for (String alias : tpl.aliases()) {
-        if (alias.toLowerCase().contains(keyword)) {
+    if (aliases != null) {
+      for (String alias : aliases) {
+        if (alias.toLowerCase().contains(keyword))
           return true;
-        }
       }
     }
     return false;

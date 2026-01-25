@@ -7,15 +7,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.example.htmlmud.domain.actor.impl.PlayerActor;
-import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.model.LivingState;
 import com.example.htmlmud.domain.model.PlayerRecord;
 import com.example.htmlmud.infra.persistence.entity.CharacterEntity;
 import com.example.htmlmud.infra.persistence.entity.UserEntity;
 import com.example.htmlmud.infra.persistence.repository.CharacterRepository;
 import com.example.htmlmud.infra.persistence.repository.UserRepository;
-import com.example.htmlmud.protocol.ConnectionState;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,10 +54,12 @@ public class AuthService {
         .passwordHash(passwordEncoder.encode(rawPassword)).createdAt(now).lastLoginAt(now).build();
     userRepository.save(newUser);
 
+
+    // TODO 待處理創角的設定
     CharacterEntity characterEntity = new CharacterEntity();
     characterEntity.setUid(newUser.getId());
     characterEntity.setName(username);
-    characterEntity.setNickname(username); // TODO 待處理
+    characterEntity.setNickname(username);
     characterEntity.setCurrentRoomId(null);
     characterEntity.setState(new LivingState());
     characterEntity.setCreatedAt(now);

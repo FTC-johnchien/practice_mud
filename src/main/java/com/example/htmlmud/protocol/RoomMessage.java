@@ -1,32 +1,39 @@
 package com.example.htmlmud.protocol;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import com.example.htmlmud.domain.actor.impl.LivingActor;
+import com.example.htmlmud.domain.actor.impl.MobActor;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
+import com.example.htmlmud.domain.model.GameItem;
+import com.example.htmlmud.domain.model.RoomStateRecord;
 
 /**
  * 定義所有發送給 RoomActor 的內部訊息協定 使用 Sealed Interface 限制訊息類型，配合 switch pattern matching
  */
-public sealed interface RoomMessage permits RoomMessage.PlayerEnter, RoomMessage.PlayerLeave,
-    RoomMessage.TryPickItem, RoomMessage.Look, RoomMessage.Say, RoomMessage.Tick {
+public sealed interface RoomMessage
+    permits RoomMessage.Enter, RoomMessage.Leave, RoomMessage.TryPickItem, RoomMessage.Say,
+    RoomMessage.Tick, RoomMessage.Broadcast, RoomMessage.BroadcastToOthers, RoomMessage.FindActor,
+    RoomMessage.GetPlayers, RoomMessage.GetMobs, RoomMessage.GetItems, RoomMessage.ToRecord {
 
   record Tick(long tickCount, long timestamp) implements RoomMessage {
   }
 
   /**
-   * 玩家進入房間
+   * LivingActor進入房間
    *
-   * @param player 玩家 Actor 實例
+   * @param LivingActor 實例
    * @param future 用於通知移動完成 (可選)
    */
-  record PlayerEnter(PlayerActor player, CompletableFuture<Void> future) implements RoomMessage {
+  record Enter(LivingActor actor, CompletableFuture<Void> future) implements RoomMessage {
   }
 
   /**
-   * 玩家離開房間
+   * LivingActor離開房間
    *
-   * @param playerId 離開的玩家 ID
+   * @param actorId 離開的 Actor ID
    */
-  record PlayerLeave(String playerId) implements RoomMessage {
+  record Leave(String actorId) implements RoomMessage {
   }
 
   /**
@@ -35,8 +42,8 @@ public sealed interface RoomMessage permits RoomMessage.PlayerEnter, RoomMessage
    * @param playerId 發出指令的玩家 ID (用於過濾"自己看到自己")
    * @param result 用於回傳房間描述字串
    */
-  record Look(String playerId, CompletableFuture<String> result) implements RoomMessage {
-  }
+  // record Look(String playerId, CompletableFuture<String> result) implements RoomMessage {
+  // }
 
   /**
    * 說話/廣播
@@ -47,7 +54,28 @@ public sealed interface RoomMessage permits RoomMessage.PlayerEnter, RoomMessage
   record Say(String sourcePlayerId, String content) implements RoomMessage {
   }
 
-  record TryPickItem(String itemId, PlayerActor picker) implements RoomMessage {
+  record TryPickItem(String itemId, PlayerActor picker, CompletableFuture<GameItem> future)
+      implements RoomMessage {
   }
 
+  record Broadcast(String message) implements RoomMessage {
+  }
+
+  record BroadcastToOthers(String sourceId, String message) implements RoomMessage {
+  }
+
+  record FindActor(String actorId, CompletableFuture<LivingActor> future) implements RoomMessage {
+  }
+
+  record GetPlayers(CompletableFuture<List<PlayerActor>> future) implements RoomMessage {
+  }
+
+  record GetMobs(CompletableFuture<List<MobActor>> future) implements RoomMessage {
+  }
+
+  record GetItems(CompletableFuture<List<GameItem>> future) implements RoomMessage {
+  }
+
+  record ToRecord(CompletableFuture<RoomStateRecord> future) implements RoomMessage {
+  }
 }

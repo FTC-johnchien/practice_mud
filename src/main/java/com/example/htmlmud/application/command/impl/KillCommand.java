@@ -38,7 +38,7 @@ public class KillCommand implements PlayerCommand {
     RoomActor room = worldManager.getRoomActor(actor.getCurrentRoomId());
     // 這裡假設 room 有 getMobsSnapshot() 回傳 List<MobActor>
     // 注意：為了線程安全，這裡最好是 Snapshot 或是能確保讀取安全的列表
-    List<MobActor> mobsInRoom = room.getMobsSnapshot();
+    List<MobActor> mobsInRoom = room.getMobs();
 
     // 2. 交給 Selector 處理複雜字串
     // args 可能是 "red goblin", "elite soldier 2"
@@ -55,7 +55,9 @@ public class KillCommand implements PlayerCommand {
     actor.getState().isInCombat = true;
     log.info("name:{} {}", actor.getName(), actor.getNickname());
     actor.reply("你對 " + target.getTemplate().name() + " 大喊受死吧 一邊擺出了戰鬥架式！");
+    room.broadcast(
+        "KillCommand 目前 " + actor.getState().hp + " / " + actor.getState().maxHp + " HP");
     // actor.reply("你開始攻擊 " + target.getTemplate().name() + "！");
-    target.attacked(actor);
+    target.onAttacked(actor);
   }
 }

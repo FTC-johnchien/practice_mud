@@ -1,21 +1,25 @@
 package com.example.htmlmud.application.factory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.application.service.WorldManager;
+import com.example.htmlmud.application.service.RoomService;
+import com.example.htmlmud.domain.actor.impl.LivingActor;
 import com.example.htmlmud.domain.actor.impl.MobActor;
+import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
 import com.example.htmlmud.domain.context.GameServices;
 import com.example.htmlmud.domain.model.GameItem;
+import com.example.htmlmud.domain.model.ItemType;
+import com.example.htmlmud.domain.model.LootEntry;
 import com.example.htmlmud.domain.model.map.ItemTemplate;
 import com.example.htmlmud.domain.model.map.MobTemplate;
 import com.example.htmlmud.domain.model.map.RoomTemplate;
 import com.example.htmlmud.domain.model.map.ZoneTemplate;
 import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,15 +28,11 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WorldFactory {
 
-  private final ObjectProvider<GameServices> servicesProvider;
-
-  // private final GameServices gameServices;
-
-  // private final WorldManager worldManager;
-  // private final ScheduledExecutorService scheduler;
-  private final ObjectMapper objectMapper;
-
   private final TemplateRepository templateRepo;
+
+  private final ObjectProvider<RoomService> roomServiceProvider;
+
+  private final ObjectProvider<GameServices> gameServicesProvider;
 
   /**
    * 建立房間 Actor
@@ -52,7 +52,7 @@ public class WorldFactory {
     }
 
     // 這裡負責組裝：RoomActor 需要 Template + ZoneTemplate
-    RoomActor room = new RoomActor(roomTpl, zoneTpl, this, objectMapper);
+    RoomActor room = new RoomActor(roomTpl, zoneTpl, roomServiceProvider.getObject());
     room.start();
     return room;
   }
@@ -71,7 +71,7 @@ public class WorldFactory {
 
     // 2. new Actor (State 自動生成)
     // MobActor mob = new MobActor(tpl);
-    MobActor mob = new MobActor(tpl, servicesProvider.getObject());
+    MobActor mob = new MobActor(tpl, gameServicesProvider.getObject());
 
     // 3. 這裡可以處理「菁英怪」或「隨機稱號」邏輯
     // if (Math.random() < 0.1) mob.setPrefix("狂暴的");
@@ -86,6 +86,7 @@ public class WorldFactory {
    * 建立物品實體 (處理隨機數值)
    */
   public GameItem createItem(String templateId) {
+    log.info("templateId:{}", templateId);
     ItemTemplate tpl = templateRepo.findItem(templateId).orElse(null);
     if (tpl == null) {
       log.error("Create Item failed: Template not found {}", templateId);
@@ -112,4 +113,58 @@ public class WorldFactory {
 
     return item;
   }
+
+  public GameItem createCorpse(LivingActor actor) {
+    GameItem corpse = new GameItem();
+    corpse.setId(UUID.randomUUID().toString());
+    corpse.setName(actor.getName() + " 的屍體");
+    corpse.setDescription("這裡有一具 " + actor.getName() + " 的屍體，死狀悽慘。");
+    corpse.setType(ItemType.CORPSE);
+
+
+    // 1. 【轉移遺物】：把怪物原本背包裡的東西移進去
+    corpse.getContents().addAll(actor.getInventory());
+
+    // 2. 【轉移裝備】：把怪物身上穿的脫下來移進去
+    corpse.getContents().addAll(actor.getState().equipment.values());
+
+    // 設定關鍵字，讓玩家可以用 "get corpse" 或 "get rat" 操作
+    // 繼承怪物的關鍵字，再加上 "corpse"
+    switch (actor) {
+      case PlayerActor player:
+        createPlayerCorpse(player, corpse);
+        break;
+
+      case MobActor mob:
+        createMobCorpse(mob, corpse);
+        break;
+    }
+
+    return corpse;
+  }
+
+  private void createPlayerCorpse(PlayerActor player, GameItem corpse) {
+    List<String> keywords = new ArrayList<>(player.getAliases());
+    keywords.add("corpse");
+  }
+
+  private void createMobCorpse(MobActor mob, GameItem corpse) {
+    List<String> keywords = new ArrayList<>(mob.getTemplate().aliases());
+    keywords.add("corpse");
+    // corpse.setKeywords(keywords); // 假設您有 keywords 欄位
+
+    // 3. 【產生掉落物】：根據 LootTable 骰骰子
+    List<LootEntry> lootTable = mob.getTemplate().lootTable();
+    if (lootTable != null) {
+      for (LootEntry entry : lootTable) {
+        if (ThreadLocalRandom.current().nextDouble() < entry.chance()) {
+          GameItem loot = createItem(entry.itemId()); // 呼叫既有的 createItem
+          if (loot != null) {
+            corpse.addContent(loot);
+          }
+        }
+      }
+    }
+  }
+
 }

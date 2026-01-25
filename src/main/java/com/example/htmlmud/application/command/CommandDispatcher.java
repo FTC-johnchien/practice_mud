@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.annotation.CommandAlias;
 import com.example.htmlmud.application.command.impl.MoveCommand;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
+import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.Direction;
 import lombok.extern.slf4j.Slf4j;
 
@@ -72,11 +73,16 @@ public class CommandDispatcher {
     String args = parts.length > 1 ? parts[1] : "";
 
     log.info("key:{}, args:{}", key, args);
+
     // 2. 查找指令
     PlayerCommand command = commandMap.get(key);
+    if (command == null) {
+      // 找不到指令的預設處理
+      actor.reply("我不懂 '" + key + "' 是什麼意思。輸入 'help' 查看指令列表。");
+      return;
+    }
 
-    if (command != null) {
-      // 【關鍵修正】
+    try {
       // 如果玩家輸入的是 "n"，我們需要把 "n" 當作參數傳給 MoveCommand
       // 或者是 MoveCommand 內部 logic 要知道 "n" 等於 "move n"
       if (command instanceof MoveCommand && Direction.parse(key) != null) {
@@ -86,9 +92,32 @@ public class CommandDispatcher {
         // 否則正常執行 (例如 "move north")
         command.execute(actor, args);
       }
-    } else {
-      // 4. 找不到指令的預設處理
-      actor.reply("我不懂 '" + key + "' 是什麼意思。輸入 'help' 查看指令列表。");
+    } catch (MudException e) {
+      // 情境 A：遊戲邏輯錯誤 (錢不夠、找不到人)
+      // 直接把錯誤訊息 "Tell" 給玩家
+      actor.reply(e.getMessage());
+    } catch (java.util.concurrent.CompletionException e) {
+      // 如果底層是我們定義的 MudException，就拿出來顯示
+      if (e.getCause() instanceof MudException mudEx) {
+        actor.reply(mudEx.getMessage());
+      } else {
+        // 否則就是真·系統錯誤
+        log.error("Async Error", e);
+        actor.reply("操作逾時或發生錯誤。");
+      }
+    } catch (Exception e) {
+      // 情境 B：系統未預期的錯誤 (Bug)
+      // 1. 記錄詳細 Log 給工程師看
+      log.error("Command execution error: user={}, cmd={}", actor.getId(), input, e);
+
+      // 2. 告訴玩家發生系統錯誤 (不要顯示 StackTrace)
+      actor.reply("發生未知的力量干擾了你的行動 (系統錯誤)。");
+
+      // 3. 如果是 CompletableFuture 的封裝錯誤，嘗試解包
+      if (e instanceof java.util.concurrent.CompletionException
+          && e.getCause() instanceof MudException) {
+        actor.reply(e.getCause().getMessage());
+      }
     }
   }
 }

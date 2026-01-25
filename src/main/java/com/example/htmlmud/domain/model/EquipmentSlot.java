@@ -30,7 +30,7 @@ public enum EquipmentSlot {
 
   FEET("腳部"),
 
-  FINGER_1("戒指1"), FINGER_2("戒指2"),
+  FINGER("戒指"),
 
 
   // 武器部位

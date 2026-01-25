@@ -3,12 +3,12 @@ package com.example.htmlmud.application.service;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
@@ -16,8 +16,8 @@ import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.application.factory.WorldFactory;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
-import com.example.htmlmud.domain.context.GameServices;
 import com.example.htmlmud.domain.context.MudKeys;
+import com.example.htmlmud.domain.model.map.ItemTemplate;
 import com.example.htmlmud.domain.model.map.MobTemplate;
 import com.example.htmlmud.domain.model.map.RoomExit;
 import com.example.htmlmud.domain.model.map.RoomTemplate;
@@ -134,20 +134,35 @@ public class WorldManager {
       if (resource == null) {
         log.error("Zone mobs not found: {}", zone);
         return;
-      }
+      } else {
+        Set<MobTemplate> mobs = objectMapper.readValue(resource.getInputStream(),
+            new TypeReference<Set<MobTemplate>>() {});
+        for (MobTemplate mob : mobs) {
+          log.info("{}", objectMapper.writeValueAsString(mob));
 
-      Set<MobTemplate> mobs = objectMapper.readValue(resource.getInputStream(),
-          new TypeReference<Set<MobTemplate>>() {});
-      for (MobTemplate mob : mobs) {
-        log.info("{}", objectMapper.writeValueAsString(mob));
-
-        String newMobId = zoneId + ":" + mob.id();
-        MobTemplate newMob = mob.toBuilder().id(newMobId).build();
-        templateRepo.registerMob(newMob);
+          String newMobId = zoneId + ":" + mob.id();
+          MobTemplate newMob = mob.toBuilder().id(newMobId).build();
+          templateRepo.registerMob(newMob);
+        }
       }
 
 
       // 讀取 item 資料
+      resource = resourceResolver.getResource("classpath:data/zones/" + zone + "/items.json");
+      if (resource == null) {
+        log.error("Zone items not found: {}", zone);
+        return;
+      } else {
+        Set<ItemTemplate> items = objectMapper.readValue(resource.getInputStream(),
+            new TypeReference<Set<ItemTemplate>>() {});
+        for (ItemTemplate item : items) {
+          log.info("{}", objectMapper.writeValueAsString(item));
+
+          String newItemId = zoneId + ":" + item.id();
+          ItemTemplate newItem = item.toBuilder().id(newItemId).build();
+          templateRepo.registerItem(newItem);
+        }
+      }
 
 
       // 讀取 room 資料
@@ -326,7 +341,7 @@ public class WorldManager {
     try {
       // 模擬 IO 延遲
       Thread.sleep(10);
-      log.debug("[Write-Behind] Saved room {} state to DB: {}", update.roomId(),
+      log.info("[Write-Behind] Saved room {} state to DB: {}", update.roomId(),
           update.dataToSave());
     } catch (Exception e) {
       log.error("Error saving room state", e);
@@ -404,4 +419,13 @@ public class WorldManager {
   // // 注意：這裡得到的 Record 內含的 State 是 Entity 裡解序列化出來的
   // return itemTemplateMapper.toRecord(entity);
   // }
+
+  public Optional<PlayerActor> findPlayerByName(String targetName) {
+    for (PlayerActor player : activePlayers.values()) {
+      if (player.getName().equals(targetName)) {
+        return Optional.of(player);
+      }
+    }
+    return Optional.empty();
+  }
 }

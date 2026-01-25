@@ -32,13 +32,13 @@ public class WorldPulse {
       boolean isRespawnTick = (currentTick % room.getZoneTemplate().respawnRate() == 0);
       if (!room.getPlayers().isEmpty() || isRespawnTick
           || room.getMobs().stream().anyMatch(m -> m.getState().isInCombat())) {
-        room.send(new RoomMessage.Tick(currentTick, now));
+        room.tick(currentTick, now);
       }
     });
 
     // 可選：每 60 秒印一次 Log 確保心臟還在跳
     if (currentTick % 60 == 0) {
-      log.debug("World Pulse alive. Tick: {}", currentTick);
+      log.info("World Pulse alive. Tick: {}", currentTick);
 
     }
   }

@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import com.example.htmlmud.domain.actor.LivingActor;
 import com.example.htmlmud.domain.actor.behavior.AggressiveBehavior;
 import com.example.htmlmud.domain.actor.behavior.MerchantBehavior;
 import com.example.htmlmud.domain.actor.behavior.MobBehavior;
@@ -19,41 +18,40 @@ import com.example.htmlmud.domain.model.map.Equipment;
 import com.example.htmlmud.domain.model.map.MobTemplate;
 import com.example.htmlmud.domain.model.vo.DamageSource;
 import com.example.htmlmud.protocol.ActorMessage;
+import com.example.htmlmud.protocol.RoomMessage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MobActor extends LivingActor {
+public final class MobActor extends LivingActor {
 
   // 仇恨列表 (Key: 攻擊者 ID字串, Value: 仇恨值)
   // 因為 ID 已改為 UUID String，這裡的 Key 也同步調整為 String
+  @Getter
   protected final Map<String, Integer> aggroTable = new HashMap<>();
 
   @Getter
   private final MobTemplate template;
 
-  private ScheduledFuture<?> aiTask; // Heartbeat 排程
   private MobBehavior behavior; // AI 行為 (策略模式)
-
-  // 裝備欄位
-  private Map<EquipmentSlot, GameItem> equipments;
 
   /**
    * 建構子： 1. 接收 Template 與 Services 2. 自動生成 UUID 3. 自動從 Template 建立 LivingState
    */
   public MobActor(MobTemplate template, GameServices services) {
-    // 【修正 1】直接使用 UUID 作為 ID，不再依賴 GameObjectId.mob()
-    // 【修正 2】呼叫 helper method 建立初始 State，確保血量與 Template 一致
-    String mobId = "mob-" + UUID.randomUUID().toString().substring(0, 8);
+    String uuid = UUID.randomUUID().toString();
+    String mobId = "m-" + uuid.substring(0, 8) + uuid.substring(9, 11);
     super(mobId, template.name(), createInitialState(template), services);
     this.template = template;
+    this.baseDamageSource = new DamageSource(template.attackNoun(), template.attackVerb(),
+        template.minDamage(), template.maxDamage(), template.attackSpeed(), template.hitRate(), -1);
 
     // 處理裝備
 
     // 初始化行為
     initBehavior();
 
-    log.debug("Mob created: {} (ID: {})", template.name(), this.getId());
+    log.info("Mob created: {} (ID: {})", template.name(), this.getId());
 
     // 【重要】這裡移除了 this.start()，請在外部 (MobFactory) 建立實體後呼叫 mob.start()
   }
@@ -73,9 +71,15 @@ public class MobActor extends LivingActor {
     // state.san = tpl.maxSan();
     // state.maxSan = tpl.maxSan();
 
+    state.str = tpl.str();
+    state.agi = tpl.agi();
+    state.intelligence = tpl.intelligence();
+    state.con = tpl.con();
+
     // 戰鬥屬性設定
-    state.damage = tpl.baseDamage();
-    state.defense = tpl.baseDefense();
+    state.minDamage = tpl.minDamage();
+    state.maxDamage = tpl.maxDamage();
+    state.defense = tpl.defense();
     state.attackSpeed = tpl.attackSpeed();
 
     return state;
@@ -102,23 +106,51 @@ public class MobActor extends LivingActor {
   }
 
   // --- 生命週期控制 ---
-
   @Override
   public void start() {
     super.start(); // 啟動 Actor 訊息佇列處理
-    // startHeartbeat(); // 啟動 AI 心跳
   }
 
   @Override
   public void stop() {
-    stopHeartbeat(); // 停止 AI
     super.stop(); // 停止 Actor
   }
 
+
+
   // --- 訊息處理 ---
+
+
 
   @Override
   protected void handleMessage(ActorMessage msg) {
+    switch (msg) {
+      // 1. 攔截怪物訊息
+      case ActorMessage.MobMessage mobMsg -> handleMobMessage(mobMsg);
+
+      // 2. 丟給父類別
+      default -> super.handleMessage(msg);
+    }
+
+  }
+
+  private void handleMobMessage(ActorMessage.MobMessage msg) {
+    switch (msg) {
+      case ActorMessage.OnPlayerEnter(var player) -> {
+        // onPlayerEnter(player);
+      }
+      case ActorMessage.AgroScan() -> {
+        // onInteract(player, command);
+      }
+      case ActorMessage.RandomMove() -> {
+        // tick();
+      }
+      case ActorMessage.Respawn() -> {
+        // tick();
+      }
+      default -> log.warn("handleMobMessage 收到無法處理的訊息: {} {}", this.id, msg);
+    }
+
     // 1. AI 決策優先 (例如：受到攻擊決定是否逃跑)
     behavior.onMessage(this, msg);
 
@@ -126,52 +158,24 @@ public class MobActor extends LivingActor {
     super.handleMessage(msg);
   }
 
-  // --- AI 心跳機制 (Heartbeat) ---
+  // public void tick() {
+  // // 委派給 Behavior
+  // // behavior.onTick(this);
 
-  private void startHeartbeat() {
-    if (aiTask != null && !aiTask.isCancelled())
-      return;
+  // long now = System.currentTimeMillis();
 
-    // Scheduler (Platform Thread) 負責定時觸發
-    this.aiTask = services.scheduler().scheduleAtFixedRate(() -> {
-      // Virtual Thread 負責執行邏輯
-      Thread.ofVirtual().name("mob-tick-" + this.getId()).start(() -> {
-        try {
-          if (this.state.hp > 0) {
-            this.tick();
-          } else {
-            stopHeartbeat();
-          }
-        } catch (Exception e) {
-          log.error("Mob tick error: {}", this.getId(), e);
-        }
-      });
-    }, 1, 3, TimeUnit.SECONDS); // 延遲1秒開始，每3秒一次
-  }
+  // // 1. 戰鬥邏輯
+  // // log.info("this.state.isInCombat: {}", this.state.isInCombat);
+  // if (this.state.isInCombat) {
+  // processCombatRound(now);
+  // } else {
+  // // 2. 非戰鬥邏輯 (巡邏、回復 HP)
+  // // processRegen();
+  // behavior.onTick(this);
+  // }
+  // }
 
-  private void stopHeartbeat() {
-    if (aiTask != null) {
-      aiTask.cancel(false);
-      aiTask = null;
-    }
-  }
-
-  public void tick() {
-    // 委派給 Behavior
-    // behavior.onTick(this);
-
-    long now = System.currentTimeMillis();
-
-    // 1. 戰鬥邏輯
-    // log.info("this.state.isInCombat: {}", this.state.isInCombat);
-    if (this.state.isInCombat) {
-      processCombatRound(now);
-    } else {
-      // 2. 非戰鬥邏輯 (巡邏、回復 HP)
-      // processRegen();
-      behavior.onTick(this);
-    }
-  }
+  // -----------------------------------------------------------------------------------
 
   // --- 互動與事件 ---
 
@@ -183,53 +187,75 @@ public class MobActor extends LivingActor {
     behavior.onInteract(this, player, command);
   }
 
-  @Override
-  protected void onAttacked(LivingActor attacker) {
+  // @Override
+  // protected void doOnAttacked(LivingActor attacker) {
 
-    // 檢查是否正在戰鬥
-    if (!this.state.isInCombat) {
-      this.state.isInCombat = true;
-    }
+  // // 檢查是否正在戰鬥
+  // if (!this.state.isInCombat) {
+  // this.state.isInCombat = true;
+  // }
 
-    // TODO 檢查仇恨表，選最高的當對手
-    this.state.combatTargetId = attacker.getId();
+  // // TODO 檢查仇恨表，選最高的當對手
+  // this.state.combatTargetId = attacker.getId();
 
-    // TODO 檢查仇恨表，選最高的當對手
-    // if (this.state.combatTargetId == null) {
-    // this.state.combatTargetId = attacker.getId();
-    // }
+  // // TODO 檢查仇恨表，選最高的當對手
+  // // if (this.state.combatTargetId == null) {
+  // // this.state.combatTargetId = attacker.getId();
+  // // }
 
-    // 無敵判定
-    if (template.isInvincible()) {
-      if (attacker instanceof PlayerActor p) {
-        p.reply(this.template.name() + " 毫髮無傷！");
-      }
-      return;
-    }
+  // // 無敵判定
+  // if (template.isInvincible()) {
+  // if (attacker instanceof PlayerActor p) {
+  // p.reply(this.template.name() + " 毫髮無傷！");
+  // }
+  // return;
+  // }
 
-    // 1. 扣血 (呼叫父類別)
-    log.info("damage: {}", attacker.getState().damage);
-    log.info("this.state.hp: {}", this.state.hp);
-    log.info("this.state.defense: {}", this.state.defense);
-    super.onAttacked(attacker);
+  // // 1. 扣血 (呼叫父類別)
+  // log.info("hp: {} defense: {} attacker.damage: {}", this.state.hp, this.state.defense,
+  // attacker.getState().damage);
+  // // super.onAttacked(attacker);
 
-    // 2. 增加仇恨值 (使用 String ID)
-    addAggro(attacker.getId(), attacker.getState().damage);
+  // if (this.state.hp <= 0) {
+  // doDie(attacker.id);
+  // }
 
-    // 3. 通知 AI
-    behavior.onDamaged(this, attacker);
-  }
+  // // 2. 增加仇恨值 (使用 String ID)
+  // addAggro(attacker.getId(), attacker.getState().damage);
 
-  @Override
-  protected void onDeath(String killerId) {
-    // super.onDie(killerId);
-    stopHeartbeat();
+  // // 3. 通知 AI
+  // behavior.onDamaged(this, attacker);
+  // }
 
-    log.info("{} died. Killer: {}", this.template.name(), killerId);
-    // 觸發掉寶、給予經驗值等邏輯...
-  }
+  // @Override
+  // protected void doDie(String killerId) {
+  // log.info("{} died. Killer: {}", this.template.name(), killerId);
 
-  // 仇恨值管理 (Key 改為 String)
+  // super.doDie(killerId);
+  // stop(); // 停止 Actor
+  // this.state.isInCombat = false;
+  // this.state.combatTargetId = null;
+
+
+
+  // 觸發掉寶、給予經驗值等邏輯...
+
+  // 製造屍體
+  // GameItem corpse = services.worldFactory().createCorpse(this);
+
+  // 通知房間：移除我，加入屍體
+  // 這裡需要發送一個複合訊息，或者兩個訊息
+  // 為了簡單，我們先發送 "加入物品" 再發送 "移除 Actor"
+
+  // 注意：這裡假設 RoomMessage 有 AddItem
+  // room.send(new RoomMessage.AddItem(corpse));
+  // room.send(new RoomMessage.MobLeave(this.id)); // 或 RemoveActor
+
+  // 但更建議用一個專門的 Death 訊息讓 Room 處理所有事
+  // room.send(new RoomMessage.MobDeath(this, corpse, killer));
+  // }
+
+  // 仇恨值管理
   public void addAggro(String sourceId, int value) {
     aggroTable.merge(sourceId, value, Integer::sum);
   }
@@ -252,8 +278,8 @@ public class MobActor extends LivingActor {
 
   private void processCombatRound(long now) {
     // 檢查攻擊冷卻
-    log.info("this.state.nextAttackTime: {}", this.state.nextAttackTime);
-    if (now < this.state.nextAttackTime) {
+    log.info("this.state.nextAttackTime: {}", state.nextAttackTime);
+    if (now < state.nextAttackTime) {
       return;
     }
 
@@ -276,25 +302,7 @@ public class MobActor extends LivingActor {
     // target.onAttacked(this, dmg);
 
     // 重設冷卻時間
-    this.state.nextAttackTime = now + this.state.attackSpeed;
+    state.nextAttackTime = now + state.attackSpeed;
   }
 
-  // 取得當前的攻擊方式
-  public DamageSource getCurrentAttackSource() {
-    // 1. 先檢查主手有沒有武器 (針對 Guard)
-    GameItem weapon = state.equipment.get(EquipmentSlot.MAIN_HAND); // 假設您有實作裝備系統
-
-    if (weapon != null) {
-      // 有武器：回傳武器資訊
-      // 這裡假設 weapon 有對應欄位，或從 Template 查
-      return new DamageSource(weapon.getTemplate().name(),
-          weapon.getTemplate().equipmentProp().attackVer(),
-          weapon.getTemplate().equipmentProp().damage(),
-          weapon.getTemplate().equipmentProp().attackSpeed());
-    }
-
-    // 2. 沒武器：回傳天生武器 (針對 Rat 或 空手的人)
-    return new DamageSource(template.attackNoun(), template.attackVerb(), template.baseDamage(),
-        template.attackSpeed());
-  }
 }

@@ -6,11 +6,17 @@
     "kind": "FRIENDLY",
     "level": 10,
     "maxHp": 500,
-    "attackVerb": "揮拳",
-    "attackNoun": "鐵拳",
-    "baseDamage": 50,
-    "damage": 50,
+    "str": 5,
+    "agi": 5,
+    "int": 5,
+    "con": 5,
+    "attackVerb": "揮舞",
+    "attackNoun": "拳頭",
+    "minDamage": 1,
+    "maxDamage": 3,
     "attackSpeed": 2000,
+    "hitRate": 10,
+    "defense": 1,
     "roomDescription": "一位穿著制服的警衛正警惕地看著四周。",
     "lookDescription": "他看起來受過嚴格訓練，身上的盔甲擦得發亮。",
     "equipment": {
@@ -19,6 +25,10 @@
     "dialogues": [
       "為了村莊的榮耀！",
       "別在村子裡惹事。"
+    ],
+    "lootTable": [
+      { "itemId": "newbie_village:rusty_sword", "chance": 0.5 },
+      { "itemId": "newbie_village:standard_spear", "chance": 0.2}
     ]
   },
   {
@@ -28,15 +38,19 @@
     "kind": "AGGRESSIVE",
     "level": 2,
     "maxHp": 30,
+    "str": 4,
+    "agi": 4,
+    "int": 4,
+    "con": 4,
     "attackVerb": "狠狠地咬了",
     "attackNoun": "發黃的門牙",
-    "baseDamage": 4,
+    "minDamage": 2,
+    "maxDamage": 5,
     "attackSpeed": 2500,
     "roomDescription": "一隻巨大的野鼠在陰影中磨牙。",
     "lookDescription": "它的眼睛發紅，似乎感染了某種疾病。",
-    "loot": [
-      { "itemId": "newbie_village:village_bread", "chance": 0.1 },
-      { "itemId": "global:gold_coin", "chance": 0.5, "amount": 2 }
+    "lootTable": [
+      { "itemId": "newbie_village:village_bread", "chance": 0.5, "minAmount": 1, "maxAmount": 3 }
     ]
   },
   {
@@ -46,15 +60,20 @@
     "kind": "AGGRESSIVE",
     "level": 1,
     "maxHp": 30,
+    "str": 2,
+    "agi": 2,
+    "int": 2,
+    "con": 2,
     "attackVerb": "狠狠地咬了",
     "attackNoun": "發黃的門牙",
-    "baseDamage": 3,
+    "minDamage": 1,
+    "maxDamage": 3,
     "attackSpeed": 2500,
     "roomDescription": "一隻巨大的野鼠在陰影中磨牙。",
     "lookDescription": "它的眼睛在陰影中發亮，似乎一直在盯著你。",
-    "loot": [
-      { "itemId": "newbie_village:village_bread", "chance": 0.1 },
-      { "itemId": "global:gold_coin", "chance": 0.5, "amount": 2 }
+    "lootTable": [
+      { "itemId": "newbie_village:village_bread", "chance": 0.3 },
+      { "itemId": "newbie_village:village_elder_house_key", "chance": 0.5 }
     ]
   }
 ]

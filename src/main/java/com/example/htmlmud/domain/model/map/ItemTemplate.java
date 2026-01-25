@@ -1,21 +1,22 @@
 package com.example.htmlmud.domain.model.map;
 
+import java.util.List;
 import java.util.Map;
-import com.example.htmlmud.domain.model.EquipmentSlot;
 import com.example.htmlmud.domain.model.ConsumableProp;
 import com.example.htmlmud.domain.model.EquipmentProp;
-import com.example.htmlmud.domain.model.ItemLocation;
 import com.example.htmlmud.domain.model.ItemType;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
 
 // 5. 物品/裝備重置 (ItemReset)
+@Builder(toBuilder = true)
 public record ItemTemplate(
 
     String id,
 
     String name, // "鐵劍"
 
-    @JsonProperty("keywords") String[] aliases,
+    List<String> aliases,
 
     String description, // "一把普通的鐵劍。"
 
@@ -23,9 +24,9 @@ public record ItemTemplate(
 
     ItemType type,
 
-    EquipmentProp equipmentProp, // 装備屬性
+    @JsonProperty("stats") EquipmentProp equipmentProp, // 装備屬性
 
-    ConsumableProp consumableProp, // 消秏品屬性
+    @JsonProperty("behavior") ConsumableProp consumableProp, // 消秏品屬性
 
     String quality, // 品質 common,
 
@@ -33,10 +34,15 @@ public record ItemTemplate(
 
     int level, // 等級
 
+    boolean isStackable, // 是否可堆疊
+
     // 屬性加成 (例如：力量+5)
     Map<String, Integer> bonusStats,
 
     Map<String, Object> extraProps // 其他靜態屬性
-
 ) {
+
+  public boolean isStackable() {
+    return isStackable;
+  }
 }

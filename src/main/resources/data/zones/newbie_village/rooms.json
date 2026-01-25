@@ -33,8 +33,26 @@
     "items": [
       {
         "id": "newbie_village:village_bread",
-        "count": 3,
-        "respawnChance": 0.8,
+        "count":1,
+        "respawnChance": 1,
+        "isHidden": false
+      },
+      {
+        "id": "newbie_village:rusty_sword",
+        "count": 1,
+        "respawnChance": 1,
+        "isHidden": false
+      },
+      {
+        "id": "newbie_village:standard_spear",
+        "count": 1,
+        "respawnChance": 1,
+        "isHidden": false
+      },
+      {
+        "id": "newbie_village:village_bread",
+        "count": 1,
+        "respawnChance": 1,
         "isHidden": false
       }
     ],
@@ -94,7 +112,15 @@
       },
       "west": "square",
       "north": "the_dark_path"
-    }
+    },
+    "items": [
+      {
+        "id": "newbie_village:village_elder_house_key",
+        "count": 1,
+        "respawnChance": 1,
+        "isHidden": false
+      }
+    ]
   },
   {
     "id": "village_elder_house",

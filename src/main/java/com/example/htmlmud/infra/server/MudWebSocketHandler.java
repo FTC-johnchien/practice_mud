@@ -10,7 +10,6 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.context.GameServices;
-import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.GameCommand;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -70,7 +69,7 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
 
         // D. 裝入信封並投遞
         // 這裡不綁定 ScopedValue，因為要跨執行緒傳遞
-        actor.send(new ActorMessage.Command(traceId, cmd));
+        actor.command(traceId, cmd);
       } else {
         // 找不到 Actor，通常代表連線異常或已被踢除
         log.warn("[{}] 收到訊息但找不到 Actor，關閉連線: {}", traceId, session.getId());
