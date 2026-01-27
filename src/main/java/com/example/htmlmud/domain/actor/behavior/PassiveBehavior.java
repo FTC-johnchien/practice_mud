@@ -3,11 +3,38 @@ package com.example.htmlmud.domain.actor.behavior;
 import com.example.htmlmud.domain.actor.impl.LivingActor;
 import com.example.htmlmud.domain.actor.impl.MobActor;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
+import com.example.htmlmud.protocol.ActorMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 // 被動行為 (一般 NPC)
 public class PassiveBehavior implements MobBehavior {
+
+  @Override
+  public MobBehavior handle(MobActor self, ActorMessage.MobMessage msg) {
+    MobBehavior next = null;
+    switch (msg) {
+      case ActorMessage.OnPlayerEnter(var playerId) -> {
+      }
+      case ActorMessage.OnPlayerFlee(var playerId, var direction) -> {
+      }
+      case ActorMessage.OnInteract(var playerId, var command) -> {
+      }
+      case ActorMessage.AgroScan() -> {
+      }
+      case ActorMessage.RandomMove() -> {
+      }
+      case ActorMessage.Respawn() -> {
+      }
+
+      default -> log.warn("PassiveBehavior 收到無法處理的訊息: {} {}", self.getName(), msg);
+    }
+
+    return next;
+  }
+
 
   // 在 PassiveBehavior (一般 NPC) 的 onTick
   public void onTick(MobActor self) {

@@ -29,7 +29,7 @@ public class WorldPulse {
     worldManager.getActiveRooms().values().forEach(room -> {
 
       // Active Room 定義：有玩家在裡面，重生時間，或者有未結束的戰鬥/腳本
-      boolean isRespawnTick = (currentTick % room.getZoneTemplate().respawnRate() == 0);
+      boolean isRespawnTick = (currentTick % room.getZoneTemplate().respawnTime() == 0);
       if (!room.getPlayers().isEmpty() || isRespawnTick
           || room.getMobs().stream().anyMatch(m -> m.getState().isInCombat())) {
         room.tick(currentTick, now);

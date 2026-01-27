@@ -5,13 +5,17 @@
     "description": "一道簡陋的木門標誌著村莊的邊界。北邊通往廣場。",
     "exits": {
       "north": "square",
-      "south": "dark_forest:clearing"
+      "south": "snow:snow_gate"
     },
-    "population": [
+    "spawns": [
       {
+        "type": "MOB",
         "id": "village_guard",
         "count": 2,
-        "respawnChance": 1.0
+        "maxCount": 2,
+        "time": 60,
+        "rate": 1,
+        "isHidden": false
       }
     ]
   },
@@ -30,37 +34,51 @@
         "doorName": "地板下的暗門"
       }
     },
-    "items": [
+    "spawns": [
       {
+        "type": "ITEM",
         "id": "newbie_village:village_bread",
         "count":1,
-        "respawnChance": 1,
+        "maxCount": 2,
+        "time": 60,
+        "rate": 1,
         "isHidden": false
       },
       {
+        "type": "ITEM",
         "id": "newbie_village:rusty_sword",
         "count": 1,
-        "respawnChance": 1,
+        "maxCount": 1,
+        "time": 60,
+        "rate": 1,
         "isHidden": false
       },
       {
+        "type": "ITEM",
         "id": "newbie_village:standard_spear",
         "count": 1,
-        "respawnChance": 1,
+        "maxCount": 1,
+        "time": 60,
+        "rate": 1,
         "isHidden": false
       },
       {
+        "type": "ITEM",
         "id": "newbie_village:village_bread",
         "count": 1,
-        "respawnChance": 1,
-        "isHidden": false
-      }
-    ],
-    "population": [
+        "maxCount": 1,
+        "time": 60,
+        "rate": 1,
+        "isHidden": true
+      },
       {
+        "type": "MOB",
         "id": "wild_rat",
         "count": 1,
-        "respawnChance": 0.3
+        "maxCount": 1,
+        "time": 60,
+        "rate": 0.3,
+        "isHidden": true
       }
     ]
   },
@@ -72,11 +90,15 @@
       "north": "forest_entrance",
       "south": "square"
     },
-    "population": [
+    "spawns": [
       {
+        "type": "MOB",
         "id": "wild_rat",
         "count": 1,
-        "respawnChance": 0.3
+        "maxCount": 1,
+        "time": 60,
+        "rate": 0.3,
+        "isHidden": true
       }
     ]
   },
@@ -88,11 +110,15 @@
     "exits": {
       "south": "north_of_the_village"
     },
-    "population": [
+    "spawns": [
       {
+        "type": "MOB",
         "id": "wild_rat",
-        "count": 2,
-        "respawnChance": 1
+        "count": 1,
+        "maxCount": 2,
+        "time": 60,
+        "rate": 1,
+        "isHidden": false
       }
     ]
   },
@@ -113,11 +139,14 @@
       "west": "square",
       "north": "the_dark_path"
     },
-    "items": [
+    "spawns": [
       {
+        "type": "ITEM",
         "id": "newbie_village:village_elder_house_key",
         "count": 1,
-        "respawnChance": 1,
+        "maxCount": 1,
+        "time": 60,
+        "rate": 1,
         "isHidden": false
       }
     ]
@@ -145,16 +174,24 @@
     "exits": {
       "south": "front_of_village_elder_house"
     },
-    "population": [
+    "spawns": [
       {
+        "type": "MOB",
         "id": "wild_rat",
         "count": 1,
-        "respawnChance": 0.3
+        "maxCount": 1,
+        "time": 60,
+        "rate": 0.3,
+        "isHidden": false
       },
       {
+        "type": "MOB",
         "id": "sewer_rat",
-        "count": 2,
-        "respawnChance": 1
+        "count": 1,
+        "maxCount": 2,
+        "time": 60,
+        "rate": 1,
+        "isHidden": false
       }
     ]
   }

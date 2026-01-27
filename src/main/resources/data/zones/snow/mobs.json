@@ -1,0 +1,59 @@
+[
+  {
+    "id": "snow_guard",
+    "name": "雪亭衛兵",
+    "level": 5,
+    "maxHp": 300,
+    "description": "這是一位身材魁梧的衛兵，負責維護雪亭鎮的治安。",
+    "str": 20,
+    "dex": 15,
+    "equipment": {
+      "MAIN_HAND": "snow_spear",
+      "BODY": "snow_armor"
+    },
+    "behavior": "GUARD"
+  },
+  {
+    "id": "snow_waiter",
+    "name": "店小二",
+    "level": 2,
+    "maxHp": 100,
+    "description": "一位勤快的店小二，正忙著招呼客人。",
+    "equipment": {
+      "BODY": "cloth"
+    },
+    "behavior": "VENDOR",
+    "vendorGoods": [
+      "snow_meat",
+      "snow_wineskin"
+    ]
+  },
+  {
+    "id": "snow_blacksmith",
+    "name": "鐵匠",
+    "level": 10,
+    "maxHp": 800,
+    "description": "一位打赤膊的壯漢，古銅色的肌肉在火光下閃閃發光。",
+    "str": 25,
+    "equipment": {
+      "MAIN_HAND": "heavy_hammer"
+    },
+    "behavior": "VENDOR",
+    "vendorGoods": [
+      "snow_sword",
+      "snow_blade"
+    ]
+  },
+  {
+    "id": "snow_trader",
+    "name": "雜貨鋪老闆",
+    "level": 3,
+    "maxHp": 150,
+    "description": "一位精明的商人，眼睛總是盯著客人的錢包。",
+    "behavior": "VENDOR",
+    "vendorGoods": [
+      "fire_starter",
+      "torch"
+    ]
+  }
+]

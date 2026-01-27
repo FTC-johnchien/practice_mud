@@ -1,0 +1,81 @@
+[
+  {
+    "id": "snow_gate",
+    "name": "雪亭鎮南門",
+    "description": "這裡是雪亭鎮的南門，雖然此處地處偏遠，但是由於南邊是通往中原的官道，東邊則是通往著名的觀光勝地──千金樓，因此平時來往的人倒也不少。南邊的官道通往山下，北邊就是著名的雪亭廣場。",
+    "exits": {
+      "south": "newbie_village:entrance",
+      "north": "snow_square"
+    },
+    "spawns": [
+      { "type": "MOB", "id": "snow_guard", "maxCount": 2 }
+    ]
+  },
+  {
+    "id": "snow_square",
+    "name": "雪亭廣場",
+    "description": "這裡是雪亭鎮的中央廣場，雪亭鎮雖然不大，但是因為這裡是官道進入雪山山脈的補給站，因此鎮上相當繁榮。廣場北邊是鎮長的辦公處──雪亭大廳，東邊跟西邊則是兩條巷子。",
+    "exits": {
+      "north": "snow_hall",
+      "south": "snow_gate",
+      "west": "snow_lane1",
+      "east": "snow_lane2"
+    }
+  },
+  {
+    "id": "snow_lane1",
+    "name": "西巷",
+    "description": "這是一條位於廣場西邊的巷子，巷子西邊有一陣陣香味傳來，北邊則是一棟巨大的建築物，隱約可以聽到從裡面傳來的金屬撞擊聲。",
+    "exits": {
+      "east": "snow_square",
+      "west": "snow_inn",
+      "north": "snow_smithy"
+    }
+  },
+  {
+    "id": "snow_lane2",
+    "name": "東巷",
+    "description": "這是一條位於廣場東邊的巷子，北邊有一棟看起來像是倉庫的建築物，東邊則是鎮上的雜貨舖。",
+    "exits": {
+      "west": "snow_square",
+      "east": "snow_emporium",
+      "north": "snow_warehouse"
+    }
+  },
+  {
+    "id": "snow_inn",
+    "name": "飲風客棧",
+    "description": "這是一家位在雪亭鎮西邊的客棧，客棧並不大，也沒有什麼豪華的裝飾，但是這裡著名的烤山豬肉及烈酒「寒那」，卻吸引了不少遊客千里迢迢來到這裡。牆上掛著一個木牌(sign)。",
+    "exits": {
+      "east": "snow_lane1"
+    },
+    "features": {
+      "sign": "木牌上寫著：飲風客棧，著名的烤山豬肉每份五十兩，寒那酒每袋一百兩。"
+    },
+    "spawns": [
+      { "type": "MOB", "id": "snow_waiter", "maxCount": 1, "time": 120 }
+    ]
+  },
+  {
+    "id": "snow_smithy",
+    "name": "打鐵舖",
+    "description": "這是一家打鐵舖，店裡的角落擺滿了各式各樣的兵器，一位打赤膊的壯漢正以此地特產的冷泉水冷卻一把剛打造好的鋼刀，熱氣夾雜著嘶嘶聲正不斷地從水桶中冒出來。",
+    "exits": {
+      "south": "snow_lane1"
+    },
+    "spawns": [
+      { "type": "MOB", "id": "snow_blacksmith", "maxCount": 1, "time": 120 }
+    ]
+  },
+  {
+    "id": "snow_emporium",
+    "name": "雜貨舖",
+    "description": "這是一家雜貨舖，雖然店面不大，但是這裡卻是雪亭鎮上跟外界交易的樞紐，舉凡來自中原的絲綢香料，或是雪山出產的毛皮藥材，在這裡都看的到。",
+    "exits": {
+      "west": "snow_lane2"
+    },
+    "spawns": [
+      { "type": "MOB", "id": "snow_trader", "maxCount": 1, "time": 120 }
+    ]
+  }
+]

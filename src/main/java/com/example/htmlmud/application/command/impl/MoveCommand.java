@@ -6,13 +6,16 @@ import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
+import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.Direction;
 import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.map.RoomExit;
 import com.example.htmlmud.infra.util.AnsiColor;
 import com.example.htmlmud.infra.util.ColorText;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class MoveCommand implements PlayerCommand {
@@ -80,8 +83,13 @@ public class MoveCommand implements PlayerCommand {
     // 6. 新房間廣播 (進場)
     // 計算反方向 (例如往北走，新房間的人會看到你從南方來)
     CompletableFuture<Void> future = new CompletableFuture<>();
-    targetRoom.enter(actor, future);
-    future.orTimeout(1, java.util.concurrent.TimeUnit.SECONDS).join();
+    targetRoom.enter(actor.getId(), future);
+    try {
+      future.orTimeout(1, java.util.concurrent.TimeUnit.SECONDS).join();
+    } catch (MudException e) {
+      log.error("enterRoom", e);
+    }
+
     String arriveMsg = ColorText.wrap(AnsiColor.YELLOW,
         actor.getNickname() + " 從 " + dir.opposite().getDisplayName() + " 過來了。");
     worldManager.broadcastToRoom(targetRoomId, arriveMsg, actor.getId());

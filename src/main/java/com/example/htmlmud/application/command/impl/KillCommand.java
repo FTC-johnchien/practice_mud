@@ -28,14 +28,14 @@ public class KillCommand implements PlayerCommand {
   }
 
   @Override
-  public void execute(PlayerActor actor, String args) {
+  public void execute(PlayerActor self, String args) {
     if (args.isBlank()) {
-      actor.reply("你要攻擊誰？");
+      self.reply("你要攻擊誰？");
       return;
     }
 
     // 1. 取得房間內的怪物列表
-    RoomActor room = worldManager.getRoomActor(actor.getCurrentRoomId());
+    RoomActor room = worldManager.getRoomActor(self.getCurrentRoomId());
     // 這裡假設 room 有 getMobsSnapshot() 回傳 List<MobActor>
     // 注意：為了線程安全，這裡最好是 Snapshot 或是能確保讀取安全的列表
     List<MobActor> mobsInRoom = room.getMobs();
@@ -45,19 +45,18 @@ public class KillCommand implements PlayerCommand {
     // TODO pvp的處理
     MobActor target = targetSelector.selectMob(mobsInRoom, args);
     if (target == null) {
-      actor.reply("這裡沒有看到 '" + args + "'。");
+      self.reply("這裡沒有看到 '" + args + "'。");
       return;
     }
     log.info("name:{} defense: {}", target.getTemplate().name(), target.getState().defense);
 
     // 3. 執行戰鬥邏輯
-    actor.getState().combatTargetId = target.getId();
-    actor.getState().isInCombat = true;
-    log.info("name:{} {}", actor.getName(), actor.getNickname());
-    actor.reply("你對 " + target.getTemplate().name() + " 大喊受死吧 一邊擺出了戰鬥架式！");
+    self.getState().combatTargetId = target.getId();
+    self.getState().isInCombat = true;
+    log.info("name:{} {}", self.getName(), self.getNickname());
+    self.reply("你對 " + target.getTemplate().name() + " 大喊受死吧 一邊擺出了戰鬥架式！");
     room.broadcast(
-        "KillCommand 目前 " + actor.getState().hp + " / " + actor.getState().maxHp + " HP");
-    // actor.reply("你開始攻擊 " + target.getTemplate().name() + "！");
-    target.onAttacked(actor);
+        "log:KillCommand 目前 " + self.getState().hp + " / " + self.getState().maxHp + " HP");
+    target.onAttacked(self.getId());
   }
 }

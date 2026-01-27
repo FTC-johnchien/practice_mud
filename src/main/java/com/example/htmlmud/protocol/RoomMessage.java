@@ -11,9 +11,9 @@ import com.example.htmlmud.domain.model.RoomStateRecord;
 /**
  * 定義所有發送給 RoomActor 的內部訊息協定 使用 Sealed Interface 限制訊息類型，配合 switch pattern matching
  */
-public sealed interface RoomMessage
-    permits RoomMessage.Enter, RoomMessage.Leave, RoomMessage.TryPickItem, RoomMessage.Say,
-    RoomMessage.Tick, RoomMessage.Broadcast, RoomMessage.BroadcastToOthers, RoomMessage.FindActor,
+public sealed interface RoomMessage permits RoomMessage.Enter, RoomMessage.Leave,
+    RoomMessage.TryPickItem, RoomMessage.Say, RoomMessage.Tick, RoomMessage.Broadcast,
+    RoomMessage.BroadcastToOthers, RoomMessage.CombatBroadcast, RoomMessage.FindActor,
     RoomMessage.GetPlayers, RoomMessage.GetMobs, RoomMessage.GetItems, RoomMessage.ToRecord {
 
   record Tick(long tickCount, long timestamp) implements RoomMessage {
@@ -25,7 +25,7 @@ public sealed interface RoomMessage
    * @param LivingActor 實例
    * @param future 用於通知移動完成 (可選)
    */
-  record Enter(LivingActor actor, CompletableFuture<Void> future) implements RoomMessage {
+  record Enter(String actorId, CompletableFuture<Void> future) implements RoomMessage {
   }
 
   /**
@@ -62,6 +62,10 @@ public sealed interface RoomMessage
   }
 
   record BroadcastToOthers(String sourceId, String message) implements RoomMessage {
+  }
+
+  record CombatBroadcast(LivingActor source, LivingActor target, String messageTemplate)
+      implements RoomMessage {
   }
 
   record FindActor(String actorId, CompletableFuture<LivingActor> future) implements RoomMessage {

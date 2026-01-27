@@ -4,19 +4,16 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import org.slf4j.MDC;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.application.service.AuthService;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
-import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.context.MudKeys;
+import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.PlayerRecord;
-import com.example.htmlmud.infra.persistence.entity.UserEntity;
 import com.example.htmlmud.protocol.ConnectionState;
 import com.example.htmlmud.protocol.GameCommand;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -333,10 +330,10 @@ public class GuestBehavior implements PlayerBehavior {
     // 讓玩家進入資料紀錄的房間
     RoomActor room = actor.getManager().getRoomActor(actor.getCurrentRoomId());
     CompletableFuture<Void> future = new CompletableFuture<>();
-    room.enter(actor, future);
+    room.enter(actor.getId(), future);
     try {
       future.orTimeout(1, java.util.concurrent.TimeUnit.SECONDS).join();
-    } catch (Exception e) {
+    } catch (MudException e) {
       log.error("enterRoom", e);
     }
 

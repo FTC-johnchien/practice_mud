@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 import com.example.htmlmud.domain.model.LootEntry;
 import com.example.htmlmud.domain.model.MobKind;
+import com.example.htmlmud.domain.model.vo.Gender;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.Builder;
 
@@ -14,6 +15,8 @@ public record MobTemplate(
     String id,
 
     String name,
+
+    Gender gender,
 
     List<String> aliases,
 
@@ -27,9 +30,9 @@ public record MobTemplate(
 
     int maxStamina,
 
-    int maxSan,
+    // int maxSan,
 
-    String roomDescription,
+    String description,
 
     String lookDescription,
 
@@ -45,7 +48,7 @@ public record MobTemplate(
 
     int str, // 力量
     @JsonAlias("int") int intelligence, // 智力
-    int agi, // 敏捷
+    int dex, // 靈巧
     int con, // 體質
 
     // === 天生攻擊定義 (Natural Attack) ===
@@ -59,10 +62,17 @@ public record MobTemplate(
     int attackSpeed, // 天生攻速
     int weight, // 天生重量
 
+    String behavior, // 行為
+
     Map<String, String> equipment, // 装備
 
     // 掉落表：列表中的每個項目代表一種可能的掉落物
     List<LootEntry> lootTable
 
 ) {
+  public MobTemplate {
+    if (lookDescription == null) {
+      lookDescription = description;
+    }
+  }
 }

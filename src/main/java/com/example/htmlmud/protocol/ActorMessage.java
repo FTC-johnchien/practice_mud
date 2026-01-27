@@ -15,7 +15,7 @@ public sealed interface ActorMessage
 
 
   sealed interface LivingMessage extends ActorMessage
-      permits Tick, OnAttacked, OnDamage, Die, Heal, Say, BuffEffect, Equip, Unequip, onMessage {
+      permits Tick, OnAttacked, OnDamage, Die, Heal, Say, BuffEffect, Equip, Unequip, OnMessage {
   }
   /**
    * 心跳訊息
@@ -25,7 +25,7 @@ public sealed interface ActorMessage
    */
   record Tick(long tickCount, long timestamp) implements LivingMessage {
   }
-  record OnAttacked(LivingActor actor) implements LivingMessage {
+  record OnAttacked(String attackerId) implements LivingMessage {
   }
   record OnDamage(int amount, String attackerId) implements LivingMessage {
   }
@@ -41,7 +41,7 @@ public sealed interface ActorMessage
   }
   record Unequip(EquipmentSlot slot, CompletableFuture<String> future) implements LivingMessage {
   }
-  record onMessage(LivingActor self, ActorMessage msg) implements LivingMessage {
+  record OnMessage(LivingActor self, ActorMessage msg) implements LivingMessage {
   }
 
 
@@ -63,12 +63,15 @@ public sealed interface ActorMessage
 
 
   sealed interface MobMessage extends ActorMessage
-      permits OnPlayerEnter, onInteract, AgroScan, RandomMove, Respawn {
+      permits OnPlayerEnter, OnPlayerFlee, OnInteract, AgroScan, RandomMove, Respawn {
   }
-  record OnPlayerEnter(String actorId) implements MobMessage {
+  record OnPlayerEnter(String playerId) implements MobMessage {
   }
-  record onInteract(MobActor self, PlayerActor player, String command) implements MobMessage {
+  record OnPlayerFlee(String playerId, String direction) implements MobMessage {
   }
+  record OnInteract(String playerId, String command) implements MobMessage {
+  }
+  // scanForEnemies
   record AgroScan() implements MobMessage {
   }
   record RandomMove() implements MobMessage {

@@ -34,11 +34,11 @@ public class LivingState {
   // 基礎屬性
   public int str = 5; // 力量 strength (影響 物理傷害、角色負重上限)
   public int intelligence = 5; // 智力 intelligence (影響 魔法傷害、法力上限MP、學習技能的速度)
-  public int agi = 5; // 敏捷 agility (影響 攻擊速度、躲避率Evasion、命中率Hit Rate)
+  public int dex = 5; // 靈巧 dexterity (影響 物理威力 命中率Hit Rate、盜賊技能成功率、遠程武器瞄準（弓箭）、暗器投擲、雙手武器的協調性)
   public int con = 5; // 體質 constitution (影響 生命值HP上限、防禦力、體力恢復速度)
 
   private int wis = 5; // 智慧 wisdom (影響 魔法威力)
-  private int dex = 5; // 靈巧 dexterity (影響 物理威力)
+  private int agi = 5; // 敏捷 agility (影響 移動速度、躲避率Evasion 閃避攻擊、戰鬥中的出手順序（主動性）。)
   private int cha; // 魅力 charisma
   private int luk; // 福緣 luck
   private int karma; // 因果 karma
@@ -51,23 +51,23 @@ public class LivingState {
   private int potential; // 潛力 (影響 學習特定高級武功的限制)
 
 
+  // === 裝備欄位 ===
+  public Map<EquipmentSlot, GameItem> equipment = new HashMap<>();
+
+
   // === 戰鬥狀態 ===
   @JsonIgnore
   public transient boolean isInCombat = false;
   // 當前鎖定的攻擊目標 ID (null 代表沒在打架)
   @JsonIgnore
   public transient String combatTargetId;
-
+  // 下一次可以攻擊的時間點 (System.currentTimeMillis)
   @JsonIgnore
-  public transient long nextAttackTime = 0; // 下一次可以攻擊的時間點 (System.currentTimeMillis)
-
-  // 戰鬥狀態 (不存入 DB，或是標記 @JsonIgnore)
+  public transient long nextAttackTime = 0;
+  // 附加增益/減益
   // @JsonIgnore
-  // public transient boolean isDead = false;
+  // public transient Map<String, Object> dynamicProps = new HashMap<>();
 
-
-  // === 裝備欄位 ===
-  public Map<EquipmentSlot, GameItem> equipment = new HashMap<>();
 
   // 衍生屬性 (快取用，每次穿脫裝備後重新計算 通常不存 DB，由基礎屬性計算，但為了簡單先存這裡)
   public transient int minDamage = str; // 最小傷害
@@ -75,6 +75,7 @@ public class LivingState {
   public transient int defense = 0; // 防禦力
   public transient int attackSpeed = 2000; // 攻擊速度 (毫秒，例如 2000 代表 2秒打一次)
   public transient int weightCapacity = str * 10;
+
 
   // 建構子與輔助方法...
   @JsonIgnore
@@ -111,20 +112,14 @@ public class LivingState {
     copy.combatExp = this.combatExp;
 
 
-
     // Map 也要複製
     // if (this.attributes != null) {
     // copy.attributes = new HashMap<>(this.attributes);
     // }
     copy.str = this.str;
     copy.intelligence = this.intelligence;
-    copy.agi = this.agi;
+    copy.dex = this.dex;
     copy.con = this.con;
-
-    // copy.damage = this.damage;
-    // copy.defense = this.defense;
-    // copy.attackSpeed = this.attackSpeed;
-    // copy.weightCapacity = this.weightCapacity;
 
     return copy;
   }

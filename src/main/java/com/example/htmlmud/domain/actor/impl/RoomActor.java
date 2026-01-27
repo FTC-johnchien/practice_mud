@@ -1,7 +1,10 @@
 package com.example.htmlmud.domain.actor.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import com.example.htmlmud.application.service.RoomService;
 import com.example.htmlmud.domain.actor.core.VirtualActor; // 引用您的基礎類別
@@ -9,6 +12,7 @@ import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.RoomStateRecord;
 import com.example.htmlmud.domain.model.map.RoomTemplate;
 import com.example.htmlmud.domain.model.map.ZoneTemplate;
+import com.example.htmlmud.infra.util.MessageFormatter;
 import com.example.htmlmud.protocol.RoomMessage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +43,10 @@ public class RoomActor extends VirtualActor<RoomMessage> {
   @Getter
   private final List<GameItem> items = new ArrayList<>(); // 地上的物品
 
+  // 戶籍名冊：記錄這個房間生出來且還活著的怪物 ID
+  // Key: TemplateID (ex: "snow_guard"), Value: Set of Instance UUIDs
+  private Map<String, Set<String>> trackedMobs = new HashMap<>();
+
 
   public RoomActor(RoomTemplate template, ZoneTemplate zoneTemplate, RoomService roomService) {
     super("room-" + template.id());
@@ -57,8 +65,8 @@ public class RoomActor extends VirtualActor<RoomMessage> {
   protected void handleMessage(RoomMessage msg) {
     // 這裡的邏輯跟之前一模一樣，但不需要自己寫 loop 和 try-catch 了
     switch (msg) {
-      case RoomMessage.Enter(var actor, var future) -> {
-        roomService.doEnter(this, actor, future);
+      case RoomMessage.Enter(var actorId, var future) -> {
+        roomService.doEnter(this, actorId, future);
       }
       case RoomMessage.Leave(var actorId) -> {
         roomService.doLeave(this, actorId);
@@ -81,6 +89,9 @@ public class RoomActor extends VirtualActor<RoomMessage> {
       }
       case RoomMessage.BroadcastToOthers(var sourceId, var message) -> {
         roomService.doBroadcastToOthers(this, sourceId, message);
+      }
+      case RoomMessage.CombatBroadcast(var source, var target, var messageTemplate) -> {
+        roomService.doCombatBroadcast(this, source, target, messageTemplate);
       }
       case RoomMessage.FindActor(var actorId, var future) -> {
         roomService.doFindActor(this, actorId, future);
@@ -105,8 +116,8 @@ public class RoomActor extends VirtualActor<RoomMessage> {
 
 
   // 公開給外部呼叫的方法 --------------------------------------------------------------------------
-  public void enter(LivingActor actor, CompletableFuture<Void> future) {
-    this.send(new RoomMessage.Enter(actor, future));
+  public void enter(String actorId, CompletableFuture<Void> future) {
+    this.send(new RoomMessage.Enter(actorId, future));
   }
 
   public void leave(String actorId) {
@@ -135,6 +146,10 @@ public class RoomActor extends VirtualActor<RoomMessage> {
 
   public void broadcastToOthers(String actorId, String message) {
     this.send(new RoomMessage.BroadcastToOthers(actorId, message));
+  }
+
+  public void combatBroadcast(LivingActor source, LivingActor target, String messageTemplate) {
+    this.send(new RoomMessage.CombatBroadcast(source, target, messageTemplate));
   }
 
   public void findActor(String actorId, CompletableFuture<LivingActor> future) {

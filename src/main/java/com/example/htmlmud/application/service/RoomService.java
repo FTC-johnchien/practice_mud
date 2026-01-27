@@ -3,6 +3,7 @@ package com.example.htmlmud.application.service;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.application.command.parser.TargetSelector;
@@ -15,6 +16,7 @@ import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.RoomStateRecord;
 import com.example.htmlmud.domain.model.map.SpawnRule;
+import com.example.htmlmud.infra.util.MessageFormatter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -34,28 +36,40 @@ public class RoomService {
   @Getter
   private final WorldFactory worldFactory;
 
-  public void doEnter(RoomActor roomActor, LivingActor actor, CompletableFuture<Void> future) {
-    try {
-      enter(roomActor, actor);
-      future.complete(null);
-    } catch (Exception e) {
-      log.error("doEnter error", e);
-      future.completeExceptionally(e);
-    }
-  }
-
-  public void doLeave(RoomActor roomActor, String actorId) {
-    LivingActor actor = findActor(roomActor, actorId);
+  public void doEnter(RoomActor self, String actorId, CompletableFuture<Void> future) {
+    // enter
+    LivingActor actor = enter(self, actorId);
     if (actor == null) {
+      log.error("Actor not found id:" + actorId);
+      future.completeExceptionally(new MudException("Actor not found id:" + actorId));
       return;
     }
 
+    // 當actor為玩家時，要將room里的mobs丟出playerEnter的message
     switch (actor) {
-      case PlayerActor player -> roomActor.getPlayers().remove(player);
-      case MobActor mob -> roomActor.getMobs().remove(mob);
+      case PlayerActor player -> {
+        self.getMobs().forEach(m -> m.onPlayerEnter(player.getId()));
+      }
+      // case MobActor mob -> {}
+      default -> {
+      }
+    }
+    future.complete(null);
+  }
+
+  public void doLeave(RoomActor self, String actorId) {
+    Optional<LivingActor> opt = findActor(self, actorId);
+    if (opt.isEmpty()) {
+      return;
     }
 
-    doBroadcast(roomActor, actor.getName() + " 離開了。");
+    LivingActor actor = opt.get();
+    switch (actor) {
+      case PlayerActor player -> self.getPlayers().remove(player);
+      case MobActor mob -> self.getMobs().remove(mob);
+    }
+
+    doBroadcast(self, actor.getName() + " 離開了。");
   }
 
   @Deprecated
@@ -86,7 +100,9 @@ public class RoomService {
     PlayerActor speaker = roomActor.getPlayers().stream().filter(p -> p.getId().equals(sourceId))
         .findFirst().orElse(null);
     String name = (speaker != null) ? speaker.getName() : "有人";
-    doBroadcast(roomActor, name + ": " + content);
+
+    doBroadcastToOthers(roomActor, sourceId, name + ": " + content);
+    // doBroadcast(roomActor, name + ": " + content);
   }
 
   public void doTryPickItem(RoomActor roomActor, String args, PlayerActor picker,
@@ -106,7 +122,7 @@ public class RoomService {
     // log.info("{} tickCount: {}", id, tickCount);
 
     // === 1. World/Zone 層級邏輯 (例如：每 60 秒檢查一次重生) ===
-    if (tickCount % roomActor.getZoneTemplate().respawnRate() == 0) {
+    if (tickCount % roomActor.getZoneTemplate().respawnTime() == 0) {
       checkSpawnRule(); // 檢查是否有怪物死掉很久該重生了
     }
 
@@ -136,19 +152,36 @@ public class RoomService {
         .forEach(p -> p.reply(message));
   }
 
-  public void doFindActor(RoomActor roomActor, String actorId,
-      CompletableFuture<LivingActor> future) {
-    try {
-      LivingActor actor = findActor(roomActor, actorId);
-      if (actor == null) {
-        future.complete(null);
-        return;
-      }
-      future.complete(actor);
-    } catch (Exception e) {
-      log.error("doFindActor error", e);
-      future.completeExceptionally(e);
+  public void doCombatBroadcast(RoomActor self, LivingActor source, LivingActor target,
+      String messageTemplate) {
+    if (source == null) {
+      throw new MudException("source is null");
     }
+    if (target == null) {
+      throw new MudException("target is null");
+    }
+
+    // 1. 取得房間內所有人 (包含做動作的人自己)
+    List<LivingActor> audiences = new ArrayList<>();
+    audiences.addAll(self.getPlayers());
+    // audiences.addAll(self.getMobs()); // 怪物通常不需要收訊息，除非有 AI 反應
+
+    // 2. 對每個人發送「客製化」的訊息
+    for (LivingActor receiver : audiences) {
+      String finalMsg = MessageFormatter.format(messageTemplate, source, target, receiver);
+      receiver.reply(finalMsg);
+    }
+  }
+
+  public void doFindActor(RoomActor self, String actorId, CompletableFuture<LivingActor> future) {
+    Optional<LivingActor> opt = findActor(self, actorId);
+    if (opt.isEmpty()) {
+      future.completeExceptionally(
+          new MudException("ActorId:" + actorId + " not found in roomId:" + self.getId()));
+      return;
+    }
+
+    future.complete(opt.get());
   }
 
   // 產生快照
@@ -207,7 +240,7 @@ public class RoomService {
     if (mobSpawnRules != null && !mobSpawnRules.isEmpty()) {
       for (SpawnRule rule : mobSpawnRules) {
         // 處理機率 (例如：稀有怪只有 10% 機率出現)
-        if (Math.random() > rule.respawnChance()) {
+        if (Math.random() > rule.rate()) {
           continue;
         }
 
@@ -221,7 +254,7 @@ public class RoomService {
     if (itemSpawnRules != null && !itemSpawnRules.isEmpty()) {
       for (SpawnRule rule : itemSpawnRules) {
         // 處理機率 (例如：稀有怪只有 10% 機率出現)
-        if (Math.random() > rule.respawnChance()) {
+        if (Math.random() > rule.rate()) {
           continue;
         }
 
@@ -292,23 +325,29 @@ public class RoomService {
 
 
 
-  private boolean enter(RoomActor roomActor, LivingActor actor) {
+  private LivingActor enter(RoomActor self, String actorId) {
+    Optional<LivingActor> opt = findActor(self, actorId);
+    if (opt.isEmpty()) {
+      throw new MudException("ActorId:" + actorId + " not found in roomId:" + self.getId());
+    }
+
+    LivingActor actor = opt.get();
     switch (actor) {
       case PlayerActor player -> {
-        if (!roomActor.getPlayers().contains(player)) {
-          roomActor.getPlayers().add(player);
+        if (!self.getPlayers().contains(player)) {
+          self.getPlayers().add(player);
         }
       }
       case MobActor mob -> {
-        if (!roomActor.getMobs().contains(mob)) {
-          roomActor.getMobs().add(mob);
+        if (!self.getMobs().contains(mob)) {
+          self.getMobs().add(mob);
         }
       }
     }
 
-    actor.setCurrentRoomId(roomActor.getId());
-    doBroadcastToOthers(roomActor, actor.getId(), actor.getName() + " 走了進來。");
-    return true;
+    actor.setCurrentRoomId(self.getId());
+    doBroadcastToOthers(self, actor.getId(), actor.getName() + " 走了進來。");
+    return actor;
   }
 
   private GameItem tryPickItem(RoomActor roomActor, String args, PlayerActor picker) {
@@ -324,22 +363,23 @@ public class RoomService {
     return targetItem;
   }
 
-  private LivingActor findActor(RoomActor roomActor, String actorId) {
+  private Optional<LivingActor> findActor(RoomActor self, String actorId) {
 
     // 先檢查mob
-    for (MobActor mob : roomActor.getMobs()) {
+    for (MobActor mob : self.getMobs()) {
       if (mob.getId().equals(actorId)) {
-        return mob;
+        return Optional.of(mob);
       }
     }
 
-    for (PlayerActor player : roomActor.getPlayers()) {
+    for (PlayerActor player : self.getPlayers()) {
       if (player.getId().equals(actorId)) {
-        return player;
+        return Optional.of(player);
       }
     }
 
-    return null;
+    log.warn("ActorId:" + actorId + " not found in roomId:" + self.getId());
+    return Optional.empty();
   }
 
   private RoomStateRecord toRecord(RoomActor roomActor) {

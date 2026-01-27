@@ -3,7 +3,7 @@
   "name": "新手村",
   "minLevel": 1,
   "maxLevel": 5,
-  "respawnRate": 60,
-  "authors": ["Admin", "BuilderBob"],
-  "flags": ["SAFE_ZONE", "NO_PVP"]
+  "respawnTime": 60,
+  "authors": ["Admin", "John"],
+  "flags": ["SAFE_ZONE", "NO_PVP", "OUTDOORS"]
 }

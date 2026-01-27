@@ -3,7 +3,6 @@ package com.example.htmlmud.domain.actor.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import com.example.htmlmud.domain.actor.core.VirtualActor;
 import com.example.htmlmud.domain.context.GameServices;
 import com.example.htmlmud.domain.model.EquipmentSlot;
@@ -12,6 +11,7 @@ import com.example.htmlmud.domain.model.ItemType;
 import com.example.htmlmud.domain.model.LivingState;
 import com.example.htmlmud.domain.model.map.ItemTemplate;
 import com.example.htmlmud.domain.model.vo.DamageSource;
+import com.example.htmlmud.domain.model.vo.Gender;
 import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.GameCommand;
 import lombok.Getter;
@@ -32,6 +32,9 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
   @Getter
   @Setter
   protected String name;
+
+  @Getter
+  protected Gender gender;
 
   // 所有生物都有狀態 (HP/MP)
   @Getter
@@ -75,8 +78,8 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
       case ActorMessage.Tick(var tickCount, var timestamp) -> {
         doTick(tickCount, timestamp);
       }
-      case ActorMessage.OnAttacked(var attacker) -> {
-        doOnAttacked(attacker);
+      case ActorMessage.OnAttacked(var attackerId) -> {
+        doOnAttacked(attackerId);
       }
       case ActorMessage.OnDamage(var amount, var attackerId) -> {
         doOnDamage(amount, attackerId);
@@ -97,7 +100,7 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
       case ActorMessage.Unequip(var slot, var future) -> {
         doUnequip(slot, future);
       }
-      case ActorMessage.onMessage(var self, var actorMessage) -> {
+      case ActorMessage.OnMessage(var self, var actorMessage) -> {
         // command(traceId, cmd);
       }
 
@@ -139,8 +142,8 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
   }
 
   // 被攻擊觸發戰鬥狀態
-  protected void doOnAttacked(LivingActor attacker) {
-    services.combatService().onAttacked(this, attacker.getId());
+  protected void doOnAttacked(String attackerId) {
+    services.combatService().onAttacked(this, attackerId);
   }
 
   // 受傷處理
@@ -251,8 +254,8 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
   }
 
   // 被攻擊處理
-  public void onAttacked(LivingActor attacker) {
-    this.send(new ActorMessage.OnAttacked(attacker));
+  public void onAttacked(String attackerId) {
+    this.send(new ActorMessage.OnAttacked(attackerId));
   }
 
   // 受傷處理
@@ -277,6 +280,10 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
       case MobActor mob -> {
       }
     }
+  }
+
+  public void sendText(String msg) {
+    reply(msg);
   }
 
   // public CompletableFuture<String> equip(GameItem item) {

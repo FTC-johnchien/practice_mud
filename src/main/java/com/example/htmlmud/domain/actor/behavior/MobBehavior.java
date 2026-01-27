@@ -7,6 +7,10 @@ import com.example.htmlmud.protocol.ActorMessage;
 
 public interface MobBehavior {
 
+  default void onEnter(MobActor actor) {}
+
+  MobBehavior handle(MobActor self, ActorMessage.MobMessage msg);
+
   // 定期心跳 (例如每秒一次)：決定是否移動、回血、索敵
   default void onTick(MobActor self) {}
 

@@ -1,0 +1,82 @@
+[
+  {
+    "id": "snow_spear",
+    "name": "長槍",
+    "description": "一把制式的長槍，是衛兵的標準裝備。",
+    "type": "WEAPON",
+    "slot": "MAIN_HAND",
+    "minDamage": 8,
+    "maxDamage": 15,
+    "value": 200
+  },
+  {
+    "id": "snow_armor",
+    "name": "皮甲",
+    "description": "一件用厚實的皮革縫製的護甲。",
+    "type": "ARMOR",
+    "slot": "BODY",
+    "baseDefense": 5,
+    "value": 150
+  },
+  {
+    "id": "snow_sword",
+    "name": "鋼刀",
+    "description": "一把剛打造好的鋼刀，刀鋒銳利。",
+    "type": "WEAPON",
+    "slot": "MAIN_HAND",
+    "minDamage": 10,
+    "maxDamage": 20,
+    "value": 500
+  },
+  {
+    "id": "snow_blade",
+    "name": "長劍",
+    "description": "一把修長的鐵劍。",
+    "type": "WEAPON",
+    "slot": "MAIN_HAND",
+    "minDamage": 9,
+    "maxDamage": 18,
+    "value": 450
+  },
+  {
+    "id": "snow_meat",
+    "name": "烤山豬肉",
+    "description": "一塊香噴噴的烤山豬肉，令人垂涎三尺。",
+    "type": "CONSUMABLE",
+    "effect": {
+      "type": "HEAL_HP",
+      "value": 50
+    },
+    "value": 50
+  },
+  {
+    "id": "snow_wineskin",
+    "name": "寒那酒袋",
+    "description": "一個裝滿烈酒「寒那」的皮袋，喝一口身子就暖了起來。",
+    "type": "CONSUMABLE",
+    "effect": {
+      "type": "HEAL_MP",
+      "value": 30
+    },
+    "value": 100
+  },
+  {
+    "id": "heavy_hammer",
+    "name": "鐵鎚",
+    "description": "一把沉重的鐵鎚，上面沾滿了煤灰。",
+    "type": "WEAPON",
+    "slot": "MAIN_HAND",
+    "minDamage": 15,
+    "maxDamage": 25,
+    "value": 0
+  },
+  {
+    "id": "cloth",
+    "name": "布衣",
+    "description": "普通的粗布衣服。",
+    "type": "ARMOR",
+    "slot": "BODY",
+    "baseDefense": 1,
+    "value": 10
+  }
+]

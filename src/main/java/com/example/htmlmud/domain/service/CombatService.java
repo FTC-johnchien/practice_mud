@@ -37,12 +37,12 @@ public class CombatService {
     LivingState attState = attacker.getState();
     LivingState defState = defender.getState();
 
-    // 1. 命中判定 (範例：敏捷越高，命中越高)
-    // 假設基礎命中 80% + (攻方敏捷 - 守方敏捷)%
-    double hitChance = 0.8 + ((attState.agi - defState.agi) * 0.01);
+    // 1. 命中判定 (範例：靈巧越高，命中越高)
+    // 假設基礎命中 80% + (攻方靈巧 - 守方靈巧)%
+    double hitChance = 0.8 + ((attState.dex - defState.dex) * 0.01);
     if (ThreadLocalRandom.current().nextDouble() > hitChance) {
       RoomActor room = worldManagerProvider.getObject().getRoomActor(attacker.getCurrentRoomId());
-      room.broadcast("calculateDamage " + attacker.getName() + " miss");
+      room.broadcast("log:calculateDamage " + attacker.getName() + " miss");
       // log.info("calculateDamage miss");
       return -1; // -1 代表 Miss
     }
@@ -196,9 +196,9 @@ public class CombatService {
     self.getState().hp -= amount;
 
     // for test----------------------------------------------------------------------------------
-    String msg = self.getName() + " 目前 HP: " + self.getState().hp + "/" + self.getState().maxHp;
     RoomActor room = worldManagerProvider.getObject().getRoomActor(self.getCurrentRoomId());
-    room.broadcast(msg);
+    room.broadcast(
+        "log:" + self.getName() + " 目前 HP: " + self.getState().hp + "/" + self.getState().maxHp);
     // for test----------------------------------------------------------------------------------
 
     // 檢查是否死亡，通知 self 死亡事件

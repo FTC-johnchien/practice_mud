@@ -35,6 +35,9 @@ public final class MobActor extends LivingActor {
 
   private MobBehavior behavior; // AI 行為 (策略模式)
 
+  // mob的戶籍地 ID
+  private String homeRoomId;
+
   /**
    * 建構子： 1. 接收 Template 與 Services 2. 自動生成 UUID 3. 自動從 Template 建立 LivingState
    */
@@ -72,7 +75,7 @@ public final class MobActor extends LivingActor {
     // state.maxSan = tpl.maxSan();
 
     state.str = tpl.str();
-    state.agi = tpl.agi();
+    state.dex = tpl.dex();
     state.intelligence = tpl.intelligence();
     state.con = tpl.con();
 
@@ -136,26 +139,13 @@ public final class MobActor extends LivingActor {
 
   private void handleMobMessage(ActorMessage.MobMessage msg) {
     switch (msg) {
-      case ActorMessage.OnPlayerEnter(var player) -> {
-        // onPlayerEnter(player);
-      }
-      case ActorMessage.AgroScan() -> {
-        // onInteract(player, command);
-      }
-      case ActorMessage.RandomMove() -> {
-        // tick();
-      }
-      case ActorMessage.Respawn() -> {
-        // tick();
-      }
-      default -> log.warn("handleMobMessage 收到無法處理的訊息: {} {}", this.id, msg);
+      case ActorMessage.OnPlayerEnter(var playerId) -> behavior.handle(this, msg);
+      case ActorMessage.OnPlayerFlee(var playerId, var direction) -> behavior.handle(this, msg);
+      case ActorMessage.OnInteract(var playerId, var command) -> behavior.handle(this, msg);
+      case ActorMessage.AgroScan() -> behavior.handle(this, msg);
+      case ActorMessage.RandomMove() -> behavior.handle(this, msg);
+      case ActorMessage.Respawn() -> behavior.handle(this, msg);
     }
-
-    // 1. AI 決策優先 (例如：受到攻擊決定是否逃跑)
-    behavior.onMessage(this, msg);
-
-    // 2. 如果父類別有通用邏輯 (如 Buff 結算)，可視需求呼叫
-    super.handleMessage(msg);
   }
 
   // public void tick() {
@@ -179,8 +169,8 @@ public final class MobActor extends LivingActor {
 
   // --- 互動與事件 ---
 
-  public void onPlayerEnter(PlayerActor player) {
-    behavior.onPlayerEnter(this, player);
+  public void onPlayerEnter(String playerId) {
+    this.send(new ActorMessage.OnPlayerEnter(playerId));
   }
 
   public void onInteract(PlayerActor player, String command) {
