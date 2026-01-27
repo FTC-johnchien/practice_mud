@@ -13,12 +13,14 @@ import com.example.htmlmud.domain.actor.impl.MobActor;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
 import com.example.htmlmud.domain.exception.MudException;
+import com.example.htmlmud.domain.model.Direction;
 import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.RoomStateRecord;
 import com.example.htmlmud.domain.model.map.SpawnRule;
+import com.example.htmlmud.infra.util.AnsiColor;
+import com.example.htmlmud.infra.util.ColorText;
 import com.example.htmlmud.infra.util.MessageFormatter;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,23 +29,16 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class RoomService {
 
-  @Getter
   private final ObjectMapper objectMapper;
 
-  @Getter
   private final TargetSelector targetSelector;
 
-  @Getter
   private final WorldFactory worldFactory;
 
-  public void doEnter(RoomActor self, String actorId, CompletableFuture<Void> future) {
+  public void doEnter(RoomActor self, LivingActor actor, Direction direction,
+      CompletableFuture<Void> future) {
     // enter
-    LivingActor actor = enter(self, actorId);
-    if (actor == null) {
-      log.error("Actor not found id:" + actorId);
-      future.completeExceptionally(new MudException("Actor not found id:" + actorId));
-      return;
-    }
+    enter(self, actor, direction);
 
     // 當actor為玩家時，要將room里的mobs丟出playerEnter的message
     switch (actor) {
@@ -57,19 +52,23 @@ public class RoomService {
     future.complete(null);
   }
 
-  public void doLeave(RoomActor self, String actorId) {
-    Optional<LivingActor> opt = findActor(self, actorId);
-    if (opt.isEmpty()) {
-      return;
-    }
-
-    LivingActor actor = opt.get();
+  public void doLeave(RoomActor self, LivingActor actor, Direction direction) {
+    String livingName = null;
     switch (actor) {
-      case PlayerActor player -> self.getPlayers().remove(player);
-      case MobActor mob -> self.getMobs().remove(mob);
+      case PlayerActor player -> {
+        self.getPlayers().remove(player);
+        livingName = player.getNickname();
+      }
+      case MobActor mob -> {
+        self.getMobs().remove(mob);
+        livingName = mob.getName();
+      }
     }
 
-    doBroadcast(self, actor.getName() + " 離開了。");
+    String leaveMsg =
+        ColorText.wrap(AnsiColor.YELLOW, livingName + " 往 " + direction.getDisplayName() + " 離開了。");
+
+    doBroadcast(self, leaveMsg);
   }
 
   @Deprecated
@@ -234,33 +233,14 @@ public class RoomService {
    * 房間初次載入時的生怪邏輯
    */
   public void spawnInitial(RoomActor roomActor) {
-    List<SpawnRule> mobSpawnRules = roomActor.getTemplate().mobSpawnRules();
-    List<SpawnRule> itemSpawnRules = roomActor.getTemplate().itemSpawnRules();
-
-    if (mobSpawnRules != null && !mobSpawnRules.isEmpty()) {
-      for (SpawnRule rule : mobSpawnRules) {
-        // 處理機率 (例如：稀有怪只有 10% 機率出現)
-        if (Math.random() > rule.rate()) {
-          continue;
-        }
-
-        // 根據數量生成
+    List<SpawnRule> spawnRules = roomActor.getTemplate().spawnRules();
+    if (spawnRules != null && !spawnRules.isEmpty()) {
+      for (SpawnRule rule : spawnRules) {
         for (int i = 0; i < rule.count(); i++) {
-          spawnOneMob(roomActor, rule);
-        }
-      }
-    }
-
-    if (itemSpawnRules != null && !itemSpawnRules.isEmpty()) {
-      for (SpawnRule rule : itemSpawnRules) {
-        // 處理機率 (例如：稀有怪只有 10% 機率出現)
-        if (Math.random() > rule.rate()) {
-          continue;
-        }
-
-        // 根據數量生成
-        for (int i = 0; i < rule.count(); i++) {
-          spawnOneItem(roomActor, rule);
+          switch (rule.type()) {
+            case "MOB" -> spawnOneMob(roomActor, rule);
+            case "ITEM" -> spawnOneItem(roomActor, rule);
+          }
         }
       }
     }
@@ -292,6 +272,12 @@ public class RoomService {
   }
 
   private void spawnOneMob(RoomActor roomActor, SpawnRule rule) {
+
+    // 處理機率 (例如：稀有怪只有 10% 機率出現)
+    if (Math.random() > rule.rate()) {
+      return;
+    }
+
     // 1. 呼叫工廠產生 MobActor (這裡會給予 UUID)
     MobActor mob = worldFactory.createMob(rule.id());
     try {
@@ -314,6 +300,11 @@ public class RoomService {
   }
 
   private void spawnOneItem(RoomActor roomActor, SpawnRule rule) {
+    // 處理機率 (例如：稀有怪只有 10% 機率出現)
+    if (Math.random() > rule.rate()) {
+      return;
+    }
+
     GameItem item = worldFactory.createItem(rule.id());
     if (item == null) {
       return;
@@ -325,20 +316,17 @@ public class RoomService {
 
 
 
-  private LivingActor enter(RoomActor self, String actorId) {
-    Optional<LivingActor> opt = findActor(self, actorId);
-    if (opt.isEmpty()) {
-      throw new MudException("ActorId:" + actorId + " not found in roomId:" + self.getId());
-    }
-
-    LivingActor actor = opt.get();
+  private void enter(RoomActor self, LivingActor actor, Direction direction) {
+    String livingName = null;
     switch (actor) {
       case PlayerActor player -> {
+        livingName = player.getNickname();
         if (!self.getPlayers().contains(player)) {
           self.getPlayers().add(player);
         }
       }
       case MobActor mob -> {
+        livingName = mob.getName();
         if (!self.getMobs().contains(mob)) {
           self.getMobs().add(mob);
         }
@@ -346,8 +334,10 @@ public class RoomService {
     }
 
     actor.setCurrentRoomId(self.getId());
-    doBroadcastToOthers(self, actor.getId(), actor.getName() + " 走了進來。");
-    return actor;
+
+    String arriveMsg =
+        ColorText.wrap(AnsiColor.YELLOW, livingName + " 從 " + direction.getDisplayName() + " 過來了。");
+    doBroadcastToOthers(self, actor.getId(), arriveMsg);
   }
 
   private GameItem tryPickItem(RoomActor roomActor, String args, PlayerActor picker) {

@@ -27,9 +27,9 @@ public sealed interface ActorMessage
   }
   record OnAttacked(String attackerId) implements LivingMessage {
   }
-  record OnDamage(int amount, String attackerId) implements LivingMessage {
+  record OnDamage(int amount, LivingActor attacker) implements LivingMessage {
   }
-  record Die(String killerId) implements LivingMessage {
+  record Die(LivingActor killer) implements LivingMessage {
   }
   record Heal(int amount) implements LivingMessage {
   }

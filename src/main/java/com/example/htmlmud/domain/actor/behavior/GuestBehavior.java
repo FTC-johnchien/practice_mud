@@ -11,6 +11,7 @@ import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
 import com.example.htmlmud.domain.context.MudKeys;
 import com.example.htmlmud.domain.exception.MudException;
+import com.example.htmlmud.domain.model.Direction;
 import com.example.htmlmud.domain.model.PlayerRecord;
 import com.example.htmlmud.protocol.ConnectionState;
 import com.example.htmlmud.protocol.GameCommand;
@@ -330,7 +331,7 @@ public class GuestBehavior implements PlayerBehavior {
     // 讓玩家進入資料紀錄的房間
     RoomActor room = actor.getManager().getRoomActor(actor.getCurrentRoomId());
     CompletableFuture<Void> future = new CompletableFuture<>();
-    room.enter(actor.getId(), future);
+    room.enter(actor, Direction.UP, future);
     try {
       future.orTimeout(1, java.util.concurrent.TimeUnit.SECONDS).join();
     } catch (MudException e) {

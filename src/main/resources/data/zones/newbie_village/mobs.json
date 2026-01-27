@@ -2,6 +2,7 @@
   {
     "id": "village_guard",
     "name": "村莊警衛",
+    "gender": "MALE",
     "aliases": ["village guard", "guard", "soldier"],
     "kind": "FRIENDLY",
     "level": 10,
@@ -25,7 +26,7 @@
       "為了村莊的榮耀！",
       "別在村子裡惹事。"
     ],
-    "lootTable": [
+    "loot": [
       { "itemId": "newbie_village:rusty_sword", "chance": 0.5 },
       { "itemId": "newbie_village:standard_spear", "chance": 0.2}
     ]
@@ -46,7 +47,7 @@
     "attackSpeed": 2500,
     "description": "一隻巨大的野鼠在陰影中磨牙。",
     "lookDescription": "它的眼睛發紅，似乎感染了某種疾病。",
-    "lootTable": [
+    "loot": [
       { "itemId": "newbie_village:village_bread", "chance": 0.5, "minAmount": 1, "maxAmount": 3 }
     ]
   },
@@ -66,7 +67,7 @@
     "attackSpeed": 2500,
     "description": "一隻巨大的野鼠在陰影中磨牙。",
     "lookDescription": "它的眼睛在陰影中發亮，似乎一直在盯著你。",
-    "lootTable": [
+    "loot": [
       { "itemId": "newbie_village:village_bread", "chance": 0.3 },
       { "itemId": "newbie_village:village_elder_house_key", "chance": 0.5 }
     ]

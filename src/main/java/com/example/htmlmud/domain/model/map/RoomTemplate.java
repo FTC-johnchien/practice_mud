@@ -22,9 +22,7 @@ public record RoomTemplate(
 
     Map<String, RoomExit> exits, // Key: 方向 (north, east), Value: 出口詳細資訊
 
-    @JsonProperty("population") List<SpawnRule> mobSpawnRules,
-
-    @JsonProperty("items") List<SpawnRule> itemSpawnRules,
+    @JsonProperty("spawns") List<SpawnRule> spawnRules,
 
     @JsonProperty("extra_data") Map<String, Object> extraData // 額外擴充資料 (e.g. 腳本觸發參數)
 

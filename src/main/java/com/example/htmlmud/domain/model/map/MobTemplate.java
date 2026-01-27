@@ -67,12 +67,37 @@ public record MobTemplate(
     Map<String, String> equipment, // 装備
 
     // 掉落表：列表中的每個項目代表一種可能的掉落物
-    List<LootEntry> lootTable
+    List<LootEntry> loot
 
 ) {
   public MobTemplate {
     if (lookDescription == null) {
       lookDescription = description;
+
+    }
+    if (gender == null) {
+      gender = Gender.ANIMAL;
+    }
+    if (kind == null) {
+      kind = MobKind.NEUTRAL;
+    }
+    if (str == 0) {
+      str = 5;
+    }
+    if (intelligence == 0) {
+      intelligence = 5;
+    }
+    if (dex == 0) {
+      dex = 5;
+    }
+    if (con == 0) {
+      con = 5;
+    }
+    if (maxStamina == 0) {
+      maxStamina = 100;
+    }
+    if (attackSpeed == 0) {
+      attackSpeed = 2000;
     }
   }
 }

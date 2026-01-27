@@ -1,5 +1,6 @@
 package com.example.htmlmud.domain.model;
 
+import com.example.htmlmud.domain.model.vo.Gender;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.HashMap;
@@ -8,7 +9,7 @@ import java.util.Map;
 // 這個物件會被序列化存入 players.state_json 和 mobs.state_json
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LivingState {
-  public String sex = "F"; // 性別
+  public Gender sex; // 性別
   public String race = "DRAGON"; // 種族 (人類、精靈等，通常會給予不同的初始屬性加成)
 
   public int level = 1;

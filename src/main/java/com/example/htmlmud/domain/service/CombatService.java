@@ -1,5 +1,7 @@
 package com.example.htmlmud.domain.service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -116,7 +118,7 @@ public class CombatService {
 
     if (target.getState().isDead()) {
       stopCombat(self); // 目標消失或死亡，停止戰鬥
-      self.reply("你的戰鬥目標 " + target.getName() + " 已經死了");
+      // self.reply("你的戰鬥目標 " + target.getName() + " 已經死了");
       return;
     }
 
@@ -148,7 +150,7 @@ public class CombatService {
 
 
     // 將傷害送給 target
-    target.onDamage(dmgAmout, self.getId());
+    target.onDamage(dmgAmout, self);
 
 
     // 你 用 拳頭 攻擊 巨大的野鼠，造成 9 點傷害！
@@ -187,7 +189,7 @@ public class CombatService {
     // return null;
   }
 
-  public void onDamage(int amount, LivingActor self, String attackerId) {
+  public void onDamage(int amount, LivingActor self, LivingActor attacker) {
 
     // 檢查是否還存在，死亡可能會消失
     if (self == null) {
@@ -213,13 +215,21 @@ public class CombatService {
     // 檢查是否死亡，通知 self 死亡事件
     if (self.getState().isDead()) {
       log.info("{} 死亡ing", self.getName());
-      self.die(attackerId);
+      self.die(attacker);
     }
   }
 
-  public void onDie(LivingActor self, String killerId) {
+  public void onDie(LivingActor self, LivingActor killer) {
     RoomActor room = worldManagerProvider.getObject().getRoomActor(self.getCurrentRoomId());
-    room.broadcast(killerId + " 殺死了 " + self.getName());
+
+    String messageTemplate = "$N殺死了$n";
+    List<LivingActor> audiences = new ArrayList<>();
+    audiences.addAll(room.getPlayers());
+    for (LivingActor receiver : audiences) {
+      String finalMsg = MessageFormatter.format(messageTemplate, killer, self, receiver);
+      receiver.reply(finalMsg);
+    }
+    // room.broadcast(killerId + " 殺死了 " + self.getName());
 
     // 停止戰鬥狀態
     self.getState().hp = 0;
@@ -236,18 +246,18 @@ public class CombatService {
 
     // TODO 應交由房間處理 roomMessage livingDead 房間廣播死亡訊息
     // RoomActor room = worldManagerProvider.getObject().getRoomActor(self.getCurrentRoomId());
-    if (room != null) {
-      CompletableFuture<LivingActor> future = new CompletableFuture<>();
-      room.findActor(killerId, future);
-      LivingActor killer = future.orTimeout(1, java.util.concurrent.TimeUnit.SECONDS).join();
-      if (killer == null) {
-        log.error("killerId LivingActor not found: {}", killerId);
-        return;
-      }
-      room.broadcastToOthers(killerId, self.getName() + " 被 " + killer.getName() + " 殺死了！");
-    } else {
-      log.error("currentRoomId RoomActor not found: {}", self.getCurrentRoomId());
-    }
+    // if (room != null) {
+    // CompletableFuture<LivingActor> future = new CompletableFuture<>();
+    // room.findActor(killerId, future);
+    // LivingActor killer = future.orTimeout(1, java.util.concurrent.TimeUnit.SECONDS).join();
+    // if (killer == null) {
+    // log.error("killerId LivingActor not found: {}", killerId);
+    // return;
+    // }
+    // room.broadcastToOthers(killerId, self.getName() + " 被 " + killer.getName() + " 殺死了！");
+    // } else {
+    // log.error("currentRoomId RoomActor not found: {}", self.getCurrentRoomId());
+    // }
   }
 
 

@@ -154,7 +154,7 @@ public class WorldFactory {
     // corpse.setKeywords(keywords); // 假設您有 keywords 欄位
 
     // 3. 【產生掉落物】：根據 LootTable 骰骰子
-    List<LootEntry> lootTable = mob.getTemplate().lootTable();
+    List<LootEntry> lootTable = mob.getTemplate().loot();
     if (lootTable != null) {
       for (LootEntry entry : lootTable) {
         if (ThreadLocalRandom.current().nextDouble() < entry.chance()) {

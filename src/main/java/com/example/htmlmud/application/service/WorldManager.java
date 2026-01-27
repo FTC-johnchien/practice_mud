@@ -14,8 +14,10 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.application.factory.WorldFactory;
+import com.example.htmlmud.domain.actor.impl.LivingActor;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
+import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.context.MudKeys;
 import com.example.htmlmud.domain.model.map.ItemTemplate;
 import com.example.htmlmud.domain.model.map.MobTemplate;
@@ -88,7 +90,10 @@ public class WorldManager {
   private final BlockingQueue<RoomStateUpdate> persistenceQueue = new LinkedBlockingQueue<>();
 
   // 快取：ID -> Player 實體
-  private final ConcurrentHashMap<String, PlayerActor> activePlayers = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, LivingActor> activeLivingActors =
+      new ConcurrentHashMap<>();
+
+
 
   private volatile boolean isRunning = true;
 
@@ -124,7 +129,7 @@ public class WorldManager {
       }
       ZoneTemplate zoneTemplate =
           objectMapper.readValue(resource.getInputStream(), ZoneTemplate.class);
-      log.info("{}", objectMapper.writeValueAsString(zoneTemplate));
+      log.info("log:{}", objectMapper.writeValueAsString(zoneTemplate));
       templateRepo.registerZone(zoneTemplate);
       String zoneId = zoneTemplate.id();
 
@@ -134,16 +139,15 @@ public class WorldManager {
       if (resource == null) {
         log.error("Zone mobs not found: {}", zone);
         return;
-      } else {
-        Set<MobTemplate> mobs = objectMapper.readValue(resource.getInputStream(),
-            new TypeReference<Set<MobTemplate>>() {});
-        for (MobTemplate mob : mobs) {
-          log.info("{}", objectMapper.writeValueAsString(mob));
-
-          String newMobId = zoneId + ":" + mob.id();
-          MobTemplate newMob = mob.toBuilder().id(newMobId).build();
-          templateRepo.registerMob(newMob);
-        }
+      }
+      Set<MobTemplate> mobs = objectMapper.readValue(resource.getInputStream(),
+          new TypeReference<Set<MobTemplate>>() {});
+      for (MobTemplate mob : mobs) {
+        String newMobId = zoneId + ":" + mob.id();
+        // IdUtils.resolveId(zoneId, mob.id())
+        MobTemplate newMob = mob.toBuilder().id(newMobId).build();
+        log.info("log:{}", objectMapper.writeValueAsString(newMob));
+        templateRepo.registerMob(newMob);
       }
 
 
@@ -152,16 +156,14 @@ public class WorldManager {
       if (resource == null) {
         log.error("Zone items not found: {}", zone);
         return;
-      } else {
-        Set<ItemTemplate> items = objectMapper.readValue(resource.getInputStream(),
-            new TypeReference<Set<ItemTemplate>>() {});
-        for (ItemTemplate item : items) {
-          log.info("{}", objectMapper.writeValueAsString(item));
-
-          String newItemId = zoneId + ":" + item.id();
-          ItemTemplate newItem = item.toBuilder().id(newItemId).build();
-          templateRepo.registerItem(newItem);
-        }
+      }
+      Set<ItemTemplate> items = objectMapper.readValue(resource.getInputStream(),
+          new TypeReference<Set<ItemTemplate>>() {});
+      for (ItemTemplate item : items) {
+        String newItemId = zoneId + ":" + item.id();
+        ItemTemplate newItem = item.toBuilder().id(newItemId).build();
+        log.info("log:{}", objectMapper.writeValueAsString(newItem));
+        templateRepo.registerItem(newItem);
       }
 
 
@@ -177,17 +179,9 @@ public class WorldManager {
           new TypeReference<List<RoomTemplate>>() {});
 
       for (RoomTemplate room : rooms) {
-        log.info("{}", objectMapper.writeValueAsString(room));
-
         // 1. 處理 Mob Spawn Rules (使用 Stream 避免 ConcurrentModificationException)
-        List<SpawnRule> updatedMobRules = room.mobSpawnRules() == null ? null
-            : room.mobSpawnRules().stream()
-                .map(rule -> rule.toBuilder().id(IdUtils.resolveId(zoneId, rule.id())).build())
-                .toList();
-
-        // 2. 處理 Item Spawn Rules
-        List<SpawnRule> updatedItemRules = room.itemSpawnRules() == null ? null
-            : room.itemSpawnRules().stream()
+        List<SpawnRule> spawnRules = room.spawnRules() == null ? null
+            : room.spawnRules().stream()
                 .map(rule -> rule.toBuilder().id(IdUtils.resolveId(zoneId, rule.id())).build())
                 .toList();
 
@@ -200,8 +194,8 @@ public class WorldManager {
         // 更新 room.id
         String newRoomId = zoneId + ":" + room.id();
         RoomTemplate newRoom = room.toBuilder().id(newRoomId).zoneId(zoneId).exits(updatedExits)
-            .mobSpawnRules(updatedMobRules).itemSpawnRules(updatedItemRules).build();
-
+            .spawnRules(spawnRules).build();
+        log.info("log:{}", objectMapper.writeValueAsString(newRoom));
         templateRepo.registerRoom(newRoom);
 
         // init roomActor
@@ -291,24 +285,18 @@ public class WorldManager {
   public record RoomStateUpdate(int roomId, String dataToSave) {
   }
 
-  public void addPlayer(PlayerActor actor) {
-    activePlayers.put(actor.getId(), actor);
+  public void addLivingActor(LivingActor actor) {
+    activeLivingActors.put(actor.getId(), actor);
   }
 
-  public PlayerActor getPlayer(WebSocketSession session) {
-    String playerId = (String) session.getAttributes().get(MudKeys.PLAYER_ID);
-    return getPlayer(playerId);
+  public Optional<LivingActor> findLivingActor(String actorId) {
+    return Optional.ofNullable(activeLivingActors.get(actorId));
   }
 
-  public PlayerActor getPlayer(String playerId) {
-    // TODO 若 playerActor 不存在，則需要從資料庫載入並建立
-
-    return activePlayers.get(playerId);
+  public void removeLivingActor(String actorId) {
+    activeLivingActors.remove(actorId);
   }
 
-  public void removePlayer(String playerId) {
-    activePlayers.remove(playerId);
-  }
 
 
   /**
@@ -356,31 +344,6 @@ public class WorldManager {
   }
 
   /**
-   * 對房間內的所有人廣播訊息 (除了來源者自己)
-   *
-   * @param roomId 房間 ID
-   * @param message 訊息內容
-   * @param excludeActorId 不想收到廣播的人 (通常是移動者本人)，可為 null
-   */
-  public void broadcastToRoom(String roomId, String message, String excludeActorId) {
-    List<PlayerActor> actors = getActorsInRoom(roomId); // 假設您已有此方法
-
-    for (PlayerActor actor : actors) {
-      if (excludeActorId != null && actor.getId().equals(excludeActorId)) {
-        continue;
-      }
-      // 直接發送文字
-      actor.reply(message);
-    }
-  }
-
-  // 簡單的 getActorsInRoom 實作參考 (效率較差，之後可用 Map<RoomId, Set<ActorId>> 優化)
-  public List<PlayerActor> getActorsInRoom(String roomId) {
-    return activePlayers.values().stream().filter(a -> roomId.equals(a.getCurrentRoomId()))
-        .toList();
-  }
-
-  /**
    * 建立一個全新的物品實體
    *
    * @param templateId 物品原型 ID
@@ -421,7 +384,11 @@ public class WorldManager {
   // }
 
   public Optional<PlayerActor> findPlayerByName(String targetName) {
-    for (PlayerActor player : activePlayers.values()) {
+    for (LivingActor actor : activeLivingActors.values()) {
+      if (!(actor instanceof PlayerActor player)) {
+        continue;
+      }
+
       if (player.getName().equals(targetName)) {
         return Optional.of(player);
       }

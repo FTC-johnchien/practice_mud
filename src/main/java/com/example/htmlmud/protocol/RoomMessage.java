@@ -5,6 +5,7 @@ import java.util.concurrent.CompletableFuture;
 import com.example.htmlmud.domain.actor.impl.LivingActor;
 import com.example.htmlmud.domain.actor.impl.MobActor;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
+import com.example.htmlmud.domain.model.Direction;
 import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.RoomStateRecord;
 
@@ -25,7 +26,8 @@ public sealed interface RoomMessage permits RoomMessage.Enter, RoomMessage.Leave
    * @param LivingActor 實例
    * @param future 用於通知移動完成 (可選)
    */
-  record Enter(String actorId, CompletableFuture<Void> future) implements RoomMessage {
+  record Enter(LivingActor actor, Direction direction, CompletableFuture<Void> future)
+      implements RoomMessage {
   }
 
   /**
@@ -33,7 +35,7 @@ public sealed interface RoomMessage permits RoomMessage.Enter, RoomMessage.Leave
    *
    * @param actorId 離開的 Actor ID
    */
-  record Leave(String actorId) implements RoomMessage {
+  record Leave(LivingActor actor, Direction direction) implements RoomMessage {
   }
 
   /**

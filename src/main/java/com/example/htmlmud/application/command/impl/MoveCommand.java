@@ -4,6 +4,8 @@ import java.util.concurrent.CompletableFuture;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.application.service.WorldManager;
+import com.example.htmlmud.domain.actor.impl.LivingActor;
+import com.example.htmlmud.domain.actor.impl.MobActor;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
 import com.example.htmlmud.domain.exception.MudException;
@@ -72,27 +74,23 @@ public class MoveCommand implements PlayerCommand {
     }
 
 
+    // TODO 是否限制移動 守衛/鎖/魔法.........
+
+
     // --- 檢查成功，開始處理移動流程 ---
 
     // 4. 舊房間廣播 (離場)
-    currentRoom.leave(actor.getId());
-    String leaveMsg = ColorText.wrap(AnsiColor.YELLOW,
-        actor.getNickname() + " 往 " + dir.getDisplayName() + " 離開了。");
-    worldManager.broadcastToRoom(currentRoomId, leaveMsg, actor.getId());
+    currentRoom.leave(actor, dir);
 
     // 6. 新房間廣播 (進場)
     // 計算反方向 (例如往北走，新房間的人會看到你從南方來)
     CompletableFuture<Void> future = new CompletableFuture<>();
-    targetRoom.enter(actor.getId(), future);
+    targetRoom.enter(actor, dir.opposite(), future);
     try {
       future.orTimeout(1, java.util.concurrent.TimeUnit.SECONDS).join();
     } catch (MudException e) {
       log.error("enterRoom", e);
     }
-
-    String arriveMsg = ColorText.wrap(AnsiColor.YELLOW,
-        actor.getNickname() + " 從 " + dir.opposite().getDisplayName() + " 過來了。");
-    worldManager.broadcastToRoom(targetRoomId, arriveMsg, actor.getId());
 
     // 7. 自動 Look (讓玩家看到新環境)
     // 直接調用 LookCommand 執行邏輯

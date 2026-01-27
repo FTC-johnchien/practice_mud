@@ -8,11 +8,11 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import com.example.htmlmud.application.service.RoomService;
 import com.example.htmlmud.domain.actor.core.VirtualActor; // 引用您的基礎類別
+import com.example.htmlmud.domain.model.Direction;
 import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.RoomStateRecord;
 import com.example.htmlmud.domain.model.map.RoomTemplate;
 import com.example.htmlmud.domain.model.map.ZoneTemplate;
-import com.example.htmlmud.infra.util.MessageFormatter;
 import com.example.htmlmud.protocol.RoomMessage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -65,11 +65,11 @@ public class RoomActor extends VirtualActor<RoomMessage> {
   protected void handleMessage(RoomMessage msg) {
     // 這裡的邏輯跟之前一模一樣，但不需要自己寫 loop 和 try-catch 了
     switch (msg) {
-      case RoomMessage.Enter(var actorId, var future) -> {
-        roomService.doEnter(this, actorId, future);
+      case RoomMessage.Enter(var actor, var direction, var future) -> {
+        roomService.doEnter(this, actor, direction, future);
       }
-      case RoomMessage.Leave(var actorId) -> {
-        roomService.doLeave(this, actorId);
+      case RoomMessage.Leave(var actor, var direction) -> {
+        roomService.doLeave(this, actor, direction);
       }
       // 交由 LookCommand 實作
       // case RoomMessage.Look(var playerId, var future) -> {
@@ -116,12 +116,12 @@ public class RoomActor extends VirtualActor<RoomMessage> {
 
 
   // 公開給外部呼叫的方法 --------------------------------------------------------------------------
-  public void enter(String actorId, CompletableFuture<Void> future) {
-    this.send(new RoomMessage.Enter(actorId, future));
+  public void enter(LivingActor actor, Direction direction, CompletableFuture<Void> future) {
+    this.send(new RoomMessage.Enter(actor, direction, future));
   }
 
-  public void leave(String actorId) {
-    this.send(new RoomMessage.Leave(actorId));
+  public void leave(LivingActor actor, Direction direction) {
+    this.send(new RoomMessage.Leave(actor, direction));
   }
 
   // public void look(String playerId, CompletableFuture<String> future) {

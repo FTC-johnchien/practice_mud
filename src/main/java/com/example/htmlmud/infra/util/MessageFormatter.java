@@ -26,11 +26,11 @@ public class MessageFormatter {
 
     // 你舉起wepon，用盡全力揮向野狼！
     if (isSource) {
-      sourceStr = source.getGender().getYou();
+      sourceStr = source.getState().sex.getYou();
     }
     // 野狼舉起 wepon，用盡全力揮向你！
     else if (isTarget) {
-      targetStr = target.getGender().getYou();
+      targetStr = target.getState().sex.getYou();
     }
 
     // 2. 進行替換

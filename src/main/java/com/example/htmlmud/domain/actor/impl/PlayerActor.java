@@ -176,10 +176,10 @@ public final class PlayerActor extends LivingActor {
   // }
 
   @Override
-  protected void doDie(String killerId) {
+  protected void doDie(LivingActor attacker) {
     this.stop();
     reply("你已經死亡！即將在重生點復活...");
-    super.doDie(killerId);
+    super.doDie(attacker);
 
 
     // 玩家死亡邏輯：掉經驗、傳送回城

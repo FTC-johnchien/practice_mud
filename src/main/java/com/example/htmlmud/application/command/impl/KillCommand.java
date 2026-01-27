@@ -1,14 +1,17 @@
 package com.example.htmlmud.application.command.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.application.command.annotation.CommandAlias;
 import com.example.htmlmud.application.command.parser.TargetSelector;
 import com.example.htmlmud.application.service.WorldManager;
+import com.example.htmlmud.domain.actor.impl.LivingActor;
 import com.example.htmlmud.domain.actor.impl.MobActor;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
+import com.example.htmlmud.infra.util.MessageFormatter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,10 +56,19 @@ public class KillCommand implements PlayerCommand {
     // 3. 執行戰鬥邏輯
     self.getState().combatTargetId = target.getId();
     self.getState().isInCombat = true;
-    log.info("name:{} {}", self.getName(), self.getNickname());
-    self.reply("你對 " + target.getTemplate().name() + " 大喊受死吧 一邊擺出了戰鬥架式！");
+    target.onAttacked(self.getId());
+    // log.info("name:{} {}", self.getName(), self.getNickname());
+
+    // 訊息處理
+    String messageTemplate = "$N對$n大喊受死吧 一邊擺出了戰鬥架式！";
+    List<LivingActor> audiences = new ArrayList<>();
+    audiences.addAll(room.getPlayers());
+    for (LivingActor receiver : audiences) {
+      String finalMsg = MessageFormatter.format(messageTemplate, self, target, receiver);
+      receiver.reply(finalMsg);
+    }
+    // self.reply("你對 " + target.getTemplate().name() + " 大喊受死吧 一邊擺出了戰鬥架式！");
     room.broadcast(
         "log:KillCommand 目前 " + self.getState().hp + " / " + self.getState().maxHp + " HP");
-    target.onAttacked(self.getId());
   }
 }

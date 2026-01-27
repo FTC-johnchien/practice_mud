@@ -33,9 +33,6 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
   @Setter
   protected String name;
 
-  @Getter
-  protected Gender gender;
-
   // 所有生物都有狀態 (HP/MP)
   @Getter
   protected LivingState state;
@@ -81,11 +78,11 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
       case ActorMessage.OnAttacked(var attackerId) -> {
         doOnAttacked(attackerId);
       }
-      case ActorMessage.OnDamage(var amount, var attackerId) -> {
-        doOnDamage(amount, attackerId);
+      case ActorMessage.OnDamage(var amount, var attacker) -> {
+        doOnDamage(amount, attacker);
       }
-      case ActorMessage.Die(var killerId) -> {
-        doDie(killerId);
+      case ActorMessage.Die(var killer) -> {
+        doDie(killer);
       }
       case ActorMessage.Heal(var amount) -> {
         doHeal(amount);
@@ -147,15 +144,15 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
   }
 
   // 受傷處理
-  protected void doOnDamage(int amount, String attackerId) {
-    services.combatService().onDamage(amount, this, attackerId);
+  protected void doOnDamage(int amount, LivingActor attacker) {
+    services.combatService().onDamage(amount, this, attacker);
   }
 
   // 死亡處理
-  protected void doDie(String killerId) {
+  protected void doDie(LivingActor killer) {
     // 標記狀態 (Mark State)：設為 Dead，停止接受新的傷害或治療。
     // 交代後事 (Cleanup & Notify)：取消心跳、製造屍體、通知房間。
-    services.combatService().onDie(this, killerId);
+    services.combatService().onDie(this, killer);
     // 自我毀滅 (Terminate)：確認訊息發出後，才停止 VT。
     stop(); // 停止 Actor
   }
@@ -259,13 +256,13 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
   }
 
   // 受傷處理
-  public void onDamage(int amount, String attackerId) {
-    this.send(new ActorMessage.OnDamage(amount, attackerId));
+  public void onDamage(int amount, LivingActor attacker) {
+    this.send(new ActorMessage.OnDamage(amount, attacker));
   }
 
   // 死亡處理
-  public void die(String killerId) {
-    this.send(new ActorMessage.Die(killerId));
+  public void die(LivingActor killer) {
+    this.send(new ActorMessage.Die(killer));
   }
 
   public void command(String traceId, GameCommand cmd) {
