@@ -11,11 +11,13 @@ import com.example.htmlmud.domain.actor.impl.LivingActor;
 import com.example.htmlmud.domain.actor.impl.MobActor;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
+import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.EquipmentSlot;
 import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.ItemType;
 import com.example.htmlmud.domain.model.LivingState;
 import com.example.htmlmud.domain.model.vo.DamageSource;
+import com.example.htmlmud.infra.util.MessageFormatter;
 import com.example.htmlmud.protocol.ActorMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -98,21 +100,23 @@ public class CombatService {
       return;
     }
 
-    // 檢查 target 是否存在
+    // 檢查與self同一個房間里的 target 是否存在!!! TODO 遠程攻擊的要另外寫
     WorldManager manager = worldManagerProvider.getObject();
     CompletableFuture<LivingActor> future = new CompletableFuture<>();
     RoomActor room = manager.getRoomActor(self.getCurrentRoomId());
     room.findActor(self.getState().combatTargetId, future);
-    LivingActor target = future.orTimeout(1, TimeUnit.SECONDS).join();
-    if (target == null) {
-      stopCombat(self); // 目標消失或死亡，停止戰鬥
-      self.reply("戰鬥目標不在視野範圍內");
-      return;
+    LivingActor target = null;
+    try {
+      target = future.orTimeout(1, TimeUnit.SECONDS).join();
+    } catch (Exception e) {
+      log.error("尋找戰鬥目標時發生錯誤: {}", e.getMessage());
+      stopCombat(self); // 目標消失，停止戰鬥
+      throw new MudException("尋找戰鬥目標時發生錯誤");
     }
 
     if (target.getState().isDead()) {
       stopCombat(self); // 目標消失或死亡，停止戰鬥
-      self.reply("你要攻擊的對象 " + target.getName() + " 已經死了");
+      self.reply("你的戰鬥目標 " + target.getName() + " 已經死了");
       return;
     }
 
@@ -130,11 +134,14 @@ public class CombatService {
     // 閃躲 dodge
 
     // 招架 parry
+    // template: $N舉起wepon，用盡全力揮向$n！
+    String combatTemplate = "$N舉起" + weapon.name() + "，用盡全力" + weapon.verb() + "$n！\r\n";
+    // String finalMsg = MessageFormatter.format(combatTemplate, source, target, receiver);
     if (dmgAmout == -1) {
-      String attackMsg =
-          "用 " + weapon.name() + " " + weapon.verb() + target.getName() + "，被對方用武器招架！";
-      self.reply("你" + attackMsg);
-      room.broadcastToOthers(self.getId(), self.getName() + attackMsg);
+      combatTemplate += "卻被對方用武器招架！";
+      room.combatBroadcast(self, target, combatTemplate);
+      // self.reply(MessageFormatter.format(combatTemplate, source, target, receiver););
+      // room.broadcastToOthers(self.getId(), self.getName() + attackMsg);
       return;
     }
 
@@ -145,12 +152,14 @@ public class CombatService {
 
 
     // 你 用 拳頭 攻擊 巨大的野鼠，造成 9 點傷害！
-    String attackMsg =
-        "用 " + weapon.name() + " " + weapon.verb() + target.getName() + "，造成 " + dmgAmout + " 點傷害！";
+    combatTemplate += "造成 " + dmgAmout + " 點傷害！";
+    room.combatBroadcast(self, target, combatTemplate);
+    // String attackMsg =
+    // "用 " + weapon.name() + " " + weapon.verb() + target.getName() + "，造成 " + dmgAmout + " 點傷害！";
 
     // 發送訊息給房間 (讓其他人看到噴血)
-    self.reply("你" + attackMsg);
-    room.broadcastToOthers(self.getId(), self.getName() + attackMsg);
+    // self.reply("你" + attackMsg);
+    // room.broadcastToOthers(self.getId(), self.getName() + attackMsg);
 
 
 
