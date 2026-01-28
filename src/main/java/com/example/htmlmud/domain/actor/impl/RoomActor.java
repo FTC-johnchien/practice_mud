@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import com.example.htmlmud.application.service.RoomService;
 import com.example.htmlmud.domain.actor.core.VirtualActor; // 引用您的基礎類別
+import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.Direction;
 import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.RoomStateRecord;
@@ -21,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 // 1. 繼承 VirtualActor，並指定泛型為 RoomMessage
 public class RoomActor extends VirtualActor<RoomMessage> {
 
+  private final RoomService roomService;
+
   @Getter
   private final String id;
 
@@ -29,9 +32,6 @@ public class RoomActor extends VirtualActor<RoomMessage> {
 
   @Getter
   private final ZoneTemplate zoneTemplate;
-
-  private final RoomService roomService;
-
 
   // 房間內的玩家 (Runtime State)
   @Getter
@@ -48,16 +48,18 @@ public class RoomActor extends VirtualActor<RoomMessage> {
   private Map<String, Set<String>> trackedMobs = new HashMap<>();
 
 
-  public RoomActor(RoomTemplate template, ZoneTemplate zoneTemplate, RoomService roomService) {
-    super("room-" + template.id());
+  public RoomActor(String id, RoomService roomService) {
+    super("room-" + id);
     this.roomService = roomService;
 
-    this.id = template.id();
-    this.template = template;
-    this.zoneTemplate = zoneTemplate;
+    this.id = id;
+    this.template = roomService.getRoomTemplate(id);
+    this.zoneTemplate = roomService.getZoneTemplate(template.zoneId());
+    if (this.template == null || this.zoneTemplate == null) {
+      throw new MudException("roomTemplate or zoneTemplate is null");
+    }
 
     roomService.spawnInitial(this);
-
   }
 
   // --- 實作父類別的抽象方法 ---

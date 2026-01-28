@@ -7,9 +7,9 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+import com.example.htmlmud.application.service.PlayerService;
 import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
-import com.example.htmlmud.domain.context.GameServices;
 import com.example.htmlmud.protocol.GameCommand;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @RequiredArgsConstructor
 public class MudWebSocketHandler extends TextWebSocketHandler {
-  private final GameServices gameServices;
+  private final PlayerService playerService;
   private final WorldManager worldManager;
   private final SessionRegistry sessionRegistry;
 
@@ -34,7 +34,7 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
 
       // Guest階段 使用工廠方法建立 Guest Actor (ID=0)
       // 將必要的 Service 注入給 Actor，讓 Actor 擁有處理業務的能力
-      PlayerActor actor = PlayerActor.createGuest(concurrentSession, worldManager, gameServices);
+      PlayerActor actor = PlayerActor.createGuest(concurrentSession, worldManager, playerService);
 
       // 啟動 Actor 的虛擬執行緒 (Virtual Thread)
       actor.start();
@@ -65,7 +65,7 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
       if (actor != null) {
         // C. 解析指令 (JSON -> Record)
         GameCommand cmd =
-            gameServices.objectMapper().readValue(message.getPayload(), GameCommand.class);
+            playerService.getObjectMapper().readValue(message.getPayload(), GameCommand.class);
 
         // D. 裝入信封並投遞
         // 這裡不綁定 ScopedValue，因為要跨執行緒傳遞

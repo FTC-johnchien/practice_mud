@@ -2,25 +2,14 @@ package com.example.htmlmud.application.service;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.application.command.CommandDispatcher;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class PlayerService {
+public class MobService {
 
   @Getter
   private final ObjectProvider<LivingService> livingServiceProvider;
-
-  @Getter
-  private final ObjectMapper objectMapper;
-
-  @Getter
-  private final CommandDispatcher commandDispatcher;
-
-  @Getter
-  private final AuthService authService;
 
 }

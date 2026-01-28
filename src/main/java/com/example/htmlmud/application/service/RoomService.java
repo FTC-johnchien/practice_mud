@@ -16,7 +16,10 @@ import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.Direction;
 import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.RoomStateRecord;
+import com.example.htmlmud.domain.model.map.RoomTemplate;
 import com.example.htmlmud.domain.model.map.SpawnRule;
+import com.example.htmlmud.domain.model.map.ZoneTemplate;
+import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
 import com.example.htmlmud.infra.util.AnsiColor;
 import com.example.htmlmud.infra.util.ColorText;
 import com.example.htmlmud.infra.util.MessageFormatter;
@@ -29,11 +32,23 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class RoomService {
 
+  private final TemplateRepository templateRepo;
+
   private final ObjectMapper objectMapper;
 
   private final TargetSelector targetSelector;
 
   private final WorldFactory worldFactory;
+
+
+
+  public ZoneTemplate getZoneTemplate(String zoneId) {
+    return templateRepo.findZone(zoneId).orElse(null);
+  }
+
+  public RoomTemplate getRoomTemplate(String roomId) {
+    return templateRepo.findRoom(roomId).orElse(null);
+  }
 
   public void doEnter(RoomActor self, LivingActor actor, Direction direction,
       CompletableFuture<Void> future) {
@@ -119,6 +134,7 @@ public class RoomService {
   // 處理邏輯
   public void doTick(RoomActor roomActor, long tickCount, long timestamp) {
     // log.info("{} tickCount: {}", id, tickCount);
+
 
     // === 1. World/Zone 層級邏輯 (例如：每 60 秒檢查一次重生) ===
     if (tickCount % roomActor.getZoneTemplate().respawnTime() == 0) {
@@ -293,9 +309,6 @@ public class RoomService {
     // // 3. 加入房間列表
     roomActor.getMobs().add(mob);
 
-    // // 4. 啟動怪物的 AI
-    mob.start();
-
     log.info("Spawned {} in room {}", mob.getTemplate().name(), roomActor.getId());
   }
 
@@ -378,4 +391,5 @@ public class RoomService {
     String roomId = args[1];
     return new RoomStateRecord(roomId, zoneId, new ArrayList<>(roomActor.getItems()));
   }
+
 }

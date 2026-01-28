@@ -8,6 +8,7 @@ import com.example.htmlmud.domain.model.map.ItemTemplate;
 import com.example.htmlmud.domain.model.map.MobTemplate;
 import com.example.htmlmud.domain.model.map.RoomTemplate;
 import com.example.htmlmud.domain.model.map.ZoneTemplate;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,6 +20,8 @@ public class TemplateRepository {
   // 儲存所有的靜態資料
   // Key: 絕對 ID (e.g., "newbie_village:sword")
   private final Map<String, ZoneTemplate> zoneTemplates = new ConcurrentHashMap<>();
+
+  @Getter
   private final Map<String, RoomTemplate> roomTemplates = new ConcurrentHashMap<>();
   private final Map<String, MobTemplate> mobTemplates = new ConcurrentHashMap<>();
   private final Map<String, ItemTemplate> itemTemplates = new ConcurrentHashMap<>();

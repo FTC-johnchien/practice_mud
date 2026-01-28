@@ -9,7 +9,7 @@ import java.util.Map;
 // 這個物件會被序列化存入 players.state_json 和 mobs.state_json
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LivingState {
-  public Gender sex; // 性別
+  public Gender gender; // 性別
   public String race = "DRAGON"; // 種族 (人類、精靈等，通常會給予不同的初始屬性加成)
 
   public int level = 1;
@@ -73,6 +73,7 @@ public class LivingState {
   // 衍生屬性 (快取用，每次穿脫裝備後重新計算 通常不存 DB，由基礎屬性計算，但為了簡單先存這裡)
   public transient int minDamage = str; // 最小傷害
   public transient int maxDamage = str; // 最大傷害
+  public transient int hitRate = 0; // 命中率
   public transient int defense = 0; // 防禦力
   public transient int attackSpeed = 2000; // 攻擊速度 (毫秒，例如 2000 代表 2秒打一次)
   public transient int weightCapacity = str * 10;
@@ -96,7 +97,7 @@ public class LivingState {
 
   public LivingState deepCopy() {
     LivingState copy = new LivingState();
-    copy.sex = this.sex;
+    copy.gender = this.gender;
     copy.race = this.race;
 
     copy.level = this.level;

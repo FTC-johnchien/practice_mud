@@ -1,29 +1,24 @@
 package com.example.htmlmud.domain.actor.impl;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import com.example.htmlmud.application.service.MobService;
 import com.example.htmlmud.domain.actor.behavior.AggressiveBehavior;
 import com.example.htmlmud.domain.actor.behavior.MerchantBehavior;
 import com.example.htmlmud.domain.actor.behavior.MobBehavior;
 import com.example.htmlmud.domain.actor.behavior.PassiveBehavior;
-import com.example.htmlmud.domain.context.GameServices;
-import com.example.htmlmud.domain.model.EquipmentSlot;
-import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.LivingState;
-import com.example.htmlmud.domain.model.map.Equipment;
 import com.example.htmlmud.domain.model.map.MobTemplate;
 import com.example.htmlmud.domain.model.vo.DamageSource;
 import com.example.htmlmud.protocol.ActorMessage;
-import com.example.htmlmud.protocol.RoomMessage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class MobActor extends LivingActor {
+
+  private final MobService mobService;
 
   // 仇恨列表 (Key: 攻擊者 ID字串, Value: 仇恨值)
   // 因為 ID 已改為 UUID String，這裡的 Key 也同步調整為 String
@@ -41,11 +36,13 @@ public final class MobActor extends LivingActor {
   /**
    * 建構子： 1. 接收 Template 與 Services 2. 自動生成 UUID 3. 自動從 Template 建立 LivingState
    */
-  public MobActor(MobTemplate template, GameServices services) {
+  public MobActor(MobTemplate template, LivingState state, MobService mobService) {
     String uuid = UUID.randomUUID().toString();
     String mobId = "m-" + uuid.substring(0, 8) + uuid.substring(9, 11);
-    super(mobId, template.name(), createInitialState(template), services);
+    super(mobId, template.name(), state, mobService.getLivingServiceProvider().getObject());
     this.template = template;
+    this.mobService = mobService;
+
     this.baseDamageSource = new DamageSource(template.attackNoun(), template.attackVerb(),
         template.minDamage(), template.maxDamage(), template.attackSpeed(), template.hitRate(), -1);
 
@@ -57,35 +54,6 @@ public final class MobActor extends LivingActor {
     log.info("Mob created: {} (ID: {})", template.name(), this.getId());
 
     // 【重要】這裡移除了 this.start()，請在外部 (MobFactory) 建立實體後呼叫 mob.start()
-  }
-
-  // 輔助方法：根據 Template 產生初始的 LivingState
-  private static LivingState createInitialState(MobTemplate tpl) {
-    LivingState state = new LivingState();
-
-    // 基本屬性設定
-    state.level = tpl.level();
-    state.hp = tpl.maxHp();
-    state.maxHp = tpl.maxHp();
-    state.mp = tpl.maxMp();
-    state.maxMp = tpl.maxMp();
-    state.stamina = tpl.maxStamina();
-    state.maxStamina = tpl.maxStamina();
-    // state.san = tpl.maxSan();
-    // state.maxSan = tpl.maxSan();
-
-    state.str = tpl.str();
-    state.dex = tpl.dex();
-    state.intelligence = tpl.intelligence();
-    state.con = tpl.con();
-
-    // 戰鬥屬性設定
-    state.minDamage = tpl.minDamage();
-    state.maxDamage = tpl.maxDamage();
-    state.defense = tpl.defense();
-    state.attackSpeed = tpl.attackSpeed();
-
-    return state;
   }
 
   // 處理初期裝備

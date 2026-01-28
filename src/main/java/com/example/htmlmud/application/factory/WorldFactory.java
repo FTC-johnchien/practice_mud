@@ -6,19 +6,20 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
+import com.example.htmlmud.application.service.MobService;
 import com.example.htmlmud.application.service.RoomService;
 import com.example.htmlmud.domain.actor.impl.LivingActor;
 import com.example.htmlmud.domain.actor.impl.MobActor;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
-import com.example.htmlmud.domain.context.GameServices;
+import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.ItemType;
+import com.example.htmlmud.domain.model.LivingState;
 import com.example.htmlmud.domain.model.LootEntry;
 import com.example.htmlmud.domain.model.map.ItemTemplate;
 import com.example.htmlmud.domain.model.map.MobTemplate;
-import com.example.htmlmud.domain.model.map.RoomTemplate;
-import com.example.htmlmud.domain.model.map.ZoneTemplate;
+import com.example.htmlmud.infra.mapper.MobMapper;
 import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,29 +31,20 @@ public class WorldFactory {
 
   private final TemplateRepository templateRepo;
 
-  private final ObjectProvider<RoomService> roomServiceProvider;
+  private final MobMapper mobMapper;
 
-  private final ObjectProvider<GameServices> gameServicesProvider;
+  private final MobService mobService;
+
+  private final ObjectProvider<RoomService> roomServiceProvider;
 
   /**
    * 建立房間 Actor
    */
   public RoomActor createRoom(String roomId) {
     log.info("createRoom roomId: {}", roomId);
-    RoomTemplate roomTpl = templateRepo.findRoom(roomId).orElse(null);
-    if (roomTpl == null) {
-      log.error("Create Room failed: RoomTemplate not found {}", roomId);
-      return null;
-    }
 
-    ZoneTemplate zoneTpl = templateRepo.findZone(roomTpl.zoneId()).orElse(null);
-    if (zoneTpl == null) {
-      log.error("Create Room failed: ZoneTemplate not found {}", roomTpl.zoneId());
-      return null;
-    }
-
-    // 這裡負責組裝：RoomActor 需要 Template + ZoneTemplate
-    RoomActor room = new RoomActor(roomTpl, zoneTpl, roomServiceProvider.getObject());
+    // 這裡負責組裝：RoomActor
+    RoomActor room = new RoomActor(roomId, roomServiceProvider.getObject());
     room.start();
     return room;
   }
@@ -66,12 +58,12 @@ public class WorldFactory {
     MobTemplate tpl = templateRepo.findMob(templateId).orElse(null);
     if (tpl == null) {
       log.error("MobTemplate ID not found: " + templateId);
-      return null;
+      throw new MudException("找不到這個怪物模板 MobTemplate ID: " + templateId);
     }
 
-    // 2. new Actor (State 自動生成)
-    // MobActor mob = new MobActor(tpl);
-    MobActor mob = new MobActor(tpl, gameServicesProvider.getObject());
+    // 2. new Actor
+    LivingState state = mobMapper.toLivingState(tpl);
+    MobActor mob = new MobActor(tpl, state, mobService);
 
     // 3. 這裡可以處理「菁英怪」或「隨機稱號」邏輯
     // if (Math.random() < 0.1) mob.setPrefix("狂暴的");

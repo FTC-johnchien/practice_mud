@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.example.htmlmud.domain.model.LivingState;
 import com.example.htmlmud.domain.model.PlayerRecord;
+import com.example.htmlmud.infra.mapper.PlayerMapper;
 import com.example.htmlmud.infra.persistence.entity.CharacterEntity;
 import com.example.htmlmud.infra.persistence.entity.UserEntity;
 import com.example.htmlmud.infra.persistence.repository.CharacterRepository;
@@ -28,12 +29,14 @@ public class AuthService {
   // 使用 BCrypt，Spring Security 內建，或者自己 new 一個
   private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-  private final PlayerService playerService;
-
+  private final PlayerMapper mapper; // 注入 MapStruct
 
   private final UserRepository userRepository;
 
   private final CharacterRepository playerRepository;
+
+  private final CharacterRepository characterRepository;
+
 
 
   public boolean exists(String username) {
@@ -91,7 +94,7 @@ public class AuthService {
     // -----------------------------------------------------------------------------
 
     // 取出角色 player 資料
-    return playerService.loadRecord(user.getId(), username);
+    return loadRecord(user.getId(), username);
   }
 
 
@@ -135,4 +138,19 @@ public class AuthService {
     return null;
   }
 
+
+  // private boolean verifyPassword(String username, String password) {
+  // String stored = userDb.get(username.toLowerCase());
+  // return stored != null && stored.equals(password);
+  // }
+
+  private PlayerRecord loadRecord(String uid, String username) {
+    // 1. DB -> Entity
+    CharacterEntity entity = characterRepository.findByUidAndName(uid, username)
+        .orElseThrow(() -> new IllegalArgumentException("角色不存在 uid:" + uid + ", name:" + username));
+
+    // 2. Entity -> Record (MapStruct 自動轉)
+    // 注意：這裡得到的 Record 內含的 State 是 Entity 裡解序列化出來的
+    return mapper.toRecord(entity);
+  }
 }

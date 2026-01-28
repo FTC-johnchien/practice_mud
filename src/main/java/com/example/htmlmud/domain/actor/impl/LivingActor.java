@@ -3,15 +3,14 @@ package com.example.htmlmud.domain.actor.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import com.example.htmlmud.application.service.LivingService;
 import com.example.htmlmud.domain.actor.core.VirtualActor;
-import com.example.htmlmud.domain.context.GameServices;
 import com.example.htmlmud.domain.model.EquipmentSlot;
 import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.ItemType;
 import com.example.htmlmud.domain.model.LivingState;
 import com.example.htmlmud.domain.model.map.ItemTemplate;
 import com.example.htmlmud.domain.model.vo.DamageSource;
-import com.example.htmlmud.domain.model.vo.Gender;
 import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.GameCommand;
 import lombok.Getter;
@@ -24,7 +23,7 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
     permits PlayerActor, MobActor {
 
   @Getter
-  protected GameServices services;
+  private LivingService services;
 
   @Getter
   protected String id;
@@ -48,7 +47,7 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
 
   protected DamageSource baseDamageSource;
 
-  public LivingActor(String id, String name, LivingState state, GameServices services) {
+  public LivingActor(String id, String name, LivingState state, LivingService services) {
     super(id);
     this.id = id;
     this.name = name;
@@ -140,19 +139,19 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
 
   // 被攻擊觸發戰鬥狀態
   protected void doOnAttacked(String attackerId) {
-    services.combatService().onAttacked(this, attackerId);
+    services.getCombatService().onAttacked(this, attackerId);
   }
 
   // 受傷處理
   protected void doOnDamage(int amount, LivingActor attacker) {
-    services.combatService().onDamage(amount, this, attacker);
+    services.getCombatService().onDamage(amount, this, attacker);
   }
 
   // 死亡處理
   protected void doDie(LivingActor killer) {
     // 標記狀態 (Mark State)：設為 Dead，停止接受新的傷害或治療。
     // 交代後事 (Cleanup & Notify)：取消心跳、製造屍體、通知房間。
-    services.combatService().onDie(this, killer);
+    services.getCombatService().onDie(this, killer);
     // 自我毀滅 (Terminate)：確認訊息發出後，才停止 VT。
     stop(); // 停止 Actor
   }
@@ -167,7 +166,9 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
       // log.info("{} 正在戰鬥，無法治療", name);
       return;
     }
-    reply(name + "回復了 " + amount + " 點 HP 目前 " + state.hp + " / " + state.maxHp);
+
+    reply(this.getState().gender.getYou() + "回復了 " + amount + " 點 HP 目前 " + state.hp + " / "
+        + state.maxHp);
     this.state.hp = Math.min(state.hp + amount, state.maxHp);
   }
 
@@ -301,7 +302,7 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
 
   // 攻擊邏輯(自動攻擊)
   protected void processAutoAttack(long now) {
-    services.combatService().processAutoAttack(this, now);
+    services.getCombatService().processAutoAttack(this, now);
   }
 
   protected void processRegen() {

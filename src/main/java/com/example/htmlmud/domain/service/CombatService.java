@@ -140,7 +140,7 @@ public class CombatService {
     String combatTemplate = "$N舉起" + weapon.name() + "，用盡全力" + weapon.verb() + "$n！\r\n";
     // String finalMsg = MessageFormatter.format(combatTemplate, source, target, receiver);
     if (dmgAmout == -1) {
-      combatTemplate += "卻被對方用武器招架！";
+      combatTemplate += "卻被$n用武器招架！";
       room.combatBroadcast(self, target, combatTemplate);
       // self.reply(MessageFormatter.format(combatTemplate, source, target, receiver););
       // room.broadcastToOthers(self.getId(), self.getName() + attackMsg);

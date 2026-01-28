@@ -9,10 +9,10 @@ import java.util.UUID;
 import org.slf4j.MDC;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+import com.example.htmlmud.application.service.PlayerService;
 import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.behavior.GuestBehavior;
 import com.example.htmlmud.domain.actor.behavior.PlayerBehavior;
-import com.example.htmlmud.domain.context.GameServices;
 import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.LivingState;
@@ -30,6 +30,9 @@ public final class PlayerActor extends LivingActor {
 
   @Getter
   private WebSocketSession session;
+
+  @Getter
+  private final PlayerService playerService;
 
   @Getter
   private final WorldManager manager;
@@ -61,21 +64,22 @@ public final class PlayerActor extends LivingActor {
 
 
   private PlayerActor(WebSocketSession session, String id, String name, LivingState state,
-      WorldManager worldManager, GameServices services) {
-    super(id, name, state, services);
+      WorldManager worldManager, PlayerService playerService) {
+    super(id, name, state, playerService.getLivingServiceProvider().getObject());
     this.session = session;
+    this.playerService = playerService;
     this.manager = worldManager;
   }
 
   // 工廠方法 初始設定為 GuestBehavior
   public static PlayerActor createGuest(WebSocketSession session, WorldManager worldManager,
-      GameServices gameServices) {
+      PlayerService playerService) {
     String name = "GUEST";
     String uuid = UUID.randomUUID().toString();
     String playerId = "p-" + uuid.substring(0, 8) + uuid.substring(9, 11);
     PlayerActor actor =
-        new PlayerActor(session, playerId, name, new LivingState(), worldManager, gameServices);
-    actor.become(new GuestBehavior(worldManager.getAuthService()));
+        new PlayerActor(session, playerId, name, new LivingState(), worldManager, playerService);
+    actor.become(new GuestBehavior(playerService.getAuthService()));
     return actor;
   }
 
@@ -150,8 +154,8 @@ public final class PlayerActor extends LivingActor {
   private void doSendText(WebSocketSession session, String msg) {
     if (session != null && session.isOpen()) {
       try {
-        String json =
-            services.objectMapper().writeValueAsString(Map.of("type", "TEXT", "content", msg));
+        String json = playerService.getObjectMapper()
+            .writeValueAsString(Map.of("type", "TEXT", "content", msg));
 
         // 這裡才是真正寫入 WebSocket 的地方
         // 因為是在 handleMessage 內執行，保證了 Thread-Safe
@@ -261,7 +265,7 @@ public final class PlayerActor extends LivingActor {
 
     // 3. 重發當前環境資訊
     this.doSendText(session, "\u001B[33m[系統] 連線已恢復。\u001B[0m");
-    this.services.commandDispatcher().dispatch(this, "look");
+    this.playerService.getCommandDispatcher().dispatch(this, "look");
   }
 
 
