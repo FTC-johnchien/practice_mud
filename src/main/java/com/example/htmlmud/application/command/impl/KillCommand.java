@@ -11,7 +11,7 @@ import com.example.htmlmud.domain.actor.impl.LivingActor;
 import com.example.htmlmud.domain.actor.impl.MobActor;
 import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
-import com.example.htmlmud.infra.util.MessageFormatter;
+import com.example.htmlmud.infra.util.MessageUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,6 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 @CommandAlias("k")
 @RequiredArgsConstructor
 public class KillCommand implements PlayerCommand {
+
+  private final MessageUtil messageUtil;
 
   private final WorldManager worldManager;
 
@@ -64,8 +66,7 @@ public class KillCommand implements PlayerCommand {
     List<LivingActor> audiences = new ArrayList<>();
     audiences.addAll(room.getPlayers());
     for (LivingActor receiver : audiences) {
-      String finalMsg = MessageFormatter.format(messageTemplate, self, target, receiver);
-      receiver.reply(finalMsg);
+      messageUtil.send(messageTemplate, self, target, receiver);
     }
     // self.reply("你對 " + target.getTemplate().name() + " 大喊受死吧 一邊擺出了戰鬥架式！");
     room.broadcast(

@@ -82,7 +82,7 @@ public class GuestBehavior implements PlayerBehavior {
     String msg = "【註冊流程】\r\n只能包含英文字母（不分大小寫），不允許數字、空格或特殊符號。\r\n長度必須在 4 到 20 個字元之間。\r\n請輸入您想使用的帳號名稱:";
     try {
       // 告訴前端：切換輸入模式為帳號 (透過自定義協議，例如 JSON {type: "USER_MODE"})
-      String json = actor.getServices().getObjectMapper()
+      String json = actor.getService().getObjectMapper()
           .writeValueAsString(Map.of("type", "USER_MODE", "content", msg));
       session.sendMessage(new TextMessage(json));
 
@@ -134,7 +134,7 @@ public class GuestBehavior implements PlayerBehavior {
     String msg = "【註冊流程】\r\n只能包含英文字母與數字且長度必須在 6 到 32 個字元之間。\r\n請輸入密碼:";
     try {
       // 告訴前端：切換輸入模式為密碼 (透過自定義協議，例如 JSON {type: "PWD_MODE"})
-      String json = actor.getServices().getObjectMapper()
+      String json = actor.getService().getObjectMapper()
           .writeValueAsString(Map.of("type", "PWD_MODE", "content", msg));
       session.sendMessage(new TextMessage(json));
 
@@ -243,7 +243,7 @@ public class GuestBehavior implements PlayerBehavior {
     String msg = "請輸入密碼:";
     try {
       // 告訴前端：切換輸入模式為密碼 (透過自定義協議，例如 JSON {type: "PWD_MODE"})
-      String json = actor.getServices().getObjectMapper()
+      String json = actor.getService().getObjectMapper()
           .writeValueAsString(Map.of("type", "PWD_MODE", "content", msg));
       session.sendMessage(new TextMessage(json));
 
@@ -307,7 +307,7 @@ public class GuestBehavior implements PlayerBehavior {
         "【角色設定流程】\r\n只能包含英文字母（不分大小寫），不允許數字、空格或特殊符號。\r\n長度必須在 2 到 20 個字元之間。\r\n請輸入您想使用的角色名稱:";
     try {
       // 告訴前端：切換輸入模式為帳號 (透過自定義協議，例如 JSON {type: "USER_MODE"})
-      String json = actor.getServices().getObjectMapper()
+      String json = actor.getService().getObjectMapper()
           .writeValueAsString(Map.of("type", "USER_MODE", "content", msg));
       session.sendMessage(new TextMessage(json));
 

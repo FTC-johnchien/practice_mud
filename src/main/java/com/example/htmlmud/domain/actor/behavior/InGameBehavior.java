@@ -15,7 +15,7 @@ public class InGameBehavior implements PlayerBehavior {
     log.info("InGameBehavior onEnter()");
 
     // 進場時自動看一次房間
-    actor.getPlayerService().getCommandDispatcher().dispatch(actor, "look");
+    actor.getService().getCommandDispatcher().dispatch(actor, "look");
   }
 
   @Override
@@ -25,7 +25,7 @@ public class InGameBehavior implements PlayerBehavior {
     // 目前只處理文字輸入 (Input)
     if (cmd instanceof GameCommand.Input(var text)) {
       // 【關鍵】將文字交給 Dispatcher
-      actor.getPlayerService().getCommandDispatcher().dispatch(actor, text);
+      actor.getService().getCommandDispatcher().dispatch(actor, text);
     }
     // else if (cmd instanceof GameCommand.Logout) {
     // actor.reply("登出中...");

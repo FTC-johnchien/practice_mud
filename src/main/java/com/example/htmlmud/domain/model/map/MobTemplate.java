@@ -73,7 +73,6 @@ public record MobTemplate(
   public MobTemplate {
     if (lookDescription == null) {
       lookDescription = description;
-
     }
     if (gender == null) {
       gender = Gender.ANIMAL;
@@ -98,6 +97,12 @@ public record MobTemplate(
     }
     if (attackSpeed == 0) {
       attackSpeed = 2000;
+    }
+    if (equipment == null) {
+      equipment = Map.of();
+    }
+    if (loot == null) {
+      loot = List.of();
     }
   }
 }

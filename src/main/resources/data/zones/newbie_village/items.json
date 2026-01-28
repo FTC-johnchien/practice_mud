@@ -7,9 +7,9 @@
     "type": "WEAPON",
     "stats": {
       "slot": "MAIN_HAND",
-      "attackVerb": "揮砍",
-      "minDamage": 3,
-      "maxDamage": 6,
+      "attackVerb": "揮向",
+      "minDamage": 10,
+      "maxDamage": 15,
       "attackSpeed": 2000,
       "maxDurability": 50
     },
@@ -25,8 +25,8 @@
     "stats": {
       "slot": "MAIN_HAND",
       "attackVerb": "刺",
-      "minDamage": 7,
-      "maxDamage": 12,
+      "minDamage": 15,
+      "maxDamage": 25,
       "defense": 2,
       "attackSpeed": 2200,
       "hitRate": 10,

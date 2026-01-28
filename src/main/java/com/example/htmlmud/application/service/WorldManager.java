@@ -37,29 +37,19 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WorldManager {
 
-  @Getter
+  // @Getter
   private final CombatService combatService;
 
-  @Getter
+  // @Getter
   private final WorldFactory worldFactory; // 注入 Factory
 
-  @Getter
+  // @Getter
   private final PlayerPersistenceService playerPersistenceService;
 
   // private final WorldFactory worldFactory;
   private final ObjectMapper objectMapper;
+
   private final ResourcePatternResolver resourceResolver;
-
-  // 1. Static Data Cache: 存放唯讀的 Room 設定檔 (POJO/Record)
-  // 雖然伺服器通常會載入全地圖，但 Caffeine 可以幫我們管理記憶體上限
-  // private final Cache<String, RoomTemplate> staticRoomCache =
-  // Caffeine.newBuilder().maximumSize(10_000) // 假設地圖上限
-  // .expireAfterAccess(1, TimeUnit.HOURS) // 沒人用的房間資料可被釋放 (視需求)
-  // .recordStats().build();
-
-  // 怪物原型快取
-  // private final Cache<String, MobTemplate> staticMobCache =
-  // Caffeine.newBuilder().maximumSize(5_000).expireAfterAccess(1, TimeUnit.HOURS).build();
 
   private final TemplateRepository templateRepo;
 

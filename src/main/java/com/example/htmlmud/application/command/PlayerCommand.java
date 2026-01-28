@@ -10,7 +10,7 @@ public interface PlayerCommand {
   // 執行邏輯
   // actor: 誰發出的指令 (操作者 Context)
   // args: 指令參數 (例如 'look north' 的 'north')
-  void execute(PlayerActor actor, String args);
+  void execute(PlayerActor self, String args);
 
   // 描述 (給 help 指令用)
   default String getDescription() {

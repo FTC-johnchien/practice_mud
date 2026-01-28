@@ -1,0 +1,26 @@
+{
+  "id": "taichi_fist",
+  "name": "太極拳",
+  "type": "UNARMED",
+  "description": "武當派入門拳法，講究以柔克剛。",
+  "actions": [
+    {
+      "name": "野馬分鬃",
+      "verb": "雙掌一分，使出一招「野馬分鬃」，推向 $n 的 $l",
+      "damageMod": 1.2,
+      "cooldown": 0
+    },
+    {
+      "name": "白鶴亮翅",
+      "verb": "左腳虛點，雙手張開如「白鶴亮翅」，攻向 $n 的 $l",
+      "damageMod": 1.1,
+      "cooldown": 0
+    },
+    {
+      "name": "手揮琵琶",
+      "verb": "雙手回撤，似抱琵琶，一記「手揮琵琶」封住 $n 的退路",
+      "damageMod": 0.8,
+      "cooldown": 0
+    }
+  ]
+}

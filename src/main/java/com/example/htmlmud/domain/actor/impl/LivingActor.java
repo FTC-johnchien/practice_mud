@@ -23,7 +23,7 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
     permits PlayerActor, MobActor {
 
   @Getter
-  private LivingService services;
+  private LivingService livingService;
 
   @Getter
   protected String id;
@@ -47,12 +47,12 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
 
   protected DamageSource baseDamageSource;
 
-  public LivingActor(String id, String name, LivingState state, LivingService services) {
+  public LivingActor(String id, String name, LivingState state, LivingService livingService) {
     super(id);
     this.id = id;
     this.name = name;
     this.state = state;
-    this.services = services;
+    this.livingService = livingService;
   }
 
   @Override
@@ -139,21 +139,30 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
 
   // 被攻擊觸發戰鬥狀態
   protected void doOnAttacked(String attackerId) {
-    services.getCombatService().onAttacked(this, attackerId);
+    livingService.getCombatService().onAttacked(this, attackerId);
   }
 
   // 受傷處理
   protected void doOnDamage(int amount, LivingActor attacker) {
-    services.getCombatService().onDamage(amount, this, attacker);
+    livingService.getCombatService().onDamage(amount, this, attacker);
   }
 
   // 死亡處理
   protected void doDie(LivingActor killer) {
     // 標記狀態 (Mark State)：設為 Dead，停止接受新的傷害或治療。
     // 交代後事 (Cleanup & Notify)：取消心跳、製造屍體、通知房間。
-    services.getCombatService().onDie(this, killer);
+    livingService.getCombatService().onDie(this, killer);
     // 自我毀滅 (Terminate)：確認訊息發出後，才停止 VT。
-    stop(); // 停止 Actor
+
+    // 區分玩家跟mob
+    switch (this) {
+      case PlayerActor player -> {
+        // TODO 玩家死亡步驟
+      }
+      case MobActor mob -> {
+        stop(); // 停止 Actor
+      }
+    }
   }
 
   // 治療處理
@@ -179,43 +188,18 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
    * @return 成功回傳 true
    */
   protected boolean doEquip(GameItem item, CompletableFuture<String> future) {
-    // 1. 取得 ItemTemplate (需要依賴 Service 或是 Item 本身帶有 slot 資訊)
-    // 假設 GameItem 已經從 Template 複製了 slot 資訊，或者這裡去查 Template
-    ItemTemplate tpl = item.getTemplate();
-    if (tpl.type() != ItemType.WEAPON && tpl.type() != ItemType.SHIELD
-        && tpl.type() != ItemType.ARMOR && tpl.type() != ItemType.ACCESSORY) {
-      future.complete(item.getDisplayName() + " 不是裝備");
+    boolean success = livingService.equip(this, item);
+    if (success) {
+      // 5. 重新計算數值
+      recalculateStats();
+      future.complete("你裝上 " + item.getDisplayName());
+      return true;
+    } else {
+      future.complete("裝備失敗");
       return false;
     }
-
-    EquipmentSlot slot = tpl.equipmentProp().slot();
-
-    // 2. 檢查該部位是否已經有裝備？如果有，先脫下來 (Swap)
-    if (state.equipment.containsKey(slot)) {
-      // GameItem oldItem = state.equipment.get(slot);
-      doUnequip(slot, new CompletableFuture<>()); // 先脫舊的
-      if (state.equipment.containsKey(slot)) {
-        future.complete("無法脫下 " + slot.getDisplayName() + "，或背包已滿");
-        return false;
-      }
-    }
-
-    // 3. 從背包移除該物品
-    // 注意：這裡假設 inventory 是 Mutable List
-    if (!inventory.remove(item)) {
-      future.complete(item.getDisplayName() + "不在背包裡");
-      return false; // 物品不在背包裡
-    }
-
-    // 4. 放入裝備欄
-    state.equipment.put(slot, item);
-
-    // 5. 重新計算數值
-    recalculateStats();
-
-    future.complete("你裝上 " + item.getDisplayName());
-    return true;
   }
+
 
   /**
    * 脫下裝備
@@ -302,7 +286,7 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
 
   // 攻擊邏輯(自動攻擊)
   protected void processAutoAttack(long now) {
-    services.getCombatService().processAutoAttack(this, now);
+    livingService.getCombatService().processAutoAttack(this, now);
   }
 
   protected void processRegen() {

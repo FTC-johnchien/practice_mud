@@ -22,7 +22,7 @@ import com.example.htmlmud.domain.model.map.ZoneTemplate;
 import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
 import com.example.htmlmud.infra.util.AnsiColor;
 import com.example.htmlmud.infra.util.ColorText;
-import com.example.htmlmud.infra.util.MessageFormatter;
+import com.example.htmlmud.infra.util.MessageUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class RoomService {
+
+  private final MessageUtil messageUtil;
 
   private final TemplateRepository templateRepo;
 
@@ -121,14 +123,8 @@ public class RoomService {
 
   public void doTryPickItem(RoomActor roomActor, String args, PlayerActor picker,
       CompletableFuture<GameItem> future) {
-    try {
-      GameItem item = tryPickItem(roomActor, args, picker);
-      future.complete(item);
-    } catch (Exception e) {
-      log.error("doTryPickItem error", e);
-      future.completeExceptionally(e);
-      // future.completeExceptionally(new MudException("你的背包太重了，撿不起來！"));
-    }
+    GameItem item = tryPickItem(roomActor, args, picker);
+    future.complete(item);
   }
 
   // 處理邏輯
@@ -183,8 +179,7 @@ public class RoomService {
 
     // 2. 對每個人發送「客製化」的訊息
     for (LivingActor receiver : audiences) {
-      String finalMsg = MessageFormatter.format(messageTemplate, source, target, receiver);
-      receiver.reply(finalMsg);
+      messageUtil.send(messageTemplate, source, target, receiver);
     }
   }
 

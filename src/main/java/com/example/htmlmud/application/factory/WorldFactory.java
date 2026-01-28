@@ -65,6 +65,19 @@ public class WorldFactory {
     LivingState state = mobMapper.toLivingState(tpl);
     MobActor mob = new MobActor(tpl, state, mobService);
 
+    log.info("{}", tpl.equipment());
+    // 處理裝備
+    for (var entry : tpl.equipment().entrySet()) {
+      GameItem item = createItem(entry.getValue());
+      if (item != null) {
+        mob.getInventory().add(item);
+        mob.getLivingService().equip(mob, item);
+
+      }
+    }
+
+
+
     // 3. 這裡可以處理「菁英怪」或「隨機稱號」邏輯
     // if (Math.random() < 0.1) mob.setPrefix("狂暴的");
 

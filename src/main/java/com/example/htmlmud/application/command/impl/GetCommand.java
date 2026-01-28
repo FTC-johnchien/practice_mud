@@ -29,10 +29,10 @@ public class GetCommand implements PlayerCommand {
   }
 
   @Override
-  public void execute(PlayerActor actor, String args) {
+  public void execute(PlayerActor self, String args) {
     // 基本檢查
     if (args.isEmpty()) {
-      actor.reply("你要撿什麼？");
+      self.getService().getMessageUtil().send("$N要撿什麼？", self);
       return;
     }
 
@@ -41,23 +41,31 @@ public class GetCommand implements PlayerCommand {
 
     // 2. 發送訊息給房間： "我要撿 'sword' (args)"
     // 注意：這裡我們還不知道房間到底有沒有劍，只傳字串
-    RoomActor room = worldManager.getRoomActor(actor.getCurrentRoomId());
-    room.tryPickItem(args, actor, future);
-    // room.send(new RoomMessage.TryPickItem(args, actor, future));
+    RoomActor room = worldManager.getRoomActor(self.getCurrentRoomId());
 
     // 3. 等待結果 (Virtual Thread 不會卡死)
     try {
+      room.tryPickItem(args, self, future);
       GameItem item = future.orTimeout(1, java.util.concurrent.TimeUnit.SECONDS).join();
       if (item != null) {
-        actor.getInventory().add(item);
-        actor.reply("你撿起了 " + item.getDisplayName());
+
+
+
+        // TODO 檢查背包是否已滿 或 荷重是否足夠
+
+
+
+        self.getInventory().add(item);
+        self.getService().getMessageUtil().send("$N撿起了 " + item.getDisplayName(), self);
       } else {
-        actor.reply("這裡沒有看到 '" + args + "'。");
+        self.reply("這裡沒有 '" + args + "'。");
       }
     } catch (Exception e) {
-      log.error("get error", e);
-      actor.reply("發生錯誤:");
+      log.error("GetCommand error", e);
+      self.reply("發生錯誤:");
     }
+
+
 
     // null actor.reply("這裡沒有看到 '" + args + "'。");
 

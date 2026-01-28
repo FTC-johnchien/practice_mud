@@ -1,0 +1,11 @@
+{
+  "id": "basic_fist",
+  "name": "基本拳腳",
+  "type": "UNARMED",
+  "actions": [
+    { "verb": "揮出一拳，擊向 $n 的 $l", "damageMod": 1.0 },
+    { "verb": "飛起一腳，踢向 $n 的 $l", "damageMod": 1.1 },
+    { "verb": "左手一晃，右手猛地擊向 $n 的 $l", "damageMod": 1.0 },
+    { "verb": "用頭部狠狠地撞向 $n", "damageMod": 0.9 }
+  ]
+}

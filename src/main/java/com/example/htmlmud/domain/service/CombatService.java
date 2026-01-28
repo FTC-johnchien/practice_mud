@@ -5,22 +5,22 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import org.aspectj.weaver.patterns.ConcreteCflowPointcut.Slot;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
+import com.example.htmlmud.application.command.parser.BodyPartSelector;
 import com.example.htmlmud.application.factory.WorldFactory;
 import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.LivingActor;
-import com.example.htmlmud.domain.actor.impl.MobActor;
-import com.example.htmlmud.domain.actor.impl.PlayerActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
 import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.EquipmentSlot;
 import com.example.htmlmud.domain.model.GameItem;
-import com.example.htmlmud.domain.model.ItemType;
 import com.example.htmlmud.domain.model.LivingState;
+import com.example.htmlmud.domain.model.SkillType;
+import com.example.htmlmud.domain.model.map.CombatAction;
 import com.example.htmlmud.domain.model.vo.DamageSource;
-import com.example.htmlmud.infra.util.MessageFormatter;
-import com.example.htmlmud.protocol.ActorMessage;
+import com.example.htmlmud.infra.util.MessageUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class CombatService {
 
+  private final MessageUtil messageUtil;
   private final ObjectProvider<WorldManager> worldManagerProvider;
   private final WorldFactory worldFactory;
 
@@ -51,8 +52,10 @@ public class CombatService {
       return -1; // -1 代表 Miss
     }
 
+    DamageSource weapon = attacker.getCurrentAttackSource();
+
     // 2. 傷害公式 (範例：攻擊力 - 防禦力，浮動 10%)
-    int damage = random(attState.minDamage, attState.maxDamage);
+    int damage = random(weapon.minDamage(), weapon.maxDamage());
     // log.info("attState.damage:{} defState.defense:{}", damage, defState.defense);
     int rawDmg = damage - defState.defense;
     if (rawDmg <= 0)
@@ -122,71 +125,77 @@ public class CombatService {
       return;
     }
 
-    // 取出 attacker 的 DamageSource
-    DamageSource weapon = self.getCurrentAttackSource();
+
 
     // 設定下一次攻擊時間 (攻速 2秒)
     self.getState().nextAttackTime = now + weapon.attackSpeed();
 
-    int dmgAmout = calculateDamage(self, target);
+    // 1. 決定攻擊類型 (空手 or 拿武器?)
+    SkillType attackType =
+        self.getState().equipment.get(EquipmentSlot.MAIN_HAND) == null ? SkillType.UNARMED
+            : SkillType.WEAPON;
+
+    // 2. 從 SkillManager 取得當前的一招 (包含描述與倍率)
+    CombatAction action = self.getSkills().getCombatAction(attackType);
+
+    // 3. 計算基礎傷害 取出 attacker 的 DamageSource
+    DamageSource weapon = self.getCurrentAttackSource();
+
+    int rawDmg = calculateDamage(self, target);
     // log.info("dmgAmout:{}", dmgAmout);
 
-    // dmgAmout = -1 代表 Miss
+    // 4. 套用招式倍率
+    int dmgAmout = (int) (rawDmg * action.damageMod());
 
-    // 閃躲 dodge
+    // 5. 格式化戰鬥訊息
+    // verb: "雙掌一分，使出一招「野馬分鬃」，推向 $n 的 $l"
+    String msg = action.verb().replace("$n", target.getName()).replace("$l",
+        BodyPartSelector.getRandomBodyPart());
 
-    // 招架 parry
+    // 6. 加上結果描述 (根據傷害高低)
+    // String resultDesc = getDamageResultDescription(dmgAmout);
+    // ex: "造成了皮肉傷" or "造成了 嚴重 的傷害！"
+
+    // 7. 廣播
+    // room.broadcast(self.getName() + " " + msg + "，" + resultDesc);
+
+    // 8. 扣血
+    // target.receiveDamage(dmgAmout);
+
+
+
+    // dmgAmout = -1 代表 Miss ?
+
+
+
+    // TODO 閃躲 dodge
+
+
+
     // template: $N舉起wepon，用盡全力揮向$n！
     String combatTemplate = "$N舉起" + weapon.name() + "，用盡全力" + weapon.verb() + "$n！\r\n";
-    // String finalMsg = MessageFormatter.format(combatTemplate, source, target, receiver);
-    if (dmgAmout == -1) {
+
+    // 訊息處理
+    List<LivingActor> audiences = new ArrayList<>();
+    audiences.addAll(room.getPlayers());
+
+    // 招架 parry
+    if (dmgAmout <= 0) {
       combatTemplate += "卻被$n用武器招架！";
-      room.combatBroadcast(self, target, combatTemplate);
-      // self.reply(MessageFormatter.format(combatTemplate, source, target, receiver););
-      // room.broadcastToOthers(self.getId(), self.getName() + attackMsg);
+      for (LivingActor receiver : audiences) {
+        messageUtil.send(combatTemplate, self, target, receiver);
+      }
       return;
     }
-
 
 
     // 將傷害送給 target
     target.onDamage(dmgAmout, self);
 
-
-    // 你 用 拳頭 攻擊 巨大的野鼠，造成 9 點傷害！
     combatTemplate += "造成 " + dmgAmout + " 點傷害！";
-    room.combatBroadcast(self, target, combatTemplate);
-    // String attackMsg =
-    // "用 " + weapon.name() + " " + weapon.verb() + target.getName() + "，造成 " + dmgAmout + " 點傷害！";
-
-    // 發送訊息給房間 (讓其他人看到噴血)
-    // self.reply("你" + attackMsg);
-    // room.broadcastToOthers(self.getId(), self.getName() + attackMsg);
-
-
-
-    // try {
-
-    // // 4. 應用傷害
-    // // target.onAttacked(attacker);
-
-    // // 5. 發送訊息給房間所有人
-    // // attacker.equip(null)
-    // String verb = "攻擊"; // 或是從 weapon.getVerb() 取得 "揮砍"
-    // String pattern = "%s 用 %s %s %s，造成 %d 點傷害！";
-    // String msg = pattern;
-    // msg = String.format(pattern, "你", "拳頭", verb, target.getName(), dmg);
-    // attacker.reply(msg);
-    // msg = String.format(pattern, attacker.getName(), "拳頭", verb, target.getName(), dmg);
-    // room.broadcastToOthers(attacker.getId(), msg);
-
-    // // return target;
-    // } catch (Exception e) {
-    // log.error("processAutoAttack", e);
-    // }
-
-    // stopCombat(attacker);
-    // return null;
+    for (LivingActor receiver : audiences) {
+      messageUtil.send(combatTemplate, self, target, receiver);
+    }
   }
 
   public void onDamage(int amount, LivingActor self, LivingActor attacker) {
@@ -226,8 +235,7 @@ public class CombatService {
     List<LivingActor> audiences = new ArrayList<>();
     audiences.addAll(room.getPlayers());
     for (LivingActor receiver : audiences) {
-      String finalMsg = MessageFormatter.format(messageTemplate, killer, self, receiver);
-      receiver.reply(finalMsg);
+      messageUtil.send(messageTemplate, killer, self, receiver);
     }
     // room.broadcast(killerId + " 殺死了 " + self.getName());
 

@@ -12,7 +12,7 @@ public record EquipmentProp(
 
     String name, // 武器名稱
 
-    String attackVer, // 攻擊動詞: "咬", "抓", "揮拳"
+    String attackVerb, // 攻擊動詞: "咬", "抓", "揮拳"
 
     int minDamage, // 最小傷害
 
@@ -38,7 +38,7 @@ public record EquipmentProp(
 ) {
 
   public DamageSource getDamageSource(String name) {
-    return new DamageSource(name, this.attackVer, this.minDamage, this.maxDamage, this.attackSpeed,
+    return new DamageSource(name, this.attackVerb, this.minDamage, this.maxDamage, this.attackSpeed,
         this.attackSpeed, this.maxDurability);
   }
 }

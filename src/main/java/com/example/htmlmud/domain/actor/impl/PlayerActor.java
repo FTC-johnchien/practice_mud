@@ -32,7 +32,7 @@ public final class PlayerActor extends LivingActor {
   private WebSocketSession session;
 
   @Getter
-  private final PlayerService playerService;
+  private final PlayerService service;
 
   @Getter
   private final WorldManager manager;
@@ -67,7 +67,7 @@ public final class PlayerActor extends LivingActor {
       WorldManager worldManager, PlayerService playerService) {
     super(id, name, state, playerService.getLivingServiceProvider().getObject());
     this.session = session;
-    this.playerService = playerService;
+    this.service = playerService;
     this.manager = worldManager;
   }
 
@@ -154,8 +154,8 @@ public final class PlayerActor extends LivingActor {
   private void doSendText(WebSocketSession session, String msg) {
     if (session != null && session.isOpen()) {
       try {
-        String json = playerService.getObjectMapper()
-            .writeValueAsString(Map.of("type", "TEXT", "content", msg));
+        String json =
+            service.getObjectMapper().writeValueAsString(Map.of("type", "TEXT", "content", msg));
 
         // 這裡才是真正寫入 WebSocket 的地方
         // 因為是在 handleMessage 內執行，保證了 Thread-Safe
@@ -168,7 +168,7 @@ public final class PlayerActor extends LivingActor {
 
   // 觸發存檔的輔助方法
   private void save() {
-    manager.getPlayerPersistenceService().saveAsync(this.toRecord());
+    service.getPlayerPersistenceService().saveAsync(this.toRecord());
   }
 
 
@@ -181,8 +181,7 @@ public final class PlayerActor extends LivingActor {
 
   @Override
   protected void doDie(LivingActor attacker) {
-    this.stop();
-    reply("你已經死亡！即將在重生點復活...");
+    service.getMessageUtil().send("$N已經死亡！即將在重生點復活...", this);
     super.doDie(attacker);
 
 
@@ -265,7 +264,7 @@ public final class PlayerActor extends LivingActor {
 
     // 3. 重發當前環境資訊
     this.doSendText(session, "\u001B[33m[系統] 連線已恢復。\u001B[0m");
-    this.playerService.getCommandDispatcher().dispatch(this, "look");
+    service.getCommandDispatcher().dispatch(this, "look");
   }
 
 

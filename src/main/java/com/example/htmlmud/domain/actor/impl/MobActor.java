@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class MobActor extends LivingActor {
 
-  private final MobService mobService;
+  private final MobService service;
 
   // 仇恨列表 (Key: 攻擊者 ID字串, Value: 仇恨值)
   // 因為 ID 已改為 UUID String，這裡的 Key 也同步調整為 String
@@ -41,7 +41,7 @@ public final class MobActor extends LivingActor {
     String mobId = "m-" + uuid.substring(0, 8) + uuid.substring(9, 11);
     super(mobId, template.name(), state, mobService.getLivingServiceProvider().getObject());
     this.template = template;
-    this.mobService = mobService;
+    this.service = mobService;
 
     this.baseDamageSource = new DamageSource(template.attackNoun(), template.attackVerb(),
         template.minDamage(), template.maxDamage(), template.attackSpeed(), template.hitRate(), -1);
