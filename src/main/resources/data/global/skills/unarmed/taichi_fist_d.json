@@ -1,0 +1,76 @@
+{
+  "id": "taichi_fist",
+  "name": "太極拳",
+  "description": "武當派鎮派絕學，講究以靜制動，以柔克剛。能有效化解敵人的攻勢並藉力反擊。",
+  "type": "ACTIVE",
+  "school": "WUDANG",
+  "tags": ["UNARMED", "INTERNAL", "COUNTER"],
+  "isHidden": false,
+
+  "requirements": {
+    "minLevel": 10,
+    "reqClass": ["TAOIST", "FIGHTER"],
+    "reqWeapon": [null],
+    "reqState": "STANDING",
+    "reqSkills": {
+      "taoism_force": 20
+    }
+  },
+
+  "costs": {
+    "mp": 20,
+    "stamina": 10,
+    "charge": 0
+  },
+
+  "timing": {
+    "castTime": 0,
+    "cooldown": 3000,
+    "gcd": 1500,
+    "interruptible": false
+  },
+
+  "targeting": {
+    "type": "SINGLE_ENEMY",
+    "range": 0,
+    "mustHaveTarget": true
+  },
+
+  "mechanics": {
+    "baseValue": 50,
+    "scaleStat": "INT",
+    "scaleFactor": 1.2,
+
+    "hitRateMod": 0.1,
+    "parryMod": 0.3,
+
+    "effects": [
+      {
+        "id": "slow_down",
+        "target": "ENEMY",
+        "chance": 0.4,
+        "duration": 6000,
+        "value": 20
+      },
+      {
+        "id": "taichi_shield",
+        "target": "SELF",
+        "chance": 1.0,
+        "duration": 3000,
+        "value": 50
+      }
+    ],
+
+    "comboStarter": true,
+    "comboTag": "TAICHI_OPEN"
+  },
+
+  "messages": {
+    "cast": "$N 雙手畫圓，使出一招「攬雀尾」，掌勁如泥沼般纏向 $n！",
+    "hit": "結果「砰」地一聲，$n 被這股綿柔的掌力擊中 $l，連退了好幾步！",
+    "crit": "【重擊】$N 看準破綻，一記「搬攔捶」重重轟在 $n 的胸口，$n 一口鮮血狂噴而出！",
+    "miss": "$n 見勢不妙，使出「千斤墜」穩住下盤，勉強避開了這一擊。",
+    "parried": "$n 識得厲害，變招急架，將 $N 的掌力卸在一旁。",
+    "counter": "$n 藉著 $N 的掌力順勢一推，反而讓 $N 失去了平衡！"
+  }
+}

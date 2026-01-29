@@ -1,0 +1,187 @@
+[
+  {
+    "id": "mob_claw",
+    "name": "銳利爪擊",
+    "description": "使用銳利的爪子進行撕裂攻擊。",
+    "type": "PASSIVE",
+    "school": "NATURAL",
+    "tags": ["UNARMED", "CLAW", "BEAST"],
+    "requirements": { "reqBodyPart": ["CLAW"] },
+    "costs": { "stamina": 1 },
+    "timing": { "castTime": 0, "cooldown": 0, "gcd": 1500 },
+    "mechanics": {
+      "baseValue": 10,
+      "scaleStat": "STR",
+      "scaleFactor": 1.0,
+      "hitRateMod": 0.05,
+      "effects": [
+         { "id": "bleed", "chance": 0.1, "duration": 5, "value": 5 }
+      ]
+    },
+    "messages": {
+      "cast": [
+        "$N 咆哮一聲，揮舞銳利的爪子抓向 $n 的 $l。",
+        "$N 伏低身子，猛然撲向 $n，雙爪狠狠撕扯。",
+        "$N 的利爪在空氣中劃出寒光，掃向 $n 的 $l。"
+      ],
+      "hit": "抓出了幾道深可見骨的血痕！",
+      "crit": "【撕裂】利爪深深嵌入肉裡，帶起了一大片血肉！",
+      "miss": "$n 靈巧地向後一跳，躲過了這致命的爪擊。",
+      "parried": "$n 舉起武器，擋住了 $N 的利爪，發出金鐵交鳴之聲。"
+    }
+  },
+
+
+
+  {
+    "id": "mob_bite",
+    "name": "兇猛撕咬",
+    "description": "張開血盆大口進行咬合攻擊。",
+    "type": "PASSIVE",
+    "school": "NATURAL",
+    "tags": ["UNARMED", "BITE", "BEAST"],
+    "requirements": { "reqBodyPart": ["FANG"] },
+    "costs": { "stamina": 1 },
+    "timing": { "castTime": 0, "cooldown": 0, "gcd": 2000 },
+    "mechanics": {
+      "baseValue": 15,
+      "scaleStat": "STR",
+      "scaleFactor": 1.1,
+      "critDamageMod": 1.5
+    },
+    "messages": {
+      "cast": [
+        "$N 張開血盆大口，露出鋒利的獠牙，惡狠狠地咬向 $n 的 $l。",
+        "$N 猛地探頭，試圖咬住 $n 的 $l。",
+        "$N 發出低沉的嘶吼，尖牙對準 $n 的喉嚨咬去。"
+      ],
+      "hit": "深深地咬了進去，鮮血順著獠牙流了下來。",
+      "crit": "【碎骨】這一口咬合力驚人，直接咬碎了 $n 的骨頭！",
+      "miss": "$n 縮身一閃，聽見獠牙在耳邊咬合的「喀嚓」聲。",
+      "parried": "$n 用手臂上的護甲硬塞進 $N 嘴裡，卡住了它的攻擊。"
+    }
+  },
+
+
+
+  {
+    "id": "mob_sting",
+    "name": "劇毒螫刺",
+    "description": "使用尾刺或毒針進行攻擊，附帶毒性。",
+    "type": "PASSIVE",
+    "school": "NATURAL",
+    "tags": ["UNARMED", "POISON", "INSECT"],
+    "requirements": { "reqBodyPart": ["TAIL", "STINGER"] },
+    "costs": { "stamina": 1 },
+    "timing": { "castTime": 0, "cooldown": 0, "gcd": 1500 },
+    "mechanics": {
+      "baseValue": 5,
+      "scaleStat": "DEX",
+      "scaleFactor": 0.5,
+      "effects": [
+         { "id": "poison", "chance": 0.4, "duration": 10, "value": 20 }
+      ]
+    },
+    "messages": {
+      "cast": [
+        "$N 翹起尾部的毒刺，迅雷不及掩耳地刺向 $n。",
+        "$N 振翅飛舞，尾針化作一道黑影襲向 $n 的 $l。",
+        "$N 悄無聲息地接近，試圖將毒液注入 $n 體內。"
+      ],
+      "hit": "毒針刺破了皮膚，傷口處迅速發黑腫脹。",
+      "crit": "【注毒】毒刺準確地刺入血管，大量的毒液被注入！",
+      "miss": "$n 聽風辨位，側身避開了這陰險的一刺。",
+      "parried": "$n 揮舞兵器，將 $N 的毒刺格擋開來。"
+    }
+  },
+
+
+
+  {
+    "id": "mob_smash",
+    "name": "重擊踐踏",
+    "description": "利用巨大的體型優勢進行碾壓攻擊。",
+    "type": "PASSIVE",
+    "school": "NATURAL",
+    "tags": ["UNARMED", "BLUNT", "GIANT"],
+    "requirements": { "reqSize": "LARGE" },
+    "costs": { "stamina": 5 },
+    "timing": { "castTime": 0, "cooldown": 0, "gcd": 2500 },
+    "mechanics": {
+      "baseValue": 30,
+      "scaleStat": "STR",
+      "scaleFactor": 1.5,
+      "hitRateMod": -0.2
+    },
+    "messages": {
+      "cast": [
+        "$N 高高舉起巨大的拳頭，像打樁機一樣砸向 $n。",
+        "$N 抬起巨腳，帶著泰山壓頂之勢踩向 $n。",
+        "$N 合握雙拳，對準 $n 的天靈蓋狠狠鎚下。"
+      ],
+      "hit": "發出沉悶的巨響，地面彷彿都震動了一下。",
+      "crit": "【粉碎】$n 像一隻蒼蠅般被拍扁在地上！",
+      "miss": "$n 連滾帶爬地逃出了攻擊範圍，身後的地面被砸出一個大坑。",
+      "parried": "$n 試圖招架，但力量懸殊，直接被震飛了出去。"
+    }
+  },
+
+
+
+  {
+    "id": "mob_elemental_touch",
+    "name": "元素觸碰",
+    "description": "身體由元素構成，接觸即造成魔法傷害。",
+    "type": "PASSIVE",
+    "school": "MAGIC",
+    "tags": ["UNARMED", "MAGIC", "ELEMENTAL"],
+    "costs": { "mp": 1 },
+    "timing": { "castTime": 0, "cooldown": 0, "gcd": 1500 },
+    "mechanics": {
+      "baseValue": 15,
+      "scaleStat": "INT",
+      "scaleFactor": 1.2,
+      "parryMod": -0.5
+    },
+    "messages": {
+      "cast": [
+        "$N 伸出由能量構成的觸手，捲向 $n 的 $l。",
+        "$N 虛無的身形穿過障礙，直接撞向 $n。",
+        "$N 身上光芒暴漲，發出一道衝擊波掃向 $n。"
+      ],
+      "hit": "造成了無視護甲的元素侵蝕傷害。",
+      "crit": "【吞噬】$N 的身體包裹住了 $n，發出滋滋的腐蝕聲！",
+      "miss": "$n 快速後退，避開了這團詭異的能量。",
+      "parried": "$n 揮劍斬去，卻像切入水中一樣毫不受力，反而差點被沾上。"
+    }
+  },
+
+
+
+  {
+    "id": "mob_undead_touch",
+    "name": "幽魂之觸",
+    "description": "帶有死亡氣息的攻擊，能汲取生者的活力。",
+    "type": "PASSIVE",
+    "school": "MAGIC",
+    "tags": ["UNARMED", "NECRO", "UNDEAD"],
+    "mechanics": {
+      "baseValue": 10,
+      "scaleStat": "INT",
+      "effects": [
+         { "id": "drain_life", "chance": 1.0, "value": 0.5 }
+      ]
+    },
+    "messages": {
+      "cast": [
+        "$N 伸出枯槁的鬼爪，抓向 $n 的魂魄。",
+        "$N 發出淒厲的尖嘯，化作一道黑煙撲向 $n。",
+        "$N 雙眼閃爍著鬼火，冰冷的手指拂向 $n 的 $l。"
+      ],
+      "hit": "讓 $n 感到一股來自靈魂深處的寒意。",
+      "crit": "【汲魂】$n 感覺生命力源源不絕地流失，臉色瞬間慘白！",
+      "miss": "$n 咬破舌尖噴出一口陽氣，逼退了 $N。",
+      "parried": "$N 的鬼爪穿透了武器，但被 $n 身上的護身符光芒擋住。"
+    }
+  }
+]

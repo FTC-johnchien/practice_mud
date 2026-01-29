@@ -1,0 +1,20 @@
+{
+  "id": "cloud_step",
+  "name": "梯雲縱",
+  "type": "PASSIVE",
+  "tags": ["DODGE", "WUDANG"],
+  "description": "武當派的絕頂輕功，注重身法輕靈，如行雲流水。",
+  "requirements": { "minLevel": 10, "reqStats": { "DEX": 20 } },
+  "mechanics": {
+    "dodgeMod": 0.15,
+    "moveSpeedMod": 0.2,
+    "staminaRegenMod": 0.1
+  },
+  "messages": {
+    "dodge": [
+      "$n 身形拔地而起，如一朵雲般飄到了 $N 身後。",
+      "$n 使出「梯雲縱」，左腳踩右腳，在空中不可思議地轉折，避開了這一擊。",
+      "$n 微微一笑，身形如煙霧般消散，讓 $N 的攻擊落了空。"
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "id": "mob_thick_skin",
+  "name": "厚實表皮",
+  "type": "PASSIVE",
+  "tags": ["PARRY", "NATURAL"],
+  "description": "依靠厚實的皮毛或甲殼來抵擋傷害。",
+  "mechanics": {
+    "parryMod": 0.05,
+    "damageReduce": 0.1,
+    "defenseMod": 10
+  },
+  "messages": {
+    "parried": [
+      "你的攻擊打在 $N 厚實的皮毛上，像是打在敗革上一樣。",
+      "$N 根本不閃避，用堅硬的部位硬接了這一擊，發出悶響。",
+      "你的武器滑開了，沒能刺穿 $N 的表皮。"
+    ]
+  }
+}

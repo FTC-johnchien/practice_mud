@@ -1,0 +1,29 @@
+{
+  "id": "basic_meditate",
+  "name": "基礎冥想",
+  "type": "CHANNEL",
+  "school": "COMMON",
+  "tags": ["KNOWLEDGE", "RECOVERY"],
+  "description": "放空思緒，讓精神力慢慢恢復。",
+  "requirements": {
+    "reqState": "SITTING",
+    "reqCombat": false
+  },
+  "costs": {
+
+  },
+  "timing": {
+    "channelTime": 10000,
+    "tickInterval": 2000
+  },
+  "mechanics": {
+    "mpRegen": 10,
+    "hpRegen": 0
+  },
+  "messages": {
+    "prepare": "$N 盤膝坐下，閉上雙眼，開始冥想。",
+    "tick": "你感覺精神稍微好了一些...",
+    "finish": "$N 緩緩睜開雙眼，看起來精神煥發。",
+    "interrupt": "$N 被打斷了冥想，皺著眉頭站了起來。"
+  }
+}

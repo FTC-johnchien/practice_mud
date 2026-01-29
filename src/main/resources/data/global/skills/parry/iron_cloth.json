@@ -1,0 +1,20 @@
+{
+  "id": "iron_cloth",
+  "name": "鐵布衫",
+  "type": "PASSIVE",
+  "tags": ["PARRY", "HARD_BODY"],
+  "description": "將氣勁灌注於皮膚表面，使其堅硬如鐵。",
+  "requirements": { "minLevel": 10, "reqStats": { "CON": 25 } },
+  "mechanics": {
+    "parryMod": 0.1,
+    "damageReduce": 0.1,
+    "defenseMod": 20
+  },
+  "messages": {
+    "parried": [
+      "$N 的攻擊打在 $n 身上，發出「鐺」的一聲金屬脆響！",
+      "$n 運起鐵布衫，不閃不避，竟硬生生震開了 $N 的兵器。",
+      "$n 全身泛起一層青氣，刀槍不入。"
+    ]
+  }
+}

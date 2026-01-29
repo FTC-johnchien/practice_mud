@@ -1,6 +1,7 @@
 package com.example.htmlmud.domain.model;
 
 import com.example.htmlmud.domain.model.vo.Gender;
+import com.example.htmlmud.infra.persistence.entity.SkillEntry;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.HashMap;
@@ -54,6 +55,9 @@ public class LivingState {
 
   // === 裝備欄位 ===
   public Map<EquipmentSlot, GameItem> equipment = new HashMap<>();
+
+  public Map<SkillCategory, SkillEntry> skills = new HashMap<>();
+
 
 
   // === 戰鬥狀態 ===

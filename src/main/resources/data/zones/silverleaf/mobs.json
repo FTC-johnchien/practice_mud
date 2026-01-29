@@ -1,0 +1,116 @@
+[
+
+  {
+    "id": "sl_mayor", "name": "老村長", "level": 10, "race": "HUMAN",
+    "description": "銀葉村的村長，看起來憂心忡忡。",
+    "flags": ["IMMOBILE", "QUEST_GIVER"],
+    "behavior": { "type": "GUARD", "chatTable": ["最近哥布林越來越猖狂了...", "你有看到我的徽章嗎？"], "chatChance": 0.1 }
+  },
+  {
+    "id": "sl_nurse", "name": "見習護士", "level": 5, "race": "HUMAN",
+    "description": "一位溫柔的護士，負責照顧傷患。",
+    "flags": ["IMMOBILE"],
+    "behavior": { "type": "HEALER" }
+  },
+  {
+    "id": "sl_blacksmith", "name": "鐵匠大叔", "level": 15, "race": "DWARF",
+    "description": "滿身肌肉的鐵匠，正在敲打著一塊燒紅的鐵。",
+    "flags": ["IMMOBILE"],
+    "equipment": { "MAIN_HAND": "rusty_sword" },
+    "interaction": { "isVendor": true, "vendorGoods": ["rusty_sword", "iron_sword", "iron_shield"] }
+  },
+  {
+    "id": "sl_merchant", "name": "雜貨商", "level": 5, "race": "HUMAN",
+    "interaction": { "isVendor": true, "vendorGoods": ["apple", "copper_ring"] }
+  },
+  {
+    "id": "sl_pharmacist", "name": "藥劑師", "level": 8, "race": "ELF",
+    "interaction": { "isVendor": true, "vendorGoods": ["healing_potion_s", "mana_water"] }
+  },
+  {
+    "id": "sl_villager", "name": "村民", "level": 1, "race": "HUMAN",
+    "description": "普通的村民，正在閒話家常。",
+    "behavior": { "type": "WANDER", "moveArea": "silverleaf_town" }
+  },
+  {
+    "id": "sl_dog", "name": "村口的小黃狗", "level": 1, "race": "BEAST",
+    "description": "一隻看起來很友善的小狗，對著你搖尾巴。",
+    "behavior": { "type": "WANDER" }
+  },
+
+
+  {
+    "id": "sewer_rat", "name": "下水道老鼠", "level": 1, "race": "BEAST",
+    "description": "一隻髒兮兮的大老鼠。",
+    "baseStats": { "str": 5, "dex": 10, "con": 5 },
+    "combat": { "naturalSkill": "mob_bite", "aggroRadius": 0, "isAggressive": false },
+    "lootTable": [ { "itemId": "rat_tail", "chance": 0.5, "min": 1, "max": 1 } ]
+  },
+  {
+    "id": "forest_wolf", "name": "森林野狼", "level": 4, "race": "BEAST",
+    "description": "眼神兇狠的野狼，嘴角流著口水。",
+    "baseStats": { "str": 15, "dex": 15, "con": 10 },
+    "combat": {
+      "naturalSkill": "mob_claw",
+      "aggroRadius": 1,
+      "isAggressive": true,
+      "enabledSkills": {
+        "DODGE": "mob_beast_dodge",
+        "PARRY": "mob_thick_skin",
+        "FORCE": "mob_wild_blood"
+      }
+    },
+    "lootTable": [ { "itemId": "wolf_pelt", "chance": 0.3 } ]
+  },
+  {
+    "id": "goblin_scout", "name": "哥布林斥候", "level": 3, "race": "GOBLIN",
+    "equipment": { "MAIN_HAND": "boss_dagger" },
+    "combat": { "aggroRadius": 1, "isAggressive": true, "assistRange": 1, "socialGroup": "GOBLIN" },
+    "lootTable": [ { "itemId": "copper_coin", "chance": 1.0, "min": 1, "max": 5 }, { "itemId": "goblin_ear", "chance": 1.0 } ]
+  },
+  {
+    "id": "goblin_warrior", "name": "哥布林戰士", "level": 6, "race": "GOBLIN",
+    "equipment": { "MAIN_HAND": "goblin_club", "BODY": "leather_vest" },
+    "combat": { "aggroRadius": 1, "isAggressive": true, "assistRange": 1, "socialGroup": "GOBLIN" },
+    "lootTable": [ { "itemId": "copper_coin", "chance": 1.0, "min": 5, "max": 15 } ]
+  },
+
+
+  {
+    "id": "goblin_king", "name": "哥布林王", "title": "殘暴的", "level": 10, "race": "GOBLIN",
+    "description": "體型比一般哥布林大上兩倍，手持巨大的狼牙棒，脖子上掛著一串耳朵。",
+    "rank": "BOSS",
+    "baseStats": { "str": 40, "dex": 20, "con": 50 },
+    "vitals": { "maxHp": 800 },
+    "combat": {
+      "aggroRadius": 2,
+      "isAggressive": true,
+      "naturalSkill": "mob_smash",
+      "enabledSkills": {
+        "DODGE": "mob_basic_dodge",
+        "PARRY": "mob_basic_parry",
+        "FORCE": "mob_wild_blood"
+      }
+    },
+    "flags": ["BOSS", "NO_STUN"],
+    "lootTable": [
+      { "itemId": "boss_dagger", "chance": 0.2 },
+      { "itemId": "silver_medallion", "chance": 1.0 },
+      { "itemId": "copper_coin", "chance": 1.0, "min": 50, "max": 100 }
+    ]
+  },
+  {
+    "id": "sl_guard",
+    "name": "銀葉村衛兵",
+    "level": 15,
+    "race": "HUMAN",
+    "equipment": { "MAIN_HAND": "iron_sword", "BODY": "chainmail_armor" },
+    "combat": {
+      "enabledSkills": {
+        "DODGE": "mob_basic_dodge",
+        "PARRY": "mob_basic_parry",
+        "FORCE": "mob_guard_training"
+      }
+    }
+  }
+]

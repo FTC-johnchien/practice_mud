@@ -1,0 +1,43 @@
+{
+  "id": "basic_throwing",
+  "name": "基礎暗器",
+  "type": "PASSIVE",
+  "school": "COMMON",
+  "tags": ["RANGED", "THROWING", "BASIC"],
+  "description": "簡單的投擲技巧，講究手腕的抖動與準頭。",
+  "requirements": {
+    "minLevel": 1,
+    "reqWeapon": ["THROWING", "DAGGER"]
+  },
+  "costs": {
+    "stamina": 5,
+    "ammo": 1
+  },
+  "timing": {
+    "castTime": 500,
+    "cooldown": 1000,
+    "gcd": 1500
+  },
+  "targeting": {
+    "type": "SINGLE_ENEMY",
+    "range": 0,
+    "lineOfSight": true
+  },
+  "mechanics": {
+    "baseValue": 8,
+    "scaleStat": "DEX",
+    "scaleFactor": 1.0,
+    "hitRateMod": 0.05
+  },
+  "messages": {
+    "cast": [
+      "$N 手腕一抖，一道寒光射向 $n。",
+      "$N 抓準空隙，猛地將手中的$w擲向 $n。",
+      "$N 大喝一聲：「看暗器！」，$w 脫手而出飛向 $n。"
+    ],
+    "hit": "準確地插在身上，顫動不已。",
+    "crit": "【貫穿】暗器直接沒入 $n 的體內，只剩下柄還露在外面！",
+    "miss": "$n 聽風辨位，偏頭躲過了這記暗器。",
+    "parried": "$n 用手中的兵器將暗器格飛。"
+  }
+}

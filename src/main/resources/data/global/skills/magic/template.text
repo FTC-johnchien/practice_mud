@@ -1,0 +1,141 @@
+{
+  // ==========================================
+  // 1. 基礎資訊 (Identity & Meta)
+  // ==========================================
+  "id": "fireball",              // 唯一識別碼
+  "name": "火球術",              // 顯示名稱
+  "description": "凝聚火焰元素，對單體造成大量傷害。",
+  "icon": "icons/fireball.png",  // (選填) 若未來有 Web/App 前端介面
+  "type": "ACTIVE",              // 類型: ACTIVE(主動), PASSIVE(被動), TOGGLE(開關型), CHANNEL(引導)
+  "school": "MAGIC",             // 派系: MAGIC, MARTIAL, DIVINE, NATURAL
+  "tags": ["FIRE", "RANGED"],    // 標籤: 用於計算抗性或加成 (例如: 火屬性傷害 +10%)
+  "isHidden": false,             // 是否為隱藏技能 (例如：怪物專屬技能)
+
+  // ==========================================
+  // 2. 施展條件 (Prerequisites)
+  // 檢查玩家是否「能」使用此招
+  // ==========================================
+  "requirements": {
+    "minLevel": 10,              // 最低等級
+    "reqClass": ["MAGE"],        // 職業限制
+    "reqGender": "ANY",          // 性別限制 (葵花寶典?)
+    "reqWeapon": ["STAFF", "WAND"], // 必須裝備特定武器 (null 代表不限)
+    "reqState": "STANDING",      // 姿態限制: STANDING, FLYING, SNEAKING (背刺需要潛行)
+    "reqEnvironment": "ANY",     // 環境限制: UNDERWATER (水下不能用火球), OUTDOORS
+    "reqSkills": {               // 前置技能
+      "basic_magic": 20          // 基本魔法需達 20 級
+    },
+    "reqItems": [                // 必須持有物品 (觸媒)
+      { "itemId": "sulfur", "amount": 1, "consume": true } // 消耗硫磺
+    ]
+  },
+
+  // ==========================================
+  // 3. 消耗與成本 (Costs)
+  // 施展時扣除的資源
+  // ==========================================
+  "costs": {
+    "mp": 50,                    // 固定扣魔
+    "mpPercent": 0.0,            // 百分比扣魔 (適合大招)
+    "stamina": 0,                // 體力/精力
+    "hp": 0,                     // 消耗血量 (如: 鮮血獻祭)
+    "hpPercent": 0.0,
+    "money": 0,                  // 消耗金錢 (如: 金錢鏢)
+    "charge": 0                  // 消耗集氣點數 (如: 戰士怒氣、盜賊連擊點)
+  },
+
+  // ==========================================
+  // 4. 時間與冷卻 (Timing & Cooldowns)
+  // 現代遊戲的節奏控制核心
+  // ==========================================
+  "timing": {
+    "castTime": 1500,            // 吟唱時間 (毫秒)。0 = 瞬發。吟唱中被打斷可能失敗。
+    "channelTime": 0,            // 引導持續時間 (毫秒)。如: 暴風雪持續 5 秒。
+    "cooldown": 5000,            // 自身冷卻時間 (CD)
+    "gcd": 1500,                 // 公共冷卻時間 (Global Cooldown)，避免瞬間發 10 招
+    "interruptible": true,       // 吟唱/引導是否可被暈眩打斷
+    "moveCancel": true           // 移動是否會中斷施法
+  },
+
+  // ==========================================
+  // 5. 目標與範圍 (Targeting)
+  // ==========================================
+  "targeting": {
+    "type": "SINGLE_ENEMY",      // 目標類型: SELF, SINGLE_ENEMY, SINGLE_ALLY, AREA_ENEMY, AREA_ALL
+    "range": 0,                  // 射程: 0=近戰, 1=同一房間, >1=遠程
+    "aoeRadius": 0,              // 範圍半徑 (若 type 為 AREA)
+    "maxTargets": 1,             // 最大影響人數 (AOE 上限)
+    "mustHaveTarget": true,      // 是否必須選中目標才能施放 (如: 治療術可對空施放補自己)
+    "lineOfSight": true          // 是否需要視線 (不能隔牆打)
+  },
+
+  // ==========================================
+  // 6. 效果與數值 (Mechanics & Values)
+  // 這是最複雜的部分，通常結合 Java 邏輯
+  // ==========================================
+  "mechanics": {
+    // A. 直接傷害/治療
+    "baseValue": 100,            // 基礎數值 (傷害或治療量)
+    "scaleStat": "INT",          // 加成屬性: STR, DEX, INT
+    "scaleFactor": 1.5,          // 加成倍率 (最終 = base + INT * 1.5)
+    "variance": 0.1,             // 浮動範圍 (+/- 10%)
+
+    // B. 命中與暴擊
+    "hitRateMod": 0.0,           // 額外命中率 (如: 必中技 +100.0)
+    "critRateMod": 0.05,         // 額外暴擊率 (+5%)
+    "critDamageMod": 1.5,        // 暴擊傷害倍率
+
+    // C. 仇恨值 (Aggro) - 坦補打機制必備
+    "threatMod": 1.0,            // 仇恨倍率 (坦克技能設為 3.0, 盜賊設為 0.5)
+
+    // D. 附加狀態 (Buffs/Debuffs)
+    "effects": [
+      {
+        "id": "burn_dot",        // 狀態 ID
+        "target": "ENEMY",       // 施加給誰 (SELF/ENEMY)
+        "chance": 0.5,           // 機率 (50% 機率燃燒)
+        "duration": 5000,        // 持續時間
+        "value": 10              // 參數 (如每秒扣 10 血)
+      },
+      {
+        "id": "speed_up",
+        "target": "SELF",
+        "chance": 1.0,
+        "duration": 10000,
+        "value": 20              // 參數 (加速 20%)
+      }
+    ],
+
+    // E. 連擊系統 (Combo)
+    "comboStarter": true,        // 是否為連擊起手式
+    "comboFinisher": false,      // 是否為終結技
+    "comboPointGen": 1           // 產生連擊點數
+  },
+
+  // ==========================================
+  // 7. 成長與學習 (Progression)
+  // ==========================================
+  "progression": {
+    "maxLevel": 100,             // 技能最大等級
+    "trainDifficulty": 1.0,      // 練習難度係數 (影響升級速度)
+    "teacherRequired": true,     // 是否需要導師才能升級
+    "levelUpBonus": {            // 升級後的成長幅度
+      "damage": 5,               // 每級 +5 傷害
+      "costMp": 1                // 每級 +1 耗魔
+    }
+  },
+
+  // ==========================================
+  // 8. 訊息描述 (Messages)
+  // 支援變數: $N(自己), $n(目標), $s(代名詞)
+  // ==========================================
+  "messages": {
+    "prepare": "$N 開始吟唱晦澀難懂的咒語...",           // 吟唱開始時
+    "cast": "$N 雙手一推，一顆巨大的火球呼嘯而出！",     // 施法成功時
+    "hit": "火球準確地擊中了 $n，造成了巨大傷害！",       // 命中時
+    "crit": "【暴擊】$n 被火球炸飛了出去，發出淒厲的慘叫！", // 暴擊時
+    "miss": "$n 靈巧地一閃，火球在身後爆炸了。",          // 未命中時
+    "parried": "$n 舉起武器，硬生生擋下了這記火球。",      // 被招架時
+    "interrupted": "$N 的施法被打斷了！"                 // 被打斷時
+  }
+}

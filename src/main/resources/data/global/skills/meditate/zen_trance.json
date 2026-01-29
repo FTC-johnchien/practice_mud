@@ -1,0 +1,31 @@
+{
+  "id": "zen_trance",
+  "name": "坐忘無我",
+  "type": "CHANNEL",
+  "school": "TAOIST",
+  "tags": ["KNOWLEDGE", "RECOVERY", "INTERNAL"],
+  "description": "心無雜念，物我兩忘，與天地靈氣合而為一。",
+  "requirements": {
+    "minLevel": 20,
+    "reqStats": { "INT": 30, "WIS": 20 },
+    "reqState": "SITTING",
+    "reqCombat": false
+  },
+  "timing": {
+    "channelTime": 20000,
+    "tickInterval": 2000
+  },
+  "mechanics": {
+    "mpRegen": 50,
+    "hpRegen": 20,
+    "effects": [
+      { "id": "vulnerable", "target": "SELF", "duration": 20000, "value": -50 }
+    ]
+  },
+  "messages": {
+    "prepare": "$N 雙手結印，五心朝天，進入了「坐忘無我」的境界。",
+    "tick": "一股清涼的氣流流遍你的全身...",
+    "finish": "$N 長吐一口濁氣，眼中有精光閃過。",
+    "interrupt": "$N 受到驚擾，氣血翻騰，差點走火入魔！"
+  }
+}

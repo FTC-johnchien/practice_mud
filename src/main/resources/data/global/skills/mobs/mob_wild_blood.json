@@ -1,0 +1,15 @@
+{
+  "id": "mob_wild_blood",
+  "name": "狂暴之血",
+  "type": "PASSIVE",
+  "tags": ["FORCE", "BEAST"],
+  "description": "受傷越重，攻擊越猛烈。",
+  "mechanics": {
+    "hpRegen": 10,
+    "damageBoost": 0.05,
+    "maxHpMod": 50
+  },
+  "messages": {
+    "combat_tick": "$N 的雙眼發紅，顯得更加狂暴了！"
+  }
+}

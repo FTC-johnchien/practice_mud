@@ -1,0 +1,138 @@
+[
+
+  {
+    "id": "sl_trainer_warrior",
+    "name": "鐵鬍子教頭",
+    "title": "衛兵隊長",
+    "level": 20,
+    "race": "DWARF",
+    "gender": "MALE",
+    "description": "他是銀葉村的民兵隊長，一臉濃密的鬍子，對訓練非常嚴格。",
+    "baseStats": { "str": 40, "dex": 20, "con": 40 },
+    "equipment": {
+      "MAIN_HAND": "iron_sword",
+      "BODY": "chainmail_armor"
+    },
+    "behavior": {
+      "type": "GUARD",
+      "chatTable": [
+        "鐵鬍子大吼：『腰馬合一！別像個軟腳蝦！』",
+        "鐵鬍子揮舞著手中的劍示範了一個格擋動作。",
+        "鐵鬍子說：『想學劍法？先去砍一百個木樁再來找我！』"
+      ],
+      "chatChance": 0.1
+    },
+    "interaction": {
+      "isTrainer": true,
+      "trainSkills": [
+        "basic_fist",
+        "basic_sword",
+        "basic_blade",
+        "basic_parry"
+      ]
+    },
+    "flags": ["IMMOBILE", "QUEST_GIVER"]
+  },
+
+
+  {
+    "id": "sl_trainer_taoist",
+    "name": "雲遊道人",
+    "title": "太極傳人",
+    "level": 25,
+    "race": "HUMAN",
+    "gender": "MALE",
+    "description": "一位身穿青色道袍的中年人，氣息悠長，看起來深不可測。",
+    "baseStats": { "str": 20, "dex": 40, "con": 20, "int": 30 },
+    "equipment": {
+      "BODY": "novice_robe"
+    },
+    "behavior": {
+      "type": "PASSIVE",
+      "chatTable": [
+        "雲遊道人閉目養神，彷彿與周圍的環境融為一體。",
+        "雲遊道人緩緩打了一套拳，動作慢得像蝸牛，卻帶著風雷之聲。",
+        "雲遊道人說：『以靜制動，後發先至，這就是太極的精隨。』"
+      ],
+      "chatChance": 0.05
+    },
+    "interaction": {
+      "isTrainer": true,
+      "trainSkills": [
+        "basic_breathing",
+        "basic_dodge",
+        "taichi",
+        "cloud_step"
+      ]
+    },
+    "flags": ["IMMOBILE"]
+  },
+
+
+  {
+    "id": "sl_trainer_mage",
+    "name": "奧菲莉亞",
+    "title": "圖書館理員",
+    "level": 15,
+    "race": "ELF",
+    "gender": "FEMALE",
+    "description": "她帶著一副厚重的眼鏡，手裡總是拿著一本看不懂的書。",
+    "baseStats": { "int": 50, "wis": 40 },
+    "equipment": {
+      "MAIN_HAND": "novice_wand",
+      "BODY": "apprentice_robe"
+    },
+    "behavior": {
+      "type": "PASSIVE",
+      "chatTable": [
+        "奧菲莉亞喃喃自語：『魔力的流動...係數不對...』",
+        "奧菲莉亞推了推眼鏡，疑惑地看著你。",
+        "奧菲莉亞說：『知識就是力量，但火球術也是力量。』"
+      ]
+    },
+    "interaction": {
+      "isTrainer": true,
+      "trainSkills": [
+        "basic_magic",
+        "basic_meditate",
+        "fireball"
+      ]
+    },
+    "flags": ["IMMOBILE"]
+  },
+
+
+  {
+    "id": "sl_trainer_doctor",
+    "name": "老傑克",
+    "title": "密醫",
+    "level": 12,
+    "race": "HUMAN",
+    "gender": "MALE",
+    "description": "雖然掛著醫生的牌子，但他玩弄手術刀的手法像個殺手。",
+    "baseStats": { "dex": 35, "int": 20 },
+    "equipment": {
+      "MAIN_HAND": "fruit_knife",
+      "BODY": "leather_vest"
+    },
+    "behavior": {
+      "type": "VENDOR",
+      "chatTable": [
+        "老傑克笑著說：『不想死的話，就學學怎麼包紮傷口。』",
+        "老傑克手中的刀片在指間飛快地旋轉。",
+        "老傑克說：『匕首要刺這裡，血才會流得快...噢，我是說手術要切這裡。』"
+      ]
+    },
+    "interaction": {
+      "isTrainer": true,
+      "isVendor": true,
+      "vendorGoods": ["healing_potion_s", "fruit_knife"],
+      "trainSkills": [
+        "basic_first_aid",
+        "basic_dagger",
+        "basic_throwing"
+      ]
+    },
+    "flags": ["IMMOBILE"]
+  }
+]

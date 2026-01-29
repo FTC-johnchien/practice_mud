@@ -1,0 +1,312 @@
+[
+  {
+    "id": "basic_fist",
+    "name": "基本拳腳",
+    "description": "流傳於市井之間的健身拳法，雖然招式粗淺，但也能強身健體，是用於搏擊的基礎。",
+    "type": "PASSIVE",
+    "school": "COMMON",
+    "tags": ["UNARMED", "BASIC"],
+    "isHidden": false,
+    "requirements": {
+      "minLevel": 1,
+      "reqClass": [],
+      "reqWeapon": [null],
+      "reqState": "ANY"
+    },
+    "costs": {
+      "mp": 0,
+      "stamina": 1,
+      "charge": 0
+    },
+    "timing": {
+      "castTime": 0,
+      "cooldown": 0,
+      "gcd": 1500,
+      "interruptible": false
+    },
+    "targeting": {
+      "type": "SINGLE_ENEMY",
+      "range": 0,
+      "mustHaveTarget": true
+    },
+    "mechanics": {
+      "baseValue": 10,
+      "scaleStat": "STR",
+      "scaleFactor": 1.0,
+      "hitRateMod": 0.0,
+      "parryMod": 0.0,
+      "effects": [],
+      "comboStarter": false,
+      "comboPointGen": 1
+    },
+    "messages": {
+      "cast": [
+        "$N 揮出一拳，擊向 $n 的 $l。",
+        "$N 飛起一腳，踢向 $n 的 $l。",
+        "$N 左手一晃，右手猛地擊向 $n 的 $l。",
+        "$N 用頭部狠狠地撞向 $n。"
+      ],
+      "hit": "造成了皮肉傷。",
+      "crit": "【重擊】$n 被這記悶拳打得眼冒金星！",
+      "miss": "$n 身子一側，躲過了這一擊。",
+      "parried": "$n 隨手一格，擋開了 $N 的攻擊。"
+    }
+  },
+
+
+
+  {
+    "id": "basic_sword",
+    "name": "基本劍法",
+    "description": "武林中常見的入門劍術，講究輕靈與準確。",
+    "type": "PASSIVE",
+    "school": "COMMON",
+    "tags": ["WEAPON", "SWORD", "BASIC"],
+    "requirements": {
+      "minLevel": 1,
+      "reqWeapon": ["SWORD"]
+    },
+    "costs": { "mp": 0, "stamina": 1 },
+    "timing": { "castTime": 0, "cooldown": 0, "gcd": 1500 },
+    "targeting": { "type": "SINGLE_ENEMY", "mustHaveTarget": true },
+    "mechanics": {
+      "baseValue": 10,
+      "scaleStat": "DEX",
+      "scaleFactor": 1.0,
+      "hitRateMod": 0.05,
+      "comboPointGen": 1
+    },
+    "messages": {
+      "cast": [
+        "$N 手腕一抖，手中$w化作一道劍光，刺向 $n 的 $l。",
+        "$N 向前踏出一步，手中$w由下而上「唰」地一聲挑向 $n。",
+        "$N 手中$w一轉，使出一招「順水推舟」，削向 $n 的 $l。",
+        "$N 劍尖顫動，挽出一個劍花，疾刺 $n 的 $l。"
+      ],
+      "hit": "造成了一道切口，鮮血直流。",
+      "crit": "【暴擊】這一劍刺了個通透，$n 痛得大叫一聲！",
+      "miss": "$n 縮身一退，劍鋒貼著鼻尖劃過，好險！",
+      "parried": "$n 豎起武器，將 $N 的劍招架開。"
+    }
+  },
+
+
+
+  {
+    "id": "basic_blade",
+    "name": "基本刀法",
+    "description": "大開大闔的刀法，以氣勢壓人，講究一力降十會。",
+    "type": "PASSIVE",
+    "school": "COMMON",
+    "tags": ["WEAPON", "BLADE", "BASIC"],
+    "requirements": {
+      "minLevel": 1,
+      "reqWeapon": ["BLADE", "SABER"]
+    },
+    "costs": { "mp": 0, "stamina": 2 },
+    "timing": { "castTime": 0, "cooldown": 0, "gcd": 1500 },
+    "targeting": { "type": "SINGLE_ENEMY", "mustHaveTarget": true },
+    "mechanics": {
+      "baseValue": 15,
+      "scaleStat": "STR",
+      "scaleFactor": 1.1,
+      "critDamageMod": 1.2,
+      "comboPointGen": 1
+    },
+    "messages": {
+      "cast": [
+        "$N 大喝一聲，雙手握住$w，力劈華山般對準 $n 當頭劈下！",
+        "$N 掄起手中的$w，帶起一股勁風，橫掃向 $n 的 $l。",
+        "$N 刀鋒一轉，由下而上反撩 $n 的 $l。",
+        "$N 跨步向前，手中$w如猛虎下山，狠狠砍向 $n。"
+      ],
+      "hit": "造成了深可見骨的傷口。",
+      "crit": "【重擊】這一刀勢大力沉，直接將 $n 劈飛了出去！",
+      "miss": "$n 就地一滾，狼狽地避開了這致命的一刀。",
+      "parried": "$n 咬牙舉起兵器，硬生生擋住了這一刀，震得手臂發麻。"
+    }
+  },
+
+
+
+  {
+    "id": "basic_dagger",
+    "name": "基本短兵",
+    "description": "險中求勝的近身搏擊術，專攻敵人要害。",
+    "type": "PASSIVE",
+    "school": "COMMON",
+    "tags": ["WEAPON", "DAGGER", "BASIC"],
+    "requirements": {
+      "minLevel": 1,
+      "reqWeapon": ["DAGGER"]
+    },
+    "costs": { "mp": 0, "stamina": 1 },
+    "timing": { "castTime": 0, "cooldown": 0, "gcd": 1000 },
+    "targeting": { "type": "SINGLE_ENEMY", "mustHaveTarget": true },
+    "mechanics": {
+      "baseValue": 5,
+      "scaleStat": "DEX",
+      "scaleFactor": 0.8,
+      "critRateMod": 0.1,
+      "comboPointGen": 2
+    },
+    "messages": {
+      "cast": [
+        "$N 身形一晃欺近 $n 身邊，手中$w無聲無息地刺向 $l。",
+        "$N 反握$w，如毒蛇吐信般劃向 $n 的咽喉。",
+        "$N 手中$w寒光一閃，迅捷無比地捅向 $n 的 $l。",
+        "$N 利用身法繞到 $n 背後，試圖用$w背刺。"
+      ],
+      "hit": "精準地刺入要害，血花四濺。",
+      "crit": "【刺殺】$w深深沒入 $n 體內，$n 發出無聲的慘叫！",
+      "miss": "$n 警覺地回身一擋，逼退了 $N。",
+      "parried": "$n 反應極快，將 $N 的匕首格開。"
+    }
+  },
+
+
+
+  {
+    "id": "basic_polearm",
+    "name": "基本長兵",
+    "description": "包含槍、棍、戟等長兵器的基礎用法，一寸長一寸強。",
+    "type": "PASSIVE",
+    "school": "COMMON",
+    "tags": ["WEAPON", "POLEARM", "SPEAR", "STAFF"],
+    "requirements": {
+      "minLevel": 1,
+      "reqWeapon": ["SPEAR", "POLEARM", "STAFF"]
+    },
+    "costs": { "mp": 0, "stamina": 2 },
+    "timing": { "castTime": 0, "cooldown": 0, "gcd": 1500 },
+    "targeting": { "type": "SINGLE_ENEMY", "mustHaveTarget": true },
+    "mechanics": {
+      "baseValue": 12,
+      "scaleStat": "STR",
+      "scaleFactor": 1.05,
+      "parryMod": 0.05,
+      "comboPointGen": 1
+    },
+    "messages": {
+      "cast": [
+        "$N 手腕一震，手中$w抖出五朵槍花，罩向 $n 全身。",
+        "$N 雙手持$w中段，一記「橫掃千軍」掃向 $n 的下盤。",
+        "$N 大喝一聲，手中$w如蛟龍出海，直刺 $n 的心窩。",
+        "$N 將手中$w高高舉起，當頭一棒砸向 $n。"
+      ],
+      "hit": "在身上留下了幾個血窟窿。",
+      "crit": "【貫穿】這一擊勢如破竹，直接刺穿了 $n 的護甲！",
+      "miss": "$n 往後一躍，退出了攻擊範圍。",
+      "parried": "$n 側身閃過槍尖，用武器架住了長桿。"
+    }
+  },
+
+
+
+  {
+    "id": "basic_blunt",
+    "name": "基本錘法",
+    "description": "使用錘、斧等重型兵器的技巧，不管有沒有招式，砸中就對了。",
+    "type": "PASSIVE",
+    "school": "COMMON",
+    "tags": ["WEAPON", "HAMMER", "AXE", "BASIC"],
+    "requirements": {
+      "minLevel": 1,
+      "reqWeapon": ["HAMMER", "AXE", "MACE"]
+    },
+    "costs": { "mp": 0, "stamina": 3 },
+    "timing": { "castTime": 0, "cooldown": 0, "gcd": 2000 },
+    "targeting": { "type": "SINGLE_ENEMY", "mustHaveTarget": true },
+    "mechanics": {
+      "baseValue": 20,
+      "scaleStat": "STR",
+      "scaleFactor": 1.3,
+      "hitRateMod": -0.1,
+      "comboPointGen": 1
+    },
+    "messages": {
+      "cast": [
+        "$N 掄起沉重的$w，帶著呼嘯的風聲砸向 $n 的腦袋。",
+        "$N 雙臂肌肉隆起，揮動$w橫向轟擊 $n 的 $l。",
+        "$N 高高躍起，藉著下墜之勢，用$w狠狠鎚向 $n。",
+        "$N 旋轉身體帶動$w，像旋風一樣捲向 $n。"
+      ],
+      "hit": "發出令人牙酸的骨折聲。",
+      "crit": "【粉碎】$n 像斷線風箏一樣被轟飛出去，口中鮮血狂噴！",
+      "miss": "$w 砸在地上，將地面轟出一個大坑，可惜沒打中 $n。",
+      "parried": "$n 試圖招架，卻被這股巨力震得虎口出血，兵器差點脫手。"
+    }
+  },
+
+
+
+  {
+    "id": "basic_whip",
+    "name": "基本鞭法",
+    "description": "軟兵器的入門技巧，詭異莫測，令人防不勝防。",
+    "type": "PASSIVE",
+    "school": "COMMON",
+    "tags": ["WEAPON", "WHIP", "BASIC"],
+    "requirements": {
+      "minLevel": 1,
+      "reqWeapon": ["WHIP"]
+    },
+    "costs": { "mp": 0, "stamina": 1 },
+    "timing": { "castTime": 0, "cooldown": 0, "gcd": 1500 },
+    "targeting": { "type": "SINGLE_ENEMY", "mustHaveTarget": true },
+    "mechanics": {
+      "baseValue": 8,
+      "scaleStat": "DEX",
+      "scaleFactor": 0.9,
+      "hitRateMod": 0.1,
+      "comboPointGen": 1
+    },
+    "messages": {
+      "cast": [
+        "$N 手腕輕抖，$w如靈蛇出洞，捲向 $n 的頸部。",
+        "$N 手中$w發出「啪」的一聲脆響，抽向 $n 的 $l。",
+        "$N 手臂一揮，$w在空中劃出一個圓圈，罩向 $n。",
+        "$N 運勁於$w，直挺挺地向 $n 胸口點去。"
+      ],
+      "hit": "留下一道火辣辣的血痕。",
+      "crit": "【纏繞】$w緊緊纏住了 $n 的肢體，倒刺深深陷入皮肉！",
+      "miss": "$n 聽風辨位，低頭避過了這詭異的一鞭。",
+      "parried": "$n 揮舞兵器護住全身，將$w擋在身外。"
+    }
+  },
+
+
+
+  {
+    "id": "basic_magic_staff",
+    "name": "法杖敲擊",
+    "description": "法師在法力耗盡時的無奈之舉，用手中的法杖進行物理攻擊。",
+    "type": "PASSIVE",
+    "school": "COMMON",
+    "tags": ["WEAPON", "WAND", "BASIC"],
+    "requirements": {
+      "minLevel": 1,
+      "reqWeapon": ["WAND", "STAFF"]
+    },
+    "costs": { "mp": 0, "stamina": 1 },
+    "timing": { "castTime": 0, "cooldown": 0, "gcd": 1500 },
+    "targeting": { "type": "SINGLE_ENEMY", "mustHaveTarget": true },
+    "mechanics": {
+      "baseValue": 5,
+      "scaleStat": "STR",
+      "scaleFactor": 0.5,
+      "comboPointGen": 0
+    },
+    "messages": {
+      "cast": [
+        "$N 舉起手中的$w，笨拙地敲向 $n 的腦袋。",
+        "$N 揮舞著$w，試圖趕走逼近的 $n。",
+        "$N 用$w的底端捅向 $n 的 $l。"
+      ],
+      "hit": "造成了輕微的瘀青。",
+      "crit": "【幸運】正好敲在 $n 的腦門上，腫起了一個大包！",
+      "miss": "$n 輕蔑地一笑，隨意地閃過了這一擊。",
+      "parried": "$n 甚至懶得用武器，直接用手抓住了$w。"
+    }
+  }
+]

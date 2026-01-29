@@ -1,0 +1,18 @@
+{
+  "id": "basic_dodge",
+  "name": "基礎身法",
+  "type": "PASSIVE",
+  "tags": ["DODGE", "BASIC"],
+  "description": "一般人打架時的本能反應，左閃右躲。",
+  "mechanics": {
+    "dodgeMod": 0.0,
+    "moveSpeedMod": 0.0
+  },
+  "messages": {
+    "dodge": [
+      "$n 往旁邊一閃，躲開了 $N 的攻擊。",
+      "$n 急忙縮頭，險險避過這一擊。",
+      "$n 腳步踉蹌了一下，卻剛好躲過了 $N 的攻勢。"
+    ]
+  }
+}

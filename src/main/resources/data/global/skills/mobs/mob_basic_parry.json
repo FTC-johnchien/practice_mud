@@ -1,0 +1,17 @@
+{
+  "id": "mob_basic_parry",
+  "name": "戰鬥格擋",
+  "type": "PASSIVE",
+  "tags": ["PARRY", "MOB"],
+  "description": "利用手中的武器或盾牌進行防禦。",
+  "mechanics": {
+    "parryMod": 0.1
+  },
+  "messages": {
+    "parried": [
+      "$N 豎起手中的$w，擋住了你的攻勢。",
+      "$N 大喝一聲，將你的兵器架開。",
+      "$N 快速揮舞$w，封住了你的攻擊路線。"
+    ]
+  }
+}

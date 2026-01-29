@@ -1,0 +1,11 @@
+{
+  "id": "basic_magic",
+  "name": "基礎魔法",
+  "type": "PASSIVE",
+  "tags": ["MAGIC", "BASIC"],
+  "mechanics": {
+    "spellDamageMod": 1.0,
+    "castTimeMod": 1.0,
+    "failureRate": 0.1
+  }
+}

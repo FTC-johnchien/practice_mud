@@ -1,0 +1,237 @@
+這是一個非常關鍵的架構問題。
+
+直接回答您：**是的，您絕對需要 Manifest（清單/設定檔）。**
+
+雖然您已經有了 Room、Mob、Item、Skill 的詳細 JSON，但這些只是「散落的零件」。Manifest 就像是 **「組裝說明書」** 或 **「索引目錄」**，它告訴您的 Game Server：
+
+1. **檔案在哪裡？** (路徑對應)
+2. **載入順序是什麼？** (先載入物品 Template，才能載入怪物掉落表，最後載入房間生怪)
+3. **區域 (Zone) 的定義**：哪些房間屬於「雪亭鎮」？哪些屬於「迷宮」？
+
+現代 MUD 引擎通常採用 **「全域設定 (Global Manifest)」** 搭配 **「區域清單 (Zone Manifest)」** 的雙層架構。
+
+以下是為您整理的 **現代 MUD Manifest 設定參數大全**。
+
+---
+
+### 第一層：全域設定檔 (Global Configuration)
+
+通常命名為 `game-config.json` 或 `world-manifest.json`，位於專案根目錄。
+
+```json
+{
+  // ==========================================
+  // 1. 遊戲識別與版本 (Identity)
+  // ==========================================
+  "gameName": "Legend of JavaMUD",
+  "version": "1.0.0-beta",
+  "dataVersion": "20260201",     // 資料版本號 (用於檢查客戶端/快取一致性)
+  "motd": "歡迎來到 JavaMUD！本週維修時間為週三...", // 每日訊息
+
+  // ==========================================
+  // 2. 引擎核心設定 (Engine Kernel)
+  // [Java/Spring 實務參數]
+  // ==========================================
+  "engine": {
+    "tickRate": 100,             // 遊戲迴圈頻率 (毫秒)。100ms = 每秒 10 ticks (戰鬥判定用)
+    "saveInterval": 300000,      // 自動存檔間隔 (5分鐘)
+    "maxVirtualThreads": 10000,  // 虛擬執行緒池上限 (Spring Virtual Threads)
+    "hotReload": true,           // 是否開啟 JSON 熱重載 (開發期超好用！)
+    "strictMode": true           // 嚴格模式：若 JSON 有錯是否直接讓 Server 崩潰 (由 false 改為 true 建議開發期開啟)
+  },
+
+  // ==========================================
+  // 3. 全域資源路徑 (Global Resources)
+  // 定義「不屬於特定區域」的共用資料
+  // ==========================================
+  "resources": {
+    "rootPath": "data/",         // 資料根目錄
+    "skills": "global/skills/**/*.json", // 載入所有技能
+    "classes": "global/classes.json",    // 職業設定
+    "races": "global/races.json",        // 種族設定
+    "channels": "global/channels.json",  // 聊天頻道設定 (公頻/隊伍/私聊)
+    "scripts": "scripts/"                // Groovy/Lua 腳本目錄 (若有支援)
+  },
+
+  // ==========================================
+  // 4. 遊戲規則常數 (Game Rules)
+  // 讓企劃能調整遊戲平衡，不用改 Java Code
+  // ==========================================
+  "rules": {
+    "startRoomId": "snow_temple_gate",   // 新手出生點
+    "respawnRoomId": "underworld_gate",  // 死亡重生點
+    "maxLevel": 100,
+    "globalCooldown": 1500,              // 基礎 GCD (毫秒)
+    "combat": {
+      "defenseCap": 0.75,                // 防禦減傷上限 (75%)
+      "xpRate": 1.0,                     // 經驗值倍率 (活動時可改 2.0)
+      "dropRate": 1.0                    // 掉寶率
+    }
+  },
+
+  // ==========================================
+  // 5. 區域掛載 (Zone Mounting) [核心]
+  // 告訴 Server 要載入哪些地圖區域
+  // ==========================================
+  "zones": [
+    { "id": "snow_town", "path": "zones/snow/manifest.json", "enabled": true },
+    { "id": "dark_forest", "path": "zones/forest/manifest.json", "enabled": true },
+    { "id": "test_area", "path": "zones/test/manifest.json", "enabled": false } // 開發中區域可關閉
+  ]
+}
+
+```
+
+---
+
+### 第二層：區域清單 (Zone Manifest)
+
+每個區域（如雪亭鎮、火焰山）都有自己的清單，通常放在 `data/zones/snow/manifest.json`。這能讓多人協作開發
+（你寫雪亭，我寫火焰山）互不衝突。
+
+```json
+{
+  // ==========================================
+  // 1. 區域識別 (Zone Identity)
+  // ==========================================
+  "id": "snow_town",             // 區域 ID (對應 Room zoneId)
+  "name": "雪亭鎮",
+  "authors": ["Annihilator", "YourName"],
+  "minLevel": 1,                 // 建議等級 (顯示在地圖上)
+  "maxLevel": 10,
+  "isInstance": false,           // 是否為「副本」(每個隊伍獨立一個空間)
+
+  // ==========================================
+  // 2. 區域環境設定 (Zone Environment)
+  // 覆蓋該區域所有房間的預設值
+  // ==========================================
+  "environment": {
+    "weather": "SNOWY",          // 預設天氣型態
+    "canRecall": true,           // 能否使用回城卷軸
+    "canFly": false,             // 能否飛行
+    "pkMode": "SAFE",            // PK 模式: SAFE(安全區), DUEL(決鬥), FREE(自由PK)
+    "respawnRateMod": 1.0        // 區域重生速度修正
+  },
+
+  // ==========================================
+  // 3. 資源載入表 (Resource Loading) [核心]
+  // ==========================================
+  "assets": {
+    // 定義該區域專屬的 JSON 檔案
+    "rooms": ["rooms.json", "rooms_dungeon.json"], // 支援多個檔案
+    "mobs": ["mobs.json", "bosses.json"],
+    "items": ["items.json", "quest_items.json"],
+    "npcs": ["merchants.json"] // 如果您將商人獨立出來
+  },
+
+  // ==========================================
+  // 4. 重生與生態規則 (Spawning & Ecology)
+  // [進階] 現代 MUD 喜歡把「生怪邏輯」從 Room 抽離出來統一管理
+  // ==========================================
+  "spawners": [
+    // 範例：讓「巡邏衛兵」在整個鎮的街道隨機出現，而不是綁死在某個房間
+    {
+      "mobId": "snow_patrol",
+      "count": 5,
+      "rooms": ["snow_street_*"], // 支援通配符：所有街道
+      "respawnTime": 300
+    }
+  ],
+
+  // ==========================================
+  // 5. 觸發與腳本 (Triggers)
+  // ==========================================
+  "events": {
+    "onZoneLoad": "scripts/snow_init.groovy", // 區域載入時執行 (如：初始化慶典 NPC)
+    "onZoneReset": "scripts/snow_reset.groovy" // 區域重置時執行 (如：寶箱補滿)
+  }
+}
+
+```
+
+---
+
+### 詳細設計建議與考量
+
+我建議您在初期設計時，**重點考慮以下參數**：
+
+#### 1. `hotReload` (熱重載)
+
+* **強烈建議：加入**
+* **用途**：當您在開發「太極拳」調整傷害係數時，不用重啟 Server，只要存檔 JSON，遊戲內馬上生效。這對開發效率提升巨大。
+
+#### 2. `zones` (區域模組化)
+
+* **強烈建議：加入**
+* **用途**：不要把所有房間都寫在一個巨大的 `rooms.json` 裡。未來如果地圖變大，單檔 50MB 會很難維護。拆分成 `snow/manifest.json`, `desert/manifest.json` 是標準做法。
+
+#### 3. `isInstance` (副本旗標)
+
+* **建議：預留欄位**
+* **用途**：未來如果您想做「地下城副本（每隊進去看到的怪是獨立的）」，這需要 `WorldManager` 特別處理。如果一般地圖是單例 (Singleton)，副本則是每次有人進去就 `new Zone()`。
+
+#### 4. `startRoomId` / `respawnRoomId`
+
+* **強烈建議：加入**
+* **用途**：避免 Hard-code 在 Java 裡。當您想改變新手村位置時，改 JSON 就好。
+
+#### 5. `xpRate` / `dropRate` (全域倍率)
+
+* **建議：加入**
+* **用途**：這是營運神器。週六日自動變成 `xpRate: 2.0` (加倍活動)，玩家會很開心，而且實作成本極低（在計算經驗值公式時乘上去而已）。
+
+---
+
+### Java 實作策略：`WorldLoader`
+
+您需要一個 Service 專門負責讀取這些 Manifest。
+
+**`WorldLoader.java` (虛擬碼概念)**
+
+```java
+@Service
+public class WorldLoader {
+
+    public void loadWorld() {
+        // 1. 讀取全域設定
+        GameConfig config = loadJson("game-config.json", GameConfig.class);
+
+        // 2. 載入全域資源 (Skills, Items...)
+        skillService.loadAll(config.getResources().getSkills());
+
+        // 3. 依序載入各個 Zone
+        for (ZoneRef zoneRef : config.getZones()) {
+            if (zoneRef.isEnabled()) {
+                loadZone(zoneRef.getPath());
+            }
+        }
+    }
+
+    private void loadZone(String manifestPath) {
+        // 讀取區域清單
+        ZoneManifest manifest = loadJson(manifestPath, ZoneManifest.class);
+
+        // 順序很重要！Dependency Order:
+        // 1. Items (因為 Mob 穿裝備)
+        itemService.load(manifest.getAssets().getItems());
+
+        // 2. Mobs (因為 Room 要生怪)
+        mobService.load(manifest.getAssets().getMobs());
+
+        // 3. Rooms (最後載入，並執行 Spawn)
+        roomService.load(manifest.getAssets().getRooms());
+
+        log.info("Zone loaded: " + manifest.getName());
+    }
+}
+
+```
+
+### 總結
+
+**Manifest 是您遊戲的「骨架」。**
+Room, Mob, Item 只是「血肉」。
+沒有骨架，血肉就無法組織成一個完整的有機體。
+
+建議您至少先建立一個簡單的 `game-config.json` 和 `zone-manifest.json` 結構，這會讓您後續擴充地圖
+（例如要把 es2-big5.txt 的其他區域轉過來）時變得井井有條。

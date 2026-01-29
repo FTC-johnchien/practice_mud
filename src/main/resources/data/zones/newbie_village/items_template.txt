@@ -1,0 +1,249 @@
+這是一份集結了 **傳統 MUD (Diku/LP)** 與 **現代 MMORPG (WoW/Diablo)** 概念的 **Item (物品/道具) 設定參數大全**。
+
+物品系統是 RPG 中最複雜的子系統之一，因為它要涵蓋從「路邊石頭」到「傳說神劍」的所有東西。為了方便您篩選，我將參數分為 **八大模組**。
+
+---
+
+### 完整的 Item JSON Schema 參考
+
+```json
+{
+  // ==========================================
+  // 1. 基礎識別 (Identity) [核心]
+  // ==========================================
+  "id": "frostmourne",           // 唯一 Template ID
+  "name": "霜之哀傷",             // 顯示名稱
+  "aliases": ["sword", "blade", "frostmourne"], // 關鍵字 (用於 get sword)
+  "description": "這把劍散發著刺骨的寒氣，劍身上銘刻著發光的符文。",
+  "type": "WEAPON",              // 大分類: WEAPON, ARMOR, CONSUMABLE, MATERIAL, CONTAINER, QUEST, TRASH
+  "subType": "SWORD_2H",         // 子分類: SWORD_1H, BOW, PLATE, HERB
+
+  // [現代化] 品質與稀有度 (影響顏色顯示與掉落光柱)
+  "quality": "LEGENDARY",        // POOR(灰), COMMON(白), UNCOMMON(綠), RARE(藍), EPIC(紫), LEGENDARY(橘)
+  "itemLevel": 80,               // 物品等級 (iLvl): 用於計算強度權重的內部數值
+
+  // ==========================================
+  // 2. 物理與經濟 (Physics & Economy) [核心]
+  // ==========================================
+  "weight": 5.0,                 // 重量 (影響負重)
+  "price": 10000,                // 基準買入價 (賣出價通常打折)
+  "isStackable": false,          // 是否可堆疊
+  "maxStack": 1,                 // 最大堆疊數 (藥水通常 20 或 99)
+
+  // [現代化] 綁定機制 (控制經濟與裝備流通)
+  "bindType": "BIND_ON_PICKUP",  // NONE, BIND_ON_PICKUP(拾取綁定), BIND_ON_EQUIP(裝備綁定), ACCOUNT_BOUND(帳號綁定)
+
+  // ==========================================
+  // 3. 裝備參數 (Equipment Stats) [裝備類專用]
+  // ==========================================
+  "equipment": {
+    "slot": "MAIN_HAND",         // 裝備位置: HEAD, CHEST, LEGS, MAIN_HAND, OFF_HAND, ACCESSORY
+
+    // 武器專屬
+    "minDamage": 100,
+    "maxDamage": 150,
+    "attackSpeed": 3500,         // 攻速 (毫秒): 3.5秒揮一次
+    "range": 0,                  // 射程: 0=近戰, >0=遠程
+
+    // 防具專屬
+    "armor": 0,                  // 物理防禦 (AC)
+    "magicResist": 0,            // 魔法抗性
+    "blockRate": 0,              // 格擋率 (盾牌)
+
+    // [現代化] 耐久度系統
+    "maxDurability": 100,        // 最大耐久
+    "durabilityLossChance": 0.1  // 攻擊/被擊中時掉耐久的機率
+  },
+
+  // ==========================================
+  // 4. 屬性加成 (Stat Modifiers) [裝備/護身符]
+  // 穿上後給予玩家的被動加成
+  // ==========================================
+  "stats": {
+    "STR": 50,                   // 力量 +50
+    "VIT": 100,                  // 體力 +100
+    "CRIT_RATE": 0.05,           // 暴擊率 +5%
+    "MOVE_SPEED": 0.1            // 移動速度 +10%
+  },
+
+  // ==========================================
+  // 5. 需求條件 (Requirements) [核心]
+  // 誰可以用這個東西？
+  // ==========================================
+  "requirements": {
+    "minLevel": 60,              // 玩家等級需求
+    "reqClass": ["DEATH_KNIGHT"],// 職業限制
+    "reqRace": [],               // 種族限制
+    "reqStats": {                // 屬性門檻 (如: 力量需達 200 才能拿起重鎚)
+      "STR": 200
+    },
+    "reqSkill": {                // 技能需求 (如: 需學會「雙手劍專精」)
+      "two_handed_sword": 1
+    }
+  },
+
+  // ==========================================
+  // 6. 主動/觸發效果 (Spells & Procs) [進階]
+  // 這是物品最有趣的部分
+  // ==========================================
+  "effects": [
+    // 1. 消耗品效果 (右鍵使用)
+    {
+      "trigger": "ON_USE",       // 觸發時機: ON_USE, ON_HIT(攻擊時), ON_EQUIP(裝備時)
+      "spellId": "frost_nova",   // 觸發的技能/法術 ID
+      "consume": true,           // 是否消耗物品
+      "cooldown": 60000,         // 冷卻時間
+      "cooldownGroup": "POTION"  // 冷卻群組 (喝紅水會導致喝藍水也進 CD)
+    },
+    // 2. 武器特效 (攻擊時機率觸發 - Proc)
+    {
+      "trigger": "ON_HIT",
+      "spellId": "drain_soul",   // 吸魂
+      "chance": 0.05,            // 5% 機率
+      "target": "ENEMY"          // 施法目標
+    }
+  ],
+
+  // ==========================================
+  // 7. 容器與特殊功能 (Container & Misc) [選配]
+  // ==========================================
+  "container": {
+    "capacity": 10,              // 容量 (格數)
+    "maxWeight": 100.0,          // 承重上限
+    "isLocked": true,            // 預設是否鎖住
+    "keyId": "skeleton_key"      // 對應鑰匙 ID
+  },
+
+  // [現代化] 鑲嵌系統
+  "sockets": {
+    "count": 2,                  // 插槽數量
+    "type": ["RED", "BLUE"]      // 插槽顏色/類型
+  },
+
+  // 套裝系統
+  "set": {
+    "setId": "lich_king_plate",  // 套裝 ID
+    "setBonusId": "lk_bonus"     // 連結到套裝效果設定檔
+  },
+
+  // ==========================================
+  // 8. 標記與規則 (Flags) [核心]
+  // ==========================================
+  "flags": [
+    "NO_DROP",                   // 死後不掉落
+    "NO_TRADE",                  // 不可交易給玩家
+    "NO_SELL",                   // 不可賣給商店
+    "UNIQUE",                    // 唯一持有 (身上只能有一個)
+    "QUEST_ITEM",                // 任務道具 (通常不佔負重或特殊存放)
+    "INDESTRUCTIBLE"             // 不可破壞 (無耐久度限制)
+  ]
+}
+
+```
+
+---
+
+### 詳細設計建議與考量
+
+#### 1. ID vs Aliases (識別與輸入)
+
+* **ID**: 系統內部用的，如 `long_sword_01`。
+* **Aliases**: 玩家輸入用的。玩家看到 "一把鋒利的長劍"，他可能會輸入 `get sword` 或 `get long sword`。
+* **建議**: `aliases` 是 MUD 的靈魂，務必支援多個關鍵字。
+
+#### 2. Item Level (物品等級) vs Required Level (需求等級)
+
+這是現代 RPG 的重要區分：
+
+* **Req Level**: 門檻。60 級才能穿。
+* **Item Level (iLvl)**: 強度權重。
+* 同樣是 60 級能穿的劍，一把 iLvl 60 (普通)，一把 iLvl 75 (副本掉落)。
+* **設計用途**: 您的公式可以用 `iLvl` 自動生成屬性 (例如 iLvl 80 的劍自動有 100 攻擊力)，節省手填數值的時間。
+
+
+
+#### 3. Bind Type (綁定機制)
+
+傳統 MUD 通常物品隨便丟。但如果您想控制經濟，或設計「強力的副本獎勵」，綁定機制很重要。
+
+* **Bind on Pickup (拾取綁定)**: 撿起來就變成你的，不能賣給別人。這強迫玩家自己去打副本，而不是用買的。
+* **Bind on Equip (裝備綁定)**: 打到了可以賣，但一旦穿上就變成你的。
+
+#### 4. Cooldown Group (冷卻群組)
+
+這在 **藥水 (Consumable)** 設計上至關重要。
+
+* 如果沒有群組，玩家可以一秒鐘喝 10 瓶紅水，變成不死之身。
+* 設定 `group: "POTION"`, `cd: 60s`。玩家喝了紅水，60秒內也不能喝藍水（因為它們共享 CD）。
+
+#### 5. Durability (耐久度)
+
+* **建議**: 初期 **不要** 加入。
+* **原因**: 耐久度會大幅增加資料庫寫入量（每次攻擊都要更新 DB），且會把 `ItemTemplate` (靜態)
+與 `ItemInstance` (動態) 的界線搞得很複雜。除非您是生存遊戲，否則可以晚點再做。
+
+---
+
+### 實務上的 Java 類別結構
+
+為了處理「靜態設定」與「動態狀態」，我們需要拆成兩個類別。
+
+#### 1. `ItemTemplate.java` (靜態資料，單例)
+
+對應上面的 JSON，系統啟動時載入記憶體。
+
+```java
+public record ItemTemplate(
+    String id,
+    String name,
+    ItemType type,
+    int maxStack,
+    EquipmentConfig equipConfig, // 包含 damage, slot...
+    List<ItemEffect> effects,
+    // ...
+) {}
+
+```
+
+#### 2. `GameItem.java` (動態實體)
+
+這是放在玩家背包裡的物件。
+
+```java
+public class GameItem {
+    private final String uuid;           // 每個物品的唯一序號
+    private final ItemTemplate template; // 參照靜態資料
+
+    // --- 變動資料 ---
+    private int amount;                  // 堆疊數量 (Stack)
+    private int currentDurability;       // 當前耐久
+    private boolean isBound;             // 是否已綁定
+
+    // [進階] 隨機屬性 (如 Diablo 的詞綴)
+    // private List<StatModifier> randomStats;
+
+    // [進階] 鑲嵌物
+    // private List<GameItem> socketedGems;
+
+    public String getName() {
+        return template.name();
+    }
+
+    public int getWeight() {
+        return template.weight() * amount;
+    }
+}
+
+```
+
+### 總結
+
+建議您初期先實作：
+
+1. **Identity** (ID, Name, Aliases)
+2. **Physics** (Weight)
+3. **Equipment Stats** (Slot, Damage, Armor)
+4. **Effects** (OnUse - 為了做藥水)
+
+像 **Sockets (鑲嵌)**、**Sets (套裝)**、**Durability (耐久)** 這些可以等基礎系統穩固後再擴充。
+這份 JSON 結構已經預留了擴充空間。

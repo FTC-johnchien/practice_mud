@@ -4,9 +4,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Component;
+import com.example.htmlmud.domain.exception.MudException;
+import com.example.htmlmud.domain.model.SkillCategory;
 import com.example.htmlmud.domain.model.map.ItemTemplate;
 import com.example.htmlmud.domain.model.map.MobTemplate;
 import com.example.htmlmud.domain.model.map.RoomTemplate;
+import com.example.htmlmud.domain.model.map.SkillTemplate;
 import com.example.htmlmud.domain.model.map.ZoneTemplate;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +28,10 @@ public class TemplateRepository {
   private final Map<String, RoomTemplate> roomTemplates = new ConcurrentHashMap<>();
   private final Map<String, MobTemplate> mobTemplates = new ConcurrentHashMap<>();
   private final Map<String, ItemTemplate> itemTemplates = new ConcurrentHashMap<>();
+
+  private final Map<String, SkillTemplate> skillTemplates = new ConcurrentHashMap<>();
+
+
 
   // 註冊方法
   public void registerZone(ZoneTemplate tpl) {
@@ -60,6 +67,22 @@ public class TemplateRepository {
 
   public Optional<ItemTemplate> findItem(String id) {
     return Optional.ofNullable(itemTemplates.get(id));
+  }
+
+  public void registerSkill(SkillTemplate tpl) {
+    skillTemplates.put(tpl.id(), tpl);
+  }
+
+  public SkillTemplate getSkill(String id) {
+    SkillTemplate tpl = skillTemplates.get(id);
+    if (tpl == null) {
+      throw new MudException("Skill not found id:" + id);
+    }
+    return tpl;
+  }
+
+  public SkillTemplate getDefaultSkill(SkillCategory category) {
+    return skillTemplates.get(category.name());
   }
 
 

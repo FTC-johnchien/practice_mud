@@ -1,0 +1,859 @@
+[
+
+  { "id": "copper_coin", "name": "銅幣", "type": "CURRENCY", "description": "普通的流通貨幣。", "isStackable": true, "maxStack": 9999 },
+
+  {
+    "id": "rusty_sword", "name": "生鏽鐵劍", "type": "WEAPON", "subType": "SWORD",
+    "quality": "POOR", "price": 10, "weight": 3.0,
+    "equipment": { "slot": "MAIN_HAND", "minDamage": 3, "maxDamage": 6, "attackSpeed": 2000 },
+    "requirements": { "minLevel": 1 }
+  },
+
+  {
+    "id": "iron_sword", "name": "精鋼劍", "type": "WEAPON", "subType": "SWORD",
+    "quality": "COMMON", "price": 100, "weight": 4.0,
+    "equipment": { "slot": "MAIN_HAND", "minDamage": 8, "maxDamage": 15, "attackSpeed": 1800 },
+    "requirements": { "minLevel": 5 }
+  },
+
+  {
+    "id": "wooden_staff", "name": "新手法杖", "type": "WEAPON", "subType": "STAFF",
+    "quality": "COMMON", "price": 50, "weight": 2.0,
+    "equipment": { "slot": "MAIN_HAND", "minDamage": 2, "maxDamage": 4, "attackSpeed": 2500 },
+    "stats": { "INT": 2 },
+    "requirements": { "minLevel": 1 }
+  },
+
+  {
+    "id": "goblin_club", "name": "哥布林狼牙棒", "type": "WEAPON", "subType": "MACE",
+    "quality": "UNCOMMON", "price": 0, "weight": 5.0,
+    "equipment": { "slot": "MAIN_HAND", "minDamage": 10, "maxDamage": 20, "attackSpeed": 3000 },
+    "requirements": { "minLevel": 3 },
+    "flags": ["NO_SELL"]
+  },
+
+  {
+    "id": "boss_dagger", "name": "淬毒之牙", "type": "WEAPON", "subType": "DAGGER",
+    "quality": "RARE", "price": 500, "weight": 1.5,
+    "equipment": { "slot": "MAIN_HAND", "minDamage": 12, "maxDamage": 18, "attackSpeed": 1000 },
+    "stats": { "DEX": 5, "CRIT_RATE": 0.05 },
+    "requirements": { "minLevel": 8 }
+  },
+
+  {
+    "id": "cloth_shirt", "name": "粗布衣", "type": "ARMOR", "subType": "CLOTH",
+    "quality": "COMMON", "price": 20, "weight": 1.0,
+    "equipment": { "slot": "BODY", "armor": 2 }
+  },
+
+  {
+    "id": "leather_vest", "name": "皮背心", "type": "ARMOR", "subType": "LEATHER",
+    "quality": "COMMON", "price": 80, "weight": 2.5,
+    "equipment": { "slot": "BODY", "armor": 8 },
+    "requirements": { "minLevel": 3 }
+  },
+
+  {
+    "id": "iron_shield", "name": "鐵圓盾", "type": "ARMOR", "subType": "SHIELD",
+    "quality": "COMMON", "price": 120, "weight": 5.0,
+    "equipment": { "slot": "OFF_HAND", "armor": 5, "blockRate": 0.15 }
+  },
+
+  {
+    "id": "copper_ring", "name": "銅戒指", "type": "ARMOR", "subType": "ACCESSORY",
+    "quality": "COMMON", "price": 50, "weight": 0.1,
+    "equipment": { "slot": "FINGER" },
+    "stats": { "HP": 20 }
+  },
+
+  {
+    "id": "apple", "name": "紅蘋果", "type": "CONSUMABLE", "subType": "FOOD",
+    "price": 5, "weight": 0.2, "isStackable": true, "maxStack": 20,
+    "effects": [ { "trigger": "ON_USE", "type": "HEAL_HP", "value": 20, "cooldown": 5000 } ]
+  },
+
+  {
+    "id": "healing_potion_s", "name": "初級治療藥水", "type": "CONSUMABLE", "subType": "POTION",
+    "price": 50, "weight": 0.5, "isStackable": true, "maxStack": 20,
+    "effects": [ { "trigger": "ON_USE", "type": "HEAL_HP", "value": 100, "cooldown": 30000, "cooldownGroup": "POTION" } ]
+  },
+
+  {
+    "id": "mana_water", "name": "魔法泉水", "type": "CONSUMABLE", "subType": "POTION",
+    "price": 60, "weight": 0.5, "isStackable": true, "maxStack": 20,
+    "effects": [ { "trigger": "ON_USE", "type": "HEAL_MP", "value": 50, "cooldown": 30000, "cooldownGroup": "POTION" } ]
+  },
+
+  {
+    "id": "cellar_key", "name": "生鏽的鑰匙", "type": "KEY",
+    "description": "一把沾滿灰塵的舊鑰匙，似乎能開啟某個地下室。",
+    "quality": "UNCOMMON", "weight": 0.1, "flags": ["QUEST_ITEM", "UNIQUE"]
+  },
+
+  { "id": "rat_tail", "name": "老鼠尾巴", "type": "TRASH", "price": 1, "isStackable": true },
+
+  { "id": "wolf_pelt", "name": "狼皮", "type": "MATERIAL", "price": 15, "isStackable": true },
+
+  { "id": "goblin_ear", "name": "哥布林耳朵", "type": "QUEST", "price": 5, "isStackable": true },
+
+  { "id": "silver_medallion", "name": "銀葉徽章", "type": "TRASH", "quality": "RARE", "price": 200, "description": "曾經是村長的信物，現在被哥布林搶走了。" },
+
+  {
+    "id": "training_sword",
+    "name": "木製練習劍",
+    "description": "一把用堅硬橡木削成的練習用劍，雖然沒有開鋒，但打人還是很痛。",
+    "type": "WEAPON",
+    "subType": "SWORD",
+    "quality": "COMMON",
+    "price": 10,
+    "weight": 2.0,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "minDamage": 4,
+      "maxDamage": 8,
+      "attackSpeed": 2000,
+      "range": 0
+    },
+    "requirements": { "minLevel": 1 }
+  },
+  {
+    "id": "fine_steel_sword",
+    "name": "百煉精鋼劍",
+    "description": "千錘百鍊而成的利劍，劍身隱隱泛著寒光。",
+    "type": "WEAPON",
+    "subType": "SWORD",
+    "quality": "UNCOMMON",
+    "price": 500,
+    "weight": 4.5,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "minDamage": 15,
+      "maxDamage": 25,
+      "attackSpeed": 1800
+    },
+    "stats": { "DEX": 5 },
+    "requirements": { "minLevel": 10 }
+  },
+
+  {
+    "id": "kitchen_chopper",
+    "name": "厚重的菜刀",
+    "description": "一把油膩膩的菜刀，上面還沾著幾片菜葉，看起來很適合剁骨頭。",
+    "type": "WEAPON",
+    "subType": "BLADE",
+    "quality": "POOR",
+    "price": 15,
+    "weight": 3.0,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "minDamage": 6,
+      "maxDamage": 12,
+      "attackSpeed": 2200
+    },
+    "requirements": { "minLevel": 1 }
+  },
+  {
+    "id": "scimitar",
+    "name": "大食彎刀",
+    "description": "來自異域的彎刀，弧度優美，利於劈砍。",
+    "type": "WEAPON",
+    "subType": "SABER",
+    "quality": "COMMON",
+    "price": 300,
+    "weight": 5.0,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "minDamage": 18,
+      "maxDamage": 28,
+      "attackSpeed": 2000
+    },
+    "requirements": { "minLevel": 8 }
+  },
+
+  {
+    "id": "fruit_knife",
+    "name": "水果刀",
+    "description": "一把小巧的水果刀，削皮很方便，捅人就有點勉強。",
+    "type": "WEAPON",
+    "subType": "DAGGER",
+    "quality": "COMMON",
+    "price": 5,
+    "weight": 0.5,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "minDamage": 2,
+      "maxDamage": 5,
+      "attackSpeed": 1000
+    },
+    "requirements": { "minLevel": 1 }
+  },
+  {
+    "id": "poison_stiletto",
+    "name": "塗毒的細劍",
+    "description": "這把匕首的刃口呈現詭異的綠色，散發著腥臭味。",
+    "type": "WEAPON",
+    "subType": "DAGGER",
+    "quality": "RARE",
+    "price": 800,
+    "weight": 1.2,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "minDamage": 10,
+      "maxDamage": 16,
+      "attackSpeed": 900
+    },
+    "effects": [
+      { "trigger": "ON_HIT", "spellId": "poison_proc", "chance": 0.2, "target": "ENEMY" }
+    ],
+    "requirements": { "minLevel": 15 }
+  },
+
+  {
+    "id": "bamboo_spear",
+    "name": "削尖的竹槍",
+    "description": "將竹子的一端削尖並用火烤硬，是村民防衛野獸的簡易武器。",
+    "type": "WEAPON",
+    "subType": "SPEAR",
+    "quality": "POOR",
+    "price": 8,
+    "weight": 2.5,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "minDamage": 5,
+      "maxDamage": 10,
+      "attackSpeed": 2000
+    },
+    "requirements": { "minLevel": 1 }
+  },
+  {
+    "id": "iron_staff",
+    "name": "熟銅棍",
+    "description": "一根沉甸甸的銅棍，舞動起來呼呼作響。",
+    "type": "WEAPON",
+    "subType": "STAFF",
+    "quality": "UNCOMMON",
+    "price": 400,
+    "weight": 8.0,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "minDamage": 20,
+      "maxDamage": 30,
+      "attackSpeed": 2200
+    },
+    "requirements": { "minLevel": 10, "reqStats": { "STR": 20 } }
+  },
+
+  {
+    "id": "wood_axe",
+    "name": "伐木斧",
+    "description": "斧刃已經有些缺口，但依然沉重有力。",
+    "type": "WEAPON",
+    "subType": "AXE",
+    "quality": "COMMON",
+    "price": 30,
+    "weight": 6.0,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "minDamage": 8,
+      "maxDamage": 20,
+      "attackSpeed": 2500
+    },
+    "requirements": { "minLevel": 2 }
+  },
+  {
+    "id": "stone_maul",
+    "name": "巨石戰鎚",
+    "description": "將一塊巨石綁在粗木柄上，簡單粗暴的暴力美學。",
+    "type": "WEAPON",
+    "subType": "HAMMER",
+    "quality": "UNCOMMON",
+    "price": 250,
+    "weight": 15.0,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "minDamage": 25,
+      "maxDamage": 45,
+      "attackSpeed": 3500
+    },
+    "requirements": { "minLevel": 12, "reqStats": { "STR": 30 } }
+  },
+
+  {
+    "id": "leather_whip",
+    "name": "牛皮長鞭",
+    "description": "牧羊人趕羊用的鞭子，抽在身上火辣辣的疼。",
+    "type": "WEAPON",
+    "subType": "WHIP",
+    "quality": "COMMON",
+    "price": 40,
+    "weight": 1.0,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "minDamage": 4,
+      "maxDamage": 8,
+      "attackSpeed": 1800
+    },
+    "requirements": { "minLevel": 3 }
+  },
+  {
+    "id": "chain_whip",
+    "name": "九節鋼鞭",
+    "description": "由九節精鋼鑄成的金屬鞭，兼具軟兵的靈活與重兵的破壞力。",
+    "type": "WEAPON",
+    "subType": "WHIP",
+    "quality": "RARE",
+    "price": 600,
+    "weight": 4.0,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "minDamage": 15,
+      "maxDamage": 22,
+      "attackSpeed": 2000
+    },
+    "requirements": { "minLevel": 15, "reqStats": { "DEX": 20 } }
+  },
+
+  {
+    "id": "novice_wand",
+    "name": "學徒魔杖",
+    "description": "一根短小的木棍，頂端鑲嵌著一顆劣質的水晶。",
+    "type": "WEAPON",
+    "subType": "WAND",
+    "quality": "COMMON",
+    "price": 50,
+    "weight": 0.5,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "minDamage": 1,
+      "maxDamage": 3,
+      "attackSpeed": 2000
+    },
+    "stats": { "INT": 3, "MP": 20 },
+    "requirements": { "minLevel": 1 }
+  },
+
+
+
+
+
+
+
+
+  {
+    "id": "linen_shirt",
+    "name": "亞麻襯衫",
+    "description": "用粗糙亞麻布縫製的衣服，防禦力聊勝於無。",
+    "type": "ARMOR",
+    "subType": "CLOTH",
+    "quality": "POOR",
+    "price": 10,
+    "weight": 0.5,
+    "equipment": {
+      "slot": "BODY",
+      "armor": 2
+    },
+    "requirements": { "minLevel": 1 }
+  },
+  {
+    "id": "apprentice_robe",
+    "name": "學徒法袍",
+    "description": "雖然有些褪色，但依然能感覺到微弱的魔法波動。",
+    "type": "ARMOR",
+    "subType": "CLOTH",
+    "quality": "COMMON",
+    "price": 60,
+    "weight": 1.5,
+    "equipment": {
+      "slot": "BODY",
+      "armor": 5,
+      "magicResist": 5
+    },
+    "stats": {
+      "INT": 3,
+      "MP": 20
+    },
+    "requirements": { "minLevel": 5 }
+  },
+  {
+    "id": "silk_hat",
+    "name": "絲綢軟帽",
+    "type": "ARMOR",
+    "subType": "CLOTH",
+    "quality": "COMMON",
+    "price": 40,
+    "weight": 0.2,
+    "equipment": {
+      "slot": "HEAD",
+      "armor": 2
+    },
+    "stats": { "INT": 1 },
+    "requirements": { "minLevel": 3 }
+  },
+
+
+  {
+    "id": "cured_leather_vest",
+    "name": "硬皮背心",
+    "description": "經過特殊處理的皮革背心，能提供不錯的防護。",
+    "type": "ARMOR",
+    "subType": "LEATHER",
+    "quality": "COMMON",
+    "price": 80,
+    "weight": 3.0,
+    "equipment": {
+      "slot": "BODY",
+      "armor": 12
+    },
+    "stats": { "DEX": 2 },
+    "requirements": { "minLevel": 4 }
+  },
+  {
+    "id": "wolf_skin_boots",
+    "name": "狼皮長靴",
+    "description": "用森林野狼的皮縫製的靴子，穿起來很輕便。",
+    "type": "ARMOR",
+    "subType": "LEATHER",
+    "quality": "UNCOMMON",
+    "price": 120,
+    "weight": 1.5,
+    "equipment": {
+      "slot": "FEET",
+      "armor": 5
+    },
+    "stats": { "DEX": 2, "MOVE_SPEED": 0.05 },
+    "requirements": { "minLevel": 6 }
+  },
+
+
+  {
+    "id": "chainmail_armor",
+    "name": "鎖子甲",
+    "description": "由無數個小鐵環串聯而成，對劈砍有很好的防護效果。",
+    "type": "ARMOR",
+    "subType": "MAIL",
+    "quality": "COMMON",
+    "price": 200,
+    "weight": 10.0,
+    "equipment": {
+      "slot": "BODY",
+      "armor": 25,
+      "stealthPenalty": 0.3
+    },
+    "requirements": { "minLevel": 8, "reqStats": { "STR": 15 } }
+  },
+  {
+    "id": "iron_breastplate",
+    "name": "精鐵胸甲",
+    "description": "厚重的鐵製胸甲，胸口刻有銀葉村衛兵的標誌。",
+    "type": "ARMOR",
+    "subType": "PLATE",
+    "quality": "RARE",
+    "price": 500,
+    "weight": 20.0,
+    "equipment": {
+      "slot": "BODY",
+      "armor": 45,
+      "moveSpeedPenalty": 0.1,
+      "spellFailure": 0.5
+    },
+    "stats": { "STR": 5, "CON": 10 },
+    "requirements": { "minLevel": 10, "reqStats": { "STR": 25 } }
+  },
+  {
+    "id": "iron_helmet",
+    "name": "鐵頭盔",
+    "type": "ARMOR",
+    "subType": "PLATE",
+    "quality": "COMMON",
+    "price": 150,
+    "weight": 5.0,
+    "equipment": {
+      "slot": "HEAD",
+      "armor": 15
+    },
+    "requirements": { "minLevel": 8 }
+  },
+
+
+  {
+    "id": "wooden_buckler",
+    "name": "木圓盾",
+    "type": "ARMOR",
+    "subType": "SHIELD",
+    "quality": "POOR",
+    "price": 25,
+    "weight": 2.0,
+    "equipment": {
+      "slot": "OFF_HAND",
+      "armor": 5,
+      "blockRate": 0.1,
+      "blockValue": 10
+    },
+    "requirements": { "minLevel": 1 }
+  },
+  {
+    "id": "tower_shield",
+    "name": "塔盾",
+    "description": "幾乎能遮住全身的巨大盾牌。",
+    "type": "ARMOR",
+    "subType": "SHIELD",
+    "quality": "UNCOMMON",
+    "price": 400,
+    "weight": 15.0,
+    "equipment": {
+      "slot": "OFF_HAND",
+      "armor": 20,
+      "blockRate": 0.35,
+      "blockValue": 30,
+      "moveSpeedPenalty": 0.05
+    },
+    "requirements": { "minLevel": 10, "reqStats": { "STR": 30 } }
+  },
+
+
+  {
+    "id": "silver_ring",
+    "name": "銀戒指",
+    "type": "ARMOR",
+    "subType": "ACCESSORY",
+    "quality": "UNCOMMON",
+    "price": 200,
+    "weight": 0.1,
+    "equipment": { "slot": "FINGER" },
+    "stats": { "INT": 2, "MP": 10 },
+    "requirements": { "minLevel": 5 }
+  },
+  {
+    "id": "bear_tooth_necklace",
+    "name": "熊牙項鍊",
+    "type": "ARMOR",
+    "subType": "ACCESSORY",
+    "quality": "RARE",
+    "price": 350,
+    "weight": 0.2,
+    "equipment": { "slot": "NECK" },
+    "stats": { "STR": 3, "CRIT_RATE": 0.02 },
+    "requirements": { "minLevel": 8 }
+  },
+
+
+
+
+
+
+
+  {
+    "id": "novice_hood",
+    "name": "學徒兜帽",
+    "description": "簡單的布質兜帽，能稍微遮擋風雪。",
+    "type": "ARMOR",
+    "subType": "CLOTH",
+    "quality": "COMMON",
+    "price": 30,
+    "weight": 0.5,
+    "equipment": { "slot": "HEAD", "armor": 3 },
+    "stats": { "MP": 10 },
+    "requirements": { "minLevel": 1 }
+  },
+  {
+    "id": "steel_great_helm",
+    "name": "全罩式鋼盔",
+    "description": "只留下一條縫隙的重型頭盔，防護力極佳但視野受限。",
+    "type": "ARMOR",
+    "subType": "PLATE",
+    "quality": "RARE",
+    "price": 350,
+    "weight": 8.0,
+    "equipment": {
+      "slot": "HEAD",
+      "armor": 20,
+      "stealthPenalty": 0.5
+    },
+    "requirements": {
+      "minLevel": 10,
+      "reqStats": { "STR": 25 }
+    }
+  },
+
+
+  {
+    "id": "leather_leggings",
+    "name": "獵人皮護腿",
+    "type": "ARMOR",
+    "subType": "LEATHER",
+    "quality": "COMMON",
+    "price": 80,
+    "weight": 2.0,
+    "equipment": { "slot": "LEGS", "armor": 8 },
+    "stats": { "DEX": 3 },
+    "requirements": {
+      "minLevel": 5,
+      "reqStats": { "DEX": 10 }
+    }
+  },
+  {
+    "id": "heavy_iron_greaves",
+    "name": "重鐵護腿",
+    "type": "ARMOR",
+    "subType": "PLATE",
+    "quality": "UNCOMMON",
+    "price": 200,
+    "weight": 12.0,
+    "equipment": {
+      "slot": "LEGS",
+      "armor": 30,
+      "moveSpeedPenalty": 0.05
+    },
+    "requirements": { "minLevel": 8, "reqStats": { "STR": 20 } }
+  },
+
+  {
+    "id": "boots_of_haste",
+    "name": "疾行之靴",
+    "description": "靴子上刻有風之符文，感覺腳步變輕了。",
+    "type": "ARMOR",
+    "subType": "LEATHER",
+    "quality": "RARE",
+    "price": 500,
+    "weight": 1.0,
+    "equipment": { "slot": "FEET", "armor": 5 },
+    "stats": {
+      "MOVE_SPEED": 0.2,
+      "DEX": 5
+    },
+    "requirements": { "minLevel": 15 }
+  },
+  {
+    "id": "lead_boots",
+    "name": "鉛底潛水靴",
+    "description": "重得要命的靴子，通常是下水作業用的。",
+    "type": "ARMOR",
+    "subType": "PLATE",
+    "quality": "COMMON",
+    "price": 50,
+    "weight": 10.0,
+    "equipment": { "slot": "FEET", "armor": 15 },
+    "stats": {
+      "MOVE_SPEED": -0.3
+    },
+    "requirements": { "minLevel": 1, "reqStats": { "STR": 30 } }
+  },
+
+
+  {
+    "id": "thief_gloves",
+    "name": "盜賊手套",
+    "type": "ARMOR",
+    "subType": "LEATHER",
+    "quality": "UNCOMMON",
+    "price": 100,
+    "weight": 0.5,
+    "equipment": { "slot": "HANDS", "armor": 4 },
+    "stats": {
+      "CRIT_RATE": 0.05,
+      "DEX": 2
+    },
+    "requirements": { "minLevel": 5 }
+  },
+  {
+    "id": "gauntlets_of_ogre_power",
+    "name": "食人魔怪力手套",
+    "description": "戴上後你會覺得自己力大無窮。",
+    "type": "ARMOR",
+    "subType": "PLATE",
+    "quality": "EPIC",
+    "price": 1000,
+    "weight": 5.0,
+    "equipment": { "slot": "HANDS", "armor": 15 },
+    "stats": {
+      "STR": 10
+    },
+    "requirements": { "minLevel": 20 }
+  },
+
+
+  {
+    "id": "traveler_cloak",
+    "name": "旅人披風",
+    "type": "ARMOR",
+    "subType": "CLOTH",
+    "quality": "COMMON",
+    "price": 40,
+    "weight": 1.5,
+    "equipment": { "slot": "BACK", "armor": 3, "magicResist": 2 },
+    "requirements": { "minLevel": 1 }
+  },
+  {
+    "id": "cloak_of_shadows",
+    "name": "暗影披風",
+    "description": "彷彿由陰影編織而成，能幫助穿戴者融入黑暗。",
+    "type": "ARMOR",
+    "subType": "CLOTH",
+    "quality": "RARE",
+    "price": 600,
+    "weight": 1.0,
+    "equipment": { "slot": "BACK", "armor": 5, "stealthPenalty": -0.2 },
+    "stats": { "DEX": 5 },
+    "requirements": { "minLevel": 10, "reqStats": { "DEX": 15 } }
+  },
+
+
+  {
+    "id": "orb_of_fire",
+    "name": "火焰寶珠",
+    "description": "一顆散發著熱度的紅色水晶球，是法師的最愛。",
+    "type": "ARMOR",
+    "subType": "ACCESSORY",
+    "quality": "RARE",
+    "price": 800,
+    "weight": 2.0,
+    "equipment": {
+      "slot": "OFF_HAND",
+      "armor": 0
+    },
+    "stats": {
+      "INT": 8,
+      "MP": 50
+    },
+    "requirements": {
+      "minLevel": 10,
+      "reqStats": { "INT": 20 }
+    }
+  },
+
+
+  {
+    "id": "lucky_rabbit_foot",
+    "name": "幸運兔腳",
+    "type": "ARMOR",
+    "subType": "TRINKET",
+    "quality": "UNCOMMON",
+    "price": 100,
+    "weight": 0.1,
+    "equipment": { "slot": "TRINKET" },
+    "stats": { "CRIT_RATE": 0.02 },
+    "requirements": { "minLevel": 1 }
+  },
+  {
+    "id": "warrior_insignia",
+    "name": "戰士徽章",
+    "description": "公會頒發給英勇戰士的證明。",
+    "type": "ARMOR",
+    "subType": "TRINKET",
+    "quality": "RARE",
+    "price": 300,
+    "weight": 0.2,
+    "equipment": { "slot": "TRINKET" },
+    "stats": {
+      "HP": 100,
+      "STR": 5
+    },
+    "requirements": {
+      "minLevel": 10,
+      "reqClass": ["WARRIOR"]
+    }
+  },
+
+
+
+
+
+
+
+  {
+    "id": "claymore",
+    "name": "蘇格蘭巨劍",
+    "description": "一把長度超過身高的巨劍，需要雙手才能揮舞。",
+    "type": "WEAPON",
+    "subType": "SWORD_2H",
+    "quality": "UNCOMMON",
+    "price": 300,
+    "weight": 8.0,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "hands": 2,
+      "minDamage": 30,
+      "maxDamage": 50,
+      "attackSpeed": 3000
+    },
+    "requirements": { "minLevel": 10, "reqStats": { "STR": 25 } }
+  },
+
+
+  {
+    "id": "executioner_axe",
+    "name": "處決者戰斧",
+    "description": "刃口寬大的戰斧，看起來令人不寒而慄。",
+    "type": "WEAPON",
+    "subType": "AXE_2H",
+    "quality": "RARE",
+    "price": 600,
+    "weight": 12.0,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "hands": 2,
+      "minDamage": 40,
+      "maxDamage": 70,
+      "attackSpeed": 3500
+    },
+    "stats": { "STR": 10, "CRIT_RATE": 0.05 },
+    "requirements": { "minLevel": 15, "reqStats": { "STR": 35 } }
+  },
+
+
+  {
+    "id": "monk_staff",
+    "name": "少林齊眉棍",
+    "type": "WEAPON",
+    "subType": "STAFF",
+    "quality": "COMMON",
+    "price": 100,
+    "weight": 4.0,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "hands": 2,
+      "minDamage": 15,
+      "maxDamage": 25,
+      "attackSpeed": 2000
+    },
+    "requirements": { "minLevel": 5 }
+  },
+
+
+  {
+    "id": "shadow_blade",
+    "name": "暗影之刃",
+    "type": "WEAPON",
+    "subType": "DAGGER",
+    "quality": "RARE",
+    "price": 400,
+    "weight": 1.5,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "hands": 1,
+      "minDamage": 10,
+      "maxDamage": 20,
+      "attackSpeed": 1200
+    },
+    "requirements": { "minLevel": 10, "reqStats": { "DEX": 20 } }
+  },
+  {
+    "id": "parrying_dagger",
+    "name": "格擋匕首",
+    "description": "專門設計用來左手格擋的匕首。",
+    "type": "WEAPON",
+    "subType": "DAGGER",
+    "quality": "UNCOMMON",
+    "price": 200,
+    "weight": 1.0,
+    "equipment": {
+      "slot": "OFF_HAND",
+      "hands": 1,
+      "minDamage": 5,
+      "maxDamage": 10,
+      "blockRate": 0.1
+    },
+    "requirements": { "minLevel": 8 }
+  }
+
+]

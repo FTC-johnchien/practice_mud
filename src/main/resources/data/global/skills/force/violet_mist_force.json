@@ -1,0 +1,18 @@
+{
+  "id": "violet_mist_force",
+  "name": "紫霞神功",
+  "type": "PASSIVE",
+  "tags": ["FORCE", "INTERNAL"],
+  "description": "華山派上乘內功，發功時臉上紫氣隱現。",
+  "requirements": { "minLevel": 15, "reqStats": { "INT": 25 } },
+  "mechanics": {
+    "hpRegen": 20,
+    "mpRegen": 30,
+    "maxHpMod": 200,
+    "maxMpMod": 300,
+    "damageBoost": 0.1
+  },
+  "messages": {
+    "meditate": "$N 雙目微閉，臉上紫氣氤氳，周身散發出柔和的熱氣。"
+  }
+}

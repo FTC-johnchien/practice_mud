@@ -1,0 +1,18 @@
+{
+  "id": "mob_beast_dodge",
+  "name": "野獸本能",
+  "type": "PASSIVE",
+  "tags": ["DODGE", "BEAST"],
+  "description": "依靠野獸的直覺進行閃避。",
+  "mechanics": {
+    "dodgeMod": 0.1,
+    "moveSpeedMod": 0.1
+  },
+  "messages": {
+    "dodge": [
+      "$N 夾著尾巴一竄，從你的胯下鑽了過去。",
+      "$N 四肢一蹬，敏捷地跳向旁邊。",
+      "$N 伏低身子，讓你的攻擊落了空。"
+    ]
+  }
+}

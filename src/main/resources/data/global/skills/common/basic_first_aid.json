@@ -1,0 +1,10 @@
+{
+  "id": "basic_first_aid",
+  "name": "急救術",
+  "type": "PASSIVE",
+  "tags": ["MEDICAL", "BASIC"],
+  "mechanics": {
+    "healEffectMod": 1.0,
+    "bandageSpeed": 5000
+  }
+}

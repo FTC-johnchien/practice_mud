@@ -1,0 +1,16 @@
+{
+  "id": "basic_parry",
+  "name": "基礎招架",
+  "type": "PASSIVE",
+  "tags": ["PARRY", "BASIC"],
+  "description": "利用武器或手臂格擋攻擊的基本技巧。",
+  "mechanics": {
+    "parryMod": 0.05
+  },
+  "messages": {
+    "parried": [
+      "$n 舉起手中的$w，擋住了 $N 的攻擊。",
+      "$n 舉起手臂硬接了 $N 這一招。"
+    ]
+  }
+}

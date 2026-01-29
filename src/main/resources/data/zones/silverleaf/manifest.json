@@ -1,0 +1,16 @@
+{
+  "id": "silverleaf",
+  "name": "銀葉村",
+  "minLevel": 1,
+  "maxLevel": 10,
+  "environment": {
+    "weather": "SUNNY",
+    "canRecall": true,
+    "pkMode": "SAFE"
+  },
+  "assets": {
+    "rooms": ["rooms.json"],
+    "mobs": ["mobs.json"],
+    "items": ["items.json"]
+  }
+}

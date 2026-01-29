@@ -1,0 +1,135 @@
+[
+  {
+    "id": "sl_temple",
+    "name": "銀葉神殿",
+    "coordinates": { "x": 0, "y": 0, "z": 0 },
+    "description": {
+      "default": "這是一座古老的神殿，空氣中瀰漫著薰香的味道。這裡是冒險者受傷後尋求庇護的地方，也是靈魂歸來的場所。",
+      "night": "夜晚的神殿顯得格外莊嚴，幾根蠟燭在風中搖曳。"
+    },
+    "flags": ["SAFE_ZONE", "NO_PK"],
+    "exits": { "east": { "targetRoomId": "sl_square" } },
+    "spawns": [ { "mobId": "sl_nurse", "maxCount": 1, "respawnTime": 60 } ],
+    "features": { "altar": "祭壇上擺放著鮮花和貢品。" }
+  },
+  {
+    "id": "sl_square",
+    "name": "村莊廣場",
+    "coordinates": { "x": 1, "y": 0, "z": 0 },
+    "description": { "default": "這裡是銀葉村的中心，村民們喜歡聚集在這裡聊天。中央有一口古老的水井。" },
+    "exits": {
+      "west": { "targetRoomId": "sl_temple" },
+      "east": { "targetRoomId": "sl_shop_street" },
+      "north": { "targetRoomId": "sl_mayor_house" },
+      "south": { "targetRoomId": "sl_gate" }
+    },
+    "spawns": [
+      { "mobId": "sl_villager", "maxCount": 3, "respawnTime": 120 },
+      { "mobId": "sl_dog", "maxCount": 1, "respawnTime": 300 }
+    ],
+    "features": { "well": "這口井深不見底，井水清澈冰涼。" }
+  },
+  {
+    "id": "sl_mayor_house",
+    "name": "村長小屋",
+    "coordinates": { "x": 1, "y": 1, "z": 0 },
+    "description": { "default": "這是一間樸素的木屋，牆上掛著銀葉村的地圖。" },
+    "exits": { "south": { "targetRoomId": "sl_square" } },
+    "spawns": [ { "mobId": "sl_mayor", "maxCount": 1, "respawnTime": 60 } ],
+    "items": [ { "itemId": "cellar_key", "respawnTime": 600 } ]
+  },
+  {
+    "id": "sl_shop_street",
+    "name": "商店街",
+    "coordinates": { "x": 2, "y": 0, "z": 0 },
+    "description": { "default": "狹窄的街道兩旁開滿了各式各樣的店鋪，叫賣聲此起彼落。" },
+    "exits": {
+      "west": { "targetRoomId": "sl_square" },
+      "north": { "targetRoomId": "sl_general_store" },
+      "east": { "targetRoomId": "sl_smithy" },
+      "south": { "targetRoomId": "sl_pharmacy" }
+    },
+    "spawns": [ { "mobId": "sewer_rat", "maxCount": 2, "respawnTime": 180 } ]
+  },
+  {
+    "id": "sl_general_store",
+    "name": "雜貨鋪",
+    "coordinates": { "x": 2, "y": 1, "z": 0 },
+    "description": { "default": "貨架上堆滿了來自各地的雜貨，空氣中混雜著香料和蘋果的味道。" },
+    "exits": { "south": { "targetRoomId": "sl_shop_street" } },
+    "spawns": [ { "mobId": "sl_merchant", "maxCount": 1, "respawnTime": 60 } ]
+  },
+  {
+    "id": "sl_smithy",
+    "name": "打鐵舖",
+    "coordinates": { "x": 3, "y": 0, "z": 0 },
+    "description": { "default": "巨大的火爐正熊熊燃燒，敲打金屬的聲音震耳欲聾。" },
+    "exits": { "west": { "targetRoomId": "sl_shop_street" } },
+    "spawns": [ { "mobId": "sl_blacksmith", "maxCount": 1, "respawnTime": 60 } ]
+  },
+  {
+    "id": "sl_pharmacy",
+    "name": "藥草堂",
+    "coordinates": { "x": 2, "y": -1, "z": 0 },
+    "description": { "default": "這裡掛滿了乾燥的藥草，一位藥劑師正在專注地調配藥水。" },
+    "exits": { "north": { "targetRoomId": "sl_shop_street" } },
+    "spawns": [ { "mobId": "sl_pharmacist", "maxCount": 1, "respawnTime": 60 } ]
+  },
+  {
+    "id": "sl_gate",
+    "name": "南門",
+    "coordinates": { "x": 1, "y": -1, "z": 0 },
+    "description": { "default": "這裡是銀葉村的出口，南邊是一片幽暗的森林。衛兵告誡新手不要輕易出村。" },
+    "exits": {
+      "north": { "targetRoomId": "sl_square" },
+      "south": { "targetRoomId": "wild_forest_path" }
+    },
+    "environment": { "isOutdoors": true }
+  },
+  {
+    "id": "wild_forest_path",
+    "name": "森林小徑",
+    "coordinates": { "x": 1, "y": -2, "z": 0 },
+    "description": { "default": "光線在這裡變得很暗，周圍傳來野獸的低吼聲。" },
+    "exits": {
+      "north": { "targetRoomId": "sl_gate" },
+      "south": { "targetRoomId": "wild_goblin_camp" }
+    },
+    "environment": { "isOutdoors": true, "terrain": "FOREST" },
+    "spawns": [ { "mobId": "forest_wolf", "maxCount": 3, "respawnTime": 120 } ]
+  },
+  {
+    "id": "wild_goblin_camp",
+    "name": "哥布林營地",
+    "coordinates": { "x": 1, "y": -3, "z": 0 },
+    "description": { "default": "地上散落著吃剩的骨頭和破爛的武器，這裡顯然是哥布林的聚集地。東邊有一個看起來很危險的山洞。" },
+    "exits": {
+      "north": { "targetRoomId": "wild_forest_path" },
+      "east": { "targetRoomId": "wild_boss_lair" }
+    },
+    "environment": { "isOutdoors": true },
+    "spawns": [
+      { "mobId": "goblin_scout", "maxCount": 4, "respawnTime": 100 },
+      { "mobId": "goblin_warrior", "maxCount": 2, "respawnTime": 150 }
+    ]
+  },
+  {
+    "id": "wild_boss_lair",
+    "name": "首領巢穴",
+    "coordinates": { "x": 2, "y": -3, "z": 0 },
+    "description": { "default": "這是一個充滿腥臭味的洞穴，地面上堆滿了搶來的財寶。" },
+    "flags": ["NO_RECALL", "BOSS_ROOM"],
+    "exits": { "west": { "targetRoomId": "wild_goblin_camp" } },
+    "environment": { "lightLevel": 10 },
+    "spawns": [ { "mobId": "goblin_king", "maxCount": 1, "respawnTime": 600 } ]
+  },
+  {
+    "id": "sl_hidden_cellar",
+    "name": "廢棄的地下室",
+    "coordinates": { "x": 1, "y": 1, "z": -1 },
+    "description": { "default": "這是一個佈滿灰塵的地下室，角落裡放著一個發光的寶箱。" },
+    "flags": ["PRIVATE"],
+    "exits": { "up": { "targetRoomId": "sl_mayor_house" } },
+    "items": [ { "itemId": "copper_coin", "count": 100, "respawnTime": 3600 } ]
+  }
+]

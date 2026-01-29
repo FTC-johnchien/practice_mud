@@ -93,13 +93,17 @@ public final class PlayerActor extends LivingActor {
 
   @Override
   protected void handleMessage(ActorMessage msg) {
-    switch (msg) {
-      // 1. 先攔截我專屬的訊息
-      case ActorMessage.PlayerMessage playerMsg -> handlePlayerMessage(playerMsg);
+    try {
+      switch (msg) {
+        // 1. 先攔截我專屬的訊息
+        case ActorMessage.PlayerMessage playerMsg -> handlePlayerMessage(playerMsg);
 
-      // 2. 其他的 (LivingMessage 或 MobMessage?) 丟給父類別處理
-      // 父類別會處理 LivingMessage，並忽略 MobMessage
-      default -> super.handleMessage(msg);
+        // 2. 其他的 (LivingMessage 或 MobMessage?) 丟給父類別處理
+        // 父類別會處理 LivingMessage，並忽略 MobMessage
+        default -> super.handleMessage(msg);
+      }
+    } catch (Exception e) {
+      reply(e.getMessage());
     }
   }
 

@@ -1,0 +1,15 @@
+{
+  "id": "mob_guard_training",
+  "name": "衛兵訓練",
+  "type": "PASSIVE",
+  "tags": ["FORCE", "HUMAN"],
+  "description": "受過正規軍事訓練，體力與耐力較好。",
+  "mechanics": {
+    "maxHpMod": 100,
+    "maxStaminaMod": 50,
+    "hitRateMod": 0.1
+  },
+  "messages": {
+    "combat_tick": "$N 調整呼吸，穩住了架式。"
+  }
+}

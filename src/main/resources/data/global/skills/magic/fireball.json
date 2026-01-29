@@ -1,0 +1,107 @@
+{
+  "id": "fireball",
+  "name": "火球術",
+  "description": "凝聚火焰元素，對單體造成大量傷害。",
+  "icon": "icons/fireball.png",
+  "type": "ACTIVE",
+  "school": "MAGIC",
+  "tags": ["FIRE", "RANGED"],
+  "isHidden": false,
+
+  "requirements": {
+    "minLevel": 10,
+    "reqClass": ["MAGE"],
+    "reqGender": "ANY",
+    "reqWeapon": ["STAFF", "WAND"],
+    "reqState": "STANDING",
+    "reqEnvironment": "ANY",
+    "reqSkills": {
+      "basic_magic": 20
+    },
+    "reqItems": [
+      { "itemId": "sulfur", "amount": 1, "consume": true }
+    ]
+  },
+
+  "costs": {
+    "mp": 50,
+    "mpPercent": 0.0,
+    "stamina": 0,
+    "hp": 0,
+    "hpPercent": 0.0,
+    "money": 0,
+    "charge": 0
+  },
+
+  "timing": {
+    "castTime": 1500,
+    "channelTime": 0,
+    "cooldown": 5000,
+    "gcd": 1500,
+    "interruptible": true,
+    "moveCancel": true
+  },
+
+  "targeting": {
+    "type": "SINGLE_ENEMY",
+    "range": 0,
+    "aoeRadius": 0,
+    "maxTargets": 1,
+    "mustHaveTarget": true,
+    "lineOfSight": true
+  },
+
+  "mechanics": {
+    "baseValue": 100,
+    "scaleStat": "INT",
+    "scaleFactor": 1.5,
+    "variance": 0.1,
+
+    "hitRateMod": 0.0,
+    "critRateMod": 0.05,
+    "critDamageMod": 1.5,
+
+    "threatMod": 1.0,
+
+    "effects": [
+      {
+        "id": "burn_dot",
+        "target": "ENEMY",
+        "chance": 0.5,
+        "duration": 5000,
+        "value": 10
+      },
+      {
+        "id": "speed_up",
+        "target": "SELF",
+        "chance": 1.0,
+        "duration": 10000,
+        "value": 20
+      }
+    ],
+
+    "comboStarter": true,
+    "comboFinisher": false,
+    "comboPointGen": 1
+  },
+
+  "progression": {
+    "maxLevel": 100,
+    "trainDifficulty": 1.0,
+    "teacherRequired": true,
+    "levelUpBonus": {
+      "damage": 5,
+      "costMp": 1
+    }
+  },
+
+  "messages": {
+    "prepare": "$N 開始吟唱晦澀難懂的咒語...",
+    "cast": "$N 雙手一推，一顆巨大的火球呼嘯而出！",
+    "hit": "火球準確地擊中了 $n，造成了巨大傷害！",
+    "crit": "【暴擊】$n 被火球炸飛了出去，發出淒厲的慘叫！",
+    "miss": "$n 靈巧地一閃，火球在身後爆炸了。",
+    "parried": "$n 舉起武器，硬生生擋下了這記火球。",
+    "interrupted": "$N 的施法被打斷了！"
+  }
+}

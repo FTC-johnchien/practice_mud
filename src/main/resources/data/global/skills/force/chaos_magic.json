@@ -1,0 +1,17 @@
+{
+  "id": "chaos_magic",
+  "name": "混沌魔法",
+  "type": "PASSIVE",
+  "tags": ["MAGIC", "CHAOS"],
+  "description": "運用極不穩定的混沌能量，破壞力巨大但難以控制。",
+  "mechanics": {
+    "spellDamageMod": 1.5,
+    "castTimeMod": 0.8,
+    "failureRate": 0.2,
+    "manaCostMod": 1.2
+  },
+  "messages": {
+    "cast": "$N 吟唱著古怪的音節，周圍的空間開始扭曲...",
+    "fail": "$N 掌控不住混沌能量，法術在手中炸開了！"
+  }
+}

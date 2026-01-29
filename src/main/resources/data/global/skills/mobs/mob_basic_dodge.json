@@ -1,0 +1,17 @@
+{
+  "id": "mob_basic_dodge",
+  "name": "閃躲律動",
+  "type": "PASSIVE",
+  "tags": ["DODGE", "MOB"],
+  "description": "NPC 專用的基礎閃避技巧。",
+  "mechanics": {
+    "dodgeMod": 0.05
+  },
+  "messages": {
+    "dodge": [
+      "$N 往旁邊跨了一步，剛好躲開了你的攻擊。",
+      "$N 側身一閃，避開了這一擊。",
+      "$N 腳步滑動，讓攻擊擦身而過。"
+    ]
+  }
+}

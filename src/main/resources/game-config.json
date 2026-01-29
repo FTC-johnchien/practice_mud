@@ -1,0 +1,43 @@
+{
+
+  "gameName": "JavaMUD",
+  "version": "0.0.1-test",
+  "dataVersion": "20260201",
+  "motd": "歡迎來到 JavaMUD！本週維修時間為週三...",
+
+  "engine": {
+    "tickRate": 100,
+    "saveInterval": 300000,
+    "maxVirtualThreads": 10000,
+    "hotReload": true,
+    "strictMode": true
+  },
+
+  "resources": {
+    "rootPath": "data/",
+    "skills": "global/skills/**/*.json",
+    "classes": "global/classes.json",
+    "races": "global/races.json",
+    "channels": "global/channels.json",
+    "scripts": "scripts/"
+  },
+
+  "rules": {
+    "startRoomId": "snow_temple_gate",
+    "respawnRoomId": "underworld_gate",
+    "maxLevel": 100,
+    "globalCooldown": 1500,
+    "combat": {
+      "defenseCap": 0.75,
+      "xpRate": 1.0,
+      "dropRate": 1.0
+    }
+  },
+
+  "zones": [
+    { "id": "newbie_village", "path": "zones/newbie_village/manifest.json", "enabled": true },
+    { "id": "snow_town", "path": "zones/snow/manifest.json", "enabled": false },
+    { "id": "dark_forest", "path": "zones/forest/manifest.json", "enabled": false },
+    { "id": "test_area", "path": "zones/test/manifest.json", "enabled": false }
+  ]
+}

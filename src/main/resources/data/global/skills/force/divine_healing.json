@@ -1,0 +1,12 @@
+{
+  "id": "divine_healing",
+  "name": "神聖治癒",
+  "type": "PASSIVE",
+  "tags": ["MEDICAL", "HOLY"],
+  "requirements": { "reqClass": ["CLERIC", "PALADIN"] },
+  "mechanics": {
+    "healEffectMod": 1.5,
+    "bandageSpeed": 2000,
+    "canCureDisease": true
+  }
+}

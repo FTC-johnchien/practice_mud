@@ -1,0 +1,15 @@
+{
+  "id": "basic_breathing",
+  "name": "吐納術",
+  "type": "PASSIVE",
+  "tags": ["FORCE", "BASIC"],
+  "description": "最基礎的呼吸調節法，能稍微平復氣息。",
+  "mechanics": {
+    "hpRegen": 5,
+    "mpRegen": 5,
+    "maxMpMod": 0
+  },
+  "messages": {
+    "meditate": "$N 盤膝而坐，緩緩調節呼吸..."
+  }
+}

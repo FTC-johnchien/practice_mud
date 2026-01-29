@@ -1,0 +1,231 @@
+這是一份集結了 **DikuMUD/ES2** 傳統與 **現代 MMORPG** 設計概念的 **Mob (怪物/NPC) 設定參數大全**。
+
+我將這些參數分為 **八大模組**。為了讓您的設計更靈活，我標註了哪些是「核心必備」，哪些是「進階/現代化」的選配功能。
+
+---
+
+### 完整的 Mob JSON Schema 參考
+
+```json
+{
+  // ==========================================
+  // 1. 基礎識別 (Identity) [核心]
+  // ==========================================
+  "id": "orc_chieftain",         // 唯一 Template ID
+  "name": "半獸人酋長",            // 顯示名稱
+  "aliases": ["orc", "chieftain", "boss"], // 別名 (用於玩家輸入 kill orc)
+  "title": "染血的",              // 頭銜 (顯示為: 染血的 半獸人酋長)
+  "description": "這是一隻身形巨大的半獸人，身上掛滿了敵人的骨頭項鍊，眼神中透著殘暴的光芒。",
+  "level": 25,                   // 等級 (決定命中/防禦/經驗值基數)
+  "race": "ORC",                 // 種族 (影響天生抗性/屬性)
+  "class": "WARRIOR",            // 職業 (影響使用的技能池 AI)
+  "gender": "MALE",              // 性別 (影響代名詞 He/She)
+
+  // [進階] 稀有度與類型
+  "rank": "ELITE",               // 階級: NORMAL, ELITE(菁英), BOSS, RARE(稀有)
+  "alignment": -500,             // 陣營: -1000(極惡) ~ 1000(極善)。(殺好人扣德行)
+  "faction": "BLACK_ROCK_CLAN",  // 所屬勢力 (用於判定怪物互打或互助)
+
+  // ==========================================
+  // 2. 屬性與數值 (Attributes & Stats) [核心]
+  // ==========================================
+  "baseStats": {
+    "str": 30, "dex": 15, "con": 25, "int": 5, "wis": 5, "cha": 10
+    // STR: 決定普攻傷害/負重
+    // DEX: 決定命中/閃避/攻速
+    // CON: 決定 HP 上限/回血速度
+    // INT: 決定 MP 上限/法傷
+  },
+
+  "vitals": {
+    "maxHp": 2000,               // 若不填，可根據 Con * Level 自動計算
+    "maxMp": 100,
+    "exp": 5000,                 // 擊殺獲得經驗值 (或由公式計算)
+    "money": 150                 // 身上攜帶金錢 (掉落)
+  },
+
+  // ==========================================
+  // 3. 戰鬥參數 (Combat) [核心]
+  // ==========================================
+  "combat": {
+    "naturalSkill": "mob_smash", // 天生攻擊 (對應之前討論的 natural_attacks.json)
+    "armor": 50,                 // 基礎護甲值 (AC)
+    "magicResist": 20,           // 魔法抗性 %
+    "aggroRadius": 1,            // 主動攻擊半徑 (0=被動, 1=同房間, 2=遠程偵測)
+    "isAggressive": true,        // 是否主動攻擊玩家
+
+    // [進階] 屬性弱點/抗性
+    "resistances": {
+      "FIRE": -50,               // 怕火 (受傷 +50%)
+      "POISON": 100              // 毒免疫 (受傷 -100%)
+    }
+  },
+
+  // ==========================================
+  // 4. 裝備與物品 (Equipment & Inventory) [核心]
+  // 出生時自動生成並穿戴
+  // ==========================================
+  "equipment": {
+    "MAIN_HAND": "heavy_axe",    // 手持大斧 (物品 ID)
+    "BODY": "orc_plate_mail",    // 身穿板甲
+    "NECK": "bone_necklace"
+  },
+
+  // 背包裡的雜物 (不會掉落，或者死後才轉移到屍體)
+  "inventory": [
+    { "itemId": "healing_potion", "count": 1 }, // 戰鬥中可能會喝掉！
+    { "itemId": "dungeon_key", "count": 1 }     // 任務道具
+  ],
+
+  // ==========================================
+  // 5. 掉落表 (Loot Table) [核心]
+  // 死亡時產生
+  // ==========================================
+  "lootTable": [
+    {
+      "itemId": "gold_coin",
+      "chance": 1.0, "min": 10, "max": 50 // 必掉錢
+    },
+    {
+      "itemId": "orc_skin",
+      "chance": 0.5 // 50% 掉皮
+    },
+    {
+      "itemId": "rare_ring",
+      "chance": 0.01 // 1% 掉稀有戒指
+    }
+  ],
+
+  // ==========================================
+  // 6. 行為與 AI (Behavior & AI) [現代化]
+  // 讓怪物「活」起來的關鍵
+  // ==========================================
+  "behavior": {
+    "type": "GUARD",             // AI 類型: PASSIVE(發呆), WANDER(亂走), GUARD(定點巡邏), VENDOR(商人)
+
+    // 移動邏輯
+    "moveArea": "orc_camp",      // 限制活動區域 (不會走出半獸人營地)
+    "walkSpeed": 10,             // 移動頻率 (每 10 秒走一步)
+
+    // 社交邏輯
+    "socialGroup": "ORC",        // 社交群組
+    "assistRange": 1,            // 呼救範圍 (被打時，周圍 1 格內的 "ORC" 會來幫忙)
+
+    // 說話/互動
+    "chatTable": [
+      "半獸人酋長大吼：『滾出我的領地！』",
+      "半獸人酋長磨著手中的斧頭。",
+      "半獸人酋長瞪了你一眼。"
+    ],
+    "chatChance": 0.05           // 每 tick 有 5% 機率說話
+  },
+
+  // ==========================================
+  // 7. 商人與 NPC 功能 (Interaction) [選配]
+  // 只有 NPC 才需要
+  // ==========================================
+  "interaction": {
+    "isVendor": false,           // 是否為商人
+    "shopId": "orc_blacksmith",  // 商店 ID (關聯 shop.json)
+
+    "isTrainer": false,          // 是否為導師
+    "trainSkills": ["axe_mastery", "berserk"], // 可教授技能
+
+    "quests": ["kill_rat_quest"] // 提供的任務
+  },
+
+  // ==========================================
+  // 8. 狀態標記 (Flags) [進階]
+  // 特殊規則
+  // ==========================================
+  "flags": [
+    "BOSS",                      // 免疫控制技能 (暈眩/擊飛)
+    "SEE_INVISIBLE",             // 看得到隱形玩家
+    "NO_STUN",                   // 不可被擊暈
+    "IMMOBILE",                  // 不可移動 (如：食人花、砲台)
+    "UNDEAD"                     // 不死生物 (被治療法術傷害)
+  ]
+}
+
+```
+
+---
+
+### 詳細設計建議：該選哪些參數？
+
+#### 1. `vitals` (HP/MP) vs `baseStats` (Str/Dex)
+
+* **簡化版設計**：直接設定 `maxHp: 1000`, `damage: 10-20`。
+* **深度版設計**：設定 `Str: 20`, `Con: 20`，系統自動算出 HP = Con * 50。
+* **建議**：採用 **深度版**。因為這讓 Buff/Debuff 變得有意義。例如法師施放「虛弱詛咒」扣怪物 10 點力量，
+怪物的傷害就會自動降低，不需要額外寫程式碼。
+
+#### 2. `aggroRadius` (仇恨半徑)
+
+* **傳統 MUD**：通常只有「主動 (Aggressive)」與「被動」。進房間就打。
+* **現代設計**：加入 `radius`。
+* Boss 可以在 2 格外就發現玩家並開始廣播警告：「我聞到人類的臭味了...」。
+* 這能創造緊張感。
+
+
+
+#### 3. `socialGroup` & `assistRange` (呼救機制)
+
+* **這非常重要！**
+* 如果您不設計這個，玩家就可以一隻一隻把怪物拉出來殺 (Pulling)。
+* 有了這個參數，當玩家攻擊小半獸人，旁邊的半獸人都會圍上來 (Train)，強迫玩家控場或 AOE。
+
+#### 4. `inventory` (背包) vs `lootTable` (掉落)
+
+* **Inventory**：怪物活著的時候**真的可以用**的東西。例如：怪物有一瓶藥水，它快死的時候會喝掉，喝掉就沒了，玩家殺死它也撿不到。
+* **LootTable**：這是「獎勵」。死掉時憑空產生的（例如老鼠掉金幣，老鼠不會拿金幣去買東西，這純粹是遊戲性）。
+* **建議**：兩者分開處理。
+
+#### 5. `flags` (特殊標記)
+
+將特殊邏輯抽出變成 Flag，可以避免大量的 `if-else`。
+
+* **NO_CORPSE**：死後不留屍體 (如幽靈、元素生物)。
+* **REVIVE**：一段時間後會原地復活 (如骷髏兵)。
+* **SANCTUARY**：自帶減傷護盾 (神聖生物)。
+
+---
+
+### 實務上的 Java 類別對應
+
+**`MobTemplate.java`**
+
+```java
+public record MobTemplate(
+    String id,
+    IdentityConfig identity,       // name, race, class...
+    AttributeConfig baseStats,     // str, dex...
+    CombatConfig combat,           // armor, naturalSkill...
+    BehaviorConfig behavior,       // ai type, assist range...
+    List<LootEntry> lootTable,
+    Map<EquipmentSlot, String> equipment, // Slot -> ItemId
+    Set<MobFlag> flags
+) {}
+
+```
+
+**`MobInstance.java` (Runtime)**
+
+```java
+public class MobInstance extends LivingActor {
+    private final MobTemplate template;
+
+    // 運行時狀態 (Runtime State)
+    private MobState state; // HP, MP, Pos
+
+    // 記憶體中的仇恨列表 (Threat Table)
+    // Key: PlayerId, Value: Threat Value
+    private Map<String, Integer> threatTable = new HashMap<>();
+
+    // ...
+}
+
+```
+
+這份資料可以讓您的怪物從單純的「經驗值包」變成具有生態、會呼朋引伴、甚至會使用道具的強大對手。
+建議初期先實作 **Identity, Stats, Combat, Loot**，等戰鬥系統穩定了，再加入 **Behavior (AI)**。

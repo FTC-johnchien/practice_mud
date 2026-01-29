@@ -5,11 +5,11 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
-import org.aspectj.weaver.patterns.ConcreteCflowPointcut.Slot;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.application.command.parser.BodyPartSelector;
 import com.example.htmlmud.application.factory.WorldFactory;
+import com.example.htmlmud.application.service.SkillManager;
 import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.LivingActor;
 import com.example.htmlmud.domain.actor.impl.RoomActor;
@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CombatService {
 
   private final MessageUtil messageUtil;
+  private final SkillManager skillManager;
   private final ObjectProvider<WorldManager> worldManagerProvider;
   private final WorldFactory worldFactory;
 
@@ -127,19 +128,20 @@ public class CombatService {
 
 
 
-    // 設定下一次攻擊時間 (攻速 2秒)
-    self.getState().nextAttackTime = now + weapon.attackSpeed();
-
     // 1. 決定攻擊類型 (空手 or 拿武器?)
     SkillType attackType =
         self.getState().equipment.get(EquipmentSlot.MAIN_HAND) == null ? SkillType.UNARMED
             : SkillType.WEAPON;
 
     // 2. 從 SkillManager 取得當前的一招 (包含描述與倍率)
-    CombatAction action = self.getSkills().getCombatAction(attackType);
+    CombatAction action = skillManager.getCombatAction(attackType);
 
     // 3. 計算基礎傷害 取出 attacker 的 DamageSource
     DamageSource weapon = self.getCurrentAttackSource();
+
+    // 設定下一次攻擊時間 (攻速 2秒)
+    self.getState().nextAttackTime = now + weapon.attackSpeed();
+
 
     int rawDmg = calculateDamage(self, target);
     // log.info("dmgAmout:{}", dmgAmout);

@@ -1,0 +1,234 @@
+這是一份集結了傳統 MUD (如 ES2) 與現代 MUD (如 World of Warcraft / MUD 客戶端支援特性) 的 **Room 設定參數大全**。
+
+我將這些參數分為 **七大模組**，您可以根據遊戲的複雜度需求，像點自助餐一樣選擇要實作的欄位。
+
+---
+
+### 完整的 Room JSON Schema 參考
+
+```json
+{
+  // ==========================================
+  // 1. 基礎識別與導航 (Identity & Navigation)
+  // ==========================================
+  "id": "snow_gate",             // 唯一 ID
+  "zoneId": "snow_town",         // 所屬區域 (用於廣播、天氣控制)
+  "name": "雪亭鎮南門",            // 顯示名稱
+
+  // 座標系統 (現代 MUD 重要功能，用於自動繪製地圖/尋路)
+  "coordinates": {
+    "x": 10,
+    "y": -5,
+    "z": 0                       // Z軸: 地面為0, 地下為負, 樓上為正
+  },
+
+  // ==========================================
+  // 2. 描述與感官 (Description & Senses)
+  // 現代 MUD 支援日夜變化與多重感官
+  // ==========================================
+  "description": {
+    "default": "這裡是雪亭鎮的南門，南邊通往山下，北邊是熱鬧的廣場。", // 基本描述
+    "night": "夜晚的南門顯得格外冷清，只有兩盞燈籠在風中搖曳。",      // (選填) 晚上顯示不同描述
+    "raining": "大雨滂沱，泥濘的道路讓行路變得艱難。"                // (選填) 下雨時追加描述
+  },
+
+  // 環境特徵 (Features/ItemDesc)
+  // 這裡的東西「看得到(Look) 但拿不到(Get)」
+  "features": {
+    "sign": "一塊破舊的木牌，寫著：『非本鎮居民請勿逗留』。",
+    "lamp": "一盞昏暗的油燈，勉強照亮了周圍的雪地。",
+    "snow": "積雪很厚，踩上去發出嘎吱嘎吱的聲音。"
+  },
+
+  // 額外感官 (Smell & Listen)
+  "senses": {
+    "smell": "空氣中飄來一陣烤肉的香味。",        // 當玩家輸入 'smell'
+    "listen": "隱約能聽到北邊廣場傳來的叫賣聲。"  // 當玩家輸入 'listen'
+  },
+
+  // ==========================================
+  // 3. 出口與連接 (Exits & Doors)
+  // 包含門、鎖、隱藏道路
+  // ==========================================
+  "exits": {
+    "north": {
+      "targetRoomId": "snow_square",
+      "isHidden": false,         // 是否隱藏 (需 search 才能發現)
+
+      // 門的設定 (若無此區塊則代表無門，直接通行)
+      "door": {
+        "name": "厚重的鐵門",
+        "state": "LOCKED",       // OPEN, CLOSED, LOCKED
+        "keyId": "snow_gate_key",// 需要哪把鑰匙
+        "canPick": true,         // 盜賊能否撬鎖
+        "difficulty": 50         // 撬鎖難度
+      }
+    },
+    "south": { "targetRoomId": "road_mountain_path" },
+
+    // 特殊出口 (爬繩子、鑽洞)
+    "climb_up": { "targetRoomId": "snow_wall_top" }
+  },
+
+  // ==========================================
+  // 4. 環境與物理 (Environment & Physics)
+  // 影響戰鬥與移動
+  // ==========================================
+  "environment": {
+    "terrain": "SNOW",           // 地形: ROAD, FOREST, MOUNTAIN, WATER, SWAMP
+                                 // 影響: 移動耗體、戰鬥閃避率 (如: 水中降攻速)
+    "isOutdoors": true,          // 是否為戶外 (影響天氣、能否騎馬)
+    "lightLevel": 50,            // 光照度: 0=全黑(需火把), 100=明亮
+    "capacity": 0,               // 容量限制: 0=無限, 10=只能擠10人 (如小船)
+    "regenRate": 1.0,            // 回復倍率: 客棧=2.0 (回血快), 毒氣室=-0.5 (扣血)
+    "gravity": 1.0               // 重力: 0.0=無重力(太空/水下移動變3D)
+  },
+
+  // ==========================================
+  // 5. 規則標記 (Flags / Rules)
+  // 房間的特殊邏輯
+  // ==========================================
+  "flags": [
+    "SAFE_ZONE",                 // 安全區 (禁止戰鬥)
+    "NO_MAGIC",                  // 禁魔區 (沉默)
+    "NO_QUIT",                   // 禁止登出 (迷宮深處/Boss房)
+    "NO_RECALL",                 // 禁止回城 (防止逃跑)
+    "PRIVATE",                   // 私人房 (其他玩家進不來，適用於副本)
+    "CHECK_MOUNT"                // 檢查座騎 (室內可能要下馬)
+  ],
+
+  // ==========================================
+  // 6. 生態與資源 (Ecology & Spawns)
+  // 整合我們之前討論的 Spawn 系統
+  // ==========================================
+  "spawns": [
+    {
+      "mobId": "snow_guard",
+      "maxCount": 2,             // 維持數量
+      "respawnTime": 60,         // 重生秒數
+      "chance": 1.0              // 重生機率
+    },
+    {
+      "itemId": "snow_lotus",    // 地上的採集物 (天山雪蓮)
+      "maxCount": 1,
+      "respawnTime": 300,
+      "coordinates": { "x": 5, "y": 5 } // 如果支援座標撿取
+    }
+  ],
+
+  // 採集點 (如果不想用 item 撿取，而是用 mining 指令)
+  "resources": [
+    { "type": "ORE", "level": 10, "yield": "iron_ore" }, // 鐵礦脈
+    { "type": "HERB", "level": 5, "yield": "healing_grass" } // 藥草叢
+  ],
+
+  // ==========================================
+  // 7. 腳本與觸發 (Scripts & Triggers)
+  // 進階互動功能
+  // ==========================================
+  "triggers": {
+    // 進入房間時觸發
+    "onEnter": {
+      "msg": "一陣刺骨的寒風吹來，你忍不住打了個冷顫。", // 自動顯示
+      "damage": 5 // 暴風雪傷害
+    },
+    // 定時觸發 (每 60 秒)
+    "onTick": {
+      "msg": "遠處傳來了狼嚎聲..."
+    }
+  }
+}
+
+```
+
+---
+
+### 詳細參數解析與設計建議
+
+我將針對幾個關鍵參數，分析「要不要加入」的考量點。
+
+#### 1. 座標系統 (`coordinates`)
+
+* **建議：加入**
+* **原因**：現代 MUD 玩家習慣有「自動地圖 (Auto-mapper)」。如果您提供 (x, y, z)，前端可以畫出很漂亮的小地圖。
+如果不提供，玩家只能靠腦補，對新手很不友善。
+
+#### 2. 地形 (`terrain`)
+
+* **建議：初期簡化，中期加入**
+* **應用**：
+* **移動消耗**：走 `ROAD` 耗 1 體力，走 `SWAMP` (沼澤) 耗 10 體力。
+* **戰鬥影響**：在 `WATER` (水) 裡打架，火系魔法傷害減半，雷系加倍。這會讓戰鬥很有深度。
+
+
+
+#### 3. 光照度 (`lightLevel`)
+
+* **建議：加入 (只需簡單邏輯)**
+* **邏輯**：
+* 設定 `lightLevel < 20` 為黑暗。
+* 玩家進入黑暗房間，`look` 只會看到「這裡一片漆黑，你什麼也看不見。」(除非有點火把)。
+* 這是一個增加冒險感的低成本功能。
+
+
+
+#### 4. 門與鎖 (`exits.door`)
+
+* **建議：加入**
+* **原因**：這是解謎與探索的核心。鑰匙、撬鎖 (Pick lock)、破門 (Bash door) 都是經典玩法。
+* **實作**：不要把門當成 Item，把門當成 Exit 的屬性比較好管理。
+
+#### 5. 多重描述 (`description.night/raining`)
+
+* **建議：視內容產量而定**
+* **考量**：程式很好寫，但「寫文案」很累。如果您有足夠的文案人力（或用 AI 生成），這會讓世界變得非常生動。
+如果只有一個人開發，先用 `default` 即可。
+
+#### 6. 資源節點 (`resources`)
+
+* **建議：看遊戲類型**
+* **考量**：
+* 如果是純戰鬥 MUD：不需要，怪物掉落即可。
+* 如果是生活系/沙盒 MUD：非常需要。讓玩家去挖礦、伐木、採藥。
+
+
+
+### 實務上的 Java 類別對應
+
+**`RoomTemplate.java`** (靜態資料，從 JSON 讀入)
+
+```java
+public record RoomTemplate(
+    String id,
+    String name,
+    String zoneId,
+    RoomDescription description,
+    Map<String, ExitConfig> exits,
+    Map<String, String> features,
+    EnvironmentConfig environment,
+    List<SpawnConfig> spawns,
+    Set<RoomFlag> flags
+) {}
+
+```
+
+**`RoomDescription.java`** (動態描述支援)
+
+```java
+public record RoomDescription(
+    String defaultDesc,
+    String nightDesc,
+    String rainDesc
+) {
+    // 根據當前世界時間/天氣回傳正確描述
+    public String resolve(WorldTime time, Weather weather) {
+        if (time.isNight() && nightDesc != null) return nightDesc;
+        if (weather.isRaining() && rainDesc != null) return rainDesc;
+        return defaultDesc;
+    }
+}
+
+```
+
+這些參數能讓您的 MUD 世界不僅僅是「房間 A 連到 房間 B」，而是一個有溫度、有光影、有生態的活世界。
+建議初期先實作 **Identity, Exits (含 Door), Environment (Outdoors/Light)** 這幾項核心即可。

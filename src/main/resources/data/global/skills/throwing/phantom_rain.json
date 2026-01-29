@@ -1,0 +1,46 @@
+{
+  "id": "phantom_rain",
+  "name": "漫天花雨",
+  "type": "ACTIVE",
+  "school": "TANG_CLAN",
+  "tags": ["RANGED", "THROWING", "AOE"],
+  "description": "唐門不傳之秘，雙手連揚，暗器如雨點般籠罩敵人。",
+  "requirements": {
+    "minLevel": 15,
+    "reqStats": { "DEX": 25 },
+    "reqWeapon": ["THROWING"]
+  },
+  "costs": {
+    "mp": 20,
+    "stamina": 20,
+    "ammo": 3
+  },
+  "timing": {
+    "castTime": 0,
+    "cooldown": 5000,
+    "gcd": 1500
+  },
+  "targeting": {
+    "type": "AREA_ENEMY",
+    "maxTargets": 3
+  },
+  "mechanics": {
+    "baseValue": 15,
+    "scaleStat": "DEX",
+    "scaleFactor": 1.5,
+    "critRateMod": 0.1,
+    "effects": [
+      {
+        "id": "bleed",
+        "chance": 0.5,
+        "duration": 10000,
+        "value": 10
+      }
+    ]
+  },
+  "messages": {
+    "cast": "$N 身形旋轉，雙手連揮，大喝一聲「漫天花雨」！無數寒星罩向四周！",
+    "hit": "被無數暗器擊中，發出淒厲的慘叫！",
+    "miss": "狼狽地在地上打滾，勉強避開了密集的暗器雨。"
+  }
+}
