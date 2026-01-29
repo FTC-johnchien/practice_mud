@@ -1,0 +1,56 @@
+{
+  "id": "basic_polearm",
+  "name": "基本長兵",
+  "description": "包含槍、棍、戟等長兵器的基礎用法，一寸長一寸強。",
+  "type": "PASSIVE",
+  "school": "COMMON",
+  "tags": [
+    "WEAPON",
+    "POLEARM",
+    "SPEAR",
+    "STAFF"
+  ],
+  "requirements": {
+    "level": 1,
+    "reqWeapon": [
+      "SPEAR",
+      "POLEARM",
+      "STAFF"
+    ]
+  },
+  "costs": {
+    "mp": 0,
+    "stamina": 2
+  },
+  "timing": {
+    "castTime": 0,
+    "cooldown": 0,
+    "gcd": 1500
+  },
+  "targeting": {
+    "type": "SINGLE_ENEMY",
+    "mustHaveTarget": true
+  },
+  "mechanics": {
+    "baseValue": 12,
+    "scaleStat": "STR",
+    "scaleFactor": 1.05,
+    "parryMod": 0.05,
+    "comboPointGen": 1
+  },
+  "growth": {
+    "baseValue": 0.12
+  },
+  "messages": {
+    "cast": [
+      "$N 手腕一震，手中$w抖出五朵槍花，罩向 $n 全身。",
+      "$N 雙手持$w中段，一記「橫掃千軍」掃向 $n 的下盤。",
+      "$N 大喝一聲，手中$w如蛟龍出海，直刺 $n 的心窩。",
+      "$N 將手中$w高高舉起，當頭一棒砸向 $n。"
+    ],
+    "hit": "在身上留下了幾個血窟窿。",
+    "crit": "【貫穿】這一擊勢如破竹，直接刺穿了 $n 的護甲！",
+    "miss": "$n 往後一躍，退出了攻擊範圍。",
+    "parried": "$n 側身閃過槍尖，用武器架住了長桿。"
+  }
+}

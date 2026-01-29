@@ -1,0 +1,53 @@
+{
+  "id": "basic_sword",
+  "name": "基本劍法",
+  "description": "武林中常見的入門劍術，講究輕靈與準確。",
+  "type": "PASSIVE",
+  "school": "COMMON",
+  "tags": [
+    "WEAPON",
+    "SWORD",
+    "BASIC"
+  ],
+  "requirements": {
+    "level": 1,
+    "reqWeapon": [
+      "SWORD"
+    ]
+  },
+  "costs": {
+    "mp": 0,
+    "stamina": 1
+  },
+  "timing": {
+    "castTime": 0,
+    "cooldown": 0,
+    "gcd": 1500
+  },
+  "targeting": {
+    "type": "SINGLE_ENEMY",
+    "mustHaveTarget": true
+  },
+  "mechanics": {
+    "baseValue": 10,
+    "scaleStat": "DEX",
+    "scaleFactor": 1.0,
+    "hitRateMod": 0.05,
+    "comboPointGen": 1
+  },
+  "growth": {
+    "baseValue": 0.1
+  },
+  "messages": {
+    "cast": [
+      "$N 手腕一抖，手中$w化作一道劍光，刺向 $n 的 $l。",
+      "$N 向前踏出一步，手中$w由下而上「唰」地一聲挑向 $n。",
+      "$N 手中$w一轉，使出一招「順水推舟」，削向 $n 的 $l。",
+      "$N 劍尖顫動，挽出一個劍花，疾刺 $n 的 $l。"
+    ],
+    "hit": "造成了一道切口，鮮血直流。",
+    "crit": "【暴擊】這一劍刺了個通透，$n 痛得大叫一聲！",
+    "miss": "$n 縮身一退，劍鋒貼著鼻尖劃過，好險！",
+    "parried": "$n 豎起武器，將 $N 的劍招架開。"
+  }
+}

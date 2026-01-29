@@ -1,0 +1,56 @@
+{
+  "id": "basic_blunt",
+  "name": "基本錘法",
+  "description": "使用錘、斧等重型兵器的技巧，不管有沒有招式，砸中就對了。",
+  "type": "PASSIVE",
+  "school": "COMMON",
+  "tags": [
+    "WEAPON",
+    "HAMMER",
+    "AXE",
+    "BASIC"
+  ],
+  "requirements": {
+    "level": 1,
+    "reqWeapon": [
+      "HAMMER",
+      "AXE",
+      "MACE"
+    ]
+  },
+  "costs": {
+    "mp": 0,
+    "stamina": 3
+  },
+  "timing": {
+    "castTime": 0,
+    "cooldown": 0,
+    "gcd": 2000
+  },
+  "targeting": {
+    "type": "SINGLE_ENEMY",
+    "mustHaveTarget": true
+  },
+  "mechanics": {
+    "baseValue": 20,
+    "scaleStat": "STR",
+    "scaleFactor": 1.3,
+    "hitRateMod": -0.1,
+    "comboPointGen": 1
+  },
+  "growth": {
+    "baseValue": 0.2
+  },
+  "messages": {
+    "cast": [
+      "$N 掄起沉重的$w，帶著呼嘯的風聲砸向 $n 的腦袋。",
+      "$N 雙臂肌肉隆起，揮動$w橫向轟擊 $n 的 $l。",
+      "$N 高高躍起，藉著下墜之勢，用$w狠狠鎚向 $n。",
+      "$N 旋轉身體帶動$w，像旋風一樣捲向 $n。"
+    ],
+    "hit": "發出令人牙酸的骨折聲。",
+    "crit": "【粉碎】$n 像斷線風箏一樣被轟飛出去，口中鮮血狂噴！",
+    "miss": "$w 砸在地上，將地面轟出一個大坑，可惜沒打中 $n。",
+    "parried": "$n 試圖招架，卻被這股巨力震得虎口出血，兵器差點脫手。"
+  }
+}

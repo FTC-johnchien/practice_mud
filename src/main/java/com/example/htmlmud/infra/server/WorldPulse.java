@@ -36,8 +36,8 @@ public class WorldPulse {
       }
     });
 
-    // 可選：每 60 秒印一次 Log 確保心臟還在跳
-    if (currentTick % 60 == 0) {
+    // 可選：每 150 秒印一次 Log 確保心臟還在跳 (遊戲時間1小時)
+    if (currentTick % 150 == 0) {
       log.info("World Pulse alive. Tick: {}", currentTick);
 
     }

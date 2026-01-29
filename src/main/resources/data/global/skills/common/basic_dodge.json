@@ -2,11 +2,18 @@
   "id": "basic_dodge",
   "name": "基礎身法",
   "type": "PASSIVE",
-  "tags": ["DODGE", "BASIC"],
+  "tags": [
+    "DODGE",
+    "BASIC"
+  ],
   "description": "一般人打架時的本能反應，左閃右躲。",
   "mechanics": {
     "dodgeMod": 0.0,
     "moveSpeedMod": 0.0
+  },
+  "growth": {
+    "dodgeMod": 0.05,
+    "moveSpeedMod": 0.05
   },
   "messages": {
     "dodge": [

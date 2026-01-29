@@ -1,0 +1,54 @@
+{
+  "id": "basic_blade",
+  "name": "基本刀法",
+  "description": "大開大闔的刀法，以氣勢壓人，講究一力降十會。",
+  "type": "PASSIVE",
+  "school": "COMMON",
+  "tags": [
+    "WEAPON",
+    "BLADE",
+    "BASIC"
+  ],
+  "requirements": {
+    "level": 1,
+    "reqWeapon": [
+      "BLADE",
+      "SABER"
+    ]
+  },
+  "costs": {
+    "mp": 0,
+    "stamina": 2
+  },
+  "timing": {
+    "castTime": 0,
+    "cooldown": 0,
+    "gcd": 1500
+  },
+  "targeting": {
+    "type": "SINGLE_ENEMY",
+    "mustHaveTarget": true
+  },
+  "mechanics": {
+    "baseValue": 15,
+    "scaleStat": "STR",
+    "scaleFactor": 1.1,
+    "critDamageMod": 1.2,
+    "comboPointGen": 1
+  },
+  "growth": {
+    "baseValue": 0.15
+  },
+  "messages": {
+    "cast": [
+      "$N 大喝一聲，雙手握住$w，力劈華山般對準 $n 當頭劈下！",
+      "$N 掄起手中的$w，帶起一股勁風，橫掃向 $n 的 $l。",
+      "$N 刀鋒一轉，由下而上反撩 $n 的 $l。",
+      "$N 跨步向前，手中$w如猛虎下山，狠狠砍向 $n。"
+    ],
+    "hit": "造成了深可見骨的傷口。",
+    "crit": "【重擊】這一刀勢大力沉，直接將 $n 劈飛了出去！",
+    "miss": "$n 就地一滾，狼狽地避開了這致命的一刀。",
+    "parried": "$n 咬牙舉起兵器，硬生生擋住了這一刀，震得手臂發麻。"
+  }
+}

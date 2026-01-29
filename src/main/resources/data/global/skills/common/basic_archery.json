@@ -22,6 +22,9 @@
     "scaleFactor": 1.0,
     "hitRateMod": 0.1
   },
+  "growth": {
+    "baseValue": 0.1
+  },
   "messages": {
     "cast": [
       "$N 拉滿弓弦，一支利箭「嗖」地一聲射向 $n。",

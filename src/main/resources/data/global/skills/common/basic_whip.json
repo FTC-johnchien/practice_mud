@@ -1,0 +1,53 @@
+{
+  "id": "basic_whip",
+  "name": "基本鞭法",
+  "description": "軟兵器的入門技巧，詭異莫測，令人防不勝防。",
+  "type": "PASSIVE",
+  "school": "COMMON",
+  "tags": [
+    "WEAPON",
+    "WHIP",
+    "BASIC"
+  ],
+  "requirements": {
+    "level": 1,
+    "reqWeapon": [
+      "WHIP"
+    ]
+  },
+  "costs": {
+    "mp": 0,
+    "stamina": 1
+  },
+  "timing": {
+    "castTime": 0,
+    "cooldown": 0,
+    "gcd": 1500
+  },
+  "targeting": {
+    "type": "SINGLE_ENEMY",
+    "mustHaveTarget": true
+  },
+  "mechanics": {
+    "baseValue": 8,
+    "scaleStat": "DEX",
+    "scaleFactor": 0.9,
+    "hitRateMod": 0.1,
+    "comboPointGen": 1
+  },
+  "growth": {
+    "baseValue": 0.08
+  },
+  "messages": {
+    "cast": [
+      "$N 手腕輕抖，$w如靈蛇出洞，捲向 $n 的頸部。",
+      "$N 手中$w發出「啪」的一聲脆響，抽向 $n 的 $l。",
+      "$N 手臂一揮，$w在空中劃出一個圓圈，罩向 $n。",
+      "$N 運勁於$w，直挺挺地向 $n 胸口點去。"
+    ],
+    "hit": "留下一道火辣辣的血痕。",
+    "crit": "【纏繞】$w緊緊纏住了 $n 的肢體，倒刺深深陷入皮肉！",
+    "miss": "$n 聽風辨位，低頭避過了這詭異的一鞭。",
+    "parried": "$n 揮舞兵器護住全身，將$w擋在身外。"
+  }
+}

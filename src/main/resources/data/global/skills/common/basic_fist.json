@@ -1,0 +1,64 @@
+{
+  "id": "basic_fist",
+  "name": "基本拳腳",
+  "description": "流傳於市井之間的健身拳法，雖然招式粗淺，但也能強身健體，是用於搏擊的基礎。",
+  "type": "PASSIVE",
+  "school": "COMMON",
+  "tags": [
+    "UNARMED",
+    "BASIC"
+  ],
+  "isHidden": false,
+  "requirements": {
+    "level": 1,
+    "reqClass": [],
+    "reqWeapon": [
+      null
+    ],
+    "reqState": "ANY"
+  },
+  "costs": {
+    "mp": 0,
+    "stamina": 1,
+    "charge": 0
+  },
+  "timing": {
+    "castTime": 0,
+    "cooldown": 0,
+    "gcd": 1500,
+    "gcdOverride": 0,
+    "triggerGcd": true,
+    "ignoreGcd": false,
+    "interruptible": false
+  },
+  "targeting": {
+    "type": "SINGLE_ENEMY",
+    "range": 0,
+    "mustHaveTarget": true
+  },
+  "mechanics": {
+    "baseValue": 10,
+    "scaleStat": "STR",
+    "scaleFactor": 1.0,
+    "hitRateMod": 0.0,
+    "parryMod": 0.0,
+    "effects": [],
+    "comboStarter": false,
+    "comboPointGen": 1
+  },
+  "growth": {
+    "baseValue": 0.1
+  },
+  "messages": {
+    "cast": [
+      "$N 揮出一拳，擊向 $n 的 $l。",
+      "$N 飛起一腳，踢向 $n 的 $l。",
+      "$N 左手一晃，右手猛地擊向 $n 的 $l。",
+      "$N 用頭部狠狠地撞向 $n。"
+    ],
+    "hit": "造成了皮肉傷。",
+    "crit": "【重擊】$n 被這記悶拳打得眼冒金星！",
+    "miss": "$n 身子一側，躲過了這一擊。",
+    "parried": "$n 隨手一格，擋開了 $N 的攻擊。"
+  }
+}

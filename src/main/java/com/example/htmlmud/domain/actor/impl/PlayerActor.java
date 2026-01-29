@@ -59,6 +59,12 @@ public final class PlayerActor extends LivingActor {
   @Setter
   private PlayerBehavior currentBehavior;
 
+  // 記錄 GCD 結束的「系統時間 (毫秒)」
+  private long gcdEndTimestamp = 0;
+
+  // 記錄當前是否正在詠唱/硬直 (Cast Time)
+  private boolean isCasting = false;
+
   private boolean isDirty = false;
 
 
@@ -301,4 +307,21 @@ public final class PlayerActor extends LivingActor {
     }
   }
 
+  /**
+   * 檢查是否受到 GCD 限制
+   */
+  public boolean isOnGcd() {
+    return System.currentTimeMillis() < gcdEndTimestamp;
+  }
+
+  /**
+   * 觸發 GCD
+   *
+   * @param duration 如果是 0，則使用預設值
+   */
+  public void triggerGcd(int duration) {
+    // int actualDuration = (duration > 0) ? duration : GameConfig.DEFAULT_GCD;
+    int actualDuration = (duration > 0) ? duration : 1500;
+    this.gcdEndTimestamp = System.currentTimeMillis() + actualDuration;
+  }
 }

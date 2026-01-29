@@ -1,0 +1,53 @@
+{
+  "id": "basic_magic_staff",
+  "name": "法杖敲擊",
+  "description": "法師在法力耗盡時的無奈之舉，用手中的法杖進行物理攻擊。",
+  "type": "PASSIVE",
+  "school": "COMMON",
+  "tags": [
+    "WEAPON",
+    "WAND",
+    "BASIC"
+  ],
+  "requirements": {
+    "level": 1,
+    "reqWeapon": [
+      "WAND",
+      "STAFF"
+    ],
+    "reqClass": []
+  },
+  "costs": {
+    "mp": 0,
+    "stamina": 1
+  },
+  "timing": {
+    "castTime": 0,
+    "cooldown": 0,
+    "gcd": 1500
+  },
+  "targeting": {
+    "type": "SINGLE_ENEMY",
+    "mustHaveTarget": true
+  },
+  "mechanics": {
+    "baseValue": 5,
+    "scaleStat": "STR",
+    "scaleFactor": 0.5,
+    "comboPointGen": 0
+  },
+  "growth": {
+    "baseValue": 0.05
+  },
+  "messages": {
+    "cast": [
+      "$N 舉起手中的$w，笨拙地敲向 $n 的腦袋。",
+      "$N 揮舞著$w，試圖趕走逼近的 $n。",
+      "$N 用$w的底端捅向 $n 的 $l。"
+    ],
+    "hit": "造成了輕微的瘀青。",
+    "crit": "【幸運】正好敲在 $n 的腦門上，腫起了一個大包！",
+    "miss": "$n 輕蔑地一笑，隨意地閃過了這一擊。",
+    "parried": "$n 甚至懶得用武器，直接用手抓住了$w。"
+  }
+}

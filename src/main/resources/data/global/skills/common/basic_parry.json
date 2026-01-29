@@ -2,10 +2,16 @@
   "id": "basic_parry",
   "name": "基礎招架",
   "type": "PASSIVE",
-  "tags": ["PARRY", "BASIC"],
+  "tags": [
+    "PARRY",
+    "BASIC"
+  ],
   "description": "利用武器或手臂格擋攻擊的基本技巧。",
   "mechanics": {
     "parryMod": 0.05
+  },
+  "growth": {
+    "parryMod": 0.0005
   },
   "messages": {
     "parried": [

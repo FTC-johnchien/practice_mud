@@ -3,15 +3,16 @@
   "name": "基礎冥想",
   "type": "CHANNEL",
   "school": "COMMON",
-  "tags": ["KNOWLEDGE", "RECOVERY"],
+  "tags": [
+    "KNOWLEDGE",
+    "RECOVERY"
+  ],
   "description": "放空思緒，讓精神力慢慢恢復。",
   "requirements": {
     "reqState": "SITTING",
     "reqCombat": false
   },
-  "costs": {
-
-  },
+  "costs": {},
   "timing": {
     "channelTime": 10000,
     "tickInterval": 2000
@@ -19,6 +20,9 @@
   "mechanics": {
     "mpRegen": 10,
     "hpRegen": 0
+  },
+  "growth": {
+    "mpRegen": 0.1
   },
   "messages": {
     "prepare": "$N 盤膝坐下，閉上雙眼，開始冥想。",

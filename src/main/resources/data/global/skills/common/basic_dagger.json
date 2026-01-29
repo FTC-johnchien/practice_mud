@@ -1,0 +1,53 @@
+{
+  "id": "basic_dagger",
+  "name": "基本短兵",
+  "description": "險中求勝的近身搏擊術，專攻敵人要害。",
+  "type": "PASSIVE",
+  "school": "COMMON",
+  "tags": [
+    "WEAPON",
+    "DAGGER",
+    "BASIC"
+  ],
+  "requirements": {
+    "level": 1,
+    "reqWeapon": [
+      "DAGGER"
+    ]
+  },
+  "costs": {
+    "mp": 0,
+    "stamina": 1
+  },
+  "timing": {
+    "castTime": 0,
+    "cooldown": 0,
+    "gcd": 1000
+  },
+  "targeting": {
+    "type": "SINGLE_ENEMY",
+    "mustHaveTarget": true
+  },
+  "mechanics": {
+    "baseValue": 5,
+    "scaleStat": "DEX",
+    "scaleFactor": 0.8,
+    "critRateMod": 0.1,
+    "comboPointGen": 2
+  },
+  "growth": {
+    "baseValue": 0.05
+  },
+  "messages": {
+    "cast": [
+      "$N 身形一晃欺近 $n 身邊，手中$w無聲無息地刺向 $l。",
+      "$N 反握$w，如毒蛇吐信般劃向 $n 的咽喉。",
+      "$N 手中$w寒光一閃，迅捷無比地捅向 $n 的 $l。",
+      "$N 利用身法繞到 $n 背後，試圖用$w背刺。"
+    ],
+    "hit": "精準地刺入要害，血花四濺。",
+    "crit": "【刺殺】$w深深沒入 $n 體內，$n 發出無聲的慘叫！",
+    "miss": "$n 警覺地回身一擋，逼退了 $N。",
+    "parried": "$n 反應極快，將 $N 的匕首格開。"
+  }
+}

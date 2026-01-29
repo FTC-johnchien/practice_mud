@@ -1,6 +1,6 @@
 [
   {
-    "id": "warrior",
+    "id": "WARRIOR",
     "name": "戰士",
     "description": "身穿重甲，手持巨刃，在戰場前線衝鋒陷陣的勇者。",
     "resourceType": "RAGE",
@@ -50,7 +50,7 @@
     }
   },
   {
-    "id": "mage",
+    "id": "MAGE",
     "name": "魔法師",
     "description": "操控元素力量的學者，身體孱弱但擁有毀滅性的破壞力。",
     "resourceType": "MANA",
@@ -92,7 +92,7 @@
     }
   },
   {
-    "id": "rogue",
+    "id": "ROGUE",
     "name": "盜賊",
     "description": "潛伏在陰影中的殺手，擅長使用毒藥與偷襲。",
     "resourceType": "ENERGY",
@@ -138,7 +138,7 @@
     }
   },
   {
-    "id": "cleric",
+    "id": "CLERIC",
     "name": "牧師",
     "description": "信仰堅定的神職人員，負責治療傷患與驅散邪惡。",
     "resourceType": "MANA",
@@ -180,7 +180,7 @@
     }
   },
   {
-    "id": "swordsman",
+    "id": "SWORDSMAN",
     "name": "俠客",
     "description": "仗劍走天涯的武者，追求劍道的極致。",
     "resourceType": "FORCE",
@@ -223,7 +223,7 @@
     }
   },
   {
-    "id": "monk",
+    "id": "MONK",
     "name": "武僧",
     "description": "苦修體魄的僧侶，以肉身對抗兵刃。",
     "resourceType": "FORCE",

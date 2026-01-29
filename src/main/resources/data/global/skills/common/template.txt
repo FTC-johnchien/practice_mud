@@ -30,7 +30,7 @@
     "costs": {
       "mp": 0,                     // 不耗內力
       "stamina": 1,                // 僅消耗極微量體力
-      "charge": 0
+      "charge": 0                  // 不耗能量 (戰鬥中累積)
     },
 
     // ==========================================
@@ -40,8 +40,10 @@
     "timing": {
       "castTime": 0,
       "cooldown": 0,               // 無 CD
-      "gcd": 1500,                 // 仍受公共冷卻限制
-      "interruptible": false
+      "gcd": 1500,                 // 0 = 使用全域設定，填數值則覆蓋 (如盜賊技能可能只需 1000ms)
+      "triggerGcd": true,          // 施放後是否觸發 GCD？(預設 true)
+      "ignoreGcd": false,          // 是否可在 GCD 轉圈時施放？(預設 false)
+      "interruptible": false       // 可被打斷
     },
 
     // ==========================================
@@ -329,4 +331,316 @@
       "parried": "$n 甚至懶得用武器，直接用手抓住了$w。"
     }
   }
+
+{
+  "id": "basic_magic",
+  "name": "基礎魔法",
+  "type": "PASSIVE",
+  "tags": ["MAGIC", "BASIC"],
+  "mechanics": {
+    "spellDamageMod": 1.0,  // 標準傷害
+    "castTimeMod": 1.0,     // 標準施法時間
+    "failureRate": 0.1      // 10% 施法失敗率
+  }
+}
 ]
+[
+  // ==========================================
+  // 1. 基礎射術 (Basic - Auto Attack)
+  // 當裝備弓時，系統自動使用的普攻
+  // ==========================================
+  {
+    "id": "basic_archery",
+    "name": "基礎射術",
+    "type": "PASSIVE",       // 被動/普攻替代
+    "school": "COMMON",
+    "tags": ["WEAPON", "BOW", "BASIC"],
+    "requirements": {
+      "reqWeapon": ["BOW"]   // 必須拿弓
+    },
+    "costs": {
+      "ammo": 1              // 每射一次消耗 1 支箭 (若您實作了彈藥系統)
+    },
+    "mechanics": {
+      "baseValue": 10,
+      "scaleStat": "DEX",    // 弓箭吃敏捷
+      "scaleFactor": 1.0,
+      "hitRateMod": 0.1      // 弓箭命中通常較高
+    },
+    "messages": {
+      "cast": [
+        "$N 拉滿弓弦，一支利箭「嗖」地一聲射向 $n。",
+        "$N 快速搭箭開弓，瞄準 $n 射去。",
+        "$N 眼神銳利，手中的箭矢如流星般飛向 $n。"
+      ],
+      "hit": "準確地射中了目標，箭羽還在微微顫動。",
+      "crit": "【穿透】這一箭直接射穿了 $n 的肩膀，帶出一蓬血霧！",
+      "miss": "$n 聽得弓弦響聲，急忙低頭避過了這一箭。",
+      "parried": "$n 揮舞兵器，將飛來的箭矢撥落在地。"
+    }
+  },
+
+  // ==========================================
+  // 2. 二連矢 (Advanced 1) - 快速輸出
+  // ==========================================
+  {
+    "id": "double_shot",
+    "name": "二連矢",
+    "type": "ACTIVE",        // 主動技能
+    "school": "ARCHERY",
+    "tags": ["RANGED", "PHYSICAL"],
+    "description": "以驚人的速度連續射出兩箭。",
+    "requirements": {
+      "minLevel": 5,
+      "reqWeapon": ["BOW"],
+      "reqStats": { "DEX": 15 }
+    },
+    "costs": {
+      "mp": 10,
+      "stamina": 15,
+      "ammo": 2              // 消耗 2 支箭
+    },
+    "timing": {
+      "castTime": 500,       // 0.5秒 瞄準
+      "cooldown": 6000,      // 6秒 CD
+      "gcd": 1500
+    },
+    "targeting": {
+      "type": "SINGLE_ENEMY"
+    },
+    "mechanics": {
+      "baseValue": 15,
+      "scaleStat": "DEX",
+      "scaleFactor": 0.8,    // 單發傷害較低 (0.8 * 2 = 1.6倍總傷)
+      "hitCount": 2          // 【關鍵】程式邏輯要處理多段攻擊
+    },
+    "messages": {
+      "cast": "$N 手法如電，瞬間射出兩支箭矢，取名「二連矢」！",
+      "hit": "兩支箭幾乎同時插在 $n 身上！"
+    }
+  },
+
+  // ==========================================
+  // 3. 弱點狙擊 (Advanced 2) - 高傷/暴擊
+  // ==========================================
+  {
+    "id": "aimed_shot",
+    "name": "弱點狙擊",
+    "type": "ACTIVE",
+    "school": "ARCHERY",
+    "tags": ["RANGED", "CRITICAL"],
+    "description": "花費時間仔細瞄準敵人的要害，造成巨大傷害。",
+    "requirements": {
+      "minLevel": 12,
+      "reqWeapon": ["BOW"]
+    },
+    "costs": {
+      "mp": 20,
+      "stamina": 30,
+      "ammo": 1
+    },
+    "timing": {
+      "castTime": 2500,      // 2.5秒 讀條 (需要站樁)
+      "cooldown": 15000,     // 15秒 CD
+      "interruptible": true  // 可被打斷
+    },
+    "targeting": {
+      "type": "SINGLE_ENEMY"
+    },
+    "mechanics": {
+      "baseValue": 50,
+      "scaleStat": "DEX",
+      "scaleFactor": 2.5,    // 高倍率
+      "critRateMod": 0.5,    // +50% 暴擊率
+      "hitRateMod": 0.2      // +20% 命中
+    },
+    "messages": {
+      "prepare": "$N 深吸一口氣，將弓拉滿，箭尖死死鎖定了 $n 的要害...",
+      "cast": "「著！」$N 手指一鬆，箭矢帶著破空之聲激射而出！",
+      "hit": "正中要害！造成了毀滅性的打擊！"
+    }
+  },
+
+  // ==========================================
+  // 4. 星辰墜落 (Ultimate) - 奧義/範圍技
+  // ==========================================
+  {
+    "id": "starfall",
+    "name": "星辰墜落",
+    "type": "ACTIVE",
+    "school": "ARCHERY",
+    "tags": ["RANGED", "AOE", "MAGIC"], // 帶有魔法屬性
+    "description": "向天空射出灌注魔力的箭矢，化作光雨覆蓋戰場。",
+    "requirements": {
+      "minLevel": 25,
+      "reqClass": ["RANGER", "ELF"], // 職業或種族限制
+      "reqWeapon": ["BOW"]
+    },
+    "costs": {
+      "mp": 100,
+      "ammo": 1              // 只需一支魔法箭作為媒介
+    },
+    "timing": {
+      "castTime": 3000,      // 3秒 詠唱
+      "cooldown": 60000      // 1分鐘 CD
+    },
+    "targeting": {
+      "type": "AREA_ENEMY",  // 全體敵人
+      "aoeRadius": 1,        // 影響周圍 1 格 (如果支援地圖)
+      "maxTargets": 5
+    },
+    "mechanics": {
+      "baseValue": 80,
+      "scaleStat": "DEX",
+      "scaleFactor": 1.5,
+      "effects": [
+        { "id": "blind", "chance": 0.5, "duration": 5000 } // 50% 機率致盲
+      ]
+    },
+    "messages": {
+      "prepare": "$N 將弓指向天空，箭矢上凝聚起耀眼的星光...",
+      "cast": "$N 鬆開弓弦，無數光矢如流星雨般從天而降！",
+      "hit": "被光矢貫穿，發出痛苦的嚎叫！",
+      "miss": "幸運地躲在掩體後，避開了光雨的洗禮。"
+    }
+  }
+]
+
+{
+  "id": "basic_breathing",
+  "name": "吐納術",
+  "type": "PASSIVE",
+  "tags": ["FORCE", "BASIC"],
+  "description": "最基礎的呼吸調節法，能稍微平復氣息。",
+  "mechanics": {
+    "hpRegen": 5,   // 每 tick 多回 5 點血
+    "mpRegen": 5,   // 每 tick 多回 5 點氣
+    "maxMpMod": 0   // 不增加上限
+  },
+  "messages": {
+    // 內功通常沒有戰鬥訊息，但在打坐(meditate)時會顯示
+    "meditate": "$N 盤膝而坐，緩緩調節呼吸..."
+  }
+}
+
+{
+  "id": "basic_dodge",
+  "name": "基礎身法",
+  "type": "PASSIVE",
+  "tags": ["DODGE", "BASIC"],
+  "description": "一般人打架時的本能反應，左閃右躲。",
+  "mechanics": {
+    "dodgeMod": 0.0,       // 基礎閃避率無加成
+    "moveSpeedMod": 0.0    // 無移動速度加成
+  },
+  "messages": {
+    "dodge": [
+      "$n 往旁邊一閃，躲開了 $N 的攻擊。",
+      "$n 急忙縮頭，險險避過這一擊。",
+      "$n 腳步踉蹌了一下，卻剛好躲過了 $N 的攻勢。"
+    ]
+  }
+}
+
+{
+  "id": "basic_first_aid",
+  "name": "急救術",
+  "type": "PASSIVE",
+  "tags": ["MEDICAL", "BASIC"],
+  "mechanics": {
+    "healEffectMod": 1.0,   // 標準治療量
+    "bandageSpeed": 5000    // 包紮需要 5 秒
+  }
+}
+
+{
+  "id": "basic_meditate",
+  "name": "基礎冥想",
+  "type": "CHANNEL", // 引導型技能 (移動會中斷)
+  "school": "COMMON",
+  "tags": ["KNOWLEDGE", "RECOVERY"],
+  "description": "放空思緒，讓精神力慢慢恢復。",
+  "requirements": {
+    "reqState": "SITTING", // [開發提示] 必須先 sit (坐下)
+    "reqCombat": false     // 戰鬥中不可使用
+  },
+  "costs": {
+    // 冥想通常不耗魔，反而耗時間
+  },
+  "timing": {
+    "channelTime": 10000, // 持續 10 秒
+    "tickInterval": 2000  // 每 2 秒跳一次回復
+  },
+  "mechanics": {
+    // 這裡定義的是「每 tick 的額外回復量」
+    "mpRegen": 10,
+    "hpRegen": 0
+  },
+  "messages": {
+    "prepare": "$N 盤膝坐下，閉上雙眼，開始冥想。",
+    "tick": "你感覺精神稍微好了一些...", // 顯示給自己看
+    "finish": "$N 緩緩睜開雙眼，看起來精神煥發。",
+    "interrupt": "$N 被打斷了冥想，皺著眉頭站了起來。"
+  }
+}
+
+{
+  "id": "basic_parry",
+  "name": "基礎招架",
+  "type": "PASSIVE",
+  "tags": ["PARRY", "BASIC"],
+  "description": "利用武器或手臂格擋攻擊的基本技巧。",
+  "mechanics": {
+    "parryMod": 0.05 // 只有 5% 基礎格擋
+  },
+  "messages": {
+    "parried": [
+      "$n 舉起手中的$w，擋住了 $N 的攻擊。", // 若有武器
+      "$n 舉起手臂硬接了 $N 這一招。"        // 若無武器 (系統自動切換描述)
+    ]
+  }
+}
+
+{
+  "id": "basic_throwing",
+  "name": "基礎暗器",
+  "type": "PASSIVE",
+  "school": "COMMON",
+  "tags": ["RANGED", "THROWING", "BASIC"],
+  "description": "簡單的投擲技巧，講究手腕的抖動與準頭。",
+  "requirements": {
+    "minLevel": 1,
+    "reqWeapon": ["THROWING", "DAGGER"] // 必須裝備投擲武器或匕首
+  },
+  "costs": {
+    "stamina": 5, // 投擲很耗體力
+    "ammo": 1     // [開發提示] 需要消耗 1 個裝備中的物品
+  },
+  "timing": {
+    "castTime": 500,  // 0.5秒 瞄準
+    "cooldown": 1000, // 1秒 CD
+    "gcd": 1500
+  },
+  "targeting": {
+    "type": "SINGLE_ENEMY",
+    "range": 0,       // 0=同房間 (有些 MUD 允許 range=1 打隔壁)
+    "lineOfSight": true
+  },
+  "mechanics": {
+    "baseValue": 8,
+    "scaleStat": "DEX", // 投擲吃敏捷
+    "scaleFactor": 1.0,
+    "hitRateMod": 0.05
+  },
+  "messages": {
+    "cast": [
+      "$N 手腕一抖，一道寒光射向 $n。",
+      "$N 抓準空隙，猛地將手中的$w擲向 $n。",
+      "$N 大喝一聲：「看暗器！」，$w 脫手而出飛向 $n。"
+    ],
+    "hit": "準確地插在身上，顫動不已。",
+    "crit": "【貫穿】暗器直接沒入 $n 的體內，只剩下柄還露在外面！",
+    "miss": "$n 聽風辨位，偏頭躲過了這記暗器。",
+    "parried": "$n 用手中的兵器將暗器格飛。"
+  }
+}

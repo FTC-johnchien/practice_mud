@@ -3,11 +3,18 @@
   "name": "基礎暗器",
   "type": "PASSIVE",
   "school": "COMMON",
-  "tags": ["RANGED", "THROWING", "BASIC"],
+  "tags": [
+    "RANGED",
+    "THROWING",
+    "BASIC"
+  ],
   "description": "簡單的投擲技巧，講究手腕的抖動與準頭。",
   "requirements": {
-    "minLevel": 1,
-    "reqWeapon": ["THROWING", "DAGGER"]
+    "level": 1,
+    "reqWeapon": [
+      "THROWING",
+      "DAGGER"
+    ]
   },
   "costs": {
     "stamina": 5,
@@ -28,6 +35,9 @@
     "scaleStat": "DEX",
     "scaleFactor": 1.0,
     "hitRateMod": 0.05
+  },
+  "growth": {
+    "baseValue": 0.08
   },
   "messages": {
     "cast": [
