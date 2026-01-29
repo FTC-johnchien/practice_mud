@@ -1,0 +1,265 @@
+[
+  {
+    "id": "warrior",
+    "name": "戰士",
+    "description": "身穿重甲，手持巨刃，在戰場前線衝鋒陷陣的勇者。",
+    "resourceType": "RAGE",
+    "baseStats": {
+      "STR": 10,
+      "DEX": 5,
+      "CON": 10,
+      "INT": 2,
+      "WIS": 3
+    },
+    "growth": {
+      "hpPerLevel": 30,
+      "mpPerLevel": 0,
+      "statWeights": {
+        "STR": 1.5,
+        "CON": 1.2,
+        "DEX": 0.5
+      }
+    },
+    "proficiencies": {
+      "armor": [
+        "PLATE",
+        "MAIL",
+        "LEATHER",
+        "CLOTH",
+        "SHIELD"
+      ],
+      "weapon": [
+        "SWORD",
+        "AXE",
+        "MACE",
+        "POLEARM",
+        "SWORD_2H",
+        "AXE_2H"
+      ]
+    },
+    "traits": {
+      "aggroMod": 1.5,
+      "blockBonus": 0.05
+    },
+    "skills": {
+      "basic_sword": 1,
+      "basic_parry": 1,
+      "taunt": 5,
+      "bash": 10,
+      "berserk": 20
+    }
+  },
+  {
+    "id": "mage",
+    "name": "魔法師",
+    "description": "操控元素力量的學者，身體孱弱但擁有毀滅性的破壞力。",
+    "resourceType": "MANA",
+    "baseStats": {
+      "STR": 2,
+      "DEX": 3,
+      "CON": 3,
+      "INT": 12,
+      "WIS": 10
+    },
+    "growth": {
+      "hpPerLevel": 10,
+      "mpPerLevel": 20,
+      "statWeights": {
+        "INT": 2.0,
+        "WIS": 1.0
+      }
+    },
+    "proficiencies": {
+      "armor": [
+        "CLOTH"
+      ],
+      "weapon": [
+        "WAND",
+        "STAFF",
+        "DAGGER"
+      ]
+    },
+    "traits": {
+      "spellDamageMod": 0.1,
+      "magicResist": 10
+    },
+    "skills": {
+      "basic_magic": 1,
+      "basic_meditate": 1,
+      "fireball": 5,
+      "frost_nova": 10,
+      "teleport": 20
+    }
+  },
+  {
+    "id": "rogue",
+    "name": "盜賊",
+    "description": "潛伏在陰影中的殺手，擅長使用毒藥與偷襲。",
+    "resourceType": "ENERGY",
+    "baseStats": {
+      "STR": 5,
+      "DEX": 12,
+      "CON": 5,
+      "INT": 4,
+      "WIS": 4
+    },
+    "growth": {
+      "hpPerLevel": 18,
+      "mpPerLevel": 0,
+      "statWeights": {
+        "DEX": 2.0,
+        "STR": 0.5,
+        "AGI": 1.0
+      }
+    },
+    "proficiencies": {
+      "armor": [
+        "LEATHER",
+        "CLOTH"
+      ],
+      "weapon": [
+        "DAGGER",
+        "SWORD",
+        "BOW",
+        "THROWING"
+      ]
+    },
+    "traits": {
+      "critChance": 0.05,
+      "moveSpeedMod": 0.1,
+      "dualWield": true
+    },
+    "skills": {
+      "basic_dagger": 1,
+      "basic_throwing": 1,
+      "stealth": 3,
+      "backstab": 5,
+      "pick_lock": 8
+    }
+  },
+  {
+    "id": "cleric",
+    "name": "牧師",
+    "description": "信仰堅定的神職人員，負責治療傷患與驅散邪惡。",
+    "resourceType": "MANA",
+    "baseStats": {
+      "STR": 5,
+      "DEX": 3,
+      "CON": 8,
+      "INT": 6,
+      "WIS": 12
+    },
+    "growth": {
+      "hpPerLevel": 15,
+      "mpPerLevel": 15,
+      "statWeights": {
+        "WIS": 2.0,
+        "CON": 1.0
+      }
+    },
+    "proficiencies": {
+      "armor": [
+        "MAIL",
+        "LEATHER",
+        "CLOTH",
+        "SHIELD"
+      ],
+      "weapon": [
+        "MACE",
+        "STAFF"
+      ]
+    },
+    "traits": {
+      "healBonus": 0.15
+    },
+    "skills": {
+      "basic_first_aid": 1,
+      "heal_light": 1,
+      "bless": 5,
+      "revive": 20
+    }
+  },
+  {
+    "id": "swordsman",
+    "name": "俠客",
+    "description": "仗劍走天涯的武者，追求劍道的極致。",
+    "resourceType": "FORCE",
+    "baseStats": {
+      "STR": 8,
+      "DEX": 10,
+      "CON": 8,
+      "INT": 6,
+      "WIS": 6
+    },
+    "growth": {
+      "hpPerLevel": 20,
+      "mpPerLevel": 10,
+      "statWeights": {
+        "DEX": 1.5,
+        "STR": 1.0,
+        "INT": 0.5
+      }
+    },
+    "proficiencies": {
+      "armor": [
+        "CLOTH",
+        "LEATHER"
+      ],
+      "weapon": [
+        "SWORD",
+        "BLADE"
+      ]
+    },
+    "traits": {
+      "parryBonus": 0.1,
+      "attackSpeedMod": 0.05
+    },
+    "skills": {
+      "basic_sword": 1,
+      "basic_dodge": 1,
+      "basic_breathing": 1,
+      "huashan_sword": 10,
+      "cloud_step": 15
+    }
+  },
+  {
+    "id": "monk",
+    "name": "武僧",
+    "description": "苦修體魄的僧侶，以肉身對抗兵刃。",
+    "resourceType": "FORCE",
+    "baseStats": {
+      "STR": 10,
+      "DEX": 8,
+      "CON": 12,
+      "INT": 5,
+      "WIS": 5
+    },
+    "growth": {
+      "hpPerLevel": 35,
+      "mpPerLevel": 5,
+      "statWeights": {
+        "CON": 2.0,
+        "STR": 1.0
+      }
+    },
+    "proficiencies": {
+      "armor": [
+        "CLOTH"
+      ],
+      "weapon": [
+        "STAFF",
+        "UNARMED"
+      ]
+    },
+    "traits": {
+      "unarmedBonus": 0.2,
+      "naturalArmor": 10
+    },
+    "skills": {
+      "basic_fist": 1,
+      "iron_cloth": 5,
+      "shaolin_fist": 10,
+      "lion_roar": 20
+    }
+  }
+]

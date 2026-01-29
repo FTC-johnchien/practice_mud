@@ -1,103 +1,267 @@
 [
-
-  { "id": "copper_coin", "name": "銅幣", "type": "CURRENCY", "description": "普通的流通貨幣。", "isStackable": true, "maxStack": 9999 },
-
   {
-    "id": "rusty_sword", "name": "生鏽鐵劍", "type": "WEAPON", "subType": "SWORD",
-    "quality": "POOR", "price": 10, "weight": 3.0,
-    "equipment": { "slot": "MAIN_HAND", "minDamage": 3, "maxDamage": 6, "attackSpeed": 2000 },
-    "requirements": { "minLevel": 1 }
+    "id": "copper_coin",
+    "name": "銅幣",
+    "type": "CURRENCY",
+    "description": "普通的流通貨幣。",
+    "isStackable": true,
+    "maxStack": 9999
   },
-
   {
-    "id": "iron_sword", "name": "精鋼劍", "type": "WEAPON", "subType": "SWORD",
-    "quality": "COMMON", "price": 100, "weight": 4.0,
-    "equipment": { "slot": "MAIN_HAND", "minDamage": 8, "maxDamage": 15, "attackSpeed": 1800 },
-    "requirements": { "minLevel": 5 }
+    "id": "rusty_sword",
+    "name": "生鏽鐵劍",
+    "type": "WEAPON",
+    "subType": "SWORD",
+    "quality": "POOR",
+    "price": 10,
+    "weight": 3.0,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "minDamage": 3,
+      "maxDamage": 6,
+      "attackSpeed": 2000
+    },
+    "requirements": {
+      "minLevel": 1
+    }
   },
-
   {
-    "id": "wooden_staff", "name": "新手法杖", "type": "WEAPON", "subType": "STAFF",
-    "quality": "COMMON", "price": 50, "weight": 2.0,
-    "equipment": { "slot": "MAIN_HAND", "minDamage": 2, "maxDamage": 4, "attackSpeed": 2500 },
-    "stats": { "INT": 2 },
-    "requirements": { "minLevel": 1 }
+    "id": "iron_sword",
+    "name": "精鋼劍",
+    "type": "WEAPON",
+    "subType": "SWORD",
+    "quality": "COMMON",
+    "price": 100,
+    "weight": 4.0,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "minDamage": 8,
+      "maxDamage": 15,
+      "attackSpeed": 1800
+    },
+    "requirements": {
+      "minLevel": 5
+    }
   },
-
   {
-    "id": "goblin_club", "name": "哥布林狼牙棒", "type": "WEAPON", "subType": "MACE",
-    "quality": "UNCOMMON", "price": 0, "weight": 5.0,
-    "equipment": { "slot": "MAIN_HAND", "minDamage": 10, "maxDamage": 20, "attackSpeed": 3000 },
-    "requirements": { "minLevel": 3 },
-    "flags": ["NO_SELL"]
+    "id": "wooden_staff",
+    "name": "新手法杖",
+    "type": "WEAPON",
+    "subType": "STAFF",
+    "quality": "COMMON",
+    "price": 50,
+    "weight": 2.0,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "minDamage": 2,
+      "maxDamage": 4,
+      "attackSpeed": 2500
+    },
+    "stats": {
+      "INT": 2
+    },
+    "requirements": {
+      "minLevel": 1
+    }
   },
-
   {
-    "id": "boss_dagger", "name": "淬毒之牙", "type": "WEAPON", "subType": "DAGGER",
-    "quality": "RARE", "price": 500, "weight": 1.5,
-    "equipment": { "slot": "MAIN_HAND", "minDamage": 12, "maxDamage": 18, "attackSpeed": 1000 },
-    "stats": { "DEX": 5, "CRIT_RATE": 0.05 },
-    "requirements": { "minLevel": 8 }
+    "id": "goblin_club",
+    "name": "哥布林狼牙棒",
+    "type": "WEAPON",
+    "subType": "MACE",
+    "quality": "UNCOMMON",
+    "price": 0,
+    "weight": 5.0,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "minDamage": 10,
+      "maxDamage": 20,
+      "attackSpeed": 3000
+    },
+    "requirements": {
+      "minLevel": 3
+    },
+    "flags": [
+      "NO_SELL"
+    ]
   },
-
   {
-    "id": "cloth_shirt", "name": "粗布衣", "type": "ARMOR", "subType": "CLOTH",
-    "quality": "COMMON", "price": 20, "weight": 1.0,
-    "equipment": { "slot": "BODY", "armor": 2 }
+    "id": "boss_dagger",
+    "name": "淬毒之牙",
+    "type": "WEAPON",
+    "subType": "DAGGER",
+    "quality": "RARE",
+    "price": 500,
+    "weight": 1.5,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "minDamage": 12,
+      "maxDamage": 18,
+      "attackSpeed": 1000
+    },
+    "stats": {
+      "DEX": 5,
+      "CRIT_RATE": 0.05
+    },
+    "requirements": {
+      "minLevel": 8
+    }
   },
-
   {
-    "id": "leather_vest", "name": "皮背心", "type": "ARMOR", "subType": "LEATHER",
-    "quality": "COMMON", "price": 80, "weight": 2.5,
-    "equipment": { "slot": "BODY", "armor": 8 },
-    "requirements": { "minLevel": 3 }
+    "id": "cloth_shirt",
+    "name": "粗布衣",
+    "type": "ARMOR",
+    "subType": "CLOTH",
+    "quality": "COMMON",
+    "price": 20,
+    "weight": 1.0,
+    "equipment": {
+      "slot": "BODY",
+      "armor": 2
+    }
   },
-
   {
-    "id": "iron_shield", "name": "鐵圓盾", "type": "ARMOR", "subType": "SHIELD",
-    "quality": "COMMON", "price": 120, "weight": 5.0,
-    "equipment": { "slot": "OFF_HAND", "armor": 5, "blockRate": 0.15 }
+    "id": "leather_vest",
+    "name": "皮背心",
+    "type": "ARMOR",
+    "subType": "LEATHER",
+    "quality": "COMMON",
+    "price": 80,
+    "weight": 2.5,
+    "equipment": {
+      "slot": "BODY",
+      "armor": 8
+    },
+    "requirements": {
+      "minLevel": 3
+    }
   },
-
   {
-    "id": "copper_ring", "name": "銅戒指", "type": "ARMOR", "subType": "ACCESSORY",
-    "quality": "COMMON", "price": 50, "weight": 0.1,
-    "equipment": { "slot": "FINGER" },
-    "stats": { "HP": 20 }
+    "id": "iron_shield",
+    "name": "鐵圓盾",
+    "type": "ARMOR",
+    "subType": "SHIELD",
+    "quality": "COMMON",
+    "price": 120,
+    "weight": 5.0,
+    "equipment": {
+      "slot": "OFF_HAND",
+      "armor": 5,
+      "blockRate": 0.15
+    }
   },
-
   {
-    "id": "apple", "name": "紅蘋果", "type": "CONSUMABLE", "subType": "FOOD",
-    "price": 5, "weight": 0.2, "isStackable": true, "maxStack": 20,
-    "effects": [ { "trigger": "ON_USE", "type": "HEAL_HP", "value": 20, "cooldown": 5000 } ]
+    "id": "copper_ring",
+    "name": "銅戒指",
+    "type": "ARMOR",
+    "subType": "ACCESSORY",
+    "quality": "COMMON",
+    "price": 50,
+    "weight": 0.1,
+    "equipment": {
+      "slot": "FINGER"
+    },
+    "stats": {
+      "HP": 20
+    }
   },
-
   {
-    "id": "healing_potion_s", "name": "初級治療藥水", "type": "CONSUMABLE", "subType": "POTION",
-    "price": 50, "weight": 0.5, "isStackable": true, "maxStack": 20,
-    "effects": [ { "trigger": "ON_USE", "type": "HEAL_HP", "value": 100, "cooldown": 30000, "cooldownGroup": "POTION" } ]
+    "id": "apple",
+    "name": "紅蘋果",
+    "type": "CONSUMABLE",
+    "subType": "FOOD",
+    "price": 5,
+    "weight": 0.2,
+    "isStackable": true,
+    "maxStack": 20,
+    "effects": [
+      {
+        "trigger": "ON_USE",
+        "type": "HEAL_HP",
+        "value": 20,
+        "cooldown": 5000
+      }
+    ]
   },
-
   {
-    "id": "mana_water", "name": "魔法泉水", "type": "CONSUMABLE", "subType": "POTION",
-    "price": 60, "weight": 0.5, "isStackable": true, "maxStack": 20,
-    "effects": [ { "trigger": "ON_USE", "type": "HEAL_MP", "value": 50, "cooldown": 30000, "cooldownGroup": "POTION" } ]
+    "id": "healing_potion_s",
+    "name": "初級治療藥水",
+    "type": "CONSUMABLE",
+    "subType": "POTION",
+    "price": 50,
+    "weight": 0.5,
+    "isStackable": true,
+    "maxStack": 20,
+    "effects": [
+      {
+        "trigger": "ON_USE",
+        "type": "HEAL_HP",
+        "value": 100,
+        "cooldown": 30000,
+        "cooldownGroup": "POTION"
+      }
+    ]
   },
-
   {
-    "id": "cellar_key", "name": "生鏽的鑰匙", "type": "KEY",
+    "id": "mana_water",
+    "name": "魔法泉水",
+    "type": "CONSUMABLE",
+    "subType": "POTION",
+    "price": 60,
+    "weight": 0.5,
+    "isStackable": true,
+    "maxStack": 20,
+    "effects": [
+      {
+        "trigger": "ON_USE",
+        "type": "HEAL_MP",
+        "value": 50,
+        "cooldown": 30000,
+        "cooldownGroup": "POTION"
+      }
+    ]
+  },
+  {
+    "id": "cellar_key",
+    "name": "生鏽的鑰匙",
+    "type": "KEY",
     "description": "一把沾滿灰塵的舊鑰匙，似乎能開啟某個地下室。",
-    "quality": "UNCOMMON", "weight": 0.1, "flags": ["QUEST_ITEM", "UNIQUE"]
+    "quality": "UNCOMMON",
+    "weight": 0.1,
+    "flags": [
+      "QUEST_ITEM",
+      "UNIQUE"
+    ]
   },
-
-  { "id": "rat_tail", "name": "老鼠尾巴", "type": "TRASH", "price": 1, "isStackable": true },
-
-  { "id": "wolf_pelt", "name": "狼皮", "type": "MATERIAL", "price": 15, "isStackable": true },
-
-  { "id": "goblin_ear", "name": "哥布林耳朵", "type": "QUEST", "price": 5, "isStackable": true },
-
-  { "id": "silver_medallion", "name": "銀葉徽章", "type": "TRASH", "quality": "RARE", "price": 200, "description": "曾經是村長的信物，現在被哥布林搶走了。" },
-
+  {
+    "id": "rat_tail",
+    "name": "老鼠尾巴",
+    "type": "TRASH",
+    "price": 1,
+    "isStackable": true
+  },
+  {
+    "id": "wolf_pelt",
+    "name": "狼皮",
+    "type": "MATERIAL",
+    "price": 15,
+    "isStackable": true
+  },
+  {
+    "id": "goblin_ear",
+    "name": "哥布林耳朵",
+    "type": "QUEST",
+    "price": 5,
+    "isStackable": true
+  },
+  {
+    "id": "silver_medallion",
+    "name": "銀葉徽章",
+    "type": "TRASH",
+    "quality": "RARE",
+    "price": 200,
+    "description": "曾經是村長的信物，現在被哥布林搶走了。"
+  },
   {
     "id": "training_sword",
     "name": "木製練習劍",
@@ -114,7 +278,9 @@
       "attackSpeed": 2000,
       "range": 0
     },
-    "requirements": { "minLevel": 1 }
+    "requirements": {
+      "minLevel": 1
+    }
   },
   {
     "id": "fine_steel_sword",
@@ -131,10 +297,13 @@
       "maxDamage": 25,
       "attackSpeed": 1800
     },
-    "stats": { "DEX": 5 },
-    "requirements": { "minLevel": 10 }
+    "stats": {
+      "DEX": 5
+    },
+    "requirements": {
+      "minLevel": 10
+    }
   },
-
   {
     "id": "kitchen_chopper",
     "name": "厚重的菜刀",
@@ -150,7 +319,9 @@
       "maxDamage": 12,
       "attackSpeed": 2200
     },
-    "requirements": { "minLevel": 1 }
+    "requirements": {
+      "minLevel": 1
+    }
   },
   {
     "id": "scimitar",
@@ -167,9 +338,10 @@
       "maxDamage": 28,
       "attackSpeed": 2000
     },
-    "requirements": { "minLevel": 8 }
+    "requirements": {
+      "minLevel": 8
+    }
   },
-
   {
     "id": "fruit_knife",
     "name": "水果刀",
@@ -185,7 +357,9 @@
       "maxDamage": 5,
       "attackSpeed": 1000
     },
-    "requirements": { "minLevel": 1 }
+    "requirements": {
+      "minLevel": 1
+    }
   },
   {
     "id": "poison_stiletto",
@@ -203,11 +377,17 @@
       "attackSpeed": 900
     },
     "effects": [
-      { "trigger": "ON_HIT", "spellId": "poison_proc", "chance": 0.2, "target": "ENEMY" }
+      {
+        "trigger": "ON_HIT",
+        "spellId": "poison_proc",
+        "chance": 0.2,
+        "target": "ENEMY"
+      }
     ],
-    "requirements": { "minLevel": 15 }
+    "requirements": {
+      "minLevel": 15
+    }
   },
-
   {
     "id": "bamboo_spear",
     "name": "削尖的竹槍",
@@ -223,7 +403,9 @@
       "maxDamage": 10,
       "attackSpeed": 2000
     },
-    "requirements": { "minLevel": 1 }
+    "requirements": {
+      "minLevel": 1
+    }
   },
   {
     "id": "iron_staff",
@@ -240,9 +422,13 @@
       "maxDamage": 30,
       "attackSpeed": 2200
     },
-    "requirements": { "minLevel": 10, "reqStats": { "STR": 20 } }
+    "requirements": {
+      "minLevel": 10,
+      "reqStats": {
+        "STR": 20
+      }
+    }
   },
-
   {
     "id": "wood_axe",
     "name": "伐木斧",
@@ -258,7 +444,9 @@
       "maxDamage": 20,
       "attackSpeed": 2500
     },
-    "requirements": { "minLevel": 2 }
+    "requirements": {
+      "minLevel": 2
+    }
   },
   {
     "id": "stone_maul",
@@ -275,9 +463,13 @@
       "maxDamage": 45,
       "attackSpeed": 3500
     },
-    "requirements": { "minLevel": 12, "reqStats": { "STR": 30 } }
+    "requirements": {
+      "minLevel": 12,
+      "reqStats": {
+        "STR": 30
+      }
+    }
   },
-
   {
     "id": "leather_whip",
     "name": "牛皮長鞭",
@@ -293,7 +485,9 @@
       "maxDamage": 8,
       "attackSpeed": 1800
     },
-    "requirements": { "minLevel": 3 }
+    "requirements": {
+      "minLevel": 3
+    }
   },
   {
     "id": "chain_whip",
@@ -310,9 +504,13 @@
       "maxDamage": 22,
       "attackSpeed": 2000
     },
-    "requirements": { "minLevel": 15, "reqStats": { "DEX": 20 } }
+    "requirements": {
+      "minLevel": 15,
+      "reqStats": {
+        "DEX": 20
+      }
+    }
   },
-
   {
     "id": "novice_wand",
     "name": "學徒魔杖",
@@ -328,17 +526,14 @@
       "maxDamage": 3,
       "attackSpeed": 2000
     },
-    "stats": { "INT": 3, "MP": 20 },
-    "requirements": { "minLevel": 1 }
+    "stats": {
+      "INT": 3,
+      "MP": 20
+    },
+    "requirements": {
+      "minLevel": 1
+    }
   },
-
-
-
-
-
-
-
-
   {
     "id": "linen_shirt",
     "name": "亞麻襯衫",
@@ -352,7 +547,9 @@
       "slot": "BODY",
       "armor": 2
     },
-    "requirements": { "minLevel": 1 }
+    "requirements": {
+      "minLevel": 1
+    }
   },
   {
     "id": "apprentice_robe",
@@ -372,7 +569,9 @@
       "INT": 3,
       "MP": 20
     },
-    "requirements": { "minLevel": 5 }
+    "requirements": {
+      "minLevel": 5
+    }
   },
   {
     "id": "silk_hat",
@@ -386,11 +585,13 @@
       "slot": "HEAD",
       "armor": 2
     },
-    "stats": { "INT": 1 },
-    "requirements": { "minLevel": 3 }
+    "stats": {
+      "INT": 1
+    },
+    "requirements": {
+      "minLevel": 3
+    }
   },
-
-
   {
     "id": "cured_leather_vest",
     "name": "硬皮背心",
@@ -404,8 +605,12 @@
       "slot": "BODY",
       "armor": 12
     },
-    "stats": { "DEX": 2 },
-    "requirements": { "minLevel": 4 }
+    "stats": {
+      "DEX": 2
+    },
+    "requirements": {
+      "minLevel": 4
+    }
   },
   {
     "id": "wolf_skin_boots",
@@ -420,11 +625,14 @@
       "slot": "FEET",
       "armor": 5
     },
-    "stats": { "DEX": 2, "MOVE_SPEED": 0.05 },
-    "requirements": { "minLevel": 6 }
+    "stats": {
+      "DEX": 2,
+      "MOVE_SPEED": 0.05
+    },
+    "requirements": {
+      "minLevel": 6
+    }
   },
-
-
   {
     "id": "chainmail_armor",
     "name": "鎖子甲",
@@ -439,7 +647,12 @@
       "armor": 25,
       "stealthPenalty": 0.3
     },
-    "requirements": { "minLevel": 8, "reqStats": { "STR": 15 } }
+    "requirements": {
+      "minLevel": 8,
+      "reqStats": {
+        "STR": 15
+      }
+    }
   },
   {
     "id": "iron_breastplate",
@@ -456,8 +669,16 @@
       "moveSpeedPenalty": 0.1,
       "spellFailure": 0.5
     },
-    "stats": { "STR": 5, "CON": 10 },
-    "requirements": { "minLevel": 10, "reqStats": { "STR": 25 } }
+    "stats": {
+      "STR": 5,
+      "CON": 10
+    },
+    "requirements": {
+      "minLevel": 10,
+      "reqStats": {
+        "STR": 25
+      }
+    }
   },
   {
     "id": "iron_helmet",
@@ -471,10 +692,10 @@
       "slot": "HEAD",
       "armor": 15
     },
-    "requirements": { "minLevel": 8 }
+    "requirements": {
+      "minLevel": 8
+    }
   },
-
-
   {
     "id": "wooden_buckler",
     "name": "木圓盾",
@@ -489,7 +710,9 @@
       "blockRate": 0.1,
       "blockValue": 10
     },
-    "requirements": { "minLevel": 1 }
+    "requirements": {
+      "minLevel": 1
+    }
   },
   {
     "id": "tower_shield",
@@ -507,10 +730,13 @@
       "blockValue": 30,
       "moveSpeedPenalty": 0.05
     },
-    "requirements": { "minLevel": 10, "reqStats": { "STR": 30 } }
+    "requirements": {
+      "minLevel": 10,
+      "reqStats": {
+        "STR": 30
+      }
+    }
   },
-
-
   {
     "id": "silver_ring",
     "name": "銀戒指",
@@ -519,9 +745,16 @@
     "quality": "UNCOMMON",
     "price": 200,
     "weight": 0.1,
-    "equipment": { "slot": "FINGER" },
-    "stats": { "INT": 2, "MP": 10 },
-    "requirements": { "minLevel": 5 }
+    "equipment": {
+      "slot": "FINGER"
+    },
+    "stats": {
+      "INT": 2,
+      "MP": 10
+    },
+    "requirements": {
+      "minLevel": 5
+    }
   },
   {
     "id": "bear_tooth_necklace",
@@ -531,17 +764,17 @@
     "quality": "RARE",
     "price": 350,
     "weight": 0.2,
-    "equipment": { "slot": "NECK" },
-    "stats": { "STR": 3, "CRIT_RATE": 0.02 },
-    "requirements": { "minLevel": 8 }
+    "equipment": {
+      "slot": "NECK"
+    },
+    "stats": {
+      "STR": 3,
+      "CRIT_RATE": 0.02
+    },
+    "requirements": {
+      "minLevel": 8
+    }
   },
-
-
-
-
-
-
-
   {
     "id": "novice_hood",
     "name": "學徒兜帽",
@@ -551,9 +784,16 @@
     "quality": "COMMON",
     "price": 30,
     "weight": 0.5,
-    "equipment": { "slot": "HEAD", "armor": 3 },
-    "stats": { "MP": 10 },
-    "requirements": { "minLevel": 1 }
+    "equipment": {
+      "slot": "HEAD",
+      "armor": 3
+    },
+    "stats": {
+      "MP": 10
+    },
+    "requirements": {
+      "minLevel": 1
+    }
   },
   {
     "id": "steel_great_helm",
@@ -571,11 +811,11 @@
     },
     "requirements": {
       "minLevel": 10,
-      "reqStats": { "STR": 25 }
+      "reqStats": {
+        "STR": 25
+      }
     }
   },
-
-
   {
     "id": "leather_leggings",
     "name": "獵人皮護腿",
@@ -584,11 +824,18 @@
     "quality": "COMMON",
     "price": 80,
     "weight": 2.0,
-    "equipment": { "slot": "LEGS", "armor": 8 },
-    "stats": { "DEX": 3 },
+    "equipment": {
+      "slot": "LEGS",
+      "armor": 8
+    },
+    "stats": {
+      "DEX": 3
+    },
     "requirements": {
       "minLevel": 5,
-      "reqStats": { "DEX": 10 }
+      "reqStats": {
+        "DEX": 10
+      }
     }
   },
   {
@@ -604,9 +851,13 @@
       "armor": 30,
       "moveSpeedPenalty": 0.05
     },
-    "requirements": { "minLevel": 8, "reqStats": { "STR": 20 } }
+    "requirements": {
+      "minLevel": 8,
+      "reqStats": {
+        "STR": 20
+      }
+    }
   },
-
   {
     "id": "boots_of_haste",
     "name": "疾行之靴",
@@ -616,12 +867,17 @@
     "quality": "RARE",
     "price": 500,
     "weight": 1.0,
-    "equipment": { "slot": "FEET", "armor": 5 },
+    "equipment": {
+      "slot": "FEET",
+      "armor": 5
+    },
     "stats": {
       "MOVE_SPEED": 0.2,
       "DEX": 5
     },
-    "requirements": { "minLevel": 15 }
+    "requirements": {
+      "minLevel": 15
+    }
   },
   {
     "id": "lead_boots",
@@ -632,14 +888,20 @@
     "quality": "COMMON",
     "price": 50,
     "weight": 10.0,
-    "equipment": { "slot": "FEET", "armor": 15 },
+    "equipment": {
+      "slot": "FEET",
+      "armor": 15
+    },
     "stats": {
       "MOVE_SPEED": -0.3
     },
-    "requirements": { "minLevel": 1, "reqStats": { "STR": 30 } }
+    "requirements": {
+      "minLevel": 1,
+      "reqStats": {
+        "STR": 30
+      }
+    }
   },
-
-
   {
     "id": "thief_gloves",
     "name": "盜賊手套",
@@ -648,12 +910,17 @@
     "quality": "UNCOMMON",
     "price": 100,
     "weight": 0.5,
-    "equipment": { "slot": "HANDS", "armor": 4 },
+    "equipment": {
+      "slot": "HANDS",
+      "armor": 4
+    },
     "stats": {
       "CRIT_RATE": 0.05,
       "DEX": 2
     },
-    "requirements": { "minLevel": 5 }
+    "requirements": {
+      "minLevel": 5
+    }
   },
   {
     "id": "gauntlets_of_ogre_power",
@@ -664,14 +931,17 @@
     "quality": "EPIC",
     "price": 1000,
     "weight": 5.0,
-    "equipment": { "slot": "HANDS", "armor": 15 },
+    "equipment": {
+      "slot": "HANDS",
+      "armor": 15
+    },
     "stats": {
       "STR": 10
     },
-    "requirements": { "minLevel": 20 }
+    "requirements": {
+      "minLevel": 20
+    }
   },
-
-
   {
     "id": "traveler_cloak",
     "name": "旅人披風",
@@ -680,8 +950,14 @@
     "quality": "COMMON",
     "price": 40,
     "weight": 1.5,
-    "equipment": { "slot": "BACK", "armor": 3, "magicResist": 2 },
-    "requirements": { "minLevel": 1 }
+    "equipment": {
+      "slot": "BACK",
+      "armor": 3,
+      "magicResist": 2
+    },
+    "requirements": {
+      "minLevel": 1
+    }
   },
   {
     "id": "cloak_of_shadows",
@@ -692,12 +968,21 @@
     "quality": "RARE",
     "price": 600,
     "weight": 1.0,
-    "equipment": { "slot": "BACK", "armor": 5, "stealthPenalty": -0.2 },
-    "stats": { "DEX": 5 },
-    "requirements": { "minLevel": 10, "reqStats": { "DEX": 15 } }
+    "equipment": {
+      "slot": "BACK",
+      "armor": 5,
+      "stealthPenalty": -0.2
+    },
+    "stats": {
+      "DEX": 5
+    },
+    "requirements": {
+      "minLevel": 10,
+      "reqStats": {
+        "DEX": 15
+      }
+    }
   },
-
-
   {
     "id": "orb_of_fire",
     "name": "火焰寶珠",
@@ -717,11 +1002,11 @@
     },
     "requirements": {
       "minLevel": 10,
-      "reqStats": { "INT": 20 }
+      "reqStats": {
+        "INT": 20
+      }
     }
   },
-
-
   {
     "id": "lucky_rabbit_foot",
     "name": "幸運兔腳",
@@ -730,9 +1015,15 @@
     "quality": "UNCOMMON",
     "price": 100,
     "weight": 0.1,
-    "equipment": { "slot": "TRINKET" },
-    "stats": { "CRIT_RATE": 0.02 },
-    "requirements": { "minLevel": 1 }
+    "equipment": {
+      "slot": "TRINKET"
+    },
+    "stats": {
+      "CRIT_RATE": 0.02
+    },
+    "requirements": {
+      "minLevel": 1
+    }
   },
   {
     "id": "warrior_insignia",
@@ -743,23 +1034,20 @@
     "quality": "RARE",
     "price": 300,
     "weight": 0.2,
-    "equipment": { "slot": "TRINKET" },
+    "equipment": {
+      "slot": "TRINKET"
+    },
     "stats": {
       "HP": 100,
       "STR": 5
     },
     "requirements": {
       "minLevel": 10,
-      "reqClass": ["WARRIOR"]
+      "reqClass": [
+        "WARRIOR"
+      ]
     }
   },
-
-
-
-
-
-
-
   {
     "id": "claymore",
     "name": "蘇格蘭巨劍",
@@ -776,10 +1064,13 @@
       "maxDamage": 50,
       "attackSpeed": 3000
     },
-    "requirements": { "minLevel": 10, "reqStats": { "STR": 25 } }
+    "requirements": {
+      "minLevel": 10,
+      "reqStats": {
+        "STR": 25
+      }
+    }
   },
-
-
   {
     "id": "executioner_axe",
     "name": "處決者戰斧",
@@ -796,11 +1087,17 @@
       "maxDamage": 70,
       "attackSpeed": 3500
     },
-    "stats": { "STR": 10, "CRIT_RATE": 0.05 },
-    "requirements": { "minLevel": 15, "reqStats": { "STR": 35 } }
+    "stats": {
+      "STR": 10,
+      "CRIT_RATE": 0.05
+    },
+    "requirements": {
+      "minLevel": 15,
+      "reqStats": {
+        "STR": 35
+      }
+    }
   },
-
-
   {
     "id": "monk_staff",
     "name": "少林齊眉棍",
@@ -816,10 +1113,10 @@
       "maxDamage": 25,
       "attackSpeed": 2000
     },
-    "requirements": { "minLevel": 5 }
+    "requirements": {
+      "minLevel": 5
+    }
   },
-
-
   {
     "id": "shadow_blade",
     "name": "暗影之刃",
@@ -835,7 +1132,12 @@
       "maxDamage": 20,
       "attackSpeed": 1200
     },
-    "requirements": { "minLevel": 10, "reqStats": { "DEX": 20 } }
+    "requirements": {
+      "minLevel": 10,
+      "reqStats": {
+        "DEX": 20
+      }
+    }
   },
   {
     "id": "parrying_dagger",
@@ -853,7 +1155,168 @@
       "maxDamage": 10,
       "blockRate": 0.1
     },
-    "requirements": { "minLevel": 8 }
+    "requirements": {
+      "minLevel": 8
+    }
+  },
+  {
+    "id": "silverleaf_necklace",
+    "name": "銀葉治癒符墜",
+    "type": "ARMOR",
+    "subType": "ACCESSORY",
+    "quality": "UNCOMMON",
+    "price": 800,
+    "weight": 0.2,
+    "equipment": {
+      "slot": "NECK"
+    },
+    "stats": {
+      "int": 5,
+      "mana_regen": 2
+    },
+    "requirements": {
+      "level": 12
+    },
+    "description": "這枚墜飾由細小的銀葉編織而成，中心鑲嵌著一顆溫潤的翡翠，持續滋養著佩戴者的精神。"
+  },
+  {
+    "id": "ancient_oak_war_badge",
+    "name": "古老橡木戰章",
+    "type": "ARMOR",
+    "subType": "ACCESSORY",
+    "quality": "RARE",
+    "price": 1000,
+    "weight": 0.2,
+    "equipment": {
+      "slot": "NECK"
+    },
+    "stats": {
+      "str": 10,
+      "sta": 12,
+      "parry_rate": 0.03
+    },
+    "requirements": {
+      "level": 15
+    },
+    "description": "這枚沉重的勳章是用受過祝福的橡木製成的，能賦予冒險者更堅毅的體魄。"
+  },
+  {
+    "id": "fragments_of_the_moon_goddess",
+    "name": "月光女神的殘頁",
+    "type": "ARMOR",
+    "subType": "RELIC",
+    "quality": "EPIC",
+    "price": 2000,
+    "weight": 0.1,
+    "equipment": {
+      "slot": "OFF_HAND"
+    },
+    "stats": {
+      "holy_power": 25,
+      "spell_power": 15,
+      "cooldown_reduction": 0.05
+    },
+    "requirements": {
+      "level": 20,
+      "class": [
+        "Cleric",
+        "Paladin"
+      ]
+    },
+    "description": "從失落的月光法典中撕下的殘頁，上頭流轉著淡淡的銀色光芒，增幅一切神聖法術。"
+  },
+  {
+    "id": "quiver_of_arrows",
+    "name": "一壺箭矢",
+    "description": "裝滿了普通的木製箭矢，大約有 50 支。",
+    "type": "CONSUMABLE",
+    "subType": "AMMO",
+    "price": 20,
+    "weight": 1.0,
+    "isStackable": true,
+    "maxStack": 999,
+    "count": 50
+  },
+  {
+    "id": "wooden_shortbow",
+    "name": "粗製短弓",
+    "type": "WEAPON",
+    "subType": "BOW",
+    "quality": "COMMON",
+    "price": 30,
+    "weight": 1.5,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "hands": 2,
+      "minDamage": 5,
+      "maxDamage": 10,
+      "attackSpeed": 2000,
+      "range": 1
+    },
+    "requirements": {
+      "minLevel": 1
+    }
+  },
+  {
+    "id": "elven_longbow",
+    "name": "精靈長弓",
+    "description": "由精靈工匠使用白蠟木製成的優良長弓，弓身刻有風之紋章。",
+    "type": "WEAPON",
+    "subType": "BOW",
+    "quality": "RARE",
+    "price": 600,
+    "weight": 2.0,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "hands": 2,
+      "minDamage": 20,
+      "maxDamage": 35,
+      "attackSpeed": 1800,
+      "range": 2
+    },
+    "stats": {
+      "DEX": 10,
+      "HIT_RATE": 0.05
+    },
+    "requirements": {
+      "minLevel": 10,
+      "reqStats": {
+        "DEX": 25
+      }
+    }
+  },
+  {
+    "id": "dragon_tongue_bow",
+    "name": "龍舌弓",
+    "description": "傳說中用巨龍的筋作為弓弦，拉滿時會發出龍吟之聲。",
+    "type": "WEAPON",
+    "subType": "BOW",
+    "quality": "LEGENDARY",
+    "price": 5000,
+    "weight": 5.0,
+    "equipment": {
+      "slot": "MAIN_HAND",
+      "hands": 2,
+      "minDamage": 50,
+      "maxDamage": 100,
+      "attackSpeed": 2500
+    },
+    "stats": {
+      "STR": 20,
+      "CRIT_RATE": 0.1
+    },
+    "effects": [
+      {
+        "trigger": "ON_HIT",
+        "spellId": "fire_arrow_proc",
+        "chance": 0.2
+      }
+    ],
+    "requirements": {
+      "minLevel": 30,
+      "reqStats": {
+        "STR": 50
+      }
+    }
   }
-
 ]

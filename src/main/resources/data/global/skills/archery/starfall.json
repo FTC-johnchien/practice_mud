@@ -1,0 +1,53 @@
+{
+  "id": "starfall",
+  "name": "星辰墜落",
+  "type": "ACTIVE",
+  "school": "ARCHERY",
+  "tags": [
+    "RANGED",
+    "AOE",
+    "MAGIC"
+  ],
+  "description": "向天空射出灌注魔力的箭矢，化作光雨覆蓋戰場。",
+  "requirements": {
+    "minLevel": 25,
+    "reqClass": [
+      "RANGER",
+      "ELF"
+    ],
+    "reqWeapon": [
+      "BOW"
+    ]
+  },
+  "costs": {
+    "mp": 100,
+    "ammo": 1
+  },
+  "timing": {
+    "castTime": 3000,
+    "cooldown": 60000
+  },
+  "targeting": {
+    "type": "AREA_ENEMY",
+    "aoeRadius": 1,
+    "maxTargets": 5
+  },
+  "mechanics": {
+    "baseValue": 80,
+    "scaleStat": "DEX",
+    "scaleFactor": 1.5,
+    "effects": [
+      {
+        "id": "blind",
+        "chance": 0.5,
+        "duration": 5000
+      }
+    ]
+  },
+  "messages": {
+    "prepare": "$N 將弓指向天空，箭矢上凝聚起耀眼的星光...",
+    "cast": "$N 鬆開弓弦，無數光矢如流星雨般從天而降！",
+    "hit": "被光矢貫穿，發出痛苦的嚎叫！",
+    "miss": "幸運地躲在掩體後，避開了光雨的洗禮。"
+  }
+}

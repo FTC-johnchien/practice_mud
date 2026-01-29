@@ -1,0 +1,43 @@
+{
+  "id": "double_shot",
+  "name": "二連矢",
+  "type": "ACTIVE",
+  "school": "ARCHERY",
+  "tags": [
+    "RANGED",
+    "PHYSICAL"
+  ],
+  "description": "以驚人的速度連續射出兩箭。",
+  "requirements": {
+    "minLevel": 5,
+    "reqWeapon": [
+      "BOW"
+    ],
+    "reqStats": {
+      "DEX": 15
+    }
+  },
+  "costs": {
+    "mp": 10,
+    "stamina": 15,
+    "ammo": 2
+  },
+  "timing": {
+    "castTime": 500,
+    "cooldown": 6000,
+    "gcd": 1500
+  },
+  "targeting": {
+    "type": "SINGLE_ENEMY"
+  },
+  "mechanics": {
+    "baseValue": 15,
+    "scaleStat": "DEX",
+    "scaleFactor": 0.8,
+    "hitCount": 2
+  },
+  "messages": {
+    "cast": "$N 手法如電，瞬間射出兩支箭矢，取名「二連矢」！",
+    "hit": "兩支箭幾乎同時插在 $n 身上！"
+  }
+}

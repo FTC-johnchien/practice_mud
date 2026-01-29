@@ -1,0 +1,42 @@
+{
+  "id": "aimed_shot",
+  "name": "弱點狙擊",
+  "type": "ACTIVE",
+  "school": "ARCHERY",
+  "tags": [
+    "RANGED",
+    "CRITICAL"
+  ],
+  "description": "花費時間仔細瞄準敵人的要害，造成巨大傷害。",
+  "requirements": {
+    "minLevel": 12,
+    "reqWeapon": [
+      "BOW"
+    ]
+  },
+  "costs": {
+    "mp": 20,
+    "stamina": 30,
+    "ammo": 1
+  },
+  "timing": {
+    "castTime": 2500,
+    "cooldown": 15000,
+    "interruptible": true
+  },
+  "targeting": {
+    "type": "SINGLE_ENEMY"
+  },
+  "mechanics": {
+    "baseValue": 50,
+    "scaleStat": "DEX",
+    "scaleFactor": 2.5,
+    "critRateMod": 0.5,
+    "hitRateMod": 0.2
+  },
+  "messages": {
+    "prepare": "$N 深吸一口氣，將弓拉滿，箭尖死死鎖定了 $n 的要害...",
+    "cast": "「著！」$N 手指一鬆，箭矢帶著破空之聲激射而出！",
+    "hit": "正中要害！造成了毀滅性的打擊！"
+  }
+}

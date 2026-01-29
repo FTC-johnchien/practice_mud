@@ -1,0 +1,324 @@
+[
+  {
+    "id": "class_warrior",
+    "display_name": "戰士",
+    "resource_type": "RAGE",
+    "primary_stats": [
+      "STR",
+      "CON"
+    ],
+    "growth": {
+      "hp_per_level": [
+        12,
+        18
+      ],
+      "mp_per_level": [
+        0,
+        0
+      ],
+      "stamina_per_level": [
+        10,
+        15
+      ]
+    },
+    "equipment_permissions": {
+      "armor": [
+        "CLOTH",
+        "LEATHER",
+        "MAIL",
+        "PLATE"
+      ],
+      "weapons": [
+        "SWORD",
+        "AXE",
+        "MACE",
+        "POLEARM",
+        "SHIELD"
+      ]
+    },
+    "starting_skills": [
+      "bash",
+      "kick"
+    ],
+    "description": "戰場上的鋼鐵長城，依靠怒氣來粉碎敵人。"
+  },
+  {
+    "id": "class_mage",
+    "display_name": "法師",
+    "resource_type": "MANA",
+    "primary_stats": [
+      "INT"
+    ],
+    "growth": {
+      "hp_per_level": [
+        4,
+        7
+      ],
+      "mp_per_level": [
+        20,
+        35
+      ],
+      "stamina_per_level": [
+        5,
+        8
+      ]
+    },
+    "equipment_permissions": {
+      "armor": [
+        "CLOTH"
+      ],
+      "weapons": [
+        "STAFF",
+        "DAGGER",
+        "WAND"
+      ]
+    },
+    "starting_skills": [
+      "magic_bolt",
+      "mana_shield"
+    ],
+    "description": "奧術能量的掌控者，雖然脆弱但具備毀滅性的法術。"
+  },
+  {
+    "id": "class_rogue",
+    "display_name": "盜賊",
+    "resource_type": "ENERGY",
+    "primary_stats": [
+      "DEX",
+      "AGI"
+    ],
+    "growth": {
+      "hp_per_level": [
+        8,
+        12
+      ],
+      "mp_per_level": [
+        0,
+        0
+      ],
+      "energy_regen_base": 10
+    },
+    "equipment_permissions": {
+      "armor": [
+        "CLOTH",
+        "LEATHER"
+      ],
+      "weapons": [
+        "DAGGER",
+        "SWORD",
+        "BOW"
+      ]
+    },
+    "starting_skills": [
+      "stealth",
+      "backstab"
+    ],
+    "description": "陰影中的暗殺者，擅長在短時間內造成致命爆發。"
+  },
+  {
+    "id": "class_paladin",
+    "display_name": "聖騎士",
+    "resource_type": "HOLY_POWER",
+    "secondary_resource": "MANA",
+    "primary_stats": [
+      "STR",
+      "WIS",
+      "CON"
+    ],
+    "growth": {
+      "hp_per_level": [
+        10,
+        15
+      ],
+      "mp_per_level": [
+        5,
+        10
+      ],
+      "stamina_per_level": [
+        8,
+        12
+      ]
+    },
+    "equipment_permissions": {
+      "armor": [
+        "CLOTH",
+        "LEATHER",
+        "MAIL",
+        "PLATE"
+      ],
+      "weapons": [
+        "SWORD",
+        "MACE",
+        "POLEARM",
+        "SHIELD",
+        "RELIC"
+      ]
+    },
+    "starting_skills": [
+      "holy_strike",
+      "devotion_aura"
+    ],
+    "description": "受聖光守護的戰士，能同時勝任坦怪與輔助治癒的角色。"
+  },
+  {
+    "id": "class_monk",
+    "display_name": "武僧",
+    "resource_type": "QI",
+    "primary_stats": [
+      "DEX",
+      "WIS"
+    ],
+    "growth": {
+      "hp_per_level": [
+        9,
+        13
+      ],
+      "mp_per_level": [
+        0,
+        0
+      ],
+      "qi_regen_base": 5
+    },
+    "equipment_permissions": {
+      "armor": [
+        "CLOTH",
+        "LEATHER"
+      ],
+      "weapons": [
+        "FIST",
+        "STAFF",
+        "NUNCHAKU"
+      ],
+      "special": "UNARMED_BONUS"
+    },
+    "starting_skills": [
+      "tiger_palm",
+      "flying_kick"
+    ],
+    "description": "修煉身心的武者，擅長空手搏鬥，擁有極高的閃避率。"
+  },
+  {
+    "id": "class_cleric",
+    "display_name": "牧師",
+    "resource_type": "MANA",
+    "primary_stats": [
+      "WIS",
+      "CHA"
+    ],
+    "growth": {
+      "hp_per_level": [
+        6,
+        10
+      ],
+      "mp_per_level": [
+        15,
+        25
+      ],
+      "stamina_per_level": [
+        5,
+        8
+      ]
+    },
+    "equipment_permissions": {
+      "armor": [
+        "CLOTH",
+        "LEATHER",
+        "MAIL"
+      ],
+      "weapons": [
+        "MACE",
+        "STAFF",
+        "WAND",
+        "SHIELD",
+        "RELIC"
+      ]
+    },
+    "starting_skills": [
+      "minor_heal",
+      "holy_word"
+    ],
+    "description": "神的代言人，團隊的核心治癒者，對不死生物有強大威懾力。"
+  },
+  {
+    "id": "class_ranger",
+    "display_name": "遊俠",
+    "resource_type": "FOCUS",
+    "primary_stats": [
+      "DEX",
+      "WIS"
+    ],
+    "growth": {
+      "hp_per_level": [
+        8,
+        12
+      ],
+      "mp_per_level": [
+        4,
+        8
+      ],
+      "stamina_per_level": [
+        10,
+        15
+      ]
+    },
+    "equipment_permissions": {
+      "armor": [
+        "CLOTH",
+        "LEATHER",
+        "MAIL"
+      ],
+      "weapons": [
+        "BOW",
+        "CROSSBOW",
+        "DAGGER",
+        "SWORD"
+      ]
+    },
+    "starting_skills": [
+      "aimed_shot",
+      "tame_beast"
+    ],
+    "description": "荒野的追蹤者，精通弓箭與陷阱，並能指揮動物夥伴協同作戰。"
+  },
+  {
+    "id": "class_warlock",
+    "display_name": "術士",
+    "resource_type": "SOUL_SHARDS",
+    "secondary_resource": "MANA",
+    "primary_stats": [
+      "INT",
+      "CHA"
+    ],
+    "growth": {
+      "hp_per_level": [
+        6,
+        9
+      ],
+      "mp_per_level": [
+        18,
+        30
+      ],
+      "stamina_per_level": [
+        4,
+        7
+      ]
+    },
+    "equipment_permissions": {
+      "armor": [
+        "CLOTH"
+      ],
+      "weapons": [
+        "DAGGER",
+        "SWORD",
+        "STAFF",
+        "WAND",
+        "TRINKET"
+      ]
+    },
+    "starting_skills": [
+      "corruption",
+      "summon_imp"
+    ],
+    "description": "追求禁忌力量的法師，擅長持續傷害（DoT）與召喚惡魔僕從。"
+  }
+]

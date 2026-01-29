@@ -1,0 +1,36 @@
+{
+  "id": "basic_archery",
+  "name": "基礎射術",
+  "type": "PASSIVE",
+  "school": "COMMON",
+  "tags": [
+    "WEAPON",
+    "BOW",
+    "BASIC"
+  ],
+  "requirements": {
+    "reqWeapon": [
+      "BOW"
+    ]
+  },
+  "costs": {
+    "ammo": 1
+  },
+  "mechanics": {
+    "baseValue": 10,
+    "scaleStat": "DEX",
+    "scaleFactor": 1.0,
+    "hitRateMod": 0.1
+  },
+  "messages": {
+    "cast": [
+      "$N 拉滿弓弦，一支利箭「嗖」地一聲射向 $n。",
+      "$N 快速搭箭開弓，瞄準 $n 射去。",
+      "$N 眼神銳利，手中的箭矢如流星般飛向 $n。"
+    ],
+    "hit": "準確地射中了目標，箭羽還在微微顫動。",
+    "crit": "【穿透】這一箭直接射穿了 $n 的肩膀，帶出一蓬血霧！",
+    "miss": "$n 聽得弓弦響聲，急忙低頭避過了這一箭。",
+    "parried": "$n 揮舞兵器，將飛來的箭矢撥落在地。"
+  }
+}
