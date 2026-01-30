@@ -8,7 +8,7 @@
   "description": "武當派鎮派絕學，講究以靜制動，以柔克剛。能有效化解敵人的攻勢並藉力反擊。",
   "type": "ACTIVE",
   "school": "WUDANG",        // 門派: 武當
-  "tags": ["UNARMED", "INTERNAL", "COUNTER"], // 標籤: 拳腳、內家功夫、反擊技
+  "tags": ["UNARMED", "PARRY", "INTERNAL", "COUNTER"], // 標籤: 拳腳、格擋、內家功夫、反擊技
   "isHidden": false,
 
   // ==========================================
@@ -110,3 +110,725 @@
     "counter": "$n 藉著 $N 的掌力順勢一推，反而讓 $N 失去了平衡！" // 特殊的反擊描述
   }
 }
+
+{
+  "id": "taichi_fist",
+  "name": "太極拳",
+  "type": "PASSIVE",
+  "school": "WUDANG",
+  "tags": ["UNARMED", "PARRY", "INTERNAL"],
+  "description": "武當派鎮山絕技，以柔克剛，後發制人。",
+
+  // ==========================================
+  // 1. 成長設定 (Level Scaling)
+  // 解決問題二：這裡定義等級如何影響強度
+  // ==========================================
+  "scaling": {
+    "maxLevel": 300,        // 最高練到 300 級
+    "baseDamage": 10,       // Lv 0 的基礎傷害
+    "damagePerLevel": 0.5,  // 每升 1 級，基礎傷害 +0.5
+    "hitRatePerLevel": 0.001, // 每升 1 級，命中 +0.1%
+    "parryRatePerLevel": 0.002 // 每升 1 級，招架 +0.2%
+  },
+
+  "mechanics": {
+    "scaleStat": "INT",     // 太極拳吃悟性(INT)加成
+    "scaleFactor": 1.2
+  },
+
+  // ==========================================
+  // 2. 招式庫 (Moves)
+  // 解決問題一：不同招式有不同傷害與機率
+  // ==========================================
+  "moves": [
+    {
+      "name": "攬雀尾",
+      "weight": 50,         // 機率最高 (50/115)
+      "damageMod": 1.0,     // 標準傷害
+      "msg": "$N 雙手畫圓，使出一招「攬雀尾」，推向 $n 的胸口。"
+    },
+    {
+      "name": "單鞭",
+      "weight": 30,         // 中等機率 (30/115)
+      "damageMod": 1.2,     // 傷害 x 1.2
+      "msg": "$N 左手虛探，右手化鉤，一記「單鞭」如鋼鞭般抽向 $n。"
+    },
+    {
+      "name": "白鶴亮翅",
+      "weight": 20,         // 較低機率 (20/115)
+      "damageMod": 1.5,     // 傷害 x 1.5
+      "msg": "$N 雙臂一展，如「白鶴亮翅」，氣勁排山倒海般壓向 $n ！"
+    },
+    {
+      "name": "搬攔捶",
+      "weight": 10,         // 低機率 (10/115)
+      "damageMod": 1.8,     // 高傷害
+      "hitMod": -0.1,       // 但命中率降低 10%
+      "msg": "$N 腳踏七星，運氣於拳，一招勢大力沉的「搬攔捶」轟向 $n！"
+    },
+    {
+      "name": "真武除邪",
+      "weight": 5,          // 極低機率 (5/115) - 必殺技
+      "damageMod": 2.5,     // 傷害 x 2.5
+      "msg": "$N 突然招式一變，神情莊嚴，打出了武當絕學「真武除邪」，拳風籠罩了 $n 全身！"
+    }
+  ]
+}
+
+// ==========================================
+  // 連攜系統 (Synergies)
+  // 當滿足 condition 時，獲得 modifiers 和 mechanics
+  // ==========================================
+  "synergies": [
+    {
+      "id": "taichi_aura",
+      "name": "太極氣勁",
+      "description": "太極拳與本門心法融合，產生生生不息的圓轉氣勁。",
+
+      // 觸發條件：當前激發的 FORCE 是 wudang_force
+      "condition": {
+        "enabledSkill": { "FORCE": "wudang_force" }
+      },
+
+      // 1. 被動屬性加成 (面板數值)
+      "stats": {
+        "PARRY_RATE": 0.15,      // 招架率 +15%
+        "MAX_MP_MOD": 0.1        // 內力上限 +10%
+      },
+
+      // 2. 戰鬥機制改變 (特殊效果)
+      "mechanics": {
+        "counterAttackChance": 0.2, // 【借力打力】20% 機率反擊
+        "counterDamageRatio": 0.5,  // 反擊造成對方原始傷害的 50%
+        "damageReduce": 0.05        // 額外減傷 5%
+      },
+
+      // 觸發時的戰鬥描述 (選配)
+      "msg": "$N 運起「太極氣勁」，周身氣流湧動，形成一個無形的圓。"
+    },
+    {
+      "id": "taoist_flow",
+      "name": "道法自然",
+      "description": "道家武學一脈相承，招式更加流暢。",
+
+      // 觸發條件：激發的 FORCE 帶有 TAOIST 標籤 (例如神照經、先天功)
+      "condition": {
+        "enabledSkillTag": { "FORCE": "TAOIST" }
+      },
+
+      // 效果：僅減少消耗，沒有太極氣勁強
+      "mechanics": {
+        "costReduction": 0.1  // 內力消耗減少 10%
+      }
+    }
+  ],
+
+  "moves": [
+  {
+    "name": "白鶴亮翅",
+    "weight": 20,
+    "damageMod": 1.5,
+    "msg": "$N 雙臂一展，如「白鶴亮翅」，氣勁排山倒海般壓向 $n！",
+
+    // 【這裡就是重點】
+    "effects": [
+      {
+        "id": "taichi_shield",   // 狀態的唯一 ID
+        "target": "SELF",        // 施加給誰？ (SELF=自己, ENEMY=敵人)
+        "type": "BUFF",          // 類型 (BUFF=增益, DEBUFF=減益)
+        "chance": 1.0,           // 觸發機率 (1.0 = 100%)
+        "duration": 30000,       // 持續時間 (30秒)
+        "value": 20              // 強度數值 (例如：防禦+20 或 減傷20%)
+      }
+    ]
+  }
+]
+
+
+
+
+
+
+這份 JSON 文件已經相當完整，結構也非常清晰。看得出來你已經將之前討論的「學習條件」、「使用限制」、「招式庫」、「連攜概念」都整合進去了。
+
+從 **現代 MUD 實務開發與維護** 的角度來看，我有以下 **4 點建議**，可以讓這份設定檔更合理、更好維護，並減少邏輯上的混淆。
+
+---
+
+### 1. `costs` 中的資源定義混淆 (Critical)
+
+**問題點**：
+在你的 `combo` 和 `comboCosts` 區塊中，你寫了 `"wudang_force": 30`。
+
+* 在 `usage` 裡，`wudang_force` 是一個 **Skill ID** (字串)。
+* 在 `costs` 裡，它看起來像是一個 **數值消耗** (Int)。
+
+**實務建議**：
+通常 MUD 的資源池是固定的（HP, MP, Stamina, Force/Qi）。
+
+* **如果你的意思是消耗「內力值」**：應該寫 `"mp": 30` 或 `"force": 30`。
+* **如果你的意思是「需要裝備武當心法」**：這應該是 `condition` (條件)，而不是 `cost` (消耗)。
+
+**修正方向**：將 cost 改回通用資源 (mp/force)，並將「需要武當心法」放在條件欄位。
+
+### 2. `combo` (連招) 的定義過於繁瑣
+
+**問題點**：
+你的 `combo` 區塊列出了 8 個招式（掤、捋、擠、按...），它們結構幾乎一模一樣，只有 **名稱**、**等級需求** 和 **消耗** 不同。
+這在 JSON 中會造成「資料膨脹」，未來如果要調整傷害係數，你要改 8 次。
+
+**實務建議**：
+如果是「隨機觸發的額外攻擊」，現代設計通常會用 **公式** 或 **簡化列表**。但在保留你的設計前提下，建議將其定義為 **「追加攻擊 (Follow-up / Extra Hit)」**，並確認它們的觸發機率。目前 JSON 沒看到 `chance`，假設是必發？那會非常 OP。
+
+### 3. `mechanics` 中的 `taichi_shield` 機率問題
+
+**問題點**：
+
+```json
+"chance": 1.0,
+"trigger": "$N身上多了一層太極氣勁的保護！"
+
+```
+
+這代表 **每一次** 玩家攻擊（每一回合），都會 **100%** 觸發這個護盾並顯示這行字。這會導致：
+
+1. **洗頻**：戰鬥訊息會被這行字淹沒。
+2. **效能浪費**：每回合都在移除舊護盾、上新護盾。
+
+**實務建議**：
+將機率調低 (例如 0.1)，或者將其改為 **Combat Start (戰鬥開始時)** 只觸發一次的被動效果。
+
+### 4. 招式 (Move) 的 `crit` 訊息重複
+
+**問題點**：
+所有的 `move` 裡的 `crit` 訊息全部都是複製貼上的「搬攔捶」。
+這樣玩家不管打出哪一招，暴擊時描述都一樣，會很出戲。
+
+**實務建議**：
+可以設定一個 **通用的暴擊描述庫**，或者若不想每招都寫，就乾脆留空 (null)，讓程式去抓預設的暴擊描述。
+
+---
+
+### 優化後的 JSON 範例
+
+我針對上述建議進行了修整。這個版本更符合程式邏輯，且好維護。
+
+**主要修改點：**
+
+1. **修正 Costs**：將 `wudang_force` 消耗改為 `mp`。
+2. **新增 `synergies**`：將 `combo` (太極八法) 和 `taichi_shield` 移入連攜系統，邏輯更清晰（有裝備內功才觸發）。
+3. **簡化 Move**：移除重複的 crit，移除多餘的 cooldown。
+4. **Counter 優化**：將反擊獨立出來。
+
+```json
+{
+  "id": "taichi_fist",
+  "name": "太極拳",
+  "type": "PASSIVE",
+  "school": "WUDANG",
+  "tags": ["UNARMED", "PARRY", "INTERNAL", "COUNTER"],
+  "learning": {
+    "reqLevel": 10,
+    "reqStats": { "INT": 30 },
+    "reqGuild": "WUDANG",
+    "reqSkills": { "basic_fist": 30, "wudang_force": 20 },
+    "cost": { "potential": 100 }
+  },
+  "usage": {
+    "allowedWeapons": [null, "UNARMED"], // 修正欄位名稱較直觀
+    "allowMounted": false
+  },
+  // 基礎消耗 (普通攻擊)
+  "costs": {
+    "stamina": 5
+  },
+  "scaling": {
+    "maxLevel": 300,
+    "baseDamage": 15,
+    "damagePerLevel": 0.8,
+    "parryRatePerLevel": 0.005
+  },
+
+  // ==========================================
+  // 連攜與特效 (Synergies & Mechanics)
+  // 將「太極八法(combo)」與「太極盾」整合於此
+  // ==========================================
+  "synergies": [
+    {
+      "id": "taichi_shield_passive",
+      "name": "太極氣勁",
+      "triggerType": "ON_COMBAT_START", // 戰鬥開始時觸發一次即可
+      "condition": { "enabledSkill": { "FORCE": "wudang_force" } },
+      "effects": [
+        {
+          "id": "taichi_shield",
+          "target": "SELF",
+          "duration": 60000,
+          "value": 50, // 減傷 50 點
+          "triggerMsg": "$N運起太極氣勁，周身形成一道無形的氣牆。",
+          "absorbMsg": "太極氣勁幫$N卸掉了 $d 點傷害！"
+        }
+      ]
+    },
+    {
+      "id": "eight_methods_burst",
+      "name": "太極八法勁",
+      "triggerType": "ON_HIT", // 攻擊命中後機率觸發 (原本的 Combo)
+      "condition": {
+        "enabledSkill": { "FORCE": "wudang_force" },
+        "chance": 0.3 // 30% 機率觸發追加攻擊，避免洗頻
+      },
+      "mechanics": {
+        "cost": { "mp": 30 }, // 消耗 MP (內力)
+        "damageMod": 1.5,     // 追加傷害倍率
+        // 隨機抽選一種勁力描述
+        "msgs": [
+          "$N招式中的「掤」勁在$n體內爆發，造成 $d 傷害！",
+          "$N招式中的「捋」勁在$n體內爆發，造成 $d 傷害！",
+          "$N招式中的「擠」勁在$n體內爆發，造成 $d 傷害！",
+          "$N招式中的「按」勁在$n體內爆發，造成 $d 傷害！"
+        ]
+      }
+    }
+  ],
+
+  // ==========================================
+  // 反擊設定 (Counter)
+  // 當成功 Parry 後觸發
+  // ==========================================
+  "counter": {
+    "chance": 0.25, // 25% 機率反擊
+    "moves": [
+      {
+        "msg": "$n藉著$N的攻擊方向順勢一推，讓$N失去平衡摔落，造成 $d 傷害。",
+        "weight": 50,
+        "damageMod": 1.5
+      },
+      {
+        "msg": "$n順勢一拉，在$N失衡的瞬間補上一掌，造成 $d 傷害。",
+        "weight": 30,
+        "damageMod": 2.0
+      }
+    ]
+  },
+
+  // ==========================================
+  // 一般招式 (Moves)
+  // ==========================================
+  "moves": [
+    {
+      "name": "野馬分鬃",
+      "cast": "雙掌一分，使出一招「野馬分鬃」，推向$n的$l",
+      "hit": "「砰」地一聲，$n被掌力擊中，受到 $d 傷害！",
+      "weight": 45,
+      "damageMod": 1.0
+    },
+    {
+      "name": "白鶴亮翅",
+      "cast": "$N雙手張開如「白鶴亮翅」，攻向$n的$l",
+      "hit": "$n被綿柔的掌力擊中$l，連退好幾步，受到 $d 傷害！",
+      "weight": 50,
+      "damageMod": 1.1
+    },
+    {
+      "name": "手揮琵琶",
+      "cast": "$N雙手回撤，一記「手揮琵琶」封住$n的退路",
+      "hit": "$n避無可避，胸口結實地挨了一掌，受到 $d 傷害！",
+      "weight": 30,
+      "damageMod": 0.9,
+      // 這招帶有緩速特效
+      "effects": [
+         { "id": "slow", "chance": 0.5, "value": 10, "duration": 5000 }
+      ]
+    },
+    {
+      "name": "搬攔捶",
+      "cast": "$N腳踏七星，一招「搬攔捶」轟向$n的$l",
+      "hit": "這招勢大力沉，$n被打得眼冒金星，受到 $d 傷害！",
+      "crit": "【重擊】$N的搬攔捶正中要害，$n鮮血狂噴，受到 $d 傷害！", // 只有這招有專屬暴擊
+      "weight": 20,
+      "damageMod": 1.5
+    }
+  ]
+}
+
+```
+
+### 總結您的問題
+
+1. **還有要補充的項目嗎？**
+* **Synergy 機制**：您原本將「內力需求」混在 `cost` 裡，我建議用 `synergies` 明確定義「有內功才有特效」。
+* **MP/Force 區分**：請確認系統中的能量單位，避免混用 ID 和數值。
+
+
+2. **是否太過繁鎖？**
+* 是的，原本的 `combo` 寫了 8 個幾乎一樣的區塊。在上面的優化版中，我用 `msgs` 陣列解決了這個問題，程式只要隨機抽一句話即可，邏輯只需寫一次。
+* 原本的 `crit` 每個 move 都複製貼上，建議只在「大招」（如搬攔捶）寫專屬暴擊，其他用系統預設即可。
+
+
+
+這份優化後的 JSON 在程式解析上會更有效率，而且保留了您想要的太極拳特色（氣勁盾、八法勁、借力打力）。
+
+
+
+
+
+
+
+
+
+這是一個非常好的想法。建立一個 **「全功能範本 (Master Template)」**，然後讓其他技能繼承或參考這個結構，是軟體工程中 **「慣例優於配置 (Convention over Configuration)」** 的體現。
+
+將 `moves` (普攻)、`combos` (連擊/追擊)、`counters` (反擊) 統一為同一種資料結構 (**ActionRecord**)，會讓你的 CombatService 寫起來非常優雅，因為解析邏輯只需要寫一次。
+
+以下我為你整理了**最終版 Master Template**。我保留了所有可能的欄位（即使是 null/0），並補充了你可能遺漏的現代 MUD 機制。
+
+### 1. 統一的動作結構 (The Action Record)
+
+為了達成你的需求，我們定義一個標準的動作物件，包含：
+
+* **觸發條件**：`weight` (權重), `reqSkillLevel` (等級解鎖), `triggerChance` (觸發率).
+* **消耗與冷卻**：`cost` (額外消耗), `cooldown` (內部CD).
+* **數值修正**：`damageMod` (傷害倍率), `hitMod` (命中修正).
+* **敘述**：`msg` (包含 cast, hit, miss, crit).
+* **特效**：`effects` (Buff/Debuff).
+
+---
+
+### 2. 太極拳 Master Template (`taichi_fist.json`)
+
+```json
+{
+  "id": "taichi_fist",
+  "name": "太極拳",
+  "description": "武當派鎮派絕學，講究以靜制動，以柔克剛。",
+  "type": "PASSIVE",
+  "school": "WUDANG",
+  "tags": ["UNARMED", "PARRY", "INTERNAL", "COUNTER"],
+  "isHidden": false,
+
+  // =================================================================
+  // 1. 學習條件 (Learning Prerequisites) - 靜態檢查
+  // =================================================================
+  "learning": {
+    "reqLevel": 10,
+    "reqStats": { "INT": 30 },
+    "reqGuild": "WUDANG",
+    "reqSkills": { "basic_fist": 30, "wudang_force": 20 },
+    "cost": { "potential": 100, "money": 0 },
+    "loseOnLeave": true
+  },
+
+  // =================================================================
+  // 2. 使用限制 (Usage Restrictions) - 動態檢查
+  // =================================================================
+  "usage": {
+    "reqGuild": "WUDANG",
+    "allowedWeapons": [null, "UNARMED"],
+    "allowMounted": false,
+    "reqState": "STANDING"
+  },
+
+  // =================================================================
+  // 3. 全域消耗與成長 (Global Costs & Scaling)
+  // 這些是「預設值」，個別招式可以覆蓋 (Override) 這些設定
+  // =================================================================
+  "baseCost": {
+    "stamina": 5,
+    "mp": 0,
+    "force": 0 // 統一使用 resource 名稱
+  },
+
+  "scaling": {
+    "maxLevel": 300,
+    "baseDamage": 15,
+    "damagePerLevel": 0.8,    // 每級傷害成長
+    "hitRatePerLevel": 0.001, // 每級命中成長
+    "parryRatePerLevel": 0.005,
+    "critRatePerLevel": 0.0   // 太極拳通常不加暴擊，設為 0 保留欄位
+  },
+
+  "mechanics": {
+    "scaleStat": "INT",       // 屬性加成來源
+    "scaleFactor": 1.2        // 屬性加成係數
+  },
+
+  // =================================================================
+  // 4. 連攜系統 (Synergies) - 被動與特殊機制
+  // 用於處理「太極氣勁」這類非攻擊性的 Buff
+  // =================================================================
+  "synergies": [
+    {
+      "id": "taichi_shield_passive",
+      "triggerType": "ON_COMBAT_START",
+      "condition": { "enabledSkill": { "FORCE": "wudang_force" } },
+      "effects": [
+        {
+          "id": "taichi_shield",
+          "target": "SELF",
+          "type": "BUFF",
+          "duration": 60000,
+          "value": 50,
+          "msg": "$N運起太極氣勁，周身形成一道無形的氣牆。"
+        }
+      ]
+    }
+  ],
+
+  // =================================================================
+  // 5. 一般招式 (Moves) - 隨機權重觸發
+  // 結構：ActionRecord
+  // =================================================================
+  "moves": [
+    {
+      "id": "move_1",
+      "name": "野馬分鬃",
+      "reqSkillLevel": 0,    // 0級就能用
+      "weight": 50,          // 權重
+      "damageMod": 1.0,
+      "hitMod": 0.0,         // 無命中修正
+      "cost": null,          // 使用全域 baseCost
+      "cooldown": 0,
+      "msg": {
+        "cast": "雙掌一分，使出一招「野馬分鬃」，推向$n的$l",
+        "hit": "「砰」地一聲，$n被掌力擊中，受到 $d 傷害！",
+        "miss": "$n見勢不妙，向後一躍躲開了這一掌。",
+        "crit": null         // 使用系統預設暴擊描述
+      },
+      "effects": null        // 無特效
+    },
+    {
+      "id": "move_2",
+      "name": "攬雀尾 (帶特效)",
+      "reqSkillLevel": 50,   // 50級解鎖
+      "weight": 20,
+      "damageMod": 1.5,
+      "cost": { "mp": 10 },  // 覆蓋全域：這招要耗內力
+      "msg": {
+        "cast": "$N雙手畫圓，使出一招「攬雀尾」，掌勁如泥沼般纏向$n！",
+        "hit": "$n被黏稠的掌力擊中，身形一滯，受到 $d 傷害！"
+      },
+      "effects": [
+        {
+          "id": "slow_down",
+          "target": "ENEMY",
+          "type": "DEBUFF",
+          "chance": 0.5,     // 50% 機率觸發
+          "duration": 5000,
+          "value": 20,
+          "msg": "$n的動作變得遲緩了！"
+        }
+      ]
+    }
+  ],
+
+  // =================================================================
+  // 6. 連擊/追擊 (Combos) - 攻擊後的額外觸發
+  // 結構：ActionRecord (多了 triggerChance)
+  // =================================================================
+  "combos": [
+    {
+      "id": "combo_peng",
+      "name": "掤勁",
+      "reqSkillLevel": 30,
+      "triggerChance": 0.3,  // 30% 機率在普攻後觸發
+      "damageMod": 0.5,      // 追加傷害通常較低
+      "cost": { "mp": 5 },   // 連擊消耗
+      "condition": { "enabledSkill": { "FORCE": "wudang_force" } }, // 額外條件
+      "msg": {
+        "hit": "$N招式中的「掤」勁在$n體內爆發，追加了 $d 傷害！"
+      }
+    }
+  ],
+
+  // =================================================================
+  // 7. 反擊 (Counters) - 被動防禦後的觸發
+  // 結構：ActionRecord (多了 triggerChance)
+  // =================================================================
+  "counters": [
+    {
+      "id": "counter_push",
+      "name": "順手推舟",
+      "reqSkillLevel": 60,
+      "triggerChance": 0.25, // 招架成功後 25% 機率反擊
+      "damageMod": 1.2,
+      "msg": {
+        "hit": "$n藉著$N的攻擊方向順勢一推，讓$N失去平衡摔落，受到 $d 傷害。"
+      }
+    }
+  ]
+}
+
+```
+
+---
+
+### 3. 現代 MUD 實務上的建議與補充
+
+你的想法非常成熟，這份 Template 已經可以運作得很好。針對你的第 4 點提問，我有以下補充建議：
+
+#### A. 補充：`tags` (標籤) 的應用
+
+雖然你的結構統一了，但程式需要知道什麼時候呼叫什麼。
+
+* `moves`: 在 `performAttack()` 時，根據權重 (Weight) 隨機挑選。
+* `combos`: 在 `performAttack()` 結束且**命中**後，遍歷此列表，檢查 `triggerChance`。
+* `counters`: 在 `parry()` (招架) 成功後，遍歷此列表，檢查 `triggerChance`。
+
+#### B. 補充：`msg` 結構的靈活性
+
+建議在程式端處理 `msg` 的 Null Check。
+
+* 如果 `crit` 是 null，程式自動去讀取 `cast` + "造成了 **致命的** 傷害！"。
+* 如果 `miss` 是 null，程式自動讀取系統預設閃避訊息。
+這能讓你寫 `basic_fist` 時非常省事，不用每招都填寫所有欄位。
+
+#### C. 潛在風險：無限連擊 (Infinite Loop)
+
+如果你的 `combo` 裡面又觸發了某個效果，導致再次呼叫攻擊判定，可能會造成無限迴圈。
+**建議**：設定一個 `isCombo` 旗標。
+
+* 普攻 (Move) -> `isCombo = false` -> 允許觸發 Combo。
+* 連擊 (Combo) -> `isCombo = true` -> **禁止**再次觸發 Combo。
+
+#### D. 關於 Effect 的 Value
+
+`value: 50` 這種寫法很依賴程式邏輯 (Hard-code)。
+在更進階的現代 MUD (如 Spring Boot 架構)，我們會用 **Expression Language (SpEL)** 或腳本：
+
+* `"value": "player.int * 0.5"` (效果值等於智力的一半)
+* 不過初期開發，直接用數值 (`value: 50`) 是完全沒問題的，簡單好維護。
+
+這份 Template 已經非常強大，可以直接拿來當作銀葉村的開發標準了！
+
+
+
+
+
+這是一個非常敏銳的觀察！這觸及到了 MUD 戰鬥系統中 **「判定優先順序」** 與 **「敘事主體」** 的設計哲學。
+
+簡單回答：**`miss` 描述不是程式運作的必需品（可以 Null），但它是提升戰鬥「沉浸感」的關鍵。**
+
+你是對的，通常防禦方會有 `dodge` 技能。但在現代 MUD 的實務設計中，我們會區分 **「對方躲得好 (Dodge)」** 和 **「自己打歪了 (Miss)」** 這兩種不同的狀況。
+
+以下是詳細的設計分析與建議：
+
+---
+
+### 1. 為什麼需要 `miss` 描述？
+
+#### 情境 A：攻擊者命中率不足 (Attack Fumble)
+
+假設太極拳有一招「搬攔捶」，威力很大但命中率低 (`hitMod: -0.2`)。
+
+* **判定結果**：攻擊者的命中檢定失敗 (Attack Roll Failed)。
+* **敘事需求**：這時候不是對方躲得好，而是你出招慢了或打偏了。
+* **訊息顯示**：
+* **有設定 `miss**`："$N 一記搬攔捶用力過猛，結果打在了空處，身形踉蹌了一下。" (生動)
+* **沒設定 `miss**`："$N 的攻擊沒有打中。" (系統預設，很乾)
+
+
+
+#### 情境 B：特定招式的連貫性 (Flavor Text)
+
+有些招式的描述動作很大，如果失敗了，只顯示通用的「對方躲開了」，會接不上前文。
+
+* **Cast**："$N 飛身而起，雙腿如剪刀般夾向 $n 的頭部！"
+* **Dodge (對方)**："$n 往左邊一閃，躲開了攻擊。" (還可以接受)
+* **Miss (專屬)**："$n 一縮頭，$N **夾了個空，重重地摔在地上**。" (這才符合剪刀腳失敗的畫面)
+
+#### 情境 C：對方真的沒有閃避技能 (Sandbag)
+
+如你所說，如果對方是「木樁」、「史萊姆」或「被擊暈 (Stunned)」的狀態，無法觸發 `dodge` 技能，這時就需要回退 (Fallback) 到攻擊者的 `miss` 描述。
+
+---
+
+### 2. 戰鬥系統的判定流程 (建議實作邏輯)
+
+在 `CombatService` 中，我們通常會區分 **Miss** 和 **Dodge/Parry** 的優先級：
+
+```java
+public void resolveAttack(Actor attacker, Actor defender, SkillMove move) {
+    // 1. 命中檢定 (Hit Check) - 看攻擊者的 HitRate vs 對方 Defense
+    boolean isHit = checkHit(attacker, defender, move.getHitMod());
+
+    if (!isHit) {
+        // --- 情況一：攻擊者自己打歪了 (Miss) ---
+        // 優先使用招式裡的 miss 描述
+        String msg = move.getMsg().getMiss();
+        if (msg == null) msg = "$N 的攻擊落空了。"; // 系統預設
+
+        broadcast(msg, attacker, defender);
+        return;
+    }
+
+    // 2. 閃避/招架檢定 (Avoidance Check) - 看防禦者的 Skills
+    AvoidanceResult avoid = checkAvoidance(defender); // 檢查 Dodge, Parry
+
+    if (avoid.isDodged()) {
+        // --- 情況二：防禦者躲開了 (Dodge) ---
+        // 使用防禦者 Dodge Skill 的描述 (例如 "野獸本能" 或 "梯雲縱")
+        String msg = avoid.getSkillMsg();
+        broadcast(msg, attacker, defender);
+        return;
+    }
+
+    if (avoid.isParried()) {
+        // --- 情況三：防禦者格擋了 (Parry) ---
+        // ...
+        return;
+    }
+
+    // 3. 命中結算 (Damage Calculation)
+    // ...
+}
+
+```
+
+---
+
+### 3. 你的 Template 該怎麼做？
+
+在 `taichi_fist.json` 的 Master Template 中，建議保留 `miss` 欄位，但允許為 **Null**。
+
+**建議策略：**
+
+1. **普通招式**：可以設為 `null`。
+* 例如「野馬分鬃」這種普通推掌，沒打中就沒打中，不需要特別寫，讓系統顯示「$n 躲開了」即可。
+
+
+2. **大招 / 特色招式**：建議填寫 `miss`。
+* 例如「搬攔捶」或「雙風貫耳」，因為動作大，失敗後的描述能增加戰鬥的趣味性。
+
+
+
+**JSON 範例調整：**
+
+```json
+"moves": [
+  {
+    "name": "野馬分鬃",
+    "msg": {
+      "cast": "...",
+      "hit": "...",
+      "miss": null  // 普通招式，省事不寫，交給對方的 Dodge 技能去描述
+    }
+  },
+  {
+    "name": "搬攔捶",
+    "msg": {
+      "cast": "...",
+      "hit": "...",
+      "miss": "$n 看準來勢，輕輕一帶，$N 這記勢大力沉的重拳就像打進了棉花堆裡，毫無著力之處。" // 特殊描述，強調太極被化解
+    }
+  }
+]
+
+```
+
+### 總結
+
+`miss` 是為了**補完「攻擊者主觀視角」的失敗描述**。
+
+* 如果是為了**開發效率**，你可以全部填 `null`，完全依賴對方的 Dodge 訊息，功能依然正常。
+* 如果是為了**遊戲品質**，建議在「大招」或「動作感強」的招式上加上 `miss` 描述。

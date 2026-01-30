@@ -4,8 +4,8 @@ public enum EffectType {
 
   // debuffs
   ANCHORED("定身"), // 定身
-  blind("失明"), // 失明
-  burn_dot("燃燒"), // 燃燒
+  BLIND("失明"), // 失明
+  BURNING("燃燒"), // 燃燒
   CHARMED("魅惑"), // 魅惑
   CONFUSED("混亂"), // 混亂
   CURSED("詛咒"), // 詛咒
@@ -16,11 +16,12 @@ public enum EffectType {
   FATIGUED("疲勞"), // 疲勞
   FEAR("恐懼"), // 恐懼
   FROZEN("冰凍"), // 冰凍
-  PARALYZED("麻痺"), // 麻痺
-  poison("中毒"), // 中毒
-  SILENCED("禁言"), // 禁言
+  PARALYZE("麻痺"), // 麻痺
+  POISON("中毒"), // 中毒
+  SAPPED("能量耗盡"), // 能量耗盡
+  SILENCE("禁言"), // 禁言
   SLOW("減速"), // 減速
-  stun("昏迷"), // 昏迷
+  STUNED("昏迷"), // 昏迷
   WEAKENED("虛弱"), // 虛弱
 
 
@@ -33,7 +34,7 @@ public enum EffectType {
   FOCUSING("專注中"), // 專注中
   FORTITUDE("堅韌"), // 堅韌
   FURY("狂怒"), // 狂怒
-  speed_up("加速"), // 加速
+  HASTE("加速"), // 加速
   HEALING("治療"), // 治療
   INVIGORATE("振奮"), // 振奮
   LUCK("幸運"), // 幸運

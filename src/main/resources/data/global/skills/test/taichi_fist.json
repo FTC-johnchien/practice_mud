@@ -1,0 +1,305 @@
+{
+  "id": "taichi_fist",
+  "name": "太極拳",
+  "description": "武當派鎮派絕學，講究以靜制動，以柔克剛。能有效化解敵人的攻勢並藉力反擊。",
+  "type": "PASSIVE",
+  "school": "WUDANG",
+  "tags": [
+    "UNARMED",
+    "PARRY",
+    "INTERNAL",
+    "COUNTER"
+  ],
+  "isHidden": false,
+  "learning": {
+    "reqLevel": 10,
+    "reqStats": {
+      "INT": 30
+    },
+    "reqGuild": "WUDANG",
+    "loseOnLeave": true,
+    "reqSkills": {
+      "basic_fist": 30,
+      "wudang_force": 20
+    },
+    "cost": {
+      "potential": 100,
+      "money": 0
+    }
+  },
+  "usage": {
+    "reqGuild": "WUDANG",
+    "allowedWeapons": [
+      null,
+      "UNARMED"
+    ],
+    "allowMounted": false
+  },
+  "costs": {
+    "hp": 0,
+    "mp": 0,
+    "stamina": 5,
+    "charge": 0
+  },
+  "scaling": {
+    "maxLevel": 300,
+    "baseDamage": 15,
+    "damagePerLevel": 0.8,
+    "hitRatePerLevel": 0.001,
+    "parryRatePerLevel": 0.005,
+    "counterRatePerLevel": 0.001,
+    "critRatePerLevel": 0.0
+  },
+  "mechanics": {
+    "scaleStat": "INT",
+    "scaleFactor": 1.2
+  },
+  "synergies": [
+    {
+      "name": "太極氣勁",
+      "triggerType": "ON_COMBAT_START",
+      "condition": {
+        "enabledSkill": {
+          "FORCE": "wudang_force"
+        }
+      },
+      "effects": [
+        {
+          "id": "taichi_shield",
+          "name": "太極氣盾",
+          "type": "DAMAGE_REDUCE",
+          "target": "SELF",
+          "duration": 60000,
+          "value": 50,
+          "triggerMsg": "$N運起太極氣勁，周身形成一道無形的氣牆。",
+          "absorbMsg": "太極氣勁幫$N卸掉了 $d 點傷害！"
+        }
+      ]
+    }
+  ],
+  "moves": [
+    {
+      "name": "野馬分鬃",
+      "reqSkillLevel": 0,
+      "weight": 50,
+      "damageMod": 1.0,
+      "hitMod": 0.0,
+      "cost": null,
+      "cooldown": 0,
+      "msg": {
+        "cast": "雙掌一分，使出一招「野馬分鬃」，推向$n的$l",
+        "hit": "「砰」地一聲，$n被這股綿柔的掌力擊中連退了好幾步，受到 $d 傷害！",
+        "crit": null,
+        "miss": "$n見勢不妙，向後一躍躲開了這一掌。"
+      },
+      "effects": null
+    },
+    {
+      "name": "白鶴亮翅",
+      "reqSkillLevel": 10,
+      "weight": 46,
+      "damageMod": 1.2,
+      "hitMod": 0.01,
+      "cost": null,
+      "cooldown": 0,
+      "msg": {
+        "cast": "$N左腳虛點，雙手張開如「白鶴亮翅」，攻向$n的$l",
+        "hit": "$n被這股掌力擊中，受到 $d 傷害！",
+        "crit": null,
+        "miss": "$n見勢不妙，向後一躍躲開了這一掌。"
+      },
+      "effects": null
+    },
+    {
+      "name": "手揮琵琶",
+      "reqSkillLevel": 20,
+      "weight": 42,
+      "damageMod": 1.4,
+      "hitMod": 0.0,
+      "cost": null,
+      "cooldown": 0,
+      "msg": {
+        "cast": "$N雙手回撤，似抱琵琶，一記「手揮琵琶」封住$n的退路",
+        "hit": "$n被這股掌力擊中，受到 $d 傷害！",
+        "crit": null,
+        "miss": "$n見勢不妙，向後一躍躲開了這一掌。"
+      },
+      "effects": null
+    },
+    {
+      "name": "搬攔捶",
+      "reqSkillLevel": 30,
+      "weight": 40,
+      "damageMod": 1.8,
+      "hitMod": -0.2,
+      "cost": null,
+      "cooldown": 0,
+      "msg": {
+        "cast": "$N腳踏七星，一招「搬攔捶」轟向$n的$l",
+        "hit": "$n被這股掌力擊中，受到 $d 傷害！",
+        "crit": "【重擊】$N看準破綻，一記「搬攔捶」重重轟在$n的$l，$n一口鮮血狂噴而出，受到 $d 傷害！",
+        "miss": "$N一記搬攔捶用力過猛，結果打在了空處，身形踉蹌了一下。"
+      },
+      "effects": null
+    },
+    {
+      "name": "攬雀尾",
+      "reqSkillLevel": 50,
+      "weight": 30,
+      "damageMod": 1.5,
+      "hitMod": 0.0,
+      "cost": {
+        "mp": 10
+      },
+      "cooldown": 0,
+      "msg": {
+        "cast": "$N雙手畫圓，使出一招「攬雀尾」，掌勁如泥沼般纏向$n！",
+        "hit": "$n被黏稠的掌力擊中，身形一滯，受到 $d 傷害！",
+        "crit": null,
+        "miss": "$n見勢不妙，向後一躍躲開了這一掌。"
+      },
+      "effects": [
+        {
+          "type": "SLOW",
+          "target": "ENEMY",
+          "chance": 0.5,
+          "duration": 5000,
+          "value": 20,
+          "msg": "$n的動作變得遲緩了！"
+        }
+      ]
+    }
+  ],
+  "comboDefaults": {
+    "condition": {
+      "enabledSkill": {
+        "FORCE": "wudang_force"
+      }
+    }
+  },
+  "combo": [
+    {
+      "name": "掤勁",
+      "reqSkillLevel": 30,
+      "triggerChance": 0.3,
+      "damageMod": 0.5,
+      "cost": {
+        "mp": 5
+      },
+      "msg": {
+        "hit": "$N招式中的「掤」勁在$n的體內爆發，追加了 $d 傷害！"
+      }
+    },
+    {
+      "name": "捋勁",
+      "reqSkillLevel": 40,
+      "triggerChance": 0.3,
+      "damageMod": 0.55,
+      "cost": {
+        "mp": 6
+      },
+      "msg": {
+        "hit": "$N招式中的「捋」勁在$n的體內爆發，追加了 $d 傷害！"
+      }
+    },
+    {
+      "name": "擠勁",
+      "reqSkillLevel": 50,
+      "triggerChance": 0.3,
+      "damageMod": 0.6,
+      "cost": {
+        "mp": 6
+      },
+      "msg": {
+        "hit": "$N招式中的「擠」勁在$n的體內爆發，追加了 $d 傷害！"
+      }
+    },
+    {
+      "name": "按勁",
+      "reqSkillLevel": 60,
+      "triggerChance": 0.3,
+      "damageMod": 0.65,
+      "cost": {
+        "mp": 7
+      },
+      "msg": {
+        "hit": "$N招式中的「按」勁在$n的體內爆發，追加了 $d 傷害！"
+      }
+    },
+    {
+      "name": "採勁",
+      "reqSkillLevel": 70,
+      "triggerChance": 0.3,
+      "damageMod": 0.7,
+      "cost": {
+        "mp": 7
+      },
+      "msg": {
+        "hit": "$N招式中的「採」勁在$n的體內爆發，追加了 $d 傷害！"
+      }
+    },
+    {
+      "name": "挒勁",
+      "reqSkillLevel": 80,
+      "triggerChance": 0.3,
+      "damageMod": 0.75,
+      "cost": {
+        "mp": 8
+      },
+      "msg": {
+        "hit": "$N招式中的「挒」勁在$n的體內爆發，追加了 $d 傷害！"
+      }
+    },
+    {
+      "name": "肘勁",
+      "reqSkillLevel": 90,
+      "triggerChance": 0.3,
+      "damageMod": 0.9,
+      "cost": {
+        "mp": 9
+      },
+      "msg": {
+        "hit": "$N招式中的「肘」勁在$n的體內爆發，追加了 $d 傷害！"
+      }
+    },
+    {
+      "name": "靠勁",
+      "reqSkillLevel": 100,
+      "triggerChance": 0.3,
+      "damageMod": 1.2,
+      "cost": {
+        "mp": 12
+      },
+      "msg": {
+        "hit": "$N招式中的「靠」勁在$n的體內爆發，追加了 $d 傷害！"
+      }
+    }
+  ],
+  "counterDefaults": {
+    "condition": {
+      "enabledSkill": {
+        "FORCE": "wudang_force"
+      }
+    }
+  },
+  "counter": [
+    {
+      "name": "順手推舟、摔",
+      "reqSkillLevel": 30,
+      "triggerChance": 0.25,
+      "damageMod": 1.5,
+      "msg": {
+        "hit": "$n藉著$N的攻擊方向順勢一推一拐，反而讓$N失去了平衡摔落，造成 $d 傷害。"
+      }
+    },
+    {
+      "name": "順手推舟、擠",
+      "reqSkillLevel": 60,
+      "triggerChance": 0.2,
+      "damageMod": 1.8,
+      "msg": {
+        "hit": "$n藉著$N的攻擊方向順勢一拉一推，在$N失衡的瞬間進行攻擊，造成 $d 傷害。"
+      }
+    }
+  ]
+}

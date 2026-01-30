@@ -61,7 +61,7 @@
   // 5. 目標與範圍 (Targeting)
   // ==========================================
   "targeting": {
-    "type": "SINGLE_ENEMY",      // 目標類型: SELF, SINGLE_ENEMY, SINGLE_ALLY, AREA_ENEMY, AREA_ALL
+    "type": "SINGLE_ENEMY",      // 目標類型: SELF, ENEMY, ALLY, AREA_ENEMY, AREA_ALL
     "range": 0,                  // 射程: 0=近戰, 1=同一房間, >1=遠程
     "aoeRadius": 0,              // 範圍半徑 (若 type 為 AREA)
     "maxTargets": 1,             // 最大影響人數 (AOE 上限)
