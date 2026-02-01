@@ -30,6 +30,7 @@ public enum EffectType {
   BRAVERY("勇敢"), // 勇敢
   CLARITY("清晰"), // 清晰
   COURAGE("勇氣"), // 勇氣
+  DAMAGE_REDUCE("傷害減免"), // 傷害減免
   ENERGY_BOOST("能量提升"), // 能量提升
   FOCUSING("專注中"), // 專注中
   FORTITUDE("堅韌"), // 堅韌

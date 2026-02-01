@@ -70,7 +70,7 @@ public class TemplateRepository {
   }
 
   public void registerSkill(SkillTemplate tpl) {
-    skillTemplates.put(tpl.id(), tpl);
+    skillTemplates.put(tpl.getId(), tpl);
   }
 
   public SkillTemplate getSkill(String id) {

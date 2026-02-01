@@ -1,13 +1,15 @@
 package com.example.htmlmud.domain.model;
 
+import java.util.HashMap;
+import java.util.Map;
 import com.example.htmlmud.domain.model.vo.Gender;
 import com.example.htmlmud.infra.persistence.entity.SkillEntry;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import java.util.HashMap;
-import java.util.Map;
+import lombok.Data;
 
 // 這個物件會被序列化存入 players.state_json 和 mobs.state_json
+@Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LivingState {
   public Gender gender; // 性別
@@ -16,6 +18,7 @@ public class LivingState {
   public int level = 1;
   public int age = 12; // 年齡 age
   public int maxAge = 100; // 最大年齡
+
   public int hp = 100;
   public int maxHp = 100;
   public int mp = 50;
@@ -29,8 +32,10 @@ public class LivingState {
   private int maxSan = 100; // 最大理智值
 
 
+  public int coin = 0; // 錢幣
   public int exp = 0; // 經驗值
   public int combatExp = 0; // 戰鬥經驗值
+  public int potential; // 潛力 (影響 學習特定高級武功的限制)
 
 
   // 基礎屬性
@@ -39,18 +44,18 @@ public class LivingState {
   public int dex = 5; // 靈巧 dexterity (影響 物理威力 命中率Hit Rate、盜賊技能成功率、遠程武器瞄準（弓箭）、暗器投擲、雙手武器的協調性)
   public int con = 5; // 體質 constitution (影響 生命值HP上限、防禦力、體力恢復速度)
 
-  private int wis = 5; // 智慧 wisdom (影響 魔法威力)
-  private int agi = 5; // 敏捷 agility (影響 移動速度、躲避率Evasion 閃避攻擊、戰鬥中的出手順序（主動性）。)
-  private int cha; // 魅力 charisma
-  private int luk; // 福緣 luck
-  private int karma; // 因果 karma
-  private int spi; // 靈性 spirit
-  private int cou; // 膽識 courage
-  private int conce; // 定力 concentration
-  private int app; // 容貌 appearance
+  // private int wis = 5; // 智慧 wisdom (影響 魔法威力)
+  // private int agi = 5; // 敏捷 agility (影響 移動速度、躲避率Evasion 閃避攻擊、戰鬥中的出手順序（主動性）。)
+  // private int cha; // 魅力 charisma
+  // private int luk; // 福緣 luck
+  // private int karma; // 因果 karma
+  // private int spi; // 靈性 spirit
+  // private int cou; // 膽識 courage
+  // private int conce; // 定力 concentration
+  // private int app; // 容貌 appearance
 
-  private int reputation; // 名聲 (影響 與 NPC 的互動)
-  private int potential; // 潛力 (影響 學習特定高級武功的限制)
+  // private int reputation; // 名聲 (影響 與 NPC 的互動)
+
 
 
   // === 裝備欄位 ===
@@ -72,6 +77,10 @@ public class LivingState {
   // 附加增益/減益
   // @JsonIgnore
   // public transient Map<String, Object> dynamicProps = new HashMap<>();
+
+  // 動態戰鬥資源 (不一定存檔，戰鬥結束可能歸零)
+  // Key: "charge", "combo_points", "rage"
+  private Map<String, Integer> combatResources = new HashMap<>();
 
 
   // 衍生屬性 (快取用，每次穿脫裝備後重新計算 通常不存 DB，由基礎屬性計算，但為了簡單先存這裡)
@@ -114,8 +123,11 @@ public class LivingState {
     copy.stamina = this.stamina;
     copy.maxStamina = this.maxStamina;
 
+    copy.coin = this.coin;
     copy.exp = this.exp;
     copy.combatExp = this.combatExp;
+    copy.potential = this.potential;
+
 
 
     // Map 也要複製
@@ -128,5 +140,18 @@ public class LivingState {
     copy.con = this.con;
 
     return copy;
+  }
+
+  // --- 用於 ResourceType.CHARGE 的方法 ---
+  public int getCombatResource(String key) {
+    return combatResources.getOrDefault(key, 0);
+  }
+
+  public void modifyCombatResource(String key, int delta) {
+    combatResources.merge(key, delta, Integer::sum);
+    // 如果減到 0 或以下，移除該 key 以節省空間 (可選)
+    if (combatResources.get(key) <= 0) {
+      combatResources.remove(key);
+    }
   }
 }

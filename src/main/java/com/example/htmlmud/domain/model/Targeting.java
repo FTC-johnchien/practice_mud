@@ -2,7 +2,7 @@ package com.example.htmlmud.domain.model;
 
 public record Targeting(
 
-    String type, // 目標類型: SELF, ENEMY(預設), ALLY, AREA_ENEMY, AREA_ALL
+    TargetType type, // 目標類型: SELF, ENEMY(預設), ALLY, AREA_ENEMY, AREA_ALL
 
     int range, // 射程: 0=近戰(預設), 1=同一房間, >1=遠程
 

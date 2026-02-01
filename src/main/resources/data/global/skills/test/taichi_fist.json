@@ -14,7 +14,7 @@
   "learning": {
     "reqLevel": 10,
     "reqStats": {
-      "INT": 30
+      "int": 30
     },
     "reqGuild": "WUDANG",
     "loseOnLeave": true,
@@ -22,7 +22,7 @@
       "basic_fist": 30,
       "wudang_force": 20
     },
-    "cost": {
+    "costs": {
       "potential": 100,
       "money": 0
     }
@@ -47,6 +47,7 @@
     "damagePerLevel": 0.8,
     "hitRatePerLevel": 0.001,
     "parryRatePerLevel": 0.005,
+    "dodgeRatePerLevel": 0.0,
     "counterRatePerLevel": 0.001,
     "critRatePerLevel": 0.0
   },
@@ -65,14 +66,14 @@
       },
       "effects": [
         {
-          "id": "taichi_shield",
           "name": "太極氣盾",
           "type": "DAMAGE_REDUCE",
           "target": "SELF",
+          "chance": 1.0,
           "duration": 60000,
           "value": 50,
           "triggerMsg": "$N運起太極氣勁，周身形成一道無形的氣牆。",
-          "absorbMsg": "太極氣勁幫$N卸掉了 $d 點傷害！"
+          "effectMsg": "太極氣勁幫$N卸掉了 $d 點傷害！"
         }
       ]
     }
@@ -84,7 +85,7 @@
       "weight": 50,
       "damageMod": 1.0,
       "hitMod": 0.0,
-      "cost": null,
+      "costs": null,
       "cooldown": 0,
       "msg": {
         "cast": "雙掌一分，使出一招「野馬分鬃」，推向$n的$l",
@@ -100,7 +101,7 @@
       "weight": 46,
       "damageMod": 1.2,
       "hitMod": 0.01,
-      "cost": null,
+      "costs": null,
       "cooldown": 0,
       "msg": {
         "cast": "$N左腳虛點，雙手張開如「白鶴亮翅」，攻向$n的$l",
@@ -116,7 +117,7 @@
       "weight": 42,
       "damageMod": 1.4,
       "hitMod": 0.0,
-      "cost": null,
+      "costs": null,
       "cooldown": 0,
       "msg": {
         "cast": "$N雙手回撤，似抱琵琶，一記「手揮琵琶」封住$n的退路",
@@ -132,7 +133,7 @@
       "weight": 40,
       "damageMod": 1.8,
       "hitMod": -0.2,
-      "cost": null,
+      "costs": null,
       "cooldown": 0,
       "msg": {
         "cast": "$N腳踏七星，一招「搬攔捶」轟向$n的$l",
@@ -148,7 +149,7 @@
       "weight": 30,
       "damageMod": 1.5,
       "hitMod": 0.0,
-      "cost": {
+      "costs": {
         "mp": 10
       },
       "cooldown": 0,
@@ -160,12 +161,14 @@
       },
       "effects": [
         {
+          "name": "太極纏勁",
           "type": "SLOW",
           "target": "ENEMY",
           "chance": 0.5,
           "duration": 5000,
           "value": 20,
-          "msg": "$n的動作變得遲緩了！"
+          "triggerMsg": "$n的動作開始變得緩慢了！",
+          "effectMsg": "$n的動作變得遲緩了！"
         }
       ]
     }
@@ -183,7 +186,7 @@
       "reqSkillLevel": 30,
       "triggerChance": 0.3,
       "damageMod": 0.5,
-      "cost": {
+      "costs": {
         "mp": 5
       },
       "msg": {
@@ -195,7 +198,7 @@
       "reqSkillLevel": 40,
       "triggerChance": 0.3,
       "damageMod": 0.55,
-      "cost": {
+      "costs": {
         "mp": 6
       },
       "msg": {
@@ -207,7 +210,7 @@
       "reqSkillLevel": 50,
       "triggerChance": 0.3,
       "damageMod": 0.6,
-      "cost": {
+      "costs": {
         "mp": 6
       },
       "msg": {
@@ -219,7 +222,7 @@
       "reqSkillLevel": 60,
       "triggerChance": 0.3,
       "damageMod": 0.65,
-      "cost": {
+      "costs": {
         "mp": 7
       },
       "msg": {
@@ -231,7 +234,7 @@
       "reqSkillLevel": 70,
       "triggerChance": 0.3,
       "damageMod": 0.7,
-      "cost": {
+      "costs": {
         "mp": 7
       },
       "msg": {
@@ -243,7 +246,7 @@
       "reqSkillLevel": 80,
       "triggerChance": 0.3,
       "damageMod": 0.75,
-      "cost": {
+      "costs": {
         "mp": 8
       },
       "msg": {
@@ -255,7 +258,7 @@
       "reqSkillLevel": 90,
       "triggerChance": 0.3,
       "damageMod": 0.9,
-      "cost": {
+      "costs": {
         "mp": 9
       },
       "msg": {
@@ -267,7 +270,7 @@
       "reqSkillLevel": 100,
       "triggerChance": 0.3,
       "damageMod": 1.2,
-      "cost": {
+      "costs": {
         "mp": 12
       },
       "msg": {

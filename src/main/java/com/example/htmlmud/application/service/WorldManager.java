@@ -1,5 +1,6 @@
 package com.example.htmlmud.application.service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,6 +20,7 @@ import com.example.htmlmud.domain.model.map.ItemTemplate;
 import com.example.htmlmud.domain.model.map.MobTemplate;
 import com.example.htmlmud.domain.model.map.RoomExit;
 import com.example.htmlmud.domain.model.map.RoomTemplate;
+import com.example.htmlmud.domain.model.map.SkillTemplate;
 import com.example.htmlmud.domain.model.map.SpawnRule;
 import com.example.htmlmud.domain.model.map.ZoneTemplate;
 import com.example.htmlmud.domain.service.CombatService;
@@ -75,10 +77,12 @@ public class WorldManager {
   public void loadWorld() {
     log.info("Starting World Loading...");
 
+    test();
+
     // 讀取 global 資料
 
     // 讀取 newbie_village 資料
-    readZone("newbie_village");
+    // readZone("newbie_village");
 
 
 
@@ -86,7 +90,38 @@ public class WorldManager {
     // startPersistenceWorker();
 
     // load zone
-    loadZone("newbie_village");
+    // loadZone("newbie_village");
+  }
+
+
+  private void test() {
+    log.info("test");
+
+    try {
+      // 使用 getResources (複數) 來支援萬用字元 *
+      Resource[] resources =
+          resourceResolver.getResources("classpath:data/global/skills/test/*.json");
+      if (resources == null || resources.length == 0) {
+        log.error("test files not found");
+        return;
+      }
+      for (Resource res : resources) {
+        try {
+          log.info("Loading skill template: {}", res.getFilename());
+
+          // 使用 try-with-resources 確保串流正確關閉
+          try (var is = res.getInputStream()) {
+            SkillTemplate tpl = objectMapper.readValue(is, SkillTemplate.class);
+            // log.info("Successfully loaded skill: {}", tpl.getId());
+            log.info("log:{}", objectMapper.writeValueAsString(tpl));
+          }
+        } catch (Exception e) {
+          log.error("Failed to parse JSON file: {} - Error: {}", res.getFilename(), e.getMessage());
+        }
+      }
+    } catch (IOException e) {
+      log.error("Error reading resources", e);
+    }
   }
 
 

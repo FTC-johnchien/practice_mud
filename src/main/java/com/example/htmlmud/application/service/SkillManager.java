@@ -49,7 +49,7 @@ public class SkillManager {
     SkillTemplate tpl = tmplateRepo.getSkill(skillId);
 
     // 從 actions 列表中隨機挑一個 (或者依等級循序挑選)
-    List<CombatAction> actions = tpl.actions();
+    List<CombatAction> actions = tpl.getActions();
     return actions.get(ThreadLocalRandom.current().nextInt(actions.size()));
   }
 
@@ -62,7 +62,7 @@ public class SkillManager {
 
     // 檢查該技能是否支援此分類 (從 JSON data 讀取)
     SkillTemplate tpl = tmplateRepo.getSkill(skillId);
-    if (!tpl.tags().contains(category.name())) {
+    if (!tpl.getTags().contains(category.name())) {
       throw new MudException("這個技能不能用在這個用途上。");
     }
 
