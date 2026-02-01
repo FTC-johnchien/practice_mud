@@ -10,7 +10,9 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Data // Lombok
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,7 +28,13 @@ public class GameItem {
 
   private String name;
   private String description;
+
+  // 主類型 (Enum)
   private ItemType type;
+  // 子類型 (String)
+  // 為什麼用 String？因為不同 Type 的 SubType Enum 不一樣，
+  // 用 String 在 JSON 裡最通用，讀進來後再用 switch/helper 處理。
+  private String subType;
 
   // 容器內容物 (如果這不是容器，則是 empty)
   // 注意：這裡直接存 GameItem 物件，因為屍體是暫時的，不需要存回 DB
@@ -76,5 +84,34 @@ public class GameItem {
 
   public boolean isStackable() {
     return template.isStackable();
+  }
+
+  /**
+   * 取得此物品對應的技能類別 (給 SkillManager 用)
+   */
+  public SkillCategory getWeaponSkillCategory() {
+    log.info("type:{} subType:{}", this.type, this.subType);
+    if (this.type != ItemType.WEAPON)
+      return SkillCategory.UNARMED;
+
+    try {
+      // 將 "SWORD" 字串轉為 SkillCategory.SWORD
+      return SkillCategory.valueOf(this.subType);
+    } catch (IllegalArgumentException e) {
+      return SkillCategory.UNARMED; // 預設/容錯
+    }
+  }
+
+  /**
+   * 取得此物品對應的裝備欄位 (給 EquipmentService 用)
+   */
+  public EquipmentSlot getEquipmentSlot() {
+    if (this.type == ItemType.WEAPON)
+      return EquipmentSlot.MAIN_HAND;
+    if (this.type == ItemType.ARMOR) {
+      // 將 "HEAD" 轉為 EquipmentSlot.HEAD
+      return EquipmentSlot.valueOf(this.subType);
+    }
+    return null; // 不可裝備
   }
 }

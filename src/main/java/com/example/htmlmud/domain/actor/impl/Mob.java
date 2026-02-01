@@ -15,17 +15,16 @@ import com.example.htmlmud.protocol.ActorMessage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+@Getter
 @Slf4j
-public final class MobActor extends LivingActor {
+public final class Mob extends Living {
 
   private final MobService service;
 
   // 仇恨列表 (Key: 攻擊者 ID字串, Value: 仇恨值)
   // 因為 ID 已改為 UUID String，這裡的 Key 也同步調整為 String
-  @Getter
-  protected final Map<String, Integer> aggroTable = new HashMap<>();
+  private final Map<String, Integer> aggroTable = new HashMap<>();
 
-  @Getter
   private final MobTemplate template;
 
   private MobBehavior behavior; // AI 行為 (策略模式)
@@ -33,10 +32,11 @@ public final class MobActor extends LivingActor {
   // mob的戶籍地 ID
   private String homeRoomId;
 
+
   /**
    * 建構子： 1. 接收 Template 與 Services 2. 自動生成 UUID 3. 自動從 Template 建立 LivingState
    */
-  public MobActor(MobTemplate template, LivingState state, MobService mobService) {
+  public Mob(MobTemplate template, LivingState state, MobService mobService) {
     String uuid = UUID.randomUUID().toString();
     String mobId = "m-" + uuid.substring(0, 8) + uuid.substring(9, 11);
     super(mobId, template.name(), state, mobService.getLivingServiceProvider().getObject());
@@ -86,8 +86,6 @@ public final class MobActor extends LivingActor {
   public void stop() {
     super.stop(); // 停止 Actor
   }
-
-
 
   // --- 訊息處理 ---
 
@@ -141,7 +139,7 @@ public final class MobActor extends LivingActor {
     this.send(new ActorMessage.OnPlayerEnter(playerId));
   }
 
-  public void onInteract(PlayerActor player, String command) {
+  public void onInteract(Player player, String command) {
     behavior.onInteract(this, player, command);
   }
 
@@ -230,14 +228,14 @@ public final class MobActor extends LivingActor {
     // services.worldManager().getRoom(currentRoomId).broadcast(...)
   }
 
-  public void attack(LivingActor target) {
+  public void attack(Living target) {
     // 實作：發送 AttackMessage 給 target
   }
 
   private void processCombatRound(long now) {
     // 檢查攻擊冷卻
-    log.info("this.state.nextAttackTime: {}", state.nextAttackTime);
-    if (now < state.nextAttackTime) {
+    log.info("this.state.nextAttackTime: {}", nextAttackTime);
+    if (now < nextAttackTime) {
       return;
     }
 
@@ -245,11 +243,11 @@ public final class MobActor extends LivingActor {
     log.info("getHighestAggroTarget: {}", getHighestAggroTarget());
     String targetId = getHighestAggroTarget();
     if (targetId == null) {
-      this.state.isInCombat = false; // 沒目標，脫離戰鬥
+      isInCombat = false; // 沒目標，脫離戰鬥
       return;
     }
 
-    processAutoAttack(now);
+    // processAutoAttack(now);
 
     // 從房間取得目標 Actor (這裡需要 WorldManager 協助，或 RoomActor 傳遞)
     // 假設這段邏輯在 RoomActor 處理會更好，但若在 Mob 處理：
@@ -260,7 +258,7 @@ public final class MobActor extends LivingActor {
     // target.onAttacked(this, dmg);
 
     // 重設冷卻時間
-    state.nextAttackTime = now + state.attackSpeed;
+    nextAttackTime = now + attackSpeed;
   }
 
 }

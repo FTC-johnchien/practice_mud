@@ -247,3 +247,12 @@ public class GameItem {
 
 像 **Sockets (鑲嵌)**、**Sets (套裝)**、**Durability (耐久)** 這些可以等基礎系統穩固後再擴充。
 這份 JSON 結構已經預留了擴充空間。
+
+
+{
+  "id": "healing_potion",
+  "name": "金創藥",
+  "type": "CONSUMABLE",
+  "subType": "POTION",
+  "effects": [...]
+}

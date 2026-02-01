@@ -18,7 +18,7 @@ public record RoomTemplate(
 
     String description, // 描述
 
-    List<String> flags, // e.g., ["SAFE", "OUTDOORS"]
+    Set<String> flags, // e.g., ["SAFE", "OUTDOORS"]
 
     Map<String, RoomExit> exits, // Key: 方向 (north, east), Value: 出口詳細資訊
 

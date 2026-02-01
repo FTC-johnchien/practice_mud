@@ -23,7 +23,7 @@ public enum ItemType {
   /** 屍體 */
   CORPSE("屍體"),
   /** 其他 */
-  OTHER("其他");
+  MISC("其他");
 
   private final String description;
 

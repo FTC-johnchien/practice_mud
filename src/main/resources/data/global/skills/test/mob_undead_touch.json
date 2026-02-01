@@ -1,0 +1,139 @@
+{
+  "id": "mob_undead_touch",
+  "name": "亡靈之觸",
+  "description": "來自冥界的冰冷觸碰，蘊含著死亡與腐朽的負能量，能直接侵蝕生者的生命力。",
+  "type": "PASSIVE",
+  "school": "NATURAL",
+  "tags": [
+    "UNARMED",
+    "BASIC",
+    "MOB",
+    "DARK"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED"
+    ]
+  },
+  "costs": {
+    "stamina": 2,
+    "mp": 1
+  },
+  "scaling": {
+    "damagePerLevel": 0.75,
+    "hitRatePerLevel": 0.002,
+    "critRatePerLevel": 0.002
+  },
+  "mechanics": {
+    "critRate": 0.06,
+    "damage": 11,
+    "damageType": "DARK",
+    "hitRate": 0.88,
+    "maxLevel": 100,
+    "scaleStat": "INT",
+    "scaleFactor": 1.3
+  },
+  "moves": [
+    {
+      "name": "寒冰鬼爪",
+      "weight": 55,
+      "damageMod": 0.9,
+      "hitRateMod": 0.15,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N伸出慘白乾枯的手爪，帶著刺骨的寒氣抓向$n。",
+        "hit": "$n被鬼爪觸碰到的瞬間，感覺血液彷彿都凝固了，受到 $d 傷害！",
+        "miss": "$n感覺到一陣陰風襲來，打了個冷顫，迅速退後避開。"
+      }
+    },
+    {
+      "name": "生命汲取",
+      "weight": 35,
+      "damageMod": 1.0,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N眼窩中的魂火跳動，貪婪地撲向$n，渴望著生者的溫暖。",
+        "hit": "$n感覺體內的生命力正被瘋狂地抽離，臉色瞬間蒼白，受到 $d 傷害！",
+        "crit": "【重擊】$N的手深深插入$n的氣場中，一大股精氣被強行吞噬，$n腳步虛浮，受到 $d 傷害！",
+        "miss": "$n運轉氣血，爆發出一股陽剛之氣，震開了貪婪的$N。"
+      }
+    },
+    {
+      "name": "腐爛屍毒",
+      "weight": 40,
+      "damageMod": 1.1,
+      "hitRateMod": -0.05,
+      "critRateMod": 0.2,
+      "msg": {
+        "cast": "$N揮動流淌著屍水的肢體，散發著令人作嘔的惡臭襲向$n。",
+        "hit": "屍毒順著傷口侵入，$n感覺傷處一陣麻癢與劇痛，受到 $d 傷害！",
+        "crit": "【重擊】劇毒攻心，$n感覺五臟六腑都在腐爛，痛苦地乾嘔起來，受到 $d 傷害！",
+        "miss": "$n屏住呼吸，側身避開了那帶毒的一擊。"
+      }
+    },
+    {
+      "name": "亡魂尖嘯",
+      "weight": 20,
+      "damageMod": 1.4,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N突然張大嘴巴，發出一聲來自地獄的無聲尖嘯，衝擊$n的靈魂。",
+        "hit": "$n大腦一片空白，靈魂彷彿要被震出體外，七竅流血，受到 $d 傷害！",
+        "miss": "$n緊守靈台清明，硬生生扛住了這波靈魂衝擊。"
+      }
+    },
+    {
+      "name": "幽冥鎖鏈",
+      "weight": 30,
+      "damageMod": 0.8,
+      "hitRateMod": 0.2,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N身後湧現出無數黑色的霧氣，化作鎖鏈纏向$n。",
+        "hit": "負能量鎖鏈勒進了肉裡，燒灼著$n的靈魂，受到 $d 傷害！",
+        "miss": "$n揮動兵器，將襲來的黑霧鎖鏈斬斷。"
+      }
+    },
+    {
+      "name": "死亡擁抱",
+      "weight": 25,
+      "damageMod": 1.5,
+      "hitRateMod": -0.2,
+      "critRateMod": 0.15,
+      "msg": {
+        "cast": "$N帶著僵硬而詭異的微笑，張開雙臂試圖給$n一個窒息的擁抱。",
+        "hit": "$n被冰冷的屍體緊緊抱住，骨骼被擠壓，陰寒之氣侵入骨髓，受到 $d 傷害！",
+        "crit": "【重擊】$N如同附骨之疽般死死纏住$n，恐怖的死氣瞬間爆發，造成了 $d 傷害！",
+        "miss": "$n一腳踹在$N的肚子上，藉力向後飛退，逃脫了這致命的懷抱。"
+      }
+    },
+    {
+      "name": "虛妄之觸",
+      "weight": 45,
+      "damageMod": 0.7,
+      "hitRateMod": 0.25,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N的身形變得虛幻透明，如鬼魅般穿過$n的防禦。",
+        "hit": "$N的手直接穿過了$n的護甲，按在胸口上，心臟一陣劇痛，受到 $d 傷害！",
+        "miss": "$n憑藉直覺向旁邊一閃，$N的手穿過空氣抓了個空。"
+      }
+    },
+    {
+      "name": "心臟攫取",
+      "weight": 10,
+      "damageMod": 1.8,
+      "hitRateMod": -0.3,
+      "critRateMod": 0.3,
+      "msg": {
+        "cast": "$N五指成爪，凝聚著濃郁的死氣，兇狠地掏向$n的心臟部位！",
+        "hit": "$n胸口如遭雷擊，護體真氣被死氣貫穿，噴出一口黑血，受到 $d 傷害！",
+        "crit": "【重擊】這一爪險些將$n的心臟掏出來，生死只在一線之間，受到毀滅性的 $d 傷害！",
+        "miss": "$n在千鈞一髮之際用武器格擋，$N的利爪在兵器上抓出五道深痕。"
+      }
+    }
+  ]
+}

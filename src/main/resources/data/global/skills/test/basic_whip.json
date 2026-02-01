@@ -1,0 +1,141 @@
+{
+  "id": "basic_whip",
+  "name": "基本鞭法",
+  "description": "包含長鞭、軟鞭、鍊子槍等軟兵器的使用技巧。講究剛柔並濟，招式詭異難測，指東打西，令人防不勝防。",
+  "type": "PASSIVE",
+  "school": "COMMON",
+  "tags": [
+    "WEAPON",
+    "WHIP",
+    "BASIC",
+    "PHYSICAL",
+    "REACH"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      "WHIP",
+      "CHAIN",
+      "ROPE",
+      "FLAIL"
+    ]
+  },
+  "costs": {
+    "stamina": 4
+  },
+  "scaling": {
+    "damagePerLevel": 0.6,
+    "hitRatePerLevel": 0.003,
+    "critRatePerLevel": 0.002
+  },
+  "mechanics": {
+    "critRate": 0.05,
+    "damage": 7,
+    "damageType": "SLASH",
+    "hitRate": 0.94,
+    "maxLevel": 100,
+    "scaleStat": "DEX",
+    "scaleFactor": 1.3,
+    "formulas": {
+      "damage": "skill.mechanics.damage + (user.dex * 0.12) + (user.str * 0.08)"
+    }
+  },
+  "moves": [
+    {
+      "name": "靈蛇出洞",
+      "weight": 50,
+      "damageMod": 1.0,
+      "hitRateMod": 0.1,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N手腕一抖，$W如同活過來的靈蛇一般，蜿蜒曲折地襲向$n。",
+        "hit": "「啪」的一聲脆響，$W準確地抽在$n的身上，留下一道紅腫的鞭痕，受到 $d 傷害！",
+        "miss": "$n看準來勢，向後一躍，鞭梢在$n面前的空氣中炸響，並未擊中實體。"
+      }
+    },
+    {
+      "name": "霹靂炸響",
+      "weight": 40,
+      "damageMod": 1.3,
+      "hitRateMod": -0.05,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N運勁於臂，猛地揮動$W，鞭梢突破音障發出如雷鳴般的巨響，直取$n的$l。",
+        "hit": "$n被這聲勢浩大的一鞭抽中，皮開肉綻，鮮血飛濺，受到 $d 傷害！",
+        "miss": "$n被鞭聲所攝，下意識地抱頭蹲防，鞭子擦著頭皮飛過，險些中招。"
+      }
+    },
+    {
+      "name": "纏繞絞殺",
+      "weight": 35,
+      "damageMod": 0.8,
+      "hitRateMod": 0.2,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N手腕轉動畫圓，$W在空中盤旋，試圖將$n的$l死死纏住。",
+        "hit": "$W如同蟒蛇般緊緊勒進了肉裡，$N猛地一拉，$n痛呼失聲，受到 $d 傷害！",
+        "miss": "$n反應極快，揮動$w將纏繞過來的$W挑開，化解了被絞殺的危機。"
+      }
+    },
+    {
+      "name": "烏龍擺尾",
+      "weight": 30,
+      "damageMod": 1.4,
+      "hitRateMod": -0.1,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N猛地轉身，藉著旋轉的離心力，將$W如同一條巨大的黑龍尾巴般橫掃$n。",
+        "hit": "$n躲閃不及，被沉重的鞭身掃中腰際，整個人被打得橫飛出去，受到 $d 傷害！",
+        "miss": "$n豎起$w格擋，雖然擋住了鞭身，但鞭梢卻繞過防禦打在身後的地上，塵土飛揚。"
+      }
+    },
+    {
+      "name": "天羅地網",
+      "weight": 25,
+      "damageMod": 0.9,
+      "hitRateMod": 0.15,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N手中的$W舞成一團幻影，密不透風的鞭影如同天羅地網般罩向$n。",
+        "hit": "$n在這漫天鞭影中無處可逃，身上接連中了數鞭，衣衫盡裂，受到 $d 傷害！",
+        "miss": "$n憑藉高超的身法，在鞭影的縫隙中穿梭，竟是片葉不沾身。"
+      }
+    },
+    {
+      "name": "回馬金槍",
+      "weight": 20,
+      "damageMod": 1.1,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N佯裝敗退收鞭，突然反手一揚，$W的尖端如毒蠍倒鉤般反撩$n的$l。",
+        "hit": "這一招極其陰險，$n猝不及防下巴被鞭梢擊中，鮮血直流，受到 $d 傷害！",
+        "miss": "$n始終盯著$N的手腕，見狀立刻後仰，險之又險地避開了這記回馬鞭。"
+      }
+    },
+    {
+      "name": "毒龍鑽",
+      "weight": 15,
+      "damageMod": 1.5,
+      "hitRateMod": -0.2,
+      "critRateMod": 0.25,
+      "msg": {
+        "cast": "$N將全身內力灌注於$W，鞭身挺得筆直如槍，對準$n的$l要害直刺而去。",
+        "hit": "$n沒想到軟兵器也能當槍使，被堅硬的鞭頭狠狠戳中，傷及內腑，受到 $d 傷害！",
+        "crit": "【重擊】這凝聚全身功力的一擊直接貫穿了防禦，$n狂噴鮮血，受到 $d 點嚴重傷害！",
+        "miss": "$n側身滑步，鞭頭擦著肋下刺空，帶起的勁風颳得皮膚生痛。"
+      }
+    },
+    {
+      "name": "卷雲奪械",
+      "weight": 10,
+      "damageMod": 0.7,
+      "hitRateMod": 0.25,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N不攻人身，$W靈活地捲向$n持有$w的手腕，意圖繳械。",
+        "hit": "$W上的倒刺刮破了手腕，$n吃痛之下手勁一鬆，雖然握住了兵器但仍受到 $d 傷害！",
+        "miss": "$n手腕一沉，避開了糾纏，同時順勢一刀斬向$W的七寸之處。"
+      }
+    }
+  ]
+}

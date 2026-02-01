@@ -2,7 +2,7 @@ package com.example.htmlmud.domain.service;
 
 import java.util.Map;
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.domain.actor.impl.LivingActor;
+import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.model.LivingState;
 import com.example.htmlmud.domain.model.ResourceType;
 import com.example.htmlmud.domain.model.map.SkillTemplate;
@@ -20,7 +20,7 @@ public class SkillCostService {
   /**
    * 檢查資源是否足夠
    */
-  public boolean checkResources(LivingActor actor, SkillTemplate skill) {
+  public boolean checkResources(Living actor, SkillTemplate skill) {
     if (skill.getLearning().costs() == null)
       return true;
 

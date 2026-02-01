@@ -1,6 +1,6 @@
 package com.example.htmlmud.domain.model;
 
-import java.util.Set;
+import java.util.List;
 
 public record SynergiesConfig(
 
@@ -10,7 +10,7 @@ public record SynergiesConfig(
 
     ConditionConfig condition,
 
-    Set<Effect> effects
+    List<Effect> effects
 
 ) {
 

@@ -13,19 +13,17 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.application.factory.WorldFactory;
-import com.example.htmlmud.domain.actor.impl.LivingActor;
-import com.example.htmlmud.domain.actor.impl.PlayerActor;
-import com.example.htmlmud.domain.actor.impl.RoomActor;
+import com.example.htmlmud.domain.actor.impl.Player;
+import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.model.map.ItemTemplate;
 import com.example.htmlmud.domain.model.map.MobTemplate;
+import com.example.htmlmud.domain.model.map.RaceTemplate;
 import com.example.htmlmud.domain.model.map.RoomExit;
 import com.example.htmlmud.domain.model.map.RoomTemplate;
 import com.example.htmlmud.domain.model.map.SkillTemplate;
 import com.example.htmlmud.domain.model.map.SpawnRule;
 import com.example.htmlmud.domain.model.map.ZoneTemplate;
-import com.example.htmlmud.domain.service.CombatService;
 import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
-import com.example.htmlmud.infra.persistence.service.PlayerPersistenceService;
 import com.example.htmlmud.infra.util.IdUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,33 +37,24 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WorldManager {
 
-  // @Getter
-  private final CombatService combatService;
-
-  // @Getter
-  private final WorldFactory worldFactory; // 注入 Factory
-
-  // @Getter
-  private final PlayerPersistenceService playerPersistenceService;
-
-  // private final WorldFactory worldFactory;
-  private final ObjectMapper objectMapper;
-
   private final ResourcePatternResolver resourceResolver;
 
+  private final ObjectMapper objectMapper;
+
   private final TemplateRepository templateRepo;
+
+  private final WorldFactory worldFactory; // 注入 Factory
 
   // 2. Runtime Actors: 存放正在運作的 RoomActor
   // 使用 ConcurrentHashMap 確保並發存取安全
   @Getter
-  private final ConcurrentHashMap<String, RoomActor> activeRooms = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, Room> activeRooms = new ConcurrentHashMap<>();
+
+  // 快取：ID -> Player 實體
+  private final ConcurrentHashMap<String, Player> activePlayers = new ConcurrentHashMap<>();
 
   // 3. Write-Behind Queue: 存放待寫入資料庫的變更
   private final BlockingQueue<RoomStateUpdate> persistenceQueue = new LinkedBlockingQueue<>();
-
-  // 快取：ID -> Player 實體
-  private final ConcurrentHashMap<String, LivingActor> activeLivingActors =
-      new ConcurrentHashMap<>();
 
   private volatile boolean isRunning = true;
 
@@ -75,14 +64,12 @@ public class WorldManager {
    * 伺服器啟動時載入地圖
    */
   public void loadWorld() {
-    log.info("Starting World Loading...");
-
-    test();
 
     // 讀取 global 資料
+    loadgGlobalData();
 
     // 讀取 newbie_village 資料
-    // readZone("newbie_village");
+    readZone("newbie_village");
 
 
 
@@ -93,34 +80,65 @@ public class WorldManager {
     // loadZone("newbie_village");
   }
 
+  private void loadgGlobalData() {
+    log.info("loadgGlobalData");
 
-  private void test() {
-    log.info("test");
+    loadgSkillData();
+
+    loadRaceData();
+  }
+
+
+
+  private void loadRaceData() {
+    log.info("load RaceData");
+
+    try {
+      Resource resource = resourceResolver.getResource("classpath:data/global/races.json");
+      if (resource == null) {
+        log.error("race not found");
+        return;
+      }
+
+      Set<RaceTemplate> list = objectMapper.readValue(resource.getInputStream(),
+          new TypeReference<Set<RaceTemplate>>() {});
+      log.info("{}", objectMapper.writeValueAsString(list));
+      for (RaceTemplate race : list) {
+        templateRepo.registerRace(race);
+      }
+      //
+    } catch (IOException e) {
+      log.error("Error reading resources race", e);
+    }
+
+  }
+
+  private void loadgSkillData() {
+    log.info("loadgSkillData");
 
     try {
       // 使用 getResources (複數) 來支援萬用字元 *
+      // Resource[] resources =
+      // resourceResolver.getResources("classpath:data/global/skills/**/*.json");
       Resource[] resources =
           resourceResolver.getResources("classpath:data/global/skills/test/*.json");
       if (resources == null || resources.length == 0) {
-        log.error("test files not found");
+        log.error("skill files not found");
         return;
       }
       for (Resource res : resources) {
-        try {
-          log.info("Loading skill template: {}", res.getFilename());
-
-          // 使用 try-with-resources 確保串流正確關閉
-          try (var is = res.getInputStream()) {
-            SkillTemplate tpl = objectMapper.readValue(is, SkillTemplate.class);
-            // log.info("Successfully loaded skill: {}", tpl.getId());
-            log.info("log:{}", objectMapper.writeValueAsString(tpl));
-          }
+        // 使用 try-with-resources 確保串流正確關閉
+        try (var is = res.getInputStream()) {
+          SkillTemplate tpl = objectMapper.readValue(is, SkillTemplate.class);
+          log.info("Successfully loaded skill: {}:{}", tpl.getId(), tpl.getName());
+          log.info("log:{}", objectMapper.writeValueAsString(tpl));
+          templateRepo.registerSkill(tpl);
         } catch (Exception e) {
           log.error("Failed to parse JSON file: {} - Error: {}", res.getFilename(), e.getMessage());
         }
       }
     } catch (IOException e) {
-      log.error("Error reading resources", e);
+      log.error("Error reading resources skills", e);
     }
   }
 
@@ -137,7 +155,7 @@ public class WorldManager {
       }
       ZoneTemplate zoneTemplate =
           objectMapper.readValue(resource.getInputStream(), ZoneTemplate.class);
-      log.info("log:{}", objectMapper.writeValueAsString(zoneTemplate));
+      // log.info("log:{}", objectMapper.writeValueAsString(zoneTemplate));
       templateRepo.registerZone(zoneTemplate);
       // String zoneId = zoneTemplate.id();
 
@@ -153,7 +171,7 @@ public class WorldManager {
       for (MobTemplate mob : mobs) {
         String newMobId = IdUtils.resolveId(zoneId, mob.id());
         MobTemplate newMob = mob.toBuilder().id(newMobId).build();
-        log.info("log:{}", objectMapper.writeValueAsString(newMob));
+        // log.info("log:{}", objectMapper.writeValueAsString(newMob));
         templateRepo.registerMob(newMob);
       }
 
@@ -169,7 +187,7 @@ public class WorldManager {
       for (ItemTemplate item : items) {
         String newItemId = IdUtils.resolveId(zoneId, item.id());
         ItemTemplate newItem = item.toBuilder().id(newItemId).build();
-        log.info("log:{}", objectMapper.writeValueAsString(newItem));
+        // log.info("log:{}", objectMapper.writeValueAsString(newItem));
         templateRepo.registerItem(newItem);
       }
 
@@ -181,7 +199,7 @@ public class WorldManager {
         return;
       }
 
-      // 使用 TypeReference 來正確讀取 JSON 陣列為 Set<RoomTemplate>
+      // 使用 TypeReference 來正確讀取 JSON 陣列為 Collection<RoomTemplate>
       List<RoomTemplate> rooms = objectMapper.readValue(resource.getInputStream(),
           new TypeReference<List<RoomTemplate>>() {});
 
@@ -202,7 +220,7 @@ public class WorldManager {
         String newRoomId = IdUtils.resolveId(zoneId, room.id());
         RoomTemplate newRoom = room.toBuilder().id(newRoomId).zoneId(zoneId).exits(updatedExits)
             .spawnRules(spawnRules).build();
-        log.info("log:{}", objectMapper.writeValueAsString(newRoom));
+        // log.info("log:{}", objectMapper.writeValueAsString(newRoom));
         templateRepo.registerRoom(newRoom);
 
         // init roomActor
@@ -226,7 +244,7 @@ public class WorldManager {
   /**
    * 核心方法：取得或創建 RoomActor 這是進入遊戲世界的入口
    */
-  public RoomActor getRoomActor(String roomId) {
+  public Room getRoomActor(String roomId) {
     // 如果 Actor 已經存在，直接回傳
     return activeRooms.computeIfAbsent(roomId, id -> {
       return worldFactory.createRoom(id);
@@ -249,16 +267,16 @@ public class WorldManager {
   public record RoomStateUpdate(int roomId, String dataToSave) {
   }
 
-  public void addLivingActor(LivingActor actor) {
-    activeLivingActors.put(actor.getId(), actor);
+  public void addLivingActor(Player player) {
+    activePlayers.put(player.getId(), player);
   }
 
-  public Optional<LivingActor> findLivingActor(String actorId) {
-    return Optional.ofNullable(activeLivingActors.get(actorId));
+  public Optional<Player> findLivingActor(String playerId) {
+    return Optional.ofNullable(activePlayers.get(playerId));
   }
 
-  public void removeLivingActor(String actorId) {
-    activeLivingActors.remove(actorId);
+  public void removeLivingActor(String playerId) {
+    activePlayers.remove(playerId);
   }
 
 
@@ -347,12 +365,8 @@ public class WorldManager {
   // return itemTemplateMapper.toRecord(entity);
   // }
 
-  public Optional<PlayerActor> findPlayerByName(String targetName) {
-    for (LivingActor actor : activeLivingActors.values()) {
-      if (!(actor instanceof PlayerActor player)) {
-        continue;
-      }
-
+  public Optional<Player> findPlayerByName(String targetName) {
+    for (Player player : activePlayers.values()) {
       if (player.getName().equals(targetName)) {
         return Optional.of(player);
       }

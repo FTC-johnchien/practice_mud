@@ -1,0 +1,138 @@
+{
+  "id": "mob_bite",
+  "name": "兇猛撕咬",
+  "description": "依靠強大的顎部力量與尖銳獠牙進行的穿刺攻擊，能夠輕易咬碎骨頭或撕裂血管。",
+  "type": "PASSIVE",
+  "school": "NATURAL",
+  "tags": [
+    "UNARMED",
+    "BASIC",
+    "MOB",
+    "PIERCE"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED"
+    ]
+  },
+  "costs": {
+    "stamina": 4
+  },
+  "scaling": {
+    "damagePerLevel": 0.8,
+    "hitRatePerLevel": 0.001,
+    "critRatePerLevel": 0.002
+  },
+  "mechanics": {
+    "critRate": 0.08,
+    "damage": 12,
+    "damageType": "PIERCE",
+    "hitRate": 0.78,
+    "maxLevel": 100,
+    "scaleStat": "STR",
+    "scaleFactor": 1.3
+  },
+  "moves": [
+    {
+      "name": "快速輕咬",
+      "weight": 50,
+      "damageMod": 0.8,
+      "hitRateMod": 0.15,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N趁$n不注意，快速地探頭咬向$n的$l。",
+        "hit": "$n雖然縮得快，但$l還是被獠牙擦過，留下一排齒痕，受到 $d 傷害！",
+        "miss": "$n眼明手快，一巴掌拍在$N的鼻子上，阻止了這次攻擊。"
+      }
+    },
+    {
+      "name": "碎骨咬合",
+      "weight": 40,
+      "damageMod": 1.5,
+      "hitRateMod": -0.15,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N張開血盆大口，發出令人牙酸的摩擦聲，狠狠咬向$n的$l！",
+        "hit": "只聽「卡嚓」一聲脆響，$n的$l骨頭被巨大的咬合力咬斷，受到 $d 傷害！",
+        "crit": "【重擊】$N這一下咬合力道驚人，直接將$n的$l骨頭咬得粉碎，受到 $d 傷害！",
+        "miss": "$n就地一滾，險之又險地避開了這碎骨的一擊。"
+      }
+    },
+    {
+      "name": "鎖喉",
+      "weight": 15,
+      "damageMod": 1.8,
+      "hitRateMod": -0.25,
+      "critRateMod": 0.3,
+      "msg": {
+        "cast": "$N眼中閃爍著嗜血的光芒，猛地撲上去想要咬斷$n的喉嚨！",
+        "hit": "$n拚命掙扎，雖然護住了氣管，但頸部動脈仍被獠牙刺穿，鮮血狂噴，受到 $d 傷害！",
+        "crit": "【重擊】$N的獠牙精準地刺入$n的喉結，$n無法發出聲音，生命力隨著鮮血飛速流逝，受到 $d 傷害！",
+        "miss": "$n用手臂死死抵住$N的下顎，沒讓那致命的獠牙碰到脖子。"
+      }
+    },
+    {
+      "name": "撕裂拉扯",
+      "weight": 35,
+      "damageMod": 1.2,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N咬住$n的$l不放，並瘋狂地左右甩頭試圖撕下一塊肉來。",
+        "hit": "$n劇痛難忍，$l被硬生生撕下一大塊皮肉，受到 $d 傷害！",
+        "crit": "【重擊】$N這一甩頭力大無窮，直接將$n$l的肌肉組織撕裂，傷口深可見骨，受到 $d 傷害！",
+        "miss": "$n忍痛一腳將$N踹開，幸好沒有被咬實。"
+      }
+    },
+    {
+      "name": "腳踝獵殺",
+      "weight": 45,
+      "damageMod": 0.9,
+      "hitRateMod": 0.1,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N伏低身體，像毒蛇一樣竄出，一口咬向$n的腳踝。",
+        "hit": "$n腳下一痛，跟腱被獠牙劃傷，身形一個踉蹌，受到 $d 傷害！",
+        "miss": "$n高高躍起，$N咬了個空，牙齒撞擊發出清脆的聲響。"
+      }
+    },
+    {
+      "name": "狂亂啃噬",
+      "weight": 30,
+      "damageMod": 1.3,
+      "hitRateMod": -0.1,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N陷入瘋狂，對著$n全身上下進行無差別的亂咬。",
+        "hit": "$n防不勝防，身上多處被咬傷，衣服也被撕得粉碎，受到 $d 傷害！",
+        "miss": "$n舞動兵器護住全身，逼退了瘋狂的$N。"
+      }
+    },
+    {
+      "name": "毒牙穿刺",
+      "weight": 25,
+      "damageMod": 1.1,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.15,
+      "msg": {
+        "cast": "$N冷冷地盯著$n，尋找防禦死角，隨後精準地一口咬向$n的$l。",
+        "hit": "獠牙深深刺入$n的肌肉，$n感覺傷口一陣麻木，受到 $d 傷害！",
+        "crit": "【重擊】這一咬刺穿了大動脈，造成了嚴重的貫穿傷，受到 $d 傷害！",
+        "miss": "$n直覺敏銳，提前避開了這陰險的一擊。"
+      }
+    },
+    {
+      "name": "飛撲噬咬",
+      "weight": 20,
+      "damageMod": 1.6,
+      "hitRateMod": -0.2,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N四肢用力一蹬，如同砲彈般射向$n，張口欲噬！",
+        "hit": "$n被巨大的衝擊力撞倒，隨後$N的利齒狠狠地嵌入了身體，受到 $d 傷害！",
+        "miss": "$N在空中無處借力，$n輕鬆地側身讓過。"
+      }
+    }
+  ]
+}

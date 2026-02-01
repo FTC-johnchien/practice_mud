@@ -1,0 +1,107 @@
+{
+  "id": "mob_dragon_breath",
+  "name": "龍之吐息",
+  "description": "龍族最強大的攻擊手段，積蓄體內的元素力量，轉化為毀滅性的洪流噴湧而出。",
+  "type": "ACTIVE",
+  "school": "NATURAL",
+  "tags": [
+    "MAGIC",
+    "FIRE",
+    "AOE"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED"
+    ]
+  },
+  "costs": {
+    "mp": 50,
+    "stamina": 10
+  },
+  "scaling": {
+    "damagePerLevel": 1.5,
+    "hitRatePerLevel": 0.001,
+    "critRatePerLevel": 0.001
+  },
+  "mechanics": {
+    "critRate": 0.05,
+    "damage": 30,
+    "damageType": "FIRE",
+    "hitRate": 0.85,
+    "maxLevel": 100,
+    "scaleStat": "CON",
+    "scaleFactor": 2.0,
+    "formulas": {
+      "damage": "damage + (user.maxHp * 0.01)"
+    }
+  },
+  "moves": [
+    {
+      "name": "烈焰噴射",
+      "weight": 40,
+      "damageMod": 1.0,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.0,
+      "costs": {
+        "mp": 50
+      },
+      "cooldown": 3000,
+      "msg": {
+        "cast": "$N深吸一口氣，猛地噴出一道赤紅的烈焰柱席捲$n！",
+        "hit": "$n被烈焰吞沒，全身衣物燃燒，皮膚焦黑，受到 $d 傷害！",
+        "miss": "$n感受到熱浪襲來，連忙向側面飛撲，險險避開了火柱。"
+      }
+    },
+    {
+      "name": "爆裂火球",
+      "weight": 30,
+      "damageMod": 1.5,
+      "hitRateMod": -0.15,
+      "critRateMod": 0.1,
+      "costs": {
+        "mp": 70
+      },
+      "cooldown": 5000,
+      "msg": {
+        "cast": "$N喉嚨發出咕嚕聲，吐出一顆極不穩定的巨大火球，轟向$n。",
+        "hit": "火球在$n身邊炸開，巨大的爆炸力將$n掀飛，受到 $d 傷害！",
+        "crit": "【重擊】火球直接命中$n並發生核心殉爆，將$n炸得血肉模糊，受到 $d 傷害！",
+        "miss": "火球擦著$n的身體飛過，在遠處爆炸，氣浪吹得$n站立不穩。"
+      }
+    },
+    {
+      "name": "廣域燎原",
+      "weight": 20,
+      "damageMod": 0.7,
+      "hitRateMod": 0.2,
+      "critRateMod": 0.0,
+      "costs": {
+        "mp": 40
+      },
+      "cooldown": 4000,
+      "msg": {
+        "cast": "$N轉動頭顱，口中噴出的扇形火焰如海嘯般覆蓋了整個區域。",
+        "hit": "$n避無可避，只能硬生生承受這漫天火海的灼燒，受到 $d 傷害！",
+        "miss": "$n迅速躲到了掩體後面，避開了這大範圍的火焰覆蓋。"
+      }
+    },
+    {
+      "name": "毀滅聚焦",
+      "weight": 10,
+      "damageMod": 2.5,
+      "hitRateMod": -0.2,
+      "critRateMod": 0.3,
+      "costs": {
+        "mp": 100
+      },
+      "cooldown": 8000,
+      "msg": {
+        "cast": "$N全身鱗片亮起紅光，將所有能量壓縮成一道白熾的細小光束，射向$n的心臟！",
+        "hit": "光束瞬間貫穿了$n的身體，高溫將傷口瞬間碳化，受到 $d 傷害！",
+        "crit": "【重擊】這是毀滅性的一擊，光束融化了$n的護甲與骨骼，造成了災難性的 $d 傷害！",
+        "miss": "$N的蓄力時間過長，$n提前預判了彈道，驚險地躲過了這必殺一擊。"
+      }
+    }
+  ]
+}

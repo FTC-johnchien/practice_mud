@@ -1,0 +1,142 @@
+{
+  "id": "basic_polearm",
+  "name": "基本長兵",
+  "description": "涵蓋槍、棍、戟等長柄兵器的基礎使用技巧，講究一寸長一寸強，招式大開大闔，威力驚人。",
+  "type": "PASSIVE",
+  "school": "COMMON",
+  "tags": [
+    "WEAPON",
+    "POLEARM",
+    "BASIC",
+    "PHYSICAL"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      "SPEAR",
+      "STAFF",
+      "HALBERD",
+      "POLEAXE"
+    ]
+  },
+  "costs": {
+    "stamina": 4
+  },
+  "scaling": {
+    "damagePerLevel": 0.7,
+    "hitRatePerLevel": 0.002,
+    "critRatePerLevel": 0.001
+  },
+  "mechanics": {
+    "critRate": 0.04,
+    "damage": 9,
+    "damageType": "PHYSICAL",
+    "hitRate": 0.88,
+    "maxLevel": 100,
+    "scaleStat": "STR",
+    "scaleFactor": 1.3,
+    "formulas": {
+      "damage": "skill.mechanics.damage + (user.str * 0.18)"
+    }
+  },
+  "moves": [
+    {
+      "name": "橫掃千軍",
+      "weight": 50,
+      "damageMod": 1.0,
+      "hitRateMod": 0.15,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N雙手握住$W末端，藉著腰力猛地旋轉，畫出一道巨大的扇形橫掃$n的下盤。",
+        "hit": "$n躲避不及，雙腿被$W狠狠掃中，重心不穩差點跌倒，受到 $d 傷害！",
+        "miss": "$n看準來勢，高高躍起，讓$W帶著風聲從腳下呼嘯而過。"
+      }
+    },
+    {
+      "name": "中平疾刺",
+      "weight": 45,
+      "damageMod": 1.1,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N將$W收於腰際，隨即雙臂發力，一招「中平刺」如毒龍出洞般刺向$n的$l。",
+        "hit": "$W來勢極快，瞬間突破防禦刺在$n身上，造成了 $d 傷害！",
+        "crit": "【重擊】這一刺勢如破竹，$W深深扎入$n的$l，造成了 $d 點貫穿傷害！",
+        "miss": "$n側身閃避，$W擦著$n的衣甲刺了個空，在空氣中發出銳嘯。"
+      }
+    },
+    {
+      "name": "泰山壓頂",
+      "weight": 30,
+      "damageMod": 1.5,
+      "hitRateMod": -0.2,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N高高舉起$W，利用長柄的槓桿原理，帶著呼嘯的風聲向$n當頭砸下！",
+        "hit": "$n只覺頭頂壓力驟增，舉起$w招架，卻被這股巨力震得虎口發麻，受到 $d 傷害！",
+        "crit": "【重擊】$W重重砸在$n的肩膀上，骨骼碎裂的聲音清晰可聞，受到 $d 傷害！",
+        "miss": "$n向後急退，地面被$W砸出一個大坑，碎石飛濺。"
+      }
+    },
+    {
+      "name": "靈蛇吐信",
+      "weight": 35,
+      "damageMod": 0.9,
+      "hitRateMod": 0.1,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N手腕抖動，$W的尖端幻化出點點寒芒，虛虛實實地籠罩$n全身。",
+        "hit": "$n分辨不出真假，身上接連中了數記，受到 $d 傷害！",
+        "miss": "$n舞動$w護住全身，將$N的攻勢盡數擋在門外。"
+      }
+    },
+    {
+      "name": "海底撈月",
+      "weight": 25,
+      "damageMod": 1.2,
+      "hitRateMod": -0.05,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N壓低身形，手中的$W由下而上猛地挑起，攻向$n的下顎。",
+        "hit": "$n猝不及防，被$W挑中，$l處傳來劇痛，受到 $d 傷害！",
+        "miss": "$n向後一仰，險之又險地避開了這陰險的一挑。"
+      }
+    },
+    {
+      "name": "桿身撞擊",
+      "weight": 20,
+      "damageMod": 0.8,
+      "hitRateMod": 0.2,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N見$n欺身太近，無法施展長兵優勢，便直接用$W的桿身橫撞$n的$l。",
+        "hit": "「砰」的一聲悶響，$n被堅硬的桿身撞退數步，氣血翻騰，受到 $d 傷害！",
+        "miss": "$n反應敏捷，貼著$N的身體轉了一圈，避開了撞擊。"
+      }
+    },
+    {
+      "name": "回馬槍",
+      "weight": 15,
+      "damageMod": 1.4,
+      "hitRateMod": -0.15,
+      "critRateMod": 0.2,
+      "msg": {
+        "cast": "$N佯裝敗退，突然回身一記「回馬槍」，$W以不可思議的角度刺向$n！",
+        "hit": "$n大驚失色，想要閃避已是不及，$W結結實實地刺中了$l，受到 $d 傷害！",
+        "crit": "【重擊】這一擊完全出乎意料，$n被刺了個對穿，鮮血狂噴，受到 $d 點嚴重傷害！",
+        "miss": "$n早有防備，冷笑一聲，側頭避過了這致命的一擊。"
+      }
+    },
+    {
+      "name": "亂舞狂風",
+      "weight": 10,
+      "damageMod": 1.3,
+      "hitRateMod": -0.1,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N雙手如輪般舞動$W，將長兵器舞成一團旋風，隨後藉著旋轉之力轟向$n。",
+        "hit": "$n被捲入兵器旋風中，全身上下不知中了多少記，受到 $d 傷害！",
+        "miss": "$n暫避鋒芒，遠遠跳開，等待$N攻勢力竭。"
+      }
+    }
+  ]
+}

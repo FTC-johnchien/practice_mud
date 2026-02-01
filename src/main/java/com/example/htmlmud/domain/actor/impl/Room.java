@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 // 1. 繼承 VirtualActor，並指定泛型為 RoomMessage
-public class RoomActor extends VirtualActor<RoomMessage> {
+public class Room extends VirtualActor<RoomMessage> {
 
   private final RoomService roomService;
 
@@ -35,10 +35,10 @@ public class RoomActor extends VirtualActor<RoomMessage> {
 
   // 房間內的玩家 (Runtime State)
   @Getter
-  private final List<PlayerActor> players = new ArrayList<>();
+  private final List<Player> players = new ArrayList<>();
 
   @Getter
-  private final List<MobActor> mobs = new ArrayList<>();
+  private final List<Mob> mobs = new ArrayList<>();
 
   @Getter
   private final List<GameItem> items = new ArrayList<>(); // 地上的物品
@@ -48,7 +48,7 @@ public class RoomActor extends VirtualActor<RoomMessage> {
   private Map<String, Set<String>> trackedMobs = new HashMap<>();
 
 
-  public RoomActor(String id, RoomService roomService) {
+  public Room(String id, RoomService roomService) {
     super("room-" + id);
     this.roomService = roomService;
 
@@ -118,11 +118,11 @@ public class RoomActor extends VirtualActor<RoomMessage> {
 
 
   // 公開給外部呼叫的方法 --------------------------------------------------------------------------
-  public void enter(LivingActor actor, Direction direction, CompletableFuture<Void> future) {
+  public void enter(Living actor, Direction direction, CompletableFuture<Void> future) {
     this.send(new RoomMessage.Enter(actor, direction, future));
   }
 
-  public void leave(LivingActor actor, Direction direction) {
+  public void leave(Living actor, Direction direction) {
     this.send(new RoomMessage.Leave(actor, direction));
   }
 
@@ -138,7 +138,7 @@ public class RoomActor extends VirtualActor<RoomMessage> {
     this.send(new RoomMessage.Tick(tickCount, timestamp));
   }
 
-  public void tryPickItem(String args, PlayerActor picker, CompletableFuture<GameItem> future) {
+  public void tryPickItem(String args, Player picker, CompletableFuture<GameItem> future) {
     this.send(new RoomMessage.TryPickItem(args, picker, future));
   }
 
@@ -150,19 +150,19 @@ public class RoomActor extends VirtualActor<RoomMessage> {
     this.send(new RoomMessage.BroadcastToOthers(actorId, message));
   }
 
-  public void combatBroadcast(LivingActor source, LivingActor target, String messageTemplate) {
+  public void combatBroadcast(Living source, Living target, String messageTemplate) {
     this.send(new RoomMessage.CombatBroadcast(source, target, messageTemplate));
   }
 
-  public void findActor(String actorId, CompletableFuture<LivingActor> future) {
+  public void findActor(String actorId, CompletableFuture<Living> future) {
     this.send(new RoomMessage.FindActor(actorId, future));
   }
 
-  public void getPlayers(CompletableFuture<List<PlayerActor>> future) {
+  public void getPlayers(CompletableFuture<List<Player>> future) {
     this.send(new RoomMessage.GetPlayers(future));
   }
 
-  public void getMobs(CompletableFuture<List<MobActor>> future) {
+  public void getMobs(CompletableFuture<List<Mob>> future) {
     this.send(new RoomMessage.GetMobs(future));
   }
 

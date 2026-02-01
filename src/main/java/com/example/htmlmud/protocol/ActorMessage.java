@@ -2,9 +2,9 @@ package com.example.htmlmud.protocol;
 
 import java.util.concurrent.CompletableFuture;
 import org.springframework.web.socket.WebSocketSession;
-import com.example.htmlmud.domain.actor.impl.LivingActor;
-import com.example.htmlmud.domain.actor.impl.MobActor;
-import com.example.htmlmud.domain.actor.impl.PlayerActor;
+import com.example.htmlmud.domain.actor.impl.Living;
+import com.example.htmlmud.domain.actor.impl.Mob;
+import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.model.EquipmentSlot;
 import com.example.htmlmud.domain.model.GameItem;
 
@@ -25,11 +25,11 @@ public sealed interface ActorMessage
    */
   record Tick(long tickCount, long timestamp) implements LivingMessage {
   }
-  record OnAttacked(String attackerId) implements LivingMessage {
+  record OnAttacked(Living attacker) implements LivingMessage {
   }
-  record OnDamage(int amount, LivingActor attacker) implements LivingMessage {
+  record OnDamage(int amount, Living attacker) implements LivingMessage {
   }
-  record Die(LivingActor killer) implements LivingMessage {
+  record Die(Living killer) implements LivingMessage {
   }
   record Heal(int amount) implements LivingMessage {
   }
@@ -41,7 +41,7 @@ public sealed interface ActorMessage
   }
   record Unequip(EquipmentSlot slot, CompletableFuture<String> future) implements LivingMessage {
   }
-  record OnMessage(LivingActor self, ActorMessage msg) implements LivingMessage {
+  record OnMessage(Living self, ActorMessage msg) implements LivingMessage {
   }
 
 

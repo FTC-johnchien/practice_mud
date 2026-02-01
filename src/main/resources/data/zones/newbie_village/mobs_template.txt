@@ -229,3 +229,156 @@ public class MobInstance extends LivingActor {
 
 這份資料可以讓您的怪物從單純的「經驗值包」變成具有生態、會呼朋引伴、甚至會使用道具的強大對手。
 建議初期先實作 **Identity, Stats, Combat, Loot**，等戰鬥系統穩定了，再加入 **Behavior (AI)**。
+
+
+
+{
+  "id": "skeleton_warrior",
+  "name": "骷髏戰士",
+  "resistances": {
+    "BLUNT": -0.5,   // 弱點：受到 150% 鈍擊傷害
+    "PIERCE": 0.5,   // 抗性：只受 50% 穿刺傷害
+    "POISON": 1.0,   // 免疫：骷髏不會中毒
+    "HOLY": -1.0     // 致命弱點：受到 200% 神聖傷害
+  }
+}
+
+{
+  "id": "green_slime",
+  "name": "綠色史萊姆",
+  "resistances": {
+    "SLASH": 0.8,    // 物理幾乎免疫
+    "PIERCE": 0.9,
+    "BLUNT": 0.2,    // 錘子稍微有用一點
+    "FIRE": -0.5,    // 怕火
+    "ICE": -0.5      // 怕冰
+  }
+}
+
+public int calculateFinalDamage(Actor attacker, Actor defender, SkillMove move) {
+    // 1. 基礎傷害計算 (公式略: 攻擊力 * 技能倍率)
+    double rawDamage = calculateRawDamage(attacker, move);
+
+    // 2. 取得傷害類型
+    DamageType type = move.getMechanics().getDamageType(); // 預設 BLUNT
+
+    if (type == DamageType.TRUE) {
+        return (int) rawDamage; // 真實傷害無視一切
+    }
+
+    // 3. 讀取防禦者的抗性
+    double resistance = defender.getResistance(type);
+
+    // 4. 計算抗性修正
+    // 公式: 傷害 = 原始 * (1 - 抗性比例)
+    // 抗性 0.5 (50%) -> 傷害 * 0.5
+    // 抗性 -0.5 (-50% 弱點) -> 傷害 * 1.5
+    double multiplier = 1.0 - resistance;
+
+    // 防止變成負數 (變成補血)
+    if (multiplier < 0) multiplier = 0;
+
+    int finalDamage = (int) (rawDamage * multiplier);
+
+    // 5. (選配) 觸發訊息反饋
+    if (resistance > 0.5) {
+        defender.send("你感覺這種攻擊對你沒什麼效果。");
+        attacker.send("你的攻擊似乎被擋下了大半！");
+    } else if (resistance < -0.3) {
+        defender.send("這一下打到了你的痛處！"); // 弱點暴擊感
+        attacker.send("效果拔群！");
+    }
+
+    return finalDamage;
+}
+總結建議
+初期不要太複雜：先實作 Map<DamageType, Double> 的抗性表即可。
+預設值很重要：如果 move 沒寫 damageType，預設給它 BLUNT (鈍擊) 或 SLASH (揮砍)。如果 Mob 沒寫抗性，預設是 0.0。
+UI 提示：在玩家使用 look 或 assess (評估) 指令觀察怪物時，如果玩家智力夠高，可以提示怪物的弱點（例如：「你看這骷髏骨架鬆散，似乎經不起重擊。」），這會引導玩家換武器（換錘子打骷髏），大大增加遊戲的代入感。
+
+[
+  {
+    "id": "forest_wolf",
+    "name": "森林野狼",
+    "race": "wolf",
+    // 不需要寫 combat.defaultAttack，因為 race 已經定義是 bite 了
+    // 程式會自動去抓 wolf 的設定
+  },
+  {
+    "id": "mutant_rat",
+    "name": "變異巨鼠",
+    "race": "beast", // 假設 beast 預設是 hit
+    "combat": {
+      "defaultAttack": "mob_bite" // 強制指定用咬
+    }
+  },
+  {
+    "id": "skeleton_warrior",
+    "name": "骷髏戰士",
+    "race": "undead",
+    "equipment": { "MAIN_HAND": "rusty_sword" },
+    "combat": {
+      // 雖然是不死族，但因為拿劍，系統邏輯應該優先用武器技能 (basic_sword)
+      // 如果武器被打掉，這裡可以設定備用方案
+      "defaultAttack": "mob_claw"
+    }
+  }
+]
+
+
+
+public class MobService {
+
+    /**
+     * 決定 Mob 的普攻技能
+     */
+    public String resolveAutoAttackSkill(MobActor mob) {
+        // 1. 優先檢查：是否有裝備武器？
+        GameItem weapon = mob.getEquipment().getMainHand();
+        if (weapon != null) {
+            // 如果有拿劍，回傳劍類技能 (這裡簡化處理，實際可能要看熟練度)
+            return getWeaponSkill(weapon.getSubType());
+        }
+
+        // 2. 檢查：Mob 本身是否有指定攻擊方式 (Override)
+        if (mob.getTemplate().getCombatConfig().getDefaultAttack() != null) {
+            return mob.getTemplate().getCombatConfig().getDefaultAttack();
+        }
+
+        // 3. 檢查：種族預設攻擊方式 (Race Default)
+        RaceTemplate race = RaceRepository.get(mob.getRaceId());
+        if (race != null && race.getCombatConfig().getDefaultAttack() != null) {
+            return race.getCombatConfig().getDefaultAttack();
+        }
+
+        // 4. 保底：回傳系統預設
+        return "mob_hit";
+    }
+
+    // 初始化 Mob 時呼叫
+    public void initMobSkills(MobActor mob) {
+        String attackSkillId = resolveAutoAttackSkill(mob);
+
+        // 將此技能 Enable 到 UNARMED 或 主要攻擊槽位
+        mob.getSkillManager().enableSkill(SkillCategory.UNARMED, attackSkillId);
+    }
+}
+
+// mobs.json
+"combat": {
+  "naturalAttacks": [
+    { "id": "mob_claw", "weight": 70 },
+    { "id": "mob_bite", "weight": 30 } // 偶爾咬一口
+  ]
+}
+
+{
+  "id": "skeleton_king",
+  "name": "骷髏王",
+  "level": 50,
+  "equipment": { "MAIN_HAND": "hell_fire_sword" },
+  "combat": {
+    // 強制指定！即使拿著劍，也不要用 basic_sword，要用這招
+    "defaultAttack": "hell_fire_sword_skill"
+  }
+}

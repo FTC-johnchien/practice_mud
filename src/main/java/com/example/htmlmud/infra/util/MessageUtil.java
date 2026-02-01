@@ -1,7 +1,7 @@
 package com.example.htmlmud.infra.util;
 
 import org.springframework.stereotype.Component;
-import com.example.htmlmud.domain.actor.impl.LivingActor;
+import com.example.htmlmud.domain.actor.impl.Living;
 
 @Component
 public class MessageUtil {
@@ -12,7 +12,7 @@ public class MessageUtil {
    * @param template 原始訊息 (只有 $N 標記)
    * @param executor (做動作的人)
    */
-  public void send(String template, LivingActor executor) {
+  public void send(String template, Living executor) {
     send(template, executor, null, executor);
   }
 
@@ -23,7 +23,7 @@ public class MessageUtil {
    * @param self (做動作的人)
    * @param receiver 接收訊息的人 (誰在看這行字？)
    */
-  public void send(String template, LivingActor executor, LivingActor receiver) {
+  public void send(String template, Living executor, Living receiver) {
     send(template, executor, null, receiver);
   }
 
@@ -35,8 +35,7 @@ public class MessageUtil {
    * @param target (對象)
    * @param receiver 接收訊息的人 (誰在看這行字？)
    */
-  public void send(String template, LivingActor executor, LivingActor target,
-      LivingActor receiver) {
+  public void send(String template, Living executor, Living target, Living receiver) {
 
     // 1. 判斷接收者是不是主角本人
     boolean isExecutor = false;
@@ -53,7 +52,7 @@ public class MessageUtil {
 
       targetNoun = target.getName();
       if (isTarget) {
-        targetNoun = target.getState().gender.getYou();
+        targetNoun = target.getState().getGender().getYou();
       }
     }
 
@@ -62,11 +61,14 @@ public class MessageUtil {
 
     executorNoun = executor.getName();
     if (isExecutor) {
-      executorNoun = executor.getState().gender.getYou();
+      executorNoun = executor.getState().getGender().getYou();
     }
+
+    String msg = template.replace("$N", executorNoun).replace("$n", targetNoun);
 
     // 2. 進行替換
     // 注意：這裡使用簡單的 replace，效能足夠。若要更嚴謹可用 Regex
-    receiver.reply(template.replace("$N", executorNoun).replace("$n", targetNoun));
+    receiver.reply(msg);
   }
+
 }

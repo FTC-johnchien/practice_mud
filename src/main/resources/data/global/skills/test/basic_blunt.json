@@ -1,0 +1,142 @@
+{
+  "id": "basic_blunt",
+  "name": "基本錘法",
+  "description": "包含錘、鐧、棍棒等鈍器的基礎使用技巧，講究一力降十會，招式勢大力沉，碰著便傷，磕著便亡。",
+  "type": "PASSIVE",
+  "school": "COMMON",
+  "tags": [
+    "WEAPON",
+    "BLUNT",
+    "BASIC",
+    "PHYSICAL"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      "HAMMER",
+      "MACE",
+      "CLUB",
+      "FLAIL",
+      "MAUL"
+    ]
+  },
+  "costs": {
+    "stamina": 5
+  },
+  "scaling": {
+    "damagePerLevel": 0.8,
+    "hitRatePerLevel": 0.001,
+    "critRatePerLevel": 0.003
+  },
+  "mechanics": {
+    "critRate": 0.04,
+    "damage": 12,
+    "damageType": "BLUNT",
+    "hitRate": 0.85,
+    "maxLevel": 100,
+    "scaleStat": "STR",
+    "scaleFactor": 1.4,
+    "formulas": {
+      "damage": "skill.mechanics.damage + (user.str * 0.2)"
+    }
+  },
+  "moves": [
+    {
+      "name": "當頭棒喝",
+      "weight": 50,
+      "damageMod": 1.2,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N雙臂貫力，高舉$W，毫無花俏地對準$n的天靈蓋狠狠砸下！",
+        "hit": "$n只覺頭頂風聲大作，被$W結結實實地砸中，頓時眼冒金星，受到 $d 傷害！",
+        "miss": "$n向旁一閃，$W重重砸在地上，將地面砸出一個大坑，土石飛濺。"
+      }
+    },
+    {
+      "name": "橫掃千軍",
+      "weight": 45,
+      "damageMod": 1.0,
+      "hitRateMod": 0.1,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N腰馬合一，猛地轉身，手中的$W藉著離心力呼嘯而出，橫掃$n的腰間。",
+        "hit": "$n躲避不及，被沉重的$W掃中，整個人如斷線風箏般橫飛出去，受到 $d 傷害！",
+        "miss": "$n聽風辨位，豎起$w硬擋，火星四濺中退了半步，卸去了力道。"
+      }
+    },
+    {
+      "name": "碎骨重擊",
+      "weight": 30,
+      "damageMod": 1.4,
+      "hitRateMod": -0.15,
+      "critRateMod": 0.15,
+      "msg": {
+        "cast": "$N大喝一聲，看準$n的$l，運足全身力氣揮動$W猛擊而去，意圖一擊碎骨。",
+        "hit": "只聽「喀嚓」一聲脆響，$W砸斷了$n的骨頭，劇痛讓$n冷汗直流，受到 $d 傷害！",
+        "crit": "【重擊】$W攜帶的恐怖勁力直接粉碎了$n的防禦，造成嚴重的粉碎性骨折，受到 $d 傷害！",
+        "miss": "$N用力過猛，這一擊雖然落空，但狂暴的風壓颳得$n臉頰生痛。"
+      }
+    },
+    {
+      "name": "握柄頂撞",
+      "weight": 35,
+      "damageMod": 0.8,
+      "hitRateMod": 0.2,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N見$n欺身太近，無法揮舞$W，便順勢將$W的握柄末端狠狠頂向$n的心窩。",
+        "hit": "$n猝不及防，胸口被硬物頂中，一口氣差點沒提上來，悶哼一聲，受到 $d 傷害！",
+        "miss": "$n身形靈活地一扭，避開了這隱蔽的一擊，同時一掌拍向$N的手腕。"
+      }
+    },
+    {
+      "name": "倒掛金鐘",
+      "weight": 25,
+      "damageMod": 1.1,
+      "hitRateMod": -0.05,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N身形半蹲，手中的$W由下而上反撩，直奔$n的下顎。",
+        "hit": "$n沒料到笨重的$W也能如此靈活，下巴被重重撩中，牙齒都快被震鬆了，受到 $d 傷害！",
+        "miss": "$n仰頭避過，驚險萬分地看著$W從鼻尖前擦過。"
+      }
+    },
+    {
+      "name": "震地波",
+      "weight": 20,
+      "damageMod": 0.9,
+      "hitRateMod": 0.15,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N並未直接攻擊，而是將$W重重砸向$n腳邊的地面。",
+        "hit": "巨大的衝擊力透過地面傳導，$n站立不穩，被震得氣血翻騰，受到 $d 傷害！",
+        "miss": "$n反應極快，縱身躍起，避開了地面的震盪波。"
+      }
+    },
+    {
+      "name": "旋風連環砸",
+      "weight": 15,
+      "damageMod": 1.5,
+      "hitRateMod": -0.2,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N狀若瘋虎，揮舞$W如風車般旋轉，藉著慣性連續不斷地砸向$n。",
+        "hit": "在這狂風暴雨般的攻勢下，$n的防禦瞬間崩潰，身上連中數記重擊，受到 $d 傷害！",
+        "crit": "【重擊】最後一下重擊狠狠砸在胸口，$n狂噴一口鮮血，感覺五臟六腑都移位了，受到 $d 傷害！",
+        "miss": "$n且戰且退，雖然狼狽不堪，但終究是躲過了這輪瘋狂的攻擊。"
+      }
+    },
+    {
+      "name": "破甲一擊",
+      "weight": 10,
+      "damageMod": 1.3,
+      "hitRateMod": -0.1,
+      "critRateMod": 0.2,
+      "msg": {
+        "cast": "$N深吸一口氣，將全部精氣神匯聚於$W的一點，無視$n的招式，強行轟擊$n的$l。",
+        "hit": "$n的護甲在沉重的$W面前如同紙糊一般凹陷下去，內腑受到劇烈震盪，受到 $d 傷害！",
+        "miss": "$n在千鈞一髮之際側身滑步，沉重的$W擦著身體砸空，帶起的勁風讓$n站立不穩。"
+      }
+    }
+  ]
+}

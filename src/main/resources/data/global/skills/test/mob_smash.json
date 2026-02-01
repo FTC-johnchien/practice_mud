@@ -1,0 +1,138 @@
+{
+  "id": "mob_smash",
+  "name": "重擊猛砸",
+  "description": "依靠巨大的身軀與蠻力進行的毀滅性打擊，雖然動作不夠靈活，但每一擊都足以開山裂石，震碎骨骼。",
+  "type": "PASSIVE",
+  "school": "NATURAL",
+  "tags": [
+    "UNARMED",
+    "BASIC",
+    "MOB",
+    "BLUNT"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED"
+    ]
+  },
+  "costs": {
+    "stamina": 5
+  },
+  "scaling": {
+    "damagePerLevel": 0.9,
+    "hitRatePerLevel": 0.0005,
+    "critRatePerLevel": 0.001
+  },
+  "mechanics": {
+    "critRate": 0.05,
+    "damage": 14,
+    "damageType": "BLUNT",
+    "hitRate": 0.75,
+    "maxLevel": 100,
+    "scaleStat": "STR",
+    "scaleFactor": 1.5
+  },
+  "moves": [
+    {
+      "name": "沉重槌擊",
+      "weight": 55,
+      "damageMod": 1.0,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N高舉雙臂，如同鐵錘般向$n狠狠砸下。",
+        "hit": "$n無法抵擋這沉重的一擊，覺得骨頭都要散架了，受到 $d 傷害！",
+        "miss": "$n向旁一滾，地面被砸出一個大坑，碎石飛濺。"
+      }
+    },
+    {
+      "name": "撼地一擊",
+      "weight": 30,
+      "damageMod": 1.4,
+      "hitRateMod": -0.15,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N發出震耳欲聾的咆哮，運足全身力氣重重地轟向地面！",
+        "hit": "巨大的衝擊波將$n震飛，全身氣血翻騰，受到 $d 傷害！",
+        "crit": "【重擊】$n被震飛後重重撞在牆上，五臟六腑彷彿移位了一般，受到 $d 傷害！",
+        "miss": "$n雖然被震得站立不穩，但幸運地沒有受到直接傷害。"
+      }
+    },
+    {
+      "name": "巨力橫掃",
+      "weight": 45,
+      "damageMod": 0.8,
+      "hitRateMod": 0.15,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N手臂一揮，帶著呼嘯的風聲橫向掃向$n。",
+        "hit": "$n像斷線風箏一樣被掃飛出去，撞倒了一片障礙物，受到 $d 傷害！",
+        "miss": "$n低頭彎腰，驚險地讓過這勢大力沉的一掃。"
+      }
+    },
+    {
+      "name": "碎顱重擊",
+      "weight": 20,
+      "damageMod": 1.6,
+      "hitRateMod": -0.2,
+      "critRateMod": 0.2,
+      "msg": {
+        "cast": "$N看準$n的頭部，兇狠地一拳轟去，意圖一擊必殺！",
+        "hit": "$n只覺得天旋地轉，頭骨發出不堪重負的呻吟，受到 $d 傷害！",
+        "crit": "【重擊】這一擊正中太陽穴，$n眼前一黑，耳邊嗡嗡作響，鮮血從口鼻溢出，受到 $d 傷害！",
+        "miss": "$n縮頸藏頭，拳風擦過頭皮，颳得臉頰生痛。"
+      }
+    },
+    {
+      "name": "泰山壓頂",
+      "weight": 25,
+      "damageMod": 1.5,
+      "hitRateMod": -0.1,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N高高躍起，將巨大的身軀當作武器，向$n重重壓下！",
+        "hit": "$n被壓在底下動彈不得，肋骨發出清脆的斷裂聲，受到 $d 傷害！",
+        "crit": "【重擊】巨大的重量瞬間壓垮了$n的防禦，全身骨骼多處粉碎性骨折，受到 $d 傷害！",
+        "miss": "$n連滾帶爬地逃開，身後傳來重物落地的巨響，地面都在顫抖。"
+      }
+    },
+    {
+      "name": "窒息擒抱",
+      "weight": 35,
+      "damageMod": 1.2,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N張開雙臂，試圖將$n死死地箍在懷裡。",
+        "hit": "$n被勒得喘不過氣來，脊椎骨被擠壓得咯咯作響，受到 $d 傷害！",
+        "miss": "$n像泥鰍一樣從$N的腋下鑽了出去。"
+      }
+    },
+    {
+      "name": "破防衝拳",
+      "weight": 40,
+      "damageMod": 1.1,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N無視$n的招架，一記直拳硬生生地轟了過去。",
+        "hit": "$n的防禦如同虛設，被這一拳打得氣血翻湧，連退數步，受到 $d 傷害！",
+        "miss": "$n用巧勁卸掉了這剛猛的一拳，借力向後飄退。"
+      }
+    },
+    {
+      "name": "狂暴連砸",
+      "weight": 15,
+      "damageMod": 1.8,
+      "hitRateMod": -0.25,
+      "critRateMod": 0.15,
+      "msg": {
+        "cast": "$N雙眼通紅，陷入狂暴狀態，雙拳如雨點般瘋狂砸向$n！",
+        "hit": "$n在這毀滅性的打擊下毫無還手之力，全身像散了架一樣劇痛，受到 $d 傷害！",
+        "crit": "【重擊】最後一擊重重砸在$n胸口，胸骨凹陷，$n狂噴一口鮮血，受到 $d 傷害！",
+        "miss": "$N打得雖然兇猛但毫無章法，$n在拳影中從容穿梭，毫髮無傷。"
+      }
+    }
+  ]
+}

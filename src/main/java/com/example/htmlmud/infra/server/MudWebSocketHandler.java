@@ -7,9 +7,10 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+import com.example.htmlmud.application.service.CommandQueueService;
 import com.example.htmlmud.application.service.PlayerService;
 import com.example.htmlmud.application.service.WorldManager;
-import com.example.htmlmud.domain.actor.impl.PlayerActor;
+import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.protocol.GameCommand;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
   private final PlayerService playerService;
   private final WorldManager worldManager;
   private final SessionRegistry sessionRegistry;
+  private final CommandQueueService commandQueueService;
 
   @Override
   public void afterConnectionEstablished(WebSocketSession session) {
@@ -34,7 +36,7 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
 
       // Guest階段 使用工廠方法建立 Guest Actor (ID=0)
       // 將必要的 Service 注入給 Actor，讓 Actor 擁有處理業務的能力
-      PlayerActor actor = PlayerActor.createGuest(concurrentSession, worldManager, playerService);
+      Player actor = Player.createGuest(concurrentSession, worldManager, playerService);
 
       // 啟動 Actor 的虛擬執行緒 (Virtual Thread)
       actor.start();
@@ -55,30 +57,21 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
 
   @Override
   protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-
-    // A. 產生 Trace ID (所有 Log 追蹤的源頭)
-    // 使用短 UUID 方便閱讀，實務上可用完整的 UUID
-    String traceId = UUID.randomUUID().toString().substring(0, 8);
-
     try {
-      PlayerActor actor = sessionRegistry.get(session.getId());
+      Player actor = sessionRegistry.get(session.getId());
       if (actor != null) {
         // C. 解析指令 (JSON -> Record)
         GameCommand cmd =
             playerService.getObjectMapper().readValue(message.getPayload(), GameCommand.class);
 
-        // D. 裝入信封並投遞
-        // 這裡不綁定 ScopedValue，因為要跨執行緒傳遞
-        actor.command(traceId, cmd);
+        // D. 統一丟進佇列，讓 ServerEngine 決定何時執行
+        commandQueueService.push(actor, cmd);
       } else {
-        // 找不到 Actor，通常代表連線異常或已被踢除
-        log.warn("[{}] 收到訊息但找不到 Actor，關閉連線: {}", traceId, session.getId());
+        log.warn("收到訊息但找不到 Actor，關閉連線: {}", session.getId());
         session.close();
       }
     } catch (Exception e) {
-      // JSON 解析失敗或其他錯誤
-      log.error("[{}] 訊息處理錯誤: {}", traceId, e.getMessage());
-      // 選擇性：回傳錯誤訊息給 Client
+      log.error("訊息處理錯誤: {}", e.getMessage());
     }
   }
 
@@ -86,7 +79,7 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
   public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
 
     // 從 Registry 移除並取得 Actor
-    PlayerActor actor = sessionRegistry.remove(session.getId());
+    Player actor = sessionRegistry.remove(session.getId());
 
     if (actor != null) {
       log.info("連線關閉: {} (Actor: {})", session.getId(), actor.getId());

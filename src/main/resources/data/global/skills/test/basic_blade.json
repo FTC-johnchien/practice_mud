@@ -1,0 +1,142 @@
+{
+  "id": "basic_blade",
+  "name": "基本刀法",
+  "description": "武林中最常見的刀術根基，講究刀如猛虎，氣勢磅礴。招式大開大闔，以劈砍為主，威力不容小覷。",
+  "type": "PASSIVE",
+  "school": "COMMON",
+  "tags": [
+    "WEAPON",
+    "BLADE",
+    "BASIC",
+    "PHYSICAL"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      "BLADE",
+      "KATANA",
+      "SABER",
+      "SCIMITAR"
+    ]
+  },
+  "costs": {
+    "stamina": 4
+  },
+  "scaling": {
+    "damagePerLevel": 0.7,
+    "hitRatePerLevel": 0.001,
+    "critRatePerLevel": 0.003
+  },
+  "mechanics": {
+    "critRate": 0.06,
+    "damage": 10,
+    "damageType": "SLASH",
+    "hitRate": 0.88,
+    "maxLevel": 100,
+    "scaleStat": "STR",
+    "scaleFactor": 1.25,
+    "formulas": {
+      "damage": "skill.mechanics.damage + (user.str * 0.18)"
+    }
+  },
+  "moves": [
+    {
+      "name": "力劈華山",
+      "weight": 50,
+      "damageMod": 1.5,
+      "hitRateMod": -0.15,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N雙手緊握$W，高高舉過頭頂，怒喝一聲，如開山巨斧般對準$n當頭劈下！",
+        "hit": "$n無法抵擋這雷霆萬鈞的一擊，被$W重重砍中，護體真氣潰散，受到 $d 傷害！",
+        "crit": "【重擊】這一刀勢大力沉，直接劈開了$n的防禦，在身上留下一道深可見骨的傷痕，受到 $d 傷害！",
+        "miss": "$n見勢不可擋，連忙向旁一滾，$W狠狠斬在地上，激起一片土石飛濺。"
+      }
+    },
+    {
+      "name": "橫掃千軍",
+      "weight": 45,
+      "damageMod": 1.1,
+      "hitRateMod": 0.1,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N壓低馬步，拖刀在後，隨即猛地轉身，手中的$W畫出一道淒厲的半圓，橫掃$n的腰腹。",
+        "hit": "$n躲閃不及，被鋒利的刀刃劃過腰際，鮮血飛濺，受到 $d 傷害！",
+        "miss": "$n提氣縱身躍起，$W帶著呼嘯的勁風從$n腳下掃過。"
+      }
+    },
+    {
+      "name": "纏頭裹腦",
+      "weight": 35,
+      "damageMod": 1.0,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N將$W繞頸揮舞，形成一道嚴密的刀光護住全身，隨即出其不意地一刀斜砍向$n的$l。",
+        "hit": "$n被這虛實結合的一招迷惑，反應慢了半拍，身上中了一刀，受到 $d 傷害！",
+        "miss": "$n看準刀勢的空隙，側身避讓，驚險地躲過了這一擊。"
+      }
+    },
+    {
+      "name": "逆水行舟",
+      "weight": 30,
+      "damageMod": 1.2,
+      "hitRateMod": -0.05,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N身形一矮，手中的$W由下而上反撩，刀鋒直指$n的$l。",
+        "hit": "這一刀來得極其刁鑽，$n防備不及，被$W劃破了$l，受到 $d 傷害！",
+        "miss": "$n向後仰倒，鐵板橋功夫了得，刀鋒貼著鼻尖掠過。"
+      }
+    },
+    {
+      "name": "亂披風",
+      "weight": 20,
+      "damageMod": 1.3,
+      "hitRateMod": -0.1,
+      "critRateMod": 0.15,
+      "msg": {
+        "cast": "$N狀若瘋虎，手中的$W毫無章法地連續劈砍，刀光如狂風驟雨般籠罩$n。",
+        "hit": "$n在密集的刀光中左支右絀，終於還是中了一刀，痛哼一聲，受到 $d 傷害！",
+        "crit": "【重擊】亂刀之中，$N的一刀砍中了$n的動脈，鮮血如噴泉般湧出，受到 $d 點嚴重傷害！",
+        "miss": "$n且戰且退，雖然狼狽，但憑藉靈活的身法躲過了所有攻擊。"
+      }
+    },
+    {
+      "name": "藏刀式",
+      "weight": 15,
+      "damageMod": 1.4,
+      "hitRateMod": -0.1,
+      "critRateMod": 0.2,
+      "msg": {
+        "cast": "$N將$W藏於身後，引而不發，突然間寒光一閃，一刀迅若奔雷般刺向$n的$l。",
+        "hit": "$n猝不及防，被這突如其來的一刀刺中，傷口極深，受到 $d 傷害！",
+        "crit": "【重擊】這一刀出其不意，精準地刺入要害，$n發出一聲慘叫，受到 $d 傷害！",
+        "miss": "$n早有提防，側身閃過，同時用$w格開了$N的刀背。"
+      }
+    },
+    {
+      "name": "推窗望月",
+      "weight": 25,
+      "damageMod": 0.9,
+      "hitRateMod": 0.15,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N刀交左手，右手虛晃一拳，隨即左手刀如推窗般平平推出，削向$n的頸項。",
+        "hit": "$n被虛招所騙，想要縮頭已是不及，脖頸被劃出一道血痕，受到 $d 傷害！",
+        "miss": "$n縮頸藏頭，險之又險地避開了這抹喉一刀。"
+      }
+    },
+    {
+      "name": "迎風一刀斬",
+      "weight": 40,
+      "damageMod": 1.0,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N藉著衝刺的勢頭，人刀合一，手中的$W化作一道疾風斬向$n。",
+        "hit": "刀鋒入肉的聲音響起，$n被這一刀斬退數步，傷口鮮血淋漓，受到 $d 傷害！",
+        "miss": "$n側身滑步，讓過鋒芒，反手一掌拍在刀背上，化解了攻勢。"
+      }
+    }
+  ]
+}

@@ -1,0 +1,143 @@
+{
+  "id": "basic_throwing",
+  "name": "基本投擲",
+  "description": "包含飛刀、飛鏢、投斧等投擲武器的使用技巧。講究腕力與眼力的配合，能於百步之內取人首級。",
+  "type": "PASSIVE",
+  "school": "COMMON",
+  "tags": [
+    "WEAPON",
+    "RANGED",
+    "THROWING",
+    "PHYSICAL"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      "DART",
+      "KNIFE",
+      "AXE",
+      "SHURIKEN",
+      "JAVELIN",
+      "STONE"
+    ]
+  },
+  "costs": {
+    "stamina": 3
+  },
+  "scaling": {
+    "damagePerLevel": 0.6,
+    "hitRatePerLevel": 0.002,
+    "critRatePerLevel": 0.003
+  },
+  "mechanics": {
+    "critRate": 0.07,
+    "damage": 7,
+    "damageType": "PIERCE",
+    "hitRate": 0.90,
+    "maxLevel": 100,
+    "scaleStat": "DEX",
+    "scaleFactor": 1.1,
+    "formulas": {
+      "damage": "skill.mechanics.damage + (user.dex * 0.1) + (user.str * 0.08)"
+    }
+  },
+  "moves": [
+    {
+      "name": "甩手一擲",
+      "weight": 50,
+      "damageMod": 1.0,
+      "hitRateMod": 0.1,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N手腕猛地一抖，手中的$W化作一道寒芒，筆直地射向$n。",
+        "hit": "$n只覺眼前一花，閃避不及，$W已深深扎入體內，受到 $d 傷害！",
+        "miss": "$n聽風辨位，頭向旁一偏，寒芒擦著耳邊飛過，釘在身後的牆上。"
+      }
+    },
+    {
+      "name": "滿力轟擊",
+      "weight": 30,
+      "damageMod": 1.5,
+      "hitRateMod": -0.2,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N身體後仰，如拉滿的強弓，將全身力量灌注於$W，發出雷霆萬鈞的一擊轟向$n。",
+        "hit": "$W帶著淒厲的風聲重重撞擊在$n身上，巨大的衝擊力讓$n連退數步，受到 $d 傷害！",
+        "crit": "【重擊】$W攜帶的恐怖動能直接貫穿了防禦，將$n釘在地上，造成了 $d 點嚴重傷害！",
+        "miss": "$n見來勢洶洶，不敢硬接，狼狽地向旁一滾，地面被砸出一個深坑。"
+      }
+    },
+    {
+      "name": "連珠手法",
+      "weight": 35,
+      "damageMod": 0.8,
+      "hitRateMod": 0.15,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N雙手如穿花蝴蝶般舞動，接連擲出數枚$W，封死了$n的所有退路。",
+        "hit": "$n擋得住前幾下卻擋不住最後一下，身上還是掛了彩，受到 $d 傷害！",
+        "miss": "$n舞動$w護住全身，只聽一連串叮噹脆響，將射來的$W盡數擊落。"
+      }
+    },
+    {
+      "name": "袖底藏花",
+      "weight": 25,
+      "damageMod": 1.2,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.2,
+      "msg": {
+        "cast": "$N佯裝抱拳施禮，卻在袖口的遮掩下突然射出$W，直取$n的$l要害。",
+        "hit": "$n完全沒料到這陰險的一招，$l處鮮血飛濺，發出一聲悶哼，受到 $d 傷害！",
+        "miss": "$n始終保持警惕，見$N袖口微動，立刻向後飛退，躲過了偷襲。"
+      }
+    },
+    {
+      "name": "迴旋側擲",
+      "weight": 40,
+      "damageMod": 0.9,
+      "hitRateMod": 0.2,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N手腕加了個旋勁，側手擲出$W，暗器在空中劃出一道詭異的弧線繞向$n。",
+        "hit": "$n正要格擋正面，卻發現$W從側面繞了過來，肋下中招，受到 $d 傷害！",
+        "miss": "$n判斷準確，看穿了弧線的軌跡，輕巧地閃身避過。"
+      }
+    },
+    {
+      "name": "漫天花雨",
+      "weight": 15,
+      "damageMod": 0.7,
+      "hitRateMod": 0.3,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N雙手抓起一把$W，看也不看便向$n撒去，籠罩了$n周身方圓數丈。",
+        "hit": "在這密集的攻勢下，$n避無可避，身上多處被劃傷，受到 $d 傷害！",
+        "miss": "$n運氣護體，同時快速揮舞$w，在身前形成一道屏障，擋下了所有暗器。"
+      }
+    },
+    {
+      "name": "追魂奪命",
+      "weight": 10,
+      "damageMod": 1.4,
+      "hitRateMod": -0.1,
+      "critRateMod": 0.25,
+      "msg": {
+        "cast": "$N眼中殺機畢露，鎖定$n的咽喉，孤注一擲地射出手中的$W，勢要一擊必殺。",
+        "hit": "$W快若閃電，精準地刺入$n的$l，$n發出咯咯的聲音，受到 $d 傷害！",
+        "crit": "【重擊】這一擊狠辣至極，直接切斷了$n的氣脈，鮮血狂噴，受到 $d 點致命傷害！",
+        "miss": "$n在生死關頭頭向後仰，用牙齒咬住了射來的$W，驚出一身冷汗。"
+      }
+    },
+    {
+      "name": "貼地飛掠",
+      "weight": 20,
+      "damageMod": 1.1,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N壓低重心，反手擲出$W，兵器貼著地面高速旋轉，削向$n的雙腿。",
+        "hit": "$n只顧防禦上盤，沒注意腳下，小腿被$W狠狠劃過，鮮血直流，受到 $d 傷害！",
+        "miss": "$n眼觀六路，見下盤有異，輕輕躍起，讓$W從腳底飛過。"
+      }
+    }
+  ]
+}

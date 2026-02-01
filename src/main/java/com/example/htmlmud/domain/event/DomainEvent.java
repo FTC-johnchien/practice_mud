@@ -1,7 +1,7 @@
 package com.example.htmlmud.domain.event;
 
 import java.time.Instant;
-import com.example.htmlmud.domain.actor.impl.PlayerActor;
+import com.example.htmlmud.domain.actor.impl.Player;
 
 /**
  * 領域事件的根介面 使用 sealed 限制只有特定的 record 可以實作它
@@ -61,7 +61,7 @@ public sealed interface DomainEvent permits DomainEvent.SessionEvent, DomainEven
     record Authenticate(String sessionId, String input, Instant occurredOn) implements SystemEvent {
     }
 
-    record Logout(String sessionId, PlayerActor player, Instant occurredOn) implements SystemEvent {
+    record Logout(String sessionId, Player player, Instant occurredOn) implements SystemEvent {
     }
   }
 

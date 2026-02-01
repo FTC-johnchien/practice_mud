@@ -1,7 +1,6 @@
 package com.example.htmlmud.application.service;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.Set;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,8 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthService {
 
   // 基礎保留字（非指令類的關鍵字）
-  private final Set<String> reservedWords = new HashSet<>(
-      Set.of("new", "quit", "exit", "wizard", "admin", "system", "root", "guest", "player"));
+  private static final Set<String> RESERVED_WORDS =
+      Set.of("new", "quit", "exit", "wizard", "admin", "system", "root", "guest", "player");
 
   // 使用 BCrypt，Spring Security 內建，或者自己 new 一個
   private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -113,7 +112,7 @@ public class AuthService {
     if (input.length() < 4 || input.length() > 20) {
       return "帳號名稱長度必須在 4 到 20 個字元之間。";
     }
-    if (reservedWords.contains(input.toLowerCase())) {
+    if (RESERVED_WORDS.contains(input.toLowerCase())) {
       return "「" + input + "」是系統保留字或指令，請選擇其他名稱。";
     }
     return null;

@@ -2,15 +2,17 @@ package com.example.htmlmud.domain.actor.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import com.example.htmlmud.application.service.LivingService;
 import com.example.htmlmud.domain.actor.core.VirtualActor;
 import com.example.htmlmud.domain.model.EquipmentSlot;
 import com.example.htmlmud.domain.model.GameItem;
-import com.example.htmlmud.domain.model.ItemType;
 import com.example.htmlmud.domain.model.LivingState;
+import com.example.htmlmud.domain.model.SkillCategory;
 import com.example.htmlmud.domain.model.map.ItemTemplate;
 import com.example.htmlmud.domain.model.vo.DamageSource;
+import com.example.htmlmud.infra.persistence.entity.SkillEntry;
 import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.GameCommand;
 import lombok.Getter;
@@ -18,42 +20,71 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 // 泛型 T 讓我們可以在子類別擴充更多 Message 類型
+@Getter
 @Slf4j
-public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
-    permits PlayerActor, MobActor {
+public abstract sealed class Living extends VirtualActor<ActorMessage> permits Player, Mob {
 
-  @Getter
   private LivingService livingService;
 
-  @Getter
   protected String id;
 
-  @Getter
-  @Setter
   protected String name;
 
   // 所有生物都有狀態 (HP/MP)
-  @Getter
   protected LivingState state;
 
   // 所有生物都在某個房間 (可能是 null)
-  @Getter
   @Setter
-  protected String currentRoomId;
+  protected Room currentRoom;
 
   // 背包
-  @Getter
   protected List<GameItem> inventory = new ArrayList<>();
 
   protected DamageSource baseDamageSource;
 
-  public LivingActor(String id, String name, LivingState state, LivingService livingService) {
+  // 記錄 GCD 結束的「系統時間 (毫秒)」
+  protected long gcdEndTimestamp = 0;
+
+  // 記錄當前是否正在詠唱/硬直 (Cast Time)
+  protected boolean isCasting = false;
+
+  protected boolean isDirty = false;
+  // 一個標記，代表這個物件是否還在遊戲世界中
+  protected boolean valid = true;
+
+
+
+  // 動態戰鬥資源 (不需要存檔，戰鬥結束清除)
+  // === 戰鬥狀態 ===
+  public boolean isInCombat = false;
+  // 當前鎖定的攻擊目標 (null 代表沒在打架)
+  public Living combatTarget;
+  // 下一次可以攻擊的時間點 (System.currentTimeMillis)
+  public long nextAttackTime = 0;
+  // 附加增益/減益
+  // public Map<String, Object> dynamicProps = new HashMap<>();
+
+
+
+  // 衍生屬性 (快取用，每次穿脫裝備後重新計算 通常不存 DB，由基礎屬性計算，但為了簡單先存這裡)
+  public int minDamage = 0; // 最小傷害
+  public int maxDamage = 0; // 最大傷害
+  public int hitRate = 0; // 命中率
+  public int defense = 0; // 防禦力
+  public int attackSpeed = 2000; // 攻擊速度 (毫秒，例如 2000 代表 2秒打一次)
+  public int weightCapacity = 0;
+
+
+
+  public Living(String id, String name, LivingState state, LivingService livingService) {
     super(id);
     this.id = id;
     this.name = name;
     this.state = state;
     this.livingService = livingService;
   }
+
+
 
   @Override
   protected void handleMessage(ActorMessage msg) {
@@ -74,8 +105,8 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
       case ActorMessage.Tick(var tickCount, var timestamp) -> {
         doTick(tickCount, timestamp);
       }
-      case ActorMessage.OnAttacked(var attackerId) -> {
-        doOnAttacked(attackerId);
+      case ActorMessage.OnAttacked(var attacker) -> {
+        doOnAttacked(attacker);
       }
       case ActorMessage.OnDamage(var amount, var attacker) -> {
         doOnDamage(amount, attacker);
@@ -110,16 +141,16 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
   protected void doTick(long tickCount, long time) {
 
     // 死亡停止心跳
-    if (this.state.isDead()) {
+    if (isDead()) {
       return;
     }
 
     // === 1. 戰鬥心跳 (最優先，每秒執行) ===
     // 頻率：1秒 (因為 WorldPulse 就是 1秒)
     // log.info(this.name + " tickCount: {} inCombat: {}", tickCount, this.state.isInCombat());
-    if (this.state.isInCombat()) {
-      processAutoAttack(time); // 之前討論過的自動攻擊
-    }
+    // if (isInCombat()) {
+    // processAutoAttack(time); // 之前討論過的自動攻擊
+    // }
 
     // === 2. 回復/狀態心跳 (Regen Tick) ===
     // 頻率：每 3 秒執行一次 ( tickCount % 3 == 0 )
@@ -132,23 +163,23 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
     // === 3. AI 行為心跳 (AI Tick) ===
     // 頻率：每 5 秒執行一次
     // 只有怪物需要，玩家不需要
-    if (this instanceof MobActor mob && tickCount % 5 == 0) {
+    if (this instanceof Mob mob && tickCount % 5 == 0) {
       // mob.processAI(); // 例如：隨機移動、喊話
     }
   }
 
   // 被攻擊觸發戰鬥狀態
-  protected void doOnAttacked(String attackerId) {
-    livingService.getCombatService().onAttacked(this, attackerId);
+  protected void doOnAttacked(Living attacker) {
+    livingService.getCombatService().onAttacked(this, attacker);
   }
 
   // 受傷處理
-  protected void doOnDamage(int amount, LivingActor attacker) {
+  protected void doOnDamage(int amount, Living attacker) {
     livingService.getCombatService().onDamage(amount, this, attacker);
   }
 
   // 死亡處理
-  protected void doDie(LivingActor killer) {
+  protected void doDie(Living killer) {
     // 標記狀態 (Mark State)：設為 Dead，停止接受新的傷害或治療。
     // 交代後事 (Cleanup & Notify)：取消心跳、製造屍體、通知房間。
     livingService.getCombatService().onDie(this, killer);
@@ -156,10 +187,10 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
 
     // 區分玩家跟mob
     switch (this) {
-      case PlayerActor player -> {
+      case Player player -> {
         // TODO 玩家死亡步驟
       }
-      case MobActor mob -> {
+      case Mob mob -> {
         stop(); // 停止 Actor
       }
     }
@@ -167,18 +198,18 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
 
   // 治療處理
   protected void doHeal(int amount) {
-    if (state.isDead()) {
+    if (isDead()) {
       // log.info("{} 已經死亡，無法治療", name);
       return;
     }
-    if (state.isInCombat()) {
+    if (isInCombat()) {
       // log.info("{} 正在戰鬥，無法治療", name);
       return;
     }
 
-    reply(this.getState().gender.getYou() + "回復了 " + amount + " 點 HP 目前 " + state.hp + " / "
-        + state.maxHp);
-    this.state.hp = Math.min(state.hp + amount, state.maxHp);
+    reply(this.state.getGender().getYou() + "回復了 " + amount + " 點 HP 目前 " + state.getHp() + " / "
+        + state.getMaxHp());
+    this.state.setHp(Math.min(state.getHp() + amount, state.getMaxHp()));
   }
 
   /**
@@ -236,17 +267,17 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
   }
 
   // 被攻擊處理
-  public void onAttacked(String attackerId) {
-    this.send(new ActorMessage.OnAttacked(attackerId));
+  public void onAttacked(Living attacker) {
+    this.send(new ActorMessage.OnAttacked(attacker));
   }
 
   // 受傷處理
-  public void onDamage(int amount, LivingActor attacker) {
+  public void onDamage(int amount, Living attacker) {
     this.send(new ActorMessage.OnDamage(amount, attacker));
   }
 
   // 死亡處理
-  public void die(LivingActor killer) {
+  public void die(Living killer) {
     this.send(new ActorMessage.Die(killer));
   }
 
@@ -258,8 +289,8 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
 
   public void reply(String msg) {
     switch (this) {
-      case PlayerActor player -> this.send(new ActorMessage.SendText(player.getSession(), msg));
-      case MobActor mob -> {
+      case Player player -> this.send(new ActorMessage.SendText(player.getSession(), msg));
+      case Mob mob -> {
       }
     }
   }
@@ -285,13 +316,13 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
 
 
   // 攻擊邏輯(自動攻擊)
-  protected void processAutoAttack(long now) {
-    livingService.getCombatService().processAutoAttack(this, now);
-  }
+  // protected void processAutoAttack(long now) {
+  // livingService.getCombatService().processAutoAttack(this, now);
+  // }
 
   protected void processRegen() {
-    if (state.hp < state.maxHp) {
-      int regenAmount = (int) (state.maxHp * 0.05); // 回復 5%
+    if (state.getHp() < state.getMaxHp()) {
+      int regenAmount = (int) (state.getMaxHp() * 0.05); // 回復 5%
       doHeal(regenAmount);
     }
   }
@@ -321,9 +352,9 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
       }
     }
 
-    this.state.minDamage = minDamage;
-    this.state.maxDamage = maxDamage;
-    this.state.defense = def;
+    this.minDamage = minDamage;
+    this.maxDamage = maxDamage;
+    this.defense = def;
     log.info("{} stats updated: minDamage={}, maxDamage={}, Def={}", this.name, minDamage,
         maxDamage, def);
   }
@@ -331,7 +362,7 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
   // 取得當前的攻擊方式
   public DamageSource getCurrentAttackSource() {
     // 1. 先檢查主手有沒有武器
-    GameItem weapon = state.equipment.get(EquipmentSlot.MAIN_HAND); // 假設您有實作裝備系統
+    GameItem weapon = getMainHandWeapon(); // 假設您有實作裝備系統
 
     if (weapon != null) {
       // 有武器：回傳武器資訊
@@ -345,4 +376,87 @@ public abstract sealed class LivingActor extends VirtualActor<ActorMessage>
 
     return DamageSource.DEFAULT_FIST;
   }
+
+  public GameItem getMainHandWeapon() {
+    return state.equipment.get(EquipmentSlot.MAIN_HAND);
+  }
+
+  public GameItem getOffHandEquip() {
+    return state.equipment.get(EquipmentSlot.OFF_HAND);
+  }
+
+  // 輔助方法：取得主手武器類型 (共用)
+  public SkillCategory getMainHandType() {
+    GameItem weapon = getMainHandWeapon();
+    return (weapon != null) ? weapon.getWeaponSkillCategory() : SkillCategory.UNARMED;
+  }
+
+  // 輔助方法：取得自身等級 (共用)
+  public int getLevel() {
+    return state.getLevel();
+  }
+
+  public Map<String, SkillEntry> getLearnedSkills() {
+    return this.state.getLearnedSkills();
+  }
+
+  public int getSkillLevel(String skillId) {
+    if (!getLearnedSkills().containsKey(skillId)) {
+      return 0;
+    }
+    return getLearnedSkills().get(skillId).getLevel();
+  }
+
+  public Map<SkillCategory, String> getEnabledSkills() {
+    return this.state.getEnabledSkills();
+  }
+
+  public String getEnabledSkillId(SkillCategory category) {
+    return getEnabledSkills().get(category);
+  }
+
+  public void setNextAttackTime(long time) {
+    this.nextAttackTime = time;
+  }
+
+  public long getAttackSpeed() {
+    GameItem weapon = getMainHandWeapon();
+    if (weapon != null) {
+      return weapon.getTemplate().equipmentProp().attackSpeed();
+    }
+
+    // 赤手空拳
+    return 2000;
+  }
+
+  public int getAttacksPerRound() {
+    return livingService.getAttacksPerRound(this);
+  }
+
+
+
+  // 建構子與輔助方法...
+  public boolean isDead() {
+    return state.getHp() <= 0;
+  }
+
+  // 判斷是否在戰鬥中
+  public boolean isInCombat() {
+    return isInCombat && combatTarget != null;
+  }
+
+
+
+  public boolean isBusy() {
+    return (isInCombat) ? isInCombat : false;
+  }
+
+  public void markInvalid() {
+    this.valid = false;
+  }
+
+  public boolean isValid() {
+    return valid && !isDead(); // 活著且有效才算有效
+  }
+
 }

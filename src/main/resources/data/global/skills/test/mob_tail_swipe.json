@@ -1,0 +1,138 @@
+{
+  "id": "mob_tail_swipe",
+  "name": "巨尾掃擊",
+  "description": "利用粗壯有力的尾巴進行如鋼鞭般的抽擊或如攻城錘般的橫掃，攻擊範圍極廣且力道沉重。",
+  "type": "PASSIVE",
+  "school": "NATURAL",
+  "tags": [
+    "UNARMED",
+    "BASIC",
+    "MOB",
+    "BLUNT"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED"
+    ]
+  },
+  "costs": {
+    "stamina": 4
+  },
+  "scaling": {
+    "damagePerLevel": 0.8,
+    "hitRatePerLevel": 0.001,
+    "critRatePerLevel": 0.001
+  },
+  "mechanics": {
+    "critRate": 0.05,
+    "damage": 11,
+    "damageType": "BLUNT",
+    "hitRate": 0.82,
+    "maxLevel": 100,
+    "scaleStat": "STR",
+    "scaleFactor": 1.2
+  },
+  "moves": [
+    {
+      "name": "強力橫掃",
+      "weight": 55,
+      "damageMod": 1.0,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N猛地轉身，粗壯的尾巴帶著呼嘯的風聲橫掃向$n。",
+        "hit": "$n躲閃不及，被這如鐵棍般的一擊掃中腰部，整個人橫飛出去，受到 $d 傷害！",
+        "miss": "$n聽風辨位，高高躍起，長尾貼著$n的腳底掃過。"
+      }
+    },
+    {
+      "name": "泰山壓頂",
+      "weight": 30,
+      "damageMod": 1.5,
+      "hitRateMod": -0.15,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N高高舉起尾巴，如同一柄巨錘般向$n頭頂重重砸下！",
+        "hit": "「轟」的一聲巨響，$n被砸得陷進土裡，全身骨骼彷彿都要散架，受到 $d 傷害！",
+        "crit": "【重擊】這雷霆萬鈞的一擊直接砸在$n的天靈蓋上，震得$n七竅流血，受到 $d 傷害！",
+        "miss": "$n向旁一滾，地面被砸出一個大坑，碎石飛濺打在$n身上。"
+      }
+    },
+    {
+      "name": "疾風鞭撻",
+      "weight": 45,
+      "damageMod": 0.8,
+      "hitRateMod": 0.2,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N的尾巴末端如靈蛇般抖動，發出一聲脆響，閃電般抽向$n。",
+        "hit": "$n根本看不清軌跡，身上瞬間被抽出一道皮開肉綻的血痕，受到 $d 傷害！",
+        "miss": "$n身形晃動，在千鈞一髮之際避開了這快若閃電的一鞭。"
+      }
+    },
+    {
+      "name": "秋風掃葉",
+      "weight": 40,
+      "damageMod": 0.9,
+      "hitRateMod": 0.1,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N壓低身形，長尾貼地疾掃，專攻$n的下盤。",
+        "hit": "$n雙腿被掃中，失去平衡重重摔在地上，摔得頭暈眼花，受到 $d 傷害！",
+        "miss": "$n下盤穩如磐石，輕輕跳起讓過了這一記掃堂腿。"
+      }
+    },
+    {
+      "name": "迴旋重擊",
+      "weight": 20,
+      "damageMod": 1.6,
+      "hitRateMod": -0.2,
+      "critRateMod": 0.15,
+      "msg": {
+        "cast": "$N藉著身體旋轉的離心力，將全身的力量匯聚在尾部，發動了毀滅性的一擊。",
+        "hit": "$n如同被疾馳的馬車撞中，護體真氣瞬間破碎，狂噴鮮血，受到 $d 傷害！",
+        "crit": "【重擊】巨大的衝擊力將$n撞飛數丈遠，落地後肋骨斷裂刺入內臟，受到 $d 傷害！",
+        "miss": "$n深知這一擊不可力敵，連忙伏地翻滾，險之又險地避開了。"
+      }
+    },
+    {
+      "name": "毒刺突襲",
+      "weight": 25,
+      "damageMod": 1.2,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.2,
+      "msg": {
+        "cast": "$N尾巴一縮一彈，末端的尖刺如長矛般筆直刺向$n的胸口。",
+        "hit": "$n格擋不及，胸口被尖刺劃破，鮮血淋漓，受到 $d 傷害！",
+        "crit": "【重擊】尖刺精準地刺入肌肉深處，造成了嚴重的貫穿傷，受到 $d 傷害！",
+        "miss": "$n側身避讓，尖刺擦著腋下刺空，驚出一身冷汗。"
+      }
+    },
+    {
+      "name": "死亡纏繞",
+      "weight": 35,
+      "damageMod": 1.1,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N的長尾靈活地捲向$n，試圖將$n勒死。",
+        "hit": "$n躲避不及被捲個正著，強大的絞殺力讓$n呼吸困難，受到 $d 傷害！",
+        "miss": "$n揮動武器一陣亂斬，逼退了試圖纏繞上來的長尾。"
+      }
+    },
+    {
+      "name": "響尾連擊",
+      "weight": 15,
+      "damageMod": 1.4,
+      "hitRateMod": -0.1,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N發狂般地揮動尾巴，瞬間幻化出數道殘影，對著$n狂轟濫炸。",
+        "hit": "$n在密集的攻擊下左支右絀，身上接連中招，痛徹心扉，受到 $d 傷害！",
+        "crit": "【重擊】其中一下狠狠抽在$n的面門上，$n被打得眼冒金星，受到 $d 傷害！",
+        "miss": "$n在狂風暴雨般的攻擊中冷靜地尋找空隙，竟毫髮無傷地躲了過去。"
+      }
+    }
+  ]
+}

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.application.service.WorldManager;
-import com.example.htmlmud.domain.actor.impl.PlayerActor;
+import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.context.MudKeys;
 import com.example.htmlmud.domain.event.DomainEvent.SystemEvent;
 import com.example.htmlmud.infra.persistence.repository.UserRepository;
@@ -47,7 +47,7 @@ public class SystemEventListener {
   @EventListener
   public void onRegisterUsername(SystemEvent.RegisterUsername event) throws Exception {
     log.info("onRegisterUsername");
-    PlayerActor actor = sessionRegistry.get(event.sessionId());
+    Player actor = sessionRegistry.get(event.sessionId());
     WebSocketSession session = actor.getSession();
 
     // WebSocketSession session = sessionRegistry.get(event.sessionId());
@@ -96,7 +96,7 @@ public class SystemEventListener {
   public void onRegisterPassword(SystemEvent.RegisterPassword event) throws IOException {
     log.info("onRegisterPassword");
 
-    PlayerActor actor = sessionRegistry.get(event.sessionId());
+    Player actor = sessionRegistry.get(event.sessionId());
     WebSocketSession session = actor.getSession();
     // WebSocketSession session = sessionRegistry.get(event.sessionId());
     // PlayerActor actor = worldManager.getPlayer(session);
@@ -150,7 +150,7 @@ public class SystemEventListener {
   @EventListener
   public void onAuthenticate(SystemEvent.Authenticate event) throws IOException {
     log.info("onAuthenticate");
-    PlayerActor actor = sessionRegistry.get(event.sessionId());
+    Player actor = sessionRegistry.get(event.sessionId());
     WebSocketSession session = actor.getSession();
     // WebSocketSession session = sessionRegistry.get(event.sessionId());
     // PlayerActor actor = worldManager.getPlayer(session);
@@ -166,7 +166,7 @@ public class SystemEventListener {
   public void onLogout(SystemEvent.Logout event) {}
 
 
-  private void doRegister(WebSocketSession session, PlayerActor actor) throws IOException {
+  private void doRegister(WebSocketSession session, Player actor) throws IOException {
     log.info("doRegister");
 
     String msg = "【註冊流程】\r\n只能包含英文字母（不分大小寫），不允許數字、空格或特殊符號。\r\n長度必須在 4 到 20 個字元之間。\r\n請輸入您想使用的帳號名稱:";
@@ -178,7 +178,7 @@ public class SystemEventListener {
     actor.setConnectionState(ConnectionState.CREATING_USERNAME);
   }
 
-  private void doLoginUsername(WebSocketSession session, PlayerActor actor,
+  private void doLoginUsername(WebSocketSession session, Player actor,
       SystemEvent.Authenticate event) throws IOException {
     log.info("doLoginUsername");
 

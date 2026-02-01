@@ -1,0 +1,92 @@
+{
+  "id": "mob_beast_dodge",
+  "name": "野性閃避",
+  "description": "依靠野獸敏銳的直覺與強悍的爆發力，在危險降臨的瞬間做出本能的迴避動作。",
+  "type": "REACTIVE",
+  "school": "NATURAL",
+  "tags": [
+    "DEFENSIVE",
+    "EVASION",
+    "NATURAL",
+    "AGILITY"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED"
+    ]
+  },
+  "costs": {
+    "stamina": 3
+  },
+  "scaling": {
+    "dodgeRatePerLevel": 0.006
+  },
+  "mechanics": {
+    "dodgeRate": 0.12,
+    "maxLevel": 100,
+    "scaleStat": "DEX",
+    "scaleFactor": 1.4,
+    "formulas": {
+      "successRate": "skill.mechanics.dodgeRate + (user.dex * 0.06) - (target.hitRate * 0.5)"
+    }
+  },
+  "moves": [
+    {
+      "name": "爆發躍起",
+      "weight": 50,
+      "msg": {
+        "success": "$N後腿猛地發力，巨大的身軀原地高高躍起，$n手中的$w從$N原本所在的$l處揮了個空。"
+      }
+    },
+    {
+      "name": "伏低狩獵姿",
+      "weight": 45,
+      "msg": {
+        "success": "就在$n出招的瞬間，$N猛地將腹部貼近地面，呈現狩獵姿態，讓$w貼著頭頂危險地掃過。"
+      }
+    },
+    {
+      "name": "詭異扭身",
+      "weight": 35,
+      "msg": {
+        "success": "$N展現出驚人的柔韌性，脊椎詭異地一扭，硬生生讓$n砍向$l的$w滑了開去，只削斷了幾根毛髮。"
+      }
+    },
+    {
+      "name": "本能側撲",
+      "weight": 40,
+      "msg": {
+        "success": "$N憑藉著野獸對危險的直覺，在間不容髮之際向側面猛撲，避開了$n$w的鋒芒。"
+      }
+    },
+    {
+      "name": "利爪急停",
+      "weight": 30,
+      "msg": {
+        "success": "$N四肢利爪深深嵌入地面，強行改變慣性向後滑動，驚險地躲過了$n針對$l的致命一擊。"
+      }
+    },
+    {
+      "name": "就地翻滾",
+      "weight": 25,
+      "msg": {
+        "success": "$N縮起四肢，就地一滾，像球一樣迅速拉開了與$n的距離，$n的$w狠狠砸在了空地上。"
+      }
+    },
+    {
+      "name": "咆哮震懾",
+      "weight": 20,
+      "msg": {
+        "success": "$N突然對著$n發出一聲兇狠的咆哮，嚇得$n手一抖，$w偏離了原本鎖定的$l，擦身而過。"
+      }
+    },
+    {
+      "name": "鬼魅遊走",
+      "weight": 15,
+      "msg": {
+        "success": "$N的身形在移動中忽快忽慢，如鬼魅般繞到了$n的身側，讓$n手中的$w完全失去了目標。"
+      }
+    }
+  ]
+}

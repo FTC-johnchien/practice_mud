@@ -2,22 +2,19 @@ package com.example.htmlmud.domain.model;
 
 public record ScalingConfig(
 
-    int maxLevel,
-
-    int baseDamage,
-
-    double damagePerLevel,
-
-    double hitRatePerLevel,
-
-    double parryRatePerLevel,
-
-    double dodgeRatePerLevel,
+    double chargeRegenPerLevel,
 
     double counterRatePerLevel,
 
-    double critRatePerLevel
+    double critRatePerLevel,
+
+    double damagePerLevel,
+
+    double dodgeRatePerLevel,
+
+    double hitRatePerLevel,
+
+    double parryRatePerLevel
 
 ) {
-
 }

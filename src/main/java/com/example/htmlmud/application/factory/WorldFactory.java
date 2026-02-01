@@ -8,10 +8,10 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.application.service.MobService;
 import com.example.htmlmud.application.service.RoomService;
-import com.example.htmlmud.domain.actor.impl.LivingActor;
-import com.example.htmlmud.domain.actor.impl.MobActor;
-import com.example.htmlmud.domain.actor.impl.PlayerActor;
-import com.example.htmlmud.domain.actor.impl.RoomActor;
+import com.example.htmlmud.domain.actor.impl.Living;
+import com.example.htmlmud.domain.actor.impl.Mob;
+import com.example.htmlmud.domain.actor.impl.Player;
+import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.ItemType;
@@ -19,7 +19,9 @@ import com.example.htmlmud.domain.model.LivingState;
 import com.example.htmlmud.domain.model.LootEntry;
 import com.example.htmlmud.domain.model.map.ItemTemplate;
 import com.example.htmlmud.domain.model.map.MobTemplate;
+import com.example.htmlmud.infra.mapper.ItemTemplateMapper;
 import com.example.htmlmud.infra.mapper.MobMapper;
+import com.example.htmlmud.infra.persistence.entity.SkillEntry;
 import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +35,9 @@ public class WorldFactory {
 
   private final MobMapper mobMapper;
 
+  private final ItemTemplateMapper itemTemplateMapper;
+
+
   private final MobService mobService;
 
   private final ObjectProvider<RoomService> roomServiceProvider;
@@ -40,11 +45,11 @@ public class WorldFactory {
   /**
    * 建立房間 Actor
    */
-  public RoomActor createRoom(String roomId) {
+  public Room createRoom(String roomId) {
     log.info("createRoom roomId: {}", roomId);
 
     // 這裡負責組裝：RoomActor
-    RoomActor room = new RoomActor(roomId, roomServiceProvider.getObject());
+    Room room = new Room(roomId, roomServiceProvider.getObject());
     room.start();
     return room;
   }
@@ -52,20 +57,20 @@ public class WorldFactory {
   /**
    * 建立怪物 Actor (包含 AI 啟動邏輯)
    */
-  public MobActor createMob(String templateId) {
+  public Mob createMob(String templateId) {
     // 1. 查 Template (Record)
-    log.info("createMob templateId: {}", templateId);
+    // log.info("createMob templateId: {}", templateId);
     MobTemplate tpl = templateRepo.findMob(templateId).orElse(null);
     if (tpl == null) {
-      log.error("MobTemplate ID not found: " + templateId);
+      log.error("createMob failed: MobTemplate ID not found: " + templateId);
       throw new MudException("找不到這個怪物模板 MobTemplate ID: " + templateId);
     }
 
     // 2. new Actor
     LivingState state = mobMapper.toLivingState(tpl);
-    MobActor mob = new MobActor(tpl, state, mobService);
+    Mob mob = new Mob(tpl, state, mobService);
 
-    log.info("{}", tpl.equipment());
+    // log.info("{}", tpl.equipment());
     // 處理裝備
     for (var entry : tpl.equipment().entrySet()) {
       GameItem item = createItem(entry.getValue());
@@ -73,6 +78,19 @@ public class WorldFactory {
         mob.getInventory().add(item);
         mob.getLivingService().equip(mob, item);
 
+      }
+    }
+
+    // 處理技能
+    // log.info("{}", tpl.enabledSkills());
+    // 檢查是否有設定 enable 的技能
+    if (tpl.enabledSkills() != null) {
+      for (var entry : tpl.enabledSkills().entrySet()) {
+        // 設定 mob 已學習的技能
+        mob.getLearnedSkills().put(entry.getValue(),
+            SkillEntry.createMobSkillEntry(entry.getValue(), mob.getLevel()));
+        // 設定 mob 已啟用的技能
+        mob.getEnabledSkills().put(entry.getKey(), entry.getValue());
       }
     }
 
@@ -98,10 +116,10 @@ public class WorldFactory {
       return null;
     }
 
-    GameItem item = new GameItem();
+    // 使用 Mapper 進行轉換 (會自動複製 name, description, type, level 以及處理耐久度)
+    GameItem item = itemTemplateMapper.toGameItem(tpl);
+
     item.setId(UUID.randomUUID().toString()); // 生成唯一 ID
-    item.setTemplate(tpl);
-    // item.setCurrentDurability(tpl.maxDurability());
     item.setAmount(1);
 
     // --- 處理隨機屬性 (RNG) ---
@@ -119,7 +137,7 @@ public class WorldFactory {
     return item;
   }
 
-  public GameItem createCorpse(LivingActor actor) {
+  public GameItem createCorpse(Living actor) {
     GameItem corpse = new GameItem();
     corpse.setId(UUID.randomUUID().toString());
     corpse.setName(actor.getName() + " 的屍體");
@@ -136,11 +154,11 @@ public class WorldFactory {
     // 設定關鍵字，讓玩家可以用 "get corpse" 或 "get rat" 操作
     // 繼承怪物的關鍵字，再加上 "corpse"
     switch (actor) {
-      case PlayerActor player:
+      case Player player:
         createPlayerCorpse(player, corpse);
         break;
 
-      case MobActor mob:
+      case Mob mob:
         createMobCorpse(mob, corpse);
         break;
     }
@@ -148,12 +166,12 @@ public class WorldFactory {
     return corpse;
   }
 
-  private void createPlayerCorpse(PlayerActor player, GameItem corpse) {
+  private void createPlayerCorpse(Player player, GameItem corpse) {
     List<String> keywords = new ArrayList<>(player.getAliases());
     keywords.add("corpse");
   }
 
-  private void createMobCorpse(MobActor mob, GameItem corpse) {
+  private void createMobCorpse(Mob mob, GameItem corpse) {
     List<String> keywords = new ArrayList<>(mob.getTemplate().aliases());
     keywords.add("corpse");
     // corpse.setKeywords(keywords); // 假設您有 keywords 欄位

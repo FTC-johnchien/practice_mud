@@ -1,0 +1,139 @@
+{
+  "id": "mob_claw",
+  "name": "銳利爪擊",
+  "description": "利用尖銳的爪子進行撕裂攻擊，常見於野獸、猛禽或妖魔，攻擊往往伴隨著鮮血與劇痛。",
+  "type": "PASSIVE",
+  "school": "NATURAL",
+  "tags": [
+    "UNARMED",
+    "BASIC",
+    "MOB",
+    "SLASH"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED"
+    ]
+  },
+  "costs": {
+    "stamina": 3
+  },
+  "scaling": {
+    "damagePerLevel": 0.7,
+    "hitRatePerLevel": 0.001,
+    "critRatePerLevel": 0.001
+  },
+  "mechanics": {
+    "critRate": 0.08,
+    "damage": 10,
+    "damageType": "SLASH",
+    "hitRate": 0.82,
+    "maxLevel": 100,
+    "scaleStat": "DEX",
+    "scaleFactor": 1.1
+  },
+  "moves": [
+    {
+      "name": "試探抓擊",
+      "weight": 55,
+      "damageMod": 0.9,
+      "hitRateMod": 0.1,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N伸出利爪，迅速地在$n面前劃過。",
+        "hit": "$n躲閃不及，$l被劃出一道淺淺的血痕，受到 $d 傷害！",
+        "miss": "$n向後一仰，避開了這記試探性的攻擊。"
+      }
+    },
+    {
+      "name": "十字撕裂",
+      "weight": 40,
+      "damageMod": 1.4,
+      "hitRateMod": -0.05,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N雙爪交叉，帶著破風之聲向$n的胸口撕去！",
+        "hit": "「嘶啦」一聲，$n的胸口被抓出一個十字型的傷口，鮮血飛濺，受到 $d 傷害！",
+        "crit": "【重擊】這一擊深可見骨，十字傷痕中噴出大量鮮血，$n痛得臉色發白，受到 $d 傷害！",
+        "miss": "$n看準時機向後急退，雙爪只抓破了$n的衣角。"
+      }
+    },
+    {
+      "name": "猛虎掏心",
+      "weight": 15,
+      "damageMod": 1.6,
+      "hitRateMod": -0.2,
+      "critRateMod": 0.3,
+      "msg": {
+        "cast": "$N眼中兇光畢露，一爪直取$n的心窩要害！",
+        "hit": "$n雖然勉強避開要害，但胸口仍被狠狠抓了一把，受到 $d 傷害！",
+        "crit": "【重擊】$N的利爪準確地刺入$n胸膛，差一點就抓碎了心臟，造成了恐怖的 $d 傷害！",
+        "miss": "$n間不容髮地側身閃過，驚出了一身冷汗。"
+      }
+    },
+    {
+      "name": "橫掃千軍",
+      "weight": 45,
+      "damageMod": 1.0,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N伏低身子，右爪橫向掃向$n的下盤。",
+        "hit": "$n躲避不及，腿部被利爪掃中，留下了幾道血印，受到 $d 傷害！",
+        "miss": "$n輕輕躍起，讓$N的利爪從腳下掃空。"
+      }
+    },
+    {
+      "name": "凌空撲擊",
+      "weight": 30,
+      "damageMod": 1.5,
+      "hitRateMod": -0.15,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N後腿一蹬，高高躍起，藉著下墜之勢撲向$n！",
+        "hit": "$n被$N撲倒在地，身上被抓得皮開肉綻，受到 $d 傷害！",
+        "crit": "【重擊】$N將$n死死按在地上瘋狂撕扯，$n發出淒厲的慘叫，受到 $d 傷害！",
+        "miss": "$n就地一滾，$N撲了個空，在地上抓出幾道深痕。"
+      }
+    },
+    {
+      "name": "瘋狂亂抓",
+      "weight": 25,
+      "damageMod": 1.2,
+      "hitRateMod": -0.1,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N發出刺耳的尖嘯，雙爪如幻影般對著$n瘋狂揮舞。",
+        "hit": "$n只覺得眼前全是爪影，身上瞬間多了十幾道傷口，受到 $d 傷害！",
+        "miss": "$n舞動武器護住全身，$N的爪子全打在了兵器上，發出叮噹脆響。"
+      }
+    },
+    {
+      "name": "鎖喉爪",
+      "weight": 20,
+      "damageMod": 1.1,
+      "hitRateMod": -0.05,
+      "critRateMod": 0.2,
+      "msg": {
+        "cast": "$N身形詭異地一扭，利爪悄無聲息地抓向$n的咽喉。",
+        "hit": "$n脖子一涼，被抓出五道血痕，差點被抓斷氣管，受到 $d 傷害！",
+        "crit": "【重擊】鮮血從$n的頸部噴湧而出，這一抓差點就要了$n的命，受到 $d 傷害！",
+        "miss": "$n縮頸藏頭，堪堪避過了這致命的一抓。"
+      }
+    },
+    {
+      "name": "撩陰爪",
+      "weight": 35,
+      "damageMod": 1.0,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.15,
+      "msg": {
+        "cast": "$N陰險地從下路發起攻擊，一爪撩向$n的腹股溝。",
+        "hit": "$n痛哼一聲，下腹被抓傷，痛苦地彎下了腰，受到 $d 傷害！",
+        "crit": "【重擊】這一擊陰毒無比，$n痛得面容扭曲，冷汗直流，受到 $d 傷害！",
+        "miss": "$n早有防備，雙腿併攏擋住了這陰險的一擊。"
+      }
+    }
+  ]
+}

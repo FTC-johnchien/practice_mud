@@ -1,8 +1,8 @@
 package com.example.htmlmud.domain.actor.behavior;
 
-import com.example.htmlmud.domain.actor.impl.LivingActor;
-import com.example.htmlmud.domain.actor.impl.MobActor;
-import com.example.htmlmud.domain.actor.impl.PlayerActor;
+import com.example.htmlmud.domain.actor.impl.Living;
+import com.example.htmlmud.domain.actor.impl.Mob;
+import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.protocol.ActorMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PassiveBehavior implements MobBehavior {
 
   @Override
-  public MobBehavior handle(MobActor self, ActorMessage.MobMessage msg) {
+  public MobBehavior handle(Mob self, ActorMessage.MobMessage msg) {
     MobBehavior next = null;
     switch (msg) {
       case ActorMessage.OnPlayerEnter(var playerId) -> {
@@ -37,7 +37,7 @@ public class PassiveBehavior implements MobBehavior {
 
 
   // 在 PassiveBehavior (一般 NPC) 的 onTick
-  public void onTick(MobActor self) {
+  public void onTick(Mob self) {
     // 5% 機率隨機移動
     if (Math.random() < 0.05) {
       // 隨機選一個出口移動
@@ -51,12 +51,12 @@ public class PassiveBehavior implements MobBehavior {
   }
 
   @Override
-  public void onPlayerEnter(MobActor self, PlayerActor player) {
+  public void onPlayerEnter(Mob self, Player player) {
 
   }
 
   @Override
-  public void onDamaged(MobActor self, LivingActor attacker) {
+  public void onDamaged(Mob self, Living attacker) {
     self.sayToRoom("吼吼~！！！(它看起來想殺死你)");
     self.attack(attacker);
   }

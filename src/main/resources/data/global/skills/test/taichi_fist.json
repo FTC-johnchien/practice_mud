@@ -12,19 +12,12 @@
   ],
   "isHidden": false,
   "learning": {
-    "reqLevel": 10,
     "reqStats": {
       "int": 30
     },
-    "reqGuild": "WUDANG",
-    "loseOnLeave": true,
     "reqSkills": {
       "basic_fist": 30,
       "wudang_force": 20
-    },
-    "costs": {
-      "potential": 100,
-      "money": 0
     }
   },
   "usage": {
@@ -42,22 +35,35 @@
     "charge": 0
   },
   "scaling": {
-    "maxLevel": 300,
-    "baseDamage": 15,
+    "chargeRegenPerLevel": 0.034,
+    "counterRatePerLevel": 0.0005,
+    "critRatePerLevel": 0.0,
     "damagePerLevel": 0.8,
-    "hitRatePerLevel": 0.001,
-    "parryRatePerLevel": 0.005,
     "dodgeRatePerLevel": 0.0,
-    "counterRatePerLevel": 0.001,
-    "critRatePerLevel": 0.0
+    "hitRatePerLevel": 0.001,
+    "parryRatePerLevel": 0.005
   },
   "mechanics": {
+    "chargeRegen": 0.0,
+    "counterRate": 0.2,
+    "critRate": 0.03,
+    "damage": 15,
+    "damageType": "BLUNT",
+    "dodgeRate": 0.0,
+    "hitRate": 0.85,
+    "learningDifficulty": 1.5,
+    "maxLevel": 300,
+    "scaleFactor": 1.2,
     "scaleStat": "INT",
-    "scaleFactor": 1.2
+    "formulas": {
+      "chargeRegen": "2 + (wudang_force.level * 0.5)",
+      "maxComboCount": "Math.max(0, (skill.level / 10) - 2)"
+    }
   },
   "synergies": [
     {
       "name": "太極氣勁",
+      "description": "裝備武當心法可加快氣勁(Charge)回復速度。",
       "triggerType": "ON_COMBAT_START",
       "condition": {
         "enabledSkill": {
@@ -84,7 +90,8 @@
       "reqSkillLevel": 0,
       "weight": 50,
       "damageMod": 1.0,
-      "hitMod": 0.0,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.0,
       "costs": null,
       "cooldown": 0,
       "msg": {
@@ -100,7 +107,8 @@
       "reqSkillLevel": 10,
       "weight": 46,
       "damageMod": 1.2,
-      "hitMod": 0.01,
+      "hitRateMod": 0.01,
+      "critRateMod": 0.0,
       "costs": null,
       "cooldown": 0,
       "msg": {
@@ -116,7 +124,8 @@
       "reqSkillLevel": 20,
       "weight": 42,
       "damageMod": 1.4,
-      "hitMod": 0.0,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.0,
       "costs": null,
       "cooldown": 0,
       "msg": {
@@ -132,7 +141,8 @@
       "reqSkillLevel": 30,
       "weight": 40,
       "damageMod": 1.8,
-      "hitMod": -0.2,
+      "hitRateMod": -0.2,
+      "critRateMod": 0.0,
       "costs": null,
       "cooldown": 0,
       "msg": {
@@ -148,7 +158,8 @@
       "reqSkillLevel": 50,
       "weight": 30,
       "damageMod": 1.5,
-      "hitMod": 0.0,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.1,
       "costs": {
         "mp": 10
       },
@@ -177,6 +188,10 @@
     "condition": {
       "enabledSkill": {
         "FORCE": "wudang_force"
+      },
+      "reqLevel": 30,
+      "costs": {
+        "charge": 1
       }
     }
   },
@@ -184,11 +199,8 @@
     {
       "name": "掤勁",
       "reqSkillLevel": 30,
-      "triggerChance": 0.3,
+      "weight": 50,
       "damageMod": 0.5,
-      "costs": {
-        "mp": 5
-      },
       "msg": {
         "hit": "$N招式中的「掤」勁在$n的體內爆發，追加了 $d 傷害！"
       }
@@ -196,11 +208,8 @@
     {
       "name": "捋勁",
       "reqSkillLevel": 40,
-      "triggerChance": 0.3,
+      "weight": 50,
       "damageMod": 0.55,
-      "costs": {
-        "mp": 6
-      },
       "msg": {
         "hit": "$N招式中的「捋」勁在$n的體內爆發，追加了 $d 傷害！"
       }
@@ -208,11 +217,8 @@
     {
       "name": "擠勁",
       "reqSkillLevel": 50,
-      "triggerChance": 0.3,
+      "weight": 50,
       "damageMod": 0.6,
-      "costs": {
-        "mp": 6
-      },
       "msg": {
         "hit": "$N招式中的「擠」勁在$n的體內爆發，追加了 $d 傷害！"
       }
@@ -220,11 +226,8 @@
     {
       "name": "按勁",
       "reqSkillLevel": 60,
-      "triggerChance": 0.3,
+      "weight": 40,
       "damageMod": 0.65,
-      "costs": {
-        "mp": 7
-      },
       "msg": {
         "hit": "$N招式中的「按」勁在$n的體內爆發，追加了 $d 傷害！"
       }
@@ -232,11 +235,8 @@
     {
       "name": "採勁",
       "reqSkillLevel": 70,
-      "triggerChance": 0.3,
+      "weight": 40,
       "damageMod": 0.7,
-      "costs": {
-        "mp": 7
-      },
       "msg": {
         "hit": "$N招式中的「採」勁在$n的體內爆發，追加了 $d 傷害！"
       }
@@ -244,11 +244,8 @@
     {
       "name": "挒勁",
       "reqSkillLevel": 80,
-      "triggerChance": 0.3,
+      "weight": 40,
       "damageMod": 0.75,
-      "costs": {
-        "mp": 8
-      },
       "msg": {
         "hit": "$N招式中的「挒」勁在$n的體內爆發，追加了 $d 傷害！"
       }
@@ -256,11 +253,8 @@
     {
       "name": "肘勁",
       "reqSkillLevel": 90,
-      "triggerChance": 0.3,
+      "weight": 35,
       "damageMod": 0.9,
-      "costs": {
-        "mp": 9
-      },
       "msg": {
         "hit": "$N招式中的「肘」勁在$n的體內爆發，追加了 $d 傷害！"
       }
@@ -268,11 +262,8 @@
     {
       "name": "靠勁",
       "reqSkillLevel": 100,
-      "triggerChance": 0.3,
+      "weight": 30,
       "damageMod": 1.2,
-      "costs": {
-        "mp": 12
-      },
       "msg": {
         "hit": "$N招式中的「靠」勁在$n的體內爆發，追加了 $d 傷害！"
       }
@@ -282,6 +273,9 @@
     "condition": {
       "enabledSkill": {
         "FORCE": "wudang_force"
+      },
+      "costs": {
+        "charge": 2
       }
     }
   },
@@ -289,7 +283,7 @@
     {
       "name": "順手推舟、摔",
       "reqSkillLevel": 30,
-      "triggerChance": 0.25,
+      "weight": 50,
       "damageMod": 1.5,
       "msg": {
         "hit": "$n藉著$N的攻擊方向順勢一推一拐，反而讓$N失去了平衡摔落，造成 $d 傷害。"
@@ -298,7 +292,7 @@
     {
       "name": "順手推舟、擠",
       "reqSkillLevel": 60,
-      "triggerChance": 0.2,
+      "weight": 30,
       "damageMod": 1.8,
       "msg": {
         "hit": "$n藉著$N的攻擊方向順勢一拉一推，在$N失衡的瞬間進行攻擊，造成 $d 傷害。"

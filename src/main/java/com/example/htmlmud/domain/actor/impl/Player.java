@@ -17,6 +17,7 @@ import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.LivingState;
 import com.example.htmlmud.domain.model.PlayerRecord;
+import com.example.htmlmud.domain.model.skill.dto.ActiveSkillResult;
 import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.ConnectionState;
 import com.example.htmlmud.protocol.GameCommand;
@@ -25,33 +26,27 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 // PlayerActor 處理的訊息類型就是 GameCommand
+@Getter
 @Slf4j
-public final class PlayerActor extends LivingActor {
+public final class Player extends Living {
 
-  @Getter
   private WebSocketSession session;
 
-  @Getter
   private final PlayerService service;
 
-  @Getter
   private final WorldManager manager;
 
-  @Getter
+
   @Setter
   private List<String> aliases;
 
-  @Getter
   @Setter
   private String nickname;
 
-  @Getter
   @Setter
   private String lookDescription;
 
-
   // Actor 內部狀態 (State Machine Context)
-  @Getter
   @Setter
   private ConnectionState connectionState = ConnectionState.CONNECTED;
 
@@ -59,17 +54,9 @@ public final class PlayerActor extends LivingActor {
   @Setter
   private PlayerBehavior currentBehavior;
 
-  // 記錄 GCD 結束的「系統時間 (毫秒)」
-  private long gcdEndTimestamp = 0;
-
-  // 記錄當前是否正在詠唱/硬直 (Cast Time)
-  private boolean isCasting = false;
-
-  private boolean isDirty = false;
 
 
-
-  private PlayerActor(WebSocketSession session, String id, String name, LivingState state,
+  private Player(WebSocketSession session, String id, String name, LivingState state,
       WorldManager worldManager, PlayerService playerService) {
     super(id, name, state, playerService.getLivingServiceProvider().getObject());
     this.session = session;
@@ -78,13 +65,13 @@ public final class PlayerActor extends LivingActor {
   }
 
   // 工廠方法 初始設定為 GuestBehavior
-  public static PlayerActor createGuest(WebSocketSession session, WorldManager worldManager,
+  public static Player createGuest(WebSocketSession session, WorldManager worldManager,
       PlayerService playerService) {
     String name = "GUEST";
     String uuid = UUID.randomUUID().toString();
     String playerId = "p-" + uuid.substring(0, 8) + uuid.substring(9, 11);
-    PlayerActor actor =
-        new PlayerActor(session, playerId, name, new LivingState(), worldManager, playerService);
+    Player actor =
+        new Player(session, playerId, name, new LivingState(), worldManager, playerService);
     actor.become(new GuestBehavior(playerService.getAuthService()));
     return actor;
   }
@@ -190,7 +177,7 @@ public final class PlayerActor extends LivingActor {
   // }
 
   @Override
-  protected void doDie(LivingActor attacker) {
+  protected void doDie(Living attacker) {
     service.getMessageUtil().send("$N已經死亡！即將在重生點復活...", this);
     super.doDie(attacker);
 
@@ -245,6 +232,7 @@ public final class PlayerActor extends LivingActor {
 
   // MudWebSocketHandler 在 afterConnectionClosed 時呼叫此方法
   public void handleDisconnect() {
+    markInvalid();
     // 1. 停止 Actor 迴圈
     this.stop();
 
@@ -283,7 +271,7 @@ public final class PlayerActor extends LivingActor {
     return new PlayerRecord(this.id, // ID
         this.name, // Username
         this.nickname, // Nickname
-        this.currentRoomId, // Room
+        this.currentRoom.getId(), // Room
         this.state.deepCopy(), // 【關鍵】深層複製 State
         new ArrayList<GameItem>(this.inventory) // Inventory
     );
@@ -300,7 +288,7 @@ public final class PlayerActor extends LivingActor {
     }
     this.aliases = new ArrayList<>(List.of(record.name()));
     this.state = record.state();
-    this.currentRoomId = record.currentRoomId();
+    this.currentRoom = manager.getRoomActor(record.currentRoomId());
     this.inventory = record.inventory();
     if (this.inventory == null) {
       this.inventory = new ArrayList<>();

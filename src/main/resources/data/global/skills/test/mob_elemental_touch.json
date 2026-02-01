@@ -1,0 +1,139 @@
+{
+  "id": "mob_elemental_touch",
+  "name": "元素之觸",
+  "description": "凝聚純粹的元素能量或靈體力量進行的接觸攻擊，無視實體防禦，直接衝擊敵人的靈魂或肉體。",
+  "type": "PASSIVE",
+  "school": "NATURAL",
+  "tags": [
+    "UNARMED",
+    "BASIC",
+    "MOB",
+    "MAGIC"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED"
+    ]
+  },
+  "costs": {
+    "stamina": 1,
+    "mp": 2
+  },
+  "scaling": {
+    "damagePerLevel": 0.8,
+    "hitRatePerLevel": 0.002,
+    "critRatePerLevel": 0.001
+  },
+  "mechanics": {
+    "critRate": 0.05,
+    "damage": 10,
+    "damageType": "MAGIC",
+    "hitRate": 0.90,
+    "maxLevel": 100,
+    "scaleStat": "INT",
+    "scaleFactor": 1.4
+  },
+  "moves": [
+    {
+      "name": "能量侵蝕",
+      "weight": 55,
+      "damageMod": 1.0,
+      "hitRateMod": 0.1,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N伸出散發著微光的手掌，輕輕觸碰$n的身體。",
+        "hit": "一股異樣的能量鑽入體內，$n感覺肌肉一陣麻痺與灼燒，受到 $d 傷害！",
+        "miss": "$n感受到危險的氣息，迅速後撤，避開了這詭異的接觸。"
+      }
+    },
+    {
+      "name": "元素爆裂",
+      "weight": 30,
+      "damageMod": 1.5,
+      "hitRateMod": -0.1,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N周身的能量瞬間變得狂暴，聚集成一顆光球轟向$n！",
+        "hit": "能量在接觸$n的瞬間發生劇烈爆炸，將$n炸得焦頭爛額，受到 $d 傷害！",
+        "crit": "【重擊】不穩定的能量核心在$n胸口炸開，造成了可怕的連鎖反應，受到 $d 傷害！",
+        "miss": "$n在爆炸的前一刻撲倒在地，衝擊波從頭頂呼嘯而過。"
+      }
+    },
+    {
+      "name": "靈魂衝擊",
+      "weight": 25,
+      "damageMod": 0.8,
+      "hitRateMod": 0.2,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N發出一陣無聲的尖嘯，一道無形的波動直衝$n的腦海。",
+        "hit": "$n無法防禦這來自精神層面的攻擊，只覺頭痛欲裂，受到 $d 傷害！",
+        "miss": "$n緊守心神，用意志力抵抗住了這波精神衝擊。"
+      }
+    },
+    {
+      "name": "虛空纏繞",
+      "weight": 40,
+      "damageMod": 0.9,
+      "hitRateMod": 0.15,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N揮動手臂，數道能量流如同觸手般纏向$n。",
+        "hit": "$n被能量觸手緊緊勒住，皮膚被能量灼燒出條條痕跡，受到 $d 傷害！",
+        "miss": "$n揮動武器，將逼近的能量流一一斬斷。"
+      }
+    },
+    {
+      "name": "魔力激流",
+      "weight": 15,
+      "damageMod": 1.8,
+      "hitRateMod": -0.2,
+      "critRateMod": 0.15,
+      "msg": {
+        "cast": "$N不再壓抑體內的力量，將全身的魔力化作一道洪流傾瀉而出！",
+        "hit": "$n瞬間被狂暴的魔力洪流淹沒，全身上下無一處不痛，受到 $d 傷害！",
+        "crit": "【重擊】狂暴的魔力撕裂了$n的防護，造成了毀滅性的貫穿傷害，受到 $d 傷害！",
+        "miss": "$N的攻擊太過明顯，$n提前預判並閃到了掩體之後。"
+      }
+    },
+    {
+      "name": "源力震盪",
+      "weight": 35,
+      "damageMod": 1.2,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N雙手合十，猛地分開，引發周圍空間的元素共振。",
+        "hit": "$n周圍的空間彷彿都在震動，內臟受到強烈的擠壓，受到 $d 傷害！",
+        "miss": "$n感覺到空氣流動的異常，迅速跳出了震盪範圍。"
+      }
+    },
+    {
+      "name": "核心穿刺",
+      "weight": 20,
+      "damageMod": 1.3,
+      "hitRateMod": -0.05,
+      "critRateMod": 0.2,
+      "msg": {
+        "cast": "$N將能量壓縮到極致，化作一根銳利的長矛刺向$n。",
+        "hit": "能量長矛無視物理護甲，直接貫穿了$n的身體，受到 $d 傷害！",
+        "crit": "【重擊】這一擊刺穿了$n的魔力迴路，引發了體內能量的亂流，受到 $d 傷害！",
+        "miss": "$n側身避開，能量長矛刺入地面，將岩石融化成岩漿。"
+      }
+    },
+    {
+      "name": "凋零之觸",
+      "weight": 30,
+      "damageMod": 0.7,
+      "hitRateMod": 0.1,
+      "critRateMod": 0.25,
+      "msg": {
+        "cast": "$N的身影變得忽明忽暗，如鬼魅般貼近$n，伸手拂過。",
+        "hit": "$n只覺被觸碰的地方生機飛速流逝，變得乾枯灰暗，受到 $d 傷害！",
+        "crit": "【重擊】這充滿死寂氣息的一觸直接侵害了$n的本源，造成了極大的 $d 傷害！",
+        "miss": "$n爆發出一股鬥氣，將$N逼退。"
+      }
+    }
+  ]
+}

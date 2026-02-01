@@ -1,5 +1,6 @@
 package com.example.htmlmud.infra.persistence.repository;
 
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -8,6 +9,7 @@ import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.SkillCategory;
 import com.example.htmlmud.domain.model.map.ItemTemplate;
 import com.example.htmlmud.domain.model.map.MobTemplate;
+import com.example.htmlmud.domain.model.map.RaceTemplate;
 import com.example.htmlmud.domain.model.map.RoomTemplate;
 import com.example.htmlmud.domain.model.map.SkillTemplate;
 import com.example.htmlmud.domain.model.map.ZoneTemplate;
@@ -30,6 +32,28 @@ public class TemplateRepository {
   private final Map<String, ItemTemplate> itemTemplates = new ConcurrentHashMap<>();
 
   private final Map<String, SkillTemplate> skillTemplates = new ConcurrentHashMap<>();
+
+  @Getter
+  private final Map<String, RaceTemplate> raceTemplates = new ConcurrentHashMap<>();
+
+
+
+  // 預先計算基礎技能的 ID，避免在戰鬥等高頻率呼叫中重複進行字串拼接與轉換
+  private static final Map<SkillCategory, String> BASIC_SKILL_IDS =
+      new EnumMap<>(SkillCategory.class);
+  private static final Map<SkillCategory, String> MOB_BASIC_SKILL_IDS =
+      new EnumMap<>(SkillCategory.class);
+
+  static {
+    for (SkillCategory cat : SkillCategory.values()) {
+      BASIC_SKILL_IDS.put(cat, ("basic_" + cat.name()).toLowerCase());
+    }
+
+    MOB_BASIC_SKILL_IDS.put(SkillCategory.UNARMED, "mob_hit");
+    MOB_BASIC_SKILL_IDS.put(SkillCategory.DODGE, "mob_dodge");
+    MOB_BASIC_SKILL_IDS.put(SkillCategory.PARRY, "mob_parry");
+    // MOB_BASIC_SKILL_IDS.put(SkillCategory.FORCE, "mob_force");
+  }
 
 
 
@@ -82,8 +106,30 @@ public class TemplateRepository {
   }
 
   public SkillTemplate getDefaultSkill(SkillCategory category) {
-    return skillTemplates.get(category.name());
+    return skillTemplates.get(BASIC_SKILL_IDS.get(category));
   }
+
+  public String getDefaultSkillId(SkillCategory category) {
+    return getDefaultSkill(category).getId();
+  }
+
+  public SkillTemplate getMobDefaultSkill(SkillCategory category) {
+    return skillTemplates.get(MOB_BASIC_SKILL_IDS.get(category));
+  }
+
+  public String getMobDefaultSkillId(SkillCategory category) {
+    return getMobDefaultSkill(category).getId();
+  }
+
+
+  public void registerRace(RaceTemplate tpl) {
+    raceTemplates.put(tpl.id(), tpl);
+  }
+
+  public Optional<RaceTemplate> findRace(String id) {
+    return Optional.ofNullable(raceTemplates.get(id));
+  }
+
 
 
   // 檢查資料完整性 (Server 啟動時檢查)

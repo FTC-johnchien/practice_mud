@@ -2,9 +2,10 @@ package com.example.htmlmud.domain.model.map;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import com.example.htmlmud.domain.model.LootEntry;
 import com.example.htmlmud.domain.model.MobKind;
+import com.example.htmlmud.domain.model.SkillCategory;
 import com.example.htmlmud.domain.model.vo.Gender;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.Builder;
@@ -15,6 +16,8 @@ public record MobTemplate(
     String id,
 
     String name,
+
+    String race,
 
     Gender gender,
 
@@ -42,7 +45,7 @@ public record MobTemplate(
 
     boolean isInvincible, // 是否無敵
 
-    Set<String> dialogues, // 預設對話庫
+    List<String> dialogues, // 預設對話庫
     // 掉落表 ID, 商店列表 ID...
     Integer shopId,
 
@@ -65,6 +68,8 @@ public record MobTemplate(
     String behavior, // 行為
 
     Map<String, String> equipment, // 装備
+
+    Map<SkillCategory, String> enabledSkills,
 
     // 掉落表：列表中的每個項目代表一種可能的掉落物
     List<LootEntry> loot
@@ -104,5 +109,14 @@ public record MobTemplate(
     if (loot == null) {
       loot = List.of();
     }
+  }
+
+  public String getRandomDialogue() {
+    if (dialogues == null || dialogues.isEmpty()) {
+      return null;
+    }
+    // 使用 ThreadLocalRandom 效率最高
+    int index = ThreadLocalRandom.current().nextInt(dialogues.size());
+    return dialogues.get(index);
   }
 }

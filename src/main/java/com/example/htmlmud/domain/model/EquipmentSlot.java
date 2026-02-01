@@ -36,7 +36,16 @@ public enum EquipmentSlot {
   // 武器部位
   MAIN_HAND("主手"),
 
-  OFF_HAND("副手");
+  OFF_HAND("副手"),
+
+
+  // 非人體部位
+  WINGS("翅膀"),
+
+  TAIL("尾毛"),
+
+  CLAWS("爪子");
+
 
   private final String displayName;
 

@@ -1,0 +1,19 @@
+{
+  "defaults": {
+    "AXE": "basic_blunt",
+    "BLADE": "basic_blade",
+    "BOW": "basic_archery",
+    "DAGGER": "basic_dagger",
+    "POLEARM": "basic_polearm",
+    "HAMMER": "basic_blunt",
+    "MACE": "basic_blunt",
+    "SPEAR": "basic_polearm",
+    "STAFF": "basic_polearm",
+    "SWORD": "basic_sword",
+    "SHIELD": "basic_shield",
+    "THROWING": "basic_throwing",
+    "UNARMED": "basic_fist",
+    "WAND": "basic_magic_staff",
+    "WHIP": "basic_whip"
+  }
+}

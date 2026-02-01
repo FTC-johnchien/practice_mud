@@ -24,6 +24,8 @@ public record ItemTemplate(
 
     ItemType type,
 
+    String subType, // "SWORD",
+
     @JsonProperty("stats") EquipmentProp equipmentProp, // 装備屬性
 
     @JsonProperty("behavior") ConsumableProp consumableProp, // 消秏品屬性

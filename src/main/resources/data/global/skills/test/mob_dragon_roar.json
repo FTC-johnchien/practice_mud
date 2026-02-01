@@ -1,0 +1,106 @@
+{
+  "id": "mob_dragon_roar",
+  "name": "恐懼咆哮",
+  "description": "蘊含龍威的怒吼，能震碎敵人的耳膜，更能直接衝擊靈魂，讓弱小者肝膽俱裂。",
+  "type": "ACTIVE",
+  "school": "NATURAL",
+  "tags": [
+    "SONIC",
+    "MENTAL",
+    "DEBUFF"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED"
+    ]
+  },
+  "costs": {
+    "mp": 30,
+    "stamina": 20
+  },
+  "scaling": {
+    "damagePerLevel": 1.0,
+    "hitRatePerLevel": 0.002,
+    "critRatePerLevel": 0.002
+  },
+  "mechanics": {
+    "critRate": 0.08,
+    "damage": 20,
+    "damageType": "SONIC",
+    "hitRate": 0.90,
+    "maxLevel": 100,
+    "scaleStat": "STR",
+    "scaleFactor": 1.5
+  },
+  "moves": [
+    {
+      "name": "震懾低吼",
+      "weight": 35,
+      "damageMod": 0.6,
+      "hitRateMod": 0.2,
+      "critRateMod": 0.0,
+      "costs": {
+        "stamina": 10
+      },
+      "cooldown": 2000,
+      "msg": {
+        "cast": "$N壓低聲音發出一陣充滿威脅的低吼，聲浪震得空氣嗡嗡作響。",
+        "hit": "$n被這突如其來的聲浪震得動作一滯，胸口發悶，受到 $d 傷害！",
+        "miss": "$n緊守心神，沒有被這聲低吼影響。"
+      }
+    },
+    {
+      "name": "音波震爆",
+      "weight": 35,
+      "damageMod": 1.2,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.05,
+      "costs": {
+        "stamina": 25
+      },
+      "cooldown": 4000,
+      "msg": {
+        "cast": "$N猛地張口，一團肉眼可見的音爆雲向$n轟去！",
+        "hit": "巨大的轟鳴聲在$n耳邊炸響，耳膜破裂出血，受到 $d 傷害！",
+        "crit": "【重擊】音波直接震碎了$n的內耳平衡，讓$n天旋地轉倒在地上，受到 $d 傷害！",
+        "miss": "$n雙手摀住耳朵，張大嘴巴，減緩了音波的衝擊。"
+      }
+    },
+    {
+      "name": "戰慄尖嘯",
+      "weight": 20,
+      "damageMod": 0.9,
+      "hitRateMod": 0.1,
+      "critRateMod": 0.3,
+      "costs": {
+        "mp": 40
+      },
+      "cooldown": 5000,
+      "msg": {
+        "cast": "$N發出一聲極其尖銳、直刺靈魂的尖嘯。",
+        "hit": "$n只覺大腦如同被針刺一般劇痛，恐懼感油然而生，受到 $d 傷害！",
+        "crit": "【重擊】$n的精神防線崩潰，抱頭慘叫，完全喪失了戰鬥意志，受到 $d 傷害！",
+        "miss": "$n咬破舌尖，用劇痛讓自己保持清醒，抵抗了精神衝擊。"
+      }
+    },
+    {
+      "name": "龍王之吼",
+      "weight": 10,
+      "damageMod": 2.0,
+      "hitRateMod": -0.1,
+      "critRateMod": 0.5,
+      "costs": {
+        "mp": 80,
+        "stamina": 50
+      },
+      "cooldown": 10000,
+      "msg": {
+        "cast": "$N高高昂起頭顱，向著蒼穹發出一聲宣告王者降臨的咆哮！",
+        "hit": "大地在顫抖，空氣在燃燒，$n覺得自己如同狂風中的落葉，五臟六腑皆碎，受到 $d 傷害！",
+        "crit": "【重擊】這是來自生物鏈頂端的絕對壓制，$n肝膽俱裂，靈魂彷彿都被這一吼震散，受到 $d 傷害！",
+        "miss": "$n運起全身功力，在身前佈下層層氣牆，勉強擋住了這驚天動地的一吼。"
+      }
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "id": "basic_parry",
+  "name": "基礎招架",
+  "description": "利用手中的兵器或強健的肢體，格擋、架開敵人的攻擊，是所有戰鬥者必備的防禦技巧。",
+  "type": "REACTIVE",
+  "school": "COMMON",
+  "tags": [
+    "DEFENSIVE",
+    "PARRY",
+    "PHYSICAL",
+    "BASIC"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED",
+      "SWORD",
+      "BLADE",
+      "DAGGER",
+      "STAFF",
+      "SPEAR",
+      "AXE",
+      "HAMMER",
+      "WHIP"
+    ],
+    "allowMounted": true
+  },
+  "costs": {
+    "stamina": 3
+  },
+  "scaling": {
+    "parryRatePerLevel": 0.005
+  },
+  "mechanics": {
+    "parryRate": 0.15,
+    "maxLevel": 100,
+    "scaleStat": "STR",
+    "scaleFactor": 1.2,
+    "formulas": {
+      "successRate": "skill.mechanics.parryRate + (user.str * 0.005) + (user.dex * 0.005)"
+    }
+  },
+  "moves": [
+    {
+      "name": "正面封擋",
+      "weight": 50,
+      "msg": {
+        "success": "面對$n襲來的$w，$N猛地抬起$W，準確地架住了這一擊，發出一聲沉悶的撞擊聲。"
+      }
+    },
+    {
+      "name": "四兩撥千斤",
+      "weight": 40,
+      "msg": {
+        "success": "$N手腕翻轉，用$W在$n的$w側面輕輕一拍，運用巧勁將針對$l的攻勢引向身側。"
+      }
+    },
+    {
+      "name": "截擊發力點",
+      "weight": 35,
+      "msg": {
+        "success": "$N眼疾手快，揮動$W搶在$n招式用老之前，精準地格擋在$n$w的發力點上，半途截斷了攻擊。"
+      }
+    },
+    {
+      "name": "畫圓防禦",
+      "weight": 25,
+      "msg": {
+        "success": "$N雙手御使$W在胸前畫出一個圓弧，以柔克剛，$n的$w擊在防禦圈上被滑了開去。"
+      }
+    },
+    {
+      "name": "沉肩硬扛",
+      "weight": 30,
+      "msg": {
+        "success": "$N沉肩墜肘，大喝一聲用$W硬生生頂住了$n的$w，強大的衝擊力震得腳下塵土飛揚。"
+      }
+    },
+    {
+      "name": "預判攔截",
+      "weight": 45,
+      "msg": {
+        "success": "$N似乎看穿了$n的意圖，提前將$W橫在$l前方，$n收勢不及，$w正好撞在了$N的防禦上。"
+      }
+    },
+    {
+      "name": "卸力後撤",
+      "weight": 20,
+      "msg": {
+        "success": "$N向後滑退卸去衝力，同時舞動$W護住周身，雖顯狼狽但終究是將$n狂風暴雨般的$w擋在門外。"
+      }
+    },
+    {
+      "name": "壓制鎖定",
+      "weight": 15,
+      "msg": {
+        "success": "$N看準兩兵相交的瞬間，用力下壓$W，死死抵住$n的$w，使其無法繼續進攻。"
+      }
+    }
+  ]
+}

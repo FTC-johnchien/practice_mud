@@ -4,10 +4,9 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.application.command.annotation.CommandAlias;
-import com.example.htmlmud.application.service.WorldManager;
-import com.example.htmlmud.domain.actor.impl.MobActor;
-import com.example.htmlmud.domain.actor.impl.PlayerActor;
-import com.example.htmlmud.domain.actor.impl.RoomActor;
+import com.example.htmlmud.domain.actor.impl.Mob;
+import com.example.htmlmud.domain.actor.impl.Player;
+import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.MobKind;
 import com.example.htmlmud.infra.util.AnsiColor;
@@ -21,36 +20,30 @@ import lombok.extern.slf4j.Slf4j;
 @CommandAlias({"l", "see", "ls"}) // 支援 l, see, ls
 public class LookCommand implements PlayerCommand {
 
-  private final WorldManager worldManager;
-
   @Override
   public String getKey() {
     return "look";
   }
 
   @Override
-  public void execute(PlayerActor actor, String args) {
-    // 1. 取得玩家當前位置 ID
-    String roomId = actor.getCurrentRoomId();
+  public void execute(Player actor, String args) {
 
-    // 2. 查詢房間資料 (使用 WorldManager)
-    RoomActor roomActor = worldManager.getRoomActor(roomId);
+    // 查詢房間資料 (使用 WorldManager)
+    Room room = actor.getCurrentRoom();
 
-    if (roomActor == null) {
-      actor.reply("你處於一片虛空之中... (RoomID: " + roomId + " 不存在)");
+    if (room == null) {
+      actor.reply("你處於一片虛空之中... (玩家: " + actor.getName() + " 的 currentRoom 不存在)");
       return;
     }
 
     // 3. 產生房間描述
-    String roomDescription = buildRoomDescription(actor, roomActor);
-
-
+    String roomDescription = buildRoomDescription(actor, room);
 
     // 4. 回傳給玩家
     actor.reply(roomDescription);
   }
 
-  private String buildRoomDescription(PlayerActor actor, RoomActor room) {
+  private String buildRoomDescription(Player actor, Room room) {
     StringBuilder sb = new StringBuilder();
 
     // 標題 (亮白色)
@@ -69,8 +62,8 @@ public class LookCommand implements PlayerCommand {
     sb.append("\r\n");
 
     // 取得房間內的生物 (玩家與怪物，經過排序)
-    List<PlayerActor> players = room.getPlayers();
-    List<MobActor> mobs = room.getMobs();
+    List<Player> players = room.getPlayers();
+    List<Mob> mobs = room.getMobs();
     List<GameItem> items = room.getItems();
     log.info("players: {}, mobs: {} items: {}", players.size(), mobs.size(), items.size());
 
@@ -114,7 +107,6 @@ public class LookCommand implements PlayerCommand {
       sb.append(ColorText.wrap(AnsiColor.YELLOW, "[物品]: ")).append(String.join(", ", itemNames))
           .append("\r\n");
     }
-
 
     return sb.toString();
   }

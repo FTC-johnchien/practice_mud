@@ -1,8 +1,8 @@
 package com.example.htmlmud.domain.actor.behavior;
 
-import com.example.htmlmud.domain.actor.impl.LivingActor;
-import com.example.htmlmud.domain.actor.impl.MobActor;
-import com.example.htmlmud.domain.actor.impl.PlayerActor;
+import com.example.htmlmud.domain.actor.impl.Living;
+import com.example.htmlmud.domain.actor.impl.Mob;
+import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.protocol.ActorMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AggressiveBehavior implements MobBehavior {
 
   @Override
-  public void onEnter(MobActor actor) {
+  public void onEnter(Mob actor) {
     log.info("AggressiveBehavior onEnter()");
 
     // 進場時自動scanForEnemies
@@ -21,7 +21,7 @@ public class AggressiveBehavior implements MobBehavior {
   }
 
   @Override
-  public MobBehavior handle(MobActor self, ActorMessage.MobMessage msg) {
+  public MobBehavior handle(Mob self, ActorMessage.MobMessage msg) {
     MobBehavior next = null;
     switch (msg) {
       case ActorMessage.OnPlayerEnter(var playerId) -> {
@@ -45,7 +45,7 @@ public class AggressiveBehavior implements MobBehavior {
 
 
   @Override
-  public void onPlayerEnter(MobActor self, PlayerActor player) {
+  public void onPlayerEnter(Mob self, Player player) {
     // 主動怪邏輯：看到玩家就攻擊
     // 發送戰鬥指令給 BattleSystem
     self.sayToRoom("滾出去！" + player.getName());
@@ -53,13 +53,13 @@ public class AggressiveBehavior implements MobBehavior {
   }
 
   @Override
-  public void onInteract(MobActor self, PlayerActor player, String command) {
+  public void onInteract(Mob self, Player player, String command) {
     self.sayToRoom("吼！！！(它看起來不想跟你說話)");
     self.attack(player);
   }
 
   @Override
-  public void onDamaged(MobActor self, LivingActor attacker) {
+  public void onDamaged(Mob self, Living attacker) {
     self.sayToRoom("吼吼吼！！！(它看起來想殺死你)");
     self.attack(attacker);
   }

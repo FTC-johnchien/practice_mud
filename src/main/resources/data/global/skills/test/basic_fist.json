@@ -1,0 +1,139 @@
+{
+  "id": "basic_fist",
+  "name": "基本拳腳",
+  "description": "流傳於市井之間的健身拳法，雖然招式粗淺，但也能強身健體，是用於搏擊的基礎。",
+  "type": "PASSIVE",
+  "school": "COMMON",
+  "tags": [
+    "UNARMED",
+    "BASIC",
+    "PHYSICAL"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED"
+    ]
+  },
+  "costs": {
+    "stamina": 2
+  },
+  "scaling": {
+    "damagePerLevel": 0.5,
+    "hitRatePerLevel": 0.001,
+    "critRatePerLevel": 0.001
+  },
+  "mechanics": {
+    "critRate": 0.03,
+    "damage": 5,
+    "damageType": "BLUNT",
+    "hitRate": 0.90,
+    "maxLevel": 100,
+    "scaleStat": "STR",
+    "scaleFactor": 1.0,
+    "formulas": {
+      "damage": "skill.mechanics.damage + (user.str * 0.1)"
+    }
+  },
+  "moves": [
+    {
+      "name": "直拳突刺",
+      "weight": 50,
+      "damageMod": 0.9,
+      "hitRateMod": 0.15,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N左腳踏前一步，平平無奇的一記直拳擊向$n的$l。",
+        "hit": "$n躲閃不及，被這一拳結實地打中，受到 $d 傷害！",
+        "miss": "$n側身一讓，這記直拳擦著衣角打了個空。"
+      }
+    },
+    {
+      "name": "側身鞭腿",
+      "weight": 40,
+      "damageMod": 1.2,
+      "hitRateMod": -0.05,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N腰身一轉，右腿如鞭子般橫掃而出，踢向$n的$l。",
+        "hit": "只聽「啪」的一聲脆響，$n被這一腿踢得身形一晃，受到 $d 傷害！",
+        "miss": "$n向後一躍，避開了這勢大力沉的一腿。"
+      }
+    },
+    {
+      "name": "下勾重拳",
+      "weight": 30,
+      "damageMod": 1.4,
+      "hitRateMod": -0.15,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N伏低身子，突然爆發出一記兇猛的上勾拳轟向$n的$l。",
+        "hit": "$n下顎被重重擊中，整個人差點被打飛起來，受到 $d 傷害！",
+        "crit": "【重擊】這一拳結結實實地轟在要害上，$n頓時眼冒金星，鮮血直流，受到 $d 傷害！",
+        "miss": "$n猛地仰頭，險之又險地避開了這記重拳。"
+      }
+    },
+    {
+      "name": "手刀劈擊",
+      "weight": 35,
+      "damageMod": 1.0,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N五指併攏成刀，帶著呼嘯的風聲劈向$n的$l。",
+        "hit": "$n被手刀劈中，感覺像被木棍狠狠抽了一記，受到 $d 傷害！",
+        "miss": "$n舉臂一格，擋開了$N的手刀。"
+      }
+    },
+    {
+      "name": "貼身肘擊",
+      "weight": 25,
+      "damageMod": 1.3,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N欺身而上，瞬間拉近距離，手肘如鐵錘般撞向$n的$l。",
+        "hit": "「砰」的一聲悶響，$n被堅硬的肘部撞得氣血翻騰，受到 $d 傷害！",
+        "miss": "$n腳步靈活地向後滑動，讓$N的肘擊落在了空處。"
+      }
+    },
+    {
+      "name": "飛身膝撞",
+      "weight": 20,
+      "damageMod": 1.5,
+      "hitRateMod": -0.2,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N猛地躍起，雙手虛抓，膝蓋帶著全身的衝力頂向$n的$l。",
+        "hit": "$n被這記膝撞頂得連退數步，面露痛苦之色，受到 $d 傷害！",
+        "crit": "【重擊】$n被頂中胸腹要害，一口氣差點沒提上來，受到 $d 傷害！",
+        "miss": "$n側身閃過，順勢在$N背上推了一把，$N踉蹌落地。"
+      }
+    },
+    {
+      "name": "反手拍擊",
+      "weight": 15,
+      "damageMod": 0.8,
+      "hitRateMod": 0.2,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N右手一晃，利用腰力帶動手臂，反手一巴掌拍向$n。",
+        "hit": "$n沒料到這一招如此詭異，臉頰被重重扇了一下，受到 $d 傷害！",
+        "miss": "$n反應極快，縮頭躲過了這羞辱性的一擊。"
+      }
+    },
+    {
+      "name": "雙峰貫耳",
+      "weight": 10,
+      "damageMod": 1.1,
+      "hitRateMod": -0.1,
+      "critRateMod": 0.2,
+      "msg": {
+        "cast": "$N雙臂張開，隨即向中間猛合，雙拳同時擊向$n的兩側太陽穴。",
+        "hit": "$n只覺腦袋「嗡」的一聲巨響，雙耳劇痛，受到 $d 傷害！",
+        "crit": "【重擊】這一擊正中要害，$n頓時頭暈目眩，站立不穩，受到 $d 傷害！",
+        "miss": "$n雙手護頭，穩穩擋住了$N的雙拳合擊。"
+      }
+    }
+  ]
+}

@@ -6,7 +6,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.annotation.CommandAlias;
 import com.example.htmlmud.application.command.impl.MoveCommand;
-import com.example.htmlmud.domain.actor.impl.PlayerActor;
+import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.Direction;
 import lombok.extern.slf4j.Slf4j;
@@ -63,7 +63,7 @@ public class CommandDispatcher {
    *
    * @param input 玩家輸入的原始字串，例如 "look north" 或 "kill goblin"
    */
-  public void dispatch(PlayerActor actor, String input) {
+  public void dispatch(Player actor, String input) {
     if (input == null || input.isBlank())
       return;
 

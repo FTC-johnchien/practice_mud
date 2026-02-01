@@ -1,8 +1,8 @@
 package com.example.htmlmud.domain.actor.behavior;
 
-import com.example.htmlmud.domain.actor.impl.LivingActor;
-import com.example.htmlmud.domain.actor.impl.MobActor;
-import com.example.htmlmud.domain.actor.impl.PlayerActor;
+import com.example.htmlmud.domain.actor.impl.Living;
+import com.example.htmlmud.domain.actor.impl.Mob;
+import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.protocol.ActorMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +15,7 @@ public class MerchantBehavior implements MobBehavior {
   private final int shopId;
 
   @Override
-  public MobBehavior handle(MobActor self, ActorMessage.MobMessage msg) {
+  public MobBehavior handle(Mob self, ActorMessage.MobMessage msg) {
     MobBehavior next = null;
     switch (msg) {
       case ActorMessage.OnPlayerEnter(var playerId) -> {
@@ -38,13 +38,13 @@ public class MerchantBehavior implements MobBehavior {
   }
 
   @Override
-  public void onPlayerEnter(MobActor self, PlayerActor player) {
+  public void onPlayerEnter(Mob self, Player player) {
     // 禮貌性問候
     self.sayToRoom("歡迎光臨！需要買點什麼嗎？(輸入 'list' 查看商品)");
   }
 
   @Override
-  public void onInteract(MobActor self, PlayerActor player, String command) {
+  public void onInteract(Mob self, Player player, String command) {
     if ("list".equalsIgnoreCase(command)) {
       // 顯示商品列表
       // ShopService.showList(player, shopId);
@@ -58,7 +58,7 @@ public class MerchantBehavior implements MobBehavior {
   }
 
   @Override
-  public void onDamaged(MobActor self, LivingActor attacker) {
+  public void onDamaged(Mob self, Living attacker) {
     // 守衛邏輯：如果被打，可能呼叫警衛，或者單純不理會(因為無敵)
     self.sayToRoom("衛兵！有人在鬧事！");
     // Spawn guards...

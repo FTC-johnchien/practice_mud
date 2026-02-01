@@ -1,30 +1,37 @@
 package com.example.htmlmud.application.service;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.domain.actor.impl.LivingActor;
+import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.model.EquipmentSlot;
 import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.ItemType;
 import com.example.htmlmud.domain.model.map.ItemTemplate;
+import com.example.htmlmud.domain.model.map.RaceTemplate;
 import com.example.htmlmud.domain.service.CombatService;
+import com.example.htmlmud.domain.service.SkillService;
+import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Getter
 @Service
 @RequiredArgsConstructor
 public class LivingService {
 
-  @Getter
-  protected final ObjectMapper objectMapper;
+  private final ObjectMapper objectMapper;
 
-  @Getter
-  protected final CombatService combatService;
+  private final CombatService combatService;
 
-  public boolean equip(LivingActor self, GameItem item) {
+  private final TemplateRepository templateRepo;
+
+  private final SkillService skillService;
+
+
+  public boolean equip(Living self, GameItem item) {
     // 1. 取得 ItemTemplate (需要依賴 Service 或是 Item 本身帶有 slot 資訊)
     // 假設 GameItem 已經從 Template 複製了 slot 資訊，或者這裡去查 Template
     ItemTemplate tpl = item.getTemplate();
@@ -64,7 +71,7 @@ public class LivingService {
     return true;
   }
 
-  public boolean unequip(LivingActor self, EquipmentSlot slot) {
+  public boolean unequip(Living self, EquipmentSlot slot) {
     log.info("unequip slot:{}", slot);
 
     return true;
@@ -72,6 +79,18 @@ public class LivingService {
 
   public boolean use() {
     return false;
+  }
+
+  public int getAttacksPerRound(Living self) {
+    Optional<RaceTemplate> opt = templateRepo.findRace(self.getState().getRace());
+    if (opt.isPresent()) {
+      RaceTemplate race = opt.get();
+      if (race.combat() != null && race.combat().naturalAttacks() != null) {
+        return race.combat().attacksPerRound();
+      }
+    }
+
+    return 1;
   }
 
 }

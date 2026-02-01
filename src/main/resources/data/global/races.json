@@ -2,223 +2,145 @@
   {
     "id": "human",
     "name": "人類",
-    "description": "適應力極強的種族，雖然沒有突出的特長，但也沒有明顯的弱點。",
-    "size": "MEDIUM",
-    "statModifiers": {
-      "STR": 0,
-      "DEX": 0,
-      "CON": 0,
-      "INT": 0,
-      "WIS": 0,
-      "CHA": 0
+    "description": "這片大陸上最常見的種族。雖然沒有堅硬的鱗片或銳利的爪牙，但擁有極高的適應力與學習能力，擅長使用各種武器與工具。",
+    "stats": {
+      "STR": 1.0,
+      "CON": 1.0,
+      "DEX": 1.0,
+      "INT": 1.0
     },
-    "metabolism": {
-      "hungerRate": 1.0,
-      "thirstRate": 1.0
+    "bodyParts": [
+      "HEAD",
+      "BODY",
+      "ARMS",
+      "LEGS",
+      "HANDS",
+      "FEET",
+      "WAIST",
+      "NECK",
+      "FINGER",
+      "WRISTS"
+    ],
+    "combat": {
+      "naturalAttacks": [
+        {
+          "id": "basic_fist",
+          "weight": 80
+        },
+        {
+          "id": "mob_hit",
+          "weight": 20
+        }
+      ],
+      "naturalDodge": "basic_dodge",
+      "naturalParry": "basic_parry",
+      "naturalArmor": 0,
+      "attacksPerRound": 1
     },
-    "traits": [
-      "FAST_LEARNER",
-      "DIPLOMACY"
-    ],
-    "languages": [
-      "COMMON"
-    ],
-    "allowedClasses": [
-      "ALL"
-    ]
+    "innateSkills": {
+      "basic_parry": 0.5,
+      "basic_dodge": 0.5
+    },
+    "resistances": {
+      "FIRE": 0.0,
+      "ICE": 0.0,
+      "POISON": 0.0,
+      "PHYSICAL": 0.0
+    }
   },
   {
-    "id": "elf",
-    "name": "精靈",
-    "description": "森林的守護者，身手矯健且長壽，對魔法有天然的親和力。",
-    "size": "MEDIUM",
-    "statModifiers": {
-      "STR": -2,
-      "DEX": 4,
-      "CON": -2,
-      "INT": 2,
-      "WIS": 2,
-      "CHA": 1
-    },
-    "metabolism": {
-      "hungerRate": 0.8,
-      "thirstRate": 1.0
-    },
-    "traits": [
-      "NIGHT_VISION",
-      "MAGIC_RESIST_LOW",
-      "BOW_MASTERY"
-    ],
-    "languages": [
-      "COMMON",
-      "ELVISH"
-    ],
-    "allowedClasses": [
-      "MAGE",
-      "ROGUE",
-      "CLERIC",
-      "SWORDSMAN"
-    ]
+    "id": "rat",
+    "name": "鼠類",
+    "combat": {
+      "naturalAttacks": [
+        {
+          "id": "mob_claw",
+          "weight": 30
+        },
+        {
+          "id": "mob_bite",
+          "weight": 50
+        }
+      ]
+    }
   },
   {
-    "id": "dwarf",
-    "name": "矮人",
-    "description": "生活在地下礦坑的頑固種族，喜愛啤酒與鍛造。",
-    "size": "MEDIUM",
-    "statModifiers": {
-      "STR": 2,
-      "DEX": -2,
-      "CON": 4,
-      "INT": 0,
-      "WIS": 1,
-      "CHA": -2
-    },
-    "metabolism": {
-      "hungerRate": 1.2,
-      "thirstRate": 2.0
-    },
-    "traits": [
-      "POISON_RESIST",
-      "DARK_VISION",
-      "STONE_SKIN"
-    ],
-    "languages": [
-      "COMMON",
-      "DWARVISH"
-    ],
-    "allowedClasses": [
-      "WARRIOR",
-      "CLERIC",
-      "BLACKSMITH"
-    ]
+    "id": "wolf",
+    "name": "狼族",
+    "combat": {
+      "naturalAttacks": [
+        {
+          "id": "mob_claw",
+          "weight": 30
+        },
+        {
+          "id": "mob_bite",
+          "weight": 50
+        },
+        {
+          "id": "mob_tail_swipe",
+          "weight": 20
+        }
+      ]
+    }
   },
   {
-    "id": "orc",
-    "name": "半獸人",
-    "description": "崇尚力量與榮耀的戰鬥種族，皮膚呈綠色，長有獠牙。",
-    "size": "LARGE",
-    "statModifiers": {
-      "STR": 5,
-      "DEX": -2,
-      "CON": 5,
-      "INT": -3,
-      "WIS": -1,
-      "CHA": -2
-    },
-    "metabolism": {
-      "hungerRate": 1.5,
-      "thirstRate": 1.0
-    },
-    "traits": [
-      "HARDINESS",
-      "BLOOD_FURY",
-      "AXE_SPECIALIZATION"
-    ],
-    "languages": [
-      "ORCISH",
-      "COMMON"
-    ],
-    "allowedClasses": [
-      "WARRIOR",
-      "SHAMAN",
-      "ROGUE"
-    ]
+    "id": "humanoid",
+    "name": "類人族",
+    "combat": {
+      "naturalAttacks": [
+        {
+          "id": "mob_hit"
+        }
+      ]
+    }
   },
   {
-    "id": "halfling",
-    "name": "哈比人",
-    "description": "身材矮小，腳掌長有厚毛，性格樂觀，擅長躲藏。",
-    "size": "SMALL",
-    "statModifiers": {
-      "STR": -3,
-      "DEX": 5,
-      "CON": -1,
-      "INT": 1,
-      "WIS": 0,
-      "CHA": 2
+    "id": "dragon",
+    "name": "龍族",
+    "description": "遠古的強大生物，擁有堅硬的鱗片與無與倫比的力量。",
+    "stats": {
+      "STR": 5.0,
+      "CON": 8.0,
+      "DEX": 0.8,
+      "INT": 4.0
     },
-    "metabolism": {
-      "hungerRate": 1.5,
-      "thirstRate": 1.0
+    "bodyParts": [
+      "HEAD",
+      "BODY",
+      "WINGS",
+      "TAIL",
+      "CLAWS"
+    ],
+    "combat": {
+      "naturalArmor": 50,
+      "naturalAttacks": [
+        {
+          "id": "mob_claw",
+          "weight": 40
+        },
+        {
+          "id": "mob_bite",
+          "weight": 30
+        },
+        {
+          "id": "mob_tail_swipe",
+          "weight": 20
+        },
+        {
+          "id": "mob_smash",
+          "weight": 10
+        }
+      ],
+      "attacksPerRound": 3
     },
-    "traits": [
-      "LUCKY",
-      "STEALTHY",
-      "ESCAPE_ARTIST"
-    ],
-    "languages": [
-      "COMMON",
-      "HALFLING"
-    ],
-    "allowedClasses": [
-      "ROGUE",
-      "MAGE",
-      "MONK"
-    ]
-  },
-  {
-    "id": "undead",
-    "name": "被遺忘者",
-    "description": "擺脫了巫妖王控制的亡靈，意志堅強但身體脆弱。",
-    "size": "MEDIUM",
-    "statModifiers": {
-      "STR": 0,
-      "DEX": 0,
-      "CON": 0,
-      "INT": 2,
-      "WIS": 2,
-      "CHA": -5
+    "innateSkills": {
+      "mob_dragon_breath": 1.0,
+      "mob_dragon_roar": 0.8
     },
-    "metabolism": {
-      "hungerRate": 0.0,
-      "thirstRate": 0.0
-    },
-    "traits": [
-      "UNDEAD_BODY",
-      "UNDERWATER_BREATH",
-      "CANNIBALIZE"
-    ],
-    "languages": [
-      "COMMON",
-      "GUTTERSPEAK"
-    ],
-    "allowedClasses": [
-      "WARRIOR",
-      "MAGE",
-      "ROGUE",
-      "WARLOCK"
-    ]
-  },
-  {
-    "id": "beastkin",
-    "name": "妖族",
-    "description": "半人半獸的型態，擁有強大的野性直覺。",
-    "size": "MEDIUM",
-    "statModifiers": {
-      "STR": 3,
-      "DEX": 3,
-      "CON": 2,
-      "INT": -2,
-      "WIS": -2,
-      "CHA": -1
-    },
-    "metabolism": {
-      "hungerRate": 1.2,
-      "thirstRate": 1.0
-    },
-    "traits": [
-      "NATURAL_WEAPON",
-      "REGENERATION",
-      "SENSE_DANGER"
-    ],
-    "languages": [
-      "COMMON",
-      "BEAST_TONGUE"
-    ],
-    "allowedClasses": [
-      "MONK",
-      "WARRIOR",
-      "ROGUE"
-    ]
+    "resistances": {
+      "FIRE": 1.0,
+      "PHYSICAL": 0.3
+    }
   }
 ]

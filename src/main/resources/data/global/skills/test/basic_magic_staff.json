@@ -1,0 +1,141 @@
+{
+  "id": "basic_magic_staff",
+  "name": "法杖格鬥術",
+  "description": "法師在魔力耗盡或被近身時的最後防線。雖然動作不如戰士熟練，但法杖本身蘊含的魔力能增強敲擊的威力。",
+  "type": "PASSIVE",
+  "school": "COMMON",
+  "tags": [
+    "WEAPON",
+    "STAFF",
+    "BASIC",
+    "BLUNT"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      "STAFF",
+      "WAND",
+      "ROD",
+      "SCEPTER"
+    ]
+  },
+  "costs": {
+    "stamina": 3
+  },
+  "scaling": {
+    "damagePerLevel": 0.5,
+    "hitRatePerLevel": 0.001,
+    "critRatePerLevel": 0.002
+  },
+  "mechanics": {
+    "critRate": 0.03,
+    "damage": 6,
+    "damageType": "BLUNT",
+    "hitRate": 0.85,
+    "maxLevel": 100,
+    "scaleStat": "STR",
+    "scaleFactor": 0.8,
+    "formulas": {
+      "damage": "skill.mechanics.damage + (user.str * 0.08) + (user.int * 0.08)"
+    }
+  },
+  "moves": [
+    {
+      "name": "笨拙揮擊",
+      "weight": 50,
+      "damageMod": 1.0,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N雙手握住$W，有些笨拙地掄圓了向$n砸去，帶起呼呼風聲。",
+        "hit": "$n沒料到這毫無章法的一擊，被$W結結實實地砸在身上，受到 $d 傷害！",
+        "miss": "$n輕鬆地向後一跳，看著$W笨重地砸在空處。"
+      }
+    },
+    {
+      "name": "晶體撞擊",
+      "weight": 45,
+      "damageMod": 1.2,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N將$W頂端的魔法寶石對準$n，猛地向前一送，利用硬物撞擊$n的$l。",
+        "hit": "堅硬的寶石撞擊在$n身上，$W中溢出的微弱魔力加重了傷勢，受到 $d 傷害！",
+        "miss": "$n側身避開，寶石擦著衣角掠過，上面流動的光芒晃了$n一下眼。"
+      }
+    },
+    {
+      "name": "驅逐橫掃",
+      "weight": 40,
+      "damageMod": 0.8,
+      "hitRateMod": 0.15,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N為了拉開距離，驚慌地揮動$W，像趕蒼蠅一樣橫掃$n的前方。",
+        "hit": "$n被這亂揮的一杖掃中，$W上附著的防護力場將$n震退了幾步，受到 $d 傷害！",
+        "miss": "$n看穿了$N想要拉開距離的意圖，矮身鑽過杖影，反而欺身更近。"
+      }
+    },
+    {
+      "name": "魔力震盪",
+      "weight": 30,
+      "damageMod": 1.1,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N高舉$W重重頓地，引導杖身的震動波傳導向$n。",
+        "hit": "$W雖然沒有直接擊中，但激起的魔力衝擊波撞在$n胸口，受到 $d 傷害！",
+        "miss": "$n感覺到地面的魔力流動，跳向一旁的岩石，避開了震盪範圍。"
+      }
+    },
+    {
+      "name": "當頭棒喝",
+      "weight": 25,
+      "damageMod": 1.3,
+      "hitRateMod": -0.1,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N咬緊牙關，將全身力氣灌注於$W，不管不顧地對準$n的腦袋砸下。",
+        "hit": "$n被這一記重擊砸得七葷八素，額頭鮮血直流，受到 $d 傷害！",
+        "crit": "【重擊】$W擊中的瞬間爆發出一團耀眼的閃光，$n慘叫一聲，感覺靈魂都顫抖了一下，受到 $d 傷害！",
+        "miss": "$N用力過猛導致重心不穩，$n趁機繞到了$N的身後。"
+      }
+    },
+    {
+      "name": "杖尾突刺",
+      "weight": 35,
+      "damageMod": 0.9,
+      "hitRateMod": 0.1,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N倒轉$W，用包裹著金屬的杖尾狠狠捅向$n的$l。",
+        "hit": "「咚」的一聲悶響，金屬杖尾頂在$n的軟肋上，痛得$n彎下了腰，受到 $d 傷害！",
+        "miss": "$n揮動$w格擋，杖尾擊打在兵器上，震得$N虎口發麻。"
+      }
+    },
+    {
+      "name": "能量過載",
+      "weight": 10,
+      "damageMod": 1.5,
+      "hitRateMod": -0.2,
+      "critRateMod": 0.2,
+      "msg": {
+        "cast": "$N手中的$W突然發出不穩定的嗡鳴聲，隨即被$N當作揮發魔力的導體砸向$n。",
+        "hit": "$W在接觸$n的瞬間發生了小規模的魔力爆炸，將$n炸得焦頭爛額，受到 $d 傷害！",
+        "crit": "【重擊】不穩定的元素亂流撕裂了$n的防禦，造成了物理與魔法的混合打擊，受到 $d 點嚴重傷害！",
+        "miss": "$n感覺到危險的氣息，連滾帶爬地躲開，爆炸的氣浪將地面的草皮掀飛。"
+      }
+    },
+    {
+      "name": "防禦式",
+      "weight": 20,
+      "damageMod": 0.7,
+      "hitRateMod": 0.2,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N雙手橫持$W護住胸前，趁著$n攻擊的空隙，用力向前一推。",
+        "hit": "$n收勢不及，撞在橫著的杖身上，被硬生生頂了回去，受到 $d 傷害！",
+        "miss": "$n虛晃一招，騙過$N的防禦動作，從側面發起了攻擊。"
+      }
+    }
+  ]
+}

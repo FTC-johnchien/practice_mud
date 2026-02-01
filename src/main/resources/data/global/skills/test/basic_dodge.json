@@ -1,0 +1,96 @@
+{
+  "id": "basic_dodge",
+  "name": "身法閃避",
+  "description": "生物本能或經由訓練而成的迴避技巧，在遭受攻擊的瞬間做出反應以規避傷害。",
+  "type": "REACTIVE",
+  "school": "COMMON",
+  "tags": [
+    "DEFENSIVE",
+    "EVASION",
+    "PHYSICAL"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED",
+      "SWORD",
+      "BLADE",
+      "DAGGER",
+      "STAFF",
+      "SPEAR"
+    ]
+  },
+  "costs": {
+    "stamina": 2
+  },
+  "scaling": {
+    "dodgeRatePerLevel": 0.005
+  },
+  "mechanics": {
+    "dodgeRate": 0.15,
+    "maxLevel": 100,
+    "scaleStat": "AGI",
+    "scaleFactor": 1.2,
+    "formulas": {
+      "successRate": "skill.mechanics.dodgeRate + (user.agi * 0.01) - (target.hitRate * 0.5)"
+    }
+  },
+  "moves": [
+    {
+      "name": "滑步側閃",
+      "weight": 50,
+      "msg": {
+        "success": "$n手中的$w帶著風聲劈來，$N腳步輕輕一滑，側身讓過了這一擊。"
+      }
+    },
+    {
+      "name": "低身縮頭",
+      "weight": 40,
+      "msg": {
+        "success": "眼看$n的$w就要擊中$l，$N猛地縮頸藏頭，驚險地避開了致命一擊。"
+      }
+    },
+    {
+      "name": "鐵板橋",
+      "weight": 20,
+      "msg": {
+        "success": "$N上半身毫無徵兆地向後仰倒，呈現鐵板橋的姿勢，$n的$w貼著$N的鼻尖掃過，毫髮無傷。"
+      }
+    },
+    {
+      "name": "懶驢打滾",
+      "weight": 30,
+      "msg": {
+        "success": "面對$n兇猛的攻勢，$N不顧形象地就地一滾，雖然狼狽但成功躲開了$w的攻擊。"
+      }
+    },
+    {
+      "name": "騰空躍起",
+      "weight": 35,
+      "msg": {
+        "success": "$N雙腿發力，整個人高高躍起，$n的$w從$N的腳下揮空。"
+      }
+    },
+    {
+      "name": "殘像迷蹤",
+      "weight": 10,
+      "msg": {
+        "success": "$N的身形瞬間變得模糊，$n一招擊中了$N留下的殘像，而真身早已退至三尺之外。"
+      }
+    },
+    {
+      "name": "貼身換位",
+      "weight": 25,
+      "msg": {
+        "success": "$N不退反進，大膽地貼近$n的懷中，讓$n手中的$w因為距離太近而無法施展，攻擊落空。"
+      }
+    },
+    {
+      "name": "藉力旋轉",
+      "weight": 15,
+      "msg": {
+        "success": "$N在被擊中的前一刻順著兵器的力道旋轉身體，如同陀螺一般將$n的$w力道卸在一旁。"
+      }
+    }
+  ]
+}

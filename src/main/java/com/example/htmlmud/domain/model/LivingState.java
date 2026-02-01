@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import com.example.htmlmud.domain.model.vo.Gender;
 import com.example.htmlmud.infra.persistence.entity.SkillEntry;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
@@ -12,24 +11,24 @@ import lombok.Data;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LivingState {
-  public Gender gender; // 性別
-  public String race = "DRAGON"; // 種族 (人類、精靈等，通常會給予不同的初始屬性加成)
+  public Gender gender;
+  public String race = "DRAGON";
 
   public int level = 1;
-  public int age = 12; // 年齡 age
-  public int maxAge = 100; // 最大年齡
+  public int age = 12;
+  public int maxAge = 100;
 
   public int hp = 100;
   public int maxHp = 100;
   public int mp = 50;
   public int maxMp = 50;
-  public int stamina = 100; // 體力值
-  public int maxStamina = 100; // 最大體力值
+  public int stamina = 100;
+  public int maxStamina = 100;
 
-  private int qi = 50; // 氣 (用於武功傷害計算)
-  private int maxQi = 50; // 最大氣值
-  private int san = 100; // 理智值
-  private int maxSan = 100; // 最大理智值
+  // private int qi = 50; // 氣 (用於武功傷害計算)
+  // private int maxQi = 50; // 最大氣值
+  // private int san = 100; // 理智值
+  // private int maxSan = 100; // 最大理智值
 
 
   public int coin = 0; // 錢幣
@@ -60,53 +59,22 @@ public class LivingState {
 
   // === 裝備欄位 ===
   public Map<EquipmentSlot, GameItem> equipment = new HashMap<>();
+  // 已學到的技能
+  public Map<String, SkillEntry> learnedSkills = new HashMap<>();
+  // 已裝備的技能
+  public Map<SkillCategory, String> enabledSkills = new HashMap<>();
 
-  public Map<SkillCategory, SkillEntry> skills = new HashMap<>();
+
+  // 數值意義：0.0 = 無抗性, 0.5 = 減傷 50%, -0.5 = 增傷 50% (弱點), 1.0 = 免疫。
+  public transient Map<DamageType, Double> resistances = new HashMap<>();
 
 
 
-  // === 戰鬥狀態 ===
-  @JsonIgnore
-  public transient boolean isInCombat = false;
-  // 當前鎖定的攻擊目標 ID (null 代表沒在打架)
-  @JsonIgnore
-  public transient String combatTargetId;
-  // 下一次可以攻擊的時間點 (System.currentTimeMillis)
-  @JsonIgnore
-  public transient long nextAttackTime = 0;
-  // 附加增益/減益
-  // @JsonIgnore
-  // public transient Map<String, Object> dynamicProps = new HashMap<>();
-
-  // 動態戰鬥資源 (不一定存檔，戰鬥結束可能歸零)
+  // 動態戰鬥資源 (不需要存檔，戰鬥結束清除)
   // Key: "charge", "combo_points", "rage"
-  private Map<String, Integer> combatResources = new HashMap<>();
+  private transient Map<String, Integer> combatResources = new HashMap<>();
 
 
-  // 衍生屬性 (快取用，每次穿脫裝備後重新計算 通常不存 DB，由基礎屬性計算，但為了簡單先存這裡)
-  public transient int minDamage = str; // 最小傷害
-  public transient int maxDamage = str; // 最大傷害
-  public transient int hitRate = 0; // 命中率
-  public transient int defense = 0; // 防禦力
-  public transient int attackSpeed = 2000; // 攻擊速度 (毫秒，例如 2000 代表 2秒打一次)
-  public transient int weightCapacity = str * 10;
-
-
-  // 建構子與輔助方法...
-  @JsonIgnore
-  public boolean isDead() {
-    return hp <= 0;
-  }
-
-  // 判斷是否在戰鬥中
-  @JsonIgnore
-  public boolean isInCombat() {
-    return isInCombat && combatTargetId != null;
-  }
-
-  public boolean isBusy() {
-    return (isInCombat) ? isInCombat : false;
-  }
 
   public LivingState deepCopy() {
     LivingState copy = new LivingState();
@@ -130,16 +98,23 @@ public class LivingState {
 
 
 
-    // Map 也要複製
-    // if (this.attributes != null) {
-    // copy.attributes = new HashMap<>(this.attributes);
-    // }
     copy.str = this.str;
     copy.intelligence = this.intelligence;
     copy.dex = this.dex;
     copy.con = this.con;
 
     return copy;
+  }
+
+  /**
+   * 取得指定類型的抗性 (包含父類別抗性的加總)
+   */
+  public double getResistance(DamageType type) {
+    double res = resistances.getOrDefault(type, 0.0);
+    if (type.getParent() != null) {
+      res += getResistance(type.getParent());
+    }
+    return res;
   }
 
   // --- 用於 ResourceType.CHARGE 的方法 ---
@@ -154,4 +129,5 @@ public class LivingState {
       combatResources.remove(key);
     }
   }
+
 }

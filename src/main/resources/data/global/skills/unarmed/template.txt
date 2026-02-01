@@ -832,3 +832,21 @@ public void resolveAttack(Actor attacker, Actor defender, SkillMove move) {
 
 * 如果是為了**開發效率**，你可以全部填 `null`，完全依賴對方的 Dodge 訊息，功能依然正常。
 * 如果是為了**遊戲品質**，建議在「大招」或「動作感強」的招式上加上 `miss` 描述。
+
+
+
+"mechanics": {
+    // 這裡定義動態數值的公式字串
+    "formulas": {
+
+      // 需求 1: Charge 每回合依 wudang_force 等級計算
+      // 假設公式：基礎 2 點 + (武當心法等級 * 0.5)
+      // 如果沒學武當心法，wudang_force.level 會是 0
+      "chargeRegen": "2 + (wudang_force.level * 0.5)",
+
+      // 需求 2: 連擊次數 = 太極拳等級 / 10 - 2
+      // 這裡使用 Math.max 確保不會小於 0
+      // skill.level 代表本技能(太極拳)等級
+      "maxComboCount": "Math.max(0, (skill.level / 10) - 2)"
+    }
+  },

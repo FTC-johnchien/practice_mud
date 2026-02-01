@@ -8,10 +8,10 @@ import java.util.concurrent.CompletableFuture;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.application.command.parser.TargetSelector;
 import com.example.htmlmud.application.factory.WorldFactory;
-import com.example.htmlmud.domain.actor.impl.LivingActor;
-import com.example.htmlmud.domain.actor.impl.MobActor;
-import com.example.htmlmud.domain.actor.impl.PlayerActor;
-import com.example.htmlmud.domain.actor.impl.RoomActor;
+import com.example.htmlmud.domain.actor.impl.Living;
+import com.example.htmlmud.domain.actor.impl.Mob;
+import com.example.htmlmud.domain.actor.impl.Player;
+import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.Direction;
 import com.example.htmlmud.domain.model.GameItem;
@@ -52,14 +52,14 @@ public class RoomService {
     return templateRepo.findRoom(roomId).orElse(null);
   }
 
-  public void doEnter(RoomActor self, LivingActor actor, Direction direction,
+  public void doEnter(Room self, Living actor, Direction direction,
       CompletableFuture<Void> future) {
     // enter
     enter(self, actor, direction);
 
     // 當actor為玩家時，要將room里的mobs丟出playerEnter的message
     switch (actor) {
-      case PlayerActor player -> {
+      case Player player -> {
         self.getMobs().forEach(m -> m.onPlayerEnter(player.getId()));
       }
       // case MobActor mob -> {}
@@ -69,14 +69,14 @@ public class RoomService {
     future.complete(null);
   }
 
-  public void doLeave(RoomActor self, LivingActor actor, Direction direction) {
+  public void doLeave(Room self, Living actor, Direction direction) {
     String livingName = null;
     switch (actor) {
-      case PlayerActor player -> {
+      case Player player -> {
         self.getPlayers().remove(player);
         livingName = player.getNickname();
       }
-      case MobActor mob -> {
+      case Mob mob -> {
         self.getMobs().remove(mob);
         livingName = mob.getName();
       }
@@ -89,7 +89,7 @@ public class RoomService {
   }
 
   @Deprecated
-  public void doLook(RoomActor roomActor, String playerId, CompletableFuture<String> future) {
+  public void doLook(Room roomActor, String playerId, CompletableFuture<String> future) {
     log.info("Player {} Look room", playerId);
 
     // StringBuilder sb = new StringBuilder();
@@ -112,8 +112,8 @@ public class RoomService {
     future.complete(null);
   }
 
-  public void doSay(RoomActor roomActor, String sourceId, String content) {
-    PlayerActor speaker = roomActor.getPlayers().stream().filter(p -> p.getId().equals(sourceId))
+  public void doSay(Room roomActor, String sourceId, String content) {
+    Player speaker = roomActor.getPlayers().stream().filter(p -> p.getId().equals(sourceId))
         .findFirst().orElse(null);
     String name = (speaker != null) ? speaker.getName() : "有人";
 
@@ -121,14 +121,14 @@ public class RoomService {
     // doBroadcast(roomActor, name + ": " + content);
   }
 
-  public void doTryPickItem(RoomActor roomActor, String args, PlayerActor picker,
+  public void doTryPickItem(Room roomActor, String args, Player picker,
       CompletableFuture<GameItem> future) {
     GameItem item = tryPickItem(roomActor, args, picker);
     future.complete(item);
   }
 
   // 處理邏輯
-  public void doTick(RoomActor roomActor, long tickCount, long timestamp) {
+  public void doTick(Room roomActor, long tickCount, long timestamp) {
     // log.info("{} tickCount: {}", id, tickCount);
 
 
@@ -140,31 +140,30 @@ public class RoomService {
     // === 2. 轉發給 Actor ===
     // 過濾掉 "完全沒事做且沒玩家在場" 的怪物
     if (!roomActor.getPlayers().isEmpty()
-        || roomActor.getMobs().stream().anyMatch(m -> m.getState().isInCombat())) {
+        || roomActor.getMobs().stream().anyMatch(m -> m.isInCombat())) {
       // ActorMessage.Tick msg = new ActorMessage.Tick(tickCount, timestamp);
 
-      for (MobActor mob : roomActor.getMobs()) {
+      for (Mob mob : roomActor.getMobs()) {
         mob.tick(tickCount, timestamp);
       }
 
-      for (PlayerActor player : roomActor.getPlayers()) {
+      for (Player player : roomActor.getPlayers()) {
         // log.info("send player");
         player.tick(tickCount, timestamp);
       }
     }
   }
 
-  public void doBroadcast(RoomActor roomActor, String message) {
+  public void doBroadcast(Room roomActor, String message) {
     roomActor.getPlayers().forEach(p -> p.reply(message));
   }
 
-  public void doBroadcastToOthers(RoomActor roomActor, String actorId, String message) {
+  public void doBroadcastToOthers(Room roomActor, String actorId, String message) {
     roomActor.getPlayers().stream().filter(p -> !p.getId().equals(actorId))
         .forEach(p -> p.reply(message));
   }
 
-  public void doCombatBroadcast(RoomActor self, LivingActor source, LivingActor target,
-      String messageTemplate) {
+  public void doCombatBroadcast(Room self, Living source, Living target, String messageTemplate) {
     if (source == null) {
       throw new MudException("source is null");
     }
@@ -173,18 +172,18 @@ public class RoomService {
     }
 
     // 1. 取得房間內所有人 (包含做動作的人自己)
-    List<LivingActor> audiences = new ArrayList<>();
+    List<Living> audiences = new ArrayList<>();
     audiences.addAll(self.getPlayers());
     // audiences.addAll(self.getMobs()); // 怪物通常不需要收訊息，除非有 AI 反應
 
     // 2. 對每個人發送「客製化」的訊息
-    for (LivingActor receiver : audiences) {
+    for (Living receiver : audiences) {
       messageUtil.send(messageTemplate, source, target, receiver);
     }
   }
 
-  public void doFindActor(RoomActor self, String actorId, CompletableFuture<LivingActor> future) {
-    Optional<LivingActor> opt = findActor(self, actorId);
+  public void doFindActor(Room self, String actorId, CompletableFuture<Living> future) {
+    Optional<Living> opt = findActor(self, actorId);
     if (opt.isEmpty()) {
       future.completeExceptionally(
           new MudException("ActorId:" + actorId + " not found in roomId:" + self.getId()));
@@ -195,11 +194,11 @@ public class RoomService {
   }
 
   // 產生快照
-  public void getPlayersSnapshot(RoomActor roomActor, CompletableFuture<List<PlayerActor>> future) {
+  public void getPlayersSnapshot(Room roomActor, CompletableFuture<List<Player>> future) {
     try {
       // 排序規則：name
-      List<PlayerActor> sortedPlayers = roomActor.getPlayers().stream()
-          .sorted(Comparator.comparing(PlayerActor::getName)).toList();
+      List<Player> sortedPlayers =
+          roomActor.getPlayers().stream().sorted(Comparator.comparing(Player::getName)).toList();
       future.complete(sortedPlayers);
     } catch (Exception e) {
       log.error("getPlayersSnapshot error", e);
@@ -210,14 +209,12 @@ public class RoomService {
   /**
    * 獲取有序快照 排序規則：先根據進入時間 (老鳥在前)，如果時間一樣，再比對 ID
    */
-  public void getMobsSnapshot(RoomActor roomActor, CompletableFuture<List<MobActor>> future) {
+  public void getMobsSnapshot(Room roomActor, CompletableFuture<List<Mob>> future) {
     try {
       // 排序規則：名稱 -> 進入時間(ArrayList有序，不用這段) -> ID
-      List<MobActor> sortedMobs =
-          roomActor
-              .getMobs().stream().sorted(Comparator
-                  .comparing((MobActor m) -> m.getTemplate().name()).thenComparing(MobActor::getId))
-              .toList();
+      List<Mob> sortedMobs = roomActor.getMobs().stream()
+          .sorted(Comparator.comparing((Mob m) -> m.getTemplate().name()).thenComparing(Mob::getId))
+          .toList();
       future.complete(sortedMobs);
     } catch (Exception e) {
       log.error("getMobsSnapshot error", e);
@@ -225,7 +222,7 @@ public class RoomService {
     }
   }
 
-  public void getItemsSnapshot(RoomActor roomActor, CompletableFuture<List<GameItem>> future) {
+  public void getItemsSnapshot(Room roomActor, CompletableFuture<List<GameItem>> future) {
     try {
       // 排序規則：名稱 -> 進入時間(ArrayList有序，不用這段) -> ID
       List<GameItem> sortedItems =
@@ -243,7 +240,7 @@ public class RoomService {
   /**
    * 房間初次載入時的生怪邏輯
    */
-  public void spawnInitial(RoomActor roomActor) {
+  public void spawnInitial(Room roomActor) {
     List<SpawnRule> spawnRules = roomActor.getTemplate().spawnRules();
     if (spawnRules != null && !spawnRules.isEmpty()) {
       for (SpawnRule rule : spawnRules) {
@@ -257,12 +254,12 @@ public class RoomService {
     }
   }
 
-  public void dropItem(RoomActor roomActor, LivingActor actor, GameItem item,
+  public void dropItem(Room roomActor, Living actor, GameItem item,
       CompletableFuture<String> future) {
 
   }
 
-  public void toRecord(RoomActor roomActor, CompletableFuture<RoomStateRecord> future) {
+  public void toRecord(Room roomActor, CompletableFuture<RoomStateRecord> future) {
     try {
       RoomStateRecord record = toRecord(roomActor);
       future.complete(record);
@@ -282,7 +279,7 @@ public class RoomService {
 
   }
 
-  private void spawnOneMob(RoomActor roomActor, SpawnRule rule) {
+  private void spawnOneMob(Room roomActor, SpawnRule rule) {
 
     // 處理機率 (例如：稀有怪只有 10% 機率出現)
     if (Math.random() > rule.rate()) {
@@ -290,7 +287,7 @@ public class RoomService {
     }
 
     // 1. 呼叫工廠產生 MobActor (這裡會給予 UUID)
-    MobActor mob = worldFactory.createMob(rule.id());
+    Mob mob = worldFactory.createMob(rule.id());
     try {
       log.info("{}: {} - {}", mob.getId(), mob.getName(),
           objectMapper.writeValueAsString(mob.getTemplate()));
@@ -299,7 +296,7 @@ public class RoomService {
     }
 
     // // 2. 設定位置
-    mob.setCurrentRoomId(roomActor.getId());
+    mob.setCurrentRoom(roomActor);
 
     // // 3. 加入房間列表
     roomActor.getMobs().add(mob);
@@ -307,7 +304,7 @@ public class RoomService {
     log.info("Spawned {} in room {}", mob.getTemplate().name(), roomActor.getId());
   }
 
-  private void spawnOneItem(RoomActor roomActor, SpawnRule rule) {
+  private void spawnOneItem(Room roomActor, SpawnRule rule) {
     // 處理機率 (例如：稀有怪只有 10% 機率出現)
     if (Math.random() > rule.rate()) {
       return;
@@ -324,16 +321,16 @@ public class RoomService {
 
 
 
-  private void enter(RoomActor self, LivingActor actor, Direction direction) {
+  private void enter(Room self, Living actor, Direction direction) {
     String livingName = null;
     switch (actor) {
-      case PlayerActor player -> {
+      case Player player -> {
         livingName = player.getNickname();
         if (!self.getPlayers().contains(player)) {
           self.getPlayers().add(player);
         }
       }
-      case MobActor mob -> {
+      case Mob mob -> {
         livingName = mob.getName();
         if (!self.getMobs().contains(mob)) {
           self.getMobs().add(mob);
@@ -341,14 +338,14 @@ public class RoomService {
       }
     }
 
-    actor.setCurrentRoomId(self.getId());
+    actor.setCurrentRoom(self);
 
     String arriveMsg =
         ColorText.wrap(AnsiColor.YELLOW, livingName + " 從 " + direction.getDisplayName() + " 過來了。");
     doBroadcastToOthers(self, actor.getId(), arriveMsg);
   }
 
-  private GameItem tryPickItem(RoomActor roomActor, String args, PlayerActor picker) {
+  private GameItem tryPickItem(Room roomActor, String args, Player picker) {
     log.info("tryPickItem: {}", args);
 
     GameItem targetItem = targetSelector.selectItem(roomActor.getItems(), args);
@@ -361,16 +358,16 @@ public class RoomService {
     return targetItem;
   }
 
-  private Optional<LivingActor> findActor(RoomActor self, String actorId) {
+  private Optional<Living> findActor(Room self, String actorId) {
 
     // 先檢查mob
-    for (MobActor mob : self.getMobs()) {
+    for (Mob mob : self.getMobs()) {
       if (mob.getId().equals(actorId)) {
         return Optional.of(mob);
       }
     }
 
-    for (PlayerActor player : self.getPlayers()) {
+    for (Player player : self.getPlayers()) {
       if (player.getId().equals(actorId)) {
         return Optional.of(player);
       }
@@ -380,7 +377,7 @@ public class RoomService {
     return Optional.empty();
   }
 
-  private RoomStateRecord toRecord(RoomActor roomActor) {
+  private RoomStateRecord toRecord(Room roomActor) {
     String[] args = roomActor.getTemplate().id().split(":");
     String zoneId = args[0];
     String roomId = args[1];

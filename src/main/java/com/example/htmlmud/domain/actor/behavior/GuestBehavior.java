@@ -7,8 +7,8 @@ import java.util.concurrent.CompletableFuture;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.application.service.AuthService;
-import com.example.htmlmud.domain.actor.impl.PlayerActor;
-import com.example.htmlmud.domain.actor.impl.RoomActor;
+import com.example.htmlmud.domain.actor.impl.Player;
+import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.context.MudKeys;
 import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.Direction;
@@ -37,7 +37,7 @@ public class GuestBehavior implements PlayerBehavior {
   }
 
   @Override
-  public PlayerBehavior handle(PlayerActor actor, GameCommand cmd) {
+  public PlayerBehavior handle(Player actor, GameCommand cmd) {
     // 目前只處理文字輸入 (Input)
     PlayerBehavior next = null;
     if (cmd instanceof GameCommand.Input(var text)) {
@@ -65,7 +65,7 @@ public class GuestBehavior implements PlayerBehavior {
     return next;
   }
 
-  private void doConnected(PlayerActor actor, String input) {
+  private void doConnected(Player actor, String input) {
     log.info("doConnected");
 
     if ("new".equalsIgnoreCase(input.trim())) {
@@ -75,7 +75,7 @@ public class GuestBehavior implements PlayerBehavior {
     }
   }
 
-  private void doRegister(PlayerActor actor) {
+  private void doRegister(Player actor) {
     log.info("doRegister");
 
     WebSocketSession session = actor.getSession();
@@ -93,7 +93,7 @@ public class GuestBehavior implements PlayerBehavior {
     }
   }
 
-  public void doCreatingUsername(PlayerActor actor, String input) {
+  public void doCreatingUsername(Player actor, String input) {
     log.info("doCreatingUsername");
     WebSocketSession session = actor.getSession();
 
@@ -144,7 +144,7 @@ public class GuestBehavior implements PlayerBehavior {
     }
   }
 
-  public void doCreatingPassword(PlayerActor actor, String input) {
+  public void doCreatingPassword(Player actor, String input) {
     log.info("doCreatingPassword");
 
     WebSocketSession session = actor.getSession();
@@ -197,7 +197,7 @@ public class GuestBehavior implements PlayerBehavior {
     actor.setConnectionState(ConnectionState.CONNECTED);
   }
 
-  private void doEnterUsername(PlayerActor actor, String input) {
+  private void doEnterUsername(Player actor, String input) {
     log.info("doLoginUsername");
 
     WebSocketSession session = actor.getSession();
@@ -253,7 +253,7 @@ public class GuestBehavior implements PlayerBehavior {
     }
   }
 
-  private PlayerBehavior doEnterPassword(PlayerActor actor, String input) {
+  private PlayerBehavior doEnterPassword(Player actor, String input) {
     log.info("doEnterPassword");
 
     WebSocketSession session = actor.getSession();
@@ -299,7 +299,7 @@ public class GuestBehavior implements PlayerBehavior {
     return upgradeIdentity(actor, record);
   }
 
-  private void doEnteringCharName(PlayerActor actor, String input) {
+  private void doEnteringCharName(Player actor, String input) {
     log.info("doEnteringCharName");
 
     WebSocketSession session = actor.getSession();
@@ -320,7 +320,7 @@ public class GuestBehavior implements PlayerBehavior {
 
 
   // 供 GuestBehavior 呼叫：由GUEST變更為正式玩家
-  private PlayerBehavior upgradeIdentity(PlayerActor actor, PlayerRecord record) {
+  private PlayerBehavior upgradeIdentity(Player actor, PlayerRecord record) {
 
     // 資料載入
     actor.fromRecord(this, record);
@@ -329,7 +329,7 @@ public class GuestBehavior implements PlayerBehavior {
     // 裝備?
 
     // 讓玩家進入資料紀錄的房間
-    RoomActor room = actor.getManager().getRoomActor(actor.getCurrentRoomId());
+    Room room = actor.getCurrentRoom();
     CompletableFuture<Void> future = new CompletableFuture<>();
     room.enter(actor, Direction.UP, future);
     try {

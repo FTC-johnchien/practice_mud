@@ -1,0 +1,140 @@
+{
+  "id": "mob_sting",
+  "name": "致命尾螫",
+  "description": "利用尾部毒針或尖刺進行的精準刺擊，往往瞄準敵人的神經節點或防禦薄弱處，令人防不勝防。",
+  "type": "PASSIVE",
+  "school": "NATURAL",
+  "tags": [
+    "UNARMED",
+    "BASIC",
+    "MOB",
+    "PIERCE",
+    "POISON"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED"
+    ]
+  },
+  "costs": {
+    "stamina": 2
+  },
+  "scaling": {
+    "damagePerLevel": 0.65,
+    "hitRatePerLevel": 0.002,
+    "critRatePerLevel": 0.002
+  },
+  "mechanics": {
+    "critRate": 0.10,
+    "damage": 9,
+    "damageType": "PIERCE",
+    "hitRate": 0.90,
+    "maxLevel": 100,
+    "scaleStat": "DEX",
+    "scaleFactor": 1.2
+  },
+  "moves": [
+    {
+      "name": "閃電連螫",
+      "weight": 55,
+      "damageMod": 0.8,
+      "hitRateMod": 0.2,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N尾部的毒針化作一道虛影，瞬間對$n發動了連續刺擊。",
+        "hit": "$n根本看不清攻擊軌跡，身上瞬間多了好幾個血洞，受到 $d 傷害！",
+        "miss": "$n左閃右避，驚險地躲過了這一連串快如閃電的刺擊。"
+      }
+    },
+    {
+      "name": "倒馬毒樁",
+      "weight": 35,
+      "damageMod": 1.4,
+      "hitRateMod": -0.1,
+      "critRateMod": 0.2,
+      "msg": {
+        "cast": "$N身體詭異地一弓，尾刺從背後倒捲而上，直刺$n的眉心！",
+        "hit": "$n沒料到這招如此刁鑽，額頭被毒針刺中，頓時頭暈目眩，受到 $d 傷害！",
+        "crit": "【重擊】這一記倒馬樁精準地刺入了$n的百會穴，劇毒瞬間攻心，受到 $d 傷害！",
+        "miss": "$n縮頸藏頭，毒針貼著頭皮擦過，斬斷了幾縷髮絲。"
+      }
+    },
+    {
+      "name": "神經刺擊",
+      "weight": 45,
+      "damageMod": 0.9,
+      "hitRateMod": 0.1,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N冷靜地尋找著$n的動作僵直，毒針無聲無息地刺向$n的關節。",
+        "hit": "$n關節一麻，毒針精準地刺入了神經節點，受到 $d 傷害！",
+        "miss": "$n突然變換身法，讓$N的預判落了空。"
+      }
+    },
+    {
+      "name": "破甲尖刺",
+      "weight": 30,
+      "damageMod": 1.3,
+      "hitRateMod": -0.05,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N積蓄力量，尾刺如長矛般筆直地刺向$n的護甲縫隙。",
+        "hit": "「噗」的一聲，堅硬的尖刺穿透了防禦，深深扎入肉裡，受到 $d 傷害！",
+        "crit": "【重擊】$N的尾刺直接貫穿了$n的$l，從另一側穿出，造成了可怕的 $d 傷害！",
+        "miss": "$n用武器格擋，尾刺刺在金屬上濺起一串火花。"
+      }
+    },
+    {
+      "name": "致命注毒",
+      "weight": 15,
+      "damageMod": 1.7,
+      "hitRateMod": -0.25,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N死死盯住$n的大動脈，尾刺閃爍著幽藍的毒光，發動了致命一擊！",
+        "hit": "毒針刺入血管，大量毒液被注入$n體內，傷口周圍瞬間發黑，受到 $d 傷害！",
+        "crit": "【重擊】毒液隨著血液直衝心臟，$n感覺全身血液彷彿燃燒了起來，受到 $d 傷害！",
+        "miss": "$n在千鈞一髮之際側身閃過，地面被滴落的毒液腐蝕出一個坑。"
+      }
+    },
+    {
+      "name": "迴旋掃擊",
+      "weight": 40,
+      "damageMod": 1.0,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N猛地轉身，長長的尾部如鞭子般橫掃$n。",
+        "hit": "$n被長尾掃中，尾端的尖刺順勢在身上劃出一道長長的傷口，受到 $d 傷害！",
+        "miss": "$n向後一躍，躲開了這範圍巨大的橫掃。"
+      }
+    },
+    {
+      "name": "暗影偷襲",
+      "weight": 25,
+      "damageMod": 1.1,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.15,
+      "msg": {
+        "cast": "$N藉著陰影掩護，尾刺悄無聲息地從$n的死角刺出。",
+        "hit": "$n只覺背後一涼，已被毒針刺中，劇痛鑽心，受到 $d 傷害！",
+        "crit": "【重擊】這一擊陰險至極，直接刺穿了$n的腎臟，造成了嚴重的內出血，受到 $d 傷害！",
+        "miss": "$n背後彷彿長了眼睛，反手一揮逼退了$N。"
+      }
+    },
+    {
+      "name": "捨身突刺",
+      "weight": 10,
+      "damageMod": 2.0,
+      "hitRateMod": -0.3,
+      "critRateMod": 0.2,
+      "msg": {
+        "cast": "$N完全放棄了防禦，將全身重量壓在尾刺上，對$n發動了決死一擊！",
+        "hit": "這瘋狂的一擊無法阻擋，尾刺將$n釘在地上，造成了毀滅性的 $d 傷害！",
+        "crit": "【重擊】$N的尾刺貫穿了$n的身體，$n發出絕望的慘叫，受到 $d 傷害！",
+        "miss": "$N用力過猛刺入地面，拔出來花了好一番功夫，露出了巨大的破綻。"
+      }
+    }
+  ]
+}

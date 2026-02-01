@@ -4,16 +4,11 @@ import java.util.concurrent.CompletableFuture;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.application.service.WorldManager;
-import com.example.htmlmud.domain.actor.impl.LivingActor;
-import com.example.htmlmud.domain.actor.impl.MobActor;
-import com.example.htmlmud.domain.actor.impl.PlayerActor;
-import com.example.htmlmud.domain.actor.impl.RoomActor;
+import com.example.htmlmud.domain.actor.impl.Player;
+import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.Direction;
-import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.map.RoomExit;
-import com.example.htmlmud.infra.util.AnsiColor;
-import com.example.htmlmud.infra.util.ColorText;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,7 +28,7 @@ public class MoveCommand implements PlayerCommand {
   }
 
   @Override
-  public void execute(PlayerActor actor, String args) {
+  public void execute(Player actor, String args) {
     // 1. 解析方向
     // 玩家可能輸入 "move north" 或者直接輸入 "north" (由 Dispatcher 轉發)
     Direction dir = Direction.parse(args);
@@ -44,9 +39,9 @@ public class MoveCommand implements PlayerCommand {
     }
 
     // 2. 取得當前房間
-    String currentRoomId = actor.getCurrentRoomId();
-    RoomActor currentRoom = worldManager.getRoomActor(currentRoomId);
+    Room currentRoom = actor.getCurrentRoom();
 
+    // TODO 應該讓玩家回到安全屋
     if (currentRoom == null) {
       actor.reply("你在一片虛空中，無法移動。");
       return;
@@ -66,7 +61,7 @@ public class MoveCommand implements PlayerCommand {
 
     // 檢查要去的房間是否存在
     String targetRoomId = exit.targetRoomId();
-    RoomActor targetRoom = worldManager.getRoomActor(targetRoomId);
+    Room targetRoom = worldManager.getRoomActor(targetRoomId);
 
     if (targetRoom == null) {
       actor.reply("前方房間 " + targetRoomId + " 施工中，無法前往。");

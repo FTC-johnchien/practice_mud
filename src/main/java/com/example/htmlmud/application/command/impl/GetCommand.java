@@ -4,12 +4,9 @@ import java.util.concurrent.CompletableFuture;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.application.command.annotation.CommandAlias;
-import com.example.htmlmud.application.command.parser.TargetSelector;
-import com.example.htmlmud.application.service.WorldManager;
-import com.example.htmlmud.domain.actor.impl.PlayerActor;
-import com.example.htmlmud.domain.actor.impl.RoomActor;
+import com.example.htmlmud.domain.actor.impl.Player;
+import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.model.GameItem;
-import com.example.htmlmud.protocol.RoomMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,17 +16,13 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class GetCommand implements PlayerCommand {
 
-  private final WorldManager worldManager;
-
-  private final TargetSelector targetSelector; // 注入工具
-
   @Override
   public String getKey() {
     return "get";
   }
 
   @Override
-  public void execute(PlayerActor self, String args) {
+  public void execute(Player self, String args) {
     // 基本檢查
     if (args.isEmpty()) {
       self.getService().getMessageUtil().send("$N要撿什麼？", self);
@@ -41,7 +34,7 @@ public class GetCommand implements PlayerCommand {
 
     // 2. 發送訊息給房間： "我要撿 'sword' (args)"
     // 注意：這裡我們還不知道房間到底有沒有劍，只傳字串
-    RoomActor room = worldManager.getRoomActor(self.getCurrentRoomId());
+    Room room = self.getCurrentRoom();
 
     // 3. 等待結果 (Virtual Thread 不會卡死)
     try {

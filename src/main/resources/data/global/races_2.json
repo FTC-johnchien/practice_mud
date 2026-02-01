@@ -1,288 +1,224 @@
 [
   {
-    "id": "race_human",
-    "display_name": "人類",
-    "attribute_mods": {
-      "str": 0,
-      "dex": 0,
-      "con": 0,
-      "int": 0,
-      "wis": 0,
-      "cha": 0
+    "id": "human",
+    "name": "人類",
+    "description": "適應力極強的種族，雖然沒有突出的特長，但也沒有明顯的弱點。",
+    "size": "MEDIUM",
+    "statModifiers": {
+      "STR": 0,
+      "DEX": 0,
+      "CON": 0,
+      "INT": 0,
+      "WIS": 0,
+      "CHA": 0
     },
-    "physiology": {
-      "size": "Medium",
-      "speed": 1.0,
-      "exp_modifier": 1.1,
-      "stamina_regen": 1.0
+    "metabolism": {
+      "hungerRate": 1.0,
+      "thirstRate": 1.0
     },
-    "vision": "NORMAL",
-    "special_traits": [
-      {
-        "id": "adaptability",
-        "description": "全屬性平衡，且獲得經驗值提升 10%"
-      }
+    "traits": [
+      "FAST_LEARNER",
+      "DIPLOMACY"
     ],
-    "equipment_restrictions": {
-      "forbidden_slots": []
-    }
+    "languages": [
+      "COMMON"
+    ],
+    "allowedClasses": [
+      "ALL"
+    ]
   },
   {
-    "id": "race_elf",
-    "display_name": "精靈",
-    "attribute_mods": {
-      "str": -2,
-      "dex": 3,
-      "con": -1,
-      "int": 2,
-      "wis": 0,
-      "cha": 2
+    "id": "elf",
+    "name": "精靈",
+    "description": "森林的守護者，身手矯健且長壽，對魔法有天然的親和力。",
+    "size": "MEDIUM",
+    "statModifiers": {
+      "STR": -2,
+      "DEX": 4,
+      "CON": -2,
+      "INT": 2,
+      "WIS": 2,
+      "CHA": 1
     },
-    "physiology": {
-      "size": "Medium",
-      "speed": 1.1,
-      "stamina_regen": 1.2,
-      "weight_modifier": 0.85
+    "metabolism": {
+      "hungerRate": 0.8,
+      "thirstRate": 1.0
     },
-    "innate_resistances": {
-      "nature": 0.3,
-      "charm": 0.5,
-      "sleep": 1.0
-    },
-    "vision": "INFRAVISION",
-    "special_traits": [
-      {
-        "id": "nature_affinity",
-        "description": "在森林或戶外區域，移動能量消耗降低 20%",
-        "move_cost_mod": -0.2
-      },
-      {
-        "id": "meditation",
-        "description": "精靈不需要像人類那樣睡眠，只需冥想即可快速恢復魔法值",
-        "mana_regen_mod": 0.15
-      }
+    "traits": [
+      "NIGHT_VISION",
+      "MAGIC_RESIST_LOW",
+      "BOW_MASTERY"
     ],
-    "equipment_restrictions": {
-      "forbidden_slots": [],
-      "preferred_weapons": [
-        "BOW",
-        "LONGSWORD"
-      ]
-    }
+    "languages": [
+      "COMMON",
+      "ELVISH"
+    ],
+    "allowedClasses": [
+      "MAGE",
+      "ROGUE",
+      "CLERIC",
+      "SWORDSMAN"
+    ]
   },
   {
-    "id": "race_dwarf",
-    "display_name": "矮人",
-    "attribute_mods": {
-      "str": 2,
-      "dex": -1,
-      "con": 4,
-      "int": 0,
-      "wis": 1,
-      "cha": -2
+    "id": "dwarf",
+    "name": "矮人",
+    "description": "生活在地下礦坑的頑固種族，喜愛啤酒與鍛造。",
+    "size": "MEDIUM",
+    "statModifiers": {
+      "STR": 2,
+      "DEX": -2,
+      "CON": 4,
+      "INT": 0,
+      "WIS": 1,
+      "CHA": -2
     },
-    "physiology": {
-      "size": "Small",
-      "speed": 0.9,
-      "encumbrance_multiplier": 1.3
+    "metabolism": {
+      "hungerRate": 1.2,
+      "thirstRate": 2.0
     },
-    "innate_resistances": {
-      "poison": 0.5,
-      "magic": 0.1
-    },
-    "vision": "INFRAVISION",
-    "special_traits": [
-      {
-        "id": "stone_skin",
-        "natural_armor": 5
-      },
-      {
-        "id": "mining_expert",
-        "crafting_bonus": 0.2
-      }
+    "traits": [
+      "POISON_RESIST",
+      "DARK_VISION",
+      "STONE_SKIN"
     ],
-    "equipment_restrictions": {
-      "forbidden_slots": []
-    }
+    "languages": [
+      "COMMON",
+      "DWARVISH"
+    ],
+    "allowedClasses": [
+      "WARRIOR",
+      "CLERIC",
+      "BLACKSMITH"
+    ]
   },
   {
-    "id": "race_halfling",
-    "display_name": "半身人",
-    "attribute_mods": {
-      "str": -3,
-      "dex": 4,
-      "con": -1,
-      "int": 0,
-      "wis": 0,
-      "cha": 2
+    "id": "orc",
+    "name": "半獸人",
+    "description": "崇尚力量與榮耀的戰鬥種族，皮膚呈綠色，長有獠牙。",
+    "size": "LARGE",
+    "statModifiers": {
+      "STR": 5,
+      "DEX": -2,
+      "CON": 5,
+      "INT": -3,
+      "WIS": -1,
+      "CHA": -2
     },
-    "physiology": {
-      "size": "Small",
-      "speed": 1.0,
-      "stealth_bonus": 0.25
+    "metabolism": {
+      "hungerRate": 1.5,
+      "thirstRate": 1.0
     },
-    "vision": "NORMAL",
-    "special_traits": [
-      {
-        "id": "lucky",
-        "crit_chance": 0.03
-      },
-      {
-        "id": "brave",
-        "fear_resistance": 0.8
-      }
+    "traits": [
+      "HARDINESS",
+      "BLOOD_FURY",
+      "AXE_SPECIALIZATION"
     ],
-    "equipment_restrictions": {
-      "forbidden_weapon_sizes": [
-        "COLOSSAL",
-        "LARGE"
-      ]
-    }
+    "languages": [
+      "ORCISH",
+      "COMMON"
+    ],
+    "allowedClasses": [
+      "WARRIOR",
+      "SHAMAN",
+      "ROGUE"
+    ]
   },
   {
-    "id": "race_dragonborn",
-    "display_name": "龍裔",
-    "attribute_mods": {
-      "str": 3,
-      "dex": -2,
-      "con": 2,
-      "int": 0,
-      "wis": 0,
-      "cha": 2
+    "id": "halfling",
+    "name": "哈比人",
+    "description": "身材矮小，腳掌長有厚毛，性格樂觀，擅長躲藏。",
+    "size": "SMALL",
+    "statModifiers": {
+      "STR": -3,
+      "DEX": 5,
+      "CON": -1,
+      "INT": 1,
+      "WIS": 0,
+      "CHA": 2
     },
-    "physiology": {
-      "size": "Medium",
-      "speed": 1.0,
-      "natural_armor": 10
+    "metabolism": {
+      "hungerRate": 1.5,
+      "thirstRate": 1.0
     },
-    "innate_resistances": {
-      "fire": 0.5,
-      "acid": 0.5
-    },
-    "vision": "NORMAL",
-    "special_traits": [
-      {
-        "id": "draconic_breath",
-        "type": "ACTIVE_SKILL",
-        "cooldown": 300
-      },
-      {
-        "id": "intimidation",
-        "aggro_reduction": 0.1
-      }
+    "traits": [
+      "LUCKY",
+      "STEALTHY",
+      "ESCAPE_ARTIST"
     ],
-    "equipment_restrictions": {
-      "forbidden_slots": []
-    }
+    "languages": [
+      "COMMON",
+      "HALFLING"
+    ],
+    "allowedClasses": [
+      "ROGUE",
+      "MAGE",
+      "MONK"
+    ]
   },
   {
-    "id": "race_undead",
-    "display_name": "亡靈",
-    "attribute_mods": {
-      "str": 0,
-      "dex": 0,
-      "con": 5,
-      "int": 1,
-      "wis": -1,
-      "cha": -5
+    "id": "undead",
+    "name": "被遺忘者",
+    "description": "擺脫了巫妖王控制的亡靈，意志堅強但身體脆弱。",
+    "size": "MEDIUM",
+    "statModifiers": {
+      "STR": 0,
+      "DEX": 0,
+      "CON": 0,
+      "INT": 2,
+      "WIS": 2,
+      "CHA": -5
     },
-    "physiology": {
-      "size": "Medium",
-      "need_food": false,
-      "need_oxygen": false
+    "metabolism": {
+      "hungerRate": 0.0,
+      "thirstRate": 0.0
     },
-    "innate_resistances": {
-      "holy": -1.0,
-      "shadow": 0.5,
-      "poison": 1.0
-    },
-    "vision": "DEATHVIEW",
-    "special_traits": [
-      {
-        "id": "undead_metabolism",
-        "description": "神聖魔法造成傷害，暗影魔法提供治癒"
-      },
-      {
-        "id": "fear_aura",
-        "wis_debuff": 2
-      }
+    "traits": [
+      "UNDEAD_BODY",
+      "UNDERWATER_BREATH",
+      "CANNIBALIZE"
     ],
-    "equipment_restrictions": {
-      "forbidden_slots": []
-    }
+    "languages": [
+      "COMMON",
+      "GUTTERSPEAK"
+    ],
+    "allowedClasses": [
+      "WARRIOR",
+      "MAGE",
+      "ROGUE",
+      "WARLOCK"
+    ]
   },
   {
-    "id": "race_aven",
-    "display_name": "翼人",
-    "attribute_mods": {
-      "str": -1,
-      "dex": 3,
-      "con": -3,
-      "int": 0,
-      "wis": 2,
-      "cha": 0
+    "id": "beastkin",
+    "name": "妖族",
+    "description": "半人半獸的型態，擁有強大的野性直覺。",
+    "size": "MEDIUM",
+    "statModifiers": {
+      "STR": 3,
+      "DEX": 3,
+      "CON": 2,
+      "INT": -2,
+      "WIS": -2,
+      "CHA": -1
     },
-    "physiology": {
-      "size": "Medium",
-      "movement_type": "FLIGHT",
-      "fall_damage_multiplier": 0.1
+    "metabolism": {
+      "hungerRate": 1.2,
+      "thirstRate": 1.0
     },
-    "innate_resistances": {
-      "wind": 0.4,
-      "blunt": -0.5
-    },
-    "vision": "TELESCOPIC",
-    "special_traits": [
-      {
-        "id": "aerial_mastery",
-        "hit_bonus": 0.15,
-        "environment": "OUTDOOR"
-      }
+    "traits": [
+      "NATURAL_WEAPON",
+      "REGENERATION",
+      "SENSE_DANGER"
     ],
-    "equipment_restrictions": {
-      "forbidden_slots": []
-    }
-  },
-  {
-    "race_id": "race_naga",
-    "display_name": "蛇人",
-    "attribute_mods": {
-      "str": -1,
-      "dex": 1,
-      "con": -1,
-      "int": 3,
-      "wis": 2,
-      "cha": 0
-    },
-    "physiology": {
-      "size": "Medium",
-      "speed": 1.0,
-      "has_feet": false,
-      "can_swim": true,
-      "can_fly": false,
-      "breath_water": false
-    },
-    "innate_resistances": {
-      "poison": 0.8,
-      "ice": -0.3,
-      "holy": 0.0
-    },
-    "special_traits": [
-      {
-        "id": "venomous_strike",
-        "chance": 0.1,
-        "effect": "POISON_DOT"
-      },
-      {
-        "id": "thermal_vision",
-        "type": "SIGHT_MODIFIER"
-      }
+    "languages": [
+      "COMMON",
+      "BEAST_TONGUE"
     ],
-    "equipment_restrictions": {
-      "forbidden_slots": [
-        "feet"
-      ],
-      "required_slots": []
-    }
+    "allowedClasses": [
+      "MONK",
+      "WARRIOR",
+      "ROGUE"
+    ]
   }
 ]

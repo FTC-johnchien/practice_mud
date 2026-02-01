@@ -7,10 +7,9 @@ import com.example.htmlmud.domain.model.DefaultConfig;
 import com.example.htmlmud.domain.model.LearningConfig;
 import com.example.htmlmud.domain.model.Mechanics;
 import com.example.htmlmud.domain.model.MoveAction;
+import com.example.htmlmud.domain.model.ScalingConfig;
 import com.example.htmlmud.domain.model.SkillType;
 import com.example.htmlmud.domain.model.SynergiesConfig;
-import com.example.htmlmud.domain.model.Targeting;
-import com.example.htmlmud.domain.model.Timing;
 import com.example.htmlmud.domain.model.UsageConfig;
 import lombok.Data;
 
@@ -38,14 +37,12 @@ public class SkillTemplate {
   UsageConfig usage;
   // 消耗與成本
   Costs costs;
-  // 時間與冷卻
-  Timing timing;
-  // 目標與範圍
-  Targeting targeting;
+  // 技能成長
+  ScalingConfig scaling;
   // 效果與數值
   Mechanics mechanics;
 
-  Set<SynergiesConfig> synergies;
+  List<SynergiesConfig> synergies;
 
   List<MoveAction> moves;
 
@@ -56,12 +53,5 @@ public class SkillTemplate {
   DefaultConfig counterDefaults;
 
   List<MoveAction> counter;
-
-
-
-  List<CombatAction> actions;
-
-  // 訊息描述
-  // Messages messages;
 
 }

@@ -1,0 +1,139 @@
+{
+  "id": "basic_sword",
+  "name": "基本劍法",
+  "description": "武林中通用的入門劍術，講究輕靈飄逸，招式雖然簡單，但包含了刺、劈、撩、掛等劍術精髓。",
+  "type": "PASSIVE",
+  "school": "COMMON",
+  "tags": [
+    "WEAPON",
+    "SWORD",
+    "BASIC",
+    "PHYSICAL"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      "SWORD"
+    ]
+  },
+  "costs": {
+    "stamina": 3
+  },
+  "scaling": {
+    "damagePerLevel": 0.6,
+    "hitRatePerLevel": 0.002,
+    "critRatePerLevel": 0.002
+  },
+  "mechanics": {
+    "critRate": 0.05,
+    "damage": 8,
+    "damageType": "SLASH",
+    "hitRate": 0.92,
+    "maxLevel": 100,
+    "scaleStat": "STR",
+    "scaleFactor": 1.1,
+    "formulas": {
+      "damage": "skill.mechanics.damage + (user.str * 0.15)"
+    }
+  },
+  "moves": [
+    {
+      "name": "順勢一劈",
+      "weight": 50,
+      "damageMod": 1.0,
+      "hitRateMod": 0.1,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N手腕一翻，手中的$W化作一道白光，斜斜地劈向$n的$l。",
+        "hit": "$n躲避不及，被$W劃出一道長長的傷口，受到 $d 傷害！",
+        "miss": "$n向後一躍，避開了這中規中矩的一劈。"
+      }
+    },
+    {
+      "name": "中宮直刺",
+      "weight": 40,
+      "damageMod": 1.1,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N腳步一錯，挺起$W，一招「中宮直刺」疾刺$n的$l。",
+        "hit": "「噗」的一聲輕響，$W鋒利的劍尖刺入了$n的身體，受到 $d 傷害！",
+        "crit": "【重擊】$N這一劍快如閃電，直接洞穿了$n的防禦，造成了 $d 點貫穿傷害！",
+        "miss": "$n側身避過，劍鋒貼著$n的肋下刺了個空。"
+      }
+    },
+    {
+      "name": "倒提撩劍",
+      "weight": 35,
+      "damageMod": 1.2,
+      "hitRateMod": -0.05,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N壓低身形，手中的$W由下而上反撩，取向$n的$l。",
+        "hit": "$n沒料到劍勢來得如此詭異，$l被$W劃開一道血槽，受到 $d 傷害！",
+        "miss": "$n眼疾手快，用$w向下一壓，擋住了$N的撩劍。"
+      }
+    },
+    {
+      "name": "虛實難測",
+      "weight": 30,
+      "damageMod": 0.9,
+      "hitRateMod": 0.15,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N手腕抖動，$W挽出三個劍花，虛虛實實地罩向$n。",
+        "hit": "$n眼花撩亂，分不清虛實，身上中了$N一劍，受到 $d 傷害！",
+        "miss": "$n凝神靜氣，不為劍花所惑，從容地避開了攻擊。"
+      }
+    },
+    {
+      "name": "迴旋斬",
+      "weight": 25,
+      "damageMod": 1.3,
+      "hitRateMod": -0.1,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N身形猛地旋轉，藉著離心力帶動$W，橫向斬向$n的腰際。",
+        "hit": "$n被這勢大力沉的一劍掃中，腳步踉蹌，受到 $d 傷害！",
+        "miss": "$n豎起$w一擋，火花四濺中擋住了$N的迴旋斬。"
+      }
+    },
+    {
+      "name": "靈蛇吐信",
+      "weight": 20,
+      "damageMod": 1.0,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.2,
+      "msg": {
+        "cast": "$N手中的$W不斷顫動，如靈蛇吐信般，刁鑽地刺向$n的$l要害。",
+        "hit": "$n防不勝防，$l要害被劍尖點中，鮮血直流，受到 $d 傷害！",
+        "crit": "【重擊】這一劍精準無比地刺入了要害，$n發出一聲慘叫，受到 $d 點嚴重傷害！",
+        "miss": "$n連退數步，驚出一身冷汗，險險避開了要害。"
+      }
+    },
+    {
+      "name": "劍柄猛擊",
+      "weight": 15,
+      "damageMod": 0.8,
+      "hitRateMod": 0.2,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N突然欺身而上，倒轉$W，用堅硬的劍柄狠狠撞向$n的$l。",
+        "hit": "$n被堅硬的劍柄重重砸中，痛得彎下了腰，受到 $d 傷害！",
+        "miss": "$n反應極快，向後一仰，劍柄擦著鼻尖掠過。"
+      }
+    },
+    {
+      "name": "力劈華山",
+      "weight": 10,
+      "damageMod": 1.5,
+      "hitRateMod": -0.2,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N雙手握住$W高舉過頭，大喝一聲，用盡全力向$n當頭劈下！",
+        "hit": "$n抵擋不住這雷霆萬鈞的一擊，被$W重創，受到 $d 傷害！",
+        "crit": "【重擊】$W破開了$n的防禦，在$n身上留下一道深可見骨的傷痕，受到 $d 傷害！",
+        "miss": "$N用力過猛，劍勢收不住斬在了地上，土石飛濺，$n趁機躲開。"
+      }
+    }
+  ]
+}

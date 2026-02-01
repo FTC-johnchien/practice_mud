@@ -2,9 +2,14 @@
   {
     "id": "rusty_sword",
     "name": "生鏽的鐵劍",
-    "aliases": ["sword", "rusty", "weapon"],
+    "aliases": [
+      "sword",
+      "rusty",
+      "weapon"
+    ],
     "description": "一把缺口的鐵劍，看起來隨時會斷掉。",
     "type": "WEAPON",
+    "subType": "SWORD",
     "stats": {
       "slot": "MAIN_HAND",
       "attackVerb": "揮向",
@@ -19,9 +24,14 @@
   {
     "id": "standard_spear",
     "name": "制式長槍",
-    "aliases": ["sword", "rusty", "weapon"],
+    "aliases": [
+      "sword",
+      "rusty",
+      "weapon"
+    ],
     "description": "一把標準的長槍，看起來保養的很好。",
     "type": "WEAPON",
+    "subType": "SPEAR",
     "stats": {
       "slot": "MAIN_HAND",
       "attackVerb": "刺",
@@ -39,9 +49,14 @@
   {
     "id": "rusty_shield",
     "name": "生鏽的盾牌",
-    "aliases": ["rusty shield", "rusty", "shield"],
+    "aliases": [
+      "rusty shield",
+      "rusty",
+      "shield"
+    ],
     "description": "一塊破爛的盾牌，看起來隨時會壞掉。",
     "type": "SHIELD",
+    "subType": "OFF_HAND",
     "stats": {
       "slot": "OFF_HAND",
       "attackVerb": "撞擊",
@@ -56,9 +71,14 @@
   {
     "id": "rusty_armor",
     "name": "生鏽的盔甲",
-    "aliases": ["rusty armor", "rusty", "armor"],
+    "aliases": [
+      "rusty armor",
+      "rusty",
+      "armor"
+    ],
     "description": "一件破爛的盔甲，看起來隨時會壞掉。",
     "type": "ARMOR",
+    "subType": "CHEST",
     "stats": {
       "slot": "CHEST",
       "defense": 5,
@@ -70,9 +90,14 @@
   {
     "id": "rusty_ring",
     "name": "老舊的戒指",
-    "aliases": ["rusty ring", "rusty", "ring"],
+    "aliases": [
+      "rusty ring",
+      "rusty",
+      "ring"
+    ],
     "description": "一個有年代的戒指，看起來不太起眼。",
     "type": "ACCESSORY",
+    "subType": "FINGER",
     "stats": {
       "slot": "FINGER",
       "defense": 1
@@ -89,9 +114,13 @@
   {
     "id": "village_bread",
     "name": "村莊烤麵包",
-    "aliases": ["bread", "food"],
+    "aliases": [
+      "bread",
+      "food"
+    ],
     "description": "剛出爐的麵包，聞起來很香。",
     "type": "CONSUMABLE",
+    "subType": "FOOD",
     "behavior": {
       "effect": "HEAL",
       "value": 20
@@ -102,7 +131,10 @@
     "id": "village_elder_house_key",
     "name": "村長小屋的鑰匙",
     "type": "KEY_ITEM",
-    "aliases": ["key"],
+    "subType": "KEY_ITEM",
+    "aliases": [
+      "key"
+    ],
     "description": "看起來很有年代感的鑰匙。",
     "value": 0
   }

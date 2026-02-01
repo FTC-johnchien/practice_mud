@@ -1,7 +1,7 @@
 package com.example.htmlmud.application.listener;
 
 import com.example.htmlmud.application.service.WorldManager;
-import com.example.htmlmud.domain.actor.impl.PlayerActor;
+import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.model.LivingState;
 import com.example.htmlmud.protocol.RoomMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;

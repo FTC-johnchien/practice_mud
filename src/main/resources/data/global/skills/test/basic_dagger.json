@@ -1,0 +1,141 @@
+{
+  "id": "basic_dagger",
+  "name": "基本短兵",
+  "description": "包含匕首、短刀、峨嵋刺等短兵器的使用技巧，講究貼身短打，一寸短一寸險，招式陰狠毒辣，專攻要害。",
+  "type": "PASSIVE",
+  "school": "COMMON",
+  "tags": [
+    "WEAPON",
+    "DAGGER",
+    "BASIC",
+    "PHYSICAL"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      "DAGGER",
+      "KNIFE",
+      "DIRK",
+      "STILETTO"
+    ]
+  },
+  "costs": {
+    "stamina": 2
+  },
+  "scaling": {
+    "damagePerLevel": 0.55,
+    "hitRatePerLevel": 0.003,
+    "critRatePerLevel": 0.004
+  },
+  "mechanics": {
+    "critRate": 0.08,
+    "damage": 6,
+    "damageType": "PIERCE",
+    "hitRate": 0.95,
+    "maxLevel": 100,
+    "scaleStat": "DEX",
+    "scaleFactor": 1.3,
+    "formulas": {
+      "damage": "skill.mechanics.damage + (user.dex * 0.15)"
+    }
+  },
+  "moves": [
+    {
+      "name": "疾風刺",
+      "weight": 50,
+      "damageMod": 0.9,
+      "hitRateMod": 0.15,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N腳步輕移，瞬間欺近$n身前，手中的$W如毒蛇吐信般疾刺$n的$l。",
+        "hit": "$n根本來不及反應，只覺眼前寒光一閃，身上已多了一個血洞，受到 $d 傷害！",
+        "miss": "$n憑藉本能向後急退，險之又險地避開了這快若閃電的一刺。"
+      }
+    },
+    {
+      "name": "反手割裂",
+      "weight": 45,
+      "damageMod": 1.1,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N反手握住$W，藉著錯身而過的瞬間，順勢在$n的$l處狠狠劃過。",
+        "hit": "利刃入肉，$n感到一陣劇痛，鮮血染紅了衣衫，受到 $d 傷害！",
+        "miss": "$n縮身閃避，鋒利的$W貼著肌膚劃過，只割破了幾縷衣衫。"
+      }
+    },
+    {
+      "name": "跗骨之蛆",
+      "weight": 35,
+      "damageMod": 0.8,
+      "hitRateMod": 0.2,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N如影子般貼著$n遊走，手中的$W專挑$n防禦的死角下手，連續刺出數刀。",
+        "hit": "$n防不勝防，身上接連中招，雖然傷口不深但鮮血淋漓，受到 $d 傷害！",
+        "miss": "$n揮動$w護住周身要害，將$N逼退了半步。"
+      }
+    },
+    {
+      "name": "絕命鑿擊",
+      "weight": 20,
+      "damageMod": 1.4,
+      "hitRateMod": -0.1,
+      "critRateMod": 0.25,
+      "msg": {
+        "cast": "$N眼中閃過一絲狠厲，雙手握住$W，高高躍起狠狠鑿向$n的$l要害！",
+        "hit": "「噗嗤」一聲，$W深深沒入體內，直透骨髓，$n痛得發出淒厲慘叫，受到 $d 傷害！",
+        "crit": "【重擊】這一擊精準地刺穿了動脈，$n鮮血狂噴，生命力飛速流逝，受到 $d 點嚴重傷害！",
+        "miss": "$n在千鈞一髮之際側頭避過，$W深深刺入地面，火星四濺。"
+      }
+    },
+    {
+      "name": "袖裡藏刀",
+      "weight": 25,
+      "damageMod": 1.2,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.2,
+      "msg": {
+        "cast": "$N佯裝跌倒，將$W藏於袖中，就在$n鬆懈的剎那，寒芒突然暴起刺向$n。",
+        "hit": "$n猝不及防，被這陰險的一招刺中要害，驚怒交加下受到 $d 傷害！",
+        "miss": "$n始終保持警惕，見寒光閃動，立刻向後翻滾躲開了偷襲。"
+      }
+    },
+    {
+      "name": "十字抹殺",
+      "weight": 30,
+      "damageMod": 1.0,
+      "hitRateMod": 0.1,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N雙手交錯，利用$W在空中劃出一個血色的十字，籠罩$n的$l。",
+        "hit": "$n無法完全避開這密集的攻勢，身上多處被利刃劃傷，受到 $d 傷害！",
+        "miss": "$n豎起$w格擋，精準地架住了$N的十字斬擊。"
+      }
+    },
+    {
+      "name": "繞背剔骨",
+      "weight": 15,
+      "damageMod": 1.3,
+      "hitRateMod": -0.05,
+      "critRateMod": 0.3,
+      "msg": {
+        "cast": "$N利用靈活的身法滑步至$n身後，手中的$W順著脊椎骨縫隙狠狠刺入。",
+        "hit": "$n只覺背後一涼，緊接著劇痛鑽心，$W彷彿要將骨頭剔出來一般，受到 $d 傷害！",
+        "crit": "【重擊】$N這一刀狠辣至極，直接傷及了$n的神經，$n慘叫一聲癱軟在地，受到 $d 傷害！",
+        "miss": "$n感覺背後風聲有異，猛地轉身橫掃，$N被迫撤招後退。"
+      }
+    },
+    {
+      "name": "雙龍搶珠",
+      "weight": 10,
+      "damageMod": 1.5,
+      "hitRateMod": -0.2,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N不顧自身防禦，將$W分刺兩路，同時攻向$n的雙眼與咽喉。",
+        "hit": "$n大驚失色，雖然避開了眼睛，但咽喉處仍被劃出一道血痕，受到 $d 傷害！",
+        "miss": "$n臨危不亂，頭向後仰，同時飛起一腳逼退了$N的拼命攻勢。"
+      }
+    }
+  ]
+}

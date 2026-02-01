@@ -1,0 +1,9 @@
+[
+  {
+    "id": "human",
+    "name": "人類",
+    "combat": {
+      "defaultAttack": "basic_fist"
+    }
+  }
+]

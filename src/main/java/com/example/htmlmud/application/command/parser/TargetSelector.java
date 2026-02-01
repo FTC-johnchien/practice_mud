@@ -5,7 +5,7 @@ import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.stereotype.Component;
-import com.example.htmlmud.domain.actor.impl.MobActor;
+import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.model.GameItem;
 
 @Component
@@ -28,7 +28,7 @@ public class TargetSelector {
    * @param input 玩家輸入的字串 (例如 "elite soldier 3" 或 "2.goblin")
    * @return 找到的 Mob，若無則回傳 null
    */
-  public MobActor selectMob(List<MobActor> candidates, String input) {
+  public Mob selectMob(List<Mob> candidates, String input) {
     return select(candidates, input, this::isMatchMob);
   }
 
@@ -59,7 +59,7 @@ public class TargetSelector {
     return isMatch(item.getTemplate().name(), item.getTemplate().aliases(), keyword);
   }
 
-  private boolean isMatchMob(MobActor mob, String keyword) {
+  private boolean isMatchMob(Mob mob, String keyword) {
     return isMatch(mob.getTemplate().name(), mob.getTemplate().aliases(), keyword);
   }
 

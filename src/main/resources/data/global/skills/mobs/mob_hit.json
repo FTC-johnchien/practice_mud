@@ -1,0 +1,136 @@
+{
+  "id": "mob_hit",
+  "name": "怪物普攻",
+  "description": "生物本能的攻擊方式，包含撕咬、衝撞與胡亂揮擊，雖然不成章法但充滿野性。",
+  "type": "PASSIVE",
+  "school": "NATURAL",
+  "tags": [
+    "UNARMED",
+    "BASIC",
+    "MOB"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED"
+    ]
+  },
+  "costs": {
+    "stamina": 2
+  },
+  "scaling": {
+    "damagePerLevel": 0.6,
+    "hitRatePerLevel": 0.001,
+    "critRatePerLevel": 0.0005
+  },
+  "mechanics": {
+    "critRate": 0.05,
+    "damage": 8,
+    "damageType": "BLUNT",
+    "hitRate": 0.80,
+    "maxLevel": 100,
+    "scaleStat": "STR",
+    "scaleFactor": 1.0
+  },
+  "moves": [
+    {
+      "name": "普通揮擊",
+      "weight": 60,
+      "damageMod": 1.0,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N發出一聲低吼，向$n發起了攻擊。",
+        "hit": "$n躲閃不及，被$N擊中，受到 $d 傷害！",
+        "miss": "$n側身一閃，躲過了$N的攻擊。"
+      }
+    },
+    {
+      "name": "蠻力衝撞",
+      "weight": 40,
+      "damageMod": 1.3,
+      "hitRateMod": -0.1,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N像發瘋似地用身體猛力衝撞$n！",
+        "hit": "「砰」地一聲巨響，$n被$N撞飛出去，受到 $d 傷害！",
+        "crit": "【重擊】$n被這記蠻牛衝撞狠狠地撞在牆上，骨頭都要散架了，受到 $d 傷害！",
+        "miss": "$N用力過猛收不住腳，直接從$n身邊衝了過去。"
+      }
+    },
+    {
+      "name": "兇狠撕咬",
+      "weight": 35,
+      "damageMod": 1.1,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N張開血盆大口，露出獠牙咬向$n的$l。",
+        "hit": "$n的$l被狠狠咬住，鮮血直流，受到 $d 傷害！",
+        "miss": "$n趕緊縮回$l，$N只咬到了一團空氣。"
+      }
+    },
+    {
+      "name": "迅捷抓擊",
+      "weight": 45,
+      "damageMod": 0.8,
+      "hitRateMod": 0.15,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N揮舞著利爪，以極快的速度抓向$n的$l。",
+        "hit": "$n的$l被抓出了幾道深深的血痕，受到 $d 傷害！",
+        "miss": "$n眼疾手快，用武器架開了$N的爪子。"
+      }
+    },
+    {
+      "name": "瘋狂亂舞",
+      "weight": 20,
+      "damageMod": 1.6,
+      "hitRateMod": -0.2,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N突然陷入狂暴，對著$n進行毫無章法的瘋狂亂打！",
+        "hit": "$n被這陣暴風驟雨般的攻擊打得手忙腳亂，受到 $d 傷害！",
+        "crit": "【重擊】$N的一記亂拳正中$n的面門，$n被打得眼冒金星，受到 $d 傷害！",
+        "miss": "$N雖然氣勢驚人，但全都被$n冷靜地一一化解了。"
+      }
+    },
+    {
+      "name": "弱點偷襲",
+      "weight": 25,
+      "damageMod": 0.7,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.25,
+      "msg": {
+        "cast": "$N趁著$n防守空隙，陰險地攻擊$n的要害部位。",
+        "hit": "$n痛呼一聲，要害被擊中，受到 $d 傷害！",
+        "crit": "【重擊】這一下狠毒的偷襲準確命中了$n的死穴，造成了巨大的 $d 傷害！",
+        "miss": "$n早已看穿了$N的意圖，提前護住了要害。"
+      }
+    },
+    {
+      "name": "重踏",
+      "weight": 30,
+      "damageMod": 1.2,
+      "hitRateMod": -0.05,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N抬起腳，重重地踩向$n。",
+        "hit": "$n被這沉重的一擊踩中，覺得五臟六腑都在翻騰，受到 $d 傷害！",
+        "miss": "$n在地上一滾，狼狽地躲開了這記重踏。"
+      }
+    },
+    {
+      "name": "威嚇一擊",
+      "weight": 15,
+      "damageMod": 1.0,
+      "hitRateMod": 0.2,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N發出恐怖的咆哮，試圖在氣勢上壓倒$n並順勢發動攻擊。",
+        "hit": "$n被$N的氣勢所攝，反應慢了半拍，結實地挨了一下，受到 $d 傷害！",
+        "miss": "$n心如止水，絲毫不受干擾地避開了攻擊。"
+      }
+    }
+  ]
+}

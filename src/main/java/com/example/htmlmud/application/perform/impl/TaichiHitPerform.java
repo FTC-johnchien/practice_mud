@@ -2,7 +2,7 @@ package com.example.htmlmud.application.perform.impl;
 
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.perform.Perform;
-import com.example.htmlmud.domain.actor.impl.LivingActor;
+import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.exception.MudException;
 
 @Component
@@ -13,7 +13,7 @@ public class TaichiHitPerform implements Perform {
   }
 
   @Override
-  public void execute(LivingActor user, LivingActor target) {
+  public void execute(Living user, Living target) {
     // 1. 檢查內力
     // if (user.getMp() < 50)
     // throw new MudException("你內力不夠！");

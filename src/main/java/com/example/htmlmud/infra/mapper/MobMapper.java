@@ -14,6 +14,7 @@ public interface MobMapper {
   @Mapping(target = "hp", source = "maxHp")
   @Mapping(target = "mp", source = "maxMp")
   @Mapping(target = "stamina", source = "maxStamina")
+
   // 忽略 equipment 欄位，因為類型不相容且涉及業務邏輯 (建立物品實體)
   @Mapping(target = "equipment", ignore = true)
   LivingState toLivingState(MobTemplate template);

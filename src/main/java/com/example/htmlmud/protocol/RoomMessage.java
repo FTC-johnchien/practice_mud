@@ -2,9 +2,9 @@ package com.example.htmlmud.protocol;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import com.example.htmlmud.domain.actor.impl.LivingActor;
-import com.example.htmlmud.domain.actor.impl.MobActor;
-import com.example.htmlmud.domain.actor.impl.PlayerActor;
+import com.example.htmlmud.domain.actor.impl.Living;
+import com.example.htmlmud.domain.actor.impl.Mob;
+import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.model.Direction;
 import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.RoomStateRecord;
@@ -23,10 +23,10 @@ public sealed interface RoomMessage permits RoomMessage.Enter, RoomMessage.Leave
   /**
    * LivingActor進入房間
    *
-   * @param LivingActor 實例
+   * @param Living 實例
    * @param future 用於通知移動完成 (可選)
    */
-  record Enter(LivingActor actor, Direction direction, CompletableFuture<Void> future)
+  record Enter(Living actor, Direction direction, CompletableFuture<Void> future)
       implements RoomMessage {
   }
 
@@ -35,7 +35,7 @@ public sealed interface RoomMessage permits RoomMessage.Enter, RoomMessage.Leave
    *
    * @param actorId 離開的 Actor ID
    */
-  record Leave(LivingActor actor, Direction direction) implements RoomMessage {
+  record Leave(Living actor, Direction direction) implements RoomMessage {
   }
 
   /**
@@ -56,7 +56,7 @@ public sealed interface RoomMessage permits RoomMessage.Enter, RoomMessage.Leave
   record Say(String sourcePlayerId, String content) implements RoomMessage {
   }
 
-  record TryPickItem(String itemId, PlayerActor picker, CompletableFuture<GameItem> future)
+  record TryPickItem(String itemId, Player picker, CompletableFuture<GameItem> future)
       implements RoomMessage {
   }
 
@@ -66,17 +66,17 @@ public sealed interface RoomMessage permits RoomMessage.Enter, RoomMessage.Leave
   record BroadcastToOthers(String sourceId, String message) implements RoomMessage {
   }
 
-  record CombatBroadcast(LivingActor source, LivingActor target, String messageTemplate)
+  record CombatBroadcast(Living source, Living target, String messageTemplate)
       implements RoomMessage {
   }
 
-  record FindActor(String actorId, CompletableFuture<LivingActor> future) implements RoomMessage {
+  record FindActor(String actorId, CompletableFuture<Living> future) implements RoomMessage {
   }
 
-  record GetPlayers(CompletableFuture<List<PlayerActor>> future) implements RoomMessage {
+  record GetPlayers(CompletableFuture<List<Player>> future) implements RoomMessage {
   }
 
-  record GetMobs(CompletableFuture<List<MobActor>> future) implements RoomMessage {
+  record GetMobs(CompletableFuture<List<Mob>> future) implements RoomMessage {
   }
 
   record GetItems(CompletableFuture<List<GameItem>> future) implements RoomMessage {

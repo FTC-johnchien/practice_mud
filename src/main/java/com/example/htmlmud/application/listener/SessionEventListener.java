@@ -7,7 +7,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
-import com.example.htmlmud.domain.actor.impl.PlayerActor;
+import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.event.DomainEvent.SessionEvent;
 import com.example.htmlmud.infra.server.SessionRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,7 +27,7 @@ public class SessionEventListener {
   public void onEstablished(SessionEvent.Established event) throws IOException {
     log.info("系統收到連線建立事件: {}", event.sessionId());
 
-    PlayerActor actor = sessionRegistry.get(event.sessionId());
+    Player actor = sessionRegistry.get(event.sessionId());
     WebSocketSession session = actor.getSession();
     // WebSocketSession session = sessionRegistry.get(event.sessionId());
 

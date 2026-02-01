@@ -1,6 +1,7 @@
 package com.example.htmlmud.domain.model.map;
 
 import java.util.List;
+import java.util.Set;
 import com.example.htmlmud.domain.model.RoomFlag;
 
 // 1. 區域 (Zone) - 靜態地圖檔的根物件
@@ -18,7 +19,7 @@ public record ZoneTemplate(
 
     List<String> authors, // 作者與可修改者
 
-    List<String> flags // e.g., ["SAFE", "OUTDOORS"]
+    Set<String> flags // e.g., ["SAFE", "OUTDOORS"]
 
 ) {
   public ZoneTemplate {
@@ -32,7 +33,7 @@ public record ZoneTemplate(
       respawnTime = 300; // 5分鐘
     }
     if (flags == null || flags.isEmpty()) {
-      flags = List.of(RoomFlag.OUTDOORS.name(), RoomFlag.NO_PVP.name());
+      flags = Set.of(RoomFlag.OUTDOORS.name(), RoomFlag.NO_PVP.name());
     }
   }
 }

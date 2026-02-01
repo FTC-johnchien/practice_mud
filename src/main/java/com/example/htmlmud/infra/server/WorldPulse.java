@@ -20,7 +20,7 @@ public class WorldPulse {
 
   // 設定基礎頻率為 1000ms (1秒)
   // 這是 "戰鬥心跳" 的速度，也是最小單位
-  @Scheduled(fixedRate = 1000)
+  // @Scheduled(fixedRate = 100)
   public void pulse() {
     long currentTick = globalTickCounter.incrementAndGet();
     long now = System.currentTimeMillis();
@@ -31,13 +31,13 @@ public class WorldPulse {
       // Active Room 定義：有玩家在裡面，重生時間，或者有未結束的戰鬥/腳本
       boolean isRespawnTick = (currentTick % room.getZoneTemplate().respawnTime() == 0);
       if (!room.getPlayers().isEmpty() || isRespawnTick
-          || room.getMobs().stream().anyMatch(m -> m.getState().isInCombat())) {
+          || room.getMobs().stream().anyMatch(m -> m.isInCombat())) {
         room.tick(currentTick, now);
       }
     });
 
     // 可選：每 150 秒印一次 Log 確保心臟還在跳 (遊戲時間1小時)
-    if (currentTick % 150 == 0) {
+    if (currentTick % 1500 == 0) {
       log.info("World Pulse alive. Tick: {}", currentTick);
 
     }

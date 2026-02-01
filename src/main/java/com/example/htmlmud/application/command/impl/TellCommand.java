@@ -3,7 +3,7 @@ package com.example.htmlmud.application.command.impl;
 import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.application.command.annotation.CommandAlias;
 import com.example.htmlmud.application.service.WorldManager;
-import com.example.htmlmud.domain.actor.impl.PlayerActor;
+import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.exception.MudException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -21,7 +21,7 @@ public class TellCommand implements PlayerCommand {
   }
 
   @Override
-  public void execute(PlayerActor actor, String args) {
+  public void execute(Player actor, String args) {
     // 1. 參數檢查
     // 格式: tell <player> <message>
     if (args == null || args.isBlank()) {
@@ -38,7 +38,7 @@ public class TellCommand implements PlayerCommand {
 
     // 2. 尋找目標 (假設 WorldManager 有用 Map 或 Cache 存線上玩家)
     // 這裡我們直接拋出異常，讓 Dispatcher 處理錯誤訊息
-    PlayerActor target = worldManager.findPlayerByName(targetName)
+    Player target = worldManager.findPlayerByName(targetName)
         .orElseThrow(() -> new MudException("在這個世界上找不到叫 '" + targetName + "' 的人。"));
 
     // 3. 檢查是不是對自己說話

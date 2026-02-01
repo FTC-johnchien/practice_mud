@@ -1,0 +1,92 @@
+{
+  "id": "mob_beast_parry",
+  "name": "野獸格擋",
+  "description": "依靠野獸的本能與強悍的肉體，利用爪牙、鱗甲或肢體硬生生架開敵人的兵器。",
+  "type": "REACTIVE",
+  "school": "NATURAL",
+  "tags": [
+    "DEFENSIVE",
+    "PARRY",
+    "NATURAL",
+    "PHYSICAL"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED"
+    ]
+  },
+  "costs": {
+    "stamina": 4
+  },
+  "scaling": {
+    "parryRatePerLevel": 0.004
+  },
+  "mechanics": {
+    "parryRate": 0.12,
+    "maxLevel": 100,
+    "scaleStat": "STR",
+    "scaleFactor": 1.4,
+    "formulas": {
+      "successRate": "skill.mechanics.parryRate + (user.str * 0.008) - (target.dex * 0.002)"
+    }
+  },
+  "moves": [
+    {
+      "name": "利爪揮擊",
+      "weight": 50,
+      "msg": {
+        "success": "面對$n劈來的$w，$N發出低吼，揮動$W精準地拍擊在兵器的側面，將攻勢盪開。"
+      }
+    },
+    {
+      "name": "蠻力硬撼",
+      "weight": 40,
+      "msg": {
+        "success": "$N不閃不避，仗著$W堅硬如鐵，直接迎向$n的$w，「噹」的一聲將攻擊硬生生震退。"
+      }
+    },
+    {
+      "name": "獠牙咬合",
+      "weight": 15,
+      "msg": {
+        "success": "$N猛地張開血盆大口，用$W死死咬住了$n劈向$l的$w，發出令人牙酸的摩擦聲。"
+      }
+    },
+    {
+      "name": "鱗甲偏斜",
+      "weight": 45,
+      "msg": {
+        "success": "$N微微側身，調整角度讓$n的$w滑過$W表面最堅硬的部位，火花四濺中毫髮無傷。"
+      }
+    },
+    {
+      "name": "巨尾橫掃",
+      "weight": 30,
+      "msg": {
+        "success": "$N身形一轉，$W如鋼鞭般後發先至，重重地抽打在$n的$w上，化解了這致命一擊。"
+      }
+    },
+    {
+      "name": "肢體壓制",
+      "weight": 25,
+      "msg": {
+        "success": "$N看準$n出招的瞬間，猛地抬起粗壯的$W踩住或壓住$n的$w，使其動彈不得。"
+      }
+    },
+    {
+      "name": "交叉格擋",
+      "weight": 35,
+      "msg": {
+        "success": "$N雙肢交叉護住$l，用$W架住了$n勢大力沉的一擊，雖然後退半步但成功防禦。"
+      }
+    },
+    {
+      "name": "獸角頂撞",
+      "weight": 20,
+      "msg": {
+        "success": "$N低頭猛衝，利用鋒利的$W準確地挑中了$n手中的$w，將兵器高高蕩起。"
+      }
+    }
+  ]
+}

@@ -1,0 +1,139 @@
+{
+  "id": "basic_archery",
+  "name": "基本弓術",
+  "description": "包含開弓、瞄準、放矢的基礎射擊技巧，講究眼手合一，百步穿楊。",
+  "type": "PASSIVE",
+  "school": "COMMON",
+  "tags": [
+    "WEAPON",
+    "RANGED",
+    "BOW",
+    "PHYSICAL"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      "BOW",
+      "CROSSBOW"
+    ]
+  },
+  "costs": {
+    "stamina": 3
+  },
+  "scaling": {
+    "damagePerLevel": 0.65,
+    "hitRatePerLevel": 0.003,
+    "critRatePerLevel": 0.002
+  },
+  "mechanics": {
+    "critRate": 0.06,
+    "damage": 8,
+    "damageType": "PIERCE",
+    "hitRate": 0.90,
+    "maxLevel": 100,
+    "scaleStat": "DEX",
+    "scaleFactor": 1.4,
+    "formulas": {
+      "damage": "skill.mechanics.damage + (user.dex * 0.12) + (user.str * 0.05)"
+    }
+  },
+  "moves": [
+    {
+      "name": "平射",
+      "weight": 50,
+      "damageMod": 1.0,
+      "hitRateMod": 0.1,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N左手持$W，右手搭箭拉弦，眼神鎖定$n，一箭平平射出。",
+        "hit": "「嗖」的一聲，箭矢精準地插在$n的$l上，顫動不已，受到 $d 傷害！",
+        "miss": "$n聽風辨位，頭一偏，利箭擦著耳邊飛過，釘在身後的樹幹上。"
+      }
+    },
+    {
+      "name": "滿弦重箭",
+      "weight": 30,
+      "damageMod": 1.5,
+      "hitRateMod": -0.2,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N深吸一口氣，雙臂肌肉隆起，將$W拉得如滿月一般，發出一記雷霆般的重箭！",
+        "hit": "箭矢帶著淒厲的嘯聲，無視防禦直接貫穿了$n的身體，受到 $d 傷害！",
+        "crit": "【重擊】強勁的力道直接將$n帶得向後飛起，箭矢透體而出，造成了巨大的 $d 傷害！",
+        "miss": "$N用力過猛導致準頭稍偏，重箭轟然射入$n腳邊的地面，炸起一片土石。"
+      }
+    },
+    {
+      "name": "連珠箭",
+      "weight": 25,
+      "damageMod": 1.2,
+      "hitRateMod": -0.1,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N手指翻飛，從箭壺中連續抽出箭矢，利用$W在眨眼間對$n連射兩箭。",
+        "hit": "$n擋得住第一箭卻擋不住第二箭，身上接連中招，鮮血飛濺，受到 $d 傷害！",
+        "miss": "$n揮動$w撥打，只聽「叮叮」兩聲脆響，將$N射來的連珠箭盡數擊落。"
+      }
+    },
+    {
+      "name": "定身阻擊",
+      "weight": 35,
+      "damageMod": 0.8,
+      "hitRateMod": 0.15,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N不求殺傷，而是冷靜地用$W瞄準$n的下盤，$l處的破綻暴露無遺。",
+        "hit": "利箭精準地射中$n的腿部關節，劇痛讓$n動作一滯，受到 $d 傷害！",
+        "miss": "$n腳步變幻，身形飄忽不定，讓$N的預判落了空。"
+      }
+    },
+    {
+      "name": "拋射",
+      "weight": 20,
+      "damageMod": 1.1,
+      "hitRateMod": -0.05,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N將$W高舉指向天空，射出一支高拋物線的箭矢，越過障礙墜向$n。",
+        "hit": "箭矢藉著墜落的力道，狠狠地扎進$n的頭肩部位，受到 $d 傷害！",
+        "miss": "$n抬頭看準落點，向旁橫移兩步，箭矢「咄」的一聲釘在原本站立的地方。"
+      }
+    },
+    {
+      "name": "近身速射",
+      "weight": 40,
+      "damageMod": 0.7,
+      "hitRateMod": 0.2,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N面對逼近的$n臨危不亂，無需瞄準，憑藉手感抬起$W就是一記快箭。",
+        "hit": "距離太近，$n根本來不及反應，箭矢已經深深沒入體內，受到 $d 傷害！",
+        "miss": "$n早有防備，近身時一掌拍在$W的弓身上，讓射出的箭矢偏離了方向。"
+      }
+    },
+    {
+      "name": "追魂一箭",
+      "weight": 15,
+      "damageMod": 1.3,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.2,
+      "msg": {
+        "cast": "$N凝神屏氣，將全身精氣神鎖定$n，手中的$W彷彿與人合二為一，射出必殺的一箭。",
+        "hit": "這一箭快得看不清軌跡，直接洞穿了$n的$l要害，受到 $d 傷害！",
+        "crit": "【重擊】箭矢精準地從護甲縫隙鑽入，直透心臟，$n發出絕望的慘叫，受到 $d 點嚴重傷害！",
+        "miss": "$n生死關頭爆發潛能，用$w極限格擋，箭尖擦出耀眼的火花被彈開。"
+      }
+    },
+    {
+      "name": "破甲錐",
+      "weight": 10,
+      "damageMod": 1.0,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.15,
+      "msg": {
+        "cast": "$N換上一支特製的破甲重箭，弓開如滿月，瞄準$n防禦最強的部位射去。",
+        "hit": "特製的箭頭輕易撕裂了$n的護甲，深深扎入肉裡，受到 $d 傷害！",
+        "miss": "$n微一側身，箭矢射在堅硬的護心鏡邊緣，滑向了一旁。"
+      }
+    }
+  ]
+}
