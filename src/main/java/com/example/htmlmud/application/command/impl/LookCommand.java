@@ -66,6 +66,7 @@ public class LookCommand implements PlayerCommand {
     List<Mob> mobs = room.getMobs();
     List<GameItem> items = room.getItems();
     log.info("players: {}, mobs: {} items: {}", players.size(), mobs.size(), items.size());
+    players.stream().forEach(p -> log.info("player: {}:{}", p.getId(), p.getName()));
 
 
     // 1. 篩選出 其他玩家 (亮藍色，排除自己)

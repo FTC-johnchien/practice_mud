@@ -7,7 +7,6 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
-import com.example.htmlmud.application.service.CommandQueueService;
 import com.example.htmlmud.application.service.PlayerService;
 import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.Player;
@@ -22,7 +21,6 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
   private final PlayerService playerService;
   private final WorldManager worldManager;
   private final SessionRegistry sessionRegistry;
-  private final CommandQueueService commandQueueService;
 
   @Override
   public void afterConnectionEstablished(WebSocketSession session) {
@@ -57,6 +55,11 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
 
   @Override
   protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+
+    // A. 產生 Trace ID (所有 Log 追蹤的源頭)
+    // 使用短 UUID 方便閱讀，實務上可用完整的 UUID
+    String traceId = UUID.randomUUID().toString().substring(0, 8);
+
     try {
       Player actor = sessionRegistry.get(session.getId());
       if (actor != null) {
@@ -64,20 +67,24 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
         GameCommand cmd =
             playerService.getObjectMapper().readValue(message.getPayload(), GameCommand.class);
 
-        // D. 統一丟進佇列，讓 ServerEngine 決定何時執行
-        commandQueueService.push(actor, cmd);
+        // D. 裝入信封並投遞
+        // 這裡不綁定 ScopedValue，因為要跨執行緒傳遞
+        actor.command(traceId, cmd);
       } else {
-        log.warn("收到訊息但找不到 Actor，關閉連線: {}", session.getId());
+        // 找不到 Actor，通常代表連線異常或已被踢除
+        log.warn("[{}] 收到訊息但找不到 Actor，關閉連線: {}", traceId, session.getId());
         session.close();
       }
     } catch (Exception e) {
-      log.error("訊息處理錯誤: {}", e.getMessage());
+      // JSON 解析失敗或其他錯誤
+      log.error("[{}] 訊息處理錯誤: {}", traceId, e.getMessage());
+      // 選擇性：回傳錯誤訊息給 Client
     }
   }
 
   @Override
   public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-
+    log.info("afterConnectionClosed");
     // 從 Registry 移除並取得 Actor
     Player actor = sessionRegistry.remove(session.getId());
 
@@ -88,5 +95,23 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
       // (如果是 Guest 則直接停止，如果是正式玩家則觸發存檔與從 WorldManager 移除)
       actor.handleDisconnect();
     }
+  }
+
+  // --- 關鍵方法：切換負責人 (Handover) ---
+  // 這個方法會被 LoginService 呼叫
+  public void promoteToPlayer(WebSocketSession session, Player player) {
+    // 1. 取得舊的 Guest
+    Player oldGuest = sessionRegistry.get(session.getId());
+
+    // 2. 讓 Player 接管 Session
+    player.setSession(session);
+
+    // 3. 更新 sessionRegistry，之後的訊息直接灌給 Player
+    sessionRegistry.register(session, player);
+
+    // 4. 【賜死 Guest】 舊的 Guest 任務完成，請他下台
+    oldGuest.stop(); // 停止 Guest 的 VT，釋放資源
+
+    log.info("Session 權限已移交給玩家: {}", player.getName());
   }
 }

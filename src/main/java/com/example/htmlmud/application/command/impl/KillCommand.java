@@ -33,8 +33,13 @@ public class KillCommand implements PlayerCommand {
 
   @Override
   public void execute(Player self, String args) {
+    if (self.isDead()) {
+      messageUtil.send("$N已經死亡了。", self);
+      return;
+    }
+
     if (args.isBlank()) {
-      self.reply("你要攻擊誰？");
+      messageUtil.send("$N要攻擊誰？", self);
       return;
     }
 

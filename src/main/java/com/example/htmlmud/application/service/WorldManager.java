@@ -13,6 +13,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.application.factory.WorldFactory;
+import com.example.htmlmud.domain.actor.impl.Living;
+import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.model.map.ItemTemplate;
@@ -50,8 +52,8 @@ public class WorldManager {
   @Getter
   private final ConcurrentHashMap<String, Room> activeRooms = new ConcurrentHashMap<>();
 
-  // 快取：ID -> Player 實體
-  private final ConcurrentHashMap<String, Player> activePlayers = new ConcurrentHashMap<>();
+  // 快取：ID -> Living 實體
+  private final ConcurrentHashMap<String, Living> activeLivings = new ConcurrentHashMap<>();
 
   // 3. Write-Behind Queue: 存放待寫入資料庫的變更
   private final BlockingQueue<RoomStateUpdate> persistenceQueue = new LinkedBlockingQueue<>();
@@ -267,16 +269,36 @@ public class WorldManager {
   public record RoomStateUpdate(int roomId, String dataToSave) {
   }
 
-  public void addLivingActor(Player player) {
-    activePlayers.put(player.getId(), player);
+  public void addLivingActor(Living living) {
+    activeLivings.put(living.getId(), living);
   }
 
-  public Optional<Player> findLivingActor(String playerId) {
-    return Optional.ofNullable(activePlayers.get(playerId));
+  public Optional<Living> findLivingActor(String livingId) {
+    return Optional.ofNullable(activeLivings.get(livingId));
   }
 
-  public void removeLivingActor(String playerId) {
-    activePlayers.remove(playerId);
+  public Optional<Player> findPlayerActor(String playerId) {
+    Optional<Living> living = findLivingActor(playerId);
+    if (living.isPresent() && living.get() instanceof Player) {
+      return Optional.of((Player) living.get());
+    }
+    return Optional.empty();
+  }
+
+  public void removeLivingActor(String livingId) {
+    // 1. 直接從 Map 移除並取得物件，減少一次查詢
+    Living living = activeLivings.remove(livingId);
+    if (living == null) {
+      return;
+    }
+
+    // 2. 如果是 Mob，確保停止其 Actor 訊息處理迴圈
+    if (living instanceof Mob) {
+      living.stop();
+    }
+
+    // 3. 委派給 Living 處理從房間移除的邏輯 (封裝職責)
+    living.removeFromRoom();
   }
 
 
@@ -366,11 +388,7 @@ public class WorldManager {
   // }
 
   public Optional<Player> findPlayerByName(String targetName) {
-    for (Player player : activePlayers.values()) {
-      if (player.getName().equals(targetName)) {
-        return Optional.of(player);
-      }
-    }
-    return Optional.empty();
+    return activeLivings.values().stream().filter(Player.class::isInstance).map(Player.class::cast)
+        .filter(player -> player.getName().equalsIgnoreCase(targetName)).findFirst();
   }
 }

@@ -10,5 +10,7 @@ public enum ConnectionState {
   ENTERING_CHAR_RACE, // 正在選擇種族
   ENTERING_CHAR_CLASS, // 正在選擇職業
   ENTERING_CHAR_ATTRIBUTES, // 正在選擇等級
+  LINK_DEAD, // 玩家已斷線
+  DISCONNECTED, // 關閉連線
   IN_GAME // 遊戲中：正常遊玩
 }

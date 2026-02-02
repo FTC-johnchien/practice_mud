@@ -99,7 +99,7 @@ public class ServerEngine implements Runnable {
     // World.tick();
 
     // C. 驅動戰鬥系統 (這就是解決你頓挫感的地方)
-    combatService.tick();
+    // combatService.tick();
 
     // D. 驅動所有區域/房間 (如果你的 Mob 是掛在房間下的)
     // RoomManager.tickAll();

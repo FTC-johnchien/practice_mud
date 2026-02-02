@@ -1,13 +1,16 @@
 package com.example.htmlmud.domain.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.application.command.parser.BodyPartSelector;
 import com.example.htmlmud.application.factory.WorldFactory;
+import com.example.htmlmud.domain.actor.core.VirtualActor;
 import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
@@ -17,6 +20,7 @@ import com.example.htmlmud.domain.model.MoveAction;
 import com.example.htmlmud.domain.model.map.SkillTemplate;
 import com.example.htmlmud.domain.model.skill.dto.ActiveSkillResult;
 import com.example.htmlmud.domain.model.vo.DamageSource;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.example.htmlmud.infra.persistence.entity.SkillEntry;
 import com.example.htmlmud.infra.util.ColorText;
 import com.example.htmlmud.infra.util.FormulaEvaluator;
@@ -38,6 +42,7 @@ public class CombatService {
   private final MessageUtil messageUtil;
   private final SkillService skillService;
   private final WorldFactory worldFactory;
+  private final ObjectMapper objectMapper;
   private final XpService xpService;
 
 
@@ -47,11 +52,11 @@ public class CombatService {
    */
   public void startCombat(Living self, Living target) {
 
-    if (self.combatTarget == null) {
-      self.combatTarget = target;
+    if (self.getCombatTarget() == null) {
+      self.combatTargetId = target.getId();
     }
-    if (target.combatTarget == null) {
-      target.combatTarget = self;
+    if (target.getCombatTarget() == null) {
+      target.combatTargetId = self.getId();
     }
 
     self.isInCombat = true;
@@ -80,7 +85,7 @@ public class CombatService {
    */
   public void endCombat(Living self) {
     self.isInCombat = false;
-    self.combatTarget = null;
+    self.combatTargetId = null;
     self.nextAttackTime = 0;
 
     // 【移出名單】
@@ -90,10 +95,7 @@ public class CombatService {
   /**
    * 【核心心跳】 由 ServerEngine 每 100ms 呼叫一次
    */
-  public void tick() {
-    // 在這個 tick 以 now 的時間為準
-    long now = System.currentTimeMillis();
-
+  public void tick(long currentTick, long now) {
     // 只遍歷「正在戰鬥」的生物，效率極高
     for (Living actor : combatants) {
 
@@ -104,7 +106,7 @@ public class CombatService {
       }
 
       // 1. 檢查對手是否還活著/存在
-      Living target = actor.combatTarget;
+      Living target = actor.getCombatTarget();
       if (target == null || target.isDead()
           || !target.getCurrentRoom().equals(actor.getCurrentRoom())) {
         endCombat(actor); // 對手不見了，脫離戰鬥
@@ -165,8 +167,8 @@ public class CombatService {
 
   public void onAttacked(Living self, Living attacker) {
     self.isInCombat = true;
-    if (self.combatTarget == null) {
-      self.combatTarget = attacker;
+    if (self.getCombatTarget() == null) {
+      self.combatTargetId = attacker.getId();
     }
 
     // 攻擊準備時間
@@ -192,7 +194,8 @@ public class CombatService {
     }
 
     // 扣除 HP
-    self.getState().setHp(self.getState().getHp() - amount);
+    self.getState().hp -= amount;
+    // self.getState().setHp(self.getState().getHp() - amount);
 
     // for test----------------------------------------------------------------------------------
     Room room = self.getCurrentRoom();
@@ -202,49 +205,9 @@ public class CombatService {
 
     // 檢查是否死亡，通知 self 死亡事件
     if (self.isDead()) {
-      log.info("{} 死亡ing", self.getName());
+      log.info("{} 被打死了", self.getName());
       self.die(attacker);
     }
-  }
-
-  public void onDie(Living self, Living killer) {
-    Room room = self.getCurrentRoom();
-
-    String messageTemplate = "$N殺死了$n";
-    List<Living> audiences = new ArrayList<>();
-    audiences.addAll(room.getPlayers());
-    for (Living receiver : audiences) {
-      messageUtil.send(messageTemplate, killer, self, receiver);
-    }
-    // room.broadcast(killerId + " 殺死了 " + self.getName());
-
-    // 停止戰鬥狀態
-    self.getState().setHp(0);
-    self.isInCombat = false;
-    self.combatTarget = null;
-
-    // 製造屍體
-    GameItem corpse = worldFactory.createCorpse(self);
-
-    if (self.getCurrentRoom() == null) {
-      log.error("{} onDie currentRoomId is null", self.getName());
-      return;
-    }
-
-    // TODO 應交由房間處理 roomMessage livingDead 房間廣播死亡訊息
-    // RoomActor room = worldManagerProvider.getObject().getRoomActor(self.getCurrentRoomId());
-    // if (room != null) {
-    // CompletableFuture<LivingActor> future = new CompletableFuture<>();
-    // room.findActor(killerId, future);
-    // LivingActor killer = future.orTimeout(1, java.util.concurrent.TimeUnit.SECONDS).join();
-    // if (killer == null) {
-    // log.error("killerId LivingActor not found: {}", killerId);
-    // return;
-    // }
-    // room.broadcastToOthers(killerId, self.getName() + " 被 " + killer.getName() + " 殺死了！");
-    // } else {
-    // log.error("currentRoomId RoomActor not found: {}", self.getCurrentRoomId());
-    // }
   }
 
   public void afterAttack(Player attacker, ActiveSkillResult skillResult) {
@@ -328,6 +291,7 @@ public class CombatService {
   }
 
   public void performAttackRound(Living self, Living target, long now) {
+    log.info("performAttackRound now:{}", now);
     // 1. 決定攻擊次數 (預設 1，龍可能是 2 或 3)
     for (int i = 0; i < self.getAttacksPerRound(); i++) {
       // 2. 每次攻擊都重新抽一次技能
@@ -392,7 +356,6 @@ public class CombatService {
     // 招架 parry
     if (dmgAmout <= 0) {
       msg += "\r\n" + action.msg().miss();
-
       for (Living receiver : audiences) {
         messageUtil.send(CombineString(msg, sWeapon, tWeapon, part), self, target, receiver);
       }
@@ -407,11 +370,15 @@ public class CombatService {
     long jitter = ThreadLocalRandom.current().nextLong(-200, 200); // ±200ms
     self.nextAttackTime = (now + baseSpeed + jitter);
 
+    msg += "\r\n" + action.msg().hit();
+    msg = CombineString(msg, sWeapon, tWeapon, part);
+    msg = msg.replace("$d", ColorText.damage(dmgAmout));
     for (Living receiver : audiences) {
-      msg += "\r\n" + action.msg().hit();
-      msg = CombineString(msg, sWeapon, tWeapon, part);
-      msg = msg.replace("$d", ColorText.damage(dmgAmout));
       messageUtil.send(msg, self, target, receiver);
+    }
+
+    if (target instanceof Player player) {
+      player.sendStatUpdate();
     }
   }
 
@@ -426,4 +393,5 @@ public class CombatService {
     double variance = 0.9 + (ThreadLocalRandom.current().nextDouble() * 0.2);
     return (long) (baseSpeed * variance);
   }
+
 }

@@ -7,6 +7,8 @@ import java.util.concurrent.CompletableFuture;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.application.service.AuthService;
+import com.example.htmlmud.application.service.WorldManager;
+import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.context.MudKeys;
@@ -26,14 +28,18 @@ public class GuestBehavior implements PlayerBehavior {
 
   private final AuthService authService;
 
+  private final WorldManager worldManager;
+
+
   @Setter
   private String tempUsername; // 暫存正在處理的帳號名
 
   @Setter
   private String tempPassword; // 暫存正在處理的密碼
 
-  public GuestBehavior(AuthService authService) {
+  public GuestBehavior(AuthService authService, WorldManager worldManager) {
     this.authService = authService;
+    this.worldManager = worldManager;
   }
 
   @Override
@@ -58,6 +64,8 @@ public class GuestBehavior implements PlayerBehavior {
         case ENTERING_CHAR_ATTRIBUTES -> {
         }
         case IN_GAME -> {
+        }
+        default -> {
         }
       }
     }
@@ -295,6 +303,14 @@ public class GuestBehavior implements PlayerBehavior {
     // 登入玩家帳密
     PlayerRecord record = authService.login(tempUsername, tempPassword);
 
+    // 查詢是否存在該帳號 (斷線重連)
+    log.info("record.id: {}", record.id());
+    Optional<Player> opt = worldManager.findPlayerActor(record.id());
+    if (opt.isPresent() && opt.get().getConnectionState() == ConnectionState.LINK_DEAD) {
+      takeoverSession(session, opt.get());
+      return null;
+    }
+
     // 變更為正式玩家身份
     return upgradeIdentity(actor, record);
   }
@@ -320,26 +336,34 @@ public class GuestBehavior implements PlayerBehavior {
 
 
   // 供 GuestBehavior 呼叫：由GUEST變更為正式玩家
-  private PlayerBehavior upgradeIdentity(Player actor, PlayerRecord record) {
+  private PlayerBehavior upgradeIdentity(Player self, PlayerRecord record) {
 
     // 資料載入
-    actor.fromRecord(this, record);
-    actor.setConnectionState(ConnectionState.IN_GAME);
+    self.fromRecord(this, record);
+    self.setConnectionState(ConnectionState.IN_GAME);
+    worldManager.addLivingActor(self);
 
     // 裝備?
 
     // 讓玩家進入資料紀錄的房間
-    Room room = actor.getCurrentRoom();
+    Room room = self.getCurrentRoom();
     CompletableFuture<Void> future = new CompletableFuture<>();
-    room.enter(actor, Direction.UP, future);
+    room.enter(self, Direction.UP, future);
     try {
       future.orTimeout(1, java.util.concurrent.TimeUnit.SECONDS).join();
     } catch (MudException e) {
       log.error("enterRoom", e);
     }
 
-    log.info("Actor 載入玩家資料 當前狀態: {} {}", actor.getName(), actor.getNickname());
+    self.sendStatUpdate();
+    log.info("Actor 載入玩家資料 當前狀態: {} {}", self.getName(), self.getNickname());
     return new InGameBehavior();
   }
 
+  // 【關鍵方法】被奪舍：接收新的連線
+  public void takeoverSession(WebSocketSession newSession, Player actor) {
+    log.info("takeoverSession actor.id: {}", actor.getId());
+    // 呼叫原 Player 的 onReconnect
+    actor.onReconnect(newSession);
+  }
 }

@@ -261,4 +261,8 @@ public final class Mob extends Living {
     nextAttackTime = now + attackSpeed;
   }
 
+  @Override
+  protected void performRemoveFromRoom(Room room) {
+    room.getMobs().remove(this);
+  }
 }

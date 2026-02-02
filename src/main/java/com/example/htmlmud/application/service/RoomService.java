@@ -296,7 +296,7 @@ public class RoomService {
     }
 
     // // 2. 設定位置
-    mob.setCurrentRoom(roomActor);
+    mob.setCurrentRoomId(roomActor.getId());
 
     // // 3. 加入房間列表
     roomActor.getMobs().add(mob);
@@ -338,7 +338,7 @@ public class RoomService {
       }
     }
 
-    actor.setCurrentRoom(self);
+    actor.setCurrentRoomId(self.getId());
 
     String arriveMsg =
         ColorText.wrap(AnsiColor.YELLOW, livingName + " 從 " + direction.getDisplayName() + " 過來了。");

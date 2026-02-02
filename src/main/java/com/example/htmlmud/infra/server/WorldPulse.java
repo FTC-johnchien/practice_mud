@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.service.WorldManager;
-import com.example.htmlmud.protocol.RoomMessage;
+import com.example.htmlmud.domain.service.CombatService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,12 +15,15 @@ public class WorldPulse {
 
   private final WorldManager worldManager;
 
+  private final CombatService combatService;
+
+
   // 全域計數器，伺服器啟動後開始累加
   private final AtomicLong globalTickCounter = new AtomicLong(0);
 
   // 設定基礎頻率為 1000ms (1秒)
   // 這是 "戰鬥心跳" 的速度，也是最小單位
-  // @Scheduled(fixedRate = 100)
+  @Scheduled(fixedRate = 100)
   public void pulse() {
     long currentTick = globalTickCounter.incrementAndGet();
     long now = System.currentTimeMillis();
@@ -35,6 +38,9 @@ public class WorldPulse {
         room.tick(currentTick, now);
       }
     });
+
+    combatService.tick(currentTick, now);
+
 
     // 可選：每 150 秒印一次 Log 確保心臟還在跳 (遊戲時間1小時)
     if (currentTick % 1500 == 0) {

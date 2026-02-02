@@ -2,6 +2,7 @@ package com.example.htmlmud.domain.actor.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,12 +31,21 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class Player extends Living {
 
+  @Setter
   private WebSocketSession session;
 
   private final PlayerService service;
 
   private final WorldManager manager;
 
+  // Actor 內部狀態 (State Machine Context)
+  @Setter
+  private ConnectionState connectionState = ConnectionState.CONNECTED;
+
+
+
+  // 用來比對「這是哪一次的斷線」，防止舊的計時器殺錯人
+  private volatile long lastDisconnectTime = 0;
 
   @Setter
   private List<String> aliases;
@@ -45,10 +55,6 @@ public final class Player extends Living {
 
   @Setter
   private String lookDescription;
-
-  // Actor 內部狀態 (State Machine Context)
-  @Setter
-  private ConnectionState connectionState = ConnectionState.CONNECTED;
 
   // 當前的行為腦
   @Setter
@@ -72,7 +78,7 @@ public final class Player extends Living {
     String playerId = "p-" + uuid.substring(0, 8) + uuid.substring(9, 11);
     Player actor =
         new Player(session, playerId, name, new LivingState(), worldManager, playerService);
-    actor.become(new GuestBehavior(playerService.getAuthService()));
+    actor.become(new GuestBehavior(playerService.getAuthService(), worldManager));
     return actor;
   }
 
@@ -230,48 +236,12 @@ public final class Player extends Living {
 
 
 
-  // MudWebSocketHandler 在 afterConnectionClosed 時呼叫此方法
-  public void handleDisconnect() {
-    markInvalid();
-    // 1. 停止 Actor 迴圈
-    this.stop();
-
-    // 2. 如果已經登入並存在於世界中，從世界移除
-    // 注意：這裡可以做「離線保護」或「延遲登出」
-    // 但最簡單的做法是直接移除
-    // worldManager.removePlayer(this.getId());
-
-    // 3. 觸發存檔 (Write-Behind)
-    // persistenceService.saveAsync(this.toRecord());
-  }
-
-
-
-  // 未整理也
-  private void replaceSession(WebSocketSession newSession) {
-    // 1. 關閉舊連線 (如果還開著)
-    if (this.session != null && this.session.isOpen()) {
-      try {
-        this.session.close();
-      } catch (IOException ignored) {
-      }
-    }
-
-    // 2. 換上新連線
-    this.session = newSession;
-
-    // 3. 重發當前環境資訊
-    this.doSendText(session, "\u001B[33m[系統] 連線已恢復。\u001B[0m");
-    service.getCommandDispatcher().dispatch(this, "look");
-  }
-
-
   private PlayerRecord toRecord() {
     // 您必須確保 LivingState 有實作 deepCopy，否則會發生併發修改例外
     return new PlayerRecord(this.id, // ID
         this.name, // Username
         this.nickname, // Nickname
-        this.currentRoom.getId(), // Room
+        this.currentRoomId, // Room
         this.state.deepCopy(), // 【關鍵】深層複製 State
         new ArrayList<GameItem>(this.inventory) // Inventory
     );
@@ -288,7 +258,7 @@ public final class Player extends Living {
     }
     this.aliases = new ArrayList<>(List.of(record.name()));
     this.state = record.state();
-    this.currentRoom = manager.getRoomActor(record.currentRoomId());
+    this.currentRoomId = record.currentRoomId();
     this.inventory = record.inventory();
     if (this.inventory == null) {
       this.inventory = new ArrayList<>();
@@ -311,5 +281,121 @@ public final class Player extends Living {
     // int actualDuration = (duration > 0) ? duration : GameConfig.DEFAULT_GCD;
     int actualDuration = (duration > 0) ? duration : 1500;
     this.gcdEndTimestamp = System.currentTimeMillis() + actualDuration;
+  }
+
+  // Java 範例：發送狀態更新
+  @Override
+  public void sendStatUpdate() {
+    Map<String, Object> update = new HashMap<>();
+    update.put("type", "STAT_UPDATE");
+    update.put("hp", state.hp);
+    update.put("maxHp", state.maxHp);
+    update.put("mp", state.mp);
+    update.put("maxMp", state.maxMp);
+    update.put("energy", state.getCombatResource("charge")); // 0~100
+
+    // 轉成 JSON 字串發送給前端
+    try {
+      String json = service.getObjectMapper().writeValueAsString(update);
+      session.sendMessage(new TextMessage(json));
+    } catch (Exception e) {
+      log.error("發送狀態更新失敗: {}", this.getName(), e);
+    }
+  }
+
+  @Override
+  protected void performRemoveFromRoom(Room room) {
+    room.getPlayers().remove(this);
+  }
+
+
+
+  // 【當 WebSocket 斷線時呼叫此方法】
+  public void handleDisconnect() {
+    log.warn("{} 斷線，進入緩衝狀態...", name);
+    this.lastDisconnectTime = System.currentTimeMillis();
+    connectionState = ConnectionState.LINK_DEAD;
+
+    // 廣播給房間其他人 (沉浸式體驗)
+    getCurrentRoom().broadcastToOthers(id, nickname + " 眼神突然變得呆滯，似乎失去了靈魂。");
+
+    // 【關鍵】啟動一個「死神 VT」
+    startDeathTimer(this.lastDisconnectTime);
+  }
+
+  // 【當玩家重新連線時呼叫此方法】
+  public void onReconnect(WebSocketSession newSession) {
+    // 1. 關閉舊連線 (如果還開著)
+    if (this.session != null && this.session.isOpen()) {
+      try {
+        this.session.close();
+      } catch (IOException ignored) {
+      }
+    }
+
+    // 2. 換上新連線
+    // 更新斷線時間戳記，這樣之前的死神 VT 醒來後會發現時間對不上，就不會執行殺人
+    this.lastDisconnectTime = System.currentTimeMillis();
+    connectionState = ConnectionState.IN_GAME;
+    service.getMudWebSocketHandlerProvider().getObject().promoteToPlayer(newSession, this);
+
+    // 3. 重發當前環境資訊
+    log.warn("{} 重新連線成功！", name);
+
+    // 發送歡迎回來的訊息
+    doSendText(session, "\u001B[33m[系統] 連線已恢復。\u001B[0m");
+    getCurrentRoom().broadcastToOthers(id, nickname + " 的眼神恢復了光采。");
+    service.getCommandDispatcher().dispatch(this, "look");
+  }
+
+  private void startDeathTimer(long disconnectTimestamp) {
+    // 啟動一個虛擬執行緒，成本極低
+    Thread.ofVirtual().name("Reaper-" + name).start(() -> {
+      try {
+        // 設定緩衝時間：例如 10 分鐘 (600,000 ms)
+        // 這裡直接 sleep，不會佔用系統資源
+        Thread.sleep(10 * 60 * 1000);
+
+        // --- 10 分鐘後醒來 ---
+
+        // 檢查 1: 玩家是否還在斷線狀態？
+        // 檢查 2: 這是當初那次斷線嗎？(防止玩家重連後又斷線，舊的計時器殺錯)
+        if (connectionState == ConnectionState.LINK_DEAD
+            && this.lastDisconnectTime == disconnectTimestamp) {
+          log.warn("緩衝時間已過，強制清理玩家: {}", name);
+          this.forceLogout();
+        } else {
+          log.info("玩家已重連，死神計時器取消: {}", name);
+        }
+
+      } catch (InterruptedException e) {
+        // 計時器被中斷
+      }
+    });
+  }
+
+  // 強制登出程序
+  public void forceLogout() {
+    // 1. 存檔
+    // saveToDb();
+
+    // // 2. 從房間移除
+    // if (currentRoom != null) {
+    // currentRoom.removePlayer(this);
+    // currentRoom.broadcast(name + " 的身影慢慢消失在空氣中。");
+    // }
+
+    // // 3. 從全域管理器移除 (Map<String, PlayerActor>)
+    // PlayerManager.remove(this.name);
+
+    // // 4. 終止 Actor 迴圈
+    stop();
+
+    // 5. 關閉 Socket (保險起見)
+    if (session != null)
+      try {
+        session.close();
+      } catch (Exception e) {
+      }
   }
 }

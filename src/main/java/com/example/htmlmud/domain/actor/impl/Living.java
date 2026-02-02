@@ -1,6 +1,7 @@
 package com.example.htmlmud.domain.actor.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -30,12 +31,14 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
 
   protected String name;
 
-  // 所有生物都有狀態 (HP/MP)
+  // 所有生物都有狀態 (HP/MP) 存放玩家需要進資料庫的變化值(寫入/讀取)
   protected LivingState state;
 
-  // 所有生物都在某個房間 (可能是 null)
+  // 所有生物都在某個房間 (房間可能未載入)
   @Setter
-  protected Room currentRoom;
+  protected String currentRoomId;
+
+
 
   // 背包
   protected List<GameItem> inventory = new ArrayList<>();
@@ -58,7 +61,7 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
   // === 戰鬥狀態 ===
   public boolean isInCombat = false;
   // 當前鎖定的攻擊目標 (null 代表沒在打架)
-  public Living combatTarget;
+  public String combatTargetId;
   // 下一次可以攻擊的時間點 (System.currentTimeMillis)
   public long nextAttackTime = 0;
   // 附加增益/減益
@@ -180,20 +183,7 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
 
   // 死亡處理
   protected void doDie(Living killer) {
-    // 標記狀態 (Mark State)：設為 Dead，停止接受新的傷害或治療。
-    // 交代後事 (Cleanup & Notify)：取消心跳、製造屍體、通知房間。
-    livingService.getCombatService().onDie(this, killer);
-    // 自我毀滅 (Terminate)：確認訊息發出後，才停止 VT。
-
-    // 區分玩家跟mob
-    switch (this) {
-      case Player player -> {
-        // TODO 玩家死亡步驟
-      }
-      case Mob mob -> {
-        stop(); // 停止 Actor
-      }
-    }
+    livingService.onDie(this, killer);
   }
 
   // 治療處理
@@ -442,7 +432,7 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
 
   // 判斷是否在戰鬥中
   public boolean isInCombat() {
-    return isInCombat && combatTarget != null;
+    return isInCombat && combatTargetId != null;
   }
 
 
@@ -458,5 +448,52 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
   public boolean isValid() {
     return valid && !isDead(); // 活著且有效才算有效
   }
+
+  public Room getCurrentRoom() {
+    Room room = livingService.getWorldManagerProvider().getObject().getRoomActor(currentRoomId);
+    // TODO 要丟到安全的房間
+    if (room == null) {
+      throw new RuntimeException("currentRoom not found: " + currentRoomId);
+    }
+    return room;
+  }
+
+  public Living getCombatTarget() {
+    // 先從怪物清單尋找
+    Room room = getCurrentRoom();
+    Living combatTarget = room.getMobs().stream().filter(m -> m.getId().equals(combatTargetId))
+        .findFirst().orElse(null);
+    // 如果沒找到，再從玩家清單尋找 (支援 PvP)
+    if (combatTarget == null) {
+      combatTarget = room.getPlayers().stream().filter(m -> m.getId().equals(combatTargetId))
+          .findFirst().orElse(null);
+    }
+
+    return combatTarget;
+  }
+
+  public void removeFromRoom() {
+    if (currentRoomId == null) {
+      return;
+    }
+
+    // 安全地獲取房間，避免觸發自動創建房間的邏輯
+    Room room =
+        livingService.getWorldManagerProvider().getObject().getActiveRooms().get(currentRoomId);
+    if (room != null) {
+      performRemoveFromRoom(room);
+    }
+
+    currentRoomId = null;
+  }
+
+
+
+  public void sendStatUpdate() {}
+
+  /**
+   * 由子類實作具體的移除邏輯
+   */
+  protected abstract void performRemoveFromRoom(Room room);
 
 }

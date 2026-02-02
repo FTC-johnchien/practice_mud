@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern MUD Client v2</title>
+    <script src="https://cdn.jsdelivr.net/npm/ansi_up@5.1.0/ansi_up.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --sidebar-bg: #222;
+            --text-color: #e0e0e0;
+            --accent-color: #00ff00;
+            --danger-color: #ff4444;
+            --mp-color: #4444ff;
+            --border-color: #333;
+            --btn-bg: #444;
+            --btn-hover: #555;
+        }
+
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            font-family: 'Courier New', monospace;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+        }
+
+        /* --- 佈局調整：L 型側邊欄 --- */
+        .game-container {
+            display: grid;
+            height: 100vh;
+            /* 左側 (Log + Input) 彈性，右側固定 280px */
+            grid-template-columns: 1fr 280px;
+            /* 左側分為：Log (自動伸展), Input (固定高度) */
+            grid-template-rows: 1fr 50px;
+            grid-template-areas:
+                "log sidebar"
+                "input sidebar";
+        }
+
+        /* 1. Log 區 */
+        #gameLog {
+            grid-area: log;
+            padding: 15px;
+            overflow-y: auto;
+            border-right: 1px solid var(--border-color);
+            background: #000;
+            white-space: pre-wrap;
+            scrollbar-width: thin;
+        }
+
+        /* 2. 輸入區 (現在寬度只跟 Log 一樣) */
+        .input-area {
+            grid-area: input;
+            display: flex;
+            background: #111;
+            border-top: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color); /* 與側邊欄區隔 */
+            padding: 5px;
+            gap: 10px;
+        }
+        #cmdInput {
+            flex-grow: 1; background: transparent; border: none;
+            color: var(--accent-color); padding: 10px; outline: none; font-family: inherit;
+        }
+        #sendBtn {
+            background: #006600; color: #fff; border: none; padding: 0 20px;
+            cursor: pointer; border-radius: 4px;
+        }
+
+        /* 3. 側邊欄 (全高) */
+        .sidebar {
+            grid-area: sidebar;
+            background-color: var(--sidebar-bg);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            gap: 15px;
+            overflow-y: auto; /* 內容太多時側邊欄自己捲動 */
+        }
+
+        .panel-section {
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        .panel-title {
+            font-size: 12px; color: #888; margin-bottom: 8px; border-bottom: 1px solid #444; padding-bottom: 3px;
+        }
+
+        /* --- 狀態條 (HP/MP) --- */
+        .stat-row { margin-bottom: 8px; }
+        .stat-bar {
+            background: #444; height: 16px; border-radius: 3px;
+            position: relative; overflow: hidden;
+        }
+        .stat-fill { height: 100%; transition: width 0.3s; }
+        .hp-fill { background-color: var(--danger-color); }
+        .mp-fill { background-color: var(--mp-color); }
+        .stat-text {
+            position: absolute; top: 0; left: 5px; font-size: 11px;
+            line-height: 16px; color: #fff; text-shadow: 1px 1px 1px #000;
+        }
+
+        /* --- 技能組 (橫向條 + 按鈕) --- */
+        .skill-item {
+            display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px;
+        }
+        .skill-header {
+            display: flex; justify-content: space-between; align-items: center; font-size: 12px;
+        }
+        .skill-btn {
+            background: var(--btn-bg); color: #aaa; border: 1px solid #555;
+            cursor: not-allowed; padding: 2px 8px; font-size: 11px; border-radius: 3px;
+        }
+        .skill-btn.ready {
+            background: linear-gradient(90deg, #b8860b, #ffd700);
+            color: #000; font-weight: bold; cursor: pointer; border-color: #ffd700;
+            animation: pulse 1s infinite;
+        }
+        .charge-bar-bg {
+            background: #333; height: 8px; border-radius: 2px; overflow: hidden;
+        }
+        .charge-fill {
+            height: 100%; background: #ffd700; width: 0%; transition: width 0.3s;
+        }
+
+        /* --- 移動控制 (九宮格) --- */
+        .d-pad-container {
+            display: flex; flex-direction: column; gap: 5px; align-items: center;
+        }
+        .d-pad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            width: 100%;
+        }
+        .move-btn {
+            background: var(--btn-bg); color: #ccc; border: 1px solid #444;
+            padding: 10px 0; text-align: center; cursor: pointer; border-radius: 4px;
+            font-size: 12px; user-select: none;
+        }
+        .move-btn:hover { background: var(--btn-hover); color: #fff; }
+        .move-btn:active { background: #666; transform: translateY(1px); }
+
+        /* 上下層按鈕 */
+        .z-axis-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 5px; width: 100%; margin-top: 5px;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0px #ffd700; }
+            50% { box-shadow: 0 0 5px #ffd700; }
+            100% { box-shadow: 0 0 0px #ffd700; }
+        }
+
+        /* RWD: 手機版調整 */
+        @media (max-width: 600px) {
+            .game-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr 200px 50px; /* Log, Sidebar, Input */
+                grid-template-areas: "log" "sidebar" "input";
+            }
+            .sidebar { border-left: none; border-top: 1px solid #333; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <div id="gameLog"></div>
+
+    <div class="input-area">
+        <input type="text" id="cmdInput" placeholder="輸入指令..." autofocus>
+        <button id="sendBtn" onclick="sendCommand()">發送</button>
+    </div>
+
+    <div class="sidebar">
+        <div id="connectionStatus" style="font-size:12px; color:#888; text-align:center;">連線中...</div>
+
+        <div class="panel-section">
+            <div class="panel-title">STATUS</div>
+            <div class="stat-row">
+                <div style="font-size:11px; color:#aaa;">HP</div>
+                <div class="stat-bar"><div id="hpBar" class="stat-fill hp-fill" style="width:100%"></div><span id="hpText" class="stat-text">---</span></div>
+            </div>
+            <div class="stat-row">
+                <div style="font-size:11px; color:#aaa;">MP</div>
+                <div class="stat-bar"><div id="mpBar" class="stat-fill mp-fill" style="width:100%"></div><span id="mpText" class="stat-text">---</span></div>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="panel-title">MOVEMENT</div>
+            <div class="d-pad-container">
+                <div class="d-pad-grid">
+                    <button class="move-btn" onclick="sendMove('nw')">NW</button>
+                    <button class="move-btn" onclick="sendMove('n')">N</button>
+                    <button class="move-btn" onclick="sendMove('ne')">NE</button>
+
+                    <button class="move-btn" onclick="sendMove('w')">W</button>
+                    <button class="move-btn" onclick="sendMove('look')" style="color:#fff; font-weight:bold;">Look</button>
+                    <button class="move-btn" onclick="sendMove('e')">E</button>
+
+                    <button class="move-btn" onclick="sendMove('sw')">SW</button>
+                    <button class="move-btn" onclick="sendMove('s')">S</button>
+                    <button class="move-btn" onclick="sendMove('se')">SE</button>
+                </div>
+                <div class="z-axis-grid">
+                    <button class="move-btn" onclick="sendMove('up')">UP ▲</button>
+                    <button class="move-btn" onclick="sendMove('down')">DOWN ▼</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="panel-title">SKILLS</div>
+            <div id="skillsList">
+                <div style="font-size:11px; color:#666; text-align:center; padding:10px;">Waiting for data...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Config & Init ---
+    let socket;
+    const ansi_up = new AnsiUp();
+    ansi_up.use_classes = false;
+
+    // UI Cache
+    const ui = {
+        hpBar: document.getElementById('hpBar'),
+        hpText: document.getElementById('hpText'),
+        mpBar: document.getElementById('mpBar'),
+        mpText: document.getElementById('mpText'),
+        skillsList: document.getElementById('skillsList'),
+        log: document.getElementById('gameLog'),
+        input: document.getElementById('cmdInput'),
+        status: document.getElementById('connectionStatus')
+    };
+
+    // 模擬的技能資料 (若後端還沒傳來)
+    // 後端傳來的結構應該類似：
+    // skills: [ { id: "s1", name: "Fireball", charge: 50, max: 100 }, { id: "s2", name: "Heal", charge: 100, max: 100 } ]
+    let skillData = [];
+
+    function connect() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        // const wsUrl = `${protocol}//${window.location.host}/ws`;
+        const wsUrl = 'ws://localhost:8080/ws'; // 開發測試用
+
+        socket = new WebSocket(wsUrl);
+
+        socket.onopen = () => {
+            ui.status.innerText = '● 已連線'; ui.status.style.color = '#00ff00';
+            appendLog('>>> 系統：已連線', '#888');
+        };
+
+        socket.onmessage = (e) => {
+            try {
+                const msg = JSON.parse(e.data);
+                // 如果後端明確要求密碼模式，則切換
+                if (msg.type === 'PWD_MODE') {
+                    ui.input.type = 'password';
+                }
+                // 否則，只要不是狀態更新 (STAT_UPDATE)，就預設切換回文字模式
+                // 這樣可以防止後端忘記送 USER_MODE
+                else if (msg.type !== 'STAT_UPDATE' && msg.type !== 'SKILL_UPDATE') {
+                    ui.input.type = 'text';
+                }
+                // if (msg.type === 'PWD_MODE') ui.input.type = 'password';
+                // if (msg.type === 'USER_MODE') ui.input.type = 'text';
+
+                // 狀態更新
+                if (msg.type === 'STAT_UPDATE') updateStats(msg);
+
+                // 技能更新 (可以是 STAT_UPDATE 的一部分，也可以獨立)
+                if (msg.type === 'SKILL_UPDATE') updateSkills(msg.skills);
+
+                // 文字內容
+                if (msg.content) appendHtml(ansi_up.ansi_to_html(msg.content));
+            } catch (err) {
+                appendLog(e.data, '#ccc');
+            }
+        };
+
+        socket.onclose = () => { ui.status.innerText = '● 已斷線'; ui.status.style.color = '#f55'; };
+    }
+
+    // --- Core Logic ---
+
+    function sendJsonCommand(text) {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: "INPUT", text: text }));
+        } else {
+            appendLog(">>> 尚未連線", "#f55");
+        }
+    }
+
+    // 發送移動指令 (給按鈕用)
+    function sendMove(dir) {
+        sendJsonCommand(dir);
+        // 不回顯移動指令，避免洗頻，或可依喜好開啟
+        // appendLog(`> ${dir}`, '#0ff');
+    }
+
+    // 發送技能指令
+    function castSkill(skillId, skillName) {
+        // 這裡假設後端接收 "cast <skillId>" 或類似指令
+        sendJsonCommand(`cast ${skillId}`);
+        appendLog(`>>> 準備釋放：${skillName}`, '#ffd700');
+    }
+
+    // 發送輸入框指令
+    function sendCommand() {
+        const val = ui.input.value.trim();
+        if (val) {
+            sendJsonCommand(val);
+            const display = ui.input.type === 'password' ? '***' : val;
+            appendHtml(`<div style="color:#0ff">> ${display}</div>`);
+            ui.input.value = '';
+        }
+    }
+
+    // --- UI Updates ---
+
+    function updateStats(data) {
+        if (data.hp !== undefined) {
+            const pct = Math.min(100, (data.hp / data.maxHp) * 100);
+            ui.hpBar.style.width = pct + '%';
+            ui.hpText.innerText = `${data.hp}/${data.maxHp}`;
+        }
+        if (data.mp !== undefined) {
+            const pct = Math.min(100, (data.mp / data.maxMp) * 100);
+            ui.mpBar.style.width = pct + '%';
+            ui.mpText.innerText = `${data.mp}/${data.maxMp}`;
+        }
+        // 如果 STAT_UPDATE 裡也有 skills 資料，順便更新
+        if (data.skills) {
+            updateSkills(data.skills);
+        }
+    }
+
+    // 動態生成/更新技能列表
+    // 預期 skills 格式: [ { id: "ult_fire", name: "烈焰風暴", charge: 20, maxCharge: 100 }, ... ]
+    function updateSkills(skills) {
+        // 簡單作法：直接重繪 (若效能有問題可改為 Diff 更新)
+        ui.skillsList.innerHTML = '';
+
+        skills.forEach(s => {
+            const pct = Math.floor((s.charge / s.maxCharge) * 100);
+            const isReady = pct >= 100;
+
+            const div = document.createElement('div');
+            div.className = 'skill-item';
+            div.innerHTML = `
+                <div class="skill-header">
+                    <span style="color:#ccc">${s.name}</span>
+                    <button class="skill-btn ${isReady ? 'ready' : ''}"
+                            ${isReady ? '' : 'disabled'}
+                            onclick="castSkill('${s.id}', '${s.name}')">
+                        ${isReady ? 'CAST' : pct + '%'}
+                    </button>
+                </div>
+                <div class="charge-bar-bg">
+                    <div class="charge-fill" style="width: ${pct}%"></div>
+                </div>
+            `;
+            ui.skillsList.appendChild(div);
+        });
+    }
+
+    // --- Utils ---
+    function appendHtml(html) {
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        ui.log.appendChild(div);
+        ui.log.scrollTop = ui.log.scrollHeight;
+    }
+    function appendLog(text, color) {
+        appendHtml(`<div style="color:${color || '#ccc'}">${text}</div>`);
+    }
+
+    ui.input.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendCommand(); });
+/*
+    // --- 測試資料 (開發用) ---
+    // 連線後模擬 1 秒後收到後端資料
+    setTimeout(() => {
+        // 模擬首次數據
+        updateStats({ hp: 800, maxHp: 1000, mp: 300, maxMp: 500 });
+        updateSkills([
+            { id: "slam", name: "重擊", charge: 100, maxCharge: 100 },
+            { id: "heal", name: "治癒術", charge: 45, maxCharge: 100 },
+            { id: "ult",  name: "天地滅絕", charge: 10, maxCharge: 100 }
+        ]);
+    }, 1000);
+*/
+    connect();
+</script>
+</body>
+</html>
