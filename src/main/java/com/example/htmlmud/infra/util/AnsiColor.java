@@ -25,6 +25,15 @@ public enum AnsiColor {
   CYAN("\u001B[36m"), // 常用於青色
   WHITE("\u001B[37m"), // 常用於白色
 
+  BLACK_BOLD("\u001B[30;1m"), // 常用於深灰
+  RED_BOLD("\u001B[31;1m"), // 常用於紅色
+  GREEN_BOLD("\u001B[32;1m"), // 常用於綠色
+  YELLOW_BOLD("\u001B[33;1m"), // 常用於黃色
+  BLUE_BOLD("\u001B[34;1m"), // 常用於藍色
+  MAGENTA_BOLD("\u001B[35;1m"), // 常用於紫紅色
+  CYAN_BOLD("\u001B[36;1m"), // 常用於青色
+  WHITE_BOLD("\u001B[37;1m"), // 常用於白色
+
   // --- 高亮前景色 (Bright Foreground) ---
   BRIGHT_BLACK("\u001B[90m"), // 常用於高亮深灰
   BRIGHT_RED("\u001B[91m"), // 常用於高亮紅色

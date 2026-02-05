@@ -1,0 +1,98 @@
+{
+  "id": "lion_roar",
+  "name": "獅子吼",
+  "description": "少林七十二絕技之一，運氣於腹，發出如迅雷般的吼聲。此功法為範圍攻擊，能震懾全場，令敵人肝膽俱裂。",
+  "type": "ACTIVE",
+  "school": "SHAOLIN",
+  "tags": [
+    "UNARMED",
+    "AOE",
+    "SONIC",
+    "INTERNAL"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED"
+    ],
+    "reqGuild": "SHAOLIN",
+    "allowMounted": false
+  },
+  "costs": {
+    "mp": 20,
+    "stamina": 10
+  },
+  "scaling": {
+    "damagePerLevel": 1.2,
+    "hitRatePerLevel": 0.002,
+    "critRatePerLevel": 0.0
+  },
+  "mechanics": {
+    "critRate": 0.05,
+    "damage": 25,
+    "damageType": "SONIC",
+    "hitRate": 1.0,
+    "maxLevel": 100,
+    "scaleStat": "INT",
+    "scaleFactor": 1.5,
+    "scope": {
+      "type": "ROOM_ALL_ENEMIES",
+      "maxTargets": 20,
+      "decay": 0.0
+    },
+    "formulas": {
+      "damage": "skill.mechanics.damage + (user.int * 0.5) + (user.force * 0.2)"
+    }
+  },
+  "moves": [
+    {
+      "name": "震懾",
+      "weight": 40,
+      "damageMod": 0.8,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N深吸一口氣，猛地發出一聲低沉的咆哮，聲浪如波紋般向四周擴散！",
+        "hit": "$n覺得耳膜一陣鼓盪，胸口如遭重錘，受到 $d 傷害！",
+        "miss": "$n早有防備，運氣護住雙耳，擋住了這波聲浪。"
+      }
+    },
+    {
+      "name": "迅雷",
+      "weight": 30,
+      "damageMod": 1.0,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N雙目圓睜，舌綻春雷，一聲怒吼如晴天霹靂，震得整個房間嗡嗡作響！",
+        "hit": "$n只覺腦中轟的一聲空白，七竅都滲出血來，受到 $d 傷害！",
+        "miss": "$n在千鈞一髮之際張開嘴巴，平衡了耳膜壓力，並未受傷。"
+      }
+    },
+    {
+      "name": "獅王降臨",
+      "weight": 20,
+      "damageMod": 1.5,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N氣沉丹田，身後彷彿浮現出一頭金毛狂獅的虛影，隨即爆發出毀天滅地的長嘯！",
+        "hit": "聲波如同實質的衝擊波般撞在$n身上，將$n震飛出去，受到 $d 傷害！",
+        "crit": "【重擊】$n被聲波正面擊中，五臟六腑彷彿移位了一般，痛苦地摀住耳朵倒地，受到 $d 傷害！",
+        "miss": "$n內功深厚，以「龜息大法」屏住氣息，硬生生扛過了這波衝擊。"
+      }
+    },
+    {
+      "name": "萬佛朝宗",
+      "weight": 10,
+      "damageMod": 2.0,
+      "hitRateMod": -0.1,
+      "critRateMod": 0.2,
+      "msg": {
+        "cast": "$N面色莊嚴，口吐真言，宏大的梵音混合著內力，對周圍進行無差別的音波洗禮！",
+        "hit": "$n在這神聖而霸道的梵音中避無可避，全身經脈劇震，受到 $d 傷害！",
+        "miss": "$n心如止水，在這狂暴的音波中如一葉扁舟，隨波逐流卻未受傷害。"
+      }
+    }
+  ]
+}

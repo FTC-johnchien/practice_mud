@@ -8,6 +8,8 @@ public enum SkillType {
 
   MAGIC("魔法"),
 
+  ACTIVE("主动技能"),
+
   PASSIVE("被動技能");
 
 

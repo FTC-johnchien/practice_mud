@@ -54,9 +54,15 @@ public class Room extends VirtualActor<RoomMessage> {
 
     this.id = id;
     this.template = roomService.getRoomTemplate(id);
+    if (this.template == null) {
+      log.error("roomTemplate is null id:{}", id);
+      throw new MudException("房間施工中 id:" + id);
+    }
+
     this.zoneTemplate = roomService.getZoneTemplate(template.zoneId());
-    if (this.template == null || this.zoneTemplate == null) {
-      throw new MudException("roomTemplate or zoneTemplate is null");
+    if (this.zoneTemplate == null) {
+      // log.error("zoneTemplate is null id:{}", template.zoneId());
+      throw new MudException("zoneTemplate is null id:" + template.zoneId());
     }
 
     roomService.spawnInitial(this);

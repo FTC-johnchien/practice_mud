@@ -5,7 +5,6 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.service.WorldManager;
-import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,10 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 public class WorldInitializer implements ApplicationRunner {
 
   private final WorldManager worldManager;
-
-  private final ServerEngine serverEngine;
-
-  private Thread engineThread;
 
 
   @Override

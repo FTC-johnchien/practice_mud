@@ -109,7 +109,7 @@ public class WorldFactory {
    * 建立物品實體 (處理隨機數值)
    */
   public GameItem createItem(String templateId) {
-    log.info("templateId:{}", templateId);
+    log.info("Item templateId:{}", templateId);
     ItemTemplate tpl = templateRepo.findItem(templateId).orElse(null);
     if (tpl == null) {
       log.error("Create Item failed: Template not found {}", templateId);

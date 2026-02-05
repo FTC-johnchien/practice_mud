@@ -104,7 +104,7 @@ public class WorldManager {
 
       Set<RaceTemplate> list = objectMapper.readValue(resource.getInputStream(),
           new TypeReference<Set<RaceTemplate>>() {});
-      log.info("{}", objectMapper.writeValueAsString(list));
+      // log.info("{}", objectMapper.writeValueAsString(list));
       for (RaceTemplate race : list) {
         templateRepo.registerRace(race);
       }
@@ -133,7 +133,7 @@ public class WorldManager {
         try (var is = res.getInputStream()) {
           SkillTemplate tpl = objectMapper.readValue(is, SkillTemplate.class);
           log.info("Successfully loaded skill: {}:{}", tpl.getId(), tpl.getName());
-          log.info("log:{}", objectMapper.writeValueAsString(tpl));
+          // log.info("log:{}", objectMapper.writeValueAsString(tpl));
           templateRepo.registerSkill(tpl);
         } catch (Exception e) {
           log.error("Failed to parse JSON file: {} - Error: {}", res.getFilename(), e.getMessage());

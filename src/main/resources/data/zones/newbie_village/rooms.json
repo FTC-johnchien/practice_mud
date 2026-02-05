@@ -16,6 +16,15 @@
         "time": 60,
         "rate": 1,
         "isHidden": false
+      },
+      {
+        "type": "MOB",
+        "id": "monk",
+        "count": 10,
+        "maxCount": 10,
+        "time": 600,
+        "rate": 1,
+        "isHidden": false
       }
     ]
   },
@@ -38,7 +47,7 @@
       {
         "type": "ITEM",
         "id": "newbie_village:village_bread",
-        "count":1,
+        "count": 1,
         "maxCount": 2,
         "time": 60,
         "rate": 1,
@@ -106,7 +115,9 @@
     "id": "forest_entrance",
     "name": "森林入口",
     "description": "這裡已經可以感受到森林的陰森氣息，偶爾傳來怪物的低吼聲。",
-    "flags": ["OUTDOORS"],
+    "flags": [
+      "OUTDOORS"
+    ],
     "exits": {
       "south": "north_of_the_village"
     },
@@ -114,8 +125,8 @@
       {
         "type": "MOB",
         "id": "wild_rat",
-        "count": 1,
-        "maxCount": 2,
+        "count": 2,
+        "maxCount": 4,
         "time": 60,
         "rate": 1,
         "isHidden": false
@@ -126,7 +137,9 @@
     "id": "front_of_village_elder_house",
     "name": "村長小屋前",
     "description": "一間簡樸的木屋矗立在眼前，門口掛著一盞老舊的風燈。",
-    "flags": ["OUTDOORS"],
+    "flags": [
+      "OUTDOORS"
+    ],
     "exits": {
       "east": {
         "targetId": "village_elder_house",
@@ -181,13 +194,13 @@
         "count": 1,
         "maxCount": 1,
         "time": 60,
-        "rate": 0.3,
+        "rate": 1,
         "isHidden": false
       },
       {
         "type": "MOB",
         "id": "sewer_rat",
-        "count": 1,
+        "count": 2,
         "maxCount": 2,
         "time": 60,
         "rate": 1,

@@ -4,6 +4,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.service.WorldManager;
+import com.example.htmlmud.infra.monitor.GameMetrics;
 import com.example.htmlmud.domain.service.CombatService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,8 @@ public class WorldPulse {
 
   private final CombatService combatService;
 
+  private final GameMetrics gameMetrics;
+
 
   // 全域計數器，伺服器啟動後開始累加
   private final AtomicLong globalTickCounter = new AtomicLong(0);
@@ -26,26 +29,36 @@ public class WorldPulse {
   @Scheduled(fixedRate = 100)
   public void pulse() {
     long currentTick = globalTickCounter.incrementAndGet();
-    long now = System.currentTimeMillis();
+    long startTime = System.currentTimeMillis();
 
-    // 優化：只對「活躍」的房間發送
-    worldManager.getActiveRooms().values().forEach(room -> {
+    try {
+      long now = startTime;
 
-      // Active Room 定義：有玩家在裡面，重生時間，或者有未結束的戰鬥/腳本
-      boolean isRespawnTick = (currentTick % room.getZoneTemplate().respawnTime() == 0);
-      if (!room.getPlayers().isEmpty() || isRespawnTick
-          || room.getMobs().stream().anyMatch(m -> m.isInCombat())) {
-        room.tick(currentTick, now);
-      }
-    });
+      // 優化：只對「活躍」的房間發送
+      worldManager.getActiveRooms().values().forEach(room -> {
+        // Active Room 定義：有玩家在裡面，重生時間，或者有未結束的戰鬥/腳本
+        boolean isRespawnTick = (currentTick % room.getZoneTemplate().respawnTime() == 0);
+        if (!room.getPlayers().isEmpty() || isRespawnTick
+            || room.getMobs().stream().anyMatch(m -> m.isInCombat())) {
+          room.tick(currentTick, now);
+        }
+      });
 
-    combatService.tick(currentTick, now);
+      combatService.tick(currentTick, now);
 
+    } finally {
+      long endTime = System.currentTimeMillis();
+      long duration = endTime - startTime;
 
-    // 可選：每 150 秒印一次 Log 確保心臟還在跳 (遊戲時間1小時)
-    if (currentTick % 1500 == 0) {
-      log.info("World Pulse alive. Tick: {}", currentTick);
+      // 紀錄到 Metrics
+      gameMetrics.recordPulseDuration(duration);
+    }
 
+    // 每秒印一次 Log 確保心臟還在跳 (遊戲時間1小時)
+    if (currentTick % 10 == 0) {
+      log.info("World Pulse alive. Tick: {}, Last Pulse: {}ms, Total Commands: {}", currentTick,
+          gameMetrics.getLastPulseDurationMs(), gameMetrics.getProcessedCommands());
+      gameMetrics.resetCommands();
     }
   }
 

@@ -90,7 +90,7 @@ public class GameItem {
    * 取得此物品對應的技能類別 (給 SkillManager 用)
    */
   public SkillCategory getWeaponSkillCategory() {
-    log.info("type:{} subType:{}", this.type, this.subType);
+    // log.info("type:{} subType:{}", this.type, this.subType);
     if (this.type != ItemType.WEAPON)
       return SkillCategory.UNARMED;
 

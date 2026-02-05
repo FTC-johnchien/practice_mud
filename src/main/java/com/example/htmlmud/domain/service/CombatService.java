@@ -1,31 +1,29 @@
 package com.example.htmlmud.domain.service;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.application.command.parser.BodyPartSelector;
 import com.example.htmlmud.application.factory.WorldFactory;
-import com.example.htmlmud.domain.actor.core.VirtualActor;
 import com.example.htmlmud.domain.actor.impl.Living;
+import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
-import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.LivingState;
 import com.example.htmlmud.domain.model.MoveAction;
 import com.example.htmlmud.domain.model.map.SkillTemplate;
 import com.example.htmlmud.domain.model.skill.dto.ActiveSkillResult;
 import com.example.htmlmud.domain.model.vo.DamageSource;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.htmlmud.infra.monitor.GameMetrics;
 import com.example.htmlmud.infra.persistence.entity.SkillEntry;
 import com.example.htmlmud.infra.util.ColorText;
 import com.example.htmlmud.infra.util.FormulaEvaluator;
 import com.example.htmlmud.infra.util.MessageUtil;
 import com.example.htmlmud.infra.util.RandomUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class CombatService {
-
+  private final GameMetrics gameMetrics;
   // 【戰鬥名單】
   // 使用 ConcurrentHashMap.newKeySet() 建立一個執行緒安全的 Set
   // 只有在名單裡的 Actor，系統才會計算它的攻擊 CD
@@ -189,7 +187,7 @@ public class CombatService {
 
     // 檢查是否還活著
     if (self.isDead()) {
-      log.info("{} 已經死亡，無法受傷", self.getName());
+      // log.info("{} 已經死亡，無法受傷", self.getName());
       return;
     }
 
@@ -207,6 +205,14 @@ public class CombatService {
     if (self.isDead()) {
       log.info("{} 被打死了", self.getName());
       self.die(attacker);
+    } else {
+      self.isInCombat = true;
+      if (self.combatTargetId == null) {
+        self.combatTargetId = attacker.getId();
+      }
+
+      // add to combatants
+      combatants.add(self);
     }
   }
 
@@ -291,21 +297,67 @@ public class CombatService {
   }
 
   public void performAttackRound(Living self, Living target, long now) {
-    log.info("performAttackRound now:{}", now);
+    // log.info("performAttackRound now:{}", now);
+
+    // 增加計數：每一次攻擊判定（無論是玩家還是 Mob）都算作一次 VT 執行的行動
+    gameMetrics.incrementCommand();
+
     // 1. 決定攻擊次數 (預設 1，龍可能是 2 或 3)
-    for (int i = 0; i < self.getAttacksPerRound(); i++) {
-      // 2. 每次攻擊都重新抽一次技能
-      // 第一下可能是 claw，第二下可能是 tail_swipe
-      ActiveSkillResult skill = skillService.getAutoAttackSkill(self);
+    // for (int i = 0; i < self.getAttacksPerRound(); i++) {
+    // // 2. 每次攻擊都重新抽一次技能
+    // // 第一下可能是 claw，第二下可能是 tail_swipe
+    // ActiveSkillResult skill = skillService.getAutoAttackSkill(self);
 
-      // 3. 執行傷害
-      performAttack(self, target, skill, now);
+    // // 3. 執行傷害
+    // performAttack(self, target, skill, now);
 
-      // 如果對方死了就中斷
-      if (target.isDead()) {
-        break;
+    // // 如果對方死了就中斷
+    // if (target.isDead()) {
+    // break;
+    // }
+    // }
+
+    // 1. 立即設定一個較長的冷卻時間，防止 ServerEngine 的下一個 Tick (例如 100ms 後) 重複觸發此回合
+    // 真正的冷卻時間會在 performAttack 內部根據攻速重新計算
+    // self.nextAttackTime = now + 10000;
+
+    // 2. 使用虛擬執行緒處理連擊，這樣可以使用 Thread.sleep 而不阻塞主引擎
+    Thread.ofVirtual().name("CombatRound-" + self.getId()).start(() -> {
+      try {
+        int attacks = self.getAttacksPerRound();
+        for (int i = 0; i < attacks; i++) {
+          // 每次攻擊前檢查雙方是否還具備戰鬥條件 (可能在 sleep 期間有人死了或離開了)
+          if (!self.isValid() || target == null || !target.isValid() || !self.isInCombat()) {
+            break;
+          }
+
+          ActiveSkillResult skill = skillService.getAutoAttackSkill(self);
+
+          // 範圍攻擊
+          if (skill.getTemplate().getTags().contains("AOE")) {
+            // 取出 self 房間里的所有 living, 排除自己
+            List<Living> targets = new ArrayList<>(self.getCurrentRoom().getMobs());
+            targets.addAll(self.getCurrentRoom().getPlayers());
+            targets.remove(self);
+            log.info("範圍攻擊了 {} 人", targets.size());
+
+            for (Living living : targets) {
+              performAttack(self, living, skill, System.currentTimeMillis());
+            }
+          } else {
+            performAttack(self, target, skill, System.currentTimeMillis());
+          }
+
+
+          // 如果還有下一次攻擊且目標未死，則等待間隔
+          if (i < attacks - 1 && !target.isDead()) {
+            Thread.sleep(500); // 間隔 0.5 秒
+          }
+        }
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
       }
-    }
+    });
   }
 
   public void performAttack(Living self, Living target, ActiveSkillResult skill, long now) {
@@ -329,9 +381,9 @@ public class CombatService {
     // 套用 skill 倍率 (基礎傷害 + 等級 * 升級加級)
     double skillDmg = skill.template().getMechanics().damage()
         + (skill.getLevel() * skill.template().getScaling().damagePerLevel());
-    log.info("skillDmg:{}", skillDmg);
+    // log.info("skillDmg:{}", skillDmg);
     rawDmg += skillDmg;
-    log.info("rawDmg:{}", rawDmg);
+    // log.info("rawDmg:{}", rawDmg);
 
     // 選出那一招
     MoveAction action = RandomUtil.pickWeighted(skill.getTemplate().getMoves());

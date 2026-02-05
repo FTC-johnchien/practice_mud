@@ -289,8 +289,8 @@ public class RoomService {
     // 1. 呼叫工廠產生 MobActor (這裡會給予 UUID)
     Mob mob = worldFactory.createMob(rule.id());
     try {
-      log.info("{}: {} - {}", mob.getId(), mob.getName(),
-          objectMapper.writeValueAsString(mob.getTemplate()));
+      // log.info("{}: {} - {}", mob.getId(), mob.getName(),
+      // objectMapper.writeValueAsString(mob.getTemplate()));
     } catch (Exception e) {
       e.printStackTrace();
     }

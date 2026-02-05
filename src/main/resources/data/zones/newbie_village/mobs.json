@@ -1,5 +1,48 @@
 [
   {
+    "id": "monk",
+    "name": "少林武僧",
+    "gender": "MALE",
+    "race": "human",
+    "aliases": [
+      "monk"
+    ],
+    "kind": "FRIENDLY",
+    "level": 50,
+    "maxHp": 5000,
+    "str": 35,
+    "dex": 25,
+    "attackVerb": "揮舞",
+    "attackNoun": "拳頭",
+    "minDamage": 1,
+    "maxDamage": 3,
+    "attackSpeed": 2000,
+    "hitRate": 10,
+    "defense": 1,
+    "description": "一位少林武僧。",
+    "lookDescription": "他看起來就像是少林武僧。",
+    "equipment": {
+      "CHEST": "newbie_village:rusty_armor"
+    },
+    "enabledSkills": {
+      "UNARMED": "lion_roar"
+    },
+    "dialogues": [
+      "為了村莊的榮耀！",
+      "別在村子裡惹事。"
+    ],
+    "loot": [
+      {
+        "itemId": "newbie_village:rusty_sword",
+        "chance": 0.5
+      },
+      {
+        "itemId": "newbie_village:standard_spear",
+        "chance": 0.2
+      }
+    ]
+  },
+  {
     "id": "village_guard",
     "name": "村莊警衛",
     "gender": "MALE",

@@ -72,7 +72,7 @@ public class CommandDispatcher {
     String key = parts[0].toLowerCase();
     String args = parts.length > 1 ? parts[1] : "";
 
-    log.info("key:{}, args:{}", key, args);
+    // log.info("key:{}, args:{}", key, args);
 
     // 2. 查找指令
     PlayerCommand command = commandMap.get(key);

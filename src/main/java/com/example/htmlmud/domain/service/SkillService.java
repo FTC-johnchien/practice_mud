@@ -75,7 +75,7 @@ public class SkillService {
     SkillEntry entry = null;
 
     try {
-      log.info("{}", objectMapper.writeValueAsString(category));
+      // log.info("{}", objectMapper.writeValueAsString(category));
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -133,7 +133,7 @@ public class SkillService {
 
 
     String skillId = resolveAutoAttackSkillId(self);
-    log.info("name:{} skillId:{}", self.getName(), skillId);
+    // log.info("name:{} skillId:{}", self.getName(), skillId);
 
     // 1. 取得技能模板
     SkillTemplate skillTemplate = templateRepo.getSkill(skillId);
@@ -144,7 +144,7 @@ public class SkillService {
     // 2. 【關鍵】動態捏造技能狀態
     // 怪物的技能等級 = 怪物自身等級 (或是怪物等級 * 1.2 之類的強度調整)
     SkillEntry virtualEntry = new SkillEntry(skillId);
-    log.info("name:{} getLevel:{}", self.getName(), self.getLevel());
+    // log.info("name:{} getLevel:{}", self.getName(), self.getLevel());
     virtualEntry.setLevel(self.getLevel());
 
     // 標記為虛擬/臨時，這樣戰鬥結算時不會給它加經驗值
@@ -165,7 +165,7 @@ public class SkillService {
     // 1. 如果有拿武器，尋找是否有enable該武器的skill
     GameItem weapon = self.getMainHandWeapon();
     try {
-      log.info("name:{} weapon:{}", self.getName(), objectMapper.writeValueAsString(weapon));
+      // log.info("name:{} weapon:{}", self.getName(), objectMapper.writeValueAsString(weapon));
     } catch (Exception e) {
       log.info(e.getMessage());
     }
