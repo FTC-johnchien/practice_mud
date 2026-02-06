@@ -7,7 +7,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.application.command.parser.BodyPartSelector;
-import com.example.htmlmud.application.factory.WorldFactory;
 import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
@@ -23,7 +22,6 @@ import com.example.htmlmud.infra.util.ColorText;
 import com.example.htmlmud.infra.util.FormulaEvaluator;
 import com.example.htmlmud.infra.util.MessageUtil;
 import com.example.htmlmud.infra.util.RandomUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,8 +37,6 @@ public class CombatService {
 
   private final MessageUtil messageUtil;
   private final SkillService skillService;
-  private final WorldFactory worldFactory;
-  private final ObjectMapper objectMapper;
   private final XpService xpService;
 
 
@@ -50,32 +46,19 @@ public class CombatService {
    */
   public void startCombat(Living self, Living target) {
 
-    if (self.getCombatTarget() == null) {
+    if (self.combatTargetId == null) {
       self.combatTargetId = target.getId();
-    }
-    if (target.getCombatTarget() == null) {
-      target.combatTargetId = self.getId();
     }
 
     self.isInCombat = true;
-    target.isInCombat = true;
-
-    long now = System.currentTimeMillis();
 
     // 【節奏控制】
     // 攻擊者：立即獲得攻擊機會 (或是很短的延遲)
-    self.nextAttackTime = now;
-
-    // 防禦者：需要反應時間 (攻速的一半 + 亂數)
-    // 這樣可以避免雙方同時出刀的頓挫感
-    long reactionDelay = (target.getAttackSpeed() / 2) + RandomUtil.jitter(200);
-    self.setNextAttackTime(now + reactionDelay);
+    self.nextAttackTime = System.currentTimeMillis();
 
     // 【加入名單】
     combatants.add(self);
-    combatants.add(target);
-
-    log.info(self.getName() + " 與 " + target.getName() + " 進入戰鬥名單！");
+    // log.info(self.getName() + " 進入戰鬥名單！");
   }
 
   /**
@@ -95,26 +78,46 @@ public class CombatService {
    */
   public void tick(long currentTick, long now) {
     // 只遍歷「正在戰鬥」的生物，效率極高
+    // log.info("tick combatants: {}" + combatants.size());
     for (Living actor : combatants) {
 
       // 檢查是否正在戰鬥
       if (!actor.isInCombat) {
+        // log.info("actor.isInCombat:false name:{}", actor.getName());
         endCombat(actor);
-        return;
+        continue;
       }
 
-      // 1. 檢查對手是否還活著/存在
+      // 檢查攻擊冷卻時間 (CD)
+      if (now < actor.nextAttackTime) {
+        // log.info("actor.nextAttackTime:{} now:{}", actor.nextAttackTime, now);
+        continue;
+      }
+
+      // 如果是 Mob 每次攻擊要先找仇恨最高的目標(如果有的話)
+      if (actor instanceof Mob mob) {
+        if (!checkMobaggroTable(mob)) {
+          log.info("mob.combatTarget 無效 mob.name:{}", actor.getName());
+          endCombat(actor); // 對手不見了，脫離戰鬥
+          continue;
+        }
+      }
+
+      // 檢查戰鬥目標是有效
       Living target = actor.getCombatTarget();
-      if (target == null || target.isDead()
+      if (target == null || !target.isValid() || target.isDead()
           || !target.getCurrentRoom().equals(actor.getCurrentRoom())) {
+        // log.info("actor.combatTarget 無效 actor.name:{} isValid:{} isDead:{}", actor.getName(),
+        // target.isValid(), target.isDead());
         endCombat(actor); // 對手不見了，脫離戰鬥
         continue;
       }
 
-      // 2. 檢查攻擊冷卻時間 (CD)
-      if (now >= actor.nextAttackTime) {
-        performAttackRound(actor, target, now);
-      }
+
+      // 必須在先設定下一次攻擊時間（冷卻鎖），防止 WorldPulse 的下一個 Tick (100ms後) 重複觸發新的回合
+      nextAttackTime(actor);
+
+      performAttackRound(actor, target, now);
     }
   }
 
@@ -169,12 +172,20 @@ public class CombatService {
       self.combatTargetId = attacker.getId();
     }
 
+    // 若是 Mob 就增加仇恨值
+    if (self instanceof Mob mob) {
+      // log.info("初始放入仇恨表 name:{}", attacker.getName());
+      mob.addAggro(attacker.getId(), 1);
+    }
+
     // 攻擊準備時間
-    long reactionTime = (self.getAttackSpeed() / 2) + RandomUtil.range(0, 500);
-    self.setNextAttackTime(System.currentTimeMillis() + reactionTime);
+    reactionTime(self);
 
     // 加入戰鬥名單
-    combatants.add(self);
+    if (!combatants.contains(self)) {
+      combatants.add(self);
+      // log.info(self.getName() + " 進入戰鬥名單！");
+    }
   }
 
   public void onDamage(int amount, Living self, Living attacker) {
@@ -186,7 +197,7 @@ public class CombatService {
     }
 
     // 檢查是否還活著
-    if (self.isDead()) {
+    if (self.isDead() || !self.isValid()) {
       // log.info("{} 已經死亡，無法受傷", self.getName());
       return;
     }
@@ -197,22 +208,44 @@ public class CombatService {
 
     // for test----------------------------------------------------------------------------------
     Room room = self.getCurrentRoom();
-    room.broadcast("log:" + self.getName() + " 目前 HP: " + self.getState().getHp() + "/"
-        + self.getState().getMaxHp());
+    // room.broadcast("log:" + self.getName() + " 目前 HP: " + self.getState().getHp() + "/"
+    // + self.getState().getMaxHp());
     // for test----------------------------------------------------------------------------------
 
     // 檢查是否死亡，通知 self 死亡事件
     if (self.isDead()) {
       log.info("{} 被打死了", self.getName());
-      self.die(attacker);
-    } else {
-      self.isInCombat = true;
-      if (self.combatTargetId == null) {
-        self.combatTargetId = attacker.getId();
+
+      // 先判斷 self 是 player 還是 mob 然後將其移出房間，避免後續的攻擊還持續的打到已死亡的對象
+      if (self instanceof Player player) {
+        room.getPlayers().remove(player);
+      } else if (self instanceof Mob mob) {
+        room.getMobs().remove(mob);
       }
 
-      // add to combatants
-      combatants.add(self);
+      self.die(attacker);
+    } else {
+      if (!self.isInCombat) {
+        self.isInCombat = true;
+        if (self.combatTargetId == null) {
+          self.combatTargetId = attacker.getId();
+        }
+
+        // 準備反應時間
+        reactionTime(self);
+
+        // 加入戰鬥名單
+        if (!combatants.contains(self)) {
+          combatants.add(self);
+          // log.info(self.getName() + " 進入戰鬥名單！");
+        }
+      }
+
+      // mob 就增加仇恨值
+      if (self instanceof Mob mob) {
+        // log.info("增加仇恨 name:{} {}", attacker.getName(), amount);
+        mob.addAggro(attacker.getId(), amount);
+      }
     }
   }
 
@@ -299,32 +332,12 @@ public class CombatService {
   public void performAttackRound(Living self, Living target, long now) {
     // log.info("performAttackRound now:{}", now);
 
-    // 增加計數：每一次攻擊判定（無論是玩家還是 Mob）都算作一次 VT 執行的行動
-    gameMetrics.incrementCommand();
-
-    // 1. 決定攻擊次數 (預設 1，龍可能是 2 或 3)
-    // for (int i = 0; i < self.getAttacksPerRound(); i++) {
-    // // 2. 每次攻擊都重新抽一次技能
-    // // 第一下可能是 claw，第二下可能是 tail_swipe
-    // ActiveSkillResult skill = skillService.getAutoAttackSkill(self);
-
-    // // 3. 執行傷害
-    // performAttack(self, target, skill, now);
-
-    // // 如果對方死了就中斷
-    // if (target.isDead()) {
-    // break;
-    // }
-    // }
-
-    // 1. 立即設定一個較長的冷卻時間，防止 ServerEngine 的下一個 Tick (例如 100ms 後) 重複觸發此回合
-    // 真正的冷卻時間會在 performAttack 內部根據攻速重新計算
-    // self.nextAttackTime = now + 10000;
-
-    // 2. 使用虛擬執行緒處理連擊，這樣可以使用 Thread.sleep 而不阻塞主引擎
+    // 使用虛擬執行緒處理每一次的攻擊，這樣可以使用 Thread.sleep 而不阻塞主引擎
     Thread.ofVirtual().name("CombatRound-" + self.getId()).start(() -> {
       try {
+        // 取得攻擊次數：取「種族/生物基礎次數」與「技能額外次數」的最大值 (假設技能模板有此欄位)
         int attacks = self.getAttacksPerRound();
+
         for (int i = 0; i < attacks; i++) {
           // 每次攻擊前檢查雙方是否還具備戰鬥條件 (可能在 sleep 期間有人死了或離開了)
           if (!self.isValid() || target == null || !target.isValid() || !self.isInCombat()) {
@@ -339,19 +352,24 @@ public class CombatService {
             List<Living> targets = new ArrayList<>(self.getCurrentRoom().getMobs());
             targets.addAll(self.getCurrentRoom().getPlayers());
             targets.remove(self);
-            log.info("範圍攻擊了 {} 人", targets.size());
+            // log.info("範圍攻擊了 {} 人", targets.size());
 
             for (Living living : targets) {
               performAttack(self, living, skill, System.currentTimeMillis());
+              gameMetrics.incrementSystemTask(); // 記錄每一次對單體的攻擊行動
             }
+
           } else {
             performAttack(self, target, skill, System.currentTimeMillis());
+            gameMetrics.incrementSystemTask(); // 記錄一次單體攻擊行動
           }
 
 
           // 如果還有下一次攻擊且目標未死，則等待間隔
           if (i < attacks - 1 && !target.isDead()) {
-            Thread.sleep(500); // 間隔 0.5 秒
+            // 間隔 0.5 秒 +- 0.1 秒
+            long nextAttackTime = 500 + ThreadLocalRandom.current().nextLong(-100, 100);
+            Thread.sleep(nextAttackTime);
           }
         }
       } catch (InterruptedException e) {
@@ -367,14 +385,6 @@ public class CombatService {
     // List<CombatAction> actions = activeSkill.getTemplate().getActions();
     // CombatAction action = activeSkill.getTemplate().getActions()
     // CombatAction action = actions.get(ThreadLocalRandom.current().nextInt(actions.size()));
-
-    // 3. 計算基礎傷害 取出 attacker 的 DamageSource
-    // DamageSource weapon = self.getCurrentAttackSource();
-
-    // 設定下一次攻擊時間 (攻速 2秒)
-    // self.nextAttackTime = now + getNextAttackDelay(self.getAttackSpeed());
-
-
 
     int rawDmg = calculateDamage(self, target);
 
@@ -417,16 +427,15 @@ public class CombatService {
     // 將傷害送給 target
     target.onDamage(dmgAmout, self);
 
-    // 3. 【設定下一次攻擊時間】 (關鍵：加入亂數擾動)
-    long baseSpeed = self.getAttackSpeed(); // 例如 2000ms
-    long jitter = ThreadLocalRandom.current().nextLong(-200, 200); // ±200ms
-    self.nextAttackTime = (now + baseSpeed + jitter);
-
     msg += "\r\n" + action.msg().hit();
     msg = CombineString(msg, sWeapon, tWeapon, part);
     msg = msg.replace("$d", ColorText.damage(dmgAmout));
+
+    // 產生 [秒.毫秒] 的時間戳記前綴
+    long nowMs = System.currentTimeMillis();
+    String timestamp = String.format("[%02d.%03d] ", (nowMs / 1000) % 60, nowMs % 1000);
     for (Living receiver : audiences) {
-      messageUtil.send(msg, self, target, receiver);
+      messageUtil.send(timestamp + msg, self, target, receiver);
     }
 
     if (target instanceof Player player) {
@@ -446,4 +455,47 @@ public class CombatService {
     return (long) (baseSpeed * variance);
   }
 
+  private boolean checkMobaggroTable(Mob mob) {
+
+    // 取出當前最高仇恨目標
+    String targetId = mob.getHighestAggroTarget();
+
+    // log.info("checkMobaggroTable targetId:{}", targetId);
+    // 仇恨表為空，脫離戰鬥
+    if (targetId == null) {
+      return false;
+    }
+
+    // 檢查新戰鬥目標是否有效
+    mob.combatTargetId = targetId;
+    Living target = mob.getCombatTarget();
+    if (target == null || !target.isValid() || target.isDead()
+        || !target.getCurrentRoom().equals(mob.getCurrentRoom())) {
+      // log.info("checkMobaggroTable target 無效 targetId:{}", targetId);
+      // 無效的目標就移出仇恨表
+      mob.removeAggro(mob.getCombatTargetId());
+      mob.combatTargetId = null;
+      // 呼叫自己直到仇恨表為空
+      checkMobaggroTable(mob);
+    }
+
+    // 新戰鬥目標有效，繼續戰鬥
+    return true;
+  }
+
+  // 準備反應的時間
+  private void reactionTime(Living self) {
+    long speed = self.getAttackSpeed();
+    // 計算 0.5 * speed +/- 0.1 * speed，即範圍 [0.4 * speed, 0.6 * speed]
+    long reactionTime = ThreadLocalRandom.current().nextLong(speed * 4 / 10, (speed * 6 / 10) + 1);
+    self.setNextAttackTime(System.currentTimeMillis() + reactionTime);
+  }
+
+  private void nextAttackTime(Living self) {
+    long speed = self.getAttackSpeed();
+    // 計算 speed +/- 0.2 * speed，即範圍 [0.8 * speed, 1.2 * speed]
+    long nextAttackTime =
+        ThreadLocalRandom.current().nextLong(speed * 8 / 10, (speed * 12 / 10) + 1);
+    self.setNextAttackTime(System.currentTimeMillis() + nextAttackTime);
+  }
 }

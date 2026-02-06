@@ -20,8 +20,8 @@
       {
         "type": "MOB",
         "id": "monk",
-        "count": 10,
-        "maxCount": 10,
+        "count": 30,
+        "maxCount": 30,
         "time": 600,
         "rate": 1,
         "isHidden": false

@@ -24,41 +24,50 @@ public class WorldPulse {
   // 全域計數器，伺服器啟動後開始累加
   private final AtomicLong globalTickCounter = new AtomicLong(0);
 
-  // 設定基礎頻率為 1000ms (1秒)
+  // 設定基礎頻率為 100ms (0.1秒)
   // 這是 "戰鬥心跳" 的速度，也是最小單位
   @Scheduled(fixedRate = 100)
   public void pulse() {
     long currentTick = globalTickCounter.incrementAndGet();
-    long startTime = System.currentTimeMillis();
+    long startTime = System.nanoTime();
 
     try {
-      long now = startTime;
+      long now = System.currentTimeMillis();
 
-      // 優化：只對「活躍」的房間發送
+      // Active Room 定義：只對「活躍」的房間發送
       worldManager.getActiveRooms().values().forEach(room -> {
-        // Active Room 定義：有玩家在裡面，重生時間，或者有未結束的戰鬥/腳本
-        boolean isRespawnTick = (currentTick % room.getZoneTemplate().respawnTime() == 0);
-        if (!room.getPlayers().isEmpty() || isRespawnTick
-            || room.getMobs().stream().anyMatch(m -> m.isInCombat())) {
+        // 先檢查最簡單的條件：有沒有玩家
+        boolean hasPlayers = !room.getPlayers().isEmpty();
+        boolean isRespawnTick = (currentTick % 10 % room.getZoneTemplate().respawnTime() == 0);
+
+        if (hasPlayers || isRespawnTick) {
           room.tick(currentTick, now);
         }
       });
 
+      // 戰鬥狀態
       combatService.tick(currentTick, now);
 
     } finally {
-      long endTime = System.currentTimeMillis();
-      long duration = endTime - startTime;
+      long duration = System.nanoTime() - startTime;
 
       // 紀錄到 Metrics
-      gameMetrics.recordPulseDuration(duration);
+      gameMetrics.addPulseDurationNanos(duration);
     }
 
-    // 每秒印一次 Log 確保心臟還在跳 (遊戲時間1小時)
+    // 每秒印一次 Log 確保心臟還在跳
     if (currentTick % 10 == 0) {
-      log.info("World Pulse alive. Tick: {}, Last Pulse: {}ms, Total Commands: {}", currentTick,
-          gameMetrics.getLastPulseDurationMs(), gameMetrics.getProcessedCommands());
-      gameMetrics.resetCommands();
+      if (gameMetrics.getPlayerCommands() == 0 && gameMetrics.getSystemTasks() == 0) {
+        gameMetrics.resetMetrics();
+        return;
+      }
+
+      long totalNanos = gameMetrics.getTotalPulseDurationNanos();
+      log.info(
+          "World Pulse Stats - Tick: {}, Total Work: {}ms, Avg Pulse: {}ms, Player Cmds: {}, System Tasks: {}",
+          currentTick, totalNanos / 1_000_000.0, (totalNanos / 10.0) / 1_000_000.0,
+          gameMetrics.getPlayerCommands(), gameMetrics.getSystemTasks());
+      gameMetrics.resetMetrics();
     }
   }
 

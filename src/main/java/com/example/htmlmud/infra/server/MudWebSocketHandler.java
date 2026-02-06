@@ -10,6 +10,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import com.example.htmlmud.application.service.PlayerService;
 import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.Player;
+import com.example.htmlmud.infra.monitor.GameMetrics;
 import com.example.htmlmud.protocol.GameCommand;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
   private final PlayerService playerService;
   private final WorldManager worldManager;
   private final SessionRegistry sessionRegistry;
+  private final GameMetrics gameMetrics;
 
   @Override
   public void afterConnectionEstablished(WebSocketSession session) {
@@ -70,6 +72,9 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
         // D. 裝入信封並投遞
         // 這裡不綁定 ScopedValue，因為要跨執行緒傳遞
         actor.command(traceId, cmd);
+
+        // 增加指令計數 (來自玩家的輸入)
+        gameMetrics.incrementPlayerCommand();
       } else {
         // 找不到 Actor，通常代表連線異常或已被踢除
         log.warn("[{}] 收到訊息但找不到 Actor，關閉連線: {}", traceId, session.getId());

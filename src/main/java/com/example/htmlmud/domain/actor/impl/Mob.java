@@ -3,6 +3,7 @@ package com.example.htmlmud.domain.actor.impl;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import com.example.htmlmud.application.service.MobService;
 import com.example.htmlmud.domain.actor.behavior.AggressiveBehavior;
 import com.example.htmlmud.domain.actor.behavior.MerchantBehavior;
@@ -23,7 +24,7 @@ public final class Mob extends Living {
 
   // 仇恨列表 (Key: 攻擊者 ID字串, Value: 仇恨值)
   // 因為 ID 已改為 UUID String，這裡的 Key 也同步調整為 String
-  private final Map<String, Integer> aggroTable = new HashMap<>();
+  private final Map<String, Integer> aggroTable = new ConcurrentHashMap<>();
 
   private final MobTemplate template;
 
@@ -218,9 +219,16 @@ public final class Mob extends Living {
 
   // 取得當前仇恨最高目標 ID
   public String getHighestAggroTarget() {
+    // log.info("aggroTable: {}", aggroTable.size());
     return aggroTable.entrySet().stream().max(Map.Entry.comparingByValue()).map(Map.Entry::getKey)
         .orElse(null);
   }
+
+  public void removeAggro(String sourceId) {
+    aggroTable.remove(sourceId);
+  }
+
+
 
   // 行為層需要的輔助方法 (Facade)
   public void sayToRoom(String content) {
