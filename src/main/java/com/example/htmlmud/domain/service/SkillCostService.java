@@ -35,7 +35,7 @@ public class SkillCostService {
       // 利用 Enum 的多型直接取得當前數值
       if (type.getCurrent(actor.getState()) < cost) {
 
-        messageUtil.send("$N的 " + type.name() + " 不足！(需要: " + cost + ")", actor);
+        actor.reply("$N的 " + type.name() + " 不足！(需要: " + cost + ")");
 
         return false;
       }

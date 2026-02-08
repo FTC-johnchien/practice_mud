@@ -7,9 +7,7 @@ import java.util.Map;
 import com.example.htmlmud.domain.model.map.ItemTemplate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -20,14 +18,14 @@ public class GameItem {
 
   // 1. 唯一識別 (UUID)
   // 每個物品都有獨立 ID，方便追蹤 (例如防止複製 Bug)
-  @Getter
   private String id;
 
-  @Getter
   private ItemTemplate template;
 
   private String name;
   private String description;
+
+  private List<String> aliases = new ArrayList<>();
 
   // 主類型 (Enum)
   private ItemType type;
@@ -50,17 +48,15 @@ public class GameItem {
   // 例如：{ "attack_bonus": 5, "crafter": "玩家A" }
   private Map<String, Object> dynamicProps = new HashMap<>();
 
-  @Getter
-  @Setter
   private boolean isDirty = false;
 
   // 輔助方法：獲取顯示名稱 (包含強化等級)
   // e.g., "鐵劍 (+5)"
   public String getDisplayName() {
     if (level > 1) {
-      return template.name() + " (+" + level + ")";
+      return name + " (+" + level + ")";
     }
-    return template.name();
+    return name;
   }
 
   // 方便的方法

@@ -1,9 +1,12 @@
 package com.example.htmlmud.application.command.impl;
 
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.counting;
+import static java.util.stream.Collectors.groupingBy;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.application.command.annotation.CommandAlias;
@@ -34,11 +37,6 @@ public class LookCommand implements PlayerCommand {
     // 查詢房間資料 (使用 WorldManager)
     Room room = actor.getCurrentRoom();
 
-    if (room == null) {
-      actor.reply("你處於一片虛空之中... (玩家: " + actor.getName() + " 的 currentRoom 不存在)");
-      return;
-    }
-
     // 3. 產生房間描述
     String roomDescription = buildRoomDescription(actor, room);
 
@@ -57,47 +55,47 @@ public class LookCommand implements PlayerCommand {
 
     // 出口 (黃色)
     sb.append(ColorText.exit("[出口]: "));
-    if (room.getTemplate().exits().isEmpty()) {
+    if (room.getTemplate().exits() == null || room.getTemplate().exits().isEmpty()) {
       sb.append("無");
     } else {
       sb.append(String.join(", ", room.getTemplate().exits().keySet()));
     }
     sb.append("\r\n");
 
-    // 取得房間內的生物 (玩家與怪物，經過排序)
-    List<Player> players = room.getPlayers();
+    // 取得房間內的玩家
+    List<Player> otherPlayers = sortedPlayers(
+        room.getPlayers().stream().filter(p -> !p.getId().equals(actor.getId())).toList());
+
+    // 取得房間內的怪物
     List<Mob> mobs = room.getMobs();
-    List<GameItem> items = room.getItems();
-    log.info("players: {}, mobs: {} items: {}", players.size(), mobs.size(), items.size());
-    players.stream().forEach(p -> log.info("player: {}:{}", p.getId(), p.getName()));
+    // mobs = sortedMobs(mobs);
+
+    // 取得房間內的物品
+    List<GameItem> items = sortedItems(room.getItems());
+
+    log.info("otherPlayers: {}, mobs: {} items: {}", otherPlayers.size(), mobs.size(),
+        items.size());
 
 
     // 1. 篩選出 其他玩家 (亮藍色，排除自己)
-    List<String> otherPlayerNames = players.stream().filter(p -> !p.getId().equals(actor.getId()))
-        .map(p -> ColorText.player(p.getNickname() + "(" + p.getName() + ")")).toList();
+    List<String> otherPlayerNames =
+        otherPlayers.stream().filter(p -> !p.getId().equals(actor.getId()))
+            .map(p -> ColorText.player(p.getName() + "(" + p.getAliases().get(0) + ")")).toList();
+
 
     // 2. 篩選出 NPC (綠色顯示)
     List<Mob> npcs = mobs.stream().filter(m -> m.getTemplate().kind() == MobKind.FRIENDLY).toList();
-    // List<String> npcNames =
-    // mobs.stream().filter(m -> m.getTemplate().kind() == MobKind.FRIENDLY)
-    // .map(m -> ColorText
-    // .npc(m.getTemplate().name() + "(" + m.getTemplate().aliases().get(0) + ")"))
-    // .toList();
+    npcs = sortedMobs(npcs);
 
     // 3. 篩選出 怪物 (紅色顯示)
     List<Mob> monsters = mobs.stream().filter(
         m -> m.getTemplate().kind() == MobKind.AGGRESSIVE || m.getTemplate().kind() == MobKind.BOSS)
         .toList();
-    // List<String> monsterNames = mobs.stream().filter(
-    // m -> m.getTemplate().kind() == MobKind.AGGRESSIVE || m.getTemplate().kind() == MobKind.BOSS)
-    // .map(m -> ColorText
-    // .mob(m.getTemplate().name() + "(" + m.getTemplate().aliases().get(0) + ")")) // 紅色代表危險
-    // .toList();
+    monsters = sortedMobs(monsters);
 
     // items
     List<String> itemNames = items.stream()
-        .map(i -> ColorText.item(i.getDisplayName() + "(" + i.getTemplate().aliases().get(0) + ")"))
-        .toList();
+        .map(i -> ColorText.item(i.getDisplayName() + "(" + i.getAliases().get(0) + ")")).toList();
 
     sb.append(AnsiColor.YELLOW).append("這裡有：\n").append(AnsiColor.RESET);
     if (!otherPlayerNames.isEmpty()) {
@@ -181,5 +179,28 @@ public class LookCommand implements PlayerCommand {
       sb.append(ColorText.wrap(color, key)).append("\r\n");
     });
     return sb.toString();
+  }
+
+  // 排序規則：name
+  public List<Player> sortedPlayers(List<Player> players) {
+    List<Player> sortedPlayers =
+        players.stream().sorted(Comparator.comparing(Player::getName)).toList();
+    return sortedPlayers;
+  }
+
+  // 排序規則：名稱 -> ID
+  public List<Mob> sortedMobs(List<Mob> mobs) {
+    List<Mob> sortedMobs = mobs.stream()
+        .sorted(Comparator.comparing((Mob m) -> m.getTemplate().name()).thenComparing(Mob::getId))
+        .toList();
+    return sortedMobs;
+  }
+
+  // 排序規則：名稱 -> ID
+  private List<GameItem> sortedItems(List<GameItem> items) {
+    List<GameItem> sortedItems = items.stream()
+        .sorted(Comparator.comparing((GameItem i) -> i.getName()).thenComparing(GameItem::getId))
+        .toList();
+    return sortedItems;
   }
 }

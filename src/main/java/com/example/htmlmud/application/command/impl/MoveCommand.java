@@ -1,12 +1,10 @@
 package com.example.htmlmud.application.command.impl;
 
-import java.util.concurrent.CompletableFuture;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
-import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.Direction;
 import com.example.htmlmud.domain.model.map.RoomExit;
 import lombok.RequiredArgsConstructor;
@@ -41,12 +39,6 @@ public class MoveCommand implements PlayerCommand {
     // 2. 取得當前房間
     Room currentRoom = actor.getCurrentRoom();
 
-    // TODO 應該讓玩家回到安全屋
-    if (currentRoom == null) {
-      actor.reply("你在一片虛空中，無法移動。");
-      return;
-    }
-
     // 3. 檢查出口
     // 假設 Room.exits 是 Map<String, Integer> (key 是 direction full name)
     // Integer nextRoomId = currentRoom.getTemplate().exits().get(dir.getFullName());
@@ -79,13 +71,8 @@ public class MoveCommand implements PlayerCommand {
 
     // 6. 新房間廣播 (進場)
     // 計算反方向 (例如往北走，新房間的人會看到你從南方來)
-    CompletableFuture<Void> future = new CompletableFuture<>();
-    targetRoom.enter(actor, dir.opposite(), future);
-    try {
-      future.orTimeout(1, java.util.concurrent.TimeUnit.SECONDS).join();
-    } catch (MudException e) {
-      log.error("enterRoom", e);
-    }
+
+    targetRoom.enter(actor, dir.opposite());
 
     // 7. 自動 Look (讓玩家看到新環境)
     // 直接調用 LookCommand 執行邏輯

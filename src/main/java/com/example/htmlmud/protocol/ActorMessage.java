@@ -29,7 +29,7 @@ public sealed interface ActorMessage
   }
   record OnDamage(int amount, Living attacker) implements LivingMessage {
   }
-  record Die(Living killer) implements LivingMessage {
+  record Die(String killerId) implements LivingMessage {
   }
   record Heal(int amount) implements LivingMessage {
   }
@@ -37,9 +37,9 @@ public sealed interface ActorMessage
   }
   record BuffEffect(String effectId) implements LivingMessage {
   }
-  record Equip(GameItem item, CompletableFuture<String> future) implements LivingMessage {
+  record Equip(GameItem item, CompletableFuture<Boolean> future) implements LivingMessage {
   }
-  record Unequip(EquipmentSlot slot, CompletableFuture<String> future) implements LivingMessage {
+  record Unequip(EquipmentSlot slot, CompletableFuture<Boolean> future) implements LivingMessage {
   }
   record OnMessage(Living self, ActorMessage msg) implements LivingMessage {
   }
@@ -47,7 +47,7 @@ public sealed interface ActorMessage
 
 
   sealed interface PlayerMessage extends ActorMessage
-      permits Command, SendText, GainExp, SaveData, QuestUpdate {
+      permits Command, SendText, GainExp, SaveData, QuestUpdate, Reconnect {
   }
   record Command(String traceId, GameCommand command) implements PlayerMessage {
   }
@@ -58,6 +58,8 @@ public sealed interface ActorMessage
   record SaveData() implements PlayerMessage {
   }
   record QuestUpdate(String questId, String status) implements PlayerMessage {
+  }
+  record Reconnect(WebSocketSession session) implements PlayerMessage {
   }
 
 

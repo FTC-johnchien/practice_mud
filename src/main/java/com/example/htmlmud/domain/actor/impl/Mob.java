@@ -43,6 +43,8 @@ public final class Mob extends Living {
     super(mobId, template.name(), state, mobService.getLivingServiceProvider().getObject());
     this.template = template;
     this.service = mobService;
+    this.name = template.name();
+    this.aliases = template.aliases();
 
     this.baseDamageSource = new DamageSource(template.attackNoun(), template.attackVerb(),
         template.minDamage(), template.maxDamage(), template.attackSpeed(), template.hitRate(), -1);
@@ -271,6 +273,6 @@ public final class Mob extends Living {
 
   @Override
   protected void performRemoveFromRoom(Room room) {
-    room.getMobs().remove(this);
+    room.removeMob(id);
   }
 }

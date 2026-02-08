@@ -1,6 +1,9 @@
 package com.example.htmlmud.application.command.impl;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.application.command.annotation.CommandAlias;
@@ -10,6 +13,8 @@ import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.service.CombatService;
+import com.example.htmlmud.infra.util.AnsiColor;
+import com.example.htmlmud.infra.util.ColorText;
 import com.example.htmlmud.infra.util.MessageUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,26 +38,18 @@ public class KillCommand implements PlayerCommand {
 
   @Override
   public void execute(Player self, String args) {
-    if (self.isDead()) {
-      messageUtil.send("$N已經死亡了。", self);
-      return;
-    }
-
     if (args.isBlank()) {
-      messageUtil.send("$N要攻擊誰？", self);
+      self.reply("$N要攻擊誰？");
       return;
     }
 
     // 1. 取得房間內的怪物列表
     Room room = self.getCurrentRoom();
-    // 這裡假設 room 有 getMobsSnapshot() 回傳 List<MobActor>
-    // 注意：為了線程安全，這裡最好是 Snapshot 或是能確保讀取安全的列表
-    List<Mob> mobsInRoom = room.getMobs();
 
     // 2. 交給 Selector 處理複雜字串
     // args 可能是 "red goblin", "elite soldier 2"
     // TODO pvp的處理
-    Mob target = targetSelector.selectMob(mobsInRoom, args);
+    Mob target = targetSelector.selectMob(room.getMobs(), args);
     if (target == null) {
       self.reply("這裡沒有看到 '" + args + "'。");
       return;
@@ -61,16 +58,13 @@ public class KillCommand implements PlayerCommand {
 
     // 3. 執行戰鬥邏輯
     combatService.startCombat(self, target);
-    target.onAttacked(self);
     // log.info("name:{} {}", self.getName(), self.getNickname());
 
     // 訊息處理
-    String messageTemplate = "$N對著$n大喊受死吧 一邊擺出了戰鬥架式！";
-    for (Living receiver : room.getPlayers()) {
-      messageUtil.send(messageTemplate, self, target, receiver);
-    }
-    // self.reply("你對 " + target.getTemplate().name() + " 大喊受死吧 一邊擺出了戰鬥架式！");
-    // room.broadcast("log:KillCommand 目前 " + self.getState().getHp() + " / "
-    // + self.getState().getMaxHp() + " HP");
+    String messageTemplate = ColorText.wrap(AnsiColor.RED, "$N對著$n喝道﹕「臭賊﹗今日不是你死就是我活﹗」");
+    room.broadcast(self.getId(), target.getId(), messageTemplate);
+    // for (Living receiver : room.getPlayers()) {
+    // messageUtil.send(messageTemplate, self, target, receiver);
+    // }
   }
 }

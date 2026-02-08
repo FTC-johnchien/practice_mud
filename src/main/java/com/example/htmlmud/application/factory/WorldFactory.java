@@ -69,6 +69,7 @@ public class WorldFactory {
     // 2. new Actor
     LivingState state = mobMapper.toLivingState(tpl);
     Mob mob = new Mob(tpl, state, mobService);
+    mob.start();
 
     // log.info("{}", tpl.equipment());
     // 處理裝備
@@ -76,7 +77,7 @@ public class WorldFactory {
       GameItem item = createItem(entry.getValue());
       if (item != null) {
         mob.getInventory().add(item);
-        mob.getLivingService().equip(mob, item);
+        mob.equip(item);
 
       }
     }
@@ -99,9 +100,6 @@ public class WorldFactory {
     // 3. 這裡可以處理「菁英怪」或「隨機稱號」邏輯
     // if (Math.random() < 0.1) mob.setPrefix("狂暴的");
 
-    // 4. 啟動 AI (重要：Factory 負責讓它動起來，或者由 Manager 統一啟動)
-    mob.start();
-
     return mob;
   }
 
@@ -120,6 +118,7 @@ public class WorldFactory {
     GameItem item = itemTemplateMapper.toGameItem(tpl);
 
     item.setId(UUID.randomUUID().toString()); // 生成唯一 ID
+    // item.setName(templateId);
     item.setAmount(1);
 
     // --- 處理隨機屬性 (RNG) ---
@@ -144,15 +143,11 @@ public class WorldFactory {
     corpse.setDescription("這裡有一具 " + actor.getName() + " 的屍體，死狀悽慘。");
     corpse.setType(ItemType.CORPSE);
 
-
-    // 1. 【轉移遺物】：把怪物原本背包裡的東西移進去
-    corpse.getContents().addAll(actor.getInventory());
-
-    // 2. 【轉移裝備】：把怪物身上穿的脫下來移進去
-    corpse.getContents().addAll(actor.getState().equipment.values());
-
     // 設定關鍵字，讓玩家可以用 "get corpse" 或 "get rat" 操作
     // 繼承怪物的關鍵字，再加上 "corpse"
+    corpse.getAliases().add("corpse");
+    corpse.getAliases().addAll(actor.getAliases());
+
     switch (actor) {
       case Player player:
         createPlayerCorpse(player, corpse);
@@ -167,13 +162,19 @@ public class WorldFactory {
   }
 
   private void createPlayerCorpse(Player player, GameItem corpse) {
-    List<String> keywords = new ArrayList<>(player.getAliases());
-    keywords.add("corpse");
+    // List<String> keywords = new ArrayList<>(player.getAliases());
+    // keywords.add("corpse");
+
+    // 1. 【轉移遺物】：把玩家原本背包裡的東西移進去
+    corpse.getContents().addAll(player.getInventory());
+
+    // 2. 【轉移裝備】：把玩家身上穿的脫下來移進去
+    corpse.getContents().addAll(player.getState().equipment.values());
   }
 
   private void createMobCorpse(Mob mob, GameItem corpse) {
-    List<String> keywords = new ArrayList<>(mob.getTemplate().aliases());
-    keywords.add("corpse");
+    // List<String> keywords = new ArrayList<>(mob.getTemplate().aliases());
+    // keywords.add("corpse");
     // corpse.setKeywords(keywords); // 假設您有 keywords 欄位
 
     // 3. 【產生掉落物】：根據 LootTable 骰骰子

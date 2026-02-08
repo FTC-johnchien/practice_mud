@@ -1,10 +1,11 @@
 package com.example.htmlmud.domain.actor.impl;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import com.example.htmlmud.application.service.LivingService;
 import com.example.htmlmud.domain.actor.core.VirtualActor;
 import com.example.htmlmud.domain.model.EquipmentSlot;
@@ -29,7 +30,11 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
 
   protected String id;
 
+  @Setter
   protected String name;
+
+  @Setter
+  protected List<String> aliases;
 
   // 所有生物都有狀態 (HP/MP) 存放玩家需要進資料庫的變化值(寫入/讀取)
   protected LivingState state;
@@ -114,8 +119,8 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
       case ActorMessage.OnDamage(var amount, var attacker) -> {
         doOnDamage(amount, attacker);
       }
-      case ActorMessage.Die(var killer) -> {
-        doDie(killer);
+      case ActorMessage.Die(var killerId) -> {
+        doDie(killerId);
       }
       case ActorMessage.Heal(var amount) -> {
         doHeal(amount);
@@ -125,10 +130,12 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
       case ActorMessage.BuffEffect(var buff) -> {
       }
       case ActorMessage.Equip(var item, var future) -> {
-        doEquip(item, future);
+        livingService.doEquip(this, item, future);
+        recalculateStats();
       }
       case ActorMessage.Unequip(var slot, var future) -> {
-        doUnequip(slot, future);
+        livingService.doUnequip(this, slot, future);
+        recalculateStats();
       }
       case ActorMessage.OnMessage(var self, var actorMessage) -> {
         // command(traceId, cmd);
@@ -143,8 +150,8 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
   // default 應依自己需求改寫 ------------------------------------------------------------------
   protected void doTick(long tickCount, long time) {
 
-    // 死亡停止心跳
-    if (isDead()) {
+    // 狀態無效不處理心跳
+    if (!isValid()) {
       return;
     }
 
@@ -158,7 +165,7 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
     // === 2. 回復/狀態心跳 (Regen Tick) ===
     // 頻率：每 3 秒執行一次 ( tickCount % 3 == 0 )
     // 只有沒在戰鬥時才回血，或者戰鬥中回得比較慢
-    if (tickCount % 3 == 0) {
+    if (tickCount % 30 == 0) {
       processRegen();
       // processBuffs(); // 檢查 Buff 是否過期
     }
@@ -182,67 +189,25 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
   }
 
   // 死亡處理
-  protected void doDie(Living killer) {
-    livingService.onDie(this, killer);
+  protected void doDie(String killerId) {
+    livingService.onDie(this, killerId);
   }
 
   // 治療處理
   protected void doHeal(int amount) {
-    if (isDead()) {
+    if (!isValid()) {
       // log.info("{} 已經死亡，無法治療", name);
       return;
     }
+
     if (isInCombat()) {
       // log.info("{} 正在戰鬥，無法治療", name);
       return;
     }
 
-    reply(this.state.getGender().getYou() + "回復了 " + amount + " 點 HP 目前 " + state.getHp() + " / "
-        + state.getMaxHp());
+    // reply(this.state.getGender().getYou() + "回復了 " + amount + " 點 HP 目前 " + state.getHp() + " / "
+    // + state.getMaxHp());
     this.state.setHp(Math.min(state.getHp() + amount, state.getMaxHp()));
-  }
-
-  /**
-   * 穿上裝備 (核心邏輯)
-   *
-   * @param item 要穿的物品
-   * @return 成功回傳 true
-   */
-  protected boolean doEquip(GameItem item, CompletableFuture<String> future) {
-    boolean success = livingService.equip(this, item);
-    if (success) {
-      // 5. 重新計算數值
-      recalculateStats();
-      future.complete("你裝上 " + item.getDisplayName());
-      return true;
-    } else {
-      future.complete("裝備失敗");
-      return false;
-    }
-  }
-
-
-  /**
-   * 脫下裝備
-   */
-  protected boolean doUnequip(EquipmentSlot slot, CompletableFuture<String> future) {
-    GameItem item = state.equipment.get(slot);
-    if (item == null) {
-      future.complete("你 " + slot.getDisplayName() + " 上沒有裝備任何東西");
-      return false;
-    }
-
-    // 1. 放入背包
-    inventory.add(item);
-
-    // 2. 從裝備欄移除
-    state.equipment.remove(slot);
-
-    // 3. 重新計算數值
-    recalculateStats();
-
-    future.complete("你將 " + slot.getDisplayName() + " 放入背包");
-    return true;
   }
 
 
@@ -253,6 +218,10 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
 
   // 實作 defualt 的公開方法給外部呼叫用 -----------------------------------------------------------
   public void tick(long tickCount, long time) {
+    if (!this.isValid()) {
+      return;
+    }
+
     this.send(new ActorMessage.Tick(tickCount, time));
   }
 
@@ -267,8 +236,8 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
   }
 
   // 死亡處理
-  public void die(Living killer) {
-    this.send(new ActorMessage.Die(killer));
+  public void die(String killerId) {
+    this.send(new ActorMessage.Die(killerId));
   }
 
   public void command(String traceId, GameCommand cmd) {
@@ -314,6 +283,7 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
     if (state.getHp() < state.getMaxHp()) {
       int regenAmount = (int) (state.getMaxHp() * 0.05); // 回復 5%
       doHeal(regenAmount);
+      sendStatUpdate();
     }
   }
 
@@ -445,6 +415,10 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
     this.valid = false;
   }
 
+  public void markValid() {
+    this.valid = true;
+  }
+
   public boolean isValid() {
     return valid && !isDead(); // 活著且有效才算有效
   }
@@ -453,23 +427,19 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
     Room room = livingService.getWorldManagerProvider().getObject().getRoomActor(currentRoomId);
     // TODO 要丟到安全的房間
     if (room == null) {
-      throw new RuntimeException("currentRoom not found: " + currentRoomId);
+      log.error("player:{} currentRoomId:{} 不存在", this.name, currentRoomId);
+      throw new RuntimeException("你處於一片虛空之中...");
     }
+
     return room;
   }
 
-  public Living getCombatTarget() {
-    // 先從怪物清單尋找
-    Room room = getCurrentRoom();
-    Living combatTarget = room.getMobs().stream().filter(m -> m.getId().equals(combatTargetId))
-        .findFirst().orElse(null);
-    // 如果沒找到，再從玩家清單尋找 (支援 PvP)
-    if (combatTarget == null) {
-      combatTarget = room.getPlayers().stream().filter(m -> m.getId().equals(combatTargetId))
-          .findFirst().orElse(null);
+  public Optional<Living> getCombatTarget() {
+    if (combatTargetId == null) {
+      return Optional.empty();
     }
 
-    return combatTarget;
+    return getCurrentRoom().findLiving(combatTargetId);
   }
 
   public void removeFromRoom() {
@@ -487,9 +457,39 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
     currentRoomId = null;
   }
 
+  public boolean equip(GameItem item) {
+    CompletableFuture<Boolean> future = new CompletableFuture<>();
+    this.send(new ActorMessage.Equip(item, future));
+    try {
+      future.orTimeout(1, TimeUnit.SECONDS).join();
+      return future.get();
+    } catch (Exception e) {
+      log.error("equip itemId:{} itemName:{} error", item.getId(), item.getDisplayName(), e);
+    }
+
+    return false;
+  }
+
+  public boolean unequip(EquipmentSlot slot) {
+    CompletableFuture<Boolean> future = new CompletableFuture<>();
+    this.send(new ActorMessage.Unequip(slot, future));
+    try {
+      future.orTimeout(1, TimeUnit.SECONDS).join();
+      return future.get();
+    } catch (Exception e) {
+      log.error("unequip slot:{} error", slot.getDisplayName(), e);
+    }
+
+    return false;
+  }
+
 
 
   public void sendStatUpdate() {}
+
+  public void processDeath() {
+    livingService.processDeath(this);
+  }
 
   /**
    * 由子類實作具體的移除邏輯

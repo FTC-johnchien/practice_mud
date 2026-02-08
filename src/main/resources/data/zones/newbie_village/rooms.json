@@ -1,10 +1,19 @@
 [
   {
+    "id": "cemetery",
+    "name": "墳場",
+    "description": "一座廢棄的墳場。",
+    "exits": {
+      "west": "entrance"
+    }
+  },
+  {
     "id": "entrance",
     "name": "村莊入口",
     "description": "一道簡陋的木門標誌著村莊的邊界。北邊通往廣場。",
     "exits": {
       "north": "square",
+      "east": "cemetery",
       "south": "snow:snow_gate"
     },
     "spawns": [

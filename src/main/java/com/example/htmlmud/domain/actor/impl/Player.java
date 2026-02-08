@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import org.slf4j.MDC;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -15,10 +16,10 @@ import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.behavior.GuestBehavior;
 import com.example.htmlmud.domain.actor.behavior.PlayerBehavior;
 import com.example.htmlmud.domain.context.MudContext;
+import com.example.htmlmud.domain.model.Direction;
 import com.example.htmlmud.domain.model.GameItem;
 import com.example.htmlmud.domain.model.LivingState;
 import com.example.htmlmud.domain.model.PlayerRecord;
-import com.example.htmlmud.domain.model.skill.dto.ActiveSkillResult;
 import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.ConnectionState;
 import com.example.htmlmud.protocol.GameCommand;
@@ -46,9 +47,6 @@ public final class Player extends Living {
 
   // 用來比對「這是哪一次的斷線」，防止舊的計時器殺錯人
   private volatile long lastDisconnectTime = 0;
-
-  @Setter
-  private List<String> aliases;
 
   @Setter
   private String nickname;
@@ -127,6 +125,10 @@ public final class Player extends Living {
       case ActorMessage.QuestUpdate(var questId, var status) -> {
         // TODO
       }
+      case ActorMessage.Reconnect(var session) -> {
+        onReconnect(session);
+      }
+
       default -> log.warn("handlePlayerMessage 收到無法處理的訊息: {} {}", this.id, msg);
     }
   }
@@ -156,6 +158,10 @@ public final class Player extends Living {
 
   private void doSendText(WebSocketSession session, String msg) {
     if (session != null && session.isOpen()) {
+
+      // 處理 $N 代名詞
+      msg = service.getMessageUtil().format(msg, this);
+
       try {
         String json =
             service.getObjectMapper().writeValueAsString(Map.of("type", "TEXT", "content", msg));
@@ -183,9 +189,9 @@ public final class Player extends Living {
   // }
 
   @Override
-  protected void doDie(Living attacker) {
-    service.getMessageUtil().send("$N已經死亡！即將在重生點復活...", this);
-    super.doDie(attacker);
+  protected void doDie(String killerId) {
+    reply("$N已經死亡！即將在重生點復活...");
+    super.doDie(killerId);
 
 
     // 玩家死亡邏輯：掉經驗、傳送回城
@@ -305,7 +311,45 @@ public final class Player extends Living {
 
   @Override
   protected void performRemoveFromRoom(Room room) {
-    room.getPlayers().remove(this);
+    room.removePlayer(id);
+  }
+
+  @Override
+  public void processDeath() {
+    log.info("processDeath");
+
+    // 更新玩家 state
+    sendStatUpdate();
+
+    // 先暫停 2秒
+    try {
+      Thread.sleep(2000);
+    } catch (InterruptedException ignored) {
+    }
+
+    // 取得死亡的房間 (可能死亡時被移出房間)
+
+    getCurrentRoom().removePlayer(id);
+
+    // 取出 currentRoom 區域的重生點/安全點 或是固定地點墳場 (如果有的話)
+    // setCurrentRoomId("newbie_village:cemetery");
+    setCurrentRoomId("newbie_village:cemetery");
+    Room room = getCurrentRoom();
+
+    // 復活玩家
+    markValid();
+    getState().setHp(1);
+    getState().setMp(0);
+    getState().setStamina(0);
+    // 更新玩家 state
+    sendStatUpdate();
+    room.enter(this, Direction.UP);
+
+    // 自動 Look 直接調用 LookCommand 執行邏輯 (讓玩家看到新環境)
+    // service.getCommandDispatcher().dispatch(this, "look");
+
+    // 對房間廣播你復活了
+    room.broadcastToOthers(id, "$N復活了，又是一尾活龍！");
   }
 
 
@@ -325,6 +369,7 @@ public final class Player extends Living {
 
   // 【當玩家重新連線時呼叫此方法】
   public void onReconnect(WebSocketSession newSession) {
+
     // 1. 關閉舊連線 (如果還開著)
     if (this.session != null && this.session.isOpen()) {
       try {
@@ -333,7 +378,7 @@ public final class Player extends Living {
       }
     }
 
-    // 2. 換上新連線
+    // 2. 換上新連線 (必須先更新欄位，確保後續訊息發往正確的連線)
     // 更新斷線時間戳記，這樣之前的死神 VT 醒來後會發現時間對不上，就不會執行殺人
     this.lastDisconnectTime = System.currentTimeMillis();
     connectionState = ConnectionState.IN_GAME;
@@ -343,8 +388,9 @@ public final class Player extends Living {
     log.warn("{} 重新連線成功！", name);
 
     // 發送歡迎回來的訊息
-    doSendText(session, "\u001B[33m[系統] 連線已恢復。\u001B[0m");
+    doSendText(this.session, "\u001B[33m[系統] 連線已恢復。\u001B[0m");
     getCurrentRoom().broadcastToOthers(id, nickname + " 的眼神恢復了光采。");
+    sendStatUpdate();
     service.getCommandDispatcher().dispatch(this, "look");
   }
 
@@ -388,7 +434,7 @@ public final class Player extends Living {
     // // 3. 從全域管理器移除 (Map<String, PlayerActor>)
     // PlayerManager.remove(this.name);
 
-    // // 4. 終止 Actor 迴圈
+    // 4. 終止 Actor 迴圈
     stop();
 
     // 5. 關閉 Socket (保險起見)

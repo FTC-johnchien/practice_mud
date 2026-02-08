@@ -1,20 +1,18 @@
 package com.example.htmlmud.domain.actor.behavior;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.application.service.AuthService;
 import com.example.htmlmud.application.service.WorldManager;
-import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Player;
-import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.context.MudKeys;
-import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.Direction;
 import com.example.htmlmud.domain.model.PlayerRecord;
+import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.ConnectionState;
 import com.example.htmlmud.protocol.GameCommand;
 import lombok.Setter;
@@ -341,29 +339,27 @@ public class GuestBehavior implements PlayerBehavior {
     // 資料載入
     self.fromRecord(this, record);
     self.setConnectionState(ConnectionState.IN_GAME);
+    self.setName(record.nickname());
+    self.setAliases(List.of(record.name()));
     worldManager.addLivingActor(self);
+
+
+    // 讓玩家進入 currentRoomId 的房間
+    self.getCurrentRoom().enter(self, Direction.UP);
 
     // 裝備?
 
-    // 讓玩家進入資料紀錄的房間
-    Room room = self.getCurrentRoom();
-    CompletableFuture<Void> future = new CompletableFuture<>();
-    room.enter(self, Direction.UP, future);
-    try {
-      future.orTimeout(1, java.util.concurrent.TimeUnit.SECONDS).join();
-    } catch (MudException e) {
-      log.error("enterRoom", e);
-    }
+    log.info("Actor 載入玩家資料 當前狀態: {} {}", self.getName(), self.getNickname());
 
     self.sendStatUpdate();
-    log.info("Actor 載入玩家資料 當前狀態: {} {}", self.getName(), self.getNickname());
     return new InGameBehavior();
   }
 
   // 【關鍵方法】被奪舍：接收新的連線
   public void takeoverSession(WebSocketSession newSession, Player actor) {
     log.info("takeoverSession actor.id: {}", actor.getId());
-    // 呼叫原 Player 的 onReconnect
-    actor.onReconnect(newSession);
+
+    // 呼叫原 Player 的 reconnect
+    actor.send(new ActorMessage.Reconnect(newSession));
   }
 }

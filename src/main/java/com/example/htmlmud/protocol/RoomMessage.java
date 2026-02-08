@@ -12,10 +12,12 @@ import com.example.htmlmud.domain.model.RoomStateRecord;
 /**
  * 定義所有發送給 RoomActor 的內部訊息協定 使用 Sealed Interface 限制訊息類型，配合 switch pattern matching
  */
-public sealed interface RoomMessage permits RoomMessage.Enter, RoomMessage.Leave,
-    RoomMessage.TryPickItem, RoomMessage.Say, RoomMessage.Tick, RoomMessage.Broadcast,
-    RoomMessage.BroadcastToOthers, RoomMessage.CombatBroadcast, RoomMessage.FindActor,
-    RoomMessage.GetPlayers, RoomMessage.GetMobs, RoomMessage.GetItems, RoomMessage.ToRecord {
+public sealed interface RoomMessage
+    permits RoomMessage.Enter, RoomMessage.Leave, RoomMessage.TryPickItem, RoomMessage.Say,
+    RoomMessage.Tick, RoomMessage.Broadcast, RoomMessage.BroadcastToOthers, RoomMessage.FindLiving,
+    RoomMessage.GetLivings, RoomMessage.RemoveLiving, RoomMessage.GetPlayers, RoomMessage.GetMobs,
+    RoomMessage.GetItems, RoomMessage.ToRecord, RoomMessage.RemovePlayer, RoomMessage.RemoveMob,
+    RoomMessage.RemoveItem, RoomMessage.DropItem {
 
   record Tick(long tickCount, long timestamp) implements RoomMessage {
   }
@@ -60,28 +62,43 @@ public sealed interface RoomMessage permits RoomMessage.Enter, RoomMessage.Leave
       implements RoomMessage {
   }
 
-  record Broadcast(String message) implements RoomMessage {
+  record Broadcast(String sourceId, String targetId, String message) implements RoomMessage {
   }
 
   record BroadcastToOthers(String sourceId, String message) implements RoomMessage {
   }
 
-  record CombatBroadcast(Living source, Living target, String messageTemplate)
-      implements RoomMessage {
+  record FindLiving(String livingId, CompletableFuture<Living> future) implements RoomMessage {
   }
 
-  record FindActor(String actorId, CompletableFuture<Living> future) implements RoomMessage {
+  record GetLivings(CompletableFuture<List<Living>> future) implements RoomMessage {
+  }
+
+  record RemoveLiving(String livingId) implements RoomMessage {
   }
 
   record GetPlayers(CompletableFuture<List<Player>> future) implements RoomMessage {
   }
 
+  record RemovePlayer(String playerId) implements RoomMessage {
+  }
+
   record GetMobs(CompletableFuture<List<Mob>> future) implements RoomMessage {
+  }
+
+  record RemoveMob(String mobId) implements RoomMessage {
   }
 
   record GetItems(CompletableFuture<List<GameItem>> future) implements RoomMessage {
   }
 
+  record RemoveItem(String itemId) implements RoomMessage {
+  }
+
+  record DropItem(GameItem item) implements RoomMessage {
+  }
+
   record ToRecord(CompletableFuture<RoomStateRecord> future) implements RoomMessage {
   }
+
 }

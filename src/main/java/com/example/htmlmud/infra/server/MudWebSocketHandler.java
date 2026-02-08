@@ -65,6 +65,13 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
     try {
       Player actor = sessionRegistry.get(session.getId());
       if (actor != null) {
+
+        // 檢查玩家是否可以動作
+        if (!actor.isValid() || actor.getGcdEndTimestamp() > System.currentTimeMillis()) {
+          actor.reply("$N目前無法動作!");
+          return;
+        }
+
         // C. 解析指令 (JSON -> Record)
         GameCommand cmd =
             playerService.getObjectMapper().readValue(message.getPayload(), GameCommand.class);
@@ -104,15 +111,16 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
 
   // --- 關鍵方法：切換負責人 (Handover) ---
   // 這個方法會被 LoginService 呼叫
-  public void promoteToPlayer(WebSocketSession session, Player player) {
-    // 1. 取得舊的 Guest
-    Player oldGuest = sessionRegistry.get(session.getId());
+  public void promoteToPlayer(WebSocketSession newSession, Player player) {
+
+    // 1. 取得登入產生的 Guest Actor
+    Player oldGuest = sessionRegistry.get(newSession.getId());
 
     // 2. 讓 Player 接管 Session
-    player.setSession(session);
+    player.setSession(newSession);
 
     // 3. 更新 sessionRegistry，之後的訊息直接灌給 Player
-    sessionRegistry.register(session, player);
+    sessionRegistry.register(newSession, player);
 
     // 4. 【賜死 Guest】 舊的 Guest 任務完成，請他下台
     oldGuest.stop(); // 停止 Guest 的 VT，釋放資源

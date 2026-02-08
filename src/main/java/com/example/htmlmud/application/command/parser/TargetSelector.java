@@ -17,6 +17,13 @@ public class TargetSelector {
   // 用來解析 "index.name" (例如: 2.goblin)
   private static final Pattern DOT_NOTATION = Pattern.compile("^(\\d+)\\.(.*)$");
 
+  /**
+   * 從列表中找到符合描述的目標
+   *
+   * @param candidates 房間裡的所有物品
+   * @param input 玩家輸入的字串 (例如 "ring")
+   * @return 找到的物品，若無則回傳 null
+   */
   public GameItem selectItem(List<GameItem> candidates, String input) {
     return select(candidates, input, this::isMatchItem);
   }
@@ -56,7 +63,7 @@ public class TargetSelector {
   }
 
   private boolean isMatchItem(GameItem item, String keyword) {
-    return isMatch(item.getTemplate().name(), item.getTemplate().aliases(), keyword);
+    return isMatch(item.getName(), item.getAliases(), keyword);
   }
 
   private boolean isMatchMob(Mob mob, String keyword) {
