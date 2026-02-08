@@ -1,24 +1,23 @@
 package com.example.htmlmud.application.factory;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.application.service.MobService;
-import com.example.htmlmud.application.service.RoomService;
 import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.exception.MudException;
-import com.example.htmlmud.domain.model.GameItem;
-import com.example.htmlmud.domain.model.ItemType;
-import com.example.htmlmud.domain.model.LivingState;
-import com.example.htmlmud.domain.model.LootEntry;
-import com.example.htmlmud.domain.model.map.ItemTemplate;
-import com.example.htmlmud.domain.model.map.MobTemplate;
+import com.example.htmlmud.domain.model.config.LootEntry;
+import com.example.htmlmud.domain.model.entity.GameItem;
+import com.example.htmlmud.domain.model.entity.LivingStats;
+import com.example.htmlmud.domain.model.enums.ItemType;
+import com.example.htmlmud.domain.model.template.ItemTemplate;
+import com.example.htmlmud.domain.model.template.MobTemplate;
+import com.example.htmlmud.domain.service.MobService;
+import com.example.htmlmud.domain.service.RoomService;
 import com.example.htmlmud.infra.mapper.ItemTemplateMapper;
 import com.example.htmlmud.infra.mapper.MobMapper;
 import com.example.htmlmud.infra.persistence.entity.SkillEntry;
@@ -67,8 +66,8 @@ public class WorldFactory {
     }
 
     // 2. new Actor
-    LivingState state = mobMapper.toLivingState(tpl);
-    Mob mob = new Mob(tpl, state, mobService);
+    LivingStats stats = mobMapper.toLivingStats(tpl);
+    Mob mob = new Mob(tpl, stats, mobService);
     mob.start();
 
     // log.info("{}", tpl.equipment());
@@ -169,7 +168,7 @@ public class WorldFactory {
     corpse.getContents().addAll(player.getInventory());
 
     // 2. 【轉移裝備】：把玩家身上穿的脫下來移進去
-    corpse.getContents().addAll(player.getState().equipment.values());
+    corpse.getContents().addAll(player.getStats().equipment.values());
   }
 
   private void createMobCorpse(Mob mob, GameItem corpse) {

@@ -4,8 +4,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import com.example.htmlmud.domain.model.GameItem;
-import com.example.htmlmud.domain.model.LivingState;
+import com.example.htmlmud.domain.model.entity.GameItem;
+import com.example.htmlmud.domain.model.entity.LivingStats;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -53,7 +53,7 @@ public class CharacterEntity {
   // 這樣未來新增屬性不用一直改 Table Schema
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "state_json")
-  private LivingState state;
+  private LivingStats state;
 
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "inventory_json")

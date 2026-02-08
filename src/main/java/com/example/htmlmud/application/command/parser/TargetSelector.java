@@ -6,7 +6,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.domain.actor.impl.Mob;
-import com.example.htmlmud.domain.model.GameItem;
+import com.example.htmlmud.domain.model.entity.GameItem;
 
 @Component
 public class TargetSelector {

@@ -5,7 +5,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.actor.impl.Player;
-import com.example.htmlmud.domain.model.map.SkillTemplate;
+import com.example.htmlmud.domain.model.template.SkillTemplate;
 import com.example.htmlmud.infra.util.formula.PlayerSkillMap;
 import com.example.htmlmud.infra.util.formula.SkillContext;
 import lombok.RequiredArgsConstructor;

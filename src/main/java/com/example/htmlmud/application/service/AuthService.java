@@ -6,8 +6,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.example.htmlmud.domain.model.LivingState;
-import com.example.htmlmud.domain.model.PlayerRecord;
+import com.example.htmlmud.domain.model.entity.LivingStats;
+import com.example.htmlmud.domain.model.entity.PlayerRecord;
 import com.example.htmlmud.infra.mapper.PlayerMapper;
 import com.example.htmlmud.infra.persistence.entity.CharacterEntity;
 import com.example.htmlmud.infra.persistence.entity.UserEntity;
@@ -63,7 +63,7 @@ public class AuthService {
     characterEntity.setName(username);
     characterEntity.setNickname(username);
     characterEntity.setCurrentRoomId(null);
-    characterEntity.setState(new LivingState());
+    characterEntity.setState(new LivingStats());
     characterEntity.setCreatedAt(now);
     characterEntity.setModifyAt(now);
 

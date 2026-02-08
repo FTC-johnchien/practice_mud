@@ -1,7 +1,7 @@
 package com.example.htmlmud.infra.persistence.service;
 
-import com.example.htmlmud.domain.model.PlayerRecord;
-import com.example.htmlmud.domain.model.RoomStateRecord;
+import com.example.htmlmud.domain.model.entity.PlayerRecord;
+import com.example.htmlmud.domain.model.entity.RoomStateRecord;
 import com.example.htmlmud.infra.mapper.PlayerMapper;
 import com.example.htmlmud.infra.persistence.entity.CharacterEntity;
 import com.example.htmlmud.infra.persistence.repository.CharacterRepository;

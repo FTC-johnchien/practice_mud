@@ -4,14 +4,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import com.example.htmlmud.application.service.MobService;
 import com.example.htmlmud.domain.actor.behavior.AggressiveBehavior;
 import com.example.htmlmud.domain.actor.behavior.MerchantBehavior;
 import com.example.htmlmud.domain.actor.behavior.MobBehavior;
 import com.example.htmlmud.domain.actor.behavior.PassiveBehavior;
-import com.example.htmlmud.domain.model.LivingState;
-import com.example.htmlmud.domain.model.map.MobTemplate;
+import com.example.htmlmud.domain.model.entity.LivingStats;
+import com.example.htmlmud.domain.model.template.MobTemplate;
 import com.example.htmlmud.domain.model.vo.DamageSource;
+import com.example.htmlmud.domain.service.MobService;
 import com.example.htmlmud.protocol.ActorMessage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +37,7 @@ public final class Mob extends Living {
   /**
    * 建構子： 1. 接收 Template 與 Services 2. 自動生成 UUID 3. 自動從 Template 建立 LivingState
    */
-  public Mob(MobTemplate template, LivingState state, MobService mobService) {
+  public Mob(MobTemplate template, LivingStats state, MobService mobService) {
     String uuid = UUID.randomUUID().toString();
     String mobId = "m-" + uuid.substring(0, 8) + uuid.substring(9, 11);
     super(mobId, template.name(), state, mobService.getLivingServiceProvider().getObject());

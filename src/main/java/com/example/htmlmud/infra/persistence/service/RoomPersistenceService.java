@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.domain.model.RoomStateRecord;
+import com.example.htmlmud.domain.model.entity.RoomStateRecord;
 import com.example.htmlmud.infra.persistence.repository.RoomStateRepository;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;

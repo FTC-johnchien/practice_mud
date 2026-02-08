@@ -2,11 +2,11 @@ package com.example.htmlmud.application.command.impl;
 
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
-import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
-import com.example.htmlmud.domain.model.Direction;
-import com.example.htmlmud.domain.model.map.RoomExit;
+import com.example.htmlmud.domain.model.enums.Direction;
+import com.example.htmlmud.domain.model.template.RoomExit;
+import com.example.htmlmud.domain.service.WorldManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

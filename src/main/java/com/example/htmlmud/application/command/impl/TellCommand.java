@@ -2,9 +2,9 @@ package com.example.htmlmud.application.command.impl;
 
 import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.application.command.annotation.CommandAlias;
-import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.exception.MudException;
+import com.example.htmlmud.domain.service.WorldManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

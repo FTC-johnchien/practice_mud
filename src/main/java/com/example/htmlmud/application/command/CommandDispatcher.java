@@ -8,7 +8,7 @@ import com.example.htmlmud.application.command.annotation.CommandAlias;
 import com.example.htmlmud.application.command.impl.MoveCommand;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.exception.MudException;
-import com.example.htmlmud.domain.model.Direction;
+import com.example.htmlmud.domain.model.enums.Direction;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

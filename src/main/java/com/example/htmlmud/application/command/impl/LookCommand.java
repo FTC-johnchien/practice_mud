@@ -13,8 +13,8 @@ import com.example.htmlmud.application.command.annotation.CommandAlias;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
-import com.example.htmlmud.domain.model.GameItem;
-import com.example.htmlmud.domain.model.MobKind;
+import com.example.htmlmud.domain.model.entity.GameItem;
+import com.example.htmlmud.domain.model.enums.MobKind;
 import com.example.htmlmud.infra.util.AnsiColor;
 import com.example.htmlmud.infra.util.ColorText;
 import lombok.RequiredArgsConstructor;
@@ -150,7 +150,7 @@ public class LookCommand implements PlayerCommand {
 
   // 定義一個簡單的狀態判斷
   public String getHealthStatus(Mob mob) {
-    double pct = (double) mob.getState().getHp() / mob.getState().getMaxHp();
+    double pct = (double) mob.getStats().getHp() / mob.getStats().getMaxHp();
     if (pct >= 0.85)
       return AnsiColor.GREEN + "[狀態佳]" + AnsiColor.RESET;
     if (pct > 0.5)

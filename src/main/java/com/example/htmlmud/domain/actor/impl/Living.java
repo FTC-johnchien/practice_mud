@@ -6,14 +6,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import com.example.htmlmud.application.service.LivingService;
 import com.example.htmlmud.domain.actor.core.VirtualActor;
-import com.example.htmlmud.domain.model.EquipmentSlot;
-import com.example.htmlmud.domain.model.GameItem;
-import com.example.htmlmud.domain.model.LivingState;
-import com.example.htmlmud.domain.model.SkillCategory;
-import com.example.htmlmud.domain.model.map.ItemTemplate;
+import com.example.htmlmud.domain.model.entity.GameItem;
+import com.example.htmlmud.domain.model.entity.LivingStats;
+import com.example.htmlmud.domain.model.enums.EquipmentSlot;
+import com.example.htmlmud.domain.model.enums.LivingPosture;
+import com.example.htmlmud.domain.model.enums.SkillCategory;
+import com.example.htmlmud.domain.model.template.ItemTemplate;
 import com.example.htmlmud.domain.model.vo.DamageSource;
+import com.example.htmlmud.domain.service.LivingService;
 import com.example.htmlmud.infra.persistence.entity.SkillEntry;
 import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.GameCommand;
@@ -37,7 +38,10 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
   protected List<String> aliases;
 
   // 所有生物都有狀態 (HP/MP) 存放玩家需要進資料庫的變化值(寫入/讀取)
-  protected LivingState state;
+  protected LivingStats stats;
+
+  // 姿勢 (站立, 戰鬥中, 死亡)
+  private LivingPosture posture = LivingPosture.STANDING;
 
   // 所有生物都在某個房間 (房間可能未載入)
   @Setter
@@ -84,11 +88,11 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
 
 
 
-  public Living(String id, String name, LivingState state, LivingService livingService) {
+  public Living(String id, String name, LivingStats stats, LivingService livingService) {
     super(id);
     this.id = id;
     this.name = name;
-    this.state = state;
+    this.stats = stats;
     this.livingService = livingService;
   }
 
@@ -157,7 +161,7 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
 
     // === 1. 戰鬥心跳 (最優先，每秒執行) ===
     // 頻率：1秒 (因為 WorldPulse 就是 1秒)
-    // log.info(this.name + " tickCount: {} inCombat: {}", tickCount, this.state.isInCombat());
+    // log.info(this.name + " tickCount: {} inCombat: {}", tickCount, this.stats.isInCombat());
     // if (isInCombat()) {
     // processAutoAttack(time); // 之前討論過的自動攻擊
     // }
@@ -205,9 +209,9 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
       return;
     }
 
-    // reply(this.state.getGender().getYou() + "回復了 " + amount + " 點 HP 目前 " + state.getHp() + " / "
-    // + state.getMaxHp());
-    this.state.setHp(Math.min(state.getHp() + amount, state.getMaxHp()));
+    // reply(this.stats.getGender().getYou() + "回復了 " + amount + " 點 HP 目前 " + stats.getHp() + " / "
+    // + stats.getMaxHp());
+    this.stats.setHp(Math.min(stats.getHp() + amount, stats.getMaxHp()));
   }
 
 
@@ -280,8 +284,8 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
   // }
 
   protected void processRegen() {
-    if (state.getHp() < state.getMaxHp()) {
-      int regenAmount = (int) (state.getMaxHp() * 0.05); // 回復 5%
+    if (stats.getHp() < stats.getMaxHp()) {
+      int regenAmount = (int) (stats.getMaxHp() * 0.05); // 回復 5%
       doHeal(regenAmount);
       sendStatUpdate();
     }
@@ -300,7 +304,7 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
     int def = 0; // 基礎防禦力
 
     // 遍歷所有裝備
-    for (GameItem item : state.equipment.values()) {
+    for (GameItem item : stats.equipment.values()) {
       ItemTemplate tpl = item.getTemplate();
       if (tpl != null) {
         minDamage += tpl.equipmentProp().minDamage();
@@ -338,11 +342,11 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
   }
 
   public GameItem getMainHandWeapon() {
-    return state.equipment.get(EquipmentSlot.MAIN_HAND);
+    return stats.equipment.get(EquipmentSlot.MAIN_HAND);
   }
 
   public GameItem getOffHandEquip() {
-    return state.equipment.get(EquipmentSlot.OFF_HAND);
+    return stats.equipment.get(EquipmentSlot.OFF_HAND);
   }
 
   // 輔助方法：取得主手武器類型 (共用)
@@ -353,11 +357,11 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
 
   // 輔助方法：取得自身等級 (共用)
   public int getLevel() {
-    return state.getLevel();
+    return stats.getLevel();
   }
 
   public Map<String, SkillEntry> getLearnedSkills() {
-    return this.state.getLearnedSkills();
+    return this.stats.getLearnedSkills();
   }
 
   public int getSkillLevel(String skillId) {
@@ -368,7 +372,7 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
   }
 
   public Map<SkillCategory, String> getEnabledSkills() {
-    return this.state.getEnabledSkills();
+    return this.stats.getEnabledSkills();
   }
 
   public String getEnabledSkillId(SkillCategory category) {
@@ -397,7 +401,7 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
 
   // 建構子與輔助方法...
   public boolean isDead() {
-    return state.getHp() <= 0;
+    return stats.getHp() <= 0;
   }
 
   // 判斷是否在戰鬥中
@@ -421,6 +425,11 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
 
   public boolean isValid() {
     return valid && !isDead(); // 活著且有效才算有效
+  }
+
+  // 判斷範例
+  public boolean canMove() {
+    return posture != LivingPosture.DEAD && posture != LivingPosture.SLEEPING;
   }
 
   public Room getCurrentRoom() {

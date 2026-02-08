@@ -3,7 +3,7 @@ package com.example.htmlmud.infra.util;
 import java.util.Collection;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.stereotype.Component;
-import com.example.htmlmud.domain.model.Weighted;
+import com.example.htmlmud.domain.model.config.Weighted;
 
 @Component
 public class RandomUtil {

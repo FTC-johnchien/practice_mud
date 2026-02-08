@@ -3,11 +3,11 @@ package com.example.htmlmud.domain.service;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.exception.MudException;
-import com.example.htmlmud.domain.model.GameItem;
-import com.example.htmlmud.domain.model.SkillCategory;
-import com.example.htmlmud.domain.model.map.RaceTemplate;
-import com.example.htmlmud.domain.model.map.SkillTemplate;
+import com.example.htmlmud.domain.model.entity.GameItem;
+import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.domain.model.skill.dto.ActiveSkillResult;
+import com.example.htmlmud.domain.model.template.RaceTemplate;
+import com.example.htmlmud.domain.model.template.SkillTemplate;
 import com.example.htmlmud.infra.persistence.entity.SkillEntry;
 import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
 import com.example.htmlmud.infra.util.RandomUtil;
@@ -197,8 +197,8 @@ public class SkillService {
     }
 
     // 檢查種族是否有設定 nature attack (Race Default)
-    // log.info("resolveCombatSkillId name:{} race:{}", self.getName(), self.getState().getRace());
-    RaceTemplate race = templateRepo.getRaceTemplates().get(self.getState().getRace());
+    // log.info("resolveCombatSkillId name:{} race:{}", self.getName(), self.getStats().getRace());
+    RaceTemplate race = templateRepo.getRaceTemplates().get(self.getStats().getRace());
     // log.info("resolveCombatSkillId name:{} race:{}", self.getName(), race);
     switch (category) {
       case DODGE -> {

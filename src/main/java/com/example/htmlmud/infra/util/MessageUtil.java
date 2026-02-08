@@ -57,7 +57,7 @@ public class MessageUtil {
     if (receiver == null || !(receiver instanceof Player)) {
       return template;
     }
-    if (executor == null || executor.getState().getGender() == null) {
+    if (executor == null || executor.getStats().getGender() == null) {
       return template;
     }
 
@@ -77,7 +77,7 @@ public class MessageUtil {
 
       targetNoun = target.getName();
       if (isTarget) {
-        targetNoun = target.getState().getGender().getYou();
+        targetNoun = target.getStats().getGender().getYou();
       }
     }
 
@@ -86,7 +86,7 @@ public class MessageUtil {
 
     executorNoun = executor.getName();
     if (isExecutor) {
-      executorNoun = executor.getState().getGender().getYou();
+      executorNoun = executor.getStats().getGender().getYou();
     }
 
     // 進行替換

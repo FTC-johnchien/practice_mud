@@ -1,6 +1,6 @@
 package com.example.htmlmud.domain.model.skill.dto;
 
-import com.example.htmlmud.domain.model.map.SkillTemplate;
+import com.example.htmlmud.domain.model.template.SkillTemplate;
 import com.example.htmlmud.infra.persistence.entity.SkillEntry;
 
 /**

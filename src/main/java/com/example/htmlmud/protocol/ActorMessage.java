@@ -5,8 +5,8 @@ import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
-import com.example.htmlmud.domain.model.EquipmentSlot;
-import com.example.htmlmud.domain.model.GameItem;
+import com.example.htmlmud.domain.model.entity.GameItem;
+import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 
 
 public sealed interface ActorMessage

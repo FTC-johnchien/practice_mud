@@ -3,7 +3,7 @@ package com.example.htmlmud.infra.persistence.entity;
 import java.util.List;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import com.example.htmlmud.domain.model.GameItem;
+import com.example.htmlmud.domain.model.entity.GameItem;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

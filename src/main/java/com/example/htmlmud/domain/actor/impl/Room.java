@@ -6,13 +6,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import com.example.htmlmud.application.service.RoomService;
 import com.example.htmlmud.domain.actor.core.VirtualActor; // 引用您的基礎類別
 import com.example.htmlmud.domain.exception.MudException;
-import com.example.htmlmud.domain.model.Direction;
-import com.example.htmlmud.domain.model.GameItem;
-import com.example.htmlmud.domain.model.map.RoomTemplate;
-import com.example.htmlmud.domain.model.map.ZoneTemplate;
+import com.example.htmlmud.domain.model.entity.GameItem;
+import com.example.htmlmud.domain.model.enums.Direction;
+import com.example.htmlmud.domain.model.template.RoomTemplate;
+import com.example.htmlmud.domain.model.template.ZoneTemplate;
+import com.example.htmlmud.domain.service.RoomService;
 import com.example.htmlmud.protocol.RoomMessage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

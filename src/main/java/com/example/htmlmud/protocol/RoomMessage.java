@@ -5,9 +5,9 @@ import java.util.concurrent.CompletableFuture;
 import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
-import com.example.htmlmud.domain.model.Direction;
-import com.example.htmlmud.domain.model.GameItem;
-import com.example.htmlmud.domain.model.RoomStateRecord;
+import com.example.htmlmud.domain.model.entity.GameItem;
+import com.example.htmlmud.domain.model.entity.RoomStateRecord;
+import com.example.htmlmud.domain.model.enums.Direction;
 
 /**
  * 定義所有發送給 RoomActor 的內部訊息協定 使用 Sealed Interface 限制訊息類型，配合 switch pattern matching

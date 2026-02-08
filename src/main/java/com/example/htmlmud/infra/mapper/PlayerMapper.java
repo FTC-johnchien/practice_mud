@@ -4,7 +4,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
-import com.example.htmlmud.domain.model.PlayerRecord;
+import com.example.htmlmud.domain.model.entity.PlayerRecord;
 import com.example.htmlmud.infra.persistence.entity.CharacterEntity;
 
 @Mapper(componentModel = "spring",

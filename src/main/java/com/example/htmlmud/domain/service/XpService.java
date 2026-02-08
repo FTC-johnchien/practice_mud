@@ -1,7 +1,7 @@
 package com.example.htmlmud.domain.service;
 
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.domain.model.map.SkillTemplate;
+import com.example.htmlmud.domain.model.template.SkillTemplate;
 import com.example.htmlmud.infra.persistence.entity.SkillEntry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

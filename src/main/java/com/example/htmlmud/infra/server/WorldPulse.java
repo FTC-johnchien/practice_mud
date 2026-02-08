@@ -3,9 +3,9 @@ package com.example.htmlmud.infra.server;
 import java.util.concurrent.atomic.AtomicLong;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.infra.monitor.GameMetrics;
 import com.example.htmlmud.domain.service.CombatService;
+import com.example.htmlmud.domain.service.WorldManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

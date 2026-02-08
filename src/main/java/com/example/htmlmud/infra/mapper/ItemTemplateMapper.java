@@ -1,12 +1,12 @@
 package com.example.htmlmud.infra.mapper;
 
-import com.example.htmlmud.domain.model.GameItem;
+import com.example.htmlmud.domain.model.entity.GameItem;
+import com.example.htmlmud.domain.model.template.ItemTemplate;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
-import com.example.htmlmud.domain.model.map.ItemTemplate;
 import com.example.htmlmud.infra.persistence.entity.ItemTemplateEntity;
 
 @Mapper(componentModel = "spring",

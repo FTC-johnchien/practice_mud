@@ -1,5 +1,8 @@
 package com.example.htmlmud.domain.model;
 
+import com.example.htmlmud.domain.model.enums.EffectType;
+import com.example.htmlmud.domain.model.enums.TargetType;
+
 public record Effect(
 
     String name,

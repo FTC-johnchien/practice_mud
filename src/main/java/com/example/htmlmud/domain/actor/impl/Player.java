@@ -12,14 +12,14 @@ import org.slf4j.MDC;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.application.service.PlayerService;
-import com.example.htmlmud.application.service.WorldManager;
 import com.example.htmlmud.domain.actor.behavior.GuestBehavior;
 import com.example.htmlmud.domain.actor.behavior.PlayerBehavior;
 import com.example.htmlmud.domain.context.MudContext;
-import com.example.htmlmud.domain.model.Direction;
-import com.example.htmlmud.domain.model.GameItem;
-import com.example.htmlmud.domain.model.LivingState;
-import com.example.htmlmud.domain.model.PlayerRecord;
+import com.example.htmlmud.domain.model.entity.GameItem;
+import com.example.htmlmud.domain.model.entity.LivingStats;
+import com.example.htmlmud.domain.model.entity.PlayerRecord;
+import com.example.htmlmud.domain.model.enums.Direction;
+import com.example.htmlmud.domain.service.WorldManager;
 import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.ConnectionState;
 import com.example.htmlmud.protocol.GameCommand;
@@ -60,7 +60,7 @@ public final class Player extends Living {
 
 
 
-  private Player(WebSocketSession session, String id, String name, LivingState state,
+  private Player(WebSocketSession session, String id, String name, LivingStats state,
       WorldManager worldManager, PlayerService playerService) {
     super(id, name, state, playerService.getLivingServiceProvider().getObject());
     this.session = session;
@@ -75,7 +75,7 @@ public final class Player extends Living {
     String uuid = UUID.randomUUID().toString();
     String playerId = "p-" + uuid.substring(0, 8) + uuid.substring(9, 11);
     Player actor =
-        new Player(session, playerId, name, new LivingState(), worldManager, playerService);
+        new Player(session, playerId, name, new LivingStats(), worldManager, playerService);
     actor.become(new GuestBehavior(playerService.getAuthService(), worldManager));
     return actor;
   }
@@ -117,8 +117,8 @@ public final class Player extends Living {
       }
       case ActorMessage.GainExp(var amount) -> {
         // TODO
-        this.state.exp += amount;
-        // if (this.state.exp >= this.state.nextLevelExp) {
+        this.stats.exp += amount;
+        // if (this.stats.exp >= this.stats.nextLevelExp) {
         // this.levelUp();
         // }
       }
@@ -237,7 +237,7 @@ public final class Player extends Living {
 
     // 發送事件
     // publisher.publishEvent(
-    // new DomainEvent.PlayerLevelUpEvent(currentTraceId, this.objectId.id(), this.state.level));
+    // new DomainEvent.PlayerLevelUpEvent(currentTraceId, this.objectId.id(), this.stats.level));
   }
 
 
@@ -248,7 +248,7 @@ public final class Player extends Living {
         this.name, // Username
         this.nickname, // Nickname
         this.currentRoomId, // Room
-        this.state.deepCopy(), // 【關鍵】深層複製 State
+        this.stats.deepCopy(), // 【關鍵】深層複製 stats
         new ArrayList<GameItem>(this.inventory) // Inventory
     );
   }
@@ -263,7 +263,7 @@ public final class Player extends Living {
       this.nickname = record.name();
     }
     this.aliases = new ArrayList<>(List.of(record.name()));
-    this.state = record.state();
+    this.stats = record.stats();
     this.currentRoomId = record.currentRoomId();
     this.inventory = record.inventory();
     if (this.inventory == null) {
@@ -294,11 +294,11 @@ public final class Player extends Living {
   public void sendStatUpdate() {
     Map<String, Object> update = new HashMap<>();
     update.put("type", "STAT_UPDATE");
-    update.put("hp", state.hp);
-    update.put("maxHp", state.maxHp);
-    update.put("mp", state.mp);
-    update.put("maxMp", state.maxMp);
-    update.put("energy", state.getCombatResource("charge")); // 0~100
+    update.put("hp", stats.hp);
+    update.put("maxHp", stats.maxHp);
+    update.put("mp", stats.mp);
+    update.put("maxMp", stats.maxMp);
+    update.put("energy", stats.getCombatResource("charge")); // 0~100
 
     // 轉成 JSON 字串發送給前端
     try {
@@ -318,7 +318,7 @@ public final class Player extends Living {
   public void processDeath() {
     log.info("processDeath");
 
-    // 更新玩家 state
+    // 更新玩家 stats
     sendStatUpdate();
 
     // 先暫停 2秒
@@ -338,10 +338,10 @@ public final class Player extends Living {
 
     // 復活玩家
     markValid();
-    getState().setHp(1);
-    getState().setMp(0);
-    getState().setStamina(0);
-    // 更新玩家 state
+    getStats().setHp(1);
+    getStats().setMp(0);
+    getStats().setStamina(0);
+    // 更新玩家 stats
     sendStatUpdate();
     room.enter(this, Direction.UP);
 

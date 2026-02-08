@@ -12,10 +12,10 @@ import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.exception.MudException;
-import com.example.htmlmud.domain.model.LivingState;
-import com.example.htmlmud.domain.model.MoveAction;
-import com.example.htmlmud.domain.model.map.SkillTemplate;
+import com.example.htmlmud.domain.model.config.MoveAction;
+import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.skill.dto.ActiveSkillResult;
+import com.example.htmlmud.domain.model.template.SkillTemplate;
 import com.example.htmlmud.domain.model.vo.DamageSource;
 import com.example.htmlmud.infra.monitor.GameMetrics;
 import com.example.htmlmud.infra.persistence.entity.SkillEntry;
@@ -148,8 +148,8 @@ public class CombatService {
    * @return 造成的傷害值 (0 代表未命中或被格擋)
    */
   private int calculateDamage(Living attacker, Living defender) {
-    LivingState attState = attacker.getState();
-    LivingState defState = defender.getState();
+    LivingStats attState = attacker.getStats();
+    LivingStats defState = defender.getStats();
 
     // 1. 命中判定 (範例：靈巧越高，命中越高)
     // 假設基礎命中 80% + (攻方靈巧 - 守方靈巧)%
@@ -381,13 +381,13 @@ public class CombatService {
     }
 
     // 扣除 HP
-    self.getState().hp -= amount;
-    // self.getState().setHp(self.getState().getHp() - amount);
+    self.getStats().hp -= amount;
+    // self.getStats().setHp(self.getStats().getHp() - amount);
 
     // for test----------------------------------------------------------------------------------
     Room room = self.getCurrentRoom();
-    // room.broadcast("log:" + self.getName() + " 目前 HP: " + self.getState().getHp() + "/"
-    // + self.getState().getMaxHp());
+    // room.broadcast("log:" + self.getName() + " 目前 HP: " + self.getStats().getHp() + "/"
+    // + self.getStats().getMaxHp());
     // for test----------------------------------------------------------------------------------
 
     // 檢查是否死亡
@@ -402,7 +402,7 @@ public class CombatService {
         room.removePlayer(player.getId());
 
         // 更新前端玩家狀態
-        player.getState().setHp(0);
+        player.getStats().setHp(0);
         player.sendStatUpdate();
       } else if (self instanceof Mob mob) {
         room.removeMob(mob.getId());
@@ -546,7 +546,7 @@ public class CombatService {
     String regenFormula = template.getMechanics().getFormula("chargeRegen");
     if (regenFormula != null) {
       int regenAmount = FormulaEvaluator.evaluateInt(regenFormula, player, template);
-      player.getState().modifyCombatResource("charge", regenAmount);
+      player.getStats().modifyCombatResource("charge", regenAmount);
 
       if (regenAmount > 0) {
         player.reply("你的太極心法運轉，回復了 " + regenAmount + " 點氣勁。");
@@ -576,7 +576,7 @@ public class CombatService {
     }
 
     // A. 增加經驗值 (公式：智力越高練越快)
-    long gain = 10 + (player.getState().intelligence / 2);
+    long gain = 10 + (player.getStats().intelligence / 2);
     entry.addXp(gain);
 
     // B. 檢查是否升級 (呼叫我們第一部分寫的公式)
@@ -596,7 +596,7 @@ public class CombatService {
    * 計算獲得經驗值 (範例)
    */
   private int calculateExp(Living mob, Living player) {
-    return mob.getState().getLevel() * 10;
+    return mob.getStats().getLevel() * 10;
   }
 
   private void afterAttack(Player attacker, ActiveSkillResult skillResult) {
@@ -605,7 +605,7 @@ public class CombatService {
 
     // 1. 計算獲得熟練度
     // 智力越高練越快，或者根據怪物強度
-    int xpGain = 1 + (attacker.getState().intelligence / 10);
+    int xpGain = 1 + (attacker.getStats().intelligence / 10);
 
     // 2. 增加熟練度
     userSkill.addXp(xpGain);

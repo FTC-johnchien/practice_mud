@@ -3,9 +3,9 @@ package com.example.htmlmud.domain.service;
 import java.util.Map;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.actor.impl.Living;
-import com.example.htmlmud.domain.model.LivingState;
-import com.example.htmlmud.domain.model.ResourceType;
-import com.example.htmlmud.domain.model.map.SkillTemplate;
+import com.example.htmlmud.domain.model.entity.LivingStats;
+import com.example.htmlmud.domain.model.enums.ResourceType;
+import com.example.htmlmud.domain.model.template.SkillTemplate;
 import com.example.htmlmud.infra.util.MessageUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +33,7 @@ public class SkillCostService {
         continue;
 
       // 利用 Enum 的多型直接取得當前數值
-      if (type.getCurrent(actor.getState()) < cost) {
+      if (type.getCurrent(actor.getStats()) < cost) {
 
         actor.reply("$N的 " + type.name() + " 不足！(需要: " + cost + ")");
 
@@ -46,7 +46,7 @@ public class SkillCostService {
   /**
    * 執行扣除
    */
-  public void deductResources(LivingState actor, SkillTemplate skill) {
+  public void deductResources(LivingStats actor, SkillTemplate skill) {
     if (skill.getLearning().costs() == null)
       return;
 
