@@ -1,7 +1,8 @@
 package com.example.htmlmud.domain.actor.impl;
 
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import com.example.htmlmud.domain.actor.behavior.AggressiveBehavior;
@@ -220,10 +221,18 @@ public final class Mob extends Living {
   }
 
   // 取得當前仇恨最高目標 ID
-  public String getHighestAggroTarget() {
-    // log.info("aggroTable: {}", aggroTable.size());
-    return aggroTable.entrySet().stream().max(Map.Entry.comparingByValue()).map(Map.Entry::getKey)
-        .orElse(null);
+  public Optional<Living> getHighestAggroTarget() {
+    // 優化：一次取得房間內所有生物，避免多次跨執行緒通訊
+    List<Living> roomLivings = this.getCurrentRoom().getLivings();
+    if (roomLivings.isEmpty()) {
+      return Optional.empty();
+    }
+
+    return aggroTable.entrySet().stream()
+        .flatMap(entry -> roomLivings.stream()
+            .filter(l -> l.getId().equals(entry.getKey()) && l.isValid())
+            .map(l -> Map.entry(entry.getValue(), l)))
+        .max(Map.Entry.comparingByKey()).map(Map.Entry::getValue);
   }
 
   public void removeAggro(String sourceId) {
@@ -240,35 +249,6 @@ public final class Mob extends Living {
 
   public void attack(Living target) {
     // 實作：發送 AttackMessage 給 target
-  }
-
-  private void processCombatRound(long now) {
-    // 檢查攻擊冷卻
-    log.info("this.state.nextAttackTime: {}", nextAttackTime);
-    if (now < nextAttackTime) {
-      return;
-    }
-
-    // 取得當前最高仇恨目標
-    log.info("getHighestAggroTarget: {}", getHighestAggroTarget());
-    String targetId = getHighestAggroTarget();
-    if (targetId == null) {
-      isInCombat = false; // 沒目標，脫離戰鬥
-      return;
-    }
-
-    // processAutoAttack(now);
-
-    // 從房間取得目標 Actor (這裡需要 WorldManager 協助，或 RoomActor 傳遞)
-    // 假設這段邏輯在 RoomActor 處理會更好，但若在 Mob 處理：
-    // LivingActor target = services.worldManager().getRoomActor(currentRoomId).findActor(targetId);
-
-    // 為了簡單，假設我們能取到 target
-    // int dmg = combatService.calculateDamage(this, target);
-    // target.onAttacked(this, dmg);
-
-    // 重設冷卻時間
-    nextAttackTime = now + attackSpeed;
   }
 
   @Override

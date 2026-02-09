@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 import com.example.htmlmud.domain.actor.core.VirtualActor; // 引用您的基礎類別
 import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.entity.GameItem;
@@ -33,7 +36,6 @@ public class Room extends VirtualActor<RoomMessage> {
   private final ZoneTemplate zoneTemplate;
 
   // 房間內的玩家 (Runtime State)
-  // @Getter
   private final List<Player> players = new ArrayList<>();
 
   private final List<Mob> mobs = new ArrayList<>();
@@ -65,79 +67,95 @@ public class Room extends VirtualActor<RoomMessage> {
     roomService.spawnInitial(this, mobs, items);
   }
 
+
+
   // --- 實作父類別的抽象方法 ---
   @Override
   protected void handleMessage(RoomMessage msg) {
     // 這裡的邏輯跟之前一模一樣，但不需要自己寫 loop 和 try-catch 了
     switch (msg) {
       case RoomMessage.Enter(var actor, var direction, var future) -> {
-        roomService.doEnter(this, players, mobs, actor, direction, future);
+        roomService.enter(this, players, mobs, actor, direction);
+        future.complete(null);
       }
       case RoomMessage.Leave(var actor, var direction) -> {
-        roomService.doLeave(this, players, mobs, actor, direction);
+        roomService.leave(this, players, mobs, actor, direction);
       }
       case RoomMessage.Say(var sourceId, var content) -> {
-        roomService.doSay(players, sourceId, content);
+        roomService.say(players, sourceId, content);
       }
       case RoomMessage.TryPickItem(var args, var picker, var future) -> {
-        roomService.doTryPickItem(items, args, picker, future);
+        future.complete(roomService.tryPickItem(items, args, picker));
       }
       case RoomMessage.Tick(var tickCount, var timestamp) -> {
-        roomService.doTick(this, players, mobs, tickCount, timestamp);
+        roomService.tick(this, tickCount, timestamp);
       }
       case RoomMessage.Broadcast(var sourceId, var targetId, var message) -> {
-        roomService.doBroadcast(players, mobs, sourceId, targetId, message);
+        roomService.broadcast(players, mobs, sourceId, targetId, message);
       }
       case RoomMessage.BroadcastToOthers(var sourceId, var message) -> {
-        roomService.doBroadcastToOthers(players, sourceId, message);
+        roomService.broadcastToOthers(players, sourceId, message);
       }
       case RoomMessage.FindLiving(var livingId, var future) -> {
-        roomService.doFindLiving(players, mobs, livingId, future);
+        future.complete(roomService.findLiving(players, mobs, livingId));
       }
       case RoomMessage.GetLivings(var future) -> {
-        List<Living> livings = new ArrayList<>(players.size() + mobs.size());
-        livings.addAll(players);
-        livings.addAll(mobs);
-        future.complete(livings);
+        future.complete(
+            Stream.concat(players.stream(), mobs.stream()).filter(Living::isValid).toList());
       }
       case RoomMessage.RemoveLiving(var livingId) -> {
         players.removeIf(player -> player.getId().equals(livingId));
         mobs.removeIf(mob -> mob.getId().equals(livingId));
       }
       case RoomMessage.GetPlayers(var future) -> {
-        future.complete(List.copyOf(players));
+        future.complete(players.stream().filter(Player::isValid).toList());
       }
       case RoomMessage.RemovePlayer(var playerId) -> {
         players.removeIf(player -> player.getId().equals(playerId));
       }
       case RoomMessage.GetMobs(var future) -> {
-        future.complete(List.copyOf(mobs));
+        future.complete(mobs.stream().filter(Mob::isValid).toList());
       }
       case RoomMessage.RemoveMob(var mobId) -> {
         mobs.removeIf(mob -> mob.getId().equals(mobId));
       }
-      case RoomMessage.GetItems(var future) -> {
-        future.complete(List.copyOf(items));
-      }
       case RoomMessage.RemoveItem(var itemId) -> {
         items.removeIf(item -> item.getId().equals(itemId));
+        // 標記為 Dirty (需要存檔)
+        // WorldManager.markDirty(this.template.id());
       }
       case RoomMessage.DropItem(var item) -> {
         items.add(item);
       }
-      case RoomMessage.ToRecord(var future) -> {
-        roomService.toRecord(this.getTemplate().id(), items, future);
+      case RoomMessage.Record() -> {
+        roomService.record(this.getTemplate().id(), items);
+      }
+      case RoomMessage.LookAtRoom(var playerId, var future) -> {
+        future.complete(roomService.handleLookAtRoom(this, players, mobs, items, playerId));
       }
 
     }
   }
+
+
+
   // ---------------------------------------------------------------------------------------------
 
 
 
   // 公開給外部呼叫的方法 --------------------------------------------------------------------------
+
+
+
   public void enter(Living actor, Direction direction) {
-    roomService.enter(this, actor, direction);
+    CompletableFuture<Void> future = new CompletableFuture<>();
+    this.send(new RoomMessage.Enter(actor, direction, future));
+    try {
+      future.orTimeout(1, TimeUnit.SECONDS).join();
+    } catch (Exception e) {
+      log.error("Room enter 失敗 roomId:{}", id, e);
+      actor.reply("一股未知的力量阻擋了$N的前進!");
+    }
   }
 
   public void leave(Living actor, Direction direction) {
@@ -153,7 +171,18 @@ public class Room extends VirtualActor<RoomMessage> {
   }
 
   public Optional<GameItem> tryPickItem(String args, Player picker) {
-    return roomService.tryPickItem(this, args, picker);
+    CompletableFuture<GameItem> future = new CompletableFuture<>();
+    this.send(new RoomMessage.TryPickItem(args, picker, future));
+    try {
+      GameItem item = future.orTimeout(1, TimeUnit.SECONDS).join();
+      if (item != null) {
+        return Optional.of(item);
+      }
+    } catch (Exception e) {
+      log.error("Room tryPickItem 失敗 roomId:{}", id, e);
+    }
+
+    return Optional.empty();
   }
 
   public void broadcast(String actorId, String targetId, String message) {
@@ -165,27 +194,55 @@ public class Room extends VirtualActor<RoomMessage> {
   }
 
   public Optional<Living> findLiving(String livingId) {
-    return roomService.findLiving(this, livingId);
+    CompletableFuture<Living> future = new CompletableFuture<>();
+    this.send(new RoomMessage.FindLiving(livingId, future));
+    try {
+      Living living = future.orTimeout(1, TimeUnit.SECONDS).join();
+      if (living != null) {
+        return Optional.of(living);
+      }
+    } catch (Exception e) {
+      log.error("Room 取得 Living 列表失敗 roomId:{}", id, e);
+    }
+
+    return Optional.empty();
   }
 
   public List<Living> getLivings() {
-    return roomService.getLivings(this);
+    CompletableFuture<List<Living>> future = new CompletableFuture<>();
+    this.send(new RoomMessage.GetLivings(future));
+    try {
+      return future.orTimeout(1, TimeUnit.SECONDS).join();
+    } catch (Exception e) {
+      log.error("Room 取得 Living 列表失敗 roomId:{}", id, e);
+    }
+    return new ArrayList<>();
   }
 
   public List<Player> getPlayers() {
-    return roomService.getPlayers(this);
+    CompletableFuture<List<Player>> future = new CompletableFuture<>();
+    this.send(new RoomMessage.GetPlayers(future));
+    try {
+      return future.orTimeout(1, TimeUnit.SECONDS).join();
+    } catch (Exception e) {
+      log.error("Room 取得 Player 列表失敗 roomId:{}", id, e);
+    }
+    return new ArrayList<>();
   }
 
   public List<Mob> getMobs() {
-    return roomService.getMobs(this);
-  }
-
-  public List<GameItem> getItems() {
-    return roomService.getItems(this);
+    CompletableFuture<List<Mob>> future = new CompletableFuture<>();
+    this.send(new RoomMessage.GetMobs(future));
+    try {
+      return future.orTimeout(1, TimeUnit.SECONDS).join();
+    } catch (Exception e) {
+      log.error("Room 取得 Mob 列表失敗 roomId:{}", id, e);
+    }
+    return new ArrayList<>();
   }
 
   public void record() {
-    roomService.record(this);
+    this.send(new RoomMessage.Record());
   }
 
   public void removeLiving(String livingId) {
@@ -208,26 +265,27 @@ public class Room extends VirtualActor<RoomMessage> {
     this.send(new RoomMessage.DropItem(item));
   }
 
+  public void lookAtRoom(Player player) {
+    CompletableFuture<String> future = new CompletableFuture<>();
+    this.send(new RoomMessage.LookAtRoom(player.getId(), future));
+    try {
+      String roomDesc = future.orTimeout(1, TimeUnit.SECONDS).join();
+      player.reply(roomDesc);
+    } catch (Exception e) {
+      log.error("Room lookAtRoom 失敗 roomId:{}", this.getId(), e);
+    }
+  }
 
+  public void lookDirection(Player player, Direction dir) {
 
-  // ---------------------------------------------------------------------------------------------
+  }
 
+  public void lookAtSelf(Player player) {
 
+  }
 
-  // --- 物品操作邏輯 ---
+  public void lookAtTarget(Player player, String targetName) {
 
-  // --- 輔助方法 (保持不變) ---
-
-
-
-  // ---------------------------------------------------------------------------------------------
-
-
-
-  private void removeItem(GameItem item) {
-    items.remove(item);
-    // 標記為 Dirty (需要存檔)
-    // WorldManager.markDirty(this.template.id());
   }
 
 }

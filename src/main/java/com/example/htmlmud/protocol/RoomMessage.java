@@ -16,8 +16,8 @@ public sealed interface RoomMessage
     permits RoomMessage.Enter, RoomMessage.Leave, RoomMessage.TryPickItem, RoomMessage.Say,
     RoomMessage.Tick, RoomMessage.Broadcast, RoomMessage.BroadcastToOthers, RoomMessage.FindLiving,
     RoomMessage.GetLivings, RoomMessage.RemoveLiving, RoomMessage.GetPlayers, RoomMessage.GetMobs,
-    RoomMessage.GetItems, RoomMessage.ToRecord, RoomMessage.RemovePlayer, RoomMessage.RemoveMob,
-    RoomMessage.RemoveItem, RoomMessage.DropItem {
+    RoomMessage.Record, RoomMessage.RemovePlayer, RoomMessage.RemoveMob, RoomMessage.RemoveItem,
+    RoomMessage.DropItem, RoomMessage.LookAtRoom {
 
   record Tick(long tickCount, long timestamp) implements RoomMessage {
   }
@@ -89,16 +89,18 @@ public sealed interface RoomMessage
   record RemoveMob(String mobId) implements RoomMessage {
   }
 
-  record GetItems(CompletableFuture<List<GameItem>> future) implements RoomMessage {
-  }
-
   record RemoveItem(String itemId) implements RoomMessage {
   }
 
   record DropItem(GameItem item) implements RoomMessage {
   }
 
-  record ToRecord(CompletableFuture<RoomStateRecord> future) implements RoomMessage {
+  record LookAtRoom(String playerId, CompletableFuture<String> future) implements RoomMessage {
+  }
+
+
+
+  record Record() implements RoomMessage {
   }
 
 }

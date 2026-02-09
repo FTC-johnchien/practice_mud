@@ -103,7 +103,7 @@ public class LivingService {
 
     // 檢查是否死亡
     if (self.isDead()) {
-      log.info("{} 被殺死了", self.getName());
+      log.info("{} 被殺死了-", self.getName());
 
       // 終止戰鬥並移出戰鬥名單
       combatService.endCombat(self);
@@ -162,7 +162,11 @@ public class LivingService {
 
     // 廣播死亡訊息
     String messageTemplate = "$n殺死了$N";
-    Living killer = worldManagerProvider.getObject().findLivingActor(killerId).orElse(null);
+    // 先找房間里的 living
+    Living killer = self.getCurrentRoom().findLiving(killerId).orElse(null);
+    if (killer == null) {
+      killer = worldManagerProvider.getObject().findLivingActor(killerId).orElse(null);
+    }
     if (killer == null) {
       log.error("killerId LivingActor not found: {}", killerId);
 

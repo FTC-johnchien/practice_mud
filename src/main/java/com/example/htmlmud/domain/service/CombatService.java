@@ -1,6 +1,5 @@
 package com.example.htmlmud.domain.service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,8 +9,6 @@ import com.example.htmlmud.application.command.parser.BodyPartSelector;
 import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
-import com.example.htmlmud.domain.actor.impl.Room;
-import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.config.MoveAction;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.skill.dto.ActiveSkillResult;
@@ -63,17 +60,16 @@ public class CombatService {
         continue;
       }
 
+      Living target = null;
       // 如果是 Mob 每次攻擊要先找仇恨最高的目標(如果有的話)
       if (actor instanceof Mob mob) {
-        if (!checkMobaggroTable(mob)) {
-          log.info("mob aggroTable 為空 name:{}", actor.getName());
-          endCombat(actor); // 對手不見了，脫離戰鬥
-          continue;
-        }
+        target = mob.getHighestAggroTarget().orElse(null);
+      } else {
+        target = actor.getCombatTarget().orElse(null);
       }
 
       // 檢查戰鬥目標是有效
-      Living target = actor.getCombatTarget().orElse(null);
+      // Living target = actor.getCombatTarget().orElse(null);
       if (target == null || !target.isValid()
           || !target.getCurrentRoom().equals(actor.getCurrentRoom())) {
         // log.info("actor.combatTarget 無效 actor.name:{} isValid:{} isDead:{}", actor.getName(),
@@ -205,10 +201,9 @@ public class CombatService {
 
           // 範圍攻擊
           if (skill.getTemplate().getTags().contains("AOE")) {
-            // 取出 self 房間里的所有 living, 排除自己
-            List<Living> targets = self.getCurrentRoom().getLivings();
-            targets.remove(self);
-            // log.info("範圍攻擊了 {} 人", targets.size());
+            // 優化：直接在取得列表後過濾掉自己，不使用會導致報錯的 remove()
+            List<Living> targets = self.getCurrentRoom().getLivings().stream()
+                .filter(l -> !l.getId().equals(self.getId())).toList();
 
             for (Living living : targets) {
               performAttack(self, living, skill, System.currentTimeMillis());
@@ -347,41 +342,14 @@ public class CombatService {
   // ---------------------------------------------------------------------------------------------
 
 
-
-  private boolean checkMobaggroTable(Mob mob) {
-
-    // 取出當前最高仇恨目標
-    String targetId = mob.getHighestAggroTarget();
-
-    // log.info("checkMobaggroTable targetId:{}", targetId);
-    // 仇恨表為空，脫離戰鬥
-    if (targetId == null) {
-      return false;
-    }
-
-    // 檢查新戰鬥目標是否有效
-    mob.combatTargetId = targetId;
-    Living target = mob.getCombatTarget().orElse(null);
-    if (target == null || !target.isValid()
-        || !target.getCurrentRoom().equals(mob.getCurrentRoom())) {
-      // log.info("checkMobaggroTable target 無效 targetId:{}", targetId);
-      // 無效的目標就移出仇恨表
-      mob.removeAggro(mob.getCombatTargetId());
-      mob.combatTargetId = null;
-      // 呼叫自己直到仇恨表為空
-      checkMobaggroTable(mob);
-    }
-
-    // 新戰鬥目標有效，繼續戰鬥
-    return true;
-  }
-
+  /**
+   * 計算並設定下一次可攻擊的時間點。 引入約 ±20% 的隨機浮動，增加戰鬥節奏的自然感。
+   */
   private void nextAttackTime(Living self) {
     long speed = self.getAttackSpeed();
-    // 計算 speed +/- 0.2 * speed，即範圍 [0.8 * speed, 1.2 * speed]
-    long nextAttackTime =
-        ThreadLocalRandom.current().nextLong(speed * 8 / 10, (speed * 12 / 10) + 1);
-    self.setNextAttackTime(System.currentTimeMillis() + nextAttackTime);
+    double variance = 0.8 + (ThreadLocalRandom.current().nextDouble() * 0.4);
+    long delay = (long) (speed * variance);
+    self.setNextAttackTime(System.currentTimeMillis() + delay);
   }
 
   private long calculateNextLevelXp(int level) {
@@ -396,38 +364,6 @@ public class CombatService {
   private String CombineString(String msg, String W, String w, String l) {
     return msg.replace("$l", l).replace("$W", W).replace("$w", w);
   }
-
-
-
-  // 取得下一次攻擊的間隔時間
-  private long getNextAttackDelay(long baseSpeed) {
-    // 引入 10% ~ 20% 的隨機浮動
-    // 如果武器速度是 2000ms，實際間隔會在 1800ms ~ 2200ms 之間飄移
-    double variance = 0.9 + (ThreadLocalRandom.current().nextDouble() * 0.2);
-    return (long) (baseSpeed * variance);
-  }
-
-  private void doCombatBroadcast(List<Player> players, Living source, Living target,
-      String messageTemplate) {
-    if (source == null) {
-      throw new MudException("source is null");
-    }
-    if (target == null) {
-      throw new MudException("target is null");
-    }
-
-    // 1. 取得房間內所有人 (包含做動作的人自己)
-    List<Living> audiences = new ArrayList<>();
-    audiences.addAll(players);
-    // audiences.addAll(self.getMobs()); // 怪物通常不需要收訊息，除非有 AI 反應
-
-    // 2. 對每個人發送「客製化」的訊息
-    for (Living receiver : audiences) {
-      messageUtil.send(messageTemplate, source, target, receiver);
-    }
-  }
-
-
 
   private void startRound(Player player) {
     ActiveSkillResult activeSkill = skillService.getAutoAttackSkill(player);

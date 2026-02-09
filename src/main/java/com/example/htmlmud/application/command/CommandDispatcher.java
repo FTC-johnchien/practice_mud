@@ -1,8 +1,10 @@
 package com.example.htmlmud.application.command;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.annotation.CommandAlias;
 import com.example.htmlmud.application.command.impl.MoveCommand;
@@ -24,20 +26,13 @@ public class CommandDispatcher {
       // 1. 註冊主鍵 (例如 "look", "move")
       register(cmd.getKey(), cmd);
 
-      // 2. 【核心修改】檢查是否有 Alias 註解
-      if (cmd.getClass().isAnnotationPresent(CommandAlias.class)) {
-        CommandAlias annotation = cmd.getClass().getAnnotation(CommandAlias.class);
-
-        // 3. 註冊所有別名
-        for (String alias : annotation.value()) {
-          register(alias, cmd);
-        }
-      }
-
-      // 額外處理 MoveCommand 的方向縮寫 (因為這不是單純的別名，還涉及參數轉換)
-      // 建議還是保留在程式碼裡特殊處理，或者用另一種 @DirectionAlias 處理
-      registerDirectionAliases(commands);
+      // 2. 使用 Optional 處理別名註解：只進行一次反射查詢，且語法簡潔
+      Optional.ofNullable(cmd.getClass().getAnnotation(CommandAlias.class)).map(CommandAlias::value)
+          .ifPresent(aliases -> Arrays.stream(aliases).forEach(alias -> register(alias, cmd)));
     }
+
+    // 3. 額外處理方向縮寫：移出迴圈，只需執行一次
+    registerDirectionAliases(commands);
   }
 
   private void register(String key, PlayerCommand cmd) {
