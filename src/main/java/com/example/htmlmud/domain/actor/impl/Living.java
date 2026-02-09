@@ -208,6 +208,7 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
 
 
 
+  // for 玩家使用 --------------------------------------------------------------------------------------
   public void command(String traceId, GameCommand cmd) {
     this.send(new ActorMessage.Command(traceId, cmd));
   }
@@ -223,6 +224,9 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
   public void reply(String msg) {
     sendText(msg);
   }
+  // for 玩家使用 --------------------------------------------------------------------------------------
+
+
 
   // public CompletableFuture<String> equip(GameItem item) {
   // var future = new CompletableFuture<String>();

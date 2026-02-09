@@ -5,8 +5,6 @@ import static java.util.stream.Collectors.groupingBy;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.application.command.annotation.CommandAlias;
@@ -14,7 +12,9 @@ import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.model.entity.GameItem;
+import com.example.htmlmud.domain.model.enums.Direction;
 import com.example.htmlmud.domain.model.enums.MobKind;
+import com.example.htmlmud.domain.service.RoomService;
 import com.example.htmlmud.infra.util.AnsiColor;
 import com.example.htmlmud.infra.util.ColorText;
 import lombok.RequiredArgsConstructor;
@@ -26,25 +26,51 @@ import lombok.extern.slf4j.Slf4j;
 @CommandAlias({"l", "see", "ls"}) // 支援 l, see, ls
 public class LookCommand implements PlayerCommand {
 
+  private final RoomService roomService;
+
   @Override
   public String getKey() {
     return "look";
   }
 
   @Override
-  public void execute(Player actor, String args) {
+  public void execute(Player player, String args) {
+
+    // 1. 如果沒有參數 -> 看當前房間
+    if (args == null || args.trim().isEmpty()) {
+      roomService.lookAtRoom(player);
+      return;
+    }
+
+    String targetName = args.trim().toLowerCase();
+
+    // 2. 判斷是否為「方向」 (look north)
+    Direction dir = Direction.parse(targetName);
+    if (dir != null) {
+      roomService.lookDirection(player, dir);
+      return;
+    }
+
+    // 3. 判斷是否為「自己」 (look me)
+    if (targetName.equals("me") || targetName.equals("self")) {
+      roomService.lookAtSelf(player);
+      return;
+    }
+
+    // 4. 看具體目標 (生物或物品)
+    roomService.lookAtTarget(player, targetName);
 
     // 查詢房間資料 (使用 WorldManager)
-    Room room = actor.getCurrentRoom();
+    Room room = player.getCurrentRoom();
 
     // 3. 產生房間描述
-    String roomDescription = buildRoomDescription(actor, room);
+    String roomDescription = buildRoomDescription(player, room);
 
     // 4. 回傳給玩家
-    actor.reply(roomDescription);
+    player.reply(roomDescription);
   }
 
-  private String buildRoomDescription(Player actor, Room room) {
+  private String buildRoomDescription(Player player, Room room) {
     StringBuilder sb = new StringBuilder();
 
     // 標題 (亮白色)
@@ -64,7 +90,7 @@ public class LookCommand implements PlayerCommand {
 
     // 取得房間內的玩家
     List<Player> otherPlayers = sortedPlayers(
-        room.getPlayers().stream().filter(p -> !p.getId().equals(actor.getId())).toList());
+        room.getPlayers().stream().filter(p -> !p.getId().equals(player.getId())).toList());
 
     // 取得房間內的怪物
     List<Mob> mobs = room.getMobs();
@@ -79,7 +105,7 @@ public class LookCommand implements PlayerCommand {
 
     // 1. 篩選出 其他玩家 (亮藍色，排除自己)
     List<String> otherPlayerNames =
-        otherPlayers.stream().filter(p -> !p.getId().equals(actor.getId()))
+        otherPlayers.stream().filter(p -> !p.getId().equals(player.getId()))
             .map(p -> ColorText.player(p.getName() + "(" + p.getAliases().get(0) + ")")).toList();
 
 

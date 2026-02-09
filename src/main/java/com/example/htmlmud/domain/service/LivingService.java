@@ -103,7 +103,7 @@ public class LivingService {
 
     // 檢查是否死亡
     if (self.isDead()) {
-      log.info("{} 被打死了", self.getName());
+      log.info("{} 被殺死了", self.getName());
 
       // 終止戰鬥並移出戰鬥名單
       combatService.endCombat(self);
@@ -124,7 +124,7 @@ public class LivingService {
       // 發送 self 死亡事件
       self.onDeath(attackerId);
     } else {
-      if (!self.isInCombat) {
+      if (!self.isInCombat && attackerId != null) {
 
         // 準備反應時間
         reactionTime(self);
@@ -134,7 +134,7 @@ public class LivingService {
       }
 
       // mob 就增加仇恨值
-      if (self instanceof Mob mob) {
+      if (self instanceof Mob mob && attackerId != null) {
         // log.info("增加仇恨 name:{} {}", attacker.getName(), amount);
         mob.addAggro(attackerId, amount);
       }
