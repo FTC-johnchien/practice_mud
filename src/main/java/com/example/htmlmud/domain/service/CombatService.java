@@ -93,22 +93,15 @@ public class CombatService {
   /**
    * 【註冊入口】 當發生攻擊行為時 (Player kill Mob 或 Mob aggro Player) 呼叫此方法
    */
-  public void startCombat(Living self, Living target) {
-
+  public void startCombat(Living self, String targetId) {
     if (self.combatTargetId == null) {
-      self.combatTargetId = target.getId();
+      self.combatTargetId = targetId;
     }
 
     self.isInCombat = true;
 
-    // 【節奏控制】
-    // 攻擊者：立即獲得攻擊機會 (或是很短的延遲)
-    self.nextAttackTime = System.currentTimeMillis();
-
     // 【加入名單】
     combatants.add(self);
-
-    target.onAttacked(self);
     // log.info(self.getName() + " 進入戰鬥名單！");
   }
 
@@ -122,7 +115,6 @@ public class CombatService {
 
     self.isInCombat = false;
     self.combatTargetId = null;
-    // self.nextAttackTime = 0;
 
     // 【移出名單】
     combatants.remove(self);
@@ -312,7 +304,7 @@ public class CombatService {
     }
 
     // 將傷害送給 target
-    target.onDamage(dmgAmout, self);
+    target.onDamage(dmgAmout, self.getId());
 
     msg += "\r\n" + action.msg().hit();
     msg = CombineString(msg, sWeapon, tWeapon, part);
@@ -341,99 +333,6 @@ public class CombatService {
 
 
   // ---------------------------------------------------------------------------------------------
-
-
-
-  public void onAttacked(Living self, Living attacker) {
-    self.isInCombat = true;
-    if (self.getCombatTarget() == null) {
-      self.combatTargetId = attacker.getId();
-    }
-
-    // 若是 Mob 就增加仇恨值
-    if (self instanceof Mob mob) {
-      // log.info("初始放入仇恨表 name:{}", attacker.getName());
-      mob.addAggro(attacker.getId(), 1);
-    }
-
-    // 攻擊準備時間
-    reactionTime(self);
-
-    // 加入戰鬥名單
-    if (!combatants.contains(self)) {
-      combatants.add(self);
-      // log.info(self.getName() + " 進入戰鬥名單！");
-    }
-  }
-
-  public void onDamage(int amount, Living self, Living attacker) {
-
-    // 檢查是否還存在，死亡可能會消失
-    if (self == null) {
-      log.info("onDamage 對象已消失");
-      return;
-    }
-
-    // 檢查是否還活著
-    if (!self.isValid()) {
-      // log.info("{} 已經死亡，無法受傷", self.getName());
-      return;
-    }
-
-    // 扣除 HP
-    self.getStats().hp -= amount;
-    // self.getStats().setHp(self.getStats().getHp() - amount);
-
-    // for test----------------------------------------------------------------------------------
-    Room room = self.getCurrentRoom();
-    // room.broadcast("log:" + self.getName() + " 目前 HP: " + self.getStats().getHp() + "/"
-    // + self.getStats().getMaxHp());
-    // for test----------------------------------------------------------------------------------
-
-    // 檢查是否死亡
-    if (self.isDead()) {
-      log.info("{} 被打死了", self.getName());
-
-      // 終止戰鬥並移出戰鬥名單
-      endCombat(self);
-
-      // 先判斷 self 是 player 還是 mob 然後將其移出房間，避免後續的攻擊還持續的打到已死亡的對象
-      if (self instanceof Player player) {
-        room.removePlayer(player.getId());
-
-        // 更新前端玩家狀態
-        player.getStats().setHp(0);
-        player.sendStatUpdate();
-      } else if (self instanceof Mob mob) {
-        room.removeMob(mob.getId());
-      }
-
-      // 發送 self 死亡事件
-      self.die(attacker.getId());
-    } else {
-      if (!self.isInCombat) {
-        self.isInCombat = true;
-        if (self.combatTargetId == null) {
-          self.combatTargetId = attacker.getId();
-        }
-
-        // 準備反應時間
-        reactionTime(self);
-
-        // 加入戰鬥名單
-        if (!combatants.contains(self)) {
-          combatants.add(self);
-          // log.info(self.getName() + " 進入戰鬥名單！");
-        }
-      }
-
-      // mob 就增加仇恨值
-      if (self instanceof Mob mob) {
-        // log.info("增加仇恨 name:{} {}", attacker.getName(), amount);
-        mob.addAggro(attacker.getId(), amount);
-      }
-    }
-  }
 
 
 
@@ -475,14 +374,6 @@ public class CombatService {
 
     // 新戰鬥目標有效，繼續戰鬥
     return true;
-  }
-
-  // 準備反應的時間
-  private void reactionTime(Living self) {
-    long speed = self.getAttackSpeed();
-    // 計算 0.5 * speed +/- 0.1 * speed，即範圍 [0.4 * speed, 0.6 * speed]
-    long reactionTime = ThreadLocalRandom.current().nextLong(speed * 4 / 10, (speed * 6 / 10) + 1);
-    self.setNextAttackTime(System.currentTimeMillis() + reactionTime);
   }
 
   private void nextAttackTime(Living self) {

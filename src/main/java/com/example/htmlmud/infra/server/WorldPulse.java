@@ -3,9 +3,10 @@ package com.example.htmlmud.infra.server;
 import java.util.concurrent.atomic.AtomicLong;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import com.example.htmlmud.infra.monitor.GameMetrics;
 import com.example.htmlmud.domain.service.CombatService;
 import com.example.htmlmud.domain.service.WorldManager;
+import com.example.htmlmud.infra.monitor.GameMetrics;
+import com.example.htmlmud.infra.util.AnsiColor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,11 +31,18 @@ public class WorldPulse {
   public void pulse() {
     long currentTick = globalTickCounter.incrementAndGet();
     long startTime = System.nanoTime();
-
+    long duration = 0;
     try {
       long now = System.currentTimeMillis();
 
-      // Active Room 定義：只對「活躍」的房間發送
+      // 對處於戰鬥清單
+      combatService.tick(currentTick, now);
+
+      // 對 Active Players
+
+      // 對 Dirty Mobs
+
+      // 對 Active Rooms 定義：只對「活躍」的房間發送
       worldManager.getActiveRooms().values().forEach(room -> {
         // 先檢查最簡單的條件：有沒有玩家
         boolean hasPlayers = !room.getPlayers().isEmpty();
@@ -45,23 +53,30 @@ public class WorldPulse {
         }
       });
 
-      // 戰鬥狀態
-      combatService.tick(currentTick, now);
+      // 對房間事件 Spawn rule
+
+      // 對 zone / world 事件
 
     } finally {
-      long duration = System.nanoTime() - startTime;
+      duration = System.nanoTime() - startTime;
 
       // 紀錄到 Metrics
       gameMetrics.addPulseDurationNanos(duration);
     }
 
-    // 每秒印一次 Log 確保心臟還在跳
-    if (currentTick % 10 == 0) {
-      if (gameMetrics.getPlayerCommands() == 0 && gameMetrics.getSystemTasks() == 0) {
-        gameMetrics.resetMetrics();
-        return;
-      }
+    // 每次心跳為 100毫秒，若有處理時間超過 50毫秒的就印出來警告
+    if (duration > 50_000_000) {
+      log.warn(
+          AnsiColor.YELLOW + "高負載警告 - Tick: {}, Pulse: {}ms, Player Cmds: {}, System Tasks: {}",
+          currentTick, duration / 1_000_000.0, gameMetrics.getPerCommands(),
+          gameMetrics.getPerTasks());
+    }
 
+    // 清除每次心跳的計數
+    gameMetrics.resetPerMetrics();
+
+    // 每分鐘印一次 Log 確保心臟還在跳
+    if (currentTick % 600 == 0) {
       long totalNanos = gameMetrics.getTotalPulseDurationNanos();
       log.info(
           "World Pulse Stats - Tick: {}, Total Work: {}ms, Avg Pulse: {}ms, Player Cmds: {}, System Tasks: {}",

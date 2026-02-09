@@ -11,7 +11,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.slf4j.MDC;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
-import com.example.htmlmud.application.service.PlayerService;
 import com.example.htmlmud.domain.actor.behavior.GuestBehavior;
 import com.example.htmlmud.domain.actor.behavior.PlayerBehavior;
 import com.example.htmlmud.domain.context.MudContext;
@@ -19,6 +18,7 @@ import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.entity.PlayerRecord;
 import com.example.htmlmud.domain.model.enums.Direction;
+import com.example.htmlmud.domain.service.PlayerService;
 import com.example.htmlmud.domain.service.WorldManager;
 import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.ConnectionState;
@@ -46,6 +46,7 @@ public final class Player extends Living {
 
 
   // 用來比對「這是哪一次的斷線」，防止舊的計時器殺錯人
+  @Setter
   private volatile long lastDisconnectTime = 0;
 
   @Setter
@@ -76,7 +77,7 @@ public final class Player extends Living {
     String playerId = "p-" + uuid.substring(0, 8) + uuid.substring(9, 11);
     Player actor =
         new Player(session, playerId, name, new LivingStats(), worldManager, playerService);
-    actor.become(new GuestBehavior(playerService.getAuthService(), worldManager));
+    playerService.become(actor, new GuestBehavior(playerService.getAuthService(), worldManager));
     return actor;
   }
 
@@ -107,11 +108,20 @@ public final class Player extends Living {
   private void handlePlayerMessage(ActorMessage.PlayerMessage msg) {
     switch (msg) {
       case ActorMessage.Command(var traceId, var cmd) -> {
-        doCommand(traceId, cmd);
+        service.handleInput(this, traceId, cmd);
       }
       case ActorMessage.SendText(var session, var content) -> {
-        doSendText(session, content);
+        service.handleSendText(this, session, content);
       }
+      case ActorMessage.Reconnect(var session) -> {
+        service.handleReconnect(this, session);
+      }
+      case ActorMessage.Disconnect() -> {
+        service.handleDisconnect(this);
+      }
+
+
+
       case ActorMessage.SaveData() -> {
         save();
       }
@@ -125,53 +135,9 @@ public final class Player extends Living {
       case ActorMessage.QuestUpdate(var questId, var status) -> {
         // TODO
       }
-      case ActorMessage.Reconnect(var session) -> {
-        onReconnect(session);
-      }
+
 
       default -> log.warn("handlePlayerMessage 收到無法處理的訊息: {} {}", this.id, msg);
-    }
-  }
-
-  private void doCommand(String traceId, GameCommand cmd) {
-    // A. 設定 MDC (給 Log 看)
-    MDC.put("traceId", traceId);
-    // MDC.put("actorName", this.name);
-
-    try {
-      // B. 設定 ScopedValue (給 Service 邏輯看)
-      ScopedValue.where(MudContext.CURRENT_PLAYER, this).where(MudContext.TRACE_ID, traceId)
-          .run(() -> {
-            // C. 委派給當前 Behavior 處理
-            PlayerBehavior next = currentBehavior.handle(this, cmd);
-
-            // D. 狀態切換
-            if (next != null) {
-              become(next);
-            }
-          });
-    } finally {
-      // E. 清理 MDC
-      MDC.clear();
-    }
-  }
-
-  private void doSendText(WebSocketSession session, String msg) {
-    if (session != null && session.isOpen()) {
-
-      // 處理 $N 代名詞
-      msg = service.getMessageUtil().format(msg, this);
-
-      try {
-        String json =
-            service.getObjectMapper().writeValueAsString(Map.of("type", "TEXT", "content", msg));
-
-        // 這裡才是真正寫入 WebSocket 的地方
-        // 因為是在 handleMessage 內執行，保證了 Thread-Safe
-        session.sendMessage(new TextMessage(json));
-      } catch (IOException e) {
-        log.error("Failed to send message to player {}", id, e);
-      }
     }
   }
 
@@ -189,9 +155,9 @@ public final class Player extends Living {
   // }
 
   @Override
-  protected void doDie(String killerId) {
+  protected void handleOnDeath(String killerId) {
     reply("$N已經死亡！即將在重生點復活...");
-    super.doDie(killerId);
+    super.handleOnDeath(killerId);
 
 
     // 玩家死亡邏輯：掉經驗、傳送回城
@@ -222,13 +188,6 @@ public final class Player extends Living {
 
     // 3. 不可堆疊，或是背包還沒有：直接加入清單
     this.inventory.add(newItem);
-  }
-
-  // 狀態切換方法
-  private void become(PlayerBehavior nextBehavior) {
-    this.currentBehavior = nextBehavior;
-    this.currentBehavior.onEnter(this); // 觸發進場事件
-    log.info("{} 切換行為模式至 {}", this.name, nextBehavior.getClass().getSimpleName());
   }
 
   private void levelUp() {
@@ -354,72 +313,6 @@ public final class Player extends Living {
 
 
 
-  // 【當 WebSocket 斷線時呼叫此方法】
-  public void handleDisconnect() {
-    log.warn("{} 斷線，進入緩衝狀態...", name);
-    this.lastDisconnectTime = System.currentTimeMillis();
-    connectionState = ConnectionState.LINK_DEAD;
-
-    // 廣播給房間其他人 (沉浸式體驗)
-    getCurrentRoom().broadcastToOthers(id, nickname + " 眼神突然變得呆滯，似乎失去了靈魂。");
-
-    // 【關鍵】啟動一個「死神 VT」
-    startDeathTimer(this.lastDisconnectTime);
-  }
-
-  // 【當玩家重新連線時呼叫此方法】
-  public void onReconnect(WebSocketSession newSession) {
-
-    // 1. 關閉舊連線 (如果還開著)
-    if (this.session != null && this.session.isOpen()) {
-      try {
-        this.session.close();
-      } catch (IOException ignored) {
-      }
-    }
-
-    // 2. 換上新連線 (必須先更新欄位，確保後續訊息發往正確的連線)
-    // 更新斷線時間戳記，這樣之前的死神 VT 醒來後會發現時間對不上，就不會執行殺人
-    this.lastDisconnectTime = System.currentTimeMillis();
-    connectionState = ConnectionState.IN_GAME;
-    service.getMudWebSocketHandlerProvider().getObject().promoteToPlayer(newSession, this);
-
-    // 3. 重發當前環境資訊
-    log.warn("{} 重新連線成功！", name);
-
-    // 發送歡迎回來的訊息
-    doSendText(this.session, "\u001B[33m[系統] 連線已恢復。\u001B[0m");
-    getCurrentRoom().broadcastToOthers(id, nickname + " 的眼神恢復了光采。");
-    sendStatUpdate();
-    service.getCommandDispatcher().dispatch(this, "look");
-  }
-
-  private void startDeathTimer(long disconnectTimestamp) {
-    // 啟動一個虛擬執行緒，成本極低
-    Thread.ofVirtual().name("Reaper-" + name).start(() -> {
-      try {
-        // 設定緩衝時間：例如 10 分鐘 (600,000 ms)
-        // 這裡直接 sleep，不會佔用系統資源
-        Thread.sleep(10 * 60 * 1000);
-
-        // --- 10 分鐘後醒來 ---
-
-        // 檢查 1: 玩家是否還在斷線狀態？
-        // 檢查 2: 這是當初那次斷線嗎？(防止玩家重連後又斷線，舊的計時器殺錯)
-        if (connectionState == ConnectionState.LINK_DEAD
-            && this.lastDisconnectTime == disconnectTimestamp) {
-          log.warn("緩衝時間已過，強制清理玩家: {}", name);
-          this.forceLogout();
-        } else {
-          log.info("玩家已重連，死神計時器取消: {}", name);
-        }
-
-      } catch (InterruptedException e) {
-        // 計時器被中斷
-      }
-    });
-  }
-
   // 強制登出程序
   public void forceLogout() {
     // 1. 存檔
@@ -438,10 +331,25 @@ public final class Player extends Living {
     stop();
 
     // 5. 關閉 Socket (保險起見)
-    if (session != null)
+    if (session != null) {
       try {
         session.close();
       } catch (Exception e) {
       }
+    }
+  }
+
+
+
+  // 公開給外部呼叫的方法 --------------------------------------------------------------------------
+
+
+
+  public void reconnect() {
+    this.send(new ActorMessage.Reconnect(session));
+  }
+
+  public void disconnect() {
+    this.send(new ActorMessage.Disconnect());
   }
 }

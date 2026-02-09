@@ -162,18 +162,18 @@ public class RoomService {
 
     // === 2. 轉發給 Actor ===
     // 過濾掉 "完全沒事做且沒玩家在場" 的怪物
-    if (!players.isEmpty() || mobs.stream().anyMatch(m -> m.isInCombat())) {
-      // ActorMessage.Tick msg = new ActorMessage.Tick(tickCount, timestamp);
+    // if (!players.isEmpty() || mobs.stream().anyMatch(m -> m.isInCombat())) {
+    // ActorMessage.Tick msg = new ActorMessage.Tick(tickCount, timestamp);
 
-      for (Mob mob : mobs) {
-        mob.tick(tickCount, timestamp);
-      }
+    // for (Mob mob : mobs) {
+    // mob.tick(tickCount, timestamp);
+    // }
 
-      for (Player player : players) {
-        // log.info("send player");
-        player.tick(tickCount, timestamp);
-      }
-    }
+    // for (Player player : players) {
+    // // log.info("send player");
+    // player.tick(tickCount, timestamp);
+    // }
+    // }
   }
 
   public void doBroadcast(List<Player> players, List<Mob> mobs, String actorId, String targetId,

@@ -1,21 +1,15 @@
 package com.example.htmlmud.application.command.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.application.command.annotation.CommandAlias;
 import com.example.htmlmud.application.command.parser.TargetSelector;
-import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.service.CombatService;
 import com.example.htmlmud.infra.util.AnsiColor;
 import com.example.htmlmud.infra.util.ColorText;
-import com.example.htmlmud.infra.util.MessageUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,8 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 @CommandAlias("k")
 @RequiredArgsConstructor
 public class KillCommand implements PlayerCommand {
-
-  private final MessageUtil messageUtil;
 
   private final TargetSelector targetSelector; // 注入工具
 
@@ -56,8 +48,16 @@ public class KillCommand implements PlayerCommand {
     }
     // log.info("name:{} defense: {}", target.getTemplate().name(), target.defense);
 
-    // 3. 執行戰鬥邏輯
-    combatService.startCombat(self, target);
+    // 發起戰鬥
+    combatService.startCombat(self, target.getId());
+
+    // 【節奏控制】
+    // 攻擊者：立即獲得攻擊機會 (或是很短的延遲)
+    self.nextAttackTime = System.currentTimeMillis();
+
+    // 被攻擊對象接收到被攻擊事件
+    target.onAttacked(self.getId());
+
     // log.info("name:{} {}", self.getName(), self.getNickname());
 
     // 訊息處理

@@ -115,19 +115,19 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
   protected void handleLivingMessage(ActorMessage.LivingMessage msg) {
     switch (msg) {
       case ActorMessage.Tick(var tickCount, var timestamp) -> {
-        doTick(tickCount, timestamp);
+        handleTick(tickCount, timestamp);
       }
-      case ActorMessage.OnAttacked(var attacker) -> {
-        doOnAttacked(attacker);
+      case ActorMessage.OnAttacked(var attackerId) -> {
+        handleOnAttacked(attackerId);
       }
-      case ActorMessage.OnDamage(var amount, var attacker) -> {
-        doOnDamage(amount, attacker);
+      case ActorMessage.OnDamage(var amount, var attackerId) -> {
+        handleOnDamage(amount, attackerId);
       }
-      case ActorMessage.Die(var killerId) -> {
-        doDie(killerId);
+      case ActorMessage.onDeath(var killerId) -> {
+        handleOnDeath(killerId);
       }
-      case ActorMessage.Heal(var amount) -> {
-        doHeal(amount);
+      case ActorMessage.onHeal(var amount) -> {
+        handleHeal(amount);
       }
       case ActorMessage.Say(var content) -> {
       }
@@ -151,67 +151,29 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
 
 
 
-  // default 應依自己需求改寫 ------------------------------------------------------------------
-  protected void doTick(long tickCount, long time) {
-
-    // 狀態無效不處理心跳
-    if (!isValid()) {
-      return;
-    }
-
-    // === 1. 戰鬥心跳 (最優先，每秒執行) ===
-    // 頻率：1秒 (因為 WorldPulse 就是 1秒)
-    // log.info(this.name + " tickCount: {} inCombat: {}", tickCount, this.stats.isInCombat());
-    // if (isInCombat()) {
-    // processAutoAttack(time); // 之前討論過的自動攻擊
-    // }
-
-    // === 2. 回復/狀態心跳 (Regen Tick) ===
-    // 頻率：每 3 秒執行一次 ( tickCount % 3 == 0 )
-    // 只有沒在戰鬥時才回血，或者戰鬥中回得比較慢
-    if (tickCount % 30 == 0) {
-      processRegen();
-      // processBuffs(); // 檢查 Buff 是否過期
-    }
-
-    // === 3. AI 行為心跳 (AI Tick) ===
-    // 頻率：每 5 秒執行一次
-    // 只有怪物需要，玩家不需要
-    if (this instanceof Mob mob && tickCount % 5 == 0) {
-      // mob.processAI(); // 例如：隨機移動、喊話
-    }
+  // default 這是提供給繼承者可依自己需求進行改寫 ------------------------------------------------------------------
+  protected void handleTick(long tickCount, long time) {
+    livingService.handleTick(this, tickCount, time);
   }
 
   // 被攻擊觸發戰鬥狀態
-  protected void doOnAttacked(Living attacker) {
-    livingService.getCombatService().onAttacked(this, attacker);
+  protected void handleOnAttacked(String attackerId) {
+    livingService.handleOnAttacked(this, attackerId);
   }
 
   // 受傷處理
-  protected void doOnDamage(int amount, Living attacker) {
-    livingService.getCombatService().onDamage(amount, this, attacker);
+  protected void handleOnDamage(int amount, String attackerId) {
+    livingService.handleOnDamage(this, amount, attackerId);
   }
 
   // 死亡處理
-  protected void doDie(String killerId) {
-    livingService.onDie(this, killerId);
+  protected void handleOnDeath(String killerId) {
+    livingService.handleOnDeath(this, killerId);
   }
 
   // 治療處理
-  protected void doHeal(int amount) {
-    if (!isValid()) {
-      // log.info("{} 已經死亡，無法治療", name);
-      return;
-    }
-
-    if (isInCombat()) {
-      // log.info("{} 正在戰鬥，無法治療", name);
-      return;
-    }
-
-    // reply(this.stats.getGender().getYou() + "回復了 " + amount + " 點 HP 目前 " + stats.getHp() + " / "
-    // + stats.getMaxHp());
-    this.stats.setHp(Math.min(stats.getHp() + amount, stats.getMaxHp()));
+  protected void handleHeal(int amount) {
+    livingService.handleHeal(this, amount);
   }
 
 
@@ -230,27 +192,27 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
   }
 
   // 被攻擊處理
-  public void onAttacked(Living attacker) {
-    this.send(new ActorMessage.OnAttacked(attacker));
+  public void onAttacked(String attackerId) {
+    this.send(new ActorMessage.OnAttacked(attackerId));
   }
 
   // 受傷處理
-  public void onDamage(int amount, Living attacker) {
-    this.send(new ActorMessage.OnDamage(amount, attacker));
+  public void onDamage(int amount, String attackerId) {
+    this.send(new ActorMessage.OnDamage(amount, attackerId));
   }
 
   // 死亡處理
-  public void die(String killerId) {
-    this.send(new ActorMessage.Die(killerId));
+  public void onDeath(String killerId) {
+    this.send(new ActorMessage.onDeath(killerId));
   }
+
+
 
   public void command(String traceId, GameCommand cmd) {
     this.send(new ActorMessage.Command(traceId, cmd));
   }
 
-
-
-  public void reply(String msg) {
+  public void sendText(String msg) {
     switch (this) {
       case Player player -> this.send(new ActorMessage.SendText(player.getSession(), msg));
       case Mob mob -> {
@@ -258,8 +220,8 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
     }
   }
 
-  public void sendText(String msg) {
-    reply(msg);
+  public void reply(String msg) {
+    sendText(msg);
   }
 
   // public CompletableFuture<String> equip(GameItem item) {
@@ -282,14 +244,6 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
   // protected void processAutoAttack(long now) {
   // livingService.getCombatService().processAutoAttack(this, now);
   // }
-
-  protected void processRegen() {
-    if (stats.getHp() < stats.getMaxHp()) {
-      int regenAmount = (int) (stats.getMaxHp() * 0.05); // 回復 5%
-      doHeal(regenAmount);
-      sendStatUpdate();
-    }
-  }
 
 
 

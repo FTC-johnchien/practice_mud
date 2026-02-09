@@ -7,8 +7,8 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
-import com.example.htmlmud.application.service.PlayerService;
 import com.example.htmlmud.domain.actor.impl.Player;
+import com.example.htmlmud.domain.service.PlayerService;
 import com.example.htmlmud.domain.service.WorldManager;
 import com.example.htmlmud.infra.monitor.GameMetrics;
 import com.example.htmlmud.protocol.GameCommand;
@@ -105,7 +105,7 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
 
       // 通知 Actor 執行清理邏輯
       // (如果是 Guest 則直接停止，如果是正式玩家則觸發存檔與從 WorldManager 移除)
-      actor.handleDisconnect();
+      actor.disconnect();
     }
   }
 

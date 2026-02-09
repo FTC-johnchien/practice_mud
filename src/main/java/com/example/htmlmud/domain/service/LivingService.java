@@ -3,6 +3,7 @@ package com.example.htmlmud.domain.service;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.application.command.impl.LookCommand;
@@ -47,7 +48,100 @@ public class LivingService {
 
 
 
-  public void onDie(Living self, String killerId) {
+  public void handleTick(Living self, long tickCount, long time) {
+
+    // 狀態無效不處理心跳
+    if (!self.isValid()) {
+      return;
+    }
+
+    // === 回復/狀態心跳 (Regen Tick) ===
+    // 頻率：每 15 秒執行一次 (mud時間 0.1小時)
+    if (!self.isInCombat() && tickCount % 150 == 0) {
+      processRegen(self);
+      // processBuffs(); // 檢查 Buff 是否過期
+    }
+
+    // === AI 行為心跳 (AI Tick) ===
+    // 頻率：每 5 秒執行一次
+    // 只有怪物需要，玩家不需要
+    if (self instanceof Mob mob && tickCount % 5 == 0) {
+      // mob.processAI(); // 例如：隨機移動、喊話
+    }
+  }
+
+  public void handleOnAttacked(Living self, String attackerId) {
+
+    // 若是 Mob 就增加仇恨值
+    if (self instanceof Mob mob) {
+      // log.info("初始放入仇恨表 name:{}", attacker.getName());
+      mob.addAggro(attackerId, 1);
+    }
+
+    // 攻擊準備時間
+    reactionTime(self);
+
+    combatService.startCombat(self, attackerId);
+  }
+
+  public void handleOnDamage(Living self, int amount, String attackerId) {
+
+    // 檢查是否還活著
+    if (!self.isValid()) {
+      // log.info("{} 已經死亡，無法受傷", self.getName());
+      return;
+    }
+
+    // 扣除 HP
+    self.getStats().setHp(self.getStats().getHp() - amount);
+
+    // for test----------------------------------------------------------------------------------
+
+    // room.broadcast("log:" + self.getName() + " 目前 HP: " + self.getStats().getHp() + "/"
+    // + self.getStats().getMaxHp());
+    // for test----------------------------------------------------------------------------------
+
+    // 檢查是否死亡
+    if (self.isDead()) {
+      log.info("{} 被打死了", self.getName());
+
+      // 終止戰鬥並移出戰鬥名單
+      combatService.endCombat(self);
+
+      Room room = self.getCurrentRoom();
+
+      // 先判斷 self 是 player 還是 mob 然後將其移出房間，避免後續的攻擊還持續的打到已死亡的對象
+      if (self instanceof Player player) {
+        room.removePlayer(player.getId());
+
+        // 更新前端玩家狀態
+        player.getStats().setHp(0);
+        player.sendStatUpdate();
+      } else if (self instanceof Mob mob) {
+        room.removeMob(mob.getId());
+      }
+
+      // 發送 self 死亡事件
+      self.onDeath(attackerId);
+    } else {
+      if (!self.isInCombat) {
+
+        // 準備反應時間
+        reactionTime(self);
+
+        // 加入戰鬥
+        combatService.startCombat(self, attackerId);
+      }
+
+      // mob 就增加仇恨值
+      if (self instanceof Mob mob) {
+        // log.info("增加仇恨 name:{} {}", attacker.getName(), amount);
+        mob.addAggro(attackerId, amount);
+      }
+    }
+  }
+
+  public void handleOnDeath(Living self, String killerId) {
 
     // 標記狀態 (Mark State)：設為 Dead，停止接受新的傷害或治療。
     self.getStats().setHp(0);
@@ -90,6 +184,18 @@ public class LivingService {
 
     }
 
+  }
+
+  public void handleHeal(Living self, int amount) {
+    if (!self.isValid()) {
+      // log.info("{} 已經死亡，無法治療", name);
+      return;
+    }
+
+    // reply(this.stats.getGender().getYou() + "回復了 " + amount + " 點 HP 目前 " + stats.getHp() + " / "
+    // + stats.getMaxHp());
+    self.getStats().setHp(Math.min(self.getStats().getHp() + amount, self.getStats().getMaxHp()));
+    self.sendStatUpdate();
   }
 
   public void doEquip(Living self, GameItem item, CompletableFuture<Boolean> future) {
@@ -209,4 +315,28 @@ public class LivingService {
       mob.stop(); // 等待 gc 回收
     }
   }
+
+
+
+  private void processRegen(Living self) {
+
+    // hp 回復 5%
+    if (self.getStats().getHp() < self.getStats().getMaxHp()) {
+      int regenAmount = (int) (self.getStats().getMaxHp() * 0.05); // 回復 5%
+      handleHeal(self, regenAmount);
+      self.sendStatUpdate();
+    }
+
+    // mp 回復 1%
+
+  }
+
+  // 準備反應的時間
+  private void reactionTime(Living self) {
+    long speed = self.getAttackSpeed();
+    // 計算 0.5 * speed +/- 0.1 * speed，即範圍 [0.4 * speed, 0.6 * speed]
+    long reactionTime = ThreadLocalRandom.current().nextLong(speed * 4 / 10, (speed * 6 / 10) + 1);
+    self.setNextAttackTime(System.currentTimeMillis() + reactionTime);
+  }
+
 }

@@ -14,8 +14,8 @@ public sealed interface ActorMessage
 
 
 
-  sealed interface LivingMessage extends ActorMessage
-      permits Tick, OnAttacked, OnDamage, Die, Heal, Say, BuffEffect, Equip, Unequip, OnMessage {
+  sealed interface LivingMessage extends ActorMessage permits Tick, OnAttacked, OnDamage, onDeath,
+      onHeal, Say, BuffEffect, Equip, Unequip, OnMessage {
   }
   /**
    * 心跳訊息
@@ -25,13 +25,13 @@ public sealed interface ActorMessage
    */
   record Tick(long tickCount, long timestamp) implements LivingMessage {
   }
-  record OnAttacked(Living attacker) implements LivingMessage {
+  record OnAttacked(String attackerId) implements LivingMessage {
   }
-  record OnDamage(int amount, Living attacker) implements LivingMessage {
+  record OnDamage(int amount, String attackerId) implements LivingMessage {
   }
-  record Die(String killerId) implements LivingMessage {
+  record onDeath(String killerId) implements LivingMessage {
   }
-  record Heal(int amount) implements LivingMessage {
+  record onHeal(int amount) implements LivingMessage {
   }
   record Say(String content) implements LivingMessage {
   }
@@ -47,7 +47,7 @@ public sealed interface ActorMessage
 
 
   sealed interface PlayerMessage extends ActorMessage
-      permits Command, SendText, GainExp, SaveData, QuestUpdate, Reconnect {
+      permits Command, SendText, GainExp, SaveData, QuestUpdate, Reconnect, Disconnect {
   }
   record Command(String traceId, GameCommand command) implements PlayerMessage {
   }
@@ -60,6 +60,8 @@ public sealed interface ActorMessage
   record QuestUpdate(String questId, String status) implements PlayerMessage {
   }
   record Reconnect(WebSocketSession session) implements PlayerMessage {
+  }
+  record Disconnect() implements PlayerMessage {
   }
 
 

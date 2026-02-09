@@ -53,7 +53,7 @@ public class CharacterEntity {
   // 這樣未來新增屬性不用一直改 Table Schema
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "state_json")
-  private LivingStats state;
+  private LivingStats stats;
 
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "inventory_json")
