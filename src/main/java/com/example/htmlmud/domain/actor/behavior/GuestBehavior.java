@@ -8,11 +8,11 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.application.service.AuthService;
 import com.example.htmlmud.domain.actor.impl.Player;
+import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.context.MudKeys;
 import com.example.htmlmud.domain.model.entity.PlayerRecord;
 import com.example.htmlmud.domain.model.enums.Direction;
 import com.example.htmlmud.domain.service.WorldManager;
-import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.ConnectionState;
 import com.example.htmlmud.protocol.GameCommand;
 import lombok.Setter;
@@ -41,7 +41,9 @@ public class GuestBehavior implements PlayerBehavior {
   }
 
   @Override
-  public PlayerBehavior handle(Player actor, GameCommand cmd) {
+  public PlayerBehavior handle(GameCommand cmd) {
+    Player actor = MudContext.currentPlayer();
+
     // 目前只處理文字輸入 (Input)
     PlayerBehavior next = null;
     if (cmd instanceof GameCommand.Input(var text)) {
@@ -341,21 +343,25 @@ public class GuestBehavior implements PlayerBehavior {
     self.setConnectionState(ConnectionState.IN_GAME);
     self.setName(record.nickname());
     self.setAliases(List.of(record.name()));
-    worldManager.addLivingActor(self);
 
-
-    // 讓玩家進入 currentRoomId 的房間
-    self.getCurrentRoom().enter(self, Direction.UP);
 
     // 裝備?
 
-    log.info("Actor 載入玩家資料 當前狀態: {} {}", self.getName(), self.getNickname());
+
+    log.info("Actor 載入玩家資料 當前狀態: {} {} {}/{}", self.getName(), self.getNickname(),
+        self.getStats().hp, self.getStats().maxHp);
+
+    worldManager.addLivingActor(self);
+
+    // 讓玩家進入 currentRoomId 的房間
+    // log.info("玩家 enter CurrentRoom");
+    self.getCurrentRoom().enter(self, Direction.UP);
 
     self.sendStatUpdate();
     return new InGameBehavior();
   }
 
-  // 【關鍵方法】被奪舍：接收新的連線
+  // 被奪舍：接收新的連線
   public void takeoverSession(WebSocketSession newSession, Player actor) {
     log.info("takeoverSession actor.id: {}", actor.getId());
 

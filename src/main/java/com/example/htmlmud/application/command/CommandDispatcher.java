@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.annotation.CommandAlias;
 import com.example.htmlmud.application.command.impl.MoveCommand;
 import com.example.htmlmud.domain.actor.impl.Player;
+import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.enums.Direction;
 import lombok.extern.slf4j.Slf4j;
@@ -58,7 +59,7 @@ public class CommandDispatcher {
    *
    * @param input 玩家輸入的原始字串，例如 "look north" 或 "kill goblin"
    */
-  public void dispatch(Player actor, String input) {
+  public void dispatch(String input) {
     if (input == null || input.isBlank())
       return;
 
@@ -68,12 +69,13 @@ public class CommandDispatcher {
     String args = parts.length > 1 ? parts[1] : "";
 
     // log.info("key:{}, args:{}", key, args);
+    Player player = MudContext.currentPlayer();
 
     // 2. 查找指令
     PlayerCommand command = commandMap.get(key);
     if (command == null) {
       // 找不到指令的預設處理
-      actor.reply("我不懂 '" + key + "' 是什麼意思。輸入 'help' 查看指令列表。");
+      player.reply("我不懂 '" + key + "' 是什麼意思。輸入 'help' 查看指令列表。");
       return;
     }
 
@@ -82,36 +84,36 @@ public class CommandDispatcher {
       // 或者是 MoveCommand 內部 logic 要知道 "n" 等於 "move n"
       if (command instanceof MoveCommand && Direction.parse(key) != null) {
         // 如果指令本身就是方向 (例如輸入 "n")，把 key 當作 args 傳進去
-        command.execute(actor, key);
+        command.execute(player, key);
       } else {
         // 否則正常執行 (例如 "move north")
-        command.execute(actor, args);
+        command.execute(player, args);
       }
     } catch (MudException e) {
       // 情境 A：遊戲邏輯錯誤 (錢不夠、找不到人)
       // 直接把錯誤訊息 "Tell" 給玩家
-      actor.reply(e.getMessage());
+      player.reply(e.getMessage());
     } catch (java.util.concurrent.CompletionException e) {
       // 如果底層是我們定義的 MudException，就拿出來顯示
       if (e.getCause() instanceof MudException mudEx) {
-        actor.reply(mudEx.getMessage());
+        player.reply(mudEx.getMessage());
       } else {
         // 否則就是真·系統錯誤
         log.error("Async Error", e);
-        actor.reply("操作逾時或發生錯誤。");
+        player.reply("操作逾時或發生錯誤。");
       }
     } catch (Exception e) {
       // 情境 B：系統未預期的錯誤 (Bug)
       // 1. 記錄詳細 Log 給工程師看
-      log.error("Command execution error: user={}, cmd={}", actor.getId(), input, e);
+      log.error("Command execution error: user={}, cmd={}", player.getId(), input, e);
 
       // 2. 告訴玩家發生系統錯誤 (不要顯示 StackTrace)
-      actor.reply("發生未知的力量干擾了你的行動 (系統錯誤)。");
+      player.reply("發生未知的力量干擾了你的行動 (系統錯誤)。");
 
       // 3. 如果是 CompletableFuture 的封裝錯誤，嘗試解包
       if (e instanceof java.util.concurrent.CompletionException
           && e.getCause() instanceof MudException) {
-        actor.reply(e.getCause().getMessage());
+        player.reply(e.getCause().getMessage());
       }
     }
   }

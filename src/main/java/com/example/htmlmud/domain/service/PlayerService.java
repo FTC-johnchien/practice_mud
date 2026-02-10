@@ -58,7 +58,7 @@ public class PlayerService {
       ScopedValue.where(MudContext.CURRENT_PLAYER, player).where(MudContext.TRACE_ID, traceId)
           .run(() -> {
             // C. 委派給當前 Behavior 處理
-            PlayerBehavior next = player.getCurrentBehavior().handle(player, cmd);
+            PlayerBehavior next = player.getCurrentBehavior().handle(cmd);
 
             // D. 狀態切換
             if (next != null) {
@@ -74,7 +74,7 @@ public class PlayerService {
   // 狀態切換方法
   public void become(Player player, PlayerBehavior nextBehavior) {
     player.setCurrentBehavior(nextBehavior);
-    nextBehavior.onEnter(player); // 觸發進場事件
+    nextBehavior.onEnter(); // 觸發進場事件
     log.info("{} 切換行為模式至 {}", player.getName(), nextBehavior.getClass().getSimpleName());
   }
 
@@ -120,7 +120,7 @@ public class PlayerService {
     // 發送歡迎回來的訊息
     handleSendText(player, player.getSession(), "\u001B[33m[系統] 連線已恢復。\u001B[0m");
     player.sendStatUpdate();
-    commandDispatcher.dispatch(player, "look");
+    commandDispatcher.dispatch("look");
     player.getCurrentRoom().broadcastToOthers(player.getId(), "$N的眼神恢復了光采。");
   }
 

@@ -1,17 +1,17 @@
 package com.example.htmlmud.infra.server;
 
-import java.util.UUID;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+import com.example.htmlmud.application.dto.GameRequest;
+import com.example.htmlmud.application.service.GameCommandService;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.service.PlayerService;
 import com.example.htmlmud.domain.service.WorldManager;
 import com.example.htmlmud.infra.monitor.GameMetrics;
-import com.example.htmlmud.protocol.GameCommand;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,6 +23,8 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
   private final WorldManager worldManager;
   private final SessionRegistry sessionRegistry;
   private final GameMetrics gameMetrics;
+  private final GameCommandService gameCommandService;
+
 
   @Override
   public void afterConnectionEstablished(WebSocketSession session) {
@@ -57,40 +59,23 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
 
   @Override
   protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+    Player player = sessionRegistry.get(session.getId());
+    if (player != null) {
 
-    // A. 產生 Trace ID (所有 Log 追蹤的源頭)
-    // 使用短 UUID 方便閱讀，實務上可用完整的 UUID
-    String traceId = UUID.randomUUID().toString().substring(0, 8);
-
-    try {
-      Player actor = sessionRegistry.get(session.getId());
-      if (actor != null) {
-
-        // 檢查玩家是否可以動作
-        if (!actor.isValid() || actor.getGcdEndTimestamp() > System.currentTimeMillis()) {
-          actor.reply("$N目前無法動作!");
-          return;
-        }
-
-        // C. 解析指令 (JSON -> Record)
-        GameCommand cmd =
-            playerService.getObjectMapper().readValue(message.getPayload(), GameCommand.class);
-
-        // D. 裝入信封並投遞
-        // 這裡不綁定 ScopedValue，因為要跨執行緒傳遞
-        actor.command(traceId, cmd);
-
-        // 增加指令計數 (來自玩家的輸入)
-        gameMetrics.incrementPlayerCommand();
-      } else {
-        // 找不到 Actor，通常代表連線異常或已被踢除
-        log.warn("[{}] 收到訊息但找不到 Actor，關閉連線: {}", traceId, session.getId());
-        session.close();
+      // 檢查玩家是否可以動作
+      if (!player.isValid() || player.getGcdEndTimestamp() > System.currentTimeMillis()) {
+        player.reply("$N目前無法動作!");
+        return;
       }
-    } catch (Exception e) {
-      // JSON 解析失敗或其他錯誤
-      log.error("[{}] 訊息處理錯誤: {}", traceId, e.getMessage());
-      // 選擇性：回傳錯誤訊息給 Client
+
+      gameCommandService.execute(new GameRequest(player, message.getPayload(), "WEB"));
+
+      // 增加指令計數 (來自玩家的輸入)
+      gameMetrics.incrementPlayerCommand();
+    } else {
+      // 找不到 Actor，通常代表連線異常或已被踢除
+      log.warn("收到訊息但找不到 Actor，關閉連線: {}", session.getId());
+      session.close();
     }
   }
 

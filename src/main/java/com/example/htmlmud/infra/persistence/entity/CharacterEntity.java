@@ -52,7 +52,7 @@ public class CharacterEntity {
   // 使用 MySQL 8.4 JSON 類型儲存擴充資料 (例如: HP, Mana, EXP, 背包)
   // 這樣未來新增屬性不用一直改 Table Schema
   @JdbcTypeCode(SqlTypes.JSON)
-  @Column(name = "state_json")
+  @Column(name = "stats_json")
   private LivingStats stats;
 
   @JdbcTypeCode(SqlTypes.JSON)

@@ -10,7 +10,7 @@ import com.example.htmlmud.infra.persistence.entity.SkillEntry;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
-// 這個物件會被序列化存入 players.state_json 和 mobs.state_json
+// 這個物件會被序列化存入 players.stats_json 和 mobs.stats_json
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LivingStats {
