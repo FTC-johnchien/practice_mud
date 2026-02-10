@@ -1,0 +1,36 @@
+services:
+  # 服務 1: 資料庫 (MySQL 8.4)
+  db:
+    image: mysql:8.4
+    container_name: mud-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 1qaz2wsx3edc4rf  # 請改成強密碼
+      MYSQL_DATABASE: practice_mud         # 你的資料庫名稱
+      MYSQL_USER: mud_tester             # 應用程式用的帳號
+      MYSQL_PASSWORD: mud_tester_pwd     # 應用程式用的密碼
+    ports:
+      - "3306:3306"  # 開放給外部連線 (方便你用 Workbench 管理)
+    volumes:
+      - mysql_data:/var/lib/mysql      # 把資料存在 Docker Volume (重要！不然重開資料就不見了)
+
+  # 服務 2: 你的 Java 應用程式
+  app:
+    build: .                         # 直接使用當前目錄的 Dockerfile 建置
+    # image: johnchien/my-java25-app:latest # 直接抓 Docker Hub 的 Image 並註解掉上面的 build
+    container_name: mud-app
+    restart: always
+    ports:
+      - "8081:8080"                  # 外部 8081 -> 內部 8080 (避開 WildFly)
+    depends_on:
+      - db                           # 告訴 Docker: 先啟動 db，再啟動 app
+    environment:
+      # 這裡是最重要的地方！覆蓋 application.properties 的設定
+      # 注意：這裡的 Hostname 必須寫 'db' (對應上面的服務名稱)，不能寫 localhost
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/practice_mud?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: mud_tester
+      SPRING_DATASOURCE_PASSWORD: mud_tester_pwd
+
+# 定義資料儲存區
+volumes:
+  mysql_data:

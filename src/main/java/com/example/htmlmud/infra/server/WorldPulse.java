@@ -67,7 +67,8 @@ public class WorldPulse {
     // 每次心跳為 100毫秒，若有處理時間超過 50毫秒的就印出來警告
     if (duration > 50_000_000) {
       log.warn(
-          AnsiColor.YELLOW + "高負載警告 - Tick: {}, Pulse: {}ms, Player Cmds: {}, System Tasks: {}",
+          AnsiColor.YELLOW + "高負載警告 - Tick: {}, Pulse: {}ms, Player Cmds: {}, System Tasks: {}"
+              + AnsiColor.RESET,
           currentTick, duration / 1_000_000.0, gameMetrics.getPerCommands(),
           gameMetrics.getPerTasks());
     }
