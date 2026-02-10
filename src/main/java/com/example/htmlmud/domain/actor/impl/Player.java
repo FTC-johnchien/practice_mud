@@ -345,8 +345,8 @@ public final class Player extends Living {
 
 
 
-  public void reconnect() {
-    this.send(new ActorMessage.Reconnect(session));
+  public void reconnect(WebSocketSession newSession) {
+    this.send(new ActorMessage.Reconnect(newSession));
   }
 
   public void disconnect() {

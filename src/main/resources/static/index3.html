@@ -56,6 +56,7 @@
             font-size: 16px; /* 手機端字體稍大一點 */
             line-height: 1.5;
             background: #000;
+            white-space: pre-wrap;
         }
 
         /* 手機控制面板 */
@@ -175,88 +176,105 @@
 </div>
 
 <script>
-    const ansi_up = new ANSI_UP();
+    // 1. 修正初始化名稱 (確保是 AnsiUp)
+    const ansi_up = new AnsiUp();
+    ansi_up.use_classes = false;
+
     let ws = null;
     const logDiv = document.getElementById('log');
     const cmdInput = document.getElementById('cmd-input');
 
-    // 連線邏輯
     function connect() {
-        // 請根據你的後端 IP 調整網址
         const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-        // const socketUrl = `${protocol}//${location.host}/ws`;
-        const socketUrl = 'ws://localhost:8080/ws'; // 開發測試用
+        // 建議測試時先跟 index2 一樣寫死 localhost 確保變數一致
+        const socketUrl = 'ws://localhost:8080/ws';
 
-        console.log("正在嘗試連線至:", socketUrl); // 除錯用
+        console.log("正在嘗試連線至:", socketUrl);
         appendLog("嘗試連線: " + socketUrl, "#ffff00");
 
         ws = new WebSocket(socketUrl);
-        // ws = new WebSocket(`${protocol}//${location.host}/ws/mud`);
 
         ws.onopen = () => appendLog("系統：連線成功！", "#00ff00");
+
         ws.onclose = () => {
             appendLog("系統：連線中斷，3秒後嘗試重連...", "#ff4444");
             setTimeout(connect, 3000);
         };
+
         ws.onmessage = (event) => {
+            console.log("原始訊息:", event.data); // 這裡可以幫你確認後端到底傳什麼
             try {
                 const data = JSON.parse(event.data);
-                if (data.type === 'message') {
+
+                // 支援 index2.html 的格式: 直接檢查 msg.content
+                if (data.content) {
                     appendLog(data.content);
-                } else if (data.type === 'stats') {
-                    updateStats(data.payload);
+                }
+                // 支援 STAT_UPDATE 格式
+                else if (data.type === 'STAT_UPDATE' || data.type === 'stats') {
+                    // 相容處理：index2 用 STAT_UPDATE, index3 用 stats
+                    const payload = data.payload || data;
+                    updateStats(payload);
                 }
             } catch (e) {
-                // 如果不是 JSON，則視為普通純文字 (含 ANSI)
+                // 如果不是 JSON，直接顯示純文字
                 appendLog(event.data);
             }
         };
     }
 
+    // 修正 send 函數：index2 使用 JSON 封裝，index3 之前傳純文字
+    // 如果你的伺服器需要 JSON INPUT，這裡必須修改
     function send(cmd) {
         if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+        // 配合後端 index2 的格式，傳送 JSON 物件
+        const msg = JSON.stringify({ type: "INPUT", text: cmd });
+        ws.send(msg);
+
         appendLog("> " + cmd, "#888");
-        ws.send(cmd);
-        // 手機端點擊按鈕後，不主動彈出鍵盤
     }
 
     function handleEnter() {
-        const cmd = cmdInput.value;
+        const cmd = cmdInput.value.trim();
         if (cmd) {
             send(cmd);
             cmdInput.value = "";
-            cmdInput.blur(); // 送出後收起手機鍵盤
+            // cmdInput.blur(); // 手機版可以考慮保留鍵盤，連續輸入
         }
     }
 
     function updateStats(s) {
-        document.getElementById('hp-val').innerText = `${s.hp}/${s.maxHp}`;
-        document.getElementById('hp-bar').style.width = (s.hp / s.maxHp * 100) + "%";
-        document.getElementById('mp-val').innerText = `${s.mp}/${s.maxMp}`;
-        document.getElementById('mp-bar').style.width = (s.mp / s.maxMp * 100) + "%";
+        // 加上防錯，避免 s.hp 是 undefined
+        if(s.hp !== undefined) {
+            const hpMax = s.maxHp || 100;
+            document.getElementById('hp-val').innerText = `${s.hp}/${hpMax}`;
+            document.getElementById('hp-bar').style.width = (s.hp / hpMax * 100) + "%";
+        }
+        if(s.mp !== undefined) {
+            const mpMax = s.maxMp || 100;
+            document.getElementById('mp-val').innerText = `${s.mp}/${mpMax}`;
+            document.getElementById('mp-bar').style.width = (s.mp / mpMax * 100) + "%";
+        }
     }
 
     function appendLog(text, color) {
+        if (!text) return;
         const div = document.createElement('div');
         if (color) div.style.color = color;
-        // 處理 ANSI 轉 HTML
+
+        // 使用 ansi_up 處理顏色
         div.innerHTML = ansi_up.ansi_to_html(text);
         logDiv.appendChild(div);
 
-        // 自動捲動到底部
         logDiv.scrollTop = logDiv.scrollHeight;
-
-        // 限制 Log 數量，防止手機記憶體溢出
-        if (logDiv.childNodes.length > 200) {
-            logDiv.removeChild(logDiv.firstChild);
-        }
+        if (logDiv.childNodes.length > 200) logDiv.removeChild(logDiv.firstChild);
     }
 
     cmdInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') handleEnter();
     });
 
-    // 啟動連線
     connect();
 </script>
 

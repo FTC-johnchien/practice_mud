@@ -366,6 +366,6 @@ public class GuestBehavior implements PlayerBehavior {
     log.info("takeoverSession actor.id: {}", actor.getId());
 
     // 呼叫原 Player 的 reconnect
-    actor.reconnect();
+    actor.reconnect(newSession);
   }
 }

@@ -120,7 +120,9 @@ public class PlayerService {
     // 發送歡迎回來的訊息
     handleSendText(player, player.getSession(), "\u001B[33m[系統] 連線已恢復。\u001B[0m");
     player.sendStatUpdate();
-    commandDispatcher.dispatch("look");
+    ScopedValue.where(MudContext.CURRENT_PLAYER, player).run(() -> {
+      commandDispatcher.dispatch("look");
+    });
     player.getCurrentRoom().broadcastToOthers(player.getId(), "$N的眼神恢復了光采。");
   }
 
