@@ -1,21 +1,11 @@
 package com.example.htmlmud.application.command.impl;
 
-import static java.util.stream.Collectors.counting;
-import static java.util.stream.Collectors.groupingBy;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.application.command.annotation.CommandAlias;
-import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
-import com.example.htmlmud.domain.actor.impl.Room;
-import com.example.htmlmud.domain.model.entity.GameItem;
+import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.model.enums.Direction;
-import com.example.htmlmud.domain.model.enums.MobKind;
-import com.example.htmlmud.infra.util.AnsiColor;
-import com.example.htmlmud.infra.util.ColorText;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,11 +21,12 @@ public class LookCommand implements PlayerCommand {
   }
 
   @Override
-  public void execute(Player player, String args) {
+  public void execute(String args) {
+    Player player = MudContext.currentPlayer();
 
     // 1. 如果沒有參數 -> 看當前房間
     if (args == null || args.trim().isEmpty()) {
-      player.getCurrentRoom().lookAtRoom(player);
+      player.reply(player.getCurrentRoom().lookAtRoom(player));
       return;
     }
 

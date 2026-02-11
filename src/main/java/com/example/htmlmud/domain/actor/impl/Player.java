@@ -119,6 +119,12 @@ public final class Player extends Living {
       case ActorMessage.Disconnect() -> {
         service.handleDisconnect(this);
       }
+      case ActorMessage.SendStatUpdate() -> {
+        service.handleSendStatUpdate(this);
+      }
+      case ActorMessage.Relive() -> {
+        service.handleRelive(this);
+      }
 
 
 
@@ -153,15 +159,6 @@ public final class Player extends Living {
   // log.info("player tickCount: {}", tickCount);
   // super.doTick(tickCount, time);
   // }
-
-  @Override
-  protected void handleOnDeath(String killerId) {
-    reply("$N已經死亡！即將在重生點復活...");
-    super.handleOnDeath(killerId);
-
-
-    // 玩家死亡邏輯：掉經驗、傳送回城
-  }
 
 
 
@@ -248,25 +245,7 @@ public final class Player extends Living {
     this.gcdEndTimestamp = System.currentTimeMillis() + actualDuration;
   }
 
-  // Java 範例：發送狀態更新
-  @Override
-  public void sendStatUpdate() {
-    Map<String, Object> update = new HashMap<>();
-    update.put("type", "STAT_UPDATE");
-    update.put("hp", stats.hp);
-    update.put("maxHp", stats.maxHp);
-    update.put("mp", stats.mp);
-    update.put("maxMp", stats.maxMp);
-    update.put("energy", stats.getCombatResource("charge")); // 0~100
 
-    // 轉成 JSON 字串發送給前端
-    try {
-      String json = service.getObjectMapper().writeValueAsString(update);
-      session.sendMessage(new TextMessage(json));
-    } catch (Exception e) {
-      log.error("發送狀態更新失敗: {}", this.getName(), e);
-    }
-  }
 
   @Override
   protected void performRemoveFromRoom(Room room) {
@@ -274,41 +253,42 @@ public final class Player extends Living {
   }
 
   @Override
-  public void processDeath() {
-    log.info("processDeath");
+  protected void performDeath() {
+    log.info("performDeath playerId:{}", id);
 
     // 更新玩家 stats
     sendStatUpdate();
 
-    // 先暫停 2秒
-    try {
-      Thread.sleep(2000);
-    } catch (InterruptedException ignored) {
-    }
+    // 將自己移出房間
+    super.removeFromRoom();
 
-    // 取得死亡的房間 (可能死亡時被移出房間)
+    reply("$N已經死亡！即將在重生點復活...");
 
-    getCurrentRoom().removePlayer(id);
+    this.send(new ActorMessage.Relive());
+  }
 
-    // 取出 currentRoom 區域的重生點/安全點 或是固定地點墳場 (如果有的話)
-    // setCurrentRoomId("newbie_village:cemetery");
-    setCurrentRoomId("newbie_village:cemetery");
-    Room room = getCurrentRoom();
+  @Override
+  protected void handleTick(long tickCount, long time) {
+    super.handleTick(tickCount, time);
 
-    // 復活玩家
-    markValid();
-    getStats().setHp(1);
-    getStats().setMp(0);
-    getStats().setStamina(0);
     // 更新玩家 stats
     sendStatUpdate();
-    room.enter(this, Direction.UP);
+  }
 
-    // 自動 Look 直接調用 LookCommand 執行邏輯 (讓玩家看到新環境)
-    // service.getCommandDispatcher().dispatch(this, "look");
+  @Override
+  protected void handleOnDamage(int amount, String attackerId) {
+    super.handleOnDamage(amount, attackerId);
 
-    // 對房間廣播你復活了
-    room.broadcastToOthers(id, "$N復活了，又是一尾活龍！");
+    // 更新玩家 stats
+    sendStatUpdate();
+  }
+
+  @Override
+  protected void handleHeal(int amount) {
+    super.handleHeal(amount);
+
+    // 更新玩家 stats
+    sendStatUpdate();
   }
 
 
@@ -341,9 +321,25 @@ public final class Player extends Living {
 
 
 
+  // ---------------------------------------------------------------------------------------------
+
+
+
   // 公開給外部呼叫的方法 --------------------------------------------------------------------------
 
 
+
+  public void command(String traceId, GameCommand cmd) {
+    this.send(new ActorMessage.Command(traceId, cmd));
+  }
+
+  public void sendText(String msg) {
+    this.send(new ActorMessage.SendText(session, msg));
+  }
+
+  public void reply(String msg) {
+    sendText(msg);
+  }
 
   public void reconnect(WebSocketSession newSession) {
     this.send(new ActorMessage.Reconnect(newSession));
@@ -351,5 +347,18 @@ public final class Player extends Living {
 
   public void disconnect() {
     this.send(new ActorMessage.Disconnect());
+  }
+
+  public void sendStatUpdate() {
+    this.send(new ActorMessage.SendStatUpdate());
+
+  }
+
+  public void saveData() {
+    this.send(new ActorMessage.SaveData());
+  }
+
+  public void gainExp(int amount) {
+    this.send(new ActorMessage.GainExp(amount));
   }
 }

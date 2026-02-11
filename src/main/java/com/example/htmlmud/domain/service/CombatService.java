@@ -308,12 +308,8 @@ public class CombatService {
     // 產生 [秒.毫秒] 的時間戳記前綴
     long nowMs = System.currentTimeMillis();
     String timestamp = String.format("[%02d.%03d] ", (nowMs / 1000) % 60, nowMs % 1000);
-    for (Living receiver : audiences) {
+    for (Player receiver : audiences) {
       messageUtil.send(timestamp + msg, self, target, receiver);
-    }
-
-    if (target instanceof Player player) {
-      player.sendStatUpdate();
     }
   }
 

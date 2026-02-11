@@ -1,10 +1,9 @@
 package com.example.htmlmud.protocol;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.domain.actor.impl.Living;
-import com.example.htmlmud.domain.actor.impl.Mob;
-import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 
@@ -46,8 +45,8 @@ public sealed interface ActorMessage
 
 
 
-  sealed interface PlayerMessage extends ActorMessage
-      permits Command, SendText, GainExp, SaveData, QuestUpdate, Reconnect, Disconnect {
+  sealed interface PlayerMessage extends ActorMessage permits Command, SendText, GainExp, SaveData,
+      QuestUpdate, Reconnect, Disconnect, SendStatUpdate, Relive {
   }
   record Command(String traceId, GameCommand command) implements PlayerMessage {
   }
@@ -63,17 +62,23 @@ public sealed interface ActorMessage
   }
   record Disconnect() implements PlayerMessage {
   }
+  record SendStatUpdate() implements PlayerMessage {
+  }
+  record Relive() implements PlayerMessage {
+  }
 
 
 
-  sealed interface MobMessage extends ActorMessage
-      permits OnPlayerEnter, OnPlayerFlee, OnInteract, AgroScan, RandomMove, Respawn {
+  sealed interface MobMessage extends ActorMessage permits OnPlayerEnter, OnPlayerFlee, OnInteract,
+      GetHighestAggroTarget, AgroScan, RandomMove, Respawn {
   }
   record OnPlayerEnter(String playerId) implements MobMessage {
   }
   record OnPlayerFlee(String playerId, String direction) implements MobMessage {
   }
   record OnInteract(String playerId, String command) implements MobMessage {
+  }
+  record GetHighestAggroTarget(CompletableFuture<Optional<Living>> future) implements MobMessage {
   }
   // scanForEnemies
   record AgroScan() implements MobMessage {

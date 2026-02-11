@@ -1,7 +1,5 @@
 package com.example.htmlmud.application.command;
 
-import com.example.htmlmud.domain.actor.impl.Player;
-
 public interface PlayerCommand {
 
   // 該指令的觸發關鍵字，例如 "look", "l"
@@ -10,7 +8,7 @@ public interface PlayerCommand {
   // 執行邏輯
   // actor: 誰發出的指令 (操作者 Context)
   // args: 指令參數 (例如 'look north' 的 'north')
-  void execute(Player self, String args);
+  void execute(String args);
 
   // 描述 (給 help 指令用)
   default String getDescription() {

@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PassiveBehavior implements MobBehavior {
 
   @Override
-  public MobBehavior handle(Mob self, ActorMessage.MobMessage msg) {
+  public MobBehavior handle(Mob mob, ActorMessage.MobMessage msg) {
     MobBehavior next = null;
     switch (msg) {
       case ActorMessage.OnPlayerEnter(var playerId) -> {
@@ -29,7 +29,7 @@ public class PassiveBehavior implements MobBehavior {
       case ActorMessage.Respawn() -> {
       }
 
-      default -> log.warn("PassiveBehavior 收到無法處理的訊息: {} {}", self.getName(), msg);
+      default -> log.warn("PassiveBehavior 收到無法處理的訊息: {} {}", mob.getName(), msg);
     }
 
     return next;
@@ -37,27 +37,27 @@ public class PassiveBehavior implements MobBehavior {
 
 
   // 在 PassiveBehavior (一般 NPC) 的 onTick
-  public void onTick(Mob self) {
+  public void onTick(Mob mob) {
     // 5% 機率隨機移動
     if (Math.random() < 0.05) {
       // 隨機選一個出口移動
-      // self.moveTo(randomExit);
+      // mob.moveTo(randomExit);
     }
 
     // 10% 機率說夢話
     if (Math.random() < 0.1) {
-      self.sayToRoom("今天天氣真好...");
+      mob.sayToRoom("今天天氣真好...");
     }
   }
 
   @Override
-  public void onPlayerEnter(Mob self, Player player) {
+  public void onPlayerEnter(Mob mob, Player player) {
 
   }
 
   @Override
-  public void onDamaged(Mob self, Living attacker) {
-    self.sayToRoom("吼吼~！！！(它看起來想殺死你)");
-    self.attack(attacker);
+  public void onDamaged(Mob mob, Living attacker) {
+    mob.sayToRoom("吼吼~！！！(它看起來想殺死你)");
+    mob.attack(attacker);
   }
 }

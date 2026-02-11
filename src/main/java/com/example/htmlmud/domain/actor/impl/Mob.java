@@ -4,7 +4,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import com.example.htmlmud.domain.actor.behavior.AggressiveBehavior;
 import com.example.htmlmud.domain.actor.behavior.MerchantBehavior;
 import com.example.htmlmud.domain.actor.behavior.MobBehavior;
@@ -14,6 +16,7 @@ import com.example.htmlmud.domain.model.template.MobTemplate;
 import com.example.htmlmud.domain.model.vo.DamageSource;
 import com.example.htmlmud.domain.service.MobService;
 import com.example.htmlmud.protocol.ActorMessage;
+import com.example.htmlmud.protocol.ActorMessage.MobMessage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -112,6 +115,9 @@ public final class Mob extends Living {
       case ActorMessage.OnPlayerEnter(var playerId) -> behavior.handle(this, msg);
       case ActorMessage.OnPlayerFlee(var playerId, var direction) -> behavior.handle(this, msg);
       case ActorMessage.OnInteract(var playerId, var command) -> behavior.handle(this, msg);
+      case ActorMessage.GetHighestAggroTarget(var future) -> {
+        future.complete(service.getHighestAggroTarget(this));
+      }
       case ActorMessage.AgroScan() -> behavior.handle(this, msg);
       case ActorMessage.RandomMove() -> behavior.handle(this, msg);
       case ActorMessage.Respawn() -> behavior.handle(this, msg);
@@ -137,15 +143,6 @@ public final class Mob extends Living {
 
   // -----------------------------------------------------------------------------------
 
-  // --- 互動與事件 ---
-
-  public void onPlayerEnter(String playerId) {
-    this.send(new ActorMessage.OnPlayerEnter(playerId));
-  }
-
-  public void onInteract(Player player, String command) {
-    behavior.onInteract(this, player, command);
-  }
 
   // @Override
   // protected void doOnAttacked(LivingActor attacker) {
@@ -215,31 +212,74 @@ public final class Mob extends Living {
   // room.send(new RoomMessage.MobDeath(this, corpse, killer));
   // }
 
-  // 仇恨值管理
-  public void addAggro(String sourceId, int value) {
-    aggroTable.merge(sourceId, value, Integer::sum);
+
+
+  @Override
+  protected void performRemoveFromRoom(Room room) {
+    room.removeMob(id);
   }
+
+  @Override
+  protected void performDeath() {
+
+    // 將自己移出房間
+    super.removeFromRoom();
+
+    // 自我毀滅 (Terminate)：確認訊息發出後，才停止 VT。
+    this.stop(); // 等待 gc 回收
+  }
+
+  @Override
+  protected void handleOnAttacked(String attackerId) {
+    super.handleOnAttacked(attackerId);
+    aggroTable.merge(attackerId, 1, Integer::sum);
+  }
+
+  @Override
+  protected void handleOnDamage(int amount, String attackerId) {
+    super.handleOnDamage(amount, attackerId);
+
+    // log.info("增加仇恨 name:{} {}", attacker.getName(), amount);
+    if (isValid()) {
+      aggroTable.merge(attackerId, amount, Integer::sum);
+    }
+  }
+
+
+
+  // ---------------------------------------------------------------------------------------------
+
+
+
+  // ---------------------------------------------------------------------------------------------
+
+
+
+  // 公開給外部呼叫的方法 --------------------------------------------------------------------------
+
+
 
   // 取得當前仇恨最高目標 ID
   public Optional<Living> getHighestAggroTarget() {
-    // 優化：一次取得房間內所有生物，避免多次跨執行緒通訊
-    List<Living> roomLivings = this.getCurrentRoom().getLivings();
-    if (roomLivings.isEmpty()) {
-      return Optional.empty();
+    CompletableFuture<Optional<Living>> future = new CompletableFuture<>();
+    this.send(new ActorMessage.GetHighestAggroTarget(future));
+    try {
+      return future.orTimeout(1, TimeUnit.SECONDS).join();
+    } catch (Exception e) {
+      log.error("Mob 取得最高仇恨目標失敗 mobId:{}", id, e);
     }
 
-    return aggroTable.entrySet().stream()
-        .flatMap(entry -> roomLivings.stream()
-            .filter(l -> l.getId().equals(entry.getKey()) && l.isValid())
-            .map(l -> Map.entry(entry.getValue(), l)))
-        .max(Map.Entry.comparingByKey()).map(Map.Entry::getValue);
+    return Optional.empty();
   }
 
-  public void removeAggro(String sourceId) {
-    aggroTable.remove(sourceId);
+  // --- 互動與事件 ---
+  public void onPlayerEnter(String playerId) {
+    this.send(new ActorMessage.OnPlayerEnter(playerId));
   }
 
-
+  public void onInteract(Player player, String command) {
+    this.send(new ActorMessage.OnInteract(player.getId(), command));
+  }
 
   // 行為層需要的輔助方法 (Facade)
   public void sayToRoom(String content) {
@@ -251,8 +291,4 @@ public final class Mob extends Living {
     // 實作：發送 AttackMessage 給 target
   }
 
-  @Override
-  protected void performRemoveFromRoom(Room room) {
-    room.removeMob(id);
-  }
 }

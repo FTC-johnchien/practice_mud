@@ -103,10 +103,6 @@ public class Room extends VirtualActor<RoomMessage> {
         future.complete(
             Stream.concat(players.stream(), mobs.stream()).filter(Living::isValid).toList());
       }
-      case RoomMessage.RemoveLiving(var livingId) -> {
-        players.removeIf(player -> player.getId().equals(livingId));
-        mobs.removeIf(mob -> mob.getId().equals(livingId));
-      }
       case RoomMessage.GetPlayers(var future) -> {
         future.complete(players.stream().filter(Player::isValid).toList());
       }
@@ -143,6 +139,10 @@ public class Room extends VirtualActor<RoomMessage> {
 
 
 
+  // ---------------------------------------------------------------------------------------------
+
+
+
   // 公開給外部呼叫的方法 --------------------------------------------------------------------------
 
 
@@ -154,7 +154,9 @@ public class Room extends VirtualActor<RoomMessage> {
       future.orTimeout(1, TimeUnit.SECONDS).join();
     } catch (Exception e) {
       log.error("Room enter 失敗 roomId:{}", id, e);
-      actor.reply("一股未知的力量阻擋了$N的前進!");
+      if (actor instanceof Player player) {
+        player.reply("一股未知的力量阻擋了$N的前進!");
+      }
     }
   }
 
@@ -245,10 +247,6 @@ public class Room extends VirtualActor<RoomMessage> {
     this.send(new RoomMessage.Record());
   }
 
-  public void removeLiving(String livingId) {
-    this.send(new RoomMessage.RemoveLiving(livingId));
-  }
-
   public void removePlayer(String playerId) {
     this.send(new RoomMessage.RemovePlayer(playerId));
   }
@@ -265,15 +263,16 @@ public class Room extends VirtualActor<RoomMessage> {
     this.send(new RoomMessage.DropItem(item));
   }
 
-  public void lookAtRoom(Player player) {
+  public String lookAtRoom(Player player) {
     CompletableFuture<String> future = new CompletableFuture<>();
     this.send(new RoomMessage.LookAtRoom(player.getId(), future));
     try {
-      String roomDesc = future.orTimeout(1, TimeUnit.SECONDS).join();
-      player.reply(roomDesc);
+      return future.orTimeout(1, TimeUnit.SECONDS).join();
     } catch (Exception e) {
       log.error("Room lookAtRoom 失敗 roomId:{}", this.getId(), e);
     }
+
+    return "";
   }
 
   public void lookDirection(Player player, Direction dir) {

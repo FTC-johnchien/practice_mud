@@ -3,6 +3,7 @@ package com.example.htmlmud.application.command.impl;
 import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.application.command.annotation.CommandAlias;
 import com.example.htmlmud.domain.actor.impl.Player;
+import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.service.WorldManager;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,9 @@ public class TellCommand implements PlayerCommand {
   }
 
   @Override
-  public void execute(Player actor, String args) {
+  public void execute(String args) {
+    Player player = MudContext.currentPlayer();
+
     // 1. 參數檢查
     // 格式: tell <player> <message>
     if (args == null || args.isBlank()) {
@@ -42,15 +45,15 @@ public class TellCommand implements PlayerCommand {
         .orElseThrow(() -> new MudException("在這個世界上找不到叫 '" + targetName + "' 的人。"));
 
     // 3. 檢查是不是對自己說話
-    if (target.getId().equals(actor.getId())) {
+    if (target.getId().equals(player.getId())) {
       throw new MudException("你自言自語，覺得有些空虛。");
     }
 
     // 4. 發送訊息 (Tell)
     // 給對方看
-    target.reply(String.format("%s 悄悄地對你說: %s", actor.getName(), content));
+    target.reply(String.format("%s 悄悄地對你說: %s", player.getName(), content));
 
     // 給自己看 (確認發送成功)
-    actor.reply(String.format("你對 %s 說: %s", target.getName(), content));
+    player.reply(String.format("你對 %s 說: %s", target.getName(), content));
   }
 }

@@ -1,6 +1,7 @@
 package com.example.htmlmud.domain.service;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.ObjectProvider;
@@ -11,7 +12,9 @@ import com.example.htmlmud.application.command.CommandDispatcher;
 import com.example.htmlmud.application.service.AuthService;
 import com.example.htmlmud.domain.actor.behavior.PlayerBehavior;
 import com.example.htmlmud.domain.actor.impl.Player;
+import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.context.MudContext;
+import com.example.htmlmud.domain.model.enums.Direction;
 import com.example.htmlmud.infra.persistence.service.PlayerPersistenceService;
 import com.example.htmlmud.infra.server.MudWebSocketHandler;
 import com.example.htmlmud.infra.util.MessageUtil;
@@ -139,6 +142,55 @@ public class PlayerService {
 
     // 【關鍵】啟動一個「死神 VT」
     startDeathTimer(player, disconnectTimestamp);
+  }
+
+  public void handleSendStatUpdate(Player player) {
+    Map<String, Object> update = new HashMap<>();
+    update.put("type", "STAT_UPDATE");
+    update.put("hp", player.getStats().hp);
+    update.put("maxHp", player.getStats().maxHp);
+    update.put("mp", player.getStats().mp);
+    update.put("maxMp", player.getStats().maxMp);
+    update.put("energy", player.getStats().getCombatResource("charge")); // 0~100
+
+    // 轉成 JSON 字串發送給前端
+    try {
+      String json = objectMapper.writeValueAsString(update);
+      player.getSession().sendMessage(new TextMessage(json));
+    } catch (Exception e) {
+      log.error("發送狀態更新失敗: {}", player.getName(), e);
+    }
+  }
+
+  public void handleRelive(Player player) {
+
+    // 先暫停 2秒
+    try {
+      Thread.sleep(2000);
+    } catch (InterruptedException ignored) {
+    }
+
+    // 取出 currentRoom 區域的重生點/安全點 或是固定地點墳場 (如果有的話)
+    // setCurrentRoomId("newbie_village:cemetery");
+    player.setCurrentRoomId("newbie_village:cemetery");
+
+    Room room = player.getCurrentRoom();
+
+    // 復活玩家
+    player.markValid();
+    player.getStats().setHp(1);
+    player.getStats().setMp(0);
+    player.getStats().setStamina(0);
+
+    // 更新玩家 stats
+    player.sendStatUpdate();
+
+    room.enter(player, Direction.UP);
+
+    // 自動 Look 直接調用 LookCommand 執行邏輯 (讓玩家看到新環境)
+    ScopedValue.where(MudContext.CURRENT_PLAYER, player).run(() -> {
+      commandDispatcher.dispatch("look");
+    });
   }
 
 

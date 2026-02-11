@@ -12,12 +12,10 @@ import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.LivingPosture;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
-import com.example.htmlmud.domain.model.template.ItemTemplate;
 import com.example.htmlmud.domain.model.vo.DamageSource;
 import com.example.htmlmud.domain.service.LivingService;
 import com.example.htmlmud.infra.persistence.entity.SkillEntry;
 import com.example.htmlmud.protocol.ActorMessage;
-import com.example.htmlmud.protocol.GameCommand;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -112,7 +110,7 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
     }
   }
 
-  protected void handleLivingMessage(ActorMessage.LivingMessage msg) {
+  private void handleLivingMessage(ActorMessage.LivingMessage msg) {
     switch (msg) {
       case ActorMessage.Tick(var tickCount, var timestamp) -> {
         handleTick(tickCount, timestamp);
@@ -135,11 +133,9 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
       }
       case ActorMessage.Equip(var item, var future) -> {
         livingService.doEquip(this, item, future);
-        recalculateStats();
       }
       case ActorMessage.Unequip(var slot, var future) -> {
         livingService.doUnequip(this, slot, future);
-        recalculateStats();
       }
       case ActorMessage.OnMessage(var self, var actorMessage) -> {
         // command(traceId, cmd);
@@ -169,6 +165,7 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
   // 死亡處理
   protected void handleOnDeath(String killerId) {
     livingService.handleOnDeath(this, killerId);
+    performDeath();
   }
 
   // 治療處理
@@ -182,7 +179,39 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
 
 
 
-  // 實作 defualt 的公開方法給外部呼叫用 -----------------------------------------------------------
+  // ---------------------------------------------------------------------------------------------
+
+
+
+  // ---------------------------------------------------------------------------------------------
+
+
+
+  /**
+   * 由子類實作具體的移除邏輯
+   */
+  protected abstract void performRemoveFromRoom(Room room);
+
+
+  protected abstract void performDeath();
+
+
+  // ---------------------------------------------------------------------------------------------
+
+
+
+  // ---------------------------------------------------------------------------------------------
+
+
+
+  // ---------------------------------------------------------------------------------------------
+
+
+
+  // 公開給外部呼叫的方法 --------------------------------------------------------------------------
+
+
+
   public void tick(long tickCount, long time) {
     if (!this.isValid()) {
       return;
@@ -206,80 +235,49 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
     this.send(new ActorMessage.onDeath(killerId));
   }
 
-
-
-  // for 玩家使用 --------------------------------------------------------------------------------------
-  public void command(String traceId, GameCommand cmd) {
-    this.send(new ActorMessage.Command(traceId, cmd));
-  }
-
-  public void sendText(String msg) {
-    switch (this) {
-      case Player player -> this.send(new ActorMessage.SendText(player.getSession(), msg));
-      case Mob mob -> {
-      }
+  public boolean equip(GameItem item) {
+    CompletableFuture<Boolean> future = new CompletableFuture<>();
+    this.send(new ActorMessage.Equip(item, future));
+    try {
+      future.orTimeout(1, TimeUnit.SECONDS).join();
+      return future.get();
+    } catch (Exception e) {
+      log.error("equip itemId:{} itemName:{} error", item.getId(), item.getDisplayName(), e);
     }
+
+    return false;
   }
 
-  public void reply(String msg) {
-    sendText(msg);
+  public boolean unequip(EquipmentSlot slot) {
+    CompletableFuture<Boolean> future = new CompletableFuture<>();
+    this.send(new ActorMessage.Unequip(slot, future));
+    try {
+      future.orTimeout(1, TimeUnit.SECONDS).join();
+      return future.get();
+    } catch (Exception e) {
+      log.error("unequip slot:{} error", slot.getDisplayName(), e);
+    }
+
+    return false;
   }
-  // for 玩家使用 --------------------------------------------------------------------------------------
 
 
 
-  // public CompletableFuture<String> equip(GameItem item) {
-  // var future = new CompletableFuture<String>();
-  // this.send(new ActorMessage.Equip(item, new CompletableFuture<>()));
-  // return future;
-  // }
-
-  // public CompletableFuture<String> unequip(EquipmentSlot slot) {
-  // var future = new CompletableFuture<String>();
-  // this.send(new ActorMessage.Unequip(slot, future));
-  // return future;
-  // }
-
-  // -----------------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------------------------
 
 
 
-  // 攻擊邏輯(自動攻擊)
-  // protected void processAutoAttack(long now) {
-  // livingService.getCombatService().processAutoAttack(this, now);
-  // }
+  // ---------------------------------------------------------------------------------------------
+
+
+
+  // ---------------------------------------------------------------------------------------------
 
 
 
   // --- 共用行為邏輯 ---
 
-  /**
-   * 【重要】重新計算總屬性 每次穿脫裝備、升級、Buff 改變時呼叫
-   */
-  public void recalculateStats() {
-    int minDamage = 0; // 基礎攻擊力 (可從 Level 算)
-    int maxDamage = 0; // 基礎防禦力
-    int def = 0; // 基礎防禦力
 
-    // 遍歷所有裝備
-    for (GameItem item : stats.equipment.values()) {
-      ItemTemplate tpl = item.getTemplate();
-      if (tpl != null) {
-        minDamage += tpl.equipmentProp().minDamage();
-        maxDamage += tpl.equipmentProp().maxDamage();
-        def += tpl.equipmentProp().defense();
-
-        // 處理額外屬性 (Bonus Stats)
-        // if (tpl.bonusStats() != null) ...
-      }
-    }
-
-    this.minDamage = minDamage;
-    this.maxDamage = maxDamage;
-    this.defense = def;
-    log.info("{} stats updated: minDamage={}, maxDamage={}, Def={}", this.name, minDamage,
-        maxDamage, def);
-  }
 
   // 取得當前的攻擊方式
   public DamageSource getCurrentAttackSource() {
@@ -424,43 +422,6 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
     currentRoomId = null;
   }
 
-  public boolean equip(GameItem item) {
-    CompletableFuture<Boolean> future = new CompletableFuture<>();
-    this.send(new ActorMessage.Equip(item, future));
-    try {
-      future.orTimeout(1, TimeUnit.SECONDS).join();
-      return future.get();
-    } catch (Exception e) {
-      log.error("equip itemId:{} itemName:{} error", item.getId(), item.getDisplayName(), e);
-    }
 
-    return false;
-  }
-
-  public boolean unequip(EquipmentSlot slot) {
-    CompletableFuture<Boolean> future = new CompletableFuture<>();
-    this.send(new ActorMessage.Unequip(slot, future));
-    try {
-      future.orTimeout(1, TimeUnit.SECONDS).join();
-      return future.get();
-    } catch (Exception e) {
-      log.error("unequip slot:{} error", slot.getDisplayName(), e);
-    }
-
-    return false;
-  }
-
-
-
-  public void sendStatUpdate() {}
-
-  public void processDeath() {
-    livingService.processDeath(this);
-  }
-
-  /**
-   * 由子類實作具體的移除邏輯
-   */
-  protected abstract void performRemoveFromRoom(Room room);
 
 }

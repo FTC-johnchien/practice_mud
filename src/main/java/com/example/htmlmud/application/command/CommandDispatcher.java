@@ -84,10 +84,10 @@ public class CommandDispatcher {
       // 或者是 MoveCommand 內部 logic 要知道 "n" 等於 "move n"
       if (command instanceof MoveCommand && Direction.parse(key) != null) {
         // 如果指令本身就是方向 (例如輸入 "n")，把 key 當作 args 傳進去
-        command.execute(player, key);
+        command.execute(key);
       } else {
         // 否則正常執行 (例如 "move north")
-        command.execute(player, args);
+        command.execute(args);
       }
     } catch (MudException e) {
       // 情境 A：遊戲邏輯錯誤 (錢不夠、找不到人)

@@ -72,12 +72,6 @@ public class LivingService {
 
   public void handleOnAttacked(Living self, String attackerId) {
 
-    // 若是 Mob 就增加仇恨值
-    if (self instanceof Mob mob) {
-      // log.info("初始放入仇恨表 name:{}", attacker.getName());
-      mob.addAggro(attackerId, 1);
-    }
-
     // 攻擊準備時間
     reactionTime(self);
 
@@ -108,35 +102,25 @@ public class LivingService {
       // 終止戰鬥並移出戰鬥名單
       combatService.endCombat(self);
 
-      Room room = self.getCurrentRoom();
+      // Room room = self.getCurrentRoom();
 
       // 先判斷 self 是 player 還是 mob 然後將其移出房間，避免後續的攻擊還持續的打到已死亡的對象
-      if (self instanceof Player player) {
-        room.removePlayer(player.getId());
-
-        // 更新前端玩家狀態
-        player.getStats().setHp(0);
-        player.sendStatUpdate();
-      } else if (self instanceof Mob mob) {
-        room.removeMob(mob.getId());
-      }
+      // if (self instanceof Player player) {
+      // room.removePlayer(player.getId());
+      // } else if (self instanceof Mob mob) {
+      // room.removeMob(mob.getId());
+      // }
 
       // 發送 self 死亡事件
       self.onDeath(attackerId);
     } else {
-      if (!self.isInCombat && attackerId != null) {
+      if (!self.isInCombat) {
 
         // 準備反應時間
         reactionTime(self);
 
         // 加入戰鬥
         combatService.startCombat(self, attackerId);
-      }
-
-      // mob 就增加仇恨值
-      if (self instanceof Mob mob && attackerId != null) {
-        // log.info("增加仇恨 name:{} {}", attacker.getName(), amount);
-        mob.addAggro(attackerId, amount);
       }
     }
   }
@@ -149,28 +133,25 @@ public class LivingService {
     self.combatTargetId = null;
 
     // 交代後事 (Cleanup & Notify)：取消心跳、製造屍體、通知房間。
-    // 取消心跳
+    // 設定為無效狀態 (不處理心跳 tick)
     self.markInvalid();
 
     Room room = self.getCurrentRoom();
-    // 將自己移出房間
-    room.removeLiving(self.getId());
 
-    // 製造屍體
+    // 製造屍體丟到房間
     GameItem corpse = worldFactory.createCorpse(self);
     room.dropItem(corpse);
 
     // 廣播死亡訊息
     String messageTemplate = "$n殺死了$N";
     // 先找房間里的 living
-    Living killer = self.getCurrentRoom().findLiving(killerId).orElse(null);
+    Living killer = room.findLiving(killerId).orElse(null);
     if (killer == null) {
       killer = worldManagerProvider.getObject().findLivingActor(killerId).orElse(null);
     }
-    if (killer == null) {
-      log.error("killerId LivingActor not found: {}", killerId);
 
-      // 不應該發生，但備用 XD
+    // killer(mob) 也可能在這輪攻擊中死亡(例如30個 monk 用獅子吼互打)，但處理速度比較快造成 null
+    if (killer == null) {
       killer = self;
       messageTemplate = "$N被殺死了";
     }
@@ -179,15 +160,6 @@ public class LivingService {
     for (Player receiver : audiences) {
       messageUtil.send(messageTemplate, self, killer, receiver);
     }
-
-    // 玩家死亡的後續流程
-    if (self instanceof Player player) {
-
-      // 讓 player 實作自行的過程
-      self.processDeath();
-
-    }
-
   }
 
   public void handleHeal(Living self, int amount) {
@@ -199,7 +171,6 @@ public class LivingService {
     // reply(this.stats.getGender().getYou() + "回復了 " + amount + " 點 HP 目前 " + stats.getHp() + " / "
     // + stats.getMaxHp());
     self.getStats().setHp(Math.min(self.getStats().getHp() + amount, self.getStats().getMaxHp()));
-    self.sendStatUpdate();
   }
 
   public void doEquip(Living self, GameItem item, CompletableFuture<Boolean> future) {
@@ -249,7 +220,13 @@ public class LivingService {
     // 4. 放入裝備欄
     self.getStats().equipment.put(slot, item);
 
-    self.reply("你裝上 " + item.getDisplayName());
+    // 重新計算數值
+    recalculateStats(self);
+
+    if (self instanceof Player player) {
+      player.reply("你裝上 " + item.getDisplayName());
+    }
+
     future.complete(true);
   }
 
@@ -260,7 +237,11 @@ public class LivingService {
     GameItem item = self.getStats().equipment.get(slot);
     if (item == null) {
       future.complete(false);
-      self.reply("該 slot 沒有裝備");
+
+      if (self instanceof Player player) {
+        player.reply("該 slot 沒有裝備");
+      }
+
       return;
     }
 
@@ -272,6 +253,10 @@ public class LivingService {
 
     // future.complete("你將 " + slot.getDisplayName() + " 放入背包");
     // return true;
+
+    // 重新計算數值
+    recalculateStats(self);
+
     future.complete(true);
   }
 
@@ -313,14 +298,6 @@ public class LivingService {
   }
 
 
-  public void processDeath(Living self) {
-    // 自我毀滅 (Terminate)：確認訊息發出後，才停止 VT。
-    if (self instanceof Mob mob) {
-      mob.stop(); // 等待 gc 回收
-    }
-  }
-
-
 
   private void processRegen(Living self) {
 
@@ -328,7 +305,6 @@ public class LivingService {
     if (self.getStats().getHp() < self.getStats().getMaxHp()) {
       int regenAmount = (int) (self.getStats().getMaxHp() * 0.05); // 回復 5%
       handleHeal(self, regenAmount);
-      self.sendStatUpdate();
     }
 
     // mp 回復 1%
@@ -341,6 +317,36 @@ public class LivingService {
     // 計算 0.5 * speed +/- 0.1 * speed，即範圍 [0.4 * speed, 0.6 * speed]
     long reactionTime = ThreadLocalRandom.current().nextLong(speed * 4 / 10, (speed * 6 / 10) + 1);
     self.setNextAttackTime(System.currentTimeMillis() + reactionTime);
+  }
+
+
+
+  /**
+   * 【重要】重新計算總屬性 每次穿脫裝備、升級、Buff 改變時呼叫
+   */
+  private void recalculateStats(Living self) {
+    int minDamage = 0; // 基礎攻擊力 (可從 Level 算)
+    int maxDamage = 0; // 基礎防禦力
+    int def = 0; // 基礎防禦力
+
+    // 遍歷所有裝備
+    for (GameItem item : self.getStats().equipment.values()) {
+      ItemTemplate tpl = item.getTemplate();
+      if (tpl != null) {
+        minDamage += tpl.equipmentProp().minDamage();
+        maxDamage += tpl.equipmentProp().maxDamage();
+        def += tpl.equipmentProp().defense();
+
+        // 處理額外屬性 (Bonus Stats)
+        // if (tpl.bonusStats() != null) ...
+      }
+    }
+
+    self.minDamage = minDamage;
+    self.maxDamage = maxDamage;
+    self.defense = def;
+    log.info("{} stats updated: minDamage={}, maxDamage={}, Def={}", self.getName(), minDamage,
+        maxDamage, def);
   }
 
 }

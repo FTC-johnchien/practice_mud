@@ -7,6 +7,7 @@ import com.example.htmlmud.application.command.parser.TargetSelector;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
+import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.service.CombatService;
 import com.example.htmlmud.infra.util.AnsiColor;
 import com.example.htmlmud.infra.util.ColorText;
@@ -29,40 +30,42 @@ public class KillCommand implements PlayerCommand {
   }
 
   @Override
-  public void execute(Player self, String args) {
+  public void execute(String args) {
+    Player player = MudContext.currentPlayer();
+
     if (args.isBlank()) {
-      self.reply("$N要攻擊誰？");
+      player.reply("$N要攻擊誰？");
       return;
     }
 
     // 1. 取得房間內的怪物列表
-    Room room = self.getCurrentRoom();
+    Room room = player.getCurrentRoom();
 
     // 2. 交給 Selector 處理複雜字串
     // args 可能是 "red goblin", "elite soldier 2"
     // TODO pvp的處理
     Mob target = targetSelector.selectMob(room.getMobs(), args);
     if (target == null) {
-      self.reply("這裡沒有看到 '" + args + "'。");
+      player.reply("這裡沒有看到 '" + args + "'。");
       return;
     }
     // log.info("name:{} defense: {}", target.getTemplate().name(), target.defense);
 
     // 發起戰鬥
-    combatService.startCombat(self, target.getId());
+    combatService.startCombat(player, target.getId());
 
     // 【節奏控制】
     // 攻擊者：立即獲得攻擊機會 (或是很短的延遲)
-    self.nextAttackTime = System.currentTimeMillis();
+    player.nextAttackTime = System.currentTimeMillis();
 
     // 被攻擊對象接收到被攻擊事件
-    target.onAttacked(self.getId());
+    target.onAttacked(player.getId());
 
     // log.info("name:{} {}", self.getName(), self.getNickname());
 
     // 訊息處理
     String messageTemplate = ColorText.wrap(AnsiColor.RED, "$N對著$n喝道﹕「臭賊﹗今日不是你死就是我活﹗」");
-    room.broadcast(self.getId(), target.getId(), messageTemplate);
+    room.broadcast(player.getId(), target.getId(), messageTemplate);
     // for (Living receiver : room.getPlayers()) {
     // messageUtil.send(messageTemplate, self, target, receiver);
     // }

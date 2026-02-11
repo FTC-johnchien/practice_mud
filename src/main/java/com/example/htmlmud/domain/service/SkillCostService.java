@@ -3,6 +3,7 @@ package com.example.htmlmud.domain.service;
 import java.util.Map;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.actor.impl.Living;
+import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.enums.ResourceType;
 import com.example.htmlmud.domain.model.template.SkillTemplate;
@@ -35,7 +36,9 @@ public class SkillCostService {
       // 利用 Enum 的多型直接取得當前數值
       if (type.getCurrent(actor.getStats()) < cost) {
 
-        actor.reply("$N的 " + type.name() + " 不足！(需要: " + cost + ")");
+        if (actor instanceof Player player) {
+          player.reply("$N的 " + type.name() + " 不足！(需要: " + cost + ")");
+        }
 
         return false;
       }

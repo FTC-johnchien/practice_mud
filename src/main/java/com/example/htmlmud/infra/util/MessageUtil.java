@@ -28,11 +28,11 @@ public class MessageUtil {
    * @param self (做動作的人)
    * @param receiver 接收訊息的人 (誰在看這行字？)
    */
-  public void send(String template, Living executor, Living receiver) {
+  public void send(String template, Living executor, Player receiver) {
     send(template, executor, null, receiver);
   }
 
-  public String format(String template, Living executor, Living receiver) {
+  public String format(String template, Living executor, Player receiver) {
     return format(template, executor, null, receiver);
   }
 
@@ -44,7 +44,7 @@ public class MessageUtil {
    * @param target (對象)
    * @param receiver 接收訊息的人 (誰在看這行字？)
    */
-  public void send(String template, Living executor, Living target, Living receiver) {
+  public void send(String template, Living executor, Living target, Player receiver) {
     String msg = format(template, executor, target, receiver);
     if (msg == null) {
       return;

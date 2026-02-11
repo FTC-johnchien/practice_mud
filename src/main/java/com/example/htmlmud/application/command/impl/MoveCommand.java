@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
+import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.model.enums.Direction;
 import com.example.htmlmud.domain.model.template.RoomExit;
 import com.example.htmlmud.domain.service.WorldManager;
@@ -26,25 +27,27 @@ public class MoveCommand implements PlayerCommand {
   }
 
   @Override
-  public void execute(Player actor, String args) {
+  public void execute(String args) {
+    Player player = MudContext.currentPlayer();
+
     // 1. 解析方向
     // 玩家可能輸入 "move north" 或者直接輸入 "north" (由 Dispatcher 轉發)
     Direction dir = Direction.parse(args);
 
     if (dir == null) {
-      actor.reply("你要往哪個方向移動？");
+      player.reply("你要往哪個方向移動？");
       return;
     }
 
     // 2. 取得當前房間
-    Room currentRoom = actor.getCurrentRoom();
+    Room currentRoom = player.getCurrentRoom();
 
     // 3. 檢查出口
     // 假設 Room.exits 是 Map<String, Integer> (key 是 direction full name)
     // Integer nextRoomId = currentRoom.getTemplate().exits().get(dir.getFullName());
     RoomExit exit = currentRoom.getTemplate().exits().get(dir.getFullName());
     if (exit == null) {
-      actor.reply("往 " + dir.getDisplayName() + " 沒有出路。");
+      player.reply("往 " + dir.getDisplayName() + " 沒有出路。");
       return;
     }
 
@@ -56,7 +59,7 @@ public class MoveCommand implements PlayerCommand {
     Room targetRoom = worldManager.getRoomActor(targetRoomId);
 
     if (targetRoom == null) {
-      actor.reply("前方房間 " + targetRoomId + " 施工中，無法前往。");
+      player.reply("前方房間 " + targetRoomId + " 施工中，無法前往。");
       return;
     }
 
@@ -67,15 +70,15 @@ public class MoveCommand implements PlayerCommand {
     // --- 檢查成功，開始處理移動流程 ---
 
     // 4. 舊房間廣播 (離場)
-    currentRoom.leave(actor, dir);
+    currentRoom.leave(player, dir);
 
     // 6. 新房間廣播 (進場)
     // 計算反方向 (例如往北走，新房間的人會看到你從南方來)
 
-    targetRoom.enter(actor, dir.opposite());
+    targetRoom.enter(player, dir.opposite());
 
     // 7. 自動 Look (讓玩家看到新環境)
     // 直接調用 LookCommand 執行邏輯
-    lookCommand.execute(actor, "");
+    lookCommand.execute("");
   }
 }
