@@ -1,5 +1,7 @@
 package com.example.htmlmud.domain.actor.core;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -39,17 +41,27 @@ public abstract class VirtualActor<T> {
   private void runLoop() {
     log.info("[{}] started on thread: {}", actorId, Thread.currentThread());
 
+    List<T> batch = new ArrayList<>(128);
     try {
       while (running.get()) {
-        // 這裡會 Block，虛擬執行緒會 Unmount，不佔用 OS Thread
-        T message = mailbox.take();
-        handleMessage(message);
+        // 1. 阻塞等待第一條訊息 (讓出 CPU)
+        T firstMsg = mailbox.take();
+        batch.add(firstMsg);
+
+        // 2. 盡可能抓取剩餘訊息 (Batching)
+        mailbox.drainTo(batch, 127); // 1 (take) + 127 = 128, 剛好填滿 ArrayList 不擴容
+
+        // 3. 處理訊息
+        for (T msg : batch) {
+          handleMessage(msg);
+        }
+        batch.clear();
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      log.warn("[{}] interrupted.", actorId);
+      log.warn("Actor [{}] interrupted.", actorId);
     } catch (Exception e) {
-      log.error("[{}] encountered unexpected error", actorId, e);
+      log.error("Actor [{}] encountered unexpected error", actorId, e);
     } finally {
       running.set(false);
       log.info("[{}] has terminated permanently.", actorId);
