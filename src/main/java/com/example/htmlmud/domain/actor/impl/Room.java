@@ -115,6 +115,9 @@ public class Room extends VirtualActor<RoomMessage> {
       case RoomMessage.RemoveMob(var mobId) -> {
         mobs.removeIf(mob -> mob.getId().equals(mobId));
       }
+      case RoomMessage.GetItems(var future) -> {
+        future.complete(items);
+      }
       case RoomMessage.RemoveItem(var itemId) -> {
         items.removeIf(item -> item.getId().equals(itemId));
         // 標記為 Dirty (需要存檔)
@@ -239,6 +242,17 @@ public class Room extends VirtualActor<RoomMessage> {
       return future.orTimeout(1, TimeUnit.SECONDS).join();
     } catch (Exception e) {
       log.error("Room 取得 Mob 列表失敗 roomId:{}", id, e);
+    }
+    return new ArrayList<>();
+  }
+
+  public List<GameItem> getItems() {
+    CompletableFuture<List<GameItem>> future = new CompletableFuture<>();
+    this.send(new RoomMessage.GetItems(future));
+    try {
+      return future.orTimeout(1, TimeUnit.SECONDS).join();
+    } catch (Exception e) {
+      log.error("Room 取得 GameItem 列表失敗 roomId:{}", id, e);
     }
     return new ArrayList<>();
   }

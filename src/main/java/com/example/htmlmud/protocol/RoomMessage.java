@@ -11,11 +11,12 @@ import com.example.htmlmud.domain.model.enums.Direction;
 /**
  * 定義所有發送給 RoomActor 的內部訊息協定 使用 Sealed Interface 限制訊息類型，配合 switch pattern matching
  */
-public sealed interface RoomMessage permits RoomMessage.Enter, RoomMessage.Leave,
-    RoomMessage.TryPickItem, RoomMessage.Say, RoomMessage.Tick, RoomMessage.Broadcast,
-    RoomMessage.BroadcastToOthers, RoomMessage.FindLiving, RoomMessage.GetLivings,
-    RoomMessage.GetPlayers, RoomMessage.GetMobs, RoomMessage.Record, RoomMessage.RemovePlayer,
-    RoomMessage.RemoveMob, RoomMessage.RemoveItem, RoomMessage.DropItem, RoomMessage.LookAtRoom {
+public sealed interface RoomMessage
+    permits RoomMessage.Enter, RoomMessage.Leave, RoomMessage.TryPickItem, RoomMessage.Say,
+    RoomMessage.Tick, RoomMessage.Broadcast, RoomMessage.BroadcastToOthers, RoomMessage.FindLiving,
+    RoomMessage.GetLivings, RoomMessage.GetPlayers, RoomMessage.GetMobs, RoomMessage.Record,
+    RoomMessage.RemovePlayer, RoomMessage.RemoveMob, RoomMessage.GetItems, RoomMessage.RemoveItem,
+    RoomMessage.DropItem, RoomMessage.LookAtRoom {
 
   record Tick(long tickCount, long timestamp) implements RoomMessage {
   }
@@ -82,6 +83,9 @@ public sealed interface RoomMessage permits RoomMessage.Enter, RoomMessage.Leave
   }
 
   record RemoveMob(String mobId) implements RoomMessage {
+  }
+
+  record GetItems(CompletableFuture<List<GameItem>> future) implements RoomMessage {
   }
 
   record RemoveItem(String itemId) implements RoomMessage {

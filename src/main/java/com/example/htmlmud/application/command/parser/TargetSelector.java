@@ -1,12 +1,17 @@
 package com.example.htmlmud.application.command.parser;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.stereotype.Component;
+import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Mob;
+import com.example.htmlmud.domain.actor.impl.Player;
+import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.model.entity.GameItem;
+import com.example.htmlmud.domain.model.enums.Direction;
 
 @Component
 public class TargetSelector {
@@ -16,6 +21,52 @@ public class TargetSelector {
 
   // 用來解析 "index.name" (例如: 2.goblin)
   private static final Pattern DOT_NOTATION = Pattern.compile("^(\\d+)\\.(.*)$");
+
+  public static Object findTarget(Player self, Room room, String input) {
+    if (input == null || input.isBlank()) {
+      return room;
+    }
+
+    ParsedTarget parsed = parseInput(input);
+    String keyword = parsed.name;
+    int index = parsed.index;
+
+    // 1. 優先找方向 (這不需要序號)
+    Direction dir = Direction.parse(keyword);
+    if (dir != null) {
+      return dir;
+    }
+
+    // 2. 找自己
+    if (keyword.equals("me") || self.getAliases().contains(keyword)) {
+      return self;
+    }
+
+    // 3. 找房間內的生物 (包含 NPC 與其他玩家)
+    // 這裡我們把所有生物集合起來，過濾出符合關鍵字的，再取第 N 個
+    Optional<Living> foundLiving = room.getLivings().stream()
+        .filter(l -> l.isValid() && l.getAliases().contains(keyword)).skip(index - 1).findFirst();
+    if (foundLiving.isPresent()) {
+      return foundLiving.get();
+    }
+
+    // 4. 找房間內的物品
+    Optional<GameItem> foundRoomItem = room.getItems().stream()
+        .filter(i -> i.getAliases().contains(keyword)).skip(index - 1).findFirst();
+    if (foundRoomItem.isPresent()) {
+      return foundRoomItem.get();
+
+    }
+
+    // 5. 找身上的物品 (背囊)
+    Optional<GameItem> foundInvItem = self.getInventory().stream()
+        .filter(i -> i.getAliases().contains(keyword)).skip(index - 1).findFirst();
+    if (foundInvItem.isPresent()) {
+      return foundInvItem.get();
+    }
+
+    return null; // 通通找不到
+  }
 
   /**
    * 從列表中找到符合描述的目標
@@ -88,22 +139,22 @@ public class TargetSelector {
   private record ParsedTarget(String name, int index) {
   }
 
-  private ParsedTarget parseInput(String input) {
+  private static ParsedTarget parseInput(String input) {
     input = input.trim();
-
-    // 檢查 "2.goblin" 格式
-    Matcher dotMatcher = DOT_NOTATION.matcher(input);
-    if (dotMatcher.find()) {
-      int idx = Integer.parseInt(dotMatcher.group(1));
-      String name = dotMatcher.group(2);
-      return new ParsedTarget(name, idx);
-    }
 
     // 檢查 "goblin 2" 格式
     Matcher trailMatcher = TRAILING_NUMBER.matcher(input);
     if (trailMatcher.find()) {
       String name = trailMatcher.group(1);
       int idx = Integer.parseInt(trailMatcher.group(2));
+      return new ParsedTarget(name, idx);
+    }
+
+    // 檢查 "2.goblin" 格式
+    Matcher dotMatcher = DOT_NOTATION.matcher(input);
+    if (dotMatcher.find()) {
+      int idx = Integer.parseInt(dotMatcher.group(1));
+      String name = dotMatcher.group(2);
       return new ParsedTarget(name, idx);
     }
 
