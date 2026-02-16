@@ -113,4 +113,8 @@ public class GameItem {
     }
     return null; // 不可裝備
   }
+
+  public String lookAtTarget() {
+    return "這是一件" + getName() + "。\n描述：" + getDescription();
+  }
 }

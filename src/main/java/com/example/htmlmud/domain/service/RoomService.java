@@ -19,6 +19,7 @@ import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.entity.RoomStateRecord;
 import com.example.htmlmud.domain.model.enums.Direction;
 import com.example.htmlmud.domain.model.enums.MobKind;
+import com.example.htmlmud.domain.model.template.RoomExit;
 import com.example.htmlmud.domain.model.template.RoomTemplate;
 import com.example.htmlmud.domain.model.template.SpawnRule;
 import com.example.htmlmud.domain.model.template.ZoneTemplate;
@@ -285,6 +286,16 @@ public class RoomService {
     }
 
     return sb.toString();
+  }
+
+  public String handleLookDirection(Room room, Player player, Direction dir) {
+    RoomExit exit = room.getTemplate().exits().get(dir.getFullName());
+    if (exit == null) {
+      return "那裡沒有路。";
+    }
+
+    // 這裡可以進階：透過 WorldManager 取得隔壁房間的簡要資訊
+    return "你往 " + dir.getDisplayName() + " 方看去，隱約看到通往隔壁的出口。";
   }
 
 

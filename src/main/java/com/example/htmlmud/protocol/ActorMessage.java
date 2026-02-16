@@ -3,6 +3,7 @@ package com.example.htmlmud.protocol;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.web.socket.WebSocketSession;
+import com.example.htmlmud.domain.actor.core.MessageOutput;
 import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
@@ -50,7 +51,7 @@ public sealed interface ActorMessage
   }
   record Command(String traceId, GameCommand command) implements PlayerMessage {
   }
-  record SendText(WebSocketSession session, String content) implements PlayerMessage {
+  record SendText(String content) implements PlayerMessage {
   }
   record GainExp(int amount) implements PlayerMessage {
   }
@@ -58,7 +59,7 @@ public sealed interface ActorMessage
   }
   record QuestUpdate(String questId, String status) implements PlayerMessage {
   }
-  record Reconnect(WebSocketSession session) implements PlayerMessage {
+  record Reconnect(MessageOutput output) implements PlayerMessage {
   }
   record Disconnect() implements PlayerMessage {
   }

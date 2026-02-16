@@ -32,45 +32,43 @@ public class LookCommand implements PlayerCommand {
     Object target = TargetSelector.findTarget(self, room, args);
     String result = switch (target) {
       case Room r -> r.lookAtRoom(self);
-      case Direction d -> peekDirection(room, d); // 這裡是看特定方向
-      case Player p -> renderPlayer(p);
-      case Mob m -> renderMob(m);
-      case GameItem i -> "這是一件" + i.getName() + "。\n描述：" + i.getDescription();
+      case Direction d -> room.lookDirection(self, d); // 這裡是看特定方向
+      case Player p -> lookAtSelf(p);
+      case Mob m -> m.lookAtTarget();
+      case GameItem i -> i.lookAtTarget();
       case null -> "你要看什麼？這裡找不到 '" + args + "'。";
       default -> "你盯著它看，但看不出什麼端倪。";
     };
 
-    // 1. 如果沒有參數 -> 看當前房間
-    if (args == null || args.trim().isEmpty()) {
-      self.reply(room.lookAtRoom(self));
-      return;
-    }
+    self.reply(result);
 
-    String targetName = args.trim().toLowerCase();
+    // // 1. 如果沒有參數 -> 看當前房間
+    // if (args == null || args.trim().isEmpty()) {
+    // self.reply(room.lookAtRoom(self));
+    // return;
+    // }
 
-    // 2. 判斷是否為「方向」 (look north)
-    Direction dir = Direction.parse(targetName);
-    if (dir != null) {
-      room.lookDirection(self, dir);
-      return;
-    }
+    // String targetName = args.trim().toLowerCase();
 
-    // 3. 判斷是否為「自己」 (look me)
-    if (targetName.equals("me") || targetName.equals("self")) {
-      room.lookAtSelf(self);
-      return;
-    }
+    // // 2. 判斷是否為「方向」 (look north)
+    // Direction dir = Direction.parse(targetName);
+    // if (dir != null) {
+    // room.lookDirection(self, dir);
+    // return;
+    // }
 
-    // 4. 看具體目標 (生物或物品)
-    room.lookAtTarget(self, targetName);
+    // // 3. 判斷是否為「自己」 (look me)
+    // if (targetName.equals("me") || targetName.equals("self")) {
+    // room.lookAtSelf(self);
+    // return;
+    // }
+
+    // // 4. 看具體目標 (生物或物品)
+    // room.lookAtTarget(self, targetName);
   }
 
-  private String peekDirection(Room currentRoom, Direction dir) {
-    String nextRoomId = currentRoom.getExit(dir);
-    if (nextRoomId == null)
-      return "那裡沒有路。";
-
-    // 這裡可以進階：透過 WorldManager 取得隔壁房間的簡要資訊
-    return "你往 " + dir.getDisplayName() + " 方看去，隱約看到通往隔壁的出口。";
+  private String lookAtSelf(Player player) {
+    return "你看自己幹嘛 (TODO)";
   }
+
 }

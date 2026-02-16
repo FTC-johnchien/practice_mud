@@ -83,109 +83,110 @@ public class GuestBehavior implements PlayerBehavior {
     }
   }
 
-  private void doRegister(Player actor) {
+  private void doRegister(Player self) {
     log.info("doRegister");
 
-    WebSocketSession session = actor.getSession();
+    // WebSocketSession session = actor.getSession();
     String msg = "【註冊流程】\r\n只能包含英文字母（不分大小寫），不允許數字、空格或特殊符號。\r\n長度必須在 4 到 20 個字元之間。\r\n請輸入您想使用的帳號名稱:";
-    try {
-      // 告訴前端：切換輸入模式為帳號 (透過自定義協議，例如 JSON {type: "USER_MODE"})
-      String json = actor.getService().getObjectMapper()
-          .writeValueAsString(Map.of("type", "USER_MODE", "content", msg));
-      session.sendMessage(new TextMessage(json));
-
-      session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, 0); // 重置計數
-      actor.setConnectionState(ConnectionState.CREATING_USERNAME);
-    } catch (IOException e) {
-      log.error("doRegister {}", e.getMessage(), e);
-    }
+    // 告訴前端：切換輸入模式為帳號 (透過自定義協議，例如 JSON {type: "USER_MODE"})
+    self.reply(msg);
+    // try {
+    // String json = actor.getService().getObjectMapper()
+    // .writeValueAsString(Map.of("type", "USER_MODE", "content", msg));
+    // session.sendMessage(new TextMessage(json));
+    // session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, 0); // 重置計數
+    // } catch (IOException e) {
+    // log.error("doRegister {}", e.getMessage(), e);
+    // }
+    self.setConnectionState(ConnectionState.CREATING_USERNAME);
   }
 
-  public void doCreatingUsername(Player actor, String input) {
+  public void doCreatingUsername(Player self, String input) {
     log.info("doCreatingUsername");
-    WebSocketSession session = actor.getSession();
+    // WebSocketSession session = actor.getSession();
 
     // 取得目前的重試次數
-    int retryCount = (int) Optional
-        .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
+    // int retryCount = (int) Optional
+    // .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
 
-    String errorReason = authService.validateUsername(input);
+    // String errorReason = authService.validateUsername(input);
 
-    if (errorReason != null) {
-      retryCount++;
-      session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, retryCount);
+    // if (errorReason != null) {
+    // retryCount++;
+    // session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, retryCount);
 
-      if (retryCount >= MAX_AUTH_RETRIES) {
-        log.warn("連線 {} 註冊帳號失敗次數過多 ({})，強制中斷。最後輸入: {}", session.getId(), retryCount, input);
-        actor.reply("嘗試次數過多，連線即將關閉。");
-        try {
-          session.close();
-        } catch (IOException ignored) {
-        }
+    // if (retryCount >= MAX_AUTH_RETRIES) {
+    // log.warn("連線 {} 註冊帳號失敗次數過多 ({})，強制中斷。最後輸入: {}", session.getId(), retryCount, input);
+    // actor.reply("嘗試次數過多，連線即將關閉。");
+    // try {
+    // session.close();
+    // } catch (IOException ignored) {
+    // }
 
-        return;
-      }
+    // return;
+    // }
 
-      log.info("連線 {} 註冊帳號失敗: {} (剩餘次數: {})", session.getId(), errorReason,
-          MAX_AUTH_RETRIES - retryCount);
-      actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
-      return;
-    }
+    // log.info("連線 {} 註冊帳號失敗: {} (剩餘次數: {})", session.getId(), errorReason,
+    // MAX_AUTH_RETRIES - retryCount);
+    // actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+    // return;
+    // }
 
     // 驗證成功，重置計數
-    session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, 0);
+    // session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, 0);
 
     // 暫存帳號
     this.tempUsername = input;
 
     // String msg = "請輸入密碼:";
     String msg = "【註冊流程】\r\n只能包含英文字母與數字且長度必須在 6 到 32 個字元之間。\r\n請輸入密碼:";
-    try {
-      // 告訴前端：切換輸入模式為密碼 (透過自定義協議，例如 JSON {type: "PWD_MODE"})
-      String json = actor.getService().getObjectMapper()
-          .writeValueAsString(Map.of("type", "PWD_MODE", "content", msg));
-      session.sendMessage(new TextMessage(json));
+    self.reply(msg);
 
-      actor.setConnectionState(ConnectionState.CREATING_PASSWORD);
-    } catch (IOException e) {
-      log.error("doCreatingUsername {}", e.getMessage(), e);
-    }
+    // try {
+    // // 告訴前端：切換輸入模式為密碼 (透過自定義協議，例如 JSON {type: "PWD_MODE"})
+    // String json = actor.getService().getObjectMapper()
+    // .writeValueAsString(Map.of("type", "PWD_MODE", "content", msg));
+    // session.sendMessage(new TextMessage(json));
+    // } catch (IOException e) {
+    // log.error("doCreatingUsername {}", e.getMessage(), e);
+    // }
+    self.setConnectionState(ConnectionState.CREATING_PASSWORD);
   }
 
-  public void doCreatingPassword(Player actor, String input) {
+  public void doCreatingPassword(Player self, String input) {
     log.info("doCreatingPassword");
 
-    WebSocketSession session = actor.getSession();
+    // WebSocketSession session = actor.getSession();
 
     // 取得目前的重試次數
-    int retryCount = (int) Optional
-        .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
+    // int retryCount = (int) Optional
+    // .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
 
-    String errorReason = authService.validatePassword(input);
+    // String errorReason = authService.validatePassword(input);
 
-    if (errorReason != null) {
-      retryCount++;
-      session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, retryCount);
+    // if (errorReason != null) {
+    // retryCount++;
+    // session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, retryCount);
 
-      if (retryCount >= MAX_AUTH_RETRIES) {
-        log.warn("連線 {} 註冊密碼失敗次數過多 ({})，強制中斷。最後輸入: {}", session.getId(), retryCount, input);
-        actor.reply("嘗試次數過多，連線即將關閉。");
-        try {
-          session.close();
-        } catch (IOException ignored) {
-        }
+    // if (retryCount >= MAX_AUTH_RETRIES) {
+    // log.warn("連線 {} 註冊密碼失敗次數過多 ({})，強制中斷。最後輸入: {}", session.getId(), retryCount, input);
+    // actor.reply("嘗試次數過多，連線即將關閉。");
+    // try {
+    // session.close();
+    // } catch (IOException ignored) {
+    // }
 
-        return;
-      }
+    // return;
+    // }
 
-      log.info("連線 {} 註冊密碼失敗: {} (剩餘次數: {})", session.getId(), errorReason,
-          MAX_AUTH_RETRIES - retryCount);
-      actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
-      return;
-    }
+    // log.info("連線 {} 註冊密碼失敗: {} (剩餘次數: {})", session.getId(), errorReason,
+    // MAX_AUTH_RETRIES - retryCount);
+    // actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+    // return;
+    // }
 
     // 驗證成功，移除計數
-    session.getAttributes().remove(MudKeys.AUTH_RETRY_COUNT_KEY);
+    // session.getAttributes().remove(MudKeys.AUTH_RETRY_COUNT_KEY);
 
     // 暫存密碼
     this.tempPassword = input;
@@ -200,101 +201,103 @@ public class GuestBehavior implements PlayerBehavior {
     // String msg = "請輸入密碼:";
     String msg = "【註冊流程】\r\n註冊完成，請重新登入。";
     // 告訴前端：切換輸入模式為密碼 (透過自定義協議，例如 JSON {type: "PWD_MODE"})
-    actor.reply(msg);
+    self.reply(msg);
 
-    actor.setConnectionState(ConnectionState.CONNECTED);
+    self.setConnectionState(ConnectionState.CONNECTED);
   }
 
-  private void doEnterUsername(Player actor, String input) {
-    log.info("doLoginUsername");
+  private void doEnterUsername(Player self, String input) {
+    log.info("doEnterUsername");
 
-    WebSocketSession session = actor.getSession();
+    // WebSocketSession session = actor.getSession();
 
-    // 取得目前的重試次數
-    int retryCount = (int) Optional
-        .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
+    // // 取得目前的重試次數
+    // int retryCount = (int) Optional
+    // .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
 
-    String errorReason = authService.validateUsername(input);
+    // String errorReason = authService.validateUsername(input);
 
-    // 如果格式正確，檢查資料庫是否存在該帳號
-    if (errorReason == null && !authService.exists(input)) {
-      errorReason = "帳號不存在。";
-    }
+    // // 如果格式正確，檢查資料庫是否存在該帳號
+    // if (errorReason == null && !authService.exists(input)) {
+    // errorReason = "帳號不存在。";
+    // }
 
-    if (errorReason != null) {
-      retryCount++;
-      session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, retryCount);
+    // if (errorReason != null) {
+    // retryCount++;
+    // session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, retryCount);
 
-      if (retryCount >= MAX_AUTH_RETRIES) {
-        log.warn("連線 {} 登入帳號失敗次數過多 ({})，強制中斷。最後輸入: {}", session.getId(), retryCount, input);
-        actor.reply("嘗試次數過多，連線即將關閉。");
-        try {
-          session.close();
-        } catch (IOException ignored) {
-        }
+    // if (retryCount >= MAX_AUTH_RETRIES) {
+    // log.warn("連線 {} 登入帳號失敗次數過多 ({})，強制中斷。最後輸入: {}", session.getId(), retryCount, input);
+    // actor.reply("嘗試次數過多，連線即將關閉。");
+    // try {
+    // session.close();
+    // } catch (IOException ignored) {
+    // }
 
-        return;
-      }
+    // return;
+    // }
 
-      log.info("連線 {} 登入帳號失敗: {} (剩餘次數: {})", session.getId(), errorReason,
-          MAX_AUTH_RETRIES - retryCount);
-      actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
-      return;
-    }
+    // log.info("連線 {} 登入帳號失敗: {} (剩餘次數: {})", session.getId(), errorReason,
+    // MAX_AUTH_RETRIES - retryCount);
+    // actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+    // return;
+    // }
 
-    // 驗證成功，重置計數
-    session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, 0);
+    // // 驗證成功，重置計數
+    // session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, 0);
 
     // 暫存帳號
     this.tempUsername = input;
 
     String msg = "請輸入密碼:";
-    try {
-      // 告訴前端：切換輸入模式為密碼 (透過自定義協議，例如 JSON {type: "PWD_MODE"})
-      String json = actor.getService().getObjectMapper()
-          .writeValueAsString(Map.of("type", "PWD_MODE", "content", msg));
-      session.sendMessage(new TextMessage(json));
+    self.reply(msg);
 
-      actor.setConnectionState(ConnectionState.ENTERING_PASSWORD);
-    } catch (IOException e) {
-      log.error("msg");
-    }
+    self.setConnectionState(ConnectionState.ENTERING_PASSWORD);
+    // try {
+    // 告訴前端：切換輸入模式為密碼 (透過自定義協議，例如 JSON {type: "PWD_MODE"})
+    // String json = self.getService().getObjectMapper()
+    // .writeValueAsString(Map.of("type", "PWD_MODE", "content", msg));
+    // session.sendMessage(new TextMessage(json));
+
+    // } catch (IOException e) {
+    // log.error("msg");
+    // }
   }
 
-  private PlayerBehavior doEnterPassword(Player actor, String input) {
+  private PlayerBehavior doEnterPassword(Player self, String input) {
     log.info("doEnterPassword");
 
-    WebSocketSession session = actor.getSession();
+    // WebSocketSession session = actor.getSession();
 
     // 取得目前的重試次數
-    int retryCount = (int) Optional
-        .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
+    // int retryCount = (int) Optional
+    // .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
 
-    String errorReason = authService.validatePassword(input);
+    // String errorReason = authService.validatePassword(input);
 
-    if (errorReason != null) {
-      retryCount++;
-      session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, retryCount);
+    // if (errorReason != null) {
+    // retryCount++;
+    // session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, retryCount);
 
-      if (retryCount >= MAX_AUTH_RETRIES) {
-        log.warn("連線 {} 登入密碼失敗次數過多 ({})，強制中斷。最後輸入: {}", session.getId(), retryCount, input);
-        actor.reply("嘗試次數過多，連線即將關閉。");
-        try {
-          session.close();
-        } catch (IOException ignored) {
-        }
+    // if (retryCount >= MAX_AUTH_RETRIES) {
+    // log.warn("連線 {} 登入密碼失敗次數過多 ({})，強制中斷。最後輸入: {}", session.getId(), retryCount, input);
+    // actor.reply("嘗試次數過多，連線即將關閉。");
+    // try {
+    // session.close();
+    // } catch (IOException ignored) {
+    // }
 
-        return null;
-      }
+    // return null;
+    // }
 
-      log.info("連線 {} 登入密碼失敗: {} (剩餘次數: {})", session.getId(), errorReason,
-          MAX_AUTH_RETRIES - retryCount);
-      actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
-      return null;
-    }
+    // log.info("連線 {} 登入密碼失敗: {} (剩餘次數: {})", session.getId(), errorReason,
+    // MAX_AUTH_RETRIES - retryCount);
+    // actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+    // return null;
+    // }
 
     // 驗證成功，移除計數
-    session.getAttributes().remove(MudKeys.AUTH_RETRY_COUNT_KEY);
+    // session.getAttributes().remove(MudKeys.AUTH_RETRY_COUNT_KEY);
 
     // 暫存密碼
     this.tempPassword = input;
@@ -307,31 +310,31 @@ public class GuestBehavior implements PlayerBehavior {
     log.info("record.id: {}", record.id());
     Optional<Player> opt = worldManager.findPlayerActor(record.id());
     if (opt.isPresent() && opt.get().getConnectionState() == ConnectionState.LINK_DEAD) {
-      takeoverSession(session, opt.get());
+      takeoverMySelf(self, opt.get());
       return null;
     }
 
     // 變更為正式玩家身份
-    return upgradeIdentity(actor, record);
+    return upgradeIdentity(self, record);
   }
 
-  private void doEnteringCharName(Player actor, String input) {
+  private void doEnteringCharName(Player self, String input) {
     log.info("doEnteringCharName");
 
-    WebSocketSession session = actor.getSession();
+    // WebSocketSession session = actor.getSession();
     String msg =
         "【角色設定流程】\r\n只能包含英文字母（不分大小寫），不允許數字、空格或特殊符號。\r\n長度必須在 2 到 20 個字元之間。\r\n請輸入您想使用的角色名稱:";
-    try {
-      // 告訴前端：切換輸入模式為帳號 (透過自定義協議，例如 JSON {type: "USER_MODE"})
-      String json = actor.getService().getObjectMapper()
-          .writeValueAsString(Map.of("type", "USER_MODE", "content", msg));
-      session.sendMessage(new TextMessage(json));
-
-      session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, 0); // 重置計數
-      actor.setConnectionState(ConnectionState.ENTERING_CHAR_NAME);
-    } catch (IOException e) {
-      log.error("doRegister {}", e.getMessage(), e);
-    }
+    self.reply(msg);
+    // try {
+    // // 告訴前端：切換輸入模式為帳號 (透過自定義協議，例如 JSON {type: "USER_MODE"})
+    // String json = actor.getService().getObjectMapper()
+    // .writeValueAsString(Map.of("type", "USER_MODE", "content", msg));
+    // session.sendMessage(new TextMessage(json));
+    // session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, 0); // 重置計數
+    // } catch (IOException e) {
+    // log.error("doRegister {}", e.getMessage(), e);
+    // }
+    self.setConnectionState(ConnectionState.ENTERING_CHAR_NAME);
   }
 
 
@@ -362,10 +365,10 @@ public class GuestBehavior implements PlayerBehavior {
   }
 
   // 被奪舍：接收新的連線
-  public void takeoverSession(WebSocketSession newSession, Player actor) {
-    log.info("takeoverSession actor.id: {}", actor.getId());
+  public void takeoverMySelf(Player self, Player pastLife) {
+    log.info("takeoverSession actor.id: {}", pastLife.getId());
 
     // 呼叫原 Player 的 reconnect
-    actor.reconnect(newSession);
+    pastLife.reconnect(self.getOutput());
   }
 }

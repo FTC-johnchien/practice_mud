@@ -291,4 +291,7 @@ public final class Mob extends Living {
     // 實作：發送 AttackMessage 給 target
   }
 
+  public String lookAtTarget() {
+    return "你看我幹嘛 (TODO)";
+  }
 }

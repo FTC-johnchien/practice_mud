@@ -8,10 +8,14 @@ import com.example.htmlmud.domain.model.enums.Gender;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.infra.persistence.entity.SkillEntry;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 // 這個物件會被序列化存入 players.stats_json 和 mobs.stats_json
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LivingStats {
   public Gender gender;

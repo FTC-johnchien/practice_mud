@@ -228,63 +228,14 @@
     const logDiv = document.getElementById('log');
     const cmdInput = document.getElementById('cmd-input');
 
-    function connect() {
-      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-      // 建議測試時先跟 index2 一樣寫死 localhost 確保變數一致
-      const socketUrl = 'ws://localhost:8080/ws';
-
-      console.log("正在嘗試連線至:", socketUrl);
-      appendLog("嘗試連線: " + socketUrl, "#ffff00");
-
-      ws = new WebSocket(socketUrl);
-
-      ws.onopen = () => appendLog("系統：連線成功！", "#00ff00");
-
-      ws.onclose = () => {
-        appendLog("系統：連線中斷，3秒後嘗試重連...", "#ff4444");
-        setTimeout(connect, 3000);
-      };
-
-      ws.onmessage = (event) => {
-        console.log("原始訊息:", event.data); // 這裡可以幫你確認後端到底傳什麼
-        try {
-          const data = JSON.parse(event.data);
-
-          // 支援 index2.html 的格式: 直接檢查 msg.content
-          if (data.content) {
-            appendLog(data.content);
-          }
-          // 支援 STAT_UPDATE 格式
-          else if (data.type === 'STAT_UPDATE' || data.type === 'stats') {
-            // 相容處理：index2 用 STAT_UPDATE, index3 用 stats
-            const payload = data.payload || data;
-            updateStats(payload);
-          }
-        } catch (e) {
-          // 如果不是 JSON，直接顯示純文字
-          appendLog(event.data);
-        }
-      };
-    }
-
     // 修正 send 函數：index2 使用 JSON 封裝，index3 之前傳純文字
     // 如果你的伺服器需要 JSON INPUT，這裡必須修改
     function send(cmd) {
-      /*
-      if (!ws || ws.readyState !== WebSocket.OPEN) return;
-
-      // 配合後端 index2 的格式，傳送 JSON 物件
-      const msg = JSON.stringify({ type: "INPUT", text: cmd });
-      ws.send(msg);
-
-      appendLog("> " + cmd, "#888");
-      */
-
       if (!cmd) return;
 
       // 優先權 1: 檢查是否有 JavaFX 注入的橋接器 (單機模式)
       if (window.javaConnector) {
-        console.log("GUI: 透過橋接器發送指令:", cmd);
+        // console.log("GUI: 透過橋接器發送指令:", cmd);
         const msg = JSON.stringify({ type: "INPUT", text: cmd });
         window.javaConnector.send(msg);
       }
@@ -299,16 +250,22 @@
       appendLog("> " + cmd, "#888");
     }
 
+    function handleServerMessage(data) {
+      // console.log("收到 Java 數據:", data);
+
+      // 根據 type 決定要怎麼處理
+      if (data.type === 'TEXT' || data.content) {
+        // 這裡的 content 可能含有 ANSI，所以用你原本的 appendLog
+        appendHtml(data.content || data.text);
+      }
+      else if (data.type === 'STAT_UPDATE' || data.hp !== undefined) {
+        // 更新血條
+        updateStats(data.payload || data);
+      }
+    }
+
     // 提供給 Java 端呼叫的接口
     function appendHtml(rawText) {
-      // 直接複用你現有的 appendLog 邏輯，但拿掉 ANSI 處理 (因為 Java 可能傳 HTML)
-      /*
-      const div = document.createElement('div');
-      div.innerHTML = html;
-      logDiv.appendChild(div);
-      logDiv.scrollTop = logDiv.scrollHeight;
-      if (logDiv.childNodes.length > 200) logDiv.removeChild(logDiv.firstChild);
-*/
       try {
         if (!rawText) return;
 
@@ -342,7 +299,7 @@
       }
     }
 
-    function updateStats(s) {
+    window.updateStats = function (s) {
       // 加上防錯，避免 s.hp 是 undefined
       if (s.hp !== undefined) {
         const hpMax = s.maxHp || 100;
@@ -372,8 +329,6 @@
     cmdInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') handleEnter();
     });
-
-    connect();
   </script>
 
 </body>

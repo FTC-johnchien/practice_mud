@@ -13,6 +13,7 @@ import com.example.htmlmud.domain.actor.core.VirtualActor; // 引用您的基礎
 import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.enums.Direction;
+import com.example.htmlmud.domain.model.template.RoomExit;
 import com.example.htmlmud.domain.model.template.RoomTemplate;
 import com.example.htmlmud.domain.model.template.ZoneTemplate;
 import com.example.htmlmud.domain.service.RoomService;
@@ -131,6 +132,9 @@ public class Room extends VirtualActor<RoomMessage> {
       }
       case RoomMessage.LookAtRoom(var playerId, var future) -> {
         future.complete(roomService.handleLookAtRoom(this, players, mobs, items, playerId));
+      }
+      case RoomMessage.LookDirection(var player, var dir, var future) -> {
+        future.complete(roomService.handleLookDirection(this, player, dir));
       }
 
     }
@@ -284,21 +288,19 @@ public class Room extends VirtualActor<RoomMessage> {
       return future.orTimeout(1, TimeUnit.SECONDS).join();
     } catch (Exception e) {
       log.error("Room lookAtRoom 失敗 roomId:{}", this.getId(), e);
+      throw new MudException("這個房間發生空間破碎!!!");
     }
-
-    return "";
   }
 
-  public void lookDirection(Player player, Direction dir) {
-
-  }
-
-  public void lookAtSelf(Player player) {
-
-  }
-
-  public void lookAtTarget(Player player, String targetName) {
-
+  public String lookDirection(Player player, Direction dir) {
+    CompletableFuture<String> future = new CompletableFuture<>();
+    this.send(new RoomMessage.LookDirection(player, dir, future));
+    try {
+      return future.orTimeout(1, TimeUnit.SECONDS).join();
+    } catch (Exception e) {
+      log.error("Room lookDirection 失敗 roomId:{}", this.getId(), e);
+      throw new MudException("那個方向發生空間破碎!!!");
+    }
   }
 
 }

@@ -16,7 +16,7 @@ public sealed interface RoomMessage
     RoomMessage.Tick, RoomMessage.Broadcast, RoomMessage.BroadcastToOthers, RoomMessage.FindLiving,
     RoomMessage.GetLivings, RoomMessage.GetPlayers, RoomMessage.GetMobs, RoomMessage.Record,
     RoomMessage.RemovePlayer, RoomMessage.RemoveMob, RoomMessage.GetItems, RoomMessage.RemoveItem,
-    RoomMessage.DropItem, RoomMessage.LookAtRoom {
+    RoomMessage.DropItem, RoomMessage.LookAtRoom, RoomMessage.LookDirection {
 
   record Tick(long tickCount, long timestamp) implements RoomMessage {
   }
@@ -95,6 +95,10 @@ public sealed interface RoomMessage
   }
 
   record LookAtRoom(String playerId, CompletableFuture<String> future) implements RoomMessage {
+  }
+
+  record LookDirection(Player player, Direction dir, CompletableFuture<String> future)
+      implements RoomMessage {
   }
 
 

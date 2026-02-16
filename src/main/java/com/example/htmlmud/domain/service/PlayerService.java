@@ -10,7 +10,9 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.application.command.CommandDispatcher;
 import com.example.htmlmud.application.service.AuthService;
+import com.example.htmlmud.config.GuiBridge;
 import com.example.htmlmud.domain.actor.behavior.PlayerBehavior;
+import com.example.htmlmud.domain.actor.core.MessageOutput;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.context.MudContext;
@@ -49,6 +51,8 @@ public class PlayerService {
 
   private final ObjectProvider<MudWebSocketHandler> mudWebSocketHandlerProvider;
 
+  private final GuiBridge guiBridge;
+
 
 
   public void handleInput(Player player, String traceId, GameCommand cmd) {
@@ -75,10 +79,21 @@ public class PlayerService {
   }
 
   // 狀態切換方法
-  public void become(Player player, PlayerBehavior nextBehavior) {
-    player.setCurrentBehavior(nextBehavior);
+  public void become(Player self, PlayerBehavior nextBehavior) {
+    self.setCurrentBehavior(nextBehavior);
     nextBehavior.onEnter(); // 觸發進場事件
-    log.info("{} 切換行為模式至 {}", player.getName(), nextBehavior.getClass().getSimpleName());
+    log.info("{} 切換行為模式至 {}", self.getName(), nextBehavior.getClass().getSimpleName());
+
+
+    // 1. 設定為 GUI 專用的輸出管道
+    // self.setOutput(new JavaFXOutput());
+
+    // 2. 將玩家存入 Spring 管理的 GuiBridge
+    // guiBridge.setPlayer(self);
+
+    // 3. 初始顯示
+    // self.reply("歡迎進入單機模式，" + self.getName());
+
   }
 
   public void handleSendText(Player player, WebSocketSession session, String msg) {
@@ -99,29 +114,32 @@ public class PlayerService {
     }
   }
 
+  public void handleSendText(Player self, String msg) {
+    // 處理 $N 代名詞
+    msg = messageUtil.format(msg, self);
+
+    self.getOutput().sendJson(Map.of("type", "TEXT", "content", msg));
+  }
+
   // 【當玩家重新連線時呼叫此方法】
-  public void handleReconnect(Player player, WebSocketSession newSession) {
+  public void handleReconnect(Player player, MessageOutput output) {
 
     // 1. 關閉舊連線 (如果還開著)
-    if (player.getSession() != null && player.getSession().isOpen()) {
-      try {
-        player.getSession().close();
-      } catch (IOException ignored) {
-      }
-    }
+    player.getOutput().close();
 
     // 2. 換上新連線 (必須先更新欄位，確保後續訊息發往正確的連線)
     // 更新斷線時間戳記，這樣之前的死神 VT 醒來後會發現時間對不上，就不會執行殺人
     player.setLastDisconnectTime(System.currentTimeMillis());
     player.setConnectionState(ConnectionState.IN_GAME);
 
-    mudWebSocketHandlerProvider.getObject().promoteToPlayer(newSession, player);
+    mudWebSocketHandlerProvider.getObject().promoteToPlayer(output.getSession(), player);
+    player.setOutput(output);
 
     // 3. 重發當前環境資訊
     log.warn("{} 重新連線成功！", player.getName());
 
     // 發送歡迎回來的訊息
-    handleSendText(player, player.getSession(), "\u001B[33m[系統] 連線已恢復。\u001B[0m");
+    handleSendText(player, "\u001B[33m[系統] 連線已恢復。\u001B[0m");
     player.sendStatUpdate();
     ScopedValue.where(MudContext.CURRENT_PLAYER, player).run(() -> {
       commandDispatcher.dispatch("look");
@@ -144,22 +162,15 @@ public class PlayerService {
     startDeathTimer(player, disconnectTimestamp);
   }
 
-  public void handleSendStatUpdate(Player player) {
+  public void handleSendStatUpdate(Player self) {
     Map<String, Object> update = new HashMap<>();
     update.put("type", "STAT_UPDATE");
-    update.put("hp", player.getStats().hp);
-    update.put("maxHp", player.getStats().maxHp);
-    update.put("mp", player.getStats().mp);
-    update.put("maxMp", player.getStats().maxMp);
-    update.put("energy", player.getStats().getCombatResource("charge")); // 0~100
-
-    // 轉成 JSON 字串發送給前端
-    try {
-      String json = objectMapper.writeValueAsString(update);
-      player.getSession().sendMessage(new TextMessage(json));
-    } catch (Exception e) {
-      log.error("發送狀態更新失敗: {}", player.getName(), e);
-    }
+    update.put("hp", self.getStats().hp);
+    update.put("maxHp", self.getStats().maxHp);
+    update.put("mp", self.getStats().mp);
+    update.put("maxMp", self.getStats().maxMp);
+    update.put("energy", self.getStats().getCombatResource("charge")); // 0~100
+    self.getOutput().sendJson(update);
   }
 
   public void handleRelive(Player player) {

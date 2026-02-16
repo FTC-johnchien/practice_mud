@@ -12,6 +12,8 @@ import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.service.PlayerService;
 import com.example.htmlmud.domain.service.WorldManager;
 import com.example.htmlmud.infra.monitor.GameMetrics;
+import com.example.htmlmud.protocol.WebSocketOutput;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,6 +26,8 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
   private final SessionRegistry sessionRegistry;
   private final GameMetrics gameMetrics;
   private final GameCommandService gameCommandService;
+  private final ObjectMapper objectMapper;
+
 
 
   @Override
@@ -31,27 +35,28 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
     // 包裝 Session
     // 這會自動加上 Lock，確保同時寫入時會排隊，不會噴出 IllegalStateException
     // 參數說明：session, sendTimeLimit(ms), bufferSizeLimit(bytes)
-    WebSocketSession concurrentSession =
-        new ConcurrentWebSocketSessionDecorator(session, 1000, 64 * 1024);
+    // WebSocketSession concurrentSession =
+    // new ConcurrentWebSocketSessionDecorator(session, 1000, 64 * 1024);
 
     try {
 
       // Guest階段 使用工廠方法建立 Guest Actor (ID=0)
       // 將必要的 Service 注入給 Actor，讓 Actor 擁有處理業務的能力
-      Player actor = Player.createGuest(concurrentSession, worldManager, playerService);
+      Player self = Player.createGuest(new WebSocketOutput(session, objectMapper), worldManager,
+          playerService);
 
       // 啟動 Actor 的虛擬執行緒 (Virtual Thread)
-      actor.start();
+      self.start();
 
       // 註冊到網路層 SessionRegistry
-      sessionRegistry.register(concurrentSession, actor);
+      sessionRegistry.register(session, self);
 
-      log.info("連線建立: {} (Guest Actor Created)", concurrentSession.getId());
+      log.info("連線建立 (Guest Actor Created): {}", session.getId());
       // eventPublisher.publishEvent(new SessionEvent.Established(session.getId(), Instant.now()));
     } catch (Exception e) {
       log.error("連線初始化失敗", e);
       try {
-        concurrentSession.close();
+        session.close();
       } catch (Exception ignored) {
       }
     }
@@ -102,7 +107,7 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
     Player oldGuest = sessionRegistry.get(newSession.getId());
 
     // 2. 讓 Player 接管 Session
-    player.setSession(newSession);
+    player.setOutput(new WebSocketOutput(newSession, objectMapper));
 
     // 3. 更新 sessionRegistry，之後的訊息直接灌給 Player
     sessionRegistry.register(newSession, player);

@@ -13,6 +13,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.domain.actor.behavior.GuestBehavior;
 import com.example.htmlmud.domain.actor.behavior.PlayerBehavior;
+import com.example.htmlmud.domain.actor.core.MessageOutput;
 import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.entity.LivingStats;
@@ -33,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 public final class Player extends Living {
 
   @Setter
-  private WebSocketSession session;
+  private MessageOutput output;
 
   private final PlayerService service;
 
@@ -61,22 +62,22 @@ public final class Player extends Living {
 
 
 
-  private Player(WebSocketSession session, String id, String name, LivingStats state,
+  private Player(MessageOutput output, String id, String name, LivingStats state,
       WorldManager worldManager, PlayerService playerService) {
     super(id, name, state, playerService.getLivingServiceProvider().getObject());
-    this.session = session;
+    this.output = output;
     this.service = playerService;
     this.manager = worldManager;
   }
 
   // 工廠方法 初始設定為 GuestBehavior
-  public static Player createGuest(WebSocketSession session, WorldManager worldManager,
+  public static Player createGuest(MessageOutput output, WorldManager worldManager,
       PlayerService playerService) {
     String name = "GUEST";
     String uuid = UUID.randomUUID().toString();
     String playerId = "p-" + uuid.substring(0, 8) + uuid.substring(9, 11);
     Player actor =
-        new Player(session, playerId, name, new LivingStats(), worldManager, playerService);
+        new Player(output, playerId, name, new LivingStats(), worldManager, playerService);
     playerService.become(actor, new GuestBehavior(playerService.getAuthService(), worldManager));
     return actor;
   }
@@ -110,8 +111,8 @@ public final class Player extends Living {
       case ActorMessage.Command(var traceId, var cmd) -> {
         service.handleInput(this, traceId, cmd);
       }
-      case ActorMessage.SendText(var session, var content) -> {
-        service.handleSendText(this, session, content);
+      case ActorMessage.SendText(var content) -> {
+        service.handleSendText(this, content);
       }
       case ActorMessage.Reconnect(var session) -> {
         service.handleReconnect(this, session);
@@ -311,12 +312,7 @@ public final class Player extends Living {
     stop();
 
     // 5. 關閉 Socket (保險起見)
-    if (session != null) {
-      try {
-        session.close();
-      } catch (Exception e) {
-      }
-    }
+    output.close();
   }
 
 
@@ -334,15 +330,15 @@ public final class Player extends Living {
   }
 
   public void sendText(String msg) {
-    this.send(new ActorMessage.SendText(session, msg));
+    this.send(new ActorMessage.SendText(msg));
   }
 
   public void reply(String msg) {
     sendText(msg);
   }
 
-  public void reconnect(WebSocketSession newSession) {
-    this.send(new ActorMessage.Reconnect(newSession));
+  public void reconnect(MessageOutput output) {
+    this.send(new ActorMessage.Reconnect(output));
   }
 
   public void disconnect() {

@@ -39,7 +39,7 @@ public class GameCommandService {
         // 2. 轉交給 Dispatcher 進行語法解析與分發
         // 注意：這裡 dispatcher 不需要再傳 player，因為 ScopedValue 已經帶進去了
         // commandDispatcher.dispatch(request.commandText());
-
+        log.info("commandText:{}", request.commandText());
 
         // C. 解析指令 (JSON -> Record)
         GameCommand cmd = objectMapper.readValue(request.commandText(), GameCommand.class);

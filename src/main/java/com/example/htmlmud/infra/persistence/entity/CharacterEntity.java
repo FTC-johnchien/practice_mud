@@ -51,12 +51,13 @@ public class CharacterEntity {
   // 關鍵：自動將 Java 物件序列化為 MySQL JSON
   // 使用 MySQL 8.4 JSON 類型儲存擴充資料 (例如: HP, Mana, EXP, 背包)
   // 這樣未來新增屬性不用一直改 Table Schema
+  // @Convert(converter = LivingStatsConverter.class)
   @JdbcTypeCode(SqlTypes.JSON)
-  @Column(name = "stats_json")
+  @Column(name = "stats_json", columnDefinition = "CLOB")
   private LivingStats stats;
 
   @JdbcTypeCode(SqlTypes.JSON)
-  @Column(name = "inventory_json")
+  @Column(name = "inventory_json", columnDefinition = "CLOB")
   private List<GameItem> inventory; // 背包系統
 
   // @JdbcTypeCode(SqlTypes.JSON)

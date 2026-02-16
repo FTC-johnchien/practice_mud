@@ -28,7 +28,7 @@ public class SessionEventListener {
     log.info("系統收到連線建立事件: {}", event.sessionId());
 
     Player actor = sessionRegistry.get(event.sessionId());
-    WebSocketSession session = actor.getSession();
+    // WebSocketSession session = actor.getSession();
     // WebSocketSession session = sessionRegistry.get(event.sessionId());
 
     // String welcomeMsg = """
@@ -42,11 +42,11 @@ public class SessionEventListener {
     // 2. 登入: \u001B[33mlogin <帳號> <密碼>\u001B[0m
     // """;
     String welcomeMsg = "歡迎來到 HTML MUD 世界！\r\n請輸入帳號 (或輸入 new 註冊)：";
-    if (session != null && session.isOpen()) {
-      String json = objectMapper.writeValueAsString(Map.of("type", "TEXT", "content", welcomeMsg));
+    // if (session != null && session.isOpen()) {
+    // String json = objectMapper.writeValueAsString(Map.of("type", "TEXT", "content", welcomeMsg));
 
-      session.sendMessage(new TextMessage(json));
-    }
+    // session.sendMessage(new TextMessage(json));
+    // }
   }
 
   @EventListener

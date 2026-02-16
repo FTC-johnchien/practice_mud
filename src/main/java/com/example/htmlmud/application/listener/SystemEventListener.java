@@ -48,37 +48,37 @@ public class SystemEventListener {
   public void onRegisterUsername(SystemEvent.RegisterUsername event) throws Exception {
     log.info("onRegisterUsername");
     Player actor = sessionRegistry.get(event.sessionId());
-    WebSocketSession session = actor.getSession();
+    // WebSocketSession session = actor.getSession();
 
     // WebSocketSession session = sessionRegistry.get(event.sessionId());
     // PlayerActor actor = worldManager.getPlayer(session);
 
     // 取得目前的重試次數
-    int retryCount = (int) Optional
-        .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
+    // int retryCount = (int) Optional
+    // .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
 
-    String errorReason = validateUsername(event.input());
+    // String errorReason = validateUsername(event.input());
 
-    if (errorReason != null) {
-      retryCount++;
-      session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, retryCount);
+    // if (errorReason != null) {
+    // retryCount++;
+    // session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, retryCount);
 
-      if (retryCount >= MAX_AUTH_RETRIES) {
-        log.warn("連線 {} 註冊帳號失敗次數過多 ({})，強制中斷。最後輸入: {}", event.sessionId(), retryCount,
-            event.input());
-        actor.reply("嘗試次數過多，連線即將關閉。");
-        session.close();
-        return;
-      }
+    // if (retryCount >= MAX_AUTH_RETRIES) {
+    // log.warn("連線 {} 註冊帳號失敗次數過多 ({})，強制中斷。最後輸入: {}", event.sessionId(), retryCount,
+    // event.input());
+    // actor.reply("嘗試次數過多，連線即將關閉。");
+    // session.close();
+    // return;
+    // }
 
-      log.info("連線 {} 註冊帳號失敗: {} (剩餘次數: {})", event.sessionId(), errorReason,
-          MAX_AUTH_RETRIES - retryCount);
-      actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
-      return;
-    }
+    // log.info("連線 {} 註冊帳號失敗: {} (剩餘次數: {})", event.sessionId(), errorReason,
+    // MAX_AUTH_RETRIES - retryCount);
+    // actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+    // return;
+    // }
 
     // 驗證成功，重置計數
-    session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, 0);
+    // session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, 0);
 
     // 暫存帳號
     // actor.setTempUsername(event.input());
@@ -86,8 +86,8 @@ public class SystemEventListener {
     // String msg = "請輸入密碼:";
     String msg = "【註冊流程】\r\n只能包含英文字母與數字且長度必須在 6 到 32 個字元之間。\r\n請輸入密碼:";
     // 告訴前端：切換輸入模式為密碼 (透過自定義協議，例如 JSON {type: "PWD_MODE"})
-    String json = objectMapper.writeValueAsString(Map.of("type", "PWD_MODE", "content", msg));
-    session.sendMessage(new TextMessage(json));
+    // String json = objectMapper.writeValueAsString(Map.of("type", "PWD_MODE", "content", msg));
+    // session.sendMessage(new TextMessage(json));
 
     actor.setConnectionState(ConnectionState.CREATING_PASSWORD);
   }
@@ -97,36 +97,36 @@ public class SystemEventListener {
     log.info("onRegisterPassword");
 
     Player actor = sessionRegistry.get(event.sessionId());
-    WebSocketSession session = actor.getSession();
+    // WebSocketSession session = actor.getSession();
     // WebSocketSession session = sessionRegistry.get(event.sessionId());
     // PlayerActor actor = worldManager.getPlayer(session);
 
     // 取得目前的重試次數
-    int retryCount = (int) Optional
-        .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
+    // int retryCount = (int) Optional
+    // .ofNullable(session.getAttributes().get(MudKeys.AUTH_RETRY_COUNT_KEY)).orElse(0);
 
-    String errorReason = validatePassword(event.input());
+    // String errorReason = validatePassword(event.input());
 
-    if (errorReason != null) {
-      retryCount++;
-      session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, retryCount);
+    // if (errorReason != null) {
+    // retryCount++;
+    // session.getAttributes().put(MudKeys.AUTH_RETRY_COUNT_KEY, retryCount);
 
-      if (retryCount >= MAX_AUTH_RETRIES) {
-        log.warn("連線 {} 註冊密碼失敗次數過多 ({})，強制中斷。最後輸入: {}", event.sessionId(), retryCount,
-            event.input());
-        actor.reply("嘗試次數過多，連線即將關閉。");
-        session.close();
-        return;
-      }
+    // if (retryCount >= MAX_AUTH_RETRIES) {
+    // log.warn("連線 {} 註冊密碼失敗次數過多 ({})，強制中斷。最後輸入: {}", event.sessionId(), retryCount,
+    // event.input());
+    // actor.reply("嘗試次數過多，連線即將關閉。");
+    // session.close();
+    // return;
+    // }
 
-      log.info("連線 {} 註冊密碼失敗: {} (剩餘次數: {})", event.sessionId(), errorReason,
-          MAX_AUTH_RETRIES - retryCount);
-      actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
-      return;
-    }
+    // log.info("連線 {} 註冊密碼失敗: {} (剩餘次數: {})", event.sessionId(), errorReason,
+    // MAX_AUTH_RETRIES - retryCount);
+    // actor.reply(errorReason + " (剩餘嘗試次數: " + (MAX_AUTH_RETRIES - retryCount) + ")");
+    // return;
+    // }
 
     // 驗證成功，移除計數
-    session.getAttributes().remove(MudKeys.AUTH_RETRY_COUNT_KEY);
+    // session.getAttributes().remove(MudKeys.AUTH_RETRY_COUNT_KEY);
 
     // 暫存密碼
     // actor.setTempPassword(event.input());
@@ -151,15 +151,15 @@ public class SystemEventListener {
   public void onAuthenticate(SystemEvent.Authenticate event) throws IOException {
     log.info("onAuthenticate");
     Player actor = sessionRegistry.get(event.sessionId());
-    WebSocketSession session = actor.getSession();
+    // WebSocketSession session = actor.getSession();
     // WebSocketSession session = sessionRegistry.get(event.sessionId());
     // PlayerActor actor = worldManager.getPlayer(session);
 
-    if ("new".equalsIgnoreCase(event.input())) {
-      doRegister(session, actor);
-    } else {
-      doLoginUsername(session, actor, event);
-    }
+    // if ("new".equalsIgnoreCase(event.input())) {
+    // doRegister(session, actor);
+    // } else {
+    // doLoginUsername(session, actor, event);
+    // }
   }
 
   @EventListener
