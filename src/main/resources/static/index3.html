@@ -260,11 +260,35 @@
             const payload = data.payload || data;
             updateStats(payload);
           }
+          else if (data.type === 'MOB_DETAIL') {
+            mobDetail(data.payload);
+          }
         } catch (e) {
           // 如果不是 JSON，直接顯示純文字
           appendLog(event.data);
         }
       };
+    }
+
+    function mobDetail(json) {
+      let content = json.description + "<br>";
+      content += "<span style=\"color: #00FF00;\">" + json.healthStatus + "</span><br>";
+      if (json.items) {
+        content += "身上帶著﹕<br>";
+        for (let i = 0; i < json.items.length; i++) {
+          content += "  ˇ" + json.items[i] + "<br>";
+        }
+      }
+      content += "<br>";
+
+      const logDiv = document.getElementById('log');
+      const div = document.createElement('div');
+
+      div.innerHTML = content;
+      logDiv.appendChild(div);
+
+      // 自動捲動到底部
+      logDiv.scrollTop = logDiv.scrollHeight;
     }
 
     // 修正 send 函數：index2 使用 JSON 封裝，index3 之前傳純文字

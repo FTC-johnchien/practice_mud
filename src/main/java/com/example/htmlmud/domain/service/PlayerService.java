@@ -22,6 +22,7 @@ import com.example.htmlmud.infra.server.MudWebSocketHandler;
 import com.example.htmlmud.infra.util.MessageUtil;
 import com.example.htmlmud.protocol.ConnectionState;
 import com.example.htmlmud.protocol.GameCommand;
+import com.example.htmlmud.protocol.MudMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -32,8 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class PlayerService {
-
-  private final MessageUtil messageUtil;
 
   private final ObjectProvider<LivingService> livingServiceProvider;
 
@@ -100,7 +99,7 @@ public class PlayerService {
     if (session != null && session.isOpen()) {
 
       // 處理 $N 代名詞
-      msg = messageUtil.format(msg, player);
+      msg = MessageUtil.format(msg, player);
 
       try {
         String json = objectMapper.writeValueAsString(Map.of("type", "TEXT", "content", msg));
@@ -116,13 +115,13 @@ public class PlayerService {
 
   public void handleSendText(Player self, String msg) {
     // 處理 $N 代名詞
-    msg = messageUtil.format(msg, self);
+    msg = MessageUtil.format(msg, self);
 
     self.getOutput().sendJson(Map.of("type", "TEXT", "content", msg));
   }
 
   // 【當玩家重新連線時呼叫此方法】
-  public void handleReconnect(Player player, MessageOutput output) {
+  public void handleReconnect(Player player, Player guestPlayer) {
 
     // 1. 關閉舊連線 (如果還開著)
     player.getOutput().close();
@@ -131,9 +130,15 @@ public class PlayerService {
     // 更新斷線時間戳記，這樣之前的死神 VT 醒來後會發現時間對不上，就不會執行殺人
     player.setLastDisconnectTime(System.currentTimeMillis());
     player.setConnectionState(ConnectionState.IN_GAME);
+    player.setOutput(guestPlayer.getOutput());
 
-    mudWebSocketHandlerProvider.getObject().promoteToPlayer(output.getSession(), player);
-    player.setOutput(output);
+    if (guestPlayer.getOutput().getSession() == null) {
+      guiBridge.setPlayer(player);
+      guestPlayer.stop();
+    } else {
+      mudWebSocketHandlerProvider.getObject().promoteToPlayer(guestPlayer.getOutput().getSession(),
+          player);
+    }
 
     // 3. 重發當前環境資訊
     log.warn("{} 重新連線成功！", player.getName());
@@ -203,6 +208,18 @@ public class PlayerService {
       commandDispatcher.dispatch("look");
     });
   }
+
+
+
+  // ---------------------------------------------------------------------------------------------
+
+
+
+  // ---------------------------------------------------------------------------------------------
+
+
+
+  // ---------------------------------------------------------------------------------------------
 
 
 

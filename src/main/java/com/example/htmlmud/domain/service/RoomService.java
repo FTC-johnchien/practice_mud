@@ -35,10 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class RoomService {
 
-  private final MessageUtil messageUtil;
-
-  private final TemplateRepository templateRepo;
-
   private final TargetSelector targetSelector;
 
   private final WorldFactory worldFactory;
@@ -48,11 +44,11 @@ public class RoomService {
 
 
   public ZoneTemplate getZoneTemplate(String zoneId) {
-    return templateRepo.findZone(zoneId).orElse(null);
+    return TemplateRepository.findZone(zoneId).orElse(null);
   }
 
   public RoomTemplate getRoomTemplate(String roomId) {
-    return templateRepo.findRoom(roomId).orElse(null);
+    return TemplateRepository.findRoom(roomId).orElse(null);
   }
 
   public void enter(Room room, List<Player> players, List<Mob> mobs, Living actor,
@@ -195,14 +191,14 @@ public class RoomService {
     }
 
     for (Player player : players) {
-      messageUtil.send(message, actor, target, player);
+      MessageUtil.send(message, actor, target, player);
     }
   }
 
   public void broadcastToOthers(List<Player> players, String actorId, String message) {
     Living actor = manager.findLivingActor(actorId).orElse(null);
     players.stream().filter(p -> !p.getId().equals(actorId))
-        .forEach(p -> messageUtil.send(message, actor, p));
+        .forEach(p -> MessageUtil.send(message, actor, p));
   }
 
   public Living findLiving(List<Player> players, List<Mob> mobs, String livingId) {
@@ -211,8 +207,8 @@ public class RoomService {
         .filter(living -> living.getId().equals(livingId)).findFirst().orElse(null);
   }
 
-  public String handleLookAtRoom(Room room, List<Player> players, List<Mob> mobs,
-      List<GameItem> items, String playerId) {
+  public String lookAtRoom(Room room, List<Player> players, List<Mob> mobs, List<GameItem> items,
+      String playerId) {
     StringBuilder sb = new StringBuilder();
 
     // 標題 (亮白色)
@@ -288,7 +284,7 @@ public class RoomService {
     return sb.toString();
   }
 
-  public String handleLookDirection(Room room, Player player, Direction dir) {
+  public String lookDirection(Room room, Player player, Direction dir) {
     RoomExit exit = room.getTemplate().exits().get(dir.getFullName());
     if (exit == null) {
       return "那裡沒有路。";

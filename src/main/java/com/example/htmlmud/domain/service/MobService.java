@@ -7,7 +7,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Mob;
-import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -17,8 +16,6 @@ import lombok.RequiredArgsConstructor;
 public class MobService {
 
   private final ObjectProvider<LivingService> livingServiceProvider;
-
-  private final TemplateRepository templateRepo;
 
   public Optional<Living> getHighestAggroTarget(Mob mob) {
 

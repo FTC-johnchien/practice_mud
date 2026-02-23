@@ -8,6 +8,8 @@ import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.domain.model.template.ItemTemplate;
+import com.example.htmlmud.infra.factory.MessageFactory;
+import com.example.htmlmud.protocol.MudMessage;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -114,7 +116,17 @@ public class GameItem {
     return null; // 不可裝備
   }
 
-  public String lookAtTarget() {
-    return "這是一件" + getName() + "。\n描述：" + getDescription();
+  public MudMessage<?> lookAtMe() {
+    switch (this.type) {
+      case ItemType.CORPSE:
+        log.info("lookAtMe corpse");
+        return MessageFactory.corpseDetail(this);
+      case ItemType.CONTAINER:
+        log.info("lookAtMe CONTAINER");
+        return MessageFactory.containerDetail(this);
+      default:
+        log.info("lookAtMe type:{}", this.type);
+        return MessageFactory.itemDetail(this);
+    }
   }
 }

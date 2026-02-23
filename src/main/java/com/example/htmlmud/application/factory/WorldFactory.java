@@ -30,8 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WorldFactory {
 
-  private final TemplateRepository templateRepo;
-
   private final MobMapper mobMapper;
 
   private final ItemTemplateMapper itemTemplateMapper;
@@ -59,7 +57,7 @@ public class WorldFactory {
   public Mob createMob(String templateId) {
     // 1. 查 Template (Record)
     // log.info("createMob templateId: {}", templateId);
-    MobTemplate tpl = templateRepo.findMob(templateId).orElse(null);
+    MobTemplate tpl = TemplateRepository.findMob(templateId).orElse(null);
     if (tpl == null) {
       log.error("createMob failed: MobTemplate ID not found: " + templateId);
       throw new MudException("找不到這個怪物模板 MobTemplate ID: " + templateId);
@@ -107,7 +105,7 @@ public class WorldFactory {
    */
   public GameItem createItem(String templateId) {
     log.info("Item templateId:{}", templateId);
-    ItemTemplate tpl = templateRepo.findItem(templateId).orElse(null);
+    ItemTemplate tpl = TemplateRepository.findItem(templateId).orElse(null);
     if (tpl == null) {
       log.error("Create Item failed: Template not found {}", templateId);
       return null;
@@ -135,27 +133,34 @@ public class WorldFactory {
     return item;
   }
 
-  public GameItem createCorpse(Living actor) {
+  public GameItem createCorpse(Living actor, String killerName) {
     GameItem corpse = new GameItem();
     corpse.setId(UUID.randomUUID().toString());
-    corpse.setName(actor.getName() + " 的屍體");
-    corpse.setDescription("這裡有一具 " + actor.getName() + " 的屍體，死狀悽慘。");
     corpse.setType(ItemType.CORPSE);
-
-    // 設定關鍵字，讓玩家可以用 "get corpse" 或 "get rat" 操作
-    // 繼承怪物的關鍵字，再加上 "corpse"
+    if (killerName != null) {
+      corpse.setName(killerName + " 殺死的" + actor.getName() + "的屍體");
+    } else {
+      corpse.setName(actor.getName() + "的屍體");
+    }
     corpse.getAliases().add("corpse");
     corpse.getAliases().addAll(actor.getAliases());
 
+    String desc = null;
     switch (actor) {
       case Player player:
+        desc = "這裡有一具 " + player.getNickname() + " 的屍體，死狀悽慘。";
         createPlayerCorpse(player, corpse);
         break;
 
       case Mob mob:
+        desc = mob.getTemplate().lookDescription();
+        if (desc == null) {
+          desc = mob.getTemplate().description();
+        }
         createMobCorpse(mob, corpse);
         break;
     }
+    corpse.setDescription(desc);
 
     return corpse;
   }

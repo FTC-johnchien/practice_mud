@@ -2,7 +2,6 @@ package com.example.htmlmud.domain.service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
@@ -19,6 +18,7 @@ import com.example.htmlmud.domain.model.template.ItemTemplate;
 import com.example.htmlmud.domain.model.template.RaceTemplate;
 import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
 import com.example.htmlmud.infra.util.MessageUtil;
+import com.example.htmlmud.protocol.MudMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -34,13 +34,9 @@ public class LivingService {
 
   private final CombatService combatService;
 
-  private final TemplateRepository templateRepo;
-
   private final SkillService skillService;
 
   private final WorldFactory worldFactory;
-
-  private final MessageUtil messageUtil;
 
   private final ObjectProvider<WorldManager> worldManagerProvider;
 
@@ -48,7 +44,7 @@ public class LivingService {
 
 
 
-  public void handleTick(Living self, long tickCount, long time) {
+  public void tick(Living self, long tickCount, long time) {
 
     // 狀態無效不處理心跳
     if (!self.isValid()) {
@@ -70,7 +66,7 @@ public class LivingService {
     }
   }
 
-  public void handleOnAttacked(Living self, String attackerId) {
+  public void onAttacked(Living self, String attackerId) {
 
     // 攻擊準備時間
     reactionTime(self);
@@ -78,7 +74,7 @@ public class LivingService {
     combatService.startCombat(self, attackerId);
   }
 
-  public void handleOnDamage(Living self, int amount, String attackerId) {
+  public void onDamage(Living self, int amount, String attackerId) {
 
     // 檢查是否還活著
     if (!self.isValid()) {
@@ -125,7 +121,7 @@ public class LivingService {
     }
   }
 
-  public void handleOnDeath(Living self, String killerId) {
+  public void onDeath(Living self, String killerId) {
 
     // 標記狀態 (Mark State)：設為 Dead，停止接受新的傷害或治療。
     self.getStats().setHp(0);
@@ -138,16 +134,16 @@ public class LivingService {
 
     Room room = self.getCurrentRoom();
 
-    // 製造屍體丟到房間
-    GameItem corpse = worldFactory.createCorpse(self);
-    room.dropItem(corpse);
-
     // 廣播死亡訊息
     String messageTemplate = "$n殺死了$N";
     // 先找房間里的 living
     Living killer = room.findLiving(killerId).orElse(null);
+    String killerName = null;
     if (killer == null) {
       killer = worldManagerProvider.getObject().findLivingActor(killerId).orElse(null);
+    }
+    if (killer != null) {
+      killerName = killer.getName();
     }
 
     // killer(mob) 也可能在這輪攻擊中死亡(例如30個 monk 用獅子吼互打)，但處理速度比較快造成 null
@@ -156,13 +152,18 @@ public class LivingService {
       messageTemplate = "$N被殺死了";
     }
 
+    // 製造屍體丟到房間
+    GameItem corpse = worldFactory.createCorpse(self, killerName);
+    room.dropItem(corpse);
+
+
     List<Player> audiences = room.getPlayers();
     for (Player receiver : audiences) {
-      messageUtil.send(messageTemplate, self, killer, receiver);
+      MessageUtil.send(messageTemplate, self, killer, receiver);
     }
   }
 
-  public void handleHeal(Living self, int amount) {
+  public void heal(Living self, int amount) {
     if (!self.isValid()) {
       // log.info("{} 已經死亡，無法治療", name);
       return;
@@ -173,7 +174,9 @@ public class LivingService {
     self.getStats().setHp(Math.min(self.getStats().getHp() + amount, self.getStats().getMaxHp()));
   }
 
-  public void doEquip(Living self, GameItem item, CompletableFuture<Boolean> future) {
+
+
+  public boolean equip(Living self, GameItem item) {
 
     // 1. 取得 ItemTemplate (需要依賴 Service 或是 Item 本身帶有 slot 資訊)
     // 假設 GameItem 已經從 Template 複製了 slot 資訊，或者這裡去查 Template
@@ -185,8 +188,7 @@ public class LivingService {
         player.reply(item.getDisplayName() + " 不是裝備");
       }
 
-      future.complete(false);
-      return;
+      return false;
     }
 
     EquipmentSlot slot = tpl.equipmentProp().slot();
@@ -200,8 +202,7 @@ public class LivingService {
           player.reply("無法脫下 " + slot.getDisplayName() + "，或背包已滿");
         }
 
-        future.complete(false);
-        return;
+        return false;
       }
     }
 
@@ -213,8 +214,7 @@ public class LivingService {
         player.reply(item.getDisplayName() + "不在背包裡");
       }
 
-      future.complete(false);
-      return;
+      return false;
     }
 
     // 4. 放入裝備欄
@@ -227,45 +227,23 @@ public class LivingService {
       player.reply("你裝上 " + item.getDisplayName());
     }
 
-    future.complete(true);
+    return true;
   }
 
   /**
    * 脫下裝備
    */
-  public void doUnequip(Living self, EquipmentSlot slot, CompletableFuture<Boolean> future) {
-    GameItem item = self.getStats().equipment.get(slot);
-    if (item == null) {
-      future.complete(false);
-
-      if (self instanceof Player player) {
-        player.reply("該 slot 沒有裝備");
-      }
-
-      return;
-    }
-
-    // // 1. 放入背包
-    // inventory.add(item);
-
-    // // 2. 從裝備欄移除
-    // state.equipment.remove(slot);
-
-    // future.complete("你將 " + slot.getDisplayName() + " 放入背包");
-    // return true;
-
-    // 重新計算數值
-    recalculateStats(self);
-
-    future.complete(true);
-  }
-
   public boolean unequip(Living self, EquipmentSlot slot) {
     log.info("unequip slot:{}", slot);
 
     GameItem item = self.getStats().equipment.get(slot);
+
+    // 該 slot 沒有裝備
     if (item == null) {
-      // 該 slot 沒有裝備
+      if (self instanceof Player player) {
+        player.reply("該 slot 沒有裝備");
+      }
+
       return true;
     }
 
@@ -275,8 +253,11 @@ public class LivingService {
     // // 2. 從裝備欄移除
     // state.equipment.remove(slot);
 
-    // future.complete("你將 " + slot.getDisplayName() + " 放入背包");
+    // "你將 " + slot.getDisplayName() + " 放入背包";
     // return true;
+
+    // 重新計算數值
+    recalculateStats(self);
 
     return true;
   }
@@ -286,7 +267,7 @@ public class LivingService {
   }
 
   public int getAttacksPerRound(Living self) {
-    Optional<RaceTemplate> opt = templateRepo.findRace(self.getStats().getRace());
+    Optional<RaceTemplate> opt = TemplateRepository.findRace(self.getStats().getRace());
     if (opt.isPresent()) {
       RaceTemplate race = opt.get();
       if (race.combat() != null && race.combat().naturalAttacks() != null) {
@@ -304,7 +285,7 @@ public class LivingService {
     // hp 回復 5%
     if (self.getStats().getHp() < self.getStats().getMaxHp()) {
       int regenAmount = (int) (self.getStats().getMaxHp() * 0.05); // 回復 5%
-      handleHeal(self, regenAmount);
+      heal(self, regenAmount);
     }
 
     // mp 回復 1%

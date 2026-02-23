@@ -17,7 +17,7 @@ public class MessageUtil {
   // send(template, executor, null, executor);
   // }
 
-  public String format(String template, Living executor) {
+  public static String format(String template, Living executor) {
     return format(template, executor, null, executor);
   }
 
@@ -28,11 +28,11 @@ public class MessageUtil {
    * @param self (做動作的人)
    * @param receiver 接收訊息的人 (誰在看這行字？)
    */
-  public void send(String template, Living executor, Player receiver) {
+  public static void send(String template, Living executor, Player receiver) {
     send(template, executor, null, receiver);
   }
 
-  public String format(String template, Living executor, Player receiver) {
+  public static String format(String template, Living executor, Player receiver) {
     return format(template, executor, null, receiver);
   }
 
@@ -44,7 +44,7 @@ public class MessageUtil {
    * @param target (對象)
    * @param receiver 接收訊息的人 (誰在看這行字？)
    */
-  public void send(String template, Living executor, Living target, Player receiver) {
+  public static void send(String template, Living executor, Living target, Player receiver) {
     String msg = format(template, executor, target, receiver);
     if (msg == null) {
       return;
@@ -53,7 +53,7 @@ public class MessageUtil {
     receiver.reply(msg);
   }
 
-  public String format(String template, Living executor, Living target, Living receiver) {
+  public static String format(String template, Living executor, Living target, Living receiver) {
     if (receiver == null || !(receiver instanceof Player)) {
       return template;
     }

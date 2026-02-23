@@ -262,6 +262,54 @@
         // 更新血條
         updateStats(data.payload || data);
       }
+      else if (data.type === 'MOB_DETAIL') {
+        mobDetail(data.payload);
+      }
+      else if (data.type === 'CORPSE_DETAIL') {
+        alert('CORPSE_DETAIL');
+        corpseDetail(data.payload);
+      }
+    }
+
+    function mobDetail(json) {
+      let content = json.description + "<br>";
+      content += "<span style=\"color: #00FF00;\">" + json.healthStatus + "</span><br>";
+      if (json.items) {
+        content += "身上帶著﹕<br>";
+        for (let i = 0; i < json.items.length; i++) {
+          content += "  ˇ" + json.items[i] + "<br>";
+        }
+      }
+      content += "<br>";
+
+      const logDiv = document.getElementById('log');
+      const div = document.createElement('div');
+
+      div.innerHTML = content;
+      logDiv.appendChild(div);
+
+      // 自動捲動到底部
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function corpseDetail(json) {
+      let content = json.description + "<br>現在只剩下一具冰冷的屍體靜靜地躺在這裡<br>";
+      if (json.items) {
+        content += "找到的遺物有﹕<br>";
+        for (let i = 0; i < json.items.length; i++) {
+          content += "  ˇ" + json.items[i] + "<br>";
+        }
+      }
+      content += "<br>";
+
+      const logDiv = document.getElementById('log');
+      const div = document.createElement('div');
+
+      div.innerHTML = content;
+      logDiv.appendChild(div);
+
+      // 自動捲動到底部
+      logDiv.scrollTop = logDiv.scrollHeight;
     }
 
     // 提供給 Java 端呼叫的接口

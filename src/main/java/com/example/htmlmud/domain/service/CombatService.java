@@ -33,7 +33,6 @@ public class CombatService {
   // 只有在名單裡的 Actor，系統才會計算它的攻擊 CD
   private final Set<Living> combatants = ConcurrentHashMap.newKeySet();
 
-  private final MessageUtil messageUtil;
   private final SkillService skillService;
   private final XpService xpService;
 
@@ -293,7 +292,7 @@ public class CombatService {
     if (dmgAmout <= 0) {
       msg += "\r\n" + action.msg().miss();
       for (Player receiver : audiences) {
-        messageUtil.send(CombineString(msg, sWeapon, tWeapon, part), self, target, receiver);
+        MessageUtil.send(CombineString(msg, sWeapon, tWeapon, part), self, target, receiver);
       }
       return;
     }
@@ -309,7 +308,7 @@ public class CombatService {
     long nowMs = System.currentTimeMillis();
     String timestamp = String.format("[%02d.%03d] ", (nowMs / 1000) % 60, nowMs % 1000);
     for (Player receiver : audiences) {
-      messageUtil.send(timestamp + msg, self, target, receiver);
+      MessageUtil.send(timestamp + msg, self, target, receiver);
     }
   }
 

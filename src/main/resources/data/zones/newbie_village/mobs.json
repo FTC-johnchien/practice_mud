@@ -45,7 +45,7 @@
   {
     "id": "village_guard",
     "name": "村莊警衛",
-    "gender": "MALE",
+    "gender": "FEMALE",
     "race": "human",
     "aliases": [
       "village guard",
@@ -65,7 +65,7 @@
     "hitRate": 10,
     "defense": 1,
     "description": "一位穿著制服的警衛正警惕地看著四周。",
-    "lookDescription": "他看起來受過嚴格訓練，身上的盔甲擦得發亮。",
+    "lookDescription": "$N看起來受過嚴格訓練，身上的盔甲擦得發亮。",
     "equipment": {
       "MAIN_HAND": "newbie_village:rusty_sword",
       "CHEST": "newbie_village:rusty_armor"

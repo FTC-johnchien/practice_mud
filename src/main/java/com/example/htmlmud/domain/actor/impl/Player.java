@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.MDC;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -15,15 +17,19 @@ import com.example.htmlmud.domain.actor.behavior.GuestBehavior;
 import com.example.htmlmud.domain.actor.behavior.PlayerBehavior;
 import com.example.htmlmud.domain.actor.core.MessageOutput;
 import com.example.htmlmud.domain.context.MudContext;
+import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.entity.PlayerRecord;
 import com.example.htmlmud.domain.model.enums.Direction;
 import com.example.htmlmud.domain.service.PlayerService;
 import com.example.htmlmud.domain.service.WorldManager;
+import com.example.htmlmud.infra.factory.MessageFactory;
+import com.example.htmlmud.infra.persistence.entity.SkillEntry;
 import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.ConnectionState;
 import com.example.htmlmud.protocol.GameCommand;
+import com.example.htmlmud.protocol.MudMessage;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -246,54 +252,6 @@ public final class Player extends Living {
     this.gcdEndTimestamp = System.currentTimeMillis() + actualDuration;
   }
 
-
-
-  @Override
-  protected void performRemoveFromRoom(Room room) {
-    room.removePlayer(id);
-  }
-
-  @Override
-  protected void performDeath() {
-    log.info("performDeath playerId:{}", id);
-
-    // 更新玩家 stats
-    sendStatUpdate();
-
-    // 將自己移出房間
-    super.removeFromRoom();
-
-    reply("$N已經死亡！即將在重生點復活...");
-
-    this.send(new ActorMessage.Relive());
-  }
-
-  @Override
-  protected void handleTick(long tickCount, long time) {
-    super.handleTick(tickCount, time);
-
-    // 更新玩家 stats
-    sendStatUpdate();
-  }
-
-  @Override
-  protected void handleOnDamage(int amount, String attackerId) {
-    super.handleOnDamage(amount, attackerId);
-
-    // 更新玩家 stats
-    sendStatUpdate();
-  }
-
-  @Override
-  protected void handleHeal(int amount) {
-    super.handleHeal(amount);
-
-    // 更新玩家 stats
-    sendStatUpdate();
-  }
-
-
-
   // 強制登出程序
   public void forceLogout() {
     // 1. 存檔
@@ -321,6 +279,83 @@ public final class Player extends Living {
 
 
 
+  // ---------------------------------------------------------------------------------------------
+
+
+
+  // ---------------------------------------------------------------------------------------------
+
+
+
+  @Override
+  protected void performRemoveFromRoom(Room room) {
+    room.removePlayer(id);
+  }
+
+  @Override
+  protected void performDeath() {
+    log.info("performDeath playerId:{}", id);
+
+    // 更新玩家 stats
+    sendStatUpdate();
+
+    // 將自己移出房間
+    super.removeFromRoom();
+
+    reply("$N已經死亡！即將在重生點復活...");
+
+    this.send(new ActorMessage.Relive());
+  }
+
+  @Override
+  protected MudMessage<?> performLookAtMe() {
+    return MessageFactory.playerDetail(this);
+  }
+
+
+
+  // ---------------------------------------------------------------------------------------------
+
+
+
+  // ---------------------------------------------------------------------------------------------
+
+
+
+  // ---------------------------------------------------------------------------------------------
+
+
+
+  @Override
+  protected void handleTick(long tickCount, long time) {
+    super.handleTick(tickCount, time);
+
+    // 更新玩家 stats
+    sendStatUpdate();
+  }
+
+  @Override
+  protected void handleOnDamage(int amount, String attackerId) {
+    super.handleOnDamage(amount, attackerId);
+
+    // 更新玩家 stats
+    sendStatUpdate();
+  }
+
+  @Override
+  protected void handleHeal(int amount) {
+    super.handleHeal(amount);
+
+    // 更新玩家 stats
+    sendStatUpdate();
+  }
+
+
+
+  // ---------------------------------------------------------------------------------------------
+
+
+
   // 公開給外部呼叫的方法 --------------------------------------------------------------------------
 
 
@@ -337,8 +372,8 @@ public final class Player extends Living {
     sendText(msg);
   }
 
-  public void reconnect(MessageOutput output) {
-    this.send(new ActorMessage.Reconnect(output));
+  public void reconnect(Player guestPlayer) {
+    this.send(new ActorMessage.Reconnect(guestPlayer));
   }
 
   public void disconnect() {
@@ -357,4 +392,13 @@ public final class Player extends Living {
   public void gainExp(int amount) {
     this.send(new ActorMessage.GainExp(amount));
   }
+
+  public MudMessage<?> lookAtMe(Player player) {
+    if (player.getId() == id) {
+      return performLookAtMe();
+    }
+
+    return super.lookAtMe();
+  }
+
 }

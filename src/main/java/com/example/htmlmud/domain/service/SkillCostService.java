@@ -7,7 +7,6 @@ import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.enums.ResourceType;
 import com.example.htmlmud.domain.model.template.SkillTemplate;
-import com.example.htmlmud.infra.util.MessageUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,8 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class SkillCostService {
-
-  private final MessageUtil messageUtil;
 
   /**
    * 檢查資源是否足夠

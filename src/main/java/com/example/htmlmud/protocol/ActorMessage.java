@@ -2,9 +2,8 @@ package com.example.htmlmud.protocol;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import org.springframework.web.socket.WebSocketSession;
-import com.example.htmlmud.domain.actor.core.MessageOutput;
 import com.example.htmlmud.domain.actor.impl.Living;
+import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 
@@ -15,7 +14,7 @@ public sealed interface ActorMessage
 
 
   sealed interface LivingMessage extends ActorMessage permits Tick, OnAttacked, OnDamage, onDeath,
-      onHeal, Say, BuffEffect, Equip, Unequip, OnMessage {
+      onHeal, Say, BuffEffect, Equip, Unequip, OnMessage, LookAtMe {
   }
   /**
    * 心跳訊息
@@ -43,6 +42,8 @@ public sealed interface ActorMessage
   }
   record OnMessage(Living self, ActorMessage msg) implements LivingMessage {
   }
+  record LookAtMe(CompletableFuture<MudMessage<?>> future) implements LivingMessage {
+  }
 
 
 
@@ -59,7 +60,7 @@ public sealed interface ActorMessage
   }
   record QuestUpdate(String questId, String status) implements PlayerMessage {
   }
-  record Reconnect(MessageOutput output) implements PlayerMessage {
+  record Reconnect(Player guestPlayer) implements PlayerMessage {
   }
   record Disconnect() implements PlayerMessage {
   }

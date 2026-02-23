@@ -1,6 +1,5 @@
 package com.example.htmlmud.domain.actor.impl;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,8 +14,9 @@ import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.template.MobTemplate;
 import com.example.htmlmud.domain.model.vo.DamageSource;
 import com.example.htmlmud.domain.service.MobService;
+import com.example.htmlmud.infra.factory.MessageFactory;
 import com.example.htmlmud.protocol.ActorMessage;
-import com.example.htmlmud.protocol.ActorMessage.MobMessage;
+import com.example.htmlmud.protocol.MudMessage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -230,6 +230,25 @@ public final class Mob extends Living {
   }
 
   @Override
+  protected MudMessage<?> performLookAtMe() {
+    return MessageFactory.mobDetail(this);
+  }
+
+
+
+  // ---------------------------------------------------------------------------------------------
+
+
+
+  // ---------------------------------------------------------------------------------------------
+
+
+
+  // ---------------------------------------------------------------------------------------------
+
+
+
+  @Override
   protected void handleOnAttacked(String attackerId) {
     super.handleOnAttacked(attackerId);
     aggroTable.merge(attackerId, 1, Integer::sum);
@@ -291,7 +310,4 @@ public final class Mob extends Living {
     // 實作：發送 AttackMessage 給 target
   }
 
-  public String lookAtTarget() {
-    return "你看我幹嘛 (TODO)";
-  }
 }

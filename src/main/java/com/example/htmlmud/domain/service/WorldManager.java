@@ -43,8 +43,6 @@ public class WorldManager {
 
   private final ObjectMapper objectMapper;
 
-  private final TemplateRepository templateRepo;
-
   private final WorldFactory worldFactory; // 注入 Factory
 
   // 2. Runtime Actors: 存放正在運作的 RoomActor
@@ -106,7 +104,7 @@ public class WorldManager {
           new TypeReference<Set<RaceTemplate>>() {});
       // log.info("{}", objectMapper.writeValueAsString(list));
       for (RaceTemplate race : list) {
-        templateRepo.registerRace(race);
+        TemplateRepository.registerRace(race);
       }
       //
     } catch (IOException e) {
@@ -134,7 +132,7 @@ public class WorldManager {
           SkillTemplate tpl = objectMapper.readValue(is, SkillTemplate.class);
           log.info("Successfully loaded skill: {}:{}", tpl.getId(), tpl.getName());
           // log.info("log:{}", objectMapper.writeValueAsString(tpl));
-          templateRepo.registerSkill(tpl);
+          TemplateRepository.registerSkill(tpl);
         } catch (Exception e) {
           log.error("Failed to parse JSON file: {} - Error: {}", res.getFilename(), e.getMessage());
         }
@@ -158,7 +156,7 @@ public class WorldManager {
       ZoneTemplate zoneTemplate =
           objectMapper.readValue(resource.getInputStream(), ZoneTemplate.class);
       // log.info("log:{}", objectMapper.writeValueAsString(zoneTemplate));
-      templateRepo.registerZone(zoneTemplate);
+      TemplateRepository.registerZone(zoneTemplate);
       // String zoneId = zoneTemplate.id();
 
 
@@ -174,7 +172,7 @@ public class WorldManager {
         String newMobId = IdUtils.resolveId(zoneId, mob.id());
         MobTemplate newMob = mob.toBuilder().id(newMobId).build();
         // log.info("log:{}", objectMapper.writeValueAsString(newMob));
-        templateRepo.registerMob(newMob);
+        TemplateRepository.registerMob(newMob);
       }
 
 
@@ -190,7 +188,7 @@ public class WorldManager {
         String newItemId = IdUtils.resolveId(zoneId, item.id());
         ItemTemplate newItem = item.toBuilder().id(newItemId).build();
         // log.info("log:{}", objectMapper.writeValueAsString(newItem));
-        templateRepo.registerItem(newItem);
+        TemplateRepository.registerItem(newItem);
       }
 
 
@@ -223,7 +221,7 @@ public class WorldManager {
         RoomTemplate newRoom = room.toBuilder().id(newRoomId).zoneId(zoneId).exits(updatedExits)
             .spawnRules(spawnRules).build();
         // log.info("log:{}", objectMapper.writeValueAsString(newRoom));
-        templateRepo.registerRoom(newRoom);
+        TemplateRepository.registerRoom(newRoom);
 
         // init roomActor
         getRoomActor(newRoomId);
@@ -236,7 +234,7 @@ public class WorldManager {
 
   private void loadZone(String zoneId) {
     log.info("loadZone zoneId: {}", zoneId);
-    templateRepo.getRoomTemplates().values().forEach(room -> {
+    TemplateRepository.getRoomTemplates().values().forEach(room -> {
       if (room.zoneId().equals(zoneId)) {
         getRoomActor(room.id());
       }
@@ -254,7 +252,7 @@ public class WorldManager {
   }
 
   public MobTemplate getMobTemplate(String mobId) {
-    return templateRepo.findMob(mobId).orElseThrow(() -> {
+    return TemplateRepository.findMob(mobId).orElseThrow(() -> {
       log.error("MobTemplate ID not found: " + mobId);
       // return new IllegalArgumentException("MobTemplate ID not found: " + mobId);
       return null;

@@ -131,10 +131,10 @@ public class Room extends VirtualActor<RoomMessage> {
         roomService.record(this.getTemplate().id(), items);
       }
       case RoomMessage.LookAtRoom(var playerId, var future) -> {
-        future.complete(roomService.handleLookAtRoom(this, players, mobs, items, playerId));
+        future.complete(roomService.lookAtRoom(this, players, mobs, items, playerId));
       }
       case RoomMessage.LookDirection(var player, var dir, var future) -> {
-        future.complete(roomService.handleLookDirection(this, player, dir));
+        future.complete(roomService.lookDirection(this, player, dir));
       }
 
     }

@@ -20,8 +20,9 @@ public class JavaFXOutput implements MessageOutput {
   public void sendJson(Object payload) {
     // 將物件轉為 JSON 字串後丟給 JS 的 updateStats 函數
     try {
-      MudGuiLauncher.executeJavaScript(
-          "handleServerMessage(" + objectMapper.writeValueAsString(payload) + ")");
+      String json = objectMapper.writeValueAsString(payload);
+      // log.info("sendJson:{}", json);
+      MudGuiLauncher.executeJavaScript("handleServerMessage(" + json + ")");
     } catch (IOException e) {
       log.error("sendJson {}", e.getMessage(), e);
     }

@@ -309,7 +309,9 @@ public class GuestBehavior implements PlayerBehavior {
     // 查詢是否存在該帳號 (斷線重連)
     log.info("record.id: {}", record.id());
     Optional<Player> opt = worldManager.findPlayerActor(record.id());
-    if (opt.isPresent() && opt.get().getConnectionState() == ConnectionState.LINK_DEAD) {
+    // log.info("isPresent:{}", opt.isPresent());
+    if (opt.isPresent()) {
+      // log.info("getConnectionState:{}", opt.get().getConnectionState());
       takeoverMySelf(self, opt.get());
       return null;
     }
@@ -369,6 +371,6 @@ public class GuestBehavior implements PlayerBehavior {
     log.info("takeoverSession actor.id: {}", pastLife.getId());
 
     // 呼叫原 Player 的 reconnect
-    pastLife.reconnect(self.getOutput());
+    pastLife.reconnect(self);
   }
 }

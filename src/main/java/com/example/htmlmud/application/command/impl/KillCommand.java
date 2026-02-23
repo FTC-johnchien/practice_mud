@@ -67,7 +67,7 @@ public class KillCommand implements PlayerCommand {
     String messageTemplate = ColorText.wrap(AnsiColor.RED, "$N對著$n喝道﹕「臭賊﹗今日不是你死就是我活﹗」");
     room.broadcast(player.getId(), target.getId(), messageTemplate);
     // for (Living receiver : room.getPlayers()) {
-    // messageUtil.send(messageTemplate, self, target, receiver);
+    // MessageUtil.send(messageTemplate, self, target, receiver);
     // }
   }
 }

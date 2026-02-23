@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import com.example.htmlmud.domain.actor.core.VirtualActor;
+import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
@@ -16,6 +17,7 @@ import com.example.htmlmud.domain.model.vo.DamageSource;
 import com.example.htmlmud.domain.service.LivingService;
 import com.example.htmlmud.infra.persistence.entity.SkillEntry;
 import com.example.htmlmud.protocol.ActorMessage;
+import com.example.htmlmud.protocol.MudMessage;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -132,13 +134,16 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
       case ActorMessage.BuffEffect(var buff) -> {
       }
       case ActorMessage.Equip(var item, var future) -> {
-        livingService.doEquip(this, item, future);
+        future.complete(handleEquip(item));
       }
       case ActorMessage.Unequip(var slot, var future) -> {
-        livingService.doUnequip(this, slot, future);
+        future.complete(handleUnequip(slot));
       }
       case ActorMessage.OnMessage(var self, var actorMessage) -> {
         // command(traceId, cmd);
+      }
+      case ActorMessage.LookAtMe(var future) -> {
+        future.complete(performLookAtMe());
       }
 
       default -> log.warn("handleLivingMessage 收到無法處理的訊息: {} {}", this.id, msg);
@@ -147,30 +152,38 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
 
 
 
-  // default 這是提供給繼承者可依自己需求進行改寫 ------------------------------------------------------------------
+  // 這是為了讓子類別可依自己需求進行改寫 ----------------------------------------------------------------------------
   protected void handleTick(long tickCount, long time) {
-    livingService.handleTick(this, tickCount, time);
+    livingService.tick(this, tickCount, time);
   }
 
   // 被攻擊觸發戰鬥狀態
   protected void handleOnAttacked(String attackerId) {
-    livingService.handleOnAttacked(this, attackerId);
+    livingService.onAttacked(this, attackerId);
   }
 
   // 受傷處理
   protected void handleOnDamage(int amount, String attackerId) {
-    livingService.handleOnDamage(this, amount, attackerId);
+    livingService.onDamage(this, amount, attackerId);
   }
 
   // 死亡處理
   protected void handleOnDeath(String killerId) {
-    livingService.handleOnDeath(this, killerId);
+    livingService.onDeath(this, killerId);
     performDeath();
   }
 
   // 治療處理
   protected void handleHeal(int amount) {
-    livingService.handleHeal(this, amount);
+    livingService.heal(this, amount);
+  }
+
+  protected boolean handleEquip(GameItem item) {
+    return livingService.equip(this, item);
+  }
+
+  protected boolean handleUnequip(EquipmentSlot slot) {
+    return livingService.unequip(this, slot);
   }
 
 
@@ -192,8 +205,9 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
    */
   protected abstract void performRemoveFromRoom(Room room);
 
-
   protected abstract void performDeath();
+
+  protected abstract MudMessage<?> performLookAtMe();
 
 
   // ---------------------------------------------------------------------------------------------
@@ -259,6 +273,18 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
     }
 
     return false;
+  }
+
+  public MudMessage<?> lookAtMe() {
+    CompletableFuture<MudMessage<?>> future = new CompletableFuture<>();
+    this.send(new ActorMessage.LookAtMe(future));
+    try {
+      future.orTimeout(1, TimeUnit.SECONDS).join();
+      return future.get();
+    } catch (Exception e) {
+      log.error("lookAtMe error", e);
+      throw new MudException("lookAtMe error livingId:" + this.id);
+    }
   }
 
 
