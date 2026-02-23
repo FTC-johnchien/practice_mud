@@ -9,14 +9,15 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
+import com.example.htmlmud.domain.actor.core.RoomMessageBuffer;
 import com.example.htmlmud.domain.actor.core.VirtualActor; // 引用您的基礎類別
 import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.enums.Direction;
-import com.example.htmlmud.domain.model.template.RoomExit;
 import com.example.htmlmud.domain.model.template.RoomTemplate;
 import com.example.htmlmud.domain.model.template.ZoneTemplate;
 import com.example.htmlmud.domain.service.RoomService;
+import com.example.htmlmud.protocol.MudMessage;
 import com.example.htmlmud.protocol.RoomMessage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +47,10 @@ public class Room extends VirtualActor<RoomMessage> {
   // 戶籍名冊：記錄這個房間生出來且還活著的怪物 ID
   // Key: TemplateID (ex: "snow_guard"), Value: Set of Instance UUIDs
   private Map<String, Set<String>> trackedMobs = new HashMap<>();
+
+  @Getter
+  private RoomMessageBuffer buffer = new RoomMessageBuffer(this);
+
 
 
   public Room(String id, RoomService roomService) {
@@ -93,6 +98,9 @@ public class Room extends VirtualActor<RoomMessage> {
       }
       case RoomMessage.Broadcast(var sourceId, var targetId, var message) -> {
         roomService.broadcast(players, mobs, sourceId, targetId, message);
+      }
+      case RoomMessage.BroadcastJson(var message) -> {
+        roomService.broadcastJson(players, message);
       }
       case RoomMessage.BroadcastToOthers(var sourceId, var message) -> {
         roomService.broadcastToOthers(players, sourceId, message);
@@ -196,6 +204,10 @@ public class Room extends VirtualActor<RoomMessage> {
 
   public void broadcast(String actorId, String targetId, String message) {
     this.send(new RoomMessage.Broadcast(actorId, targetId, message));
+  }
+
+  public void broadcastJson(MudMessage<Object> message) {
+    this.send(new RoomMessage.BroadcastJson(message));
   }
 
   public void broadcastToOthers(String actorId, String message) {

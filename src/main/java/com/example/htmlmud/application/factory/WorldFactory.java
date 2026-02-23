@@ -148,7 +148,7 @@ public class WorldFactory {
     String desc = null;
     switch (actor) {
       case Player player:
-        desc = "這裡有一具 " + player.getNickname() + " 的屍體，死狀悽慘。";
+        desc = "這裡有一具" + player.getNickname() + "的屍體，死狀悽慘。";
         createPlayerCorpse(player, corpse);
         break;
 

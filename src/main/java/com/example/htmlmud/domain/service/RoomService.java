@@ -27,6 +27,7 @@ import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
 import com.example.htmlmud.infra.util.AnsiColor;
 import com.example.htmlmud.infra.util.ColorText;
 import com.example.htmlmud.infra.util.MessageUtil;
+import com.example.htmlmud.protocol.MudMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -194,6 +195,8 @@ public class RoomService {
       MessageUtil.send(message, actor, target, player);
     }
   }
+
+  public void broadcastJson(List<Player> players, MudMessage<Object> message) {}
 
   public void broadcastToOthers(List<Player> players, String actorId, String message) {
     Living actor = manager.findLivingActor(actorId).orElse(null);

@@ -294,7 +294,7 @@
 
     function corpseDetail(json) {
       let content = json.description + "<br>現在只剩下一具冰冷的屍體靜靜地躺在這裡<br>";
-      if (json.items) {
+      if (json.items && json.items.length > 0) {
         content += "找到的遺物有﹕<br>";
         for (let i = 0; i < json.items.length; i++) {
           content += "  ˇ" + json.items[i] + "<br>";

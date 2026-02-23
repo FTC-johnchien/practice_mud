@@ -47,7 +47,7 @@ public class CombatService {
     for (Living actor : combatants) {
 
       // 檢查是否正在戰鬥
-      if (!actor.isInCombat) {
+      if (!actor.isValid() || !actor.isInCombat) {
         // log.info("actor.isInCombat:false name:{}", actor.getName());
         endCombat(actor);
         continue;
@@ -192,11 +192,13 @@ public class CombatService {
 
         for (int i = 0; i < attacks; i++) {
           // 每次攻擊前檢查雙方是否還具備戰鬥條件 (可能在 sleep 期間有人死了或離開了)
-          if (!self.isValid() || target == null || !target.isValid() || !self.isInCombat()) {
+          if (target == null || !target.isValid()) {
             break;
           }
 
           ActiveSkillResult skill = skillService.getAutoAttackSkill(self);
+          // 由技能里隨機抽出一招
+          MoveAction action = RandomUtil.pickWeighted(skill.getTemplate().getMoves());
 
           // 範圍攻擊
           if (skill.getTemplate().getTags().contains("AOE")) {
@@ -205,7 +207,7 @@ public class CombatService {
                 .filter(l -> !l.getId().equals(self.getId())).toList();
 
             for (Living living : targets) {
-              performAttack(self, living, skill, System.currentTimeMillis());
+              performAttack(self, living, skill, action);
               gameMetrics.incrementSystemTask(); // 記錄每一次對單體的攻擊行動
             }
 
@@ -213,7 +215,7 @@ public class CombatService {
 
           // 單體攻擊
           else {
-            performAttack(self, target, skill, System.currentTimeMillis());
+            performAttack(self, target, skill, action);
             gameMetrics.incrementSystemTask(); // 記錄一次單體攻擊行動
           }
 
@@ -233,10 +235,9 @@ public class CombatService {
   }
 
 
-  private void performAttack(Living self, Living target, ActiveSkillResult skill, long now) {
-
-    // 由技能里隨機抽出一招
-    MoveAction action = RandomUtil.pickWeighted(skill.getTemplate().getMoves());
+  private void performAttack(Living self, Living target, ActiveSkillResult skill,
+      MoveAction action) {
+    // long now = System.currentTimeMillis();
 
 
 

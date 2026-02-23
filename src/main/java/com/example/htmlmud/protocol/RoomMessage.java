@@ -1,6 +1,7 @@
 package com.example.htmlmud.protocol;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Mob;
@@ -11,9 +12,9 @@ import com.example.htmlmud.domain.model.enums.Direction;
 /**
  * 定義所有發送給 RoomActor 的內部訊息協定 使用 Sealed Interface 限制訊息類型，配合 switch pattern matching
  */
-public sealed interface RoomMessage
-    permits RoomMessage.Enter, RoomMessage.Leave, RoomMessage.TryPickItem, RoomMessage.Say,
-    RoomMessage.Tick, RoomMessage.Broadcast, RoomMessage.BroadcastToOthers, RoomMessage.FindLiving,
+public sealed interface RoomMessage permits RoomMessage.Enter, RoomMessage.Leave,
+    RoomMessage.TryPickItem, RoomMessage.Say, RoomMessage.Tick, RoomMessage.Broadcast,
+    RoomMessage.BroadcastJson, RoomMessage.BroadcastToOthers, RoomMessage.FindLiving,
     RoomMessage.GetLivings, RoomMessage.GetPlayers, RoomMessage.GetMobs, RoomMessage.Record,
     RoomMessage.RemovePlayer, RoomMessage.RemoveMob, RoomMessage.GetItems, RoomMessage.RemoveItem,
     RoomMessage.DropItem, RoomMessage.LookAtRoom, RoomMessage.LookDirection {
@@ -62,6 +63,9 @@ public sealed interface RoomMessage
   }
 
   record Broadcast(String sourceId, String targetId, String message) implements RoomMessage {
+  }
+
+  record BroadcastJson(MudMessage<Object> message) implements RoomMessage {
   }
 
   record BroadcastToOthers(String sourceId, String message) implements RoomMessage {
