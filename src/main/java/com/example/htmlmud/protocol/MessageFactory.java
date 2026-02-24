@@ -1,4 +1,4 @@
-package com.example.htmlmud.infra.factory;
+package com.example.htmlmud.protocol;
 
 import java.util.List;
 import java.util.Map;
@@ -7,10 +7,8 @@ import org.springframework.stereotype.Component;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.model.entity.GameItem;
-import com.example.htmlmud.domain.model.template.ItemTemplate;
+import com.example.htmlmud.domain.service.HealthStatusUtil;
 import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
-import com.example.htmlmud.infra.util.HealthStatusUtil;
-import com.example.htmlmud.protocol.MudMessage;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

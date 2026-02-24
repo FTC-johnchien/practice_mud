@@ -1,7 +1,7 @@
 package com.example.htmlmud.application.command.impl;
 
+import com.example.htmlmud.application.command.CommandAlias;
 import com.example.htmlmud.application.command.PlayerCommand;
-import com.example.htmlmud.application.command.annotation.CommandAlias;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.exception.MudException;

@@ -1,4 +1,4 @@
-package com.example.htmlmud.infra.util;
+package com.example.htmlmud.domain.service;
 
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.domain.actor.impl.Living;

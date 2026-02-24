@@ -1,7 +1,7 @@
 package com.example.htmlmud.domain.model.skill.dto;
 
+import com.example.htmlmud.domain.model.entity.SkillEntry;
 import com.example.htmlmud.domain.model.template.SkillTemplate;
-import com.example.htmlmud.infra.persistence.entity.SkillEntry;
 
 /**
  * 封裝「當前正在使用的技能」之完整資訊 包含靜態設定 (Template) 與 動態等級 (Entry)

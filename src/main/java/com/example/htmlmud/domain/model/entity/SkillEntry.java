@@ -1,4 +1,4 @@
-package com.example.htmlmud.infra.persistence.entity;
+package com.example.htmlmud.domain.model.entity;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -8,7 +8,7 @@ import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.domain.model.template.ItemTemplate;
-import com.example.htmlmud.infra.factory.MessageFactory;
+import com.example.htmlmud.protocol.MessageFactory;
 import com.example.htmlmud.protocol.MudMessage;
 import lombok.AllArgsConstructor;
 import lombok.Data;

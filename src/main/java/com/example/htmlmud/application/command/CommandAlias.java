@@ -1,4 +1,4 @@
-package com.example.htmlmud.application.command.annotation;
+package com.example.htmlmud.application.command;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

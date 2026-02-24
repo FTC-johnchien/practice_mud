@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
-import com.example.htmlmud.application.command.annotation.CommandAlias;
 import com.example.htmlmud.application.command.impl.MoveCommand;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.context.MudContext;

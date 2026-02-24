@@ -1,16 +1,16 @@
 package com.example.htmlmud.application.command.impl;
 
 import org.springframework.stereotype.Component;
+import com.example.htmlmud.application.command.CommandAlias;
 import com.example.htmlmud.application.command.PlayerCommand;
-import com.example.htmlmud.application.command.annotation.CommandAlias;
-import com.example.htmlmud.application.command.parser.TargetSelector;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.service.CombatService;
-import com.example.htmlmud.infra.util.AnsiColor;
-import com.example.htmlmud.infra.util.ColorText;
+import com.example.htmlmud.domain.service.TargetSelector;
+import com.example.htmlmud.protocol.util.AnsiColor;
+import com.example.htmlmud.protocol.util.ColorText;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

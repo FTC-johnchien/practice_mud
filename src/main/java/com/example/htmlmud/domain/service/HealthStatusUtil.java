@@ -1,4 +1,4 @@
-package com.example.htmlmud.infra.util;
+package com.example.htmlmud.domain.service;
 
 public class HealthStatusUtil {
 

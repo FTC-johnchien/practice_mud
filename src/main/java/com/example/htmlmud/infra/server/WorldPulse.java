@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import com.example.htmlmud.domain.service.CombatService;
 import com.example.htmlmud.domain.service.WorldManager;
 import com.example.htmlmud.infra.monitor.GameMetrics;
-import com.example.htmlmud.infra.util.AnsiColor;
+import com.example.htmlmud.protocol.util.AnsiColor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

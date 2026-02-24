@@ -11,15 +11,14 @@ import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.model.config.MoveAction;
 import com.example.htmlmud.domain.model.entity.LivingStats;
+import com.example.htmlmud.domain.model.entity.SkillEntry;
 import com.example.htmlmud.domain.model.skill.dto.ActiveSkillResult;
 import com.example.htmlmud.domain.model.template.SkillTemplate;
 import com.example.htmlmud.domain.model.vo.DamageSource;
 import com.example.htmlmud.infra.monitor.GameMetrics;
-import com.example.htmlmud.infra.persistence.entity.SkillEntry;
-import com.example.htmlmud.infra.util.ColorText;
 import com.example.htmlmud.infra.util.FormulaEvaluator;
-import com.example.htmlmud.infra.util.MessageUtil;
 import com.example.htmlmud.infra.util.RandomUtil;
+import com.example.htmlmud.protocol.util.ColorText;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

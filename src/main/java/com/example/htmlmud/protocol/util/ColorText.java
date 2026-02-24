@@ -1,4 +1,4 @@
-package com.example.htmlmud.infra.util;
+package com.example.htmlmud.protocol.util;
 
 public class ColorText {
 

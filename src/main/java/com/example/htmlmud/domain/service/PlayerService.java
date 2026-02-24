@@ -19,7 +19,6 @@ import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.model.enums.Direction;
 import com.example.htmlmud.infra.persistence.service.PlayerPersistenceService;
 import com.example.htmlmud.infra.server.MudWebSocketHandler;
-import com.example.htmlmud.infra.util.MessageUtil;
 import com.example.htmlmud.protocol.ConnectionState;
 import com.example.htmlmud.protocol.GameCommand;
 import com.example.htmlmud.protocol.MudMessage;

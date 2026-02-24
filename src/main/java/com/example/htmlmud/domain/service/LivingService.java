@@ -17,7 +17,6 @@ import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.domain.model.template.ItemTemplate;
 import com.example.htmlmud.domain.model.template.RaceTemplate;
 import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
-import com.example.htmlmud.infra.util.MessageUtil;
 import com.example.htmlmud.protocol.MudMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;

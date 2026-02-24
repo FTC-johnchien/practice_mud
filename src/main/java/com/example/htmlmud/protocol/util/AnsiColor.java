@@ -1,4 +1,4 @@
-package com.example.htmlmud.infra.util;
+package com.example.htmlmud.protocol.util;
 
 /**
  * ANSI 顏色碼列舉 包含標準色、高亮色、背景色以及 MUD 常用的 256 色擴展

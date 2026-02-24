@@ -2,9 +2,8 @@ package com.example.htmlmud.application.command.impl;
 
 import java.io.IOException;
 import org.springframework.stereotype.Component;
+import com.example.htmlmud.application.command.CommandAlias;
 import com.example.htmlmud.application.command.PlayerCommand;
-import com.example.htmlmud.application.command.annotation.CommandAlias;
-import com.example.htmlmud.application.command.parser.TargetSelector;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
@@ -12,6 +11,7 @@ import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.enums.Direction;
+import com.example.htmlmud.domain.service.TargetSelector;
 import com.example.htmlmud.protocol.MudMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

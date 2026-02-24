@@ -1,4 +1,4 @@
-package com.example.htmlmud.application.command.parser;
+package com.example.htmlmud.domain.service;
 
 import java.util.List;
 import java.util.Optional;

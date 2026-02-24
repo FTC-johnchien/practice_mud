@@ -6,7 +6,6 @@ import com.example.htmlmud.domain.model.enums.DamageType;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.Gender;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
-import com.example.htmlmud.infra.persistence.entity.SkillEntry;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
