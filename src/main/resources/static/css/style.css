@@ -1,0 +1,133 @@
+:root {
+  --bg-color: #121212;
+  --sidebar-bg: #1e1e1e;
+  --text-color: #e0e0e0;
+  --accent-color: #00ff00;
+  --danger-color: #ff4444;
+  --mp-color: #4444ff;
+  --border-color: #333;
+  --btn-bg: #2a2a2a;
+  --btn-active: #444;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Consolas', 'Courier New', monospace;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  overflow: hidden;
+}
+
+.game-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.status-header {
+  background: var(--sidebar-bg);
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.bar-container {
+  height: 12px;
+  background: #333;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.bar-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.hp-fill { background: var(--danger-color); }
+.mp-fill { background: var(--mp-color); }
+
+#log {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  font-size: 16px;
+  line-height: 1.5;
+  background: #000;
+  white-space: pre-wrap;
+}
+
+.mobile-panel {
+  background: var(--sidebar-bg);
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  padding: 10px;
+  gap: 10px;
+  border-top: 2px solid var(--border-color);
+  user-select: none;
+}
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.direction-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+button {
+  background: var(--btn-bg);
+  color: white;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px 5px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+
+button:active {
+  background: var(--btn-active);
+  transform: scale(0.95);
+}
+
+.dir-btn {
+  font-weight: bold;
+  background: #333;
+  font-size: 18px;
+}
+
+.center-btn { background: #442222; }
+
+.input-bar {
+  display: flex;
+  padding: 8px;
+  background: #000;
+}
+
+input[type="text"] {
+  flex: 1;
+  background: #111;
+  border: 1px solid var(--border-color);
+  color: var(--accent-color);
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 4px;
+}
+
+/* 桌機模式修正 */
+@media (min-width: 769px) {
+  .mobile-panel { grid-template-columns: 1fr 300px; }
+  .direction-pad { width: 200px; margin-left: auto; }
+}

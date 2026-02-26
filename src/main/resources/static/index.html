@@ -1,134 +1,79 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <title>HTML MUD 測試客戶端</title>
-    <script src="https://cdn.jsdelivr.net/npm/ansi_up@5.1.0/ansi_up.min.js"></script>
-    <style>
-        body { background-color: #1a1a1a; color: #ccc; font-family: 'Courier New', monospace; display: flex; flex-direction: column; height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
-        /* 使用 pre-wrap 保留空白與換行，這對 MUD 排版很重要 */
-        #output { flex-grow: 1; border: 1px solid #333; padding: 10px; overflow-y: auto; margin-bottom: 10px; white-space: pre-wrap; background: #000; font-size: 14px; line-height: 1.4; }
-        #input-area { display: flex; gap: 10px; }
-        input { background: #000; color: #00ff00; border: 1px solid #444; padding: 10px; flex-grow: 1; outline: none; font-family: inherit; }
-        button { background: #006600; color: #fff; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #008800; }
-        .status { color: #666; font-size: 0.8em; margin-bottom: 5px; }
-
-        /* 讓 ansi_up 產生的 span 能夠正確顯示粗體 */
-        span[style*="bold"] { font-weight: bold; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Modern MUD Mobile</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/ansi_up@5.1.0/ansi_up.min.js"></script>
 </head>
 <body>
-    <div class="status" id="status">狀態: 尚未連線</div>
-    <div id="output"></div>
-    <div id="input-area">
-        <input type="text" id="commandInput" placeholder="輸入指令..." autofocus>
-        <button onclick="sendCommand()">發送</button>
+
+  <div class="game-container">
+    <div class="status-header">
+      <div>
+        <div style="font-size: 12px;">HP: <span id="hp-val">0/0</span></div>
+        <div class="bar-container"><div id="hp-bar" class="bar-fill hp-fill" style="width: 0%"></div></div>
+      </div>
+      <div>
+        <div style="font-size: 12px;">MP: <span id="mp-val">0/0</span></div>
+        <div class="bar-container"><div id="mp-bar" class="bar-fill mp-fill" style="width: 0%"></div></div>
+      </div>
     </div>
 
-    <script>
-        let socket;
-        // 2. 初始化 AnsiUp
-        const ansi_up = new AnsiUp();
-        // 設定不要轉義 HTML (因為我們相信後端的內容，且需要顯示顏色)
-        // 或者設為 true 來防止 XSS，視您的需求而定
-        ansi_up.use_classes = false;
+    <div id="log"></div>
 
-        const output = document.getElementById('output');
-        const status = document.getElementById('status');
-        const input = document.getElementById('commandInput');
+    <div class="mobile-panel">
+      <div class="quick-actions">
+        <button onclick="send('sc')">狀態</button>
+        <button onclick="send('i')">物品</button>
+        <button onclick="send('get all')">全撿</button>
+        <button onclick="send('skills')">技能</button>
+        <button onclick="send('rest')">休息</button>
+        <button onclick="send('sit')">坐下</button>
+      </div>
+      <div class="direction-pad">
+        <button class="dir-btn" onclick="send('nw')">↖</button>
+        <button class="dir-btn" onclick="send('n')">N</button>
+        <button class="dir-btn" onclick="send('ne')">↗</button>
+        <button class="dir-btn" onclick="send('w')">W</button>
+        <button class="dir-btn center-btn" onclick="send('l')">👁️</button>
+        <button class="dir-btn" onclick="send('e')">E</button>
+        <button class="dir-btn" onclick="send('sw')">↙</button>
+        <button class="dir-btn" onclick="send('s')">S</button>
+        <button class="dir-btn" onclick="send('se')">↘</button>
+      </div>
+    </div>
 
-        function connect() {
-            // 連線至 WebSocket 端點
-            socket = new WebSocket('ws://' + window.location.host + '/ws');
+    <div class="input-bar">
+      <input type="text" id="cmd-input" placeholder="輸入指令..." autocomplete="off" autofocus>
+      <button onclick="handleEnter()" style="margin-left: 5px; padding: 0 15px;">發送</button>
+    </div>
+  </div>
 
-            socket.onopen = () => {
-                status.innerText = '狀態: 已連線至 ' + window.location.host;
-                appendLog('>>> 系統：已建立連線', '#888'); // 系統訊息用灰色
-            };
+  <script src="js/mud-core.js"></script>
+  <script src="js/mud-ui.js"></script>
 
-            socket.onmessage = (event) => {
-                try {
-                    const msg = JSON.parse(event.data);
+  <script>
+    let ws = null;
+    function connect() {
+      const socketUrl = 'ws://localhost:8080/ws';
+      ws = new WebSocket(socketUrl);
+      ws.onopen = () => appendHtml("系統：連線成功！", "#00ff00");
+      ws.onclose = () => {
+        appendHtml("系統：連線中斷，3秒後重連...", "#ff4444");
+        setTimeout(connect, 3000);
+      };
+      ws.onmessage = (event) => handleServerMessage(event.data);
+    }
 
-                    // 處理模式切換：USER_MODE 為一般文字，PWD_MODE 為密碼隱碼
-                    if (msg.type === 'PWD_MODE') {
-                        input.type = 'password';
-                    } else {
-                        input.type = 'text';
-                    }
+    function send(cmd) {
+      if (!cmd || !ws || ws.readyState !== WebSocket.OPEN) return;
+      ws.send(JSON.stringify({ type: "INPUT", text: cmd }));
+      appendHtml("> " + cmd, "#888");
+    }
 
-                    // if (msg.type === 'USER_MODE') {
-                    //     input.type = 'text';
-                    // }
-
-                    // 只要訊息包含內容就進行顯示 (包含 TEXT, USER_MODE, PWD_MODE 的提示字)
-                    if (msg.content) {
-                        appendHtml(ansi_up.ansi_to_html(msg.content));
-                    }
-                } catch (e) {
-                    console.error("解析訊息失敗:", event.data);
-                }
-            };
-
-            socket.onclose = () => {
-                status.innerText = '狀態: 連線已中斷';
-                appendLog('>>> 系統：連線已關閉', '#ff5555');
-            };
-
-            socket.onerror = (error) => {
-                appendLog('>>> 錯誤：WebSocket Error', '#ff5555');
-            };
-        }
-
-        // 輔助函式：直接插入已轉換好的 HTML
-        function appendHtml(htmlContent) {
-            const div = document.createElement('div');
-            // 注意：這裡直接塞入 HTML，確保 ansi_up 轉出來的 span tag 生效
-            div.innerHTML = htmlContent;
-            output.appendChild(div);
-            scrollToBottom();
-        }
-
-        // 輔助函式：插入純文字 log (本機系統訊息用)
-        function appendLog(text, color) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            if (color) div.style.color = color;
-            output.appendChild(div);
-            scrollToBottom();
-        }
-
-        function scrollToBottom() {
-            output.scrollTop = output.scrollHeight;
-        }
-
-        function sendCommand() {
-            const text = input.value.trim();
-            if (text && socket.readyState === WebSocket.OPEN) {
-                // 4. 【重要】需包裝成 JSON 信封發送，符合後端 GameCommand 結構
-                const payload = JSON.stringify({
-                    type: "INPUT",
-                    text: text
-                });
-
-                socket.send(payload);
-
-                // 在本地顯示自己輸入的指令 (如果是密碼模式則顯示隱碼 *)
-                const displayValue = input.type === 'password' ? '*'.repeat(text.length) : text;
-                appendHtml('<span style="color:#00ffff">> ' + displayValue + '</span>');
-
-                input.value = '';
-            }
-        }
-
-        // 監聽 Enter 鍵
-        input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendCommand();
-        });
-
-        // 初始化連線
-        connect();
-    </script>
+    connect();
+  </script>
 </body>
 </html>

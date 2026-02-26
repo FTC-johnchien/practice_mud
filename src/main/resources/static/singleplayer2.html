@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Modern MUD Mobile</title>
+  <script src="https://cdn.jsdelivr.net/npm/ansi_up@5.1.0/ansi_up.min.js"></script>
+  <style>
+    :root {
+      --bg-color: #121212;
+      --sidebar-bg: #1e1e1e;
+      --text-color: #e0e0e0;
+      --accent-color: #00ff00;
+      --danger-color: #ff4444;
+      --mp-color: #4444ff;
+      --border-color: #333;
+      --btn-bg: #2a2a2a;
+      --btn-active: #444;
+    }
+
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Consolas', 'Courier New', monospace;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      overflow: hidden;
+      /* 防止整個頁面捲動 */
+    }
+
+    /* 主容器：手機模式下改為垂直堆疊 */
+    .game-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* 頂部狀態列 */
+    .status-header {
+      background: var(--sidebar-bg);
+      padding: 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .bar-container {
+      height: 12px;
+      background: #333;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .bar-fill {
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+
+    .hp-fill {
+      background: var(--danger-color);
+    }
+
+    .mp-fill {
+      background: var(--mp-color);
+    }
+
+    /* 遊戲 Log 區 */
+    #log {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      font-size: 16px;
+      /* 手機端字體稍大一點 */
+      line-height: 1.5;
+      background: #000;
+      white-space: pre-wrap;
+    }
+
+    /* 手機控制面板 */
+    .mobile-panel {
+      background: var(--sidebar-bg);
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      /* 快捷鍵 vs 方向鍵 */
+      padding: 10px;
+      gap: 10px;
+      border-top: 2px solid var(--border-color);
+      user-select: none;
+    }
+
+    /* 快捷指令區 */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    /* 方向導航區 (九宮格) */
+    .direction-pad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    button {
+      background: var(--btn-bg);
+      color: white;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px 5px;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: manipulation;
+      /* 優化觸控反應速度 */
+    }
+
+    button:active {
+      background: var(--btn-active);
+      transform: scale(0.95);
+    }
+
+    .dir-btn {
+      font-weight: bold;
+      background: #333;
+      font-size: 18px;
+    }
+
+    .center-btn {
+      background: #442222;
+    }
+
+    /* 點中間執行 Look */
+
+    /* 輸入框區 */
+    .input-bar {
+      display: flex;
+      padding: 8px;
+      background: #000;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      background: #111;
+      border: 1px solid var(--border-color);
+      color: var(--accent-color);
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 4px;
+    }
+
+    /* 桌機模式修正 */
+    @media (min-width: 769px) {
+      .mobile-panel {
+        grid-template-columns: 1fr 300px;
+      }
+
+      .direction-pad {
+        width: 200px;
+        margin-left: auto;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="game-container">
+    <div class="status-header">
+      <div>
+        <div style="font-size: 12px;">HP: <span id="hp-val">0/0</span></div>
+        <div class="bar-container">
+          <div id="hp-bar" class="bar-fill hp-fill" style="width: 0%"></div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size: 12px;">MP: <span id="mp-val">0/0</span></div>
+        <div class="bar-container">
+          <div id="mp-bar" class="bar-fill mp-fill" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="log"></div>
+
+    <div class="mobile-panel">
+      <div class="quick-actions">
+        <button onclick="send('sc')">狀態</button>
+        <button onclick="send('i')">物品</button>
+        <button onclick="send('get all')">全撿</button>
+        <button onclick="send('skills')">技能</button>
+        <button onclick="send('rest')">休息</button>
+        <button onclick="send('sit')">坐下</button>
+      </div>
+
+      <div class="direction-pad">
+        <button class="dir-btn" onclick="send('nw')">↖</button>
+        <button class="dir-btn" onclick="send('n')">N</button>
+        <button class="dir-btn" onclick="send('ne')">↗</button>
+        <button class="dir-btn" onclick="send('w')">W</button>
+        <button class="dir-btn center-btn" onclick="send('l')">👁️</button>
+        <button class="dir-btn" onclick="send('e')">E</button>
+        <button class="dir-btn" onclick="send('sw')">↙</button>
+        <button class="dir-btn" onclick="send('s')">S</button>
+        <button class="dir-btn" onclick="send('se')">↘</button>
+      </div>
+    </div>
+
+    <div class="input-bar">
+      <input type="text" id="cmd-input" placeholder="輸入指令..." autocomplete="off" autofocus>
+      <button onclick="handleEnter()" style="margin-left: 5px; padding: 0 15px;">發送</button>
+    </div>
+  </div>
+
+  <script>
+    // 1. 修正初始化名稱 (確保是 AnsiUp)
+    const ansi_up = new AnsiUp();
+    ansi_up.use_classes = false;
+
+    let ws = null;
+    const logDiv = document.getElementById('log');
+    const cmdInput = document.getElementById('cmd-input');
+
+    // 修正 send 函數：index2 使用 JSON 封裝，index3 之前傳純文字
+    // 如果你的伺服器需要 JSON INPUT，這裡必須修改
+    function send(cmd) {
+      if (!cmd) return;
+
+      // 優先權 1: 檢查是否有 JavaFX 注入的橋接器 (單機模式)
+      if (window.javaConnector) {
+        // console.log("GUI: 透過橋接器發送指令:", cmd);
+        const msg = JSON.stringify({ type: "INPUT", text: cmd });
+        window.javaConnector.send(msg);
+      }
+      // 優先權 2: 如果橋接器不存在，才使用 WebSocket (連線模式)
+      else if (ws && ws.readyState === WebSocket.OPEN) {
+        const msg = JSON.stringify({ type: "INPUT", text: cmd });
+        ws.send(msg);
+      } else {
+        console.error("系統：尚未連接伺服器或橋接器未就緒");
+      }
+
+      appendLog("> " + cmd, "#888");
+    }
+
+    function handleServerMessage(data) {
+      // console.log("收到 Java 數據:", data);
+
+      // 根據 type 決定要怎麼處理
+      if (data.type === 'TEXT' || data.content) {
+        // 這裡的 content 可能含有 ANSI，所以用你原本的 appendLog
+        appendHtml(data.content || data.text);
+      }
+      else if (data.type === 'STAT_UPDATE' || data.hp !== undefined) {
+        // 更新血條
+        updateStats(data.payload || data);
+      }
+      else if (data.type === 'MOB_DETAIL') {
+        mobDetail(data.payload);
+      }
+      else if (data.type === 'CORPSE_DETAIL') {
+        alert('CORPSE_DETAIL');
+        corpseDetail(data.payload);
+      }
+    }
+
+    function mobDetail(json) {
+      let content = json.description + "<br>";
+      content += "<span style=\"color: #00FF00;\">" + json.healthStatus + "</span><br>";
+      if (json.items) {
+        content += "身上帶著﹕<br>";
+        for (let i = 0; i < json.items.length; i++) {
+          content += "  ˇ" + json.items[i] + "<br>";
+        }
+      }
+      content += "<br>";
+
+      const logDiv = document.getElementById('log');
+      const div = document.createElement('div');
+
+      div.innerHTML = content;
+      logDiv.appendChild(div);
+
+      // 自動捲動到底部
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function corpseDetail(json) {
+      let content = json.description + "<br>現在只剩下一具冰冷的屍體靜靜地躺在這裡<br>";
+      if (json.items && json.items.length > 0) {
+        content += "找到的遺物有﹕<br>";
+        for (let i = 0; i < json.items.length; i++) {
+          content += "  ˇ" + json.items[i] + "<br>";
+        }
+      }
+      content += "<br>";
+
+      const logDiv = document.getElementById('log');
+      const div = document.createElement('div');
+
+      div.innerHTML = content;
+      logDiv.appendChild(div);
+
+      // 自動捲動到底部
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    // 提供給 Java 端呼叫的接口
+    function appendHtml(rawText) {
+      try {
+        if (!rawText) return;
+
+        const logDiv = document.getElementById('log');
+        const div = document.createElement('div');
+
+        // 使用你 HTML 頂部引入的 ansi_up 庫
+        // 它會把 [97m 這種東西變成 <span style="...">
+        div.innerHTML = ansi_up.ansi_to_html(rawText);
+
+        logDiv.appendChild(div);
+
+        // 自動捲動到底部
+        logDiv.scrollTop = logDiv.scrollHeight;
+
+        // 限制顯示行數，維持效能
+        if (logDiv.childNodes.length > 200) {
+          logDiv.removeChild(logDiv.firstChild);
+        }
+      } catch (err) {
+        console.error("JS 渲染錯誤:", err);
+      }
+    }
+
+    function handleEnter() {
+      const cmd = cmdInput.value.trim();
+      if (cmd) {
+        send(cmd);
+        cmdInput.value = "";
+        // cmdInput.blur(); // 手機版可以考慮保留鍵盤，連續輸入
+      }
+    }
+
+    window.updateStats = function (s) {
+      // 加上防錯，避免 s.hp 是 undefined
+      if (s.hp !== undefined) {
+        const hpMax = s.maxHp || 100;
+        document.getElementById('hp-val').innerText = `${s.hp}/${hpMax}`;
+        document.getElementById('hp-bar').style.width = (s.hp / hpMax * 100) + "%";
+      }
+      if (s.mp !== undefined) {
+        const mpMax = s.maxMp || 100;
+        document.getElementById('mp-val').innerText = `${s.mp}/${mpMax}`;
+        document.getElementById('mp-bar').style.width = (s.mp / mpMax * 100) + "%";
+      }
+    }
+
+    function appendLog(text, color) {
+      if (!text) return;
+      const div = document.createElement('div');
+      if (color) div.style.color = color;
+
+      // 使用 ansi_up 處理顏色
+      div.innerHTML = ansi_up.ansi_to_html(text);
+      logDiv.appendChild(div);
+
+      logDiv.scrollTop = logDiv.scrollHeight;
+      if (logDiv.childNodes.length > 200) logDiv.removeChild(logDiv.firstChild);
+    }
+
+    cmdInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleEnter();
+    });
+  </script>
+
+</body>
+
+</html>
