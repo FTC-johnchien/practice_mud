@@ -33,7 +33,28 @@ public class MessageFactory {
     log.info("playerDetail playerId:{}", player.getId());
     String noun = player.getStats().getGender().getHe();
 
-    return null;
+    String lookDesc = player.getLookDescription();
+    if (lookDesc == null)
+      lookDesc = "這是一位冒險者。";
+    lookDesc = lookDesc.replace("$N", noun);
+
+    double pct = (double) player.getStats().getHp() / player.getStats().getMaxHp();
+    String healthStatus =
+        HealthStatusUtil.getHealthStatus(player.getStats().getHp(), player.getStats().getMaxHp())
+            .replace("$N", noun);
+
+    // 取出裝備的 GameItem 的 name(alias)
+    List<String> itemNames =
+        player.getStats().getEquipment().values().stream()
+            .map(item -> item.getName()
+                + (item.getAliases().isEmpty() ? "" : "(" + item.getAliases().get(0) + ")"))
+            .toList();
+
+    Map<String, Object> data = Map.of("id", player.getName(), "name", player.getNickname(),
+        "gender", player.getStats().getGender(), "race", player.getStats().getRace(), "description",
+        lookDesc, "hpPercent", pct, "healthStatus", healthStatus, "items", itemNames);
+
+    return MudMessage.builder().type("ENTITY_DETAIL").payload(data).build();
   }
 
   /**
@@ -61,7 +82,7 @@ public class MessageFactory {
             mob.getTemplate().gender(), "race", mob.getTemplate().race(), "description", lookDesc,
             "hpPercent", pct, "healthStatus", healthStatus, "items", itemNames);
 
-    return MudMessage.builder().type("MOB_DETAIL").payload(data).build();
+    return MudMessage.builder().type("ENTITY_DETAIL").payload(data).build();
   }
 
   public static MudMessage<?> corpseDetail(GameItem item) {

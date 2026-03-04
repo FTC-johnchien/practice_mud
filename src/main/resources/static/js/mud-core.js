@@ -47,7 +47,7 @@ function appendHtml(rawText, color) {
 /**
  * 處理怪物詳細資訊
  */
-function handleMobDetail(json) {
+function handleEntityDetail(json) {
   appendHtml(`${json.description}`);
   appendHtml(`${json.healthStatus}`, `#00FF00`);
   if (json.items && json.items.length > 0) {
@@ -80,13 +80,14 @@ function handleServerMessage(data) {
             return;
         }
     }
+//    console.log(data.type);
 
     if (data.type === 'TEXT' || data.content) {
         appendHtml(data.content || data.text);
     } else if (data.type === 'STAT_UPDATE' || data.type === 'stats' || data.hp !== undefined) {
         updateStats(data);
-    } else if (data.type === 'MOB_DETAIL') {
-        handleMobDetail(data.payload);
+    } else if (data.type === 'ENTITY_DETAIL') {
+        handleEntityDetail(data.payload);
     } else if (data.type === 'CORPSE_DETAIL') {
         handleCorpseDetail(data.payload);
     }
