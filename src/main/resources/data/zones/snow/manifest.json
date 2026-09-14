@@ -1,6 +1,9 @@
 {
   "id": "snow",
-  "name": "雪亭鎮",
-  "maxLevel": 10,
-  "authors": ["Admin", "John"]
-}
+  "name": "極北雪域·霜風鎮",
+  "description": "被終年風雪覆蓋的邊陲小鎮，刺骨寒風中流傳著上古冰霜巨龍的傳說。",
+  "respawnTime": 300,
+  "maxLevel": 15,
+  "authors": ["System"],
+  "flags": ["SNOW", "OUTDOORS"]
+}

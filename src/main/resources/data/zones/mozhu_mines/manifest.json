@@ -1,0 +1,9 @@
+{
+  "id": "mozhu_mines",
+  "name": "墨竹山廢棄靈石礦坑",
+  "minLevel": 5,
+  "maxLevel": 20,
+  "respawnTime": 60,
+  "authors": ["John", "Antigravity"],
+  "flags": ["DUNGEON", "HAZARD", "CORRUPTED"]
+}

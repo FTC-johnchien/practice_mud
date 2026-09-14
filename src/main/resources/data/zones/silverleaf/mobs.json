@@ -1,116 +1,301 @@
 [
-
   {
-    "id": "sl_mayor", "name": "老村長", "level": 10, "race": "HUMAN",
+    "id": "sl_mayor",
+    "name": "老村長",
+    "gender": "MALE",
+    "race": "human",
+    "kind": "FRIENDLY",
+    "level": 10,
+    "maxHp": 500,
+    "maxMp": 200,
+    "maxStamina": 150,
     "description": "銀葉村的村長，看起來憂心忡忡。",
-    "flags": ["IMMOBILE", "QUEST_GIVER"],
-    "behavior": { "type": "GUARD", "chatTable": ["最近哥布林越來越猖狂了...", "你有看到我的徽章嗎？"], "chatChance": 0.1 }
+    "str": 12,
+    "dex": 10,
+    "con": 15,
+    "intelligence": 18,
+    "dialogues": [
+      "最近森林裡的哥布林越來越猖狂了...",
+      "年輕人，出村一定要格外當心。"
+    ],
+    "aliases": ["mayor", "sl mayor"]
   },
   {
-    "id": "sl_nurse", "name": "見習護士", "level": 5, "race": "HUMAN",
+    "id": "sl_nurse",
+    "name": "見習護士",
+    "gender": "FEMALE",
+    "race": "human",
+    "kind": "FRIENDLY",
+    "level": 5,
+    "maxHp": 200,
+    "maxMp": 150,
+    "maxStamina": 100,
     "description": "一位溫柔的護士，負責照顧傷患。",
-    "flags": ["IMMOBILE"],
-    "behavior": { "type": "HEALER" }
+    "str": 8,
+    "dex": 12,
+    "con": 10,
+    "intelligence": 15,
+    "dialogues": [
+      "願大地之神庇佑你的旅程，受傷了隨時可以回神殿休養。"
+    ],
+    "aliases": ["nurse"]
   },
   {
-    "id": "sl_blacksmith", "name": "鐵匠大叔", "level": 15, "race": "DWARF",
+    "id": "sl_blacksmith",
+    "name": "鐵匠大叔",
+    "gender": "MALE",
+    "race": "human",
+    "kind": "FRIENDLY",
+    "level": 15,
+    "maxHp": 800,
+    "maxMp": 100,
+    "maxStamina": 200,
     "description": "滿身肌肉的鐵匠，正在敲打著一塊燒紅的鐵。",
-    "flags": ["IMMOBILE"],
-    "equipment": { "MAIN_HAND": "rusty_sword" },
-    "interaction": { "isVendor": true, "vendorGoods": ["rusty_sword", "iron_sword", "iron_shield"] }
+    "str": 25,
+    "dex": 14,
+    "con": 22,
+    "intelligence": 10,
+    "equipment": {
+      "MAIN_HAND": "rusty_sword"
+    },
+    "dialogues": [
+      "想要一把趁手的兵刃？來看看我的手藝吧！"
+    ],
+    "aliases": ["blacksmith", "smith"]
   },
   {
-    "id": "sl_merchant", "name": "雜貨商", "level": 5, "race": "HUMAN",
-    "interaction": { "isVendor": true, "vendorGoods": ["apple", "copper_ring"] }
+    "id": "sl_merchant",
+    "name": "雜貨商",
+    "gender": "MALE",
+    "race": "human",
+    "kind": "FRIENDLY",
+    "level": 5,
+    "maxHp": 200,
+    "maxMp": 50,
+    "maxStamina": 100,
+    "description": "一位精明的雜貨商，擺滿了旅行必備的用品。",
+    "str": 10,
+    "dex": 12,
+    "con": 12,
+    "intelligence": 14,
+    "dialogues": [
+      "出外冒險，乾糧和補給品可不能少！"
+    ],
+    "aliases": ["merchant", "trader"]
   },
   {
-    "id": "sl_pharmacist", "name": "藥劑師", "level": 8, "race": "ELF",
-    "interaction": { "isVendor": true, "vendorGoods": ["healing_potion_s", "mana_water"] }
+    "id": "sl_pharmacist",
+    "name": "藥劑師",
+    "gender": "FEMALE",
+    "race": "human",
+    "kind": "FRIENDLY",
+    "level": 8,
+    "maxHp": 300,
+    "maxMp": 200,
+    "maxStamina": 120,
+    "description": "這裡掛滿了乾燥的藥草，一位藥劑師正在專注地調配藥水。",
+    "str": 8,
+    "dex": 14,
+    "con": 12,
+    "intelligence": 18,
+    "dialogues": [
+      "森林裡的草藥蘊含著神奇的治癒力量。"
+    ],
+    "aliases": ["pharmacist"]
   },
   {
-    "id": "sl_villager", "name": "村民", "level": 1, "race": "HUMAN",
+    "id": "sl_villager",
+    "name": "村民",
+    "gender": "MALE",
+    "race": "human",
+    "kind": "FRIENDLY",
+    "level": 1,
+    "maxHp": 100,
+    "maxMp": 30,
+    "maxStamina": 80,
     "description": "普通的村民，正在閒話家常。",
-    "behavior": { "type": "WANDER", "moveArea": "silverleaf_town" }
+    "str": 10,
+    "dex": 10,
+    "con": 10,
+    "intelligence": 10,
+    "dialogues": [
+      "今天的天氣真好啊！"
+    ],
+    "aliases": ["villager"]
   },
   {
-    "id": "sl_dog", "name": "村口的小黃狗", "level": 1, "race": "BEAST",
+    "id": "sl_dog",
+    "name": "村口的小黃狗",
+    "gender": "MALE",
+    "race": "wolf",
+    "kind": "FRIENDLY",
+    "level": 1,
+    "maxHp": 80,
+    "maxMp": 20,
+    "maxStamina": 100,
     "description": "一隻看起來很友善的小狗，對著你搖尾巴。",
-    "behavior": { "type": "WANDER" }
+    "str": 6,
+    "dex": 14,
+    "con": 8,
+    "intelligence": 5,
+    "attackVerb": "咬",
+    "attackNoun": "尖牙",
+    "minDamage": 2,
+    "maxDamage": 5,
+    "aliases": ["dog", "yellow dog"]
   },
-
-
   {
-    "id": "sewer_rat", "name": "下水道老鼠", "level": 1, "race": "BEAST",
-    "description": "一隻髒兮兮的大老鼠。",
-    "baseStats": { "str": 5, "dex": 10, "con": 5 },
-    "combat": { "naturalSkill": "mob_bite", "aggroRadius": 0, "isAggressive": false },
-    "lootTable": [ { "itemId": "rat_tail", "chance": 0.5, "min": 1, "max": 1 } ]
+    "id": "sewer_rat",
+    "name": "下水道老鼠",
+    "gender": "MALE",
+    "race": "rat",
+    "kind": "NEUTRAL",
+    "level": 1,
+    "maxHp": 50,
+    "maxMp": 10,
+    "maxStamina": 50,
+    "description": "一隻髒兮兮的大老鼠，眼中閃著狡黠的光。",
+    "str": 5,
+    "dex": 12,
+    "con": 5,
+    "intelligence": 3,
+    "attackVerb": "咬",
+    "attackNoun": "鼠牙",
+    "minDamage": 1,
+    "maxDamage": 4,
+    "isAggressive": false,
+    "loot": [
+      { "itemId": "rat_tail", "rate": 0.5, "minCount": 1, "maxCount": 1 }
+    ],
+    "aliases": ["rat", "sewer rat"]
   },
   {
-    "id": "forest_wolf", "name": "森林野狼", "level": 4, "race": "BEAST",
+    "id": "forest_wolf",
+    "name": "森林野狼",
+    "gender": "MALE",
+    "race": "wolf",
+    "kind": "AGGRESSIVE",
+    "level": 4,
+    "maxHp": 180,
+    "maxMp": 30,
+    "maxStamina": 120,
     "description": "眼神兇狠的野狼，嘴角流著口水。",
-    "baseStats": { "str": 15, "dex": 15, "con": 10 },
-    "combat": {
-      "naturalSkill": "mob_claw",
-      "aggroRadius": 1,
-      "isAggressive": true,
-      "enabledSkills": {
-        "DODGE": "mob_beast_dodge",
-        "PARRY": "mob_thick_skin",
-        "FORCE": "mob_wild_blood"
-      }
-    },
-    "lootTable": [ { "itemId": "wolf_pelt", "chance": 0.3 } ]
+    "str": 15,
+    "dex": 15,
+    "con": 12,
+    "intelligence": 6,
+    "attackVerb": "抓",
+    "attackNoun": "利爪",
+    "minDamage": 6,
+    "maxDamage": 12,
+    "isAggressive": true,
+    "loot": [
+      { "itemId": "wolf_pelt", "rate": 0.4, "minCount": 1, "maxCount": 1 }
+    ],
+    "aliases": ["wolf", "forest wolf"]
   },
   {
-    "id": "goblin_scout", "name": "哥布林斥候", "level": 3, "race": "GOBLIN",
-    "equipment": { "MAIN_HAND": "boss_dagger" },
-    "combat": { "aggroRadius": 1, "isAggressive": true, "assistRange": 1, "socialGroup": "GOBLIN" },
-    "lootTable": [ { "itemId": "copper_coin", "chance": 1.0, "min": 1, "max": 5 }, { "itemId": "goblin_ear", "chance": 1.0 } ]
+    "id": "goblin_scout",
+    "name": "哥布林斥候",
+    "gender": "MALE",
+    "race": "humanoid",
+    "kind": "AGGRESSIVE",
+    "level": 3,
+    "maxHp": 150,
+    "maxMp": 30,
+    "maxStamina": 100,
+    "description": "身材矮小卻行動敏捷的哥布林斥候。",
+    "str": 10,
+    "dex": 16,
+    "con": 10,
+    "intelligence": 8,
+    "attackVerb": "刺",
+    "attackNoun": "匕首",
+    "minDamage": 5,
+    "maxDamage": 10,
+    "isAggressive": true,
+    "loot": [
+      { "itemId": "copper_coin", "rate": 0.8, "minCount": 2, "maxCount": 6 }
+    ],
+    "aliases": ["goblin", "scout", "goblin scout"]
   },
   {
-    "id": "goblin_warrior", "name": "哥布林戰士", "level": 6, "race": "GOBLIN",
-    "equipment": { "MAIN_HAND": "goblin_club", "BODY": "leather_vest" },
-    "combat": { "aggroRadius": 1, "isAggressive": true, "assistRange": 1, "socialGroup": "GOBLIN" },
-    "lootTable": [ { "itemId": "copper_coin", "chance": 1.0, "min": 5, "max": 15 } ]
+    "id": "goblin_warrior",
+    "name": "哥布林戰士",
+    "gender": "MALE",
+    "race": "humanoid",
+    "kind": "AGGRESSIVE",
+    "level": 6,
+    "maxHp": 280,
+    "maxMp": 40,
+    "maxStamina": 140,
+    "description": "手持粗糙木棒的哥布林戰士，滿臉橫肉。",
+    "str": 16,
+    "dex": 12,
+    "con": 16,
+    "intelligence": 6,
+    "attackVerb": "揮擊",
+    "attackNoun": "木棒",
+    "minDamage": 8,
+    "maxDamage": 16,
+    "isAggressive": true,
+    "loot": [
+      { "itemId": "copper_coin", "rate": 1.0, "minCount": 5, "maxCount": 15 }
+    ],
+    "aliases": ["warrior", "goblin warrior"]
   },
-
-
   {
-    "id": "goblin_king", "name": "哥布林王", "title": "殘暴的", "level": 10, "race": "GOBLIN",
+    "id": "goblin_king",
+    "name": "哥布林王",
+    "gender": "MALE",
+    "race": "humanoid",
+    "kind": "BOSS",
+    "level": 10,
+    "maxHp": 800,
+    "maxMp": 100,
+    "maxStamina": 250,
     "description": "體型比一般哥布林大上兩倍，手持巨大的狼牙棒，脖子上掛著一串耳朵。",
-    "rank": "BOSS",
-    "baseStats": { "str": 40, "dex": 20, "con": 50 },
-    "vitals": { "maxHp": 800 },
-    "combat": {
-      "aggroRadius": 2,
-      "isAggressive": true,
-      "naturalSkill": "mob_smash",
-      "enabledSkills": {
-        "DODGE": "mob_basic_dodge",
-        "PARRY": "mob_basic_parry",
-        "FORCE": "mob_wild_blood"
-      }
-    },
-    "flags": ["BOSS", "NO_STUN"],
-    "lootTable": [
-      { "itemId": "boss_dagger", "chance": 0.2 },
-      { "itemId": "silver_medallion", "chance": 1.0 },
-      { "itemId": "copper_coin", "chance": 1.0, "min": 50, "max": 100 }
-    ]
+    "str": 28,
+    "dex": 14,
+    "con": 25,
+    "intelligence": 12,
+    "attackVerb": "重擊",
+    "attackNoun": "狼牙棒",
+    "minDamage": 15,
+    "maxDamage": 30,
+    "isAggressive": true,
+    "loot": [
+      { "itemId": "copper_coin", "rate": 1.0, "minCount": 30, "maxCount": 80 },
+      { "itemId": "silver_medallion", "rate": 0.5, "minCount": 1, "maxCount": 1 }
+    ],
+    "aliases": ["king", "goblin king"]
   },
   {
     "id": "sl_guard",
     "name": "銀葉村衛兵",
-    "level": 15,
-    "race": "HUMAN",
-    "equipment": { "MAIN_HAND": "iron_sword", "BODY": "chainmail_armor" },
-    "combat": {
-      "enabledSkills": {
-        "DODGE": "mob_basic_dodge",
-        "PARRY": "mob_basic_parry",
-        "FORCE": "mob_guard_training"
-      }
-    }
+    "gender": "MALE",
+    "race": "human",
+    "kind": "NEUTRAL",
+    "level": 12,
+    "maxHp": 600,
+    "maxMp": 100,
+    "maxStamina": 200,
+    "description": "手持利劍的精銳衛兵，警戒著森林深處的動靜。",
+    "str": 22,
+    "dex": 16,
+    "con": 20,
+    "intelligence": 12,
+    "attackVerb": "斬",
+    "attackNoun": "利劍",
+    "minDamage": 12,
+    "maxDamage": 22,
+    "equipment": {
+      "MAIN_HAND": "iron_sword"
+    },
+    "isAggressive": false,
+    "dialogues": [
+      "站住！再往前就是哥布林的巢穴了，務必小心！"
+    ],
+    "aliases": ["guard", "sl guard"]
   }
 ]

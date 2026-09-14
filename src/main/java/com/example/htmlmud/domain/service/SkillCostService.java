@@ -34,7 +34,7 @@ public class SkillCostService {
       if (type.getCurrent(actor.getStats()) < cost) {
 
         if (actor instanceof Player player) {
-          player.reply("$N的 " + type.name() + " 不足！(需要: " + cost + ")");
+          player.reply("你的 " + type.name() + " 不足！(需要: " + cost + ")");
         }
 
         return false;

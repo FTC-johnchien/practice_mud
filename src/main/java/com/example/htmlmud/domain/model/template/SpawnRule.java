@@ -1,5 +1,6 @@
 package com.example.htmlmud.domain.model.template;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.Builder;
 
 // Mob/Item 重生設定 (Mob/Item Reset)
@@ -8,22 +9,25 @@ public record SpawnRule(
 
     String type, // MOB 或 ITEM
 
+    @JsonAlias({"mobId", "itemId"})
     String id, // 物件原型 mob/item TemplateId
 
     int count, // 每次spawn幾隻
 
     int maxCount, // 該房間上限幾隻
 
+    @JsonAlias({"respawnTime"})
     int time, // 重生秒數 (-1 代表不重生，0 代表使用區域預設)
 
     double rate, // 重生機率 (0.01 - 1) 未設定代表 1
 
     boolean isHidden // 是否隱藏
 
-
-
 ) {
   public SpawnRule {
+    if (type == null) {
+      type = "MOB";
+    }
     if (count == 0) {
       count = 1;
     }

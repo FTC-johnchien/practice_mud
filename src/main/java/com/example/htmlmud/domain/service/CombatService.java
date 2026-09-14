@@ -46,14 +46,14 @@ public class CombatService {
     for (Living actor : combatants) {
 
       // 檢查是否正在戰鬥
-      if (!actor.isValid() || !actor.isInCombat) {
+      if (!actor.isValid() || !actor.isInCombat()) {
         // log.info("actor.isInCombat:false name:{}", actor.getName());
         endCombat(actor);
         continue;
       }
 
       // 檢查攻擊冷卻時間 (CD)
-      if (now < actor.nextAttackTime) {
+      if (now < actor.getNextAttackTime()) {
         // log.info("actor.nextAttackTime:{} now:{}", actor.nextAttackTime, now);
         continue;
       }
@@ -88,11 +88,7 @@ public class CombatService {
    * 【註冊入口】 當發生攻擊行為時 (Player kill Mob 或 Mob aggro Player) 呼叫此方法
    */
   public void startCombat(Living self, String targetId) {
-    if (self.combatTargetId == null) {
-      self.combatTargetId = targetId;
-    }
-
-    self.isInCombat = true;
+    self.enterCombat(targetId);
 
     // 【加入名單】
     combatants.add(self);
@@ -107,8 +103,7 @@ public class CombatService {
       return;
     }
 
-    self.isInCombat = false;
-    self.combatTargetId = null;
+    self.exitCombat();
 
     // 【移出名單】
     combatants.remove(self);

@@ -1,0 +1,72 @@
+{
+  "id": "terminal_strike",
+  "name": "終焉解構",
+  "description": "以現代科學、唯物認知與程式碼底層邏輯，降維解構修仙天道的異化分子鏈條。對目標造成極其恐怖的真實解構傷害與斬殺效果。",
+  "type": "ACTIVE",
+  "school": "MODERN_LOGIC",
+  "tags": [
+    "TRUE_DAMAGE",
+    "FINISHER",
+    "DECONSTRUCT",
+    "BURST"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED",
+      "SPEAR",
+      "SWORD"
+    ],
+    "reqGuild": null,
+    "allowMounted": false
+  },
+  "costs": {
+    "mp": 60,
+    "stamina": 25
+  },
+  "scaling": {
+    "damagePerLevel": 2.0,
+    "hitRatePerLevel": 0.003,
+    "critRatePerLevel": 0.005
+  },
+  "mechanics": {
+    "critRate": 0.2,
+    "damage": 100,
+    "damageType": "TRUE",
+    "hitRate": 0.98,
+    "maxLevel": 100,
+    "scaleStat": "INT",
+    "scaleFactor": 2.2,
+    "formulas": {
+      "damage": "skill.mechanics.damage + (user.int * 1.5) + (user.dex * 0.8)"
+    }
+  },
+  "moves": [
+    {
+      "name": "分子鏈格式化",
+      "weight": 60,
+      "damageMod": 1.5,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.15,
+      "msg": {
+        "cast": "$N雙眸閃爍出幽藍的二進制光流，以唯物科學與現代代碼邏輯，強行重寫眼前的畸變分子鏈！",
+        "hit": "【邏輯湮滅】$n身軀的有機化學鍵瞬息斷裂，分子結構無聲瓦解，受到 $d 點無法被減免的真傷打擊！",
+        "crit": "【系統格式化·終焉除錯】$n的生命底層邏輯被徹底註銷！肉身化作漫天碎屑坍縮湮滅，受到 $d 點絕殺真傷！",
+        "miss": "$n狂暴的煞氣引發劇烈空間擾動，中斷了邏輯算力的鎖定。"
+      }
+    },
+    {
+      "name": "熵增崩解",
+      "weight": 40,
+      "damageMod": 1.8,
+      "hitRateMod": 0.02,
+      "critRateMod": 0.25,
+      "msg": {
+        "cast": "$N高舉手掌，虛空中無數發光的物理常數與熱力學公式如同鎖鏈般垂落，封鎖$n全身退路！",
+        "hit": "【絕對熱寂】$n體內的靈壓與微觀粒子瞬間陷入無序混亂，細胞全面壞死，受到 $d 點崩解重創！",
+        "crit": "【零點坍縮·終局】不可逆的熵增法則將$n的存在概念生生抹去大半！大殿劇震，受到 $d 點毀滅極限傷害！",
+        "miss": "$n憑藉瀕死的求生直覺拼死狂撲，在算力光鎖收攏前堪堪脫出！"
+      }
+    }
+  ]
+}

@@ -1,10 +1,12 @@
 package com.example.htmlmud.domain.service;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -17,6 +19,7 @@ import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
+import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.template.ItemTemplate;
 import com.example.htmlmud.domain.model.template.MobTemplate;
 import com.example.htmlmud.domain.model.template.RaceTemplate;
@@ -64,27 +67,38 @@ public class WorldManager {
    * 伺服器啟動時載入地圖
    */
   public void loadWorld() {
-
     // 讀取 global 資料
-    loadgGlobalData();
+    loadGlobalData();
 
-    // 讀取 newbie_village 資料
-    readZone("newbie_village");
+    // 動態載入所有區域 manifest.json
+    try {
+      Resource[] manifests = resourceResolver.getResources("classpath:data/zones/*/manifest.json");
+      if (manifests != null && manifests.length > 0) {
+        for (Resource manifest : manifests) {
+          try {
+            ZoneTemplate zt = objectMapper.readValue(manifest.getInputStream(), ZoneTemplate.class);
+            if (zt != null && zt.id() != null) {
+              readZone(zt.id());
+            }
+          } catch (Exception ex) {
+            log.warn("無法解析區域 manifest: {}", manifest.getFilename(), ex);
+          }
+        }
+      } else {
+        List.of("newbie_village", "mozhu_mines", "snow", "silverleaf").forEach(this::readZone);
+      }
+    } catch (Exception e) {
+      log.error("動態搜尋區域失敗，退回固定載入清單", e);
+      List.of("newbie_village", "mozhu_mines", "snow", "silverleaf").forEach(this::readZone);
+    }
 
-
-
-    // 啟動 Write-Behind 消費者執行緒
-    // startPersistenceWorker();
-
-    // load zone
-    // loadZone("newbie_village");
+    // 啟動完成後校驗資料完整性
+    TemplateRepository.validate();
   }
 
-  private void loadgGlobalData() {
-    log.info("loadgGlobalData");
-
-    loadgSkillData();
-
+  private void loadGlobalData() {
+    log.info("loadGlobalData");
+    loadSkillData();
     loadRaceData();
   }
 
@@ -113,15 +127,11 @@ public class WorldManager {
 
   }
 
-  private void loadgSkillData() {
-    log.info("loadgSkillData");
+  private void loadSkillData() {
+    log.info("loadSkillData: classpath:data/global/skills/**/*.json");
 
     try {
-      // 使用 getResources (複數) 來支援萬用字元 *
-      // Resource[] resources =
-      // resourceResolver.getResources("classpath:data/global/skills/**/*.json");
-      Resource[] resources =
-          resourceResolver.getResources("classpath:data/global/skills/test/*.json");
+      Resource[] resources = resourceResolver.getResources("classpath:data/global/skills/**/*.json");
       if (resources == null || resources.length == 0) {
         log.error("skill files not found");
         return;
@@ -170,7 +180,16 @@ public class WorldManager {
           new TypeReference<Set<MobTemplate>>() {});
       for (MobTemplate mob : mobs) {
         String newMobId = IdUtils.resolveId(zoneId, mob.id());
-        MobTemplate newMob = mob.toBuilder().id(newMobId).build();
+        Map<String, String> updatedEquipment = mob.equipment() == null ? null
+            : mob.equipment().entrySet().stream()
+                .collect(Collectors.toMap(
+                    Map.Entry::getKey,
+                    e -> IdUtils.resolveId(zoneId, e.getValue())
+                ));
+        MobTemplate newMob = mob.toBuilder()
+            .id(newMobId)
+            .equipment(updatedEquipment)
+            .build();
         // log.info("log:{}", objectMapper.writeValueAsString(newMob));
         TemplateRepository.registerMob(newMob);
       }

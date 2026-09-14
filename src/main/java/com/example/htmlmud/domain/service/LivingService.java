@@ -109,7 +109,7 @@ public class LivingService {
       // 發送 self 死亡事件
       self.onDeath(attackerId);
     } else {
-      if (!self.isInCombat) {
+      if (!self.isInCombat()) {
 
         // 準備反應時間
         reactionTime(self);
@@ -124,8 +124,7 @@ public class LivingService {
 
     // 標記狀態 (Mark State)：設為 Dead，停止接受新的傷害或治療。
     self.getStats().setHp(0);
-    self.isInCombat = false;
-    self.combatTargetId = null;
+    self.exitCombat();
 
     // 交代後事 (Cleanup & Notify)：取消心跳、製造屍體、通知房間。
     // 設定為無效狀態 (不處理心跳 tick)

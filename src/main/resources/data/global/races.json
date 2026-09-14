@@ -51,48 +51,133 @@
   {
     "id": "rat",
     "name": "鼠類",
+    "description": "在陰暗潮濕處繁衍的狡黠生物，行動敏捷，常以尖牙利爪成群襲擊過路者。",
+    "stats": {
+      "STR": 0.5,
+      "CON": 0.6,
+      "DEX": 1.4,
+      "INT": 0.3
+    },
+    "bodyParts": [
+      "HEAD",
+      "BODY",
+      "LEGS",
+      "FEET",
+      "TAIL"
+    ],
     "combat": {
       "naturalAttacks": [
         {
           "id": "mob_claw",
-          "weight": 30
+          "weight": 40
         },
         {
           "id": "mob_bite",
-          "weight": 50
+          "weight": 60
         }
-      ]
+      ],
+      "naturalDodge": "mob_beast_dodge",
+      "naturalParry": "mob_beast_parry",
+      "naturalArmor": 2,
+      "attacksPerRound": 1
+    },
+    "innateSkills": {
+      "mob_beast_dodge": 0.5
+    },
+    "resistances": {
+      "POISON": 0.2,
+      "PHYSICAL": 0.0
     }
   },
   {
     "id": "wolf",
     "name": "狼族",
+    "description": "生性殘暴且具高度戰術協作能力的荒野掠食者，擁有極為敏銳的狩獵直覺。",
+    "stats": {
+      "STR": 1.2,
+      "CON": 1.1,
+      "DEX": 1.3,
+      "INT": 0.6
+    },
+    "bodyParts": [
+      "HEAD",
+      "BODY",
+      "LEGS",
+      "FEET",
+      "TAIL",
+      "CLAWS"
+    ],
     "combat": {
       "naturalAttacks": [
         {
           "id": "mob_claw",
-          "weight": 30
+          "weight": 35
         },
         {
           "id": "mob_bite",
-          "weight": 50
+          "weight": 45
         },
         {
           "id": "mob_tail_swipe",
           "weight": 20
         }
-      ]
+      ],
+      "naturalDodge": "mob_beast_dodge",
+      "naturalParry": "mob_beast_parry",
+      "naturalArmor": 5,
+      "attacksPerRound": 1
+    },
+    "innateSkills": {
+      "mob_beast_dodge": 0.6,
+      "mob_wild_blood": 0.5
+    },
+    "resistances": {
+      "ICE": 0.2,
+      "PHYSICAL": 0.0
     }
   },
   {
     "id": "humanoid",
     "name": "類人族",
+    "description": "廣泛分佈在各處的類人族生物（如哥布林、蠻族、雜役異化者），可使用基礎工具或天然拳腳格鬥。",
+    "stats": {
+      "STR": 1.0,
+      "CON": 1.0,
+      "DEX": 1.0,
+      "INT": 0.8
+    },
+    "bodyParts": [
+      "HEAD",
+      "BODY",
+      "CHEST",
+      "ARMS",
+      "LEGS",
+      "HANDS",
+      "FEET",
+      "WAIST"
+    ],
     "combat": {
       "naturalAttacks": [
         {
-          "id": "mob_hit"
+          "id": "mob_hit",
+          "weight": 60
+        },
+        {
+          "id": "mob_smash",
+          "weight": 40
         }
-      ]
+      ],
+      "naturalDodge": "mob_basic_dodge",
+      "naturalParry": "mob_basic_parry",
+      "naturalArmor": 5,
+      "attacksPerRound": 1
+    },
+    "innateSkills": {
+      "mob_basic_dodge": 0.5,
+      "mob_basic_parry": 0.5
+    },
+    "resistances": {
+      "PHYSICAL": 0.0
     }
   },
   {

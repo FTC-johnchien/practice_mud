@@ -1,0 +1,100 @@
+[
+  {
+    "id": "corrupted_servant",
+    "name": "煞氣異化雜役",
+    "gender": "MALE",
+    "race": "human",
+    "aliases": ["servant", "miner", "corrupted"],
+    "kind": "AGGRESSIVE",
+    "level": 5,
+    "maxHp": 65,
+    "str": 15,
+    "dex": 12,
+    "attackVerb": "猛烈抓撓",
+    "attackNoun": "畸變血爪",
+    "minDamage": 8,
+    "maxDamage": 14,
+    "attackSpeed": 1800,
+    "hitRate": 10,
+    "defense": 2,
+    "description": "一名徹底失去理智的墨竹山底層採礦雜役，皮膚下生出密密麻麻的血肉肉瘤與結晶晶簇。",
+    "lookDescription": "他的雙眼充斥著瘋狂的血光，嘴裡不斷發出含糊不清的抽泣與癲狂咆哮。",
+    "dialogues": [
+      "天道……太素……我的腦子……好癢……",
+      "靈石……都是靈石……別搶我的靈石！"
+    ],
+    "loot": [
+      {
+        "itemId": "mozhu_mines:corrupted_spirit_stone",
+        "chance": 0.8
+      },
+      {
+        "itemId": "mozhu_mines:miner_pickaxe",
+        "chance": 0.25
+      }
+    ]
+  },
+  {
+    "id": "shao_crystal_beast",
+    "name": "煞氣結晶獸",
+    "gender": "ANIMAL",
+    "race": "beast",
+    "aliases": ["beast", "crystal", "shao"],
+    "kind": "AGGRESSIVE",
+    "level": 8,
+    "maxHp": 120,
+    "str": 22,
+    "dex": 10,
+    "attackVerb": "狂暴撞擊",
+    "attackNoun": "煞氣晶刺",
+    "minDamage": 12,
+    "maxDamage": 20,
+    "attackSpeed": 2200,
+    "hitRate": 8,
+    "defense": 8,
+    "description": "凝聚礦坑深處濃烈天道煞氣而形成的活體晶石巨獸，渾身披覆著紫黑色的棱角尖刺。",
+    "lookDescription": "它的體內流動著宛如水銀般的暗光，每一次呼吸都會在空氣中引起微弱的靈壓震顫。",
+    "loot": [
+      {
+        "itemId": "mozhu_mines:corrupted_spirit_stone",
+        "chance": 1.0
+      }
+    ]
+  },
+  {
+    "id": "boss_song_tianheng",
+    "name": "畸變大師兄·宋天衡",
+    "gender": "MALE",
+    "race": "human",
+    "aliases": ["song", "brother", "tianheng", "boss"],
+    "kind": "AGGRESSIVE",
+    "level": 15,
+    "maxHp": 450,
+    "str": 38,
+    "dex": 28,
+    "attackVerb": "揮動泣血巨爪拍下",
+    "attackNoun": "泣血巨爪",
+    "minDamage": 16,
+    "maxDamage": 26,
+    "attackSpeed": 1500,
+    "hitRate": 16,
+    "defense": 6,
+    "description": "昔日氣宇軒昂的墨竹山外門首徒宋天衡，如今身軀嚴重膨脹畸變，背後撕裂出兩對巨大骨刺，整條右臂化作滴淌腐蝕濁血的泣血巨爪！",
+    "lookDescription": "他的面部五官已經半溶化，唯有一隻猩紅重瞳在黑暗中死死鎖定著你。",
+    "dialogues": [
+      "吼……天道已死……虛月……歸位！",
+      "雜役……把你的骨髓……獻給山主！",
+      "墨家十戒……兼愛……非攻……全都是騙局！"
+    ],
+    "loot": [
+      {
+        "itemId": "mozhu_mines:black_obsidian_scythe",
+        "chance": 1.0
+      },
+      {
+        "itemId": "mozhu_mines:elder_token",
+        "chance": 1.0
+      }
+    ]
+  }
+]

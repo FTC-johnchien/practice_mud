@@ -23,8 +23,9 @@ public class ExitDeserializer extends JsonDeserializer<RoomExit> {
       // 讀取整個物件節點
       JsonNode node = p.getCodec().readTree(p);
 
-      // 優先讀取 "targetId" (與 RoomExit 的 JsonProperty 一致)，若無則讀取 "targetId"
-      String targetId = node.has("targetId") ? node.get("targetId").asText() : null;
+      // 優先讀取 "targetId"，若無則讀取 "targetRoomId"
+      String targetId = node.has("targetId") ? node.get("targetId").asText()
+          : (node.has("targetRoomId") ? node.get("targetRoomId").asText() : null);
 
       // 讀取選填欄位 (處理 null)
       String doorName = node.has("doorName") ? node.get("doorName").asText() : null;

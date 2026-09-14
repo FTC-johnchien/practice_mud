@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LivingStats {
-  public Gender gender;
+  public Gender gender = Gender.MALE;
   public String race = "DRAGON";
 
   public int level = 1;

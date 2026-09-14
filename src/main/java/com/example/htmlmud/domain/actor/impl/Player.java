@@ -302,7 +302,7 @@ public final class Player extends Living {
     // 將自己移出房間
     super.removeFromRoom();
 
-    reply("$N已經死亡！即將在重生點復活...");
+    reply("你已經死亡！即將在重生點復活...");
 
     this.send(new ActorMessage.Relive());
   }

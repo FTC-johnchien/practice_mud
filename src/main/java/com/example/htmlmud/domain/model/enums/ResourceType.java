@@ -23,7 +23,7 @@ public enum ResourceType {
   AGE(LivingStats::getAge, (s, val) -> s.setAge(s.getAge() - val)),
 
   @JsonProperty("coin") @JsonAlias({"COIN", "money", "MONEY"})
-  COIN(LivingStats::getCoin, (s, val) -> s.setAge(s.getCoin() - val)),
+  COIN(LivingStats::getCoin, (s, val) -> s.setCoin(s.getCoin() - val)),
 
   @JsonProperty("exp") @JsonAlias({"EXP"})
   EXP(LivingStats::getExp, (s, val) -> s.setExp(s.getExp() - val)),

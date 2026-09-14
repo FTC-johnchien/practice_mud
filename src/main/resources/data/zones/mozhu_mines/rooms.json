@@ -1,0 +1,125 @@
+[
+  {
+    "id": "mine_entrance",
+    "name": "廢棄靈石礦坑入口",
+    "description": "這裡是墨竹山外圍荒廢已久的地下礦坑入口。四周岩壁斑駁漆黑，陰冷刺骨的煞氣順著黑黢黢的深坑裂隙向上吞吐翻湧。南邊有一條雜草叢生的小徑通往新手村，往下則是一座垂直向下的腐朽深坑斜道。",
+    "exits": {
+      "southeast": "newbie_village:north_of_the_village",
+      "down": "rotting_shaft"
+    },
+    "spawns": [
+      {
+        "type": "ITEM",
+        "id": "mozhu_mines:miner_pickaxe",
+        "count": 1,
+        "maxCount": 1,
+        "time": 120,
+        "rate": 1
+      }
+    ]
+  },
+  {
+    "id": "rotting_shaft",
+    "name": "腐朽深坑斜道",
+    "description": "支撐坑道的木柱已經腐爛發黑，長滿了散發暗綠色螢光的詭異苔蘚。腳下的枕木滿是乾涸的黑褐色血漬與深深的指甲抓痕。往上可返回礦坑入口，往北通向一片菌絲瀰漫的深隙，往東則能聽到沉悶的晶石敲擊回聲。",
+    "exits": {
+      "up": "mine_entrance",
+      "north": "fungal_chasm",
+      "east": "corrupted_vein"
+    },
+    "spawns": [
+      {
+        "type": "MOB",
+        "id": "corrupted_servant",
+        "count": 2,
+        "maxCount": 2,
+        "time": 60,
+        "rate": 1
+      }
+    ]
+  },
+  {
+    "id": "fungal_chasm",
+    "name": "血肉菌絲裂谷",
+    "description": "岩壁被一層厚重的粉紅色血肉質菌絲完全覆蓋，菌絲深處彷彿有微弱的神經脈絡在有節奏地舒張搏動。空氣中瀰漫著濃烈的甜腥腐敗氣息。往南是腐朽斜道，往東有一座泛著不祥幽光的祭壇平台。",
+    "exits": {
+      "south": "rotting_shaft",
+      "east": "void_moon_altar"
+    },
+    "spawns": [
+      {
+        "type": "MOB",
+        "id": "corrupted_servant",
+        "count": 1,
+        "maxCount": 1,
+        "time": 60,
+        "rate": 1
+      },
+      {
+        "type": "MOB",
+        "id": "shao_crystal_beast",
+        "count": 1,
+        "maxCount": 1,
+        "time": 90,
+        "rate": 1
+      }
+    ]
+  },
+  {
+    "id": "corrupted_vein",
+    "name": "煞氣異化靈石脈",
+    "description": "整條坑道兩側嵌滿了大小不一的煞氣靈石晶簇，晶石內部流動著渾濁如水銀的幽暗光暈。幾名雜役的枯骨已被靈石尖刺穿透同化。往西是腐朽斜道，往北通往那座散發刺骨寒意的祭壇。",
+    "exits": {
+      "west": "rotting_shaft",
+      "north": "void_moon_altar"
+    },
+    "spawns": [
+      {
+        "type": "MOB",
+        "id": "shao_crystal_beast",
+        "count": 2,
+        "maxCount": 2,
+        "time": 90,
+        "rate": 1
+      },
+      {
+        "type": "ITEM",
+        "id": "mozhu_mines:corrupted_spirit_stone",
+        "count": 2,
+        "maxCount": 3,
+        "time": 90,
+        "rate": 1
+      }
+    ]
+  },
+  {
+    "id": "void_moon_altar",
+    "name": "虛月血肉祭壇",
+    "description": "這座空曠的地下圓形石殿中央，聳立著一座用無數修士斷骨與煞氣結晶拼嵌而成的祭壇。穹頂裂開一道深不見底的空隙，一輪虛幻慘白的月牙投影正冷酷地照耀著整座大殿！祭壇前，一道龐大畸變的狂暴身影正背對著你瘋狂撕咬著什麼……",
+    "exits": {
+      "west": "fungal_chasm",
+      "south": "corrupted_vein",
+      "up": "elder_vent_shaft"
+    },
+    "spawns": [
+      {
+        "type": "MOB",
+        "id": "boss_song_tianheng",
+        "count": 1,
+        "maxCount": 1,
+        "time": 300,
+        "rate": 1
+      }
+    ]
+  },
+  {
+    "id": "elder_vent_shaft",
+    "name": "古老通風豎井",
+    "description": "穿過祭壇上方的狹窄岩縫，這裡是一條直通墨竹山外門劍閣的古老青石豎井。井壁上刻滿了墨家「兼愛非攻」的護山古陣道紋。往下一躍便是虛月祭壇，往北可從隱蔽縫隙繞回礦坑入口。",
+    "exits": {
+      "down": "void_moon_altar",
+      "north": "mine_entrance"
+    },
+    "spawns": []
+  }
+]

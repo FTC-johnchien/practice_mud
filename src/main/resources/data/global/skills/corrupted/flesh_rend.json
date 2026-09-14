@@ -1,0 +1,72 @@
+{
+  "id": "flesh_rend",
+  "name": "血肉撕裂",
+  "description": "源自虛月異化的深淵法變絕技。六對黑曜骨鐮齊齊破體刺出，能瞬間對敵人肉身造成極高額的多段穿刺與撕裂創傷。",
+  "type": "ACTIVE",
+  "school": "CORRUPTED",
+  "tags": [
+    "SLASH",
+    "PIERCE",
+    "CORRUPTED",
+    "BURST"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "SPEAR",
+      "SWORD",
+      "UNARMED"
+    ],
+    "reqGuild": null,
+    "allowMounted": false
+  },
+  "costs": {
+    "mp": 30,
+    "stamina": 15
+  },
+  "scaling": {
+    "damagePerLevel": 1.5,
+    "hitRatePerLevel": 0.002,
+    "critRatePerLevel": 0.003
+  },
+  "mechanics": {
+    "critRate": 0.15,
+    "damage": 55,
+    "damageType": "PIERCE",
+    "hitRate": 0.95,
+    "maxLevel": 100,
+    "scaleStat": "DEX",
+    "scaleFactor": 1.6,
+    "formulas": {
+      "damage": "skill.mechanics.damage + (user.dex * 0.8) + (user.str * 0.5)"
+    }
+  },
+  "moves": [
+    {
+      "name": "六鐮齊出",
+      "weight": 60,
+      "damageMod": 1.2,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N背後黑曜骨鐮破體而出，六道森寒刃影撕裂空氣，疾風暴雨般刺向$n！",
+        "hit": "嗤啦！$n皮肉被生生絞碎，黑曜骨刃深深扎入骨髓，造成 $d 點穿刺撕裂重創！",
+        "crit": "【血肉撕裂·暴擊】骨鐮倒鉤猛然倒扣撕扯出漫天血霧！$n發出撕心裂肺的慘嚎，受到 $d 點恐怖爆發傷害！",
+        "miss": "$n身法敏捷，在骨鐮交錯的刃網中險險側身避過！"
+      }
+    },
+    {
+      "name": "深淵剃骨",
+      "weight": 40,
+      "damageMod": 1.5,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.2,
+      "msg": {
+        "cast": "$N身形化作虛月殘影，骨鐮如巨型剪刀般自兩側朝著$n的脖頸合攏絞殺！",
+        "hit": "咔嚓！巨鐮交錯橫斬，$n身首處噴湧出大股黑血，受到 $d 點致命重擊！",
+        "crit": "【身首分離·狂暴】骨鐮合擊如斷頭天刀！$n半邊肩膀幾乎被完整斬落，受到 $d 點毀滅性打擊！",
+        "miss": "$n矮身伏地，骨鐮帶起刺耳的金鐵呼嘯自頭頂險險掠過！"
+      }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "HtmlmudApplication",
+      "request": "launch",
+      "mainClass": "com.example.htmlmud.HtmlmudApplication",
+      "projectName": "htmlmud",
+      "envFile": "${workspaceFolder}/.env",
+      "vmArgs": "-Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8",
+      "encoding": "UTF-8",
+      "console": "internalConsole"
+    },
+    {
+      "type": "java",
+      "name": "HtmlmudApplication (Terminal)",
+      "request": "launch",
+      "mainClass": "com.example.htmlmud.HtmlmudApplication",
+      "projectName": "htmlmud",
+      "envFile": "${workspaceFolder}/.env",
+      "vmArgs": "-Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8",
+      "encoding": "UTF-8",
+      "console": "integratedTerminal"
+    }
+  ]
+}

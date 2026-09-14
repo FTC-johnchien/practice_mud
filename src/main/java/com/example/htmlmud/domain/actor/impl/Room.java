@@ -1,12 +1,14 @@
 package com.example.htmlmud.domain.actor.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import com.example.htmlmud.domain.actor.core.RoomMessageBuffer;
@@ -37,12 +39,12 @@ public class Room extends VirtualActor<RoomMessage> {
   @Getter
   private final ZoneTemplate zoneTemplate;
 
-  // 房間內的玩家 (Runtime State)
-  private final List<Player> players = new ArrayList<>();
+  // 房間內的生物與物品 (Runtime State) - 使用 CopyOnWriteArrayList 支援無鎖快照讀取
+  private final List<Player> players = new CopyOnWriteArrayList<>();
 
-  private final List<Mob> mobs = new ArrayList<>();
+  private final List<Mob> mobs = new CopyOnWriteArrayList<>();
 
-  private final List<GameItem> items = new ArrayList<>(); // 地上的物品
+  private final List<GameItem> items = new CopyOnWriteArrayList<>(); // 地上的物品
 
   // 戶籍名冊：記錄這個房間生出來且還活著的怪物 ID
   // Key: TemplateID (ex: "snow_guard"), Value: Set of Instance UUIDs
@@ -170,7 +172,7 @@ public class Room extends VirtualActor<RoomMessage> {
     } catch (Exception e) {
       log.error("Room enter 失敗 roomId:{}", id, e);
       if (actor instanceof Player player) {
-        player.reply("一股未知的力量阻擋了$N的前進!");
+        player.reply("一股未知的力量阻擋了你的前進!");
       }
     }
   }
@@ -215,62 +217,28 @@ public class Room extends VirtualActor<RoomMessage> {
   }
 
   public Optional<Living> findLiving(String livingId) {
-    CompletableFuture<Living> future = new CompletableFuture<>();
-    this.send(new RoomMessage.FindLiving(livingId, future));
-    try {
-      Living living = future.orTimeout(1, TimeUnit.SECONDS).join();
-      if (living != null) {
-        return Optional.of(living);
-      }
-    } catch (Exception e) {
-      log.error("Room 取得 Living 列表失敗 roomId:{}", id, e);
-    }
-
-    return Optional.empty();
+    if (livingId == null) return Optional.empty();
+    return Stream.concat(players.stream(), mobs.stream())
+        .filter(l -> l.isValid() && livingId.equals(l.getId()))
+        .findFirst();
   }
 
   public List<Living> getLivings() {
-    CompletableFuture<List<Living>> future = new CompletableFuture<>();
-    this.send(new RoomMessage.GetLivings(future));
-    try {
-      return future.orTimeout(1, TimeUnit.SECONDS).join();
-    } catch (Exception e) {
-      log.error("Room 取得 Living 列表失敗 roomId:{}", id, e);
-    }
-    return new ArrayList<>();
+    return Stream.concat(players.stream(), mobs.stream())
+        .filter(Living::isValid)
+        .toList();
   }
 
   public List<Player> getPlayers() {
-    CompletableFuture<List<Player>> future = new CompletableFuture<>();
-    this.send(new RoomMessage.GetPlayers(future));
-    try {
-      return future.orTimeout(1, TimeUnit.SECONDS).join();
-    } catch (Exception e) {
-      log.error("Room 取得 Player 列表失敗 roomId:{}", id, e);
-    }
-    return new ArrayList<>();
+    return players.stream().filter(Player::isValid).toList();
   }
 
   public List<Mob> getMobs() {
-    CompletableFuture<List<Mob>> future = new CompletableFuture<>();
-    this.send(new RoomMessage.GetMobs(future));
-    try {
-      return future.orTimeout(1, TimeUnit.SECONDS).join();
-    } catch (Exception e) {
-      log.error("Room 取得 Mob 列表失敗 roomId:{}", id, e);
-    }
-    return new ArrayList<>();
+    return mobs.stream().filter(Mob::isValid).toList();
   }
 
   public List<GameItem> getItems() {
-    CompletableFuture<List<GameItem>> future = new CompletableFuture<>();
-    this.send(new RoomMessage.GetItems(future));
-    try {
-      return future.orTimeout(1, TimeUnit.SECONDS).join();
-    } catch (Exception e) {
-      log.error("Room 取得 GameItem 列表失敗 roomId:{}", id, e);
-    }
-    return new ArrayList<>();
+    return Collections.unmodifiableList(items);
   }
 
   public void record() {

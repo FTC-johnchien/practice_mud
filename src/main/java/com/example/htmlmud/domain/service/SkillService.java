@@ -198,13 +198,13 @@ public class SkillService {
         if (race != null && race.combat() != null && race.combat().naturalDodge() != null) {
           return race.combat().naturalDodge();
         }
-        return "mob_dodge"; // 系統預設
+        return "mob_basic_dodge"; // 系統預設
       }
       case PARRY -> {
         if (race != null && race.combat() != null && race.combat().naturalParry() != null) {
           return race.combat().naturalParry();
         }
-        return "mob_parry"; // 系統預設
+        return "mob_basic_parry"; // 系統預設
       }
       case FORCE -> {
         if (race != null && race.combat() != null && race.combat().naturalForce() != null) {

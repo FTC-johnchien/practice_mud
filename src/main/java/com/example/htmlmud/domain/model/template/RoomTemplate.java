@@ -3,7 +3,9 @@ package com.example.htmlmud.domain.model.template;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import com.example.htmlmud.infra.persistence.json.RoomDescriptionDeserializer;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Builder;
 
 // 2. 房間 (Room)
@@ -16,6 +18,7 @@ public record RoomTemplate(
 
     String name, // e.g., "中央廣場"
 
+    @JsonDeserialize(using = RoomDescriptionDeserializer.class)
     String description, // 描述
 
     Set<String> flags, // e.g., ["SAFE", "OUTDOORS"]

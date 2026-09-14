@@ -32,6 +32,8 @@ public enum EquipmentSlot {
 
   FINGER("戒指"),
 
+  TRINKET("飾品"),
+
 
   // 武器部位
   MAIN_HAND("主手"),

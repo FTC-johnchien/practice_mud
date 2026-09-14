@@ -3,6 +3,7 @@ package com.example.htmlmud.domain.service;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Player;
+import com.example.htmlmud.domain.model.enums.Gender;
 
 @Component
 public class MessageUtil {
@@ -54,44 +55,36 @@ public class MessageUtil {
   }
 
   public static String format(String template, Living executor, Living target, Living receiver) {
+    if (template == null) {
+      return "";
+    }
     if (receiver == null || !(receiver instanceof Player)) {
       return template;
     }
-    if (executor == null || executor.getStats().getGender() == null) {
+    if (executor == null) {
       return template;
     }
 
+    // 判斷接收者是不是主角本人 (執行者)
+    boolean isExecutor = executor.getId().equals(receiver.getId());
+    String executorNoun = executor.getName();
+    if (isExecutor) {
+      Gender g = (executor.getStats() != null) ? executor.getStats().getGender() : null;
+      executorNoun = (g != null && g.getYou() != null) ? g.getYou() : "你";
+    }
 
-    // 判斷接收者是不是主角本人
-    boolean isExecutor = false;
-    boolean isTarget = false;
-    String executorNoun = null;
+    // 判斷接收者是不是受詞本人 (目標)
     String targetNoun = "";
-
-    // template: $N舉起 wepon，用盡全力揮向$n！
-    // 房間其他人: John舉起 wepon，用盡全力揮向野狼！
-
-    // 你是target: 野狼舉起 wepon，用盡全力揮向你！
     if (target != null) {
-      isTarget = target.getId().equals(receiver.getId());
-
+      boolean isTarget = target.getId().equals(receiver.getId());
       targetNoun = target.getName();
       if (isTarget) {
-        targetNoun = target.getStats().getGender().getYou();
+        Gender g = (target.getStats() != null) ? target.getStats().getGender() : null;
+        targetNoun = (g != null && g.getYou() != null) ? g.getYou() : "你";
       }
     }
 
-    // 你是executor: 你舉起 wepon，用盡全力揮向野狼！
-    isExecutor = executor.getId().equals(receiver.getId());
-
-    executorNoun = executor.getName();
-    if (isExecutor) {
-      executorNoun = executor.getStats().getGender().getYou();
-    }
-
-    // 進行替換
-    // 注意：這裡使用簡單的 replace，效能足夠。若要更嚴謹可用 Regex
+    // 進行替換：主語 $N 與受詞 $n
     return template.replace("$N", executorNoun).replace("$n", targetNoun);
   }
-
 }

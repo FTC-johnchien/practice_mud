@@ -1,16 +1,9 @@
 {
   "id": "silverleaf",
-  "name": "銀葉村",
-  "minLevel": 1,
+  "name": "翡翠森林·銀葉村",
+  "description": "坐落在精靈森林邊緣的祥和村落，綠葉掩映間流淌著純淨的魔法泉水。",
+  "respawnTime": 300,
   "maxLevel": 10,
-  "environment": {
-    "weather": "SUNNY",
-    "canRecall": true,
-    "pkMode": "SAFE"
-  },
-  "assets": {
-    "rooms": ["rooms.json"],
-    "mobs": ["mobs.json"],
-    "items": ["items.json"]
-  }
+  "authors": ["System"],
+  "flags": ["FOREST", "SAFE_ZONE"]
 }

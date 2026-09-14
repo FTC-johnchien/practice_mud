@@ -68,11 +68,11 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
 
   // 動態戰鬥資源 (不需要存檔，戰鬥結束清除)
   // === 戰鬥狀態 ===
-  public boolean isInCombat = false;
+  protected volatile boolean isInCombat = false;
   // 當前鎖定的攻擊目標 (null 代表沒在打架)
-  public String combatTargetId;
+  protected volatile String combatTargetId;
   // 下一次可以攻擊的時間點 (System.currentTimeMillis)
-  public long nextAttackTime = 0;
+  protected volatile long nextAttackTime = 0;
   // 附加增益/減益
   // public Map<String, Object> dynamicProps = new HashMap<>();
 
@@ -384,6 +384,32 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
   // 建構子與輔助方法...
   public boolean isDead() {
     return stats.getHp() <= 0;
+  }
+
+  // 進入戰鬥狀態
+  public void enterCombat(String targetId) {
+    if (this.combatTargetId == null) {
+      this.combatTargetId = targetId;
+    }
+    this.isInCombat = true;
+  }
+
+  // 脫離戰鬥狀態
+  public void exitCombat() {
+    this.isInCombat = false;
+    this.combatTargetId = null;
+  }
+
+  public String getCombatTargetId() {
+    return this.combatTargetId;
+  }
+
+  public void setCombatTargetId(String targetId) {
+    this.combatTargetId = targetId;
+  }
+
+  public long getNextAttackTime() {
+    return this.nextAttackTime;
   }
 
   // 判斷是否在戰鬥中

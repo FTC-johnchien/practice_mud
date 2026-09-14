@@ -8,7 +8,7 @@
       "north": "snow_square"
     },
     "spawns": [
-      { "type": "MOB", "id": "snow_guard", "maxCount": 2 }
+      { "type": "MOB", "id": "snow_guard", "count": 2, "maxCount": 2, "rate": 1.0 }
     ]
   },
   {
@@ -21,6 +21,17 @@
       "west": "snow_lane1",
       "east": "snow_lane2"
     }
+  },
+  {
+    "id": "snow_hall",
+    "name": "雪亭大廳",
+    "description": "這裡是雪亭鎮的議事大廳，大廳中央鋪著厚厚的雪原白熊毛皮地毯。鎮長平時在此處理鎮民事務與接待往來商隊。",
+    "exits": {
+      "south": "snow_square"
+    },
+    "spawns": [
+      { "type": "MOB", "id": "snow_mayor", "count": 1, "maxCount": 1, "rate": 1.0 }
+    ]
   },
   {
     "id": "snow_lane1",
@@ -43,17 +54,25 @@
     }
   },
   {
+    "id": "snow_warehouse",
+    "name": "地窖倉庫",
+    "description": "雪亭鎮用來儲備過冬物資的石砌地窖倉庫，堆滿了成捆的乾草、醃肉與密封的酒桶。",
+    "exits": {
+      "south": "snow_lane2"
+    },
+    "spawns": [
+      { "type": "MOB", "id": "snow_guard", "count": 1, "maxCount": 1, "rate": 1.0 }
+    ]
+  },
+  {
     "id": "snow_inn",
     "name": "飲風客棧",
-    "description": "這是一家位在雪亭鎮西邊的客棧，客棧並不大，也沒有什麼豪華的裝飾，但是這裡著名的烤山豬肉及烈酒「寒那」，卻吸引了不少遊客千里迢迢來到這裡。牆上掛著一個木牌(sign)。",
+    "description": "這是一家位在雪亭鎮西邊的客棧，客棧並不大，也沒有什麼豪華的裝飾，但是這裡著名的烤山豬肉及烈酒「寒那」，卻吸引了不少遊客千里迢迢來到這裡。",
     "exits": {
       "east": "snow_lane1"
     },
-    "features": {
-      "sign": "木牌上寫著：飲風客棧，著名的烤山豬肉每份五十兩，寒那酒每袋一百兩。"
-    },
     "spawns": [
-      { "type": "MOB", "id": "snow_waiter", "maxCount": 1, "time": 120 }
+      { "type": "MOB", "id": "snow_waiter", "count": 1, "maxCount": 1, "rate": 1.0 }
     ]
   },
   {
@@ -64,7 +83,7 @@
       "south": "snow_lane1"
     },
     "spawns": [
-      { "type": "MOB", "id": "snow_blacksmith", "maxCount": 1, "time": 120 }
+      { "type": "MOB", "id": "snow_blacksmith", "count": 1, "maxCount": 1, "rate": 1.0 }
     ]
   },
   {
@@ -75,7 +94,7 @@
       "west": "snow_lane2"
     },
     "spawns": [
-      { "type": "MOB", "id": "snow_trader", "maxCount": 1, "time": 120 }
+      { "type": "MOB", "id": "snow_trader", "count": 1, "maxCount": 1, "rate": 1.0 }
     ]
   }
 ]

@@ -8,6 +8,29 @@
     "maxStack": 9999
   },
   {
+    "id": "rat_tail",
+    "name": "老鼠尾巴",
+    "type": "MATERIAL",
+    "description": "從下水道老鼠身上割下來的尾巴，可作為鍊金材料或完成懸賞任務。",
+    "value": 5,
+    "isStackable": true
+  },
+  {
+    "id": "wolf_pelt",
+    "name": "野狼毛皮",
+    "type": "MATERIAL",
+    "description": "一張厚實的灰色野狼毛皮，可用於裁縫防具。",
+    "value": 25,
+    "isStackable": true
+  },
+  {
+    "id": "silver_medallion",
+    "name": "銀葉徽章",
+    "type": "KEY_ITEM",
+    "description": "一枚雕刻著銀葉圖案的精緻銀質徽章，似乎是老村長遺失的信物。",
+    "value": 100
+  },
+  {
     "id": "rusty_sword",
     "name": "生鏽鐵劍",
     "type": "WEAPON",

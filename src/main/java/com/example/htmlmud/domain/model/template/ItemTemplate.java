@@ -5,6 +5,7 @@ import java.util.Map;
 import com.example.htmlmud.domain.model.config.ConsumableProp;
 import com.example.htmlmud.domain.model.config.EquipmentProp;
 import com.example.htmlmud.domain.model.enums.ItemType;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 
@@ -26,13 +27,13 @@ public record ItemTemplate(
 
     String subType, // "SWORD",
 
-    @JsonProperty("stats") EquipmentProp equipmentProp, // 装備屬性
+    @JsonProperty("stats") @JsonAlias("equipment") EquipmentProp equipmentProp, // 装備屬性
 
     @JsonProperty("behavior") ConsumableProp consumableProp, // 消秏品屬性
 
     String quality, // 品質 common,
 
-    int value, // 價值
+    @JsonProperty("value") @JsonAlias("price") int value, // 價值
 
     int level, // 等級
 

@@ -103,10 +103,11 @@
   {
     "id": "north_of_the_village",
     "name": "村北小路",
-    "description": "一條通往北方森林的小徑，兩旁長滿了雜草。",
+    "description": "一條通往北方森林的小徑，兩旁長滿了雜草。往西北方隱約可見一座通往墨竹山廢棄靈石礦坑的深邃岩洞。",
     "exits": {
       "north": "forest_entrance",
-      "south": "square"
+      "south": "square",
+      "northwest": "mozhu_mines:mine_entrance"
     },
     "spawns": [
       {
@@ -216,5 +217,13 @@
         "isHidden": false
       }
     ]
+  },
+  {
+    "id": "inn",
+    "name": "村莊客棧",
+    "description": "一家樸素溫馨的小客棧，空氣中飄著麥酒與烤麵包的香氣，幾名疲憊的旅人正坐在角落歇息。",
+    "exits": {
+      "east": "square"
+    }
   }
 ]

@@ -2,58 +2,125 @@
   {
     "id": "snow_guard",
     "name": "雪亭衛兵",
+    "race": "human",
+    "gender": "MALE",
+    "aliases": ["guard", "snow guard"],
+    "kind": "NEUTRAL",
     "level": 5,
     "maxHp": 300,
+    "maxMp": 50,
+    "maxStamina": 120,
     "description": "這是一位身材魁梧的衛兵，負責維護雪亭鎮的治安。",
+    "expReward": 50,
+    "isAggressive": false,
     "str": 20,
     "dex": 15,
+    "con": 18,
+    "intelligence": 10,
+    "attackVerb": "刺",
+    "attackNoun": "長槍",
+    "minDamage": 8,
+    "maxDamage": 15,
+    "defense": 5,
     "equipment": {
       "MAIN_HAND": "snow_spear",
       "BODY": "snow_armor"
     },
-    "behavior": "GUARD"
+    "behavior": "GUARD",
+    "dialogues": [
+      "站住！雪亭鎮內禁止私鬥！",
+      "這風雪天，沒事少往深山跑。"
+    ]
   },
   {
     "id": "snow_waiter",
     "name": "店小二",
+    "race": "human",
+    "gender": "MALE",
+    "aliases": ["waiter", "xiao er"],
+    "kind": "FRIENDLY",
     "level": 2,
     "maxHp": 100,
+    "maxMp": 30,
+    "maxStamina": 80,
     "description": "一位勤快的店小二，正忙著招呼客人。",
+    "str": 8,
+    "dex": 12,
+    "con": 10,
+    "intelligence": 10,
     "equipment": {
       "BODY": "cloth"
     },
     "behavior": "VENDOR",
-    "vendorGoods": [
-      "snow_meat",
-      "snow_wineskin"
+    "dialogues": [
+      "客官裡面請！熱騰騰的烤山豬肉剛出爐！",
+      "喝碗寒那酒暖暖身子吧！"
     ]
   },
   {
     "id": "snow_blacksmith",
     "name": "鐵匠",
+    "race": "human",
+    "gender": "MALE",
+    "aliases": ["blacksmith", "smith"],
+    "kind": "FRIENDLY",
     "level": 10,
     "maxHp": 800,
+    "maxMp": 100,
+    "maxStamina": 200,
     "description": "一位打赤膊的壯漢，古銅色的肌肉在火光下閃閃發光。",
     "str": 25,
+    "dex": 14,
+    "con": 22,
+    "intelligence": 10,
     "equipment": {
       "MAIN_HAND": "heavy_hammer"
     },
     "behavior": "VENDOR",
-    "vendorGoods": [
-      "snow_sword",
-      "snow_blade"
+    "dialogues": [
+      "雪山的寒鐵打造出來的兵器，比中原的利落多了！"
     ]
   },
   {
     "id": "snow_trader",
     "name": "雜貨鋪老闆",
+    "race": "human",
+    "gender": "MALE",
+    "aliases": ["trader", "merchant", "boss"],
+    "kind": "FRIENDLY",
     "level": 3,
     "maxHp": 150,
+    "maxMp": 50,
+    "maxStamina": 100,
     "description": "一位精明的商人，眼睛總是盯著客人的錢包。",
+    "str": 10,
+    "dex": 12,
+    "con": 12,
+    "intelligence": 14,
     "behavior": "VENDOR",
-    "vendorGoods": [
-      "fire_starter",
-      "torch"
+    "dialogues": [
+      "火摺子、火把應有盡有，客官需要點什麼？"
+    ]
+  },
+  {
+    "id": "snow_mayor",
+    "name": "霜風鎮長",
+    "race": "human",
+    "gender": "MALE",
+    "aliases": ["mayor", "snow mayor"],
+    "kind": "FRIENDLY",
+    "level": 10,
+    "maxHp": 500,
+    "maxMp": 200,
+    "maxStamina": 150,
+    "description": "霜風鎮的長者，鬚髮皆白，神態慈祥而威嚴。",
+    "str": 14,
+    "dex": 12,
+    "con": 16,
+    "intelligence": 18,
+    "dialogues": [
+      "極北之地雖酷寒，但也是鍛鍊心志的好地方。",
+      "若要前往雪山腹地，切記結伴同行。"
     ]
   }
 ]

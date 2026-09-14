@@ -34,7 +34,7 @@ public class KillCommand implements PlayerCommand {
     Player player = MudContext.currentPlayer();
 
     if (args.isBlank()) {
-      player.reply("$N要攻擊誰？");
+      player.reply("你要攻擊誰？");
       return;
     }
 
@@ -56,7 +56,7 @@ public class KillCommand implements PlayerCommand {
 
     // 【節奏控制】
     // 攻擊者：立即獲得攻擊機會 (或是很短的延遲)
-    player.nextAttackTime = System.currentTimeMillis();
+    player.setNextAttackTime(System.currentTimeMillis());
 
     // 被攻擊對象接收到被攻擊事件
     target.onAttacked(player.getId());

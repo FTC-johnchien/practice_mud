@@ -1,82 +1,173 @@
 [
   {
     "id": "snow_spear",
-    "name": "長槍",
+    "name": "霜紋長槍",
+    "aliases": ["spear", "snow spear", "weapon"],
     "description": "一把制式的長槍，是衛兵的標準裝備。",
     "type": "WEAPON",
-    "slot": "MAIN_HAND",
-    "minDamage": 8,
-    "maxDamage": 15,
-    "value": 200
+    "subType": "SPEAR",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "刺",
+      "minDamage": 8,
+      "maxDamage": 15,
+      "attackSpeed": 2000,
+      "hitRate": 5,
+      "maxDurability": 100
+    },
+    "value": 200,
+    "quality": "COMMON"
   },
   {
     "id": "snow_armor",
-    "name": "皮甲",
+    "name": "厚皮甲",
+    "aliases": ["armor", "leather armor"],
     "description": "一件用厚實的皮革縫製的護甲。",
     "type": "ARMOR",
-    "slot": "BODY",
-    "baseDefense": 5,
-    "value": 150
+    "subType": "CHEST",
+    "stats": {
+      "slot": "BODY",
+      "defense": 5,
+      "weight": 8,
+      "maxDurability": 80
+    },
+    "value": 150,
+    "quality": "COMMON"
   },
   {
     "id": "snow_sword",
     "name": "鋼刀",
+    "aliases": ["blade", "saber"],
     "description": "一把剛打造好的鋼刀，刀鋒銳利。",
     "type": "WEAPON",
-    "slot": "MAIN_HAND",
-    "minDamage": 10,
-    "maxDamage": 20,
-    "value": 500
+    "subType": "BLADE",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "劈",
+      "minDamage": 10,
+      "maxDamage": 20,
+      "attackSpeed": 1800,
+      "hitRate": 8,
+      "maxDurability": 100
+    },
+    "value": 500,
+    "quality": "COMMON"
   },
   {
     "id": "snow_blade",
-    "name": "長劍",
-    "description": "一把修長的鐵劍。",
+    "name": "霜雪長劍",
+    "aliases": ["sword", "snow sword"],
+    "description": "一把修長的鐵劍，散發著微弱的寒氣。",
     "type": "WEAPON",
-    "slot": "MAIN_HAND",
-    "minDamage": 9,
-    "maxDamage": 18,
-    "value": 450
+    "subType": "SWORD",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "刺",
+      "minDamage": 9,
+      "maxDamage": 18,
+      "attackSpeed": 1700,
+      "hitRate": 10,
+      "maxDurability": 100
+    },
+    "value": 450,
+    "quality": "COMMON"
   },
   {
     "id": "snow_meat",
     "name": "烤山豬肉",
+    "aliases": ["meat", "pork"],
     "description": "一塊香噴噴的烤山豬肉，令人垂涎三尺。",
     "type": "CONSUMABLE",
-    "effect": {
-      "type": "HEAL_HP",
+    "behavior": {
+      "effect": "HEAL_HP",
       "value": 50
     },
-    "value": 50
+    "value": 50,
+    "isStackable": true
   },
   {
     "id": "snow_wineskin",
     "name": "寒那酒袋",
+    "aliases": ["wine", "wineskin"],
     "description": "一個裝滿烈酒「寒那」的皮袋，喝一口身子就暖了起來。",
     "type": "CONSUMABLE",
-    "effect": {
-      "type": "HEAL_MP",
+    "behavior": {
+      "effect": "HEAL_MP",
       "value": 30
     },
-    "value": 100
+    "value": 100,
+    "isStackable": true
   },
   {
     "id": "heavy_hammer",
-    "name": "鐵鎚",
+    "name": "鍛造鐵鎚",
+    "aliases": ["hammer", "heavy hammer"],
     "description": "一把沉重的鐵鎚，上面沾滿了煤灰。",
     "type": "WEAPON",
-    "slot": "MAIN_HAND",
-    "minDamage": 15,
-    "maxDamage": 25,
-    "value": 0
+    "subType": "BLUNT",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "砸",
+      "minDamage": 15,
+      "maxDamage": 25,
+      "attackSpeed": 2500,
+      "hitRate": 0,
+      "maxDurability": 150
+    },
+    "value": 300,
+    "quality": "COMMON"
   },
   {
     "id": "cloth",
-    "name": "布衣",
+    "name": "粗布衣",
+    "aliases": ["cloth", "clothes"],
     "description": "普通的粗布衣服。",
     "type": "ARMOR",
-    "slot": "BODY",
-    "baseDefense": 1,
-    "value": 10
+    "subType": "CHEST",
+    "stats": {
+      "slot": "BODY",
+      "defense": 1,
+      "weight": 2,
+      "maxDurability": 30
+    },
+    "value": 10,
+    "quality": "POOR"
+  },
+  {
+    "id": "fire_starter",
+    "name": "火摺子",
+    "aliases": ["starter", "fire starter"],
+    "description": "便於攜帶的點火工具，可在漆黑環境點燃火把。",
+    "type": "MISC",
+    "value": 20,
+    "isStackable": true
+  },
+  {
+    "id": "torch",
+    "name": "火把",
+    "aliases": ["torch"],
+    "description": "浸過油脂的松木火把，能在黑暗中提供照明。",
+    "type": "MISC",
+    "value": 15,
+    "isStackable": true
+  },
+  {
+    "id": "heavy_hammer",
+    "name": "沉重鐵鎚",
+    "aliases": ["hammer", "heavy hammer", "weapon"],
+    "description": "一把鍛造用的重鐵鎚，沉重而堅固。",
+    "type": "WEAPON",
+    "subType": "HAMMER",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "砸",
+      "minDamage": 12,
+      "maxDamage": 24,
+      "attackSpeed": 2500,
+      "hitRate": 0,
+      "maxDurability": 150
+    },
+    "value": 350,
+    "quality": "COMMON"
   }
 ]

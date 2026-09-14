@@ -9,11 +9,11 @@
     -->
     <property name="LOG_PATTERN" value="%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [%X{traceId}] %msg%n" />
 
-    <!-- 控制台輸出 -->
+    <!-- 控制台輸出：自適應終端機編碼 (在 Windows CP950 終端自動為 MS950，在 UTF-8 終端或 Linux 自動為 UTF-8) -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>${LOG_PATTERN}</pattern>
-            <charset>UTF-8</charset>
+            <charset>${CONSOLE_LOG_CHARSET:-${stdout.encoding:-UTF-8}}</charset>
         </encoder>
     </appender>
 

@@ -1,0 +1,28 @@
+{
+  "java.configuration.runtimes": [
+    {
+      "default": true,
+      "name": "JavaSE-25",
+      "path": "C:\\Workspace\\DevTools\\jdk-25.0.4.1+1"
+    }
+  ],
+  "java.jdt.ls.java.home": "C:\\Workspace\\DevTools\\jdk-25.0.4.1+1",
+  "terminal.integrated.env.windows": {
+    "JAVA_TOOL_OPTIONS": "-Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8"
+  },
+  "java.debug.settings.vmArgs": "-Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8",
+  "java.debug.settings.console": "internalConsole",
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "terminal.integrated.profiles.windows": {
+    "PowerShell": {
+      "source": "PowerShell",
+      "icon": "terminal-powershell",
+      "args": [
+        "-NoExit",
+        "-Command",
+        "chcp 65001 > $null; [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; [Console]::InputEncoding = [System.Text.Encoding]::UTF8; $OutputEncoding = [System.Text.Encoding]::UTF8"
+      ]
+    }
+  },
+  "maven.executable.path": "C:\\Workspace\\DevTools\\apache-maven-3.9.16\\bin\\mvn.cmd"
+}

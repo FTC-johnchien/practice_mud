@@ -1,0 +1,72 @@
+{
+  "id": "gorging_corruption",
+  "name": "煞氣暴食",
+  "description": "張開體內的畸變之口狂暴吞噬周遭天道煞氣與敵人本源氣血。能造成暗黑煞氣傷害並將傷害反哺自身生命值。",
+  "type": "ACTIVE",
+  "school": "CORRUPTED",
+  "tags": [
+    "DARK",
+    "DRAIN",
+    "CORRUPTED",
+    "INTERNAL"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED",
+      "SPEAR",
+      "SWORD"
+    ],
+    "reqGuild": null,
+    "allowMounted": false
+  },
+  "costs": {
+    "mp": 40,
+    "stamina": 10
+  },
+  "scaling": {
+    "damagePerLevel": 1.4,
+    "hitRatePerLevel": 0.001,
+    "critRatePerLevel": 0.002
+  },
+  "mechanics": {
+    "critRate": 0.1,
+    "damage": 50,
+    "damageType": "DARK",
+    "hitRate": 0.9,
+    "maxLevel": 100,
+    "scaleStat": "CON",
+    "scaleFactor": 1.5,
+    "formulas": {
+      "damage": "skill.mechanics.damage + (user.con * 0.7) + (user.str * 0.5)"
+    }
+  },
+  "moves": [
+    {
+      "name": "暴食之口",
+      "weight": 70,
+      "damageMod": 1.0,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N周身煞氣暴漲，胸膛彷彿裂開一張森白巨口，瘋狂吮吸四周天道煞氣！",
+        "hit": "暗紅煞氣如狂蛇般自$n七竅被生生抽離，注入$N體內！$n受到 $d 點侵蝕，氣血被瘋狂吞噬！",
+        "crit": "【煞氣狂宴】深淵巨口鯨吞海飲！$n的本源氣血如決堤般湧入$N體內，受到 $d 點暗蝕吸血重創！",
+        "miss": "$n緊守心神運轉靈力，強行封閉周身毛孔，阻斷了煞氣的牽引。"
+      }
+    },
+    {
+      "name": "血肉反哺",
+      "weight": 30,
+      "damageMod": 1.3,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N發出一聲滿足的異化低吟，體表肉芽瘋狂蠕動再生，煞氣化作實質濁流衝向$n！",
+        "hit": "濁流貫體！$n身軀顫抖萎縮，生機大量消逝，受到 $d 點反哺抽取！",
+        "crit": "【生命剝奪】狂暴的煞氣洪流如跗骨之蛆吞噬氣血，$n發出虛弱的呻吟，受到 $d 點致命吸血衝擊！",
+        "miss": "$n抽身疾退，護體罡氣將席捲而來的濁流盡數彈開！"
+      }
+    }
+  ]
+}

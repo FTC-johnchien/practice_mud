@@ -10,6 +10,7 @@ import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.domain.model.template.ItemTemplate;
 import com.example.htmlmud.domain.model.template.MobTemplate;
 import com.example.htmlmud.domain.model.template.RaceTemplate;
+import com.example.htmlmud.domain.model.template.RoomExit;
 import com.example.htmlmud.domain.model.template.RoomTemplate;
 import com.example.htmlmud.domain.model.template.SkillTemplate;
 import com.example.htmlmud.domain.model.template.ZoneTemplate;
@@ -48,11 +49,14 @@ public class TemplateRepository {
     for (SkillCategory cat : SkillCategory.values()) {
       BASIC_SKILL_IDS.put(cat, ("basic_" + cat.name()).toLowerCase());
     }
+    // 修正特例技能命名與檔案實際 ID 對齊
+    BASIC_SKILL_IDS.put(SkillCategory.UNARMED, "basic_fist");
+    BASIC_SKILL_IDS.put(SkillCategory.BOW, "basic_archery");
+    BASIC_SKILL_IDS.put(SkillCategory.SPEAR, "basic_polearm");
 
     MOB_BASIC_SKILL_IDS.put(SkillCategory.UNARMED, "mob_hit");
-    MOB_BASIC_SKILL_IDS.put(SkillCategory.DODGE, "mob_dodge");
-    MOB_BASIC_SKILL_IDS.put(SkillCategory.PARRY, "mob_parry");
-    // MOB_BASIC_SKILL_IDS.put(SkillCategory.FORCE, "mob_force");
+    MOB_BASIC_SKILL_IDS.put(SkillCategory.DODGE, "mob_basic_dodge");
+    MOB_BASIC_SKILL_IDS.put(SkillCategory.PARRY, "mob_basic_parry");
   }
 
 
@@ -74,7 +78,17 @@ public class TemplateRepository {
 
   // 查詢方法
   public static Optional<RoomTemplate> findRoom(String id) {
-    return Optional.ofNullable(roomTemplates.get(id));
+    if (id == null) return Optional.empty();
+    RoomTemplate tpl = roomTemplates.get(id);
+    if (tpl != null) return Optional.of(tpl);
+    if (!id.contains(":")) {
+      for (Map.Entry<String, RoomTemplate> entry : roomTemplates.entrySet()) {
+        if (entry.getKey().endsWith(":" + id)) {
+          return Optional.of(entry.getValue());
+        }
+      }
+    }
+    return Optional.empty();
   }
 
   public static void registerMob(MobTemplate tpl) {
@@ -82,7 +96,17 @@ public class TemplateRepository {
   }
 
   public static Optional<MobTemplate> findMob(String id) {
-    return Optional.ofNullable(mobTemplates.get(id));
+    if (id == null) return Optional.empty();
+    MobTemplate tpl = mobTemplates.get(id);
+    if (tpl != null) return Optional.of(tpl);
+    if (!id.contains(":")) {
+      for (Map.Entry<String, MobTemplate> entry : mobTemplates.entrySet()) {
+        if (entry.getKey().endsWith(":" + id)) {
+          return Optional.of(entry.getValue());
+        }
+      }
+    }
+    return Optional.empty();
   }
 
   public static void registerItem(ItemTemplate tpl) {
@@ -90,11 +114,25 @@ public class TemplateRepository {
   }
 
   public static Optional<ItemTemplate> findItem(String id) {
-    return Optional.ofNullable(itemTemplates.get(id));
+    if (id == null) return Optional.empty();
+    ItemTemplate tpl = itemTemplates.get(id);
+    if (tpl != null) return Optional.of(tpl);
+    if (!id.contains(":")) {
+      for (Map.Entry<String, ItemTemplate> entry : itemTemplates.entrySet()) {
+        if (entry.getKey().endsWith(":" + id)) {
+          return Optional.of(entry.getValue());
+        }
+      }
+    }
+    return Optional.empty();
   }
 
   public static void registerSkill(SkillTemplate tpl) {
     skillTemplates.put(tpl.getId(), tpl);
+  }
+
+  public static Optional<SkillTemplate> findSkill(String id) {
+    return Optional.ofNullable(skillTemplates.get(id));
   }
 
   public static SkillTemplate getSkill(String id) {
@@ -110,7 +148,8 @@ public class TemplateRepository {
   }
 
   public static String getDefaultSkillId(SkillCategory category) {
-    return getDefaultSkill(category).getId();
+    SkillTemplate defaultSkill = getDefaultSkill(category);
+    return defaultSkill != null ? defaultSkill.getId() : BASIC_SKILL_IDS.get(category);
   }
 
   public static SkillTemplate getMobDefaultSkill(SkillCategory category) {
@@ -118,7 +157,8 @@ public class TemplateRepository {
   }
 
   public static String getMobDefaultSkillId(SkillCategory category) {
-    return getMobDefaultSkill(category).getId();
+    SkillTemplate mobDefaultSkill = getMobDefaultSkill(category);
+    return mobDefaultSkill != null ? mobDefaultSkill.getId() : MOB_BASIC_SKILL_IDS.get(category);
   }
 
 
@@ -134,7 +174,38 @@ public class TemplateRepository {
 
   // 檢查資料完整性 (Server 啟動時檢查)
   public static void validate() {
-    // 檢查 room 的 exit 是否指向存在的 room id
-    // 檢查 mob 的 loot table 是否指向存在的 item id
+    // 1. 檢查 Room Exits
+    for (RoomTemplate room : roomTemplates.values()) {
+      if (room.exits() != null) {
+        for (Map.Entry<String, RoomExit> entry : room.exits().entrySet()) {
+          String targetId = entry.getValue().targetRoomId();
+          if (targetId != null && !targetId.isBlank()) {
+            String resolvedId = targetId.contains(":") ? targetId
+                : (room.zoneId() != null ? room.zoneId() + ":" + targetId : targetId);
+            if (!roomTemplates.containsKey(resolvedId) && !roomTemplates.containsKey(targetId)) {
+              log.warn("Data Validation Warning: Room [{}] exit [{}] points to non-existent room [{}]",
+                  room.id(), entry.getKey(), targetId);
+            }
+          }
+        }
+      }
+    }
+
+    // 2. 檢查基礎技能與怪物技能存在性
+    for (Map.Entry<SkillCategory, String> entry : BASIC_SKILL_IDS.entrySet()) {
+      if (!skillTemplates.containsKey(entry.getValue())) {
+        log.warn("Data Validation Warning: Basic skill ID [{}] for category [{}] not found in skillTemplates",
+            entry.getValue(), entry.getKey());
+      }
+    }
+    for (Map.Entry<SkillCategory, String> entry : MOB_BASIC_SKILL_IDS.entrySet()) {
+      if (!skillTemplates.containsKey(entry.getValue())) {
+        log.warn("Data Validation Warning: Mob basic skill ID [{}] for category [{}] not found in skillTemplates",
+            entry.getValue(), entry.getKey());
+      }
+    }
+
+    log.info("TemplateRepository validation complete. Loaded: {} zones, {} rooms, {} mobs, {} items, {} skills, {} races",
+        zoneTemplates.size(), roomTemplates.size(), mobTemplates.size(), itemTemplates.size(), skillTemplates.size(), raceTemplates.size());
   }
 }

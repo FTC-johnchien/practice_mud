@@ -69,7 +69,7 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
 
       // 檢查玩家是否可以動作
       if (!player.isValid() || player.getGcdEndTimestamp() > System.currentTimeMillis()) {
-        player.reply("$N目前無法動作!");
+        player.reply("你目前無法動作!");
         return;
       }
 

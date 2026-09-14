@@ -40,6 +40,6 @@ public record EquipmentProp(
 
   public DamageSource getDamageSource(String name) {
     return new DamageSource(name, this.attackVerb, this.minDamage, this.maxDamage, this.attackSpeed,
-        this.attackSpeed, this.maxDurability);
+        this.hitRate, this.maxDurability);
   }
 }

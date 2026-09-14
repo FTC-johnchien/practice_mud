@@ -1,0 +1,68 @@
+[
+  {
+    "id": "corrupted_spirit_stone",
+    "name": "煞氣靈石碎片",
+    "aliases": ["stone", "spirit stone", "corrupted"],
+    "description": "表面佈滿暗紫色扭曲紋路的靈石碎片，隱約傳出細微的脈動心跳聲。",
+    "type": "CONSUMABLE",
+    "subType": "POTION",
+    "behavior": {
+      "effect": "HEAL",
+      "value": 50
+    },
+    "value": 15,
+    "quality": "UNCOMMON"
+  },
+  {
+    "id": "black_obsidian_scythe",
+    "name": "黑曜骨鐮",
+    "aliases": ["scythe", "bone scythe", "obsidian"],
+    "description": "從虛月煞氣異化畸變體上剝離下來的黑曜骨質巨鐮，刀刃泛著幽藍森寒的煞氣微光。",
+    "type": "WEAPON",
+    "subType": "SPEAR",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "揮動骨鐮怒斬",
+      "minDamage": 22,
+      "maxDamage": 35,
+      "defense": 4,
+      "attackSpeed": 1600,
+      "hitRate": 15,
+      "range": 1,
+      "maxDurability": 120
+    },
+    "value": 150,
+    "quality": "RARE"
+  },
+  {
+    "id": "miner_pickaxe",
+    "name": "斑駁靈石鶴嘴鋤",
+    "aliases": ["pickaxe", "axe", "pick"],
+    "description": "墨竹山礦坑底層雜役慣用的採礦鶴嘴鋤，鋤尖沾染了乾涸已久的暗褐色煞氣泥漿。",
+    "type": "WEAPON",
+    "subType": "BLUNT",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "重重鑿擊",
+      "minDamage": 12,
+      "maxDamage": 18,
+      "defense": 1,
+      "attackSpeed": 2000,
+      "hitRate": 8,
+      "range": 1,
+      "maxDurability": 80
+    },
+    "value": 25,
+    "quality": "COMMON"
+  },
+  {
+    "id": "elder_token",
+    "name": "墨竹山長老黑話玉牌",
+    "aliases": ["token", "elder token", "jade"],
+    "description": "墨竹山外門劍閣長老秦劍師的隨身信物。玉牌表面被現代思維錨點刻滿了「閉環、賦能、底層邏輯」等黑色幽默陣列。",
+    "type": "KEY_ITEM",
+    "subType": "KEY_ITEM",
+    "value": 999,
+    "quality": "EPIC"
+  }
+]

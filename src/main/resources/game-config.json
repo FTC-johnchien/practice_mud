@@ -23,8 +23,8 @@
   },
 
   "rules": {
-    "startRoomId": "snow_temple_gate",
-    "respawnRoomId": "underworld_gate",
+    "startRoomId": "newbie_village:square",
+    "respawnRoomId": "newbie_village:square",
     "maxLevel": 100,
     "globalCooldown": 1500,
     "combat": {
@@ -35,9 +35,9 @@
   },
 
   "zones": [
-    { "id": "newbie_village", "path": "zones/newbie_village/manifest.json", "enabled": true },
-    { "id": "snow_town", "path": "zones/snow/manifest.json", "enabled": false },
-    { "id": "dark_forest", "path": "zones/forest/manifest.json", "enabled": false },
-    { "id": "test_area", "path": "zones/test/manifest.json", "enabled": false }
+    { "id": "newbie_village", "path": "data/zones/newbie_village/manifest.json", "enabled": true },
+    { "id": "mozhu_mines", "path": "data/zones/mozhu_mines/manifest.json", "enabled": true },
+    { "id": "snow", "path": "data/zones/snow/manifest.json", "enabled": true },
+    { "id": "silverleaf", "path": "data/zones/silverleaf/manifest.json", "enabled": true }
   ]
 }
