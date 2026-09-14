@@ -85,11 +85,11 @@ public class WorldManager {
           }
         }
       } else {
-        List.of("newbie_village", "mozhu_mines", "snow", "silverleaf").forEach(this::readZone);
+        List.of("newbie_village", "mozhu_mines", "snow", "silverleaf", "taiyin_tomb").forEach(this::readZone);
       }
     } catch (Exception e) {
       log.error("動態搜尋區域失敗，退回固定載入清單", e);
-      List.of("newbie_village", "mozhu_mines", "snow", "silverleaf").forEach(this::readZone);
+      List.of("newbie_village", "mozhu_mines", "snow", "silverleaf", "taiyin_tomb").forEach(this::readZone);
     }
 
     // 啟動完成後校驗資料完整性

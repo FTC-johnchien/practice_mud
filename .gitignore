@@ -42,3 +42,4 @@ data/*.lock.db
 data/*.trace.db
 logs/
 .env
+data/muddb.lock.db

@@ -1,0 +1,27 @@
+[
+  {
+    "id": "entrance",
+    "name": "地宮甬道石階",
+    "description": "一條向下傾斜的幽暗石階，兩側石壁爬滿了詭異的真菌苔蘚，空氣中飄散著刺鼻的陰煞腐氣。",
+    "exits": {
+      "north": "hall"
+    }
+  },
+  {
+    "id": "hall",
+    "name": "太陰古殿",
+    "description": "寬廣而森冷的古墓正廳，四周矗立著八尊無頭石俑，中央是一座乾涸已久的八卦血池。",
+    "exits": {
+      "south": "entrance",
+      "east": "chamber"
+    }
+  },
+  {
+    "id": "chamber",
+    "name": "殉葬墓室",
+    "description": "陰氣凝聚的偏室，地面散落著碎裂的古棺與陶罐殘片，隱隱能聽見黑暗深處傳來骨骼摩擦的怪聲。",
+    "exits": {
+      "west": "hall"
+    }
+  }
+]

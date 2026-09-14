@@ -3,7 +3,6 @@ package com.example.htmlmud.domain.actor.behavior;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.protocol.GameCommand;
-import com.example.htmlmud.protocol.JavaFXOutput;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,8 +15,9 @@ public class InGameBehavior implements PlayerBehavior {
     log.info("InGameBehavior onEnter()");
     Player self = MudContext.currentPlayer();
 
-    // 進場時自動看一次房間
+    // 進場時自動看一次房間並初始化地牢地圖
     self.getService().getCommandDispatcher().dispatch("look");
+    self.getService().getCommandDispatcher().dispatch("map");
   }
 
   @Override

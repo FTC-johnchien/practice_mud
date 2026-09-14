@@ -54,16 +54,6 @@
       <artifactId>mapstruct</artifactId>
       <version>1.5.5.Final</version>
     </dependency>
-    <dependency>
-      <groupId>org.openjfx</groupId>
-      <artifactId>javafx-controls</artifactId>
-      <version>21</version>
-    </dependency>
-    <dependency>
-      <groupId>org.openjfx</groupId>
-      <artifactId>javafx-web</artifactId>
-      <version>21</version>
-    </dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
@@ -123,6 +113,7 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
+					<mainClass>com.example.htmlmud.HtmlmudApplication</mainClass>
 					<jvmArguments>-Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8</jvmArguments>
 					<excludes>
 						<exclude>

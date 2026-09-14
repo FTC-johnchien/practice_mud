@@ -372,6 +372,12 @@ public final class Player extends Living {
     sendText(msg);
   }
 
+  public void sendJson(Object payload) {
+    if (this.output != null) {
+      this.output.sendJson(payload);
+    }
+  }
+
   public void reconnect(Player guestPlayer) {
     this.send(new ActorMessage.Reconnect(guestPlayer));
   }

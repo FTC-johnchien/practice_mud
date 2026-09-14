@@ -1,0 +1,9 @@
+{
+  "id": "taiyin_tomb",
+  "name": "太陰古塚",
+  "minLevel": 1,
+  "maxLevel": 10,
+  "respawnTime": 60,
+  "authors": ["John", "Antigravity"],
+  "flags": ["DUNGEON", "DANGEROUS", "INDOORS", "NO_PVP"]
+}

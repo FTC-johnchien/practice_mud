@@ -1,0 +1,46 @@
+package com.example.htmlmud.domain.dungeon.model;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class DungeonFloor {
+  private String id;
+  private String name;
+  private String description;
+  private int width;
+  private int height;
+  private DungeonTile[][] tiles;
+  private GridCoord startCoord;
+  private Direction startFacing;
+
+  public boolean isInBounds(int x, int y) {
+    return x >= 0 && x < width && y >= 0 && y < height;
+  }
+
+  public boolean isInBounds(GridCoord coord) {
+    return coord != null && isInBounds(coord.x(), coord.y());
+  }
+
+  public DungeonTile getTile(int x, int y) {
+    if (!isInBounds(x, y)) {
+      return DungeonTile.wall();
+    }
+    return tiles[y][x];
+  }
+
+  public DungeonTile getTile(GridCoord coord) {
+    return getTile(coord.x(), coord.y());
+  }
+
+  public void setTile(int x, int y, DungeonTile tile) {
+    if (isInBounds(x, y)) {
+      tiles[y][x] = tile;
+    }
+  }
+}

@@ -82,7 +82,11 @@ function handleServerMessage(data) {
     }
 //    console.log(data.type);
 
-    if (data.type === 'TEXT' || data.content) {
+    if (data.type === 'DRPG_STATE') {
+        if (typeof updateDrpgView === 'function') {
+            updateDrpgView(data);
+        }
+    } else if (data.type === 'TEXT' || data.content) {
         appendHtml(data.content || data.text);
     } else if (data.type === 'STAT_UPDATE' || data.type === 'stats' || data.hp !== undefined) {
         updateStats(data);

@@ -3,52 +3,117 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Modern MUD Mobile</title>
+  <title>道祖是克蘇魯 - DRPG 靈境探索</title>
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/ansi_up@5.1.0/ansi_up.min.js"></script>
 </head>
 <body>
 
   <div class="game-container">
-    <div class="status-header">
-      <div>
-        <div style="font-size: 12px;">HP: <span id="hp-val">0/0</span></div>
-        <div class="bar-container"><div id="hp-bar" class="bar-fill hp-fill" style="width: 0%"></div></div>
+    <!-- 頂部資訊列：模式提示與陣法靈威槽 -->
+    <header class="top-nav-bar">
+      <div id="control-mode-badge" class="mode-badge mode-exploring">
+        🎮 步進探索模式 (按 W/A/S/D 移動，按 / 或 Enter 輸入指令)
       </div>
-      <div>
-        <div style="font-size: 12px;">MP: <span id="mp-val">0/0</span></div>
-        <div class="bar-container"><div id="mp-bar" class="bar-fill mp-fill" style="width: 0%"></div></div>
-      </div>
-    </div>
 
-    <div id="log"></div>
-
-    <div class="mobile-panel">
-      <div class="quick-actions">
-        <button onclick="send('sc')">狀態</button>
-        <button onclick="send('i')">物品</button>
-        <button onclick="send('get all')">全撿</button>
-        <button onclick="send('skills')">技能</button>
-        <button onclick="send('rest')">休息</button>
-        <button onclick="send('sit')">坐下</button>
+      <div class="formation-status-wrap" onclick="if(window.triggerFormationAction) triggerFormationAction(); else send('formation toggle');" style="cursor: pointer;" title="點擊切換結成之道門陣法 (F)">
+        <div id="formation-info" class="formation-info">
+          <span class="formation-name">☯️ 陣法：【未結陣】</span>
+          <span class="formation-energy-val">靈威: 0/100</span>
+        </div>
+        <div class="formation-bar-container">
+          <div id="formation-bar" class="formation-bar-fill" style="width: 0%"></div>
+        </div>
+        <button id="ult-btn" class="ult-trigger-btn" onclick="event.stopPropagation(); send('formation cast')" title="釋放陣法奧義大招 (U)">⚡ 陣法奧義</button>
       </div>
-      <div class="direction-pad">
-        <button class="dir-btn" onclick="send('nw')">↖</button>
-        <button class="dir-btn" onclick="send('n')">N</button>
-        <button class="dir-btn" onclick="send('ne')">↗</button>
-        <button class="dir-btn" onclick="send('w')">W</button>
-        <button class="dir-btn center-btn" onclick="send('l')">👁️</button>
-        <button class="dir-btn" onclick="send('e')">E</button>
-        <button class="dir-btn" onclick="send('sw')">↙</button>
-        <button class="dir-btn" onclick="send('s')">S</button>
-        <button class="dir-btn" onclick="send('se')">↘</button>
-      </div>
-    </div>
+    </header>
 
-    <div class="input-bar">
-      <input type="text" id="cmd-input" placeholder="輸入指令..." autocomplete="off" autofocus>
-      <button onclick="handleEnter()" style="margin-left: 5px; padding: 0 15px;">發送</button>
-    </div>
+    <!-- 主畫面視窗：左側 10x10 地牢雷達，右側冒險文字日誌 -->
+    <main class="main-viewport">
+      <aside class="dungeon-radar-panel">
+        <div id="drpg-floor-info" class="radar-header">
+          <span class="floor-title">🏛️ 太陰古塚一層 (B1F)</span>
+          <span class="coord-tag">[X: 1, Y: 1]</span>
+          <span class="facing-tag">朝向: <strong class="arrow-glow">▲</strong> 北</span>
+        </div>
+
+        <div class="radar-grid-container">
+          <div id="drpg-grid" class="radar-grid">
+            <!-- 由 drpg-view.js 動態渲染 10x10 地塊 -->
+          </div>
+        </div>
+
+        <div id="drpg-forward-inspect" class="forward-inspect-card">
+          【正前方】凝神探查中...
+        </div>
+      </aside>
+
+      <!-- 右側主體：戰場敵方陣列 + 戰鬥冒險日誌 -->
+      <div class="log-and-battle-area">
+        <!-- 戰鬥交鋒面板 (戰鬥時動態顯示) -->
+        <section id="battle-arena-panel" class="battle-arena-panel hidden">
+          <div class="battle-arena-header">
+            <div class="battle-header-left">
+              <span class="battle-title">⚔️ 太陰地宮・交鋒戰場</span>
+              <span id="battle-status-badge" class="battle-status-badge">戰鬥交鋒中</span>
+            </div>
+            <div class="battle-header-right">
+              <span class="battle-tip">點擊敵怪可鎖定集火目標，點擊下方隊員可施放專屬招式</span>
+            </div>
+          </div>
+          <div id="battle-enemies-container" class="battle-enemies-container">
+            <!-- 由 drpg-view.js 動態渲染敵方前排與後排 -->
+          </div>
+        </section>
+
+        <section id="log"></section>
+      </div>
+    </main>
+
+    <!-- 下部：6 人小隊狀態 HUD -->
+    <section class="party-hud-panel">
+      <div id="party-members-list" class="party-members-list">
+        <!-- 由 drpg-view.js 動態渲染 6 名小隊成員卡片 -->
+      </div>
+    </section>
+
+    <!-- 隊員專屬技能盤 / 抽屜 (點選隊員卡片滑出) -->
+    <section id="skill-drawer" class="skill-drawer hidden">
+      <!-- 由 drpg-view.js 動態渲染所選隊員的技能按鈕、能量消耗與 CD 倒數 -->
+    </section>
+
+    <!-- 底部操作列：十字步進盤、快捷功能按鍵與文字指令輸入 -->
+    <footer class="bottom-control-panel">
+      <div class="quick-dpad-wrap">
+        <div class="dpad-grid">
+          <button class="dpad-btn dpad-forward" onclick="if(window.sendStep) sendStep('w'); else send('step w');" title="前進 (W)">▲</button>
+          <button class="dpad-btn dpad-left" onclick="if(window.sendStep) sendStep('a'); else send('step a');" title="左轉 90度 (A)">◀</button>
+          <button class="dpad-btn dpad-backward" onclick="if(window.sendStep) sendStep('s'); else send('step s');" title="後退 (S)">▼</button>
+          <button class="dpad-btn dpad-right" onclick="if(window.sendStep) sendStep('d'); else send('step d');" title="右轉 90度 (D)">▶</button>
+        </div>
+
+        <!-- 探索模式按鍵組 -->
+        <div id="action-buttons-group" class="action-buttons-group">
+          <button class="act-btn" onclick="if(window.triggerPartyAction) triggerPartyAction(); else send('party');" title="檢視/同步小隊狀態 (P)">👥 小隊 (P)</button>
+          <button class="act-btn" onclick="if(window.triggerFormationAction) triggerFormationAction(); else send('formation toggle');" title="切換道門陣法 (F)">☯️ 陣法 (F)</button>
+          <button class="act-btn" onclick="if(window.triggerInspectAction) triggerInspectAction(); else send('dungeon look');" title="凝神探查正前方地塊 (I)">👁️ 探查 (I)</button>
+          <button class="act-btn" onclick="if(window.triggerRestAction) triggerRestAction(); else send('rest');" title="凝神調息回復氣血與真元 (R)">🌿 休息 (R)</button>
+        </div>
+
+        <!-- 戰鬥模式按鍵組 (平時隱藏) -->
+        <div id="battle-buttons-group" class="action-buttons-group hidden">
+          <button class="act-btn btn-fight" onclick="send('battle fight')" title="全隊集火主動迎戰 (Space)">⚔️ 迎戰 (Space)</button>
+          <button class="act-btn btn-flee" onclick="send('battle flee')" title="遁地撤退 (-5 SAN) (Esc)">🏃 遁地 (Esc)</button>
+          <button class="act-btn btn-ult" onclick="send('formation cast')" title="釋放小隊陣法專屬奧義 (U)">⚡ 陣法奧義 (U)</button>
+          <button class="act-btn" onclick="send('party')" title="檢視小隊詳細戰況 (P)">👥 小隊 (P)</button>
+        </div>
+      </div>
+
+      <div class="input-container">
+        <input type="text" id="cmd-input" class="cmd-input-field" placeholder="按 / 或 Enter 輸入文字指令，Esc 切回步進..." autocomplete="off">
+        <button class="send-btn" onclick="handleEnter()">發送</button>
+      </div>
+    </footer>
   </div>
 
   <script src="js/mud-core.js"></script>
@@ -57,11 +122,16 @@
   <script>
     let ws = null;
     function connect() {
-      const socketUrl = 'ws://localhost:8080/ws';
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.host || 'localhost:8080';
+      const socketUrl = `${protocol}//${host}/ws`;
+
       ws = new WebSocket(socketUrl);
-      ws.onopen = () => appendHtml("系統：連線成功！", "#00ff00");
+      ws.onopen = () => {
+        appendHtml("系統：神識已連結至太陰地宮！", "#10b981");
+      };
       ws.onclose = () => {
-        appendHtml("系統：連線中斷，3秒後重連...", "#ff4444");
+        appendHtml("系統：靈識中斷，3秒後嘗試凝神重連...", "#ef4444");
         setTimeout(connect, 3000);
       };
       ws.onmessage = (event) => handleServerMessage(event.data);
@@ -70,10 +140,15 @@
     function send(cmd) {
       if (!cmd || !ws || ws.readyState !== WebSocket.OPEN) return;
       ws.send(JSON.stringify({ type: "INPUT", text: cmd }));
-      appendHtml("> " + cmd, "#888");
+      // 指令步進不需洗版文字日誌，僅特別指令記錄
+      if (!cmd.startsWith('step ')) {
+        appendHtml("> " + cmd, "#6b7280");
+      }
     }
 
+    window.send = send;
     connect();
   </script>
+  <script src="js/drpg-view.js"></script>
 </body>
 </html>

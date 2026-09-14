@@ -1,0 +1,122 @@
+[
+  {
+    "id": "corpse_doll",
+    "name": "腐化屍偶",
+    "gender": "ANIMAL",
+    "race": "undead",
+    "aliases": ["corpse", "doll", "zombie"],
+    "kind": "HOSTILE",
+    "level": 2,
+    "maxHp": 120,
+    "maxMp": 20,
+    "str": 12,
+    "dex": 8,
+    "con": 14,
+    "attackVerb": "揮舞",
+    "attackNoun": "長滿黑斑的腐爛爪臂",
+    "minDamage": 8,
+    "maxDamage": 14,
+    "defense": 2,
+    "attackSpeed": 2200,
+    "description": "一具被詭異陰煞操縱的古屍，身上長滿了墨黑色的真菌與肉芽，雙目空洞死寂。",
+    "expReward": 25,
+    "loot": [
+      {
+        "itemId": "taiyin_tomb:taiyin_pill",
+        "chance": 0.4
+      }
+    ]
+  },
+  {
+    "id": "blood_python",
+    "name": "陰靈血蟒",
+    "gender": "ANIMAL",
+    "race": "beast",
+    "aliases": ["python", "snake", "serpent"],
+    "kind": "HOSTILE",
+    "level": 3,
+    "maxHp": 160,
+    "maxMp": 50,
+    "str": 15,
+    "dex": 16,
+    "con": 12,
+    "attackVerb": "撕咬",
+    "attackNoun": "滴著腥臭綠涎的毒牙",
+    "minDamage": 12,
+    "maxDamage": 18,
+    "defense": 3,
+    "attackSpeed": 1800,
+    "description": "棲息於墓室深水溝壑中的異變巨蟒，鱗片泛著猩紅幽光，信子吐納間傳來陣陣神經麻痺的惡臭。",
+    "expReward": 40,
+    "loot": [
+      {
+        "itemId": "taiyin_tomb:purify_talisman",
+        "chance": 0.35
+      }
+    ]
+  },
+  {
+    "id": "tomb_guard",
+    "name": "異化守墓道奴",
+    "gender": "MALE",
+    "race": "undead",
+    "aliases": ["guard", "tomb guard", "slave"],
+    "kind": "HOSTILE",
+    "level": 5,
+    "maxHp": 280,
+    "maxMp": 80,
+    "str": 22,
+    "dex": 12,
+    "con": 20,
+    "attackVerb": "猛劈",
+    "attackNoun": "鏽蝕斑駁的重刃",
+    "minDamage": 18,
+    "maxDamage": 28,
+    "defense": 8,
+    "attackSpeed": 2400,
+    "description": "昔年殉葬的古宗護法道奴，身軀與玄鐵甲冑早已因血肉畸變融為一體，散發恐怖的道威殘息。",
+    "expReward": 85,
+    "loot": [
+      {
+        "itemId": "taiyin_tomb:bronze_sword",
+        "chance": 0.25
+      },
+      {
+        "itemId": "taiyin_tomb:yin_robe",
+        "chance": 0.15
+      },
+      {
+        "itemId": "taiyin_tomb:tomb_key",
+        "chance": 0.5
+      }
+    ]
+  },
+  {
+    "id": "bone_bat",
+    "name": "邪祟骨蝠",
+    "gender": "ANIMAL",
+    "race": "beast",
+    "aliases": ["bat", "bone bat"],
+    "kind": "HOSTILE",
+    "level": 1,
+    "maxHp": 75,
+    "maxMp": 10,
+    "str": 8,
+    "dex": 18,
+    "con": 6,
+    "attackVerb": "俯衝撲咬",
+    "attackNoun": "白森森的骸骨尖吻",
+    "minDamage": 5,
+    "maxDamage": 10,
+    "defense": 1,
+    "attackSpeed": 1500,
+    "description": "倒吊在墓穴甬道穹頂的畸變骨蝠，雙翼無羽無皮，僅由嶙峋骨架與暗紫膜絲構成。",
+    "expReward": 15,
+    "loot": [
+      {
+        "itemId": "taiyin_tomb:taiyin_pill",
+        "chance": 0.2
+      }
+    ]
+  }
+]

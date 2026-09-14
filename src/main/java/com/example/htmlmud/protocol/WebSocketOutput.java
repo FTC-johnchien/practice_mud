@@ -18,7 +18,10 @@ public class WebSocketOutput implements MessageOutput {
   }
 
   @Override
-  public void sendJson(Object payload) {
+  public synchronized void sendJson(Object payload) {
+    if (session == null || !session.isOpen()) {
+      return;
+    }
     try {
       session.sendMessage(new TextMessage(objectMapper.writeValueAsString(payload)));
     } catch (IOException e) {
@@ -27,7 +30,7 @@ public class WebSocketOutput implements MessageOutput {
   }
 
   @Override
-  public void close() {
+  public synchronized void close() {
     if (session == null || !session.isOpen()) {
       return;
     }

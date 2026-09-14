@@ -304,7 +304,17 @@ public class GuestBehavior implements PlayerBehavior {
     // log.info("玩家登入: {} {}", this.tempUsername, this.tempPassword);
 
     // 登入玩家帳密
-    PlayerRecord record = authService.login(tempUsername, tempPassword);
+    PlayerRecord record;
+    try {
+      record = authService.login(tempUsername, tempPassword);
+    } catch (Exception e) {
+      self.reply(e.getMessage());
+      self.reply("請重新輸入 帳號 進行登入 或 輸入 'new' 進行註冊：");
+      self.setConnectionState(ConnectionState.CONNECTED);
+      this.tempUsername = null;
+      this.tempPassword = null;
+      return null;
+    }
 
     // 查詢是否存在該帳號 (斷線重連)
     log.info("record.id: {}", record.id());
