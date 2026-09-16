@@ -12,14 +12,11 @@
     "bodyParts": [
       "HEAD",
       "BODY",
-      "ARMS",
-      "LEGS",
-      "HANDS",
       "FEET",
-      "WAIST",
-      "NECK",
-      "FINGER",
-      "WRISTS"
+      "MAIN_HAND",
+      "OFF_HAND",
+      "ACCESSORY_1",
+      "ACCESSORY_2"
     ],
     "combat": {
       "naturalAttacks": [
@@ -61,9 +58,7 @@
     "bodyParts": [
       "HEAD",
       "BODY",
-      "LEGS",
-      "FEET",
-      "TAIL"
+      "FEET"
     ],
     "combat": {
       "naturalAttacks": [
@@ -102,10 +97,7 @@
     "bodyParts": [
       "HEAD",
       "BODY",
-      "LEGS",
-      "FEET",
-      "TAIL",
-      "CLAWS"
+      "FEET"
     ],
     "combat": {
       "naturalAttacks": [
@@ -149,12 +141,9 @@
     "bodyParts": [
       "HEAD",
       "BODY",
-      "CHEST",
-      "ARMS",
-      "LEGS",
-      "HANDS",
       "FEET",
-      "WAIST"
+      "MAIN_HAND",
+      "OFF_HAND"
     ],
     "combat": {
       "naturalAttacks": [
@@ -192,10 +181,7 @@
     },
     "bodyParts": [
       "HEAD",
-      "BODY",
-      "WINGS",
-      "TAIL",
-      "CLAWS"
+      "BODY"
     ],
     "combat": {
       "naturalArmor": 50,

@@ -8,9 +8,13 @@ public enum SkillType {
 
   MAGIC("魔法"),
 
-  ACTIVE("主动技能"),
+  ACTIVE("主動技能"),
 
-  PASSIVE("被動技能");
+  PASSIVE("被動技能"),
+
+  REACTIVE("反應技能"),
+
+  CHANNEL("導引技能");
 
 
   private final String description;

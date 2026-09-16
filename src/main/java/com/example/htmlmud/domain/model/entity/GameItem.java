@@ -107,11 +107,21 @@ public class GameItem {
    * 取得此物品對應的裝備欄位 (給 EquipmentService 用)
    */
   public EquipmentSlot getEquipmentSlot() {
-    if (this.type == ItemType.WEAPON)
+    ItemTemplate tpl = getTemplate();
+    if (tpl != null && tpl.equipmentProp() != null && tpl.equipmentProp().slot() != null) {
+      return tpl.equipmentProp().slot();
+    }
+    if (this.type == ItemType.WEAPON) {
       return EquipmentSlot.MAIN_HAND;
+    }
+    if (this.type == ItemType.SHIELD) {
+      return EquipmentSlot.OFF_HAND;
+    }
+    if (this.type == ItemType.ACCESSORY) {
+      return EquipmentSlot.ACCESSORY_1;
+    }
     if (this.type == ItemType.ARMOR) {
-      // 將 "HEAD" 轉為 EquipmentSlot.HEAD
-      return EquipmentSlot.valueOf(this.subType);
+      return EquipmentSlot.fromString(this.subType);
     }
     return null; // 不可裝備
   }

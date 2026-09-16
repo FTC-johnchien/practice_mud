@@ -53,6 +53,12 @@ public class TemplateRepository {
     BASIC_SKILL_IDS.put(SkillCategory.UNARMED, "basic_fist");
     BASIC_SKILL_IDS.put(SkillCategory.BOW, "basic_archery");
     BASIC_SKILL_IDS.put(SkillCategory.SPEAR, "basic_polearm");
+    BASIC_SKILL_IDS.put(SkillCategory.POLEARM, "basic_polearm");
+    BASIC_SKILL_IDS.put(SkillCategory.HAMMER, "basic_blunt");
+    BASIC_SKILL_IDS.put(SkillCategory.FORCE, "basic_breathing");
+    BASIC_SKILL_IDS.put(SkillCategory.MEDICAL, "basic_first_aid");
+    BASIC_SKILL_IDS.put(SkillCategory.STAFF, "basic_magic_staff");
+    BASIC_SKILL_IDS.put(SkillCategory.WAND, "basic_magic_staff");
 
     MOB_BASIC_SKILL_IDS.put(SkillCategory.UNARMED, "mob_hit");
     MOB_BASIC_SKILL_IDS.put(SkillCategory.DODGE, "mob_basic_dodge");

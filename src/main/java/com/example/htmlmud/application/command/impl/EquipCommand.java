@@ -39,7 +39,7 @@ public class EquipCommand implements PlayerCommand {
           return;
         } catch (NumberFormatException ignored) {}
       }
-      self.reply("用法: unequip <weapon/armor> <隊員編號0-5>");
+      self.reply("用法: unequip <部位> <隊員編號0-5> (支援 weapon, shield, armor, head, feet, acc1, acc2)");
       return;
     }
 

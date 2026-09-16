@@ -2,6 +2,7 @@ package com.example.htmlmud.domain.party.model;
 
 import java.util.HashMap;
 import java.util.Map;
+import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
@@ -22,6 +23,7 @@ public class PartyItemSlot {
   private String icon = "📦";
   private ItemType itemType;
   private String subType;
+  private EquipmentSlot equipSlot;
   @Builder.Default
   private int count = 1;
   @Builder.Default
@@ -54,12 +56,25 @@ public class PartyItemSlot {
     return itemType == ItemType.CONSUMABLE || "SKILL_CORE".equals(subType);
   }
 
+  public boolean isEquipment() {
+    return isWeapon() || isArmor() || isShield() || isAccessory() || equipSlot != null;
+  }
+
   public boolean isWeapon() {
-    return itemType == ItemType.WEAPON;
+    return itemType == ItemType.WEAPON || equipSlot == EquipmentSlot.MAIN_HAND;
+  }
+
+  public boolean isShield() {
+    return itemType == ItemType.SHIELD || equipSlot == EquipmentSlot.OFF_HAND;
+  }
+
+  public boolean isAccessory() {
+    return itemType == ItemType.ACCESSORY || (equipSlot != null && equipSlot.isAccessory());
   }
 
   public boolean isArmor() {
-    return itemType == ItemType.ARMOR;
+    return itemType == ItemType.ARMOR
+        || (equipSlot != null && (equipSlot == EquipmentSlot.BODY || equipSlot == EquipmentSlot.HEAD || equipSlot == EquipmentSlot.FEET));
   }
 
   public boolean isStackable() {

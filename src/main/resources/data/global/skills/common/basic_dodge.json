@@ -29,10 +29,10 @@
   "mechanics": {
     "dodgeRate": 0.15,
     "maxLevel": 100,
-    "scaleStat": "AGI",
+    "scaleStat": "DEX",
     "scaleFactor": 1.2,
     "formulas": {
-      "successRate": "skill.mechanics.dodgeRate + (user.agi * 0.01) - (target.hitRate * 0.5)"
+      "successRate": "skill.mechanics.dodgeRate + (user.dex * 0.01) - (target.hitRate * 0.5)"
     }
   },
   "moves": [

@@ -388,6 +388,25 @@ function renderPartyHud(party) {
     const armorName = m.equippedArmor ? `${m.equippedArmor.icon} ${m.equippedArmor.name}` : '🥋 布衣';
     const unequipArmorBtn = m.equippedArmor ? `<button class="unequip-mini-btn" onclick="event.stopPropagation(); send('item unequip armor ${idx}')" title="卸下防具放回行囊">✕</button>` : '';
 
+    // 其它部位裝備 (副手、頭部、靴履、法寶)
+    let extraEquipHtml = '';
+    if (m.equipment) {
+      const otherSlots = [
+        { key: 'OFF_HAND', alias: 'shield', label: '副手' },
+        { key: 'HEAD', alias: 'head', label: '頭部' },
+        { key: 'FEET', alias: 'feet', label: '靴履' },
+        { key: 'ACCESSORY_1', alias: 'acc1', label: '法寶一' },
+        { key: 'ACCESSORY_2', alias: 'acc2', label: '法寶二' }
+      ];
+      for (const slot of otherSlots) {
+        const item = m.equipment[slot.key];
+        if (item) {
+          const btn = `<button class="unequip-mini-btn" onclick="event.stopPropagation(); send('item unequip ${slot.alias} ${idx}')" title="卸下${slot.label}放回行囊">✕</button>`;
+          extraEquipHtml += `<span class="equip-tag" title="${item.description || slot.label}">${item.icon || '📦'} ${item.name}${btn}</span>`;
+        }
+      }
+    }
+
     card.innerHTML = `
       <div class="card-info-side">
         <div class="card-name-row">
@@ -399,6 +418,7 @@ function renderPartyHud(party) {
         <div class="member-equip-row">
           <span class="equip-tag" title="${m.equippedWeapon ? m.equippedWeapon.description : '空手'}">${weaponName}${unequipWeaponBtn}</span>
           <span class="equip-tag" title="${m.equippedArmor ? m.equippedArmor.description : '布衣'}">${armorName}${unequipArmorBtn}</span>
+          ${extraEquipHtml}
         </div>
       </div>
       <div class="card-bars-side">
@@ -635,7 +655,7 @@ function renderBagDrawer() {
       `;
     }
 
-    if (item.weapon || item.armor) {
+    if (item.weapon || item.armor || item.equipment || item.equipSlot || item.itemType === 'WEAPON' || item.itemType === 'ARMOR' || item.itemType === 'SHIELD' || item.itemType === 'ACCESSORY') {
       const btns = members.map((m, mIdx) => {
         const isAlive = (m.alive !== undefined) ? m.alive : (m.hp > 0);
         return `<button class="item-act-mini-btn btn-equip" ${isAlive ? '' : 'disabled'}

@@ -1,0 +1,78 @@
+{
+  "id": "basic_axe",
+  "name": "基本斧法",
+  "description": "大開大闔的基礎劈砍技巧，善於破甲與破盾，講究勢大力沉，以威猛霸道著稱。",
+  "type": "PASSIVE",
+  "school": "COMMON",
+  "tags": [
+    "WEAPON",
+    "AXE",
+    "BASIC",
+    "PHYSICAL"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      "AXE",
+      "POLEAXE"
+    ]
+  },
+  "costs": {
+    "stamina": 4
+  },
+  "scaling": {
+    "damagePerLevel": 0.65,
+    "hitRatePerLevel": 0.001,
+    "critRatePerLevel": 0.002
+  },
+  "mechanics": {
+    "critRate": 0.06,
+    "damage": 9,
+    "damageType": "SLASH",
+    "hitRate": 0.88,
+    "maxLevel": 100,
+    "scaleStat": "STR",
+    "scaleFactor": 1.15,
+    "formulas": {
+      "damage": "skill.mechanics.damage + (user.str * 0.16)"
+    }
+  },
+  "moves": [
+    {
+      "name": "開山力劈",
+      "weight": 50,
+      "damageMod": 1.1,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N高舉$W，夾帶著開山斷石之勢，重重劈向$n的$l。",
+        "hit": "$W帶著尖銳的呼嘯聲劈落，$n避之不及，被重創撕開一道深深的傷口，受到 $d 傷害！",
+        "miss": "$n一個後滾翻，險之又險地躲過，$W重重劈在地面上濺起漫天碎石。"
+      }
+    },
+    {
+      "name": "橫掃千軍",
+      "weight": 35,
+      "damageMod": 0.95,
+      "hitRateMod": 0.1,
+      "critRateMod": 0.0,
+      "msg": {
+        "cast": "$N腰部發力，雙手輪動$W橫向大範圍揮掃，直奔$n的腰腹。",
+        "hit": "$n來不及拉開距離，被$W沉重的斧刃掃中，身形踉蹌，受到 $d 傷害！",
+        "miss": "$n矮身低頭，凌厲的斧風擦著頭頂掠過。"
+      }
+    },
+    {
+      "name": "斧刃重斬",
+      "weight": 25,
+      "damageMod": 1.3,
+      "hitRateMod": -0.05,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N怒吼一聲，全身肌肉暴起，將全部重量壓在$W之上斬向$n。",
+        "hit": "【重擊】$W以泰山壓頂之勢劈中$n，骨骼碎裂聲清晰可聞，造成 $d 點恐怖傷害！",
+        "crit": "【重擊】$W勢不可擋地撕裂了$n的護甲，血光四濺，造成 $d 點致命傷害！",
+        "miss": "$n看準$N出招前搖較長，及時側躍避開了這剛猛的一斧。"
+      }
+    }
+  ]
+}

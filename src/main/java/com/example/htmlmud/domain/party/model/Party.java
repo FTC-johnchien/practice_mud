@@ -3,6 +3,7 @@ package com.example.htmlmud.domain.party.model;
 import java.util.ArrayList;
 import java.util.List;
 import com.example.htmlmud.domain.model.entity.LivingStats;
+import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
@@ -105,23 +106,48 @@ public class Party {
       return "行囊中無此物品！";
     }
 
-    if (slot.isWeapon()) {
-      getInventory().removeItem(slotId, 1);
-      PartyItemSlot old = target.equipWeapon(slot);
-      if (old != null) {
-        getInventory().addSlot(old);
-      }
-      return "⚔️ " + target.getName() + " 裝備了武器【" + slot.getName() + "】！攻擊力顯著提升！";
-    } else if (slot.isArmor()) {
-      getInventory().removeItem(slotId, 1);
-      PartyItemSlot old = target.equipArmor(slot);
-      if (old != null) {
-        getInventory().addSlot(old);
-      }
-      return "🥋 " + target.getName() + " 穿戴了防具【" + slot.getName() + "】！防禦與氣血提升！";
+    if (!slot.isEquipment()) {
+      return "該物品並非法寶裝備，無法穿戴！";
     }
 
-    return "該物品並非法寶裝備，無法穿戴！";
+    // 確定要穿戴的目標槽位
+    com.example.htmlmud.domain.model.enums.EquipmentSlot targetSlot = slot.getEquipSlot();
+    if (targetSlot == null) {
+      if (slot.isWeapon()) targetSlot = com.example.htmlmud.domain.model.enums.EquipmentSlot.MAIN_HAND;
+      else if (slot.isShield()) targetSlot = com.example.htmlmud.domain.model.enums.EquipmentSlot.OFF_HAND;
+      else if (slot.isAccessory()) targetSlot = com.example.htmlmud.domain.model.enums.EquipmentSlot.ACCESSORY_1;
+      else if (slot.isArmor()) targetSlot = com.example.htmlmud.domain.model.enums.EquipmentSlot.BODY;
+    }
+
+    // 若為飾品，智慧判斷 ACCESSORY_1 或 ACCESSORY_2 是否為空
+    if (targetSlot != null && targetSlot.isAccessory()) {
+      if (target.getEquipment().get(com.example.htmlmud.domain.model.enums.EquipmentSlot.ACCESSORY_1) == null) {
+        targetSlot = com.example.htmlmud.domain.model.enums.EquipmentSlot.ACCESSORY_1;
+      } else if (target.getEquipment().get(com.example.htmlmud.domain.model.enums.EquipmentSlot.ACCESSORY_2) == null) {
+        targetSlot = com.example.htmlmud.domain.model.enums.EquipmentSlot.ACCESSORY_2;
+      } else {
+        targetSlot = com.example.htmlmud.domain.model.enums.EquipmentSlot.ACCESSORY_1;
+      }
+    }
+
+    if (targetSlot == null) {
+      targetSlot = com.example.htmlmud.domain.model.enums.EquipmentSlot.BODY;
+    }
+
+    getInventory().removeItem(slotId, 1);
+    PartyItemSlot old = target.equip(targetSlot, slot);
+    if (old != null) {
+      getInventory().addSlot(old);
+    }
+
+    return switch (targetSlot) {
+      case MAIN_HAND -> "⚔️ " + target.getName() + " 裝備了武器【" + slot.getName() + "】！攻擊力顯著提升！";
+      case OFF_HAND -> "🛡️ " + target.getName() + " 裝備了副手【" + slot.getName() + "】！防禦加成提升！";
+      case HEAD -> "👑 " + target.getName() + " 穿戴了頭部防具【" + slot.getName() + "】！防禦與屬性提升！";
+      case BODY -> "🥋 " + target.getName() + " 穿戴了防具【" + slot.getName() + "】！防禦與氣血提升！";
+      case FEET -> "👢 " + target.getName() + " 穿戴了靴履【" + slot.getName() + "】！身法敏捷提升！";
+      case ACCESSORY_1, ACCESSORY_2 -> "💍 " + target.getName() + " 佩戴了法寶【" + slot.getName() + "】(" + targetSlot.getDisplayName() + ")！靈韻道心增幅！";
+    };
   }
 
   public String unequipItemFromMember(String slotType, int memberIdx) {
@@ -129,22 +155,51 @@ public class Party {
       return "無效的隊員編號！";
     }
     PartyMember target = members.get(memberIdx);
-    if ("weapon".equalsIgnoreCase(slotType)) {
-      PartyItemSlot old = target.unequipWeapon();
-      if (old != null) {
-        getInventory().addSlot(old);
+    if (slotType == null || slotType.trim().isEmpty()) {
+      return "請指定要卸下的裝備部位！";
+    }
+
+    String key = slotType.trim().toLowerCase();
+    com.example.htmlmud.domain.model.enums.EquipmentSlot targetSlot = switch (key) {
+      case "weapon", "main_hand", "main" -> com.example.htmlmud.domain.model.enums.EquipmentSlot.MAIN_HAND;
+      case "shield", "off_hand", "off" -> com.example.htmlmud.domain.model.enums.EquipmentSlot.OFF_HAND;
+      case "armor", "body", "chest" -> com.example.htmlmud.domain.model.enums.EquipmentSlot.BODY;
+      case "head", "helm", "helmet" -> com.example.htmlmud.domain.model.enums.EquipmentSlot.HEAD;
+      case "feet", "boots", "shoes", "legs" -> com.example.htmlmud.domain.model.enums.EquipmentSlot.FEET;
+      case "acc1", "accessory_1", "ring" -> com.example.htmlmud.domain.model.enums.EquipmentSlot.ACCESSORY_1;
+      case "acc2", "accessory_2", "trinket" -> com.example.htmlmud.domain.model.enums.EquipmentSlot.ACCESSORY_2;
+      default -> {
+        try {
+          yield com.example.htmlmud.domain.model.enums.EquipmentSlot.valueOf(slotType.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+          yield null;
+        }
+      }
+    };
+
+    if (targetSlot == null) {
+      return "無效的裝備部位 (支援 weapon, shield, armor, head, feet, acc1, acc2)！";
+    }
+
+    PartyItemSlot old = target.unequip(targetSlot);
+    if (old != null) {
+      getInventory().addSlot(old);
+      if (targetSlot == com.example.htmlmud.domain.model.enums.EquipmentSlot.MAIN_HAND) {
         return "🗡️ " + target.getName() + " 卸下了武器【" + old.getName() + "】。";
-      }
-      return target.getName() + " 未裝備任何武器！";
-    } else if ("armor".equalsIgnoreCase(slotType)) {
-      PartyItemSlot old = target.unequipArmor();
-      if (old != null) {
-        getInventory().addSlot(old);
+      } else if (targetSlot == com.example.htmlmud.domain.model.enums.EquipmentSlot.BODY) {
         return "🥋 " + target.getName() + " 卸下了防具【" + old.getName() + "】。";
+      } else {
+        String icon = (old.getIcon() != null) ? old.getIcon() : "📦";
+        return icon + " " + target.getName() + " 卸下了" + targetSlot.getDisplayName() + "【" + old.getName() + "】。";
       }
+    }
+
+    if (targetSlot == com.example.htmlmud.domain.model.enums.EquipmentSlot.MAIN_HAND) {
+      return target.getName() + " 未裝備任何武器！";
+    } else if (targetSlot == com.example.htmlmud.domain.model.enums.EquipmentSlot.BODY) {
       return target.getName() + " 未穿戴任何防具！";
     }
-    return "無效的裝備部位 (支援 weapon, armor)！";
+    return target.getName() + " 的【" + targetSlot.getDisplayName() + "】部位未穿戴任何裝備！";
   }
 
   public boolean addMember(PartyMember member) {

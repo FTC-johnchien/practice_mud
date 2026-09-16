@@ -1,7 +1,9 @@
 package com.example.htmlmud.domain.dungeon.dto;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
 import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
 import com.example.htmlmud.domain.dungeon.model.DungeonTile;
@@ -125,6 +127,15 @@ public record DrpgStateDto(
           }
         }
 
+        Map<String, PartyItemSlotViewDto> equipMap = new HashMap<>();
+        if (m.getEquipment() != null) {
+          m.getEquipment().forEach((slot, item) -> {
+            if (slot != null && item != null) {
+              equipMap.put(slot.name(), PartyItemSlotViewDto.of(item));
+            }
+          });
+        }
+
         memberViews.add(new PartyMemberViewDto(
             m.getId(),
             m.getName(),
@@ -146,7 +157,8 @@ public record DrpgStateDto(
             m.getMadnessState() != null ? m.getMadnessState().name() : "SANE",
             m.getAberrationCounter(),
             PartyItemSlotViewDto.of(m.getEquippedWeapon()),
-            PartyItemSlotViewDto.of(m.getEquippedArmor())
+            PartyItemSlotViewDto.of(m.getEquippedArmor()),
+            equipMap
         ));
       }
 
@@ -194,6 +206,7 @@ public record DrpgStateDto(
       String icon,
       String itemType,
       String subType,
+      String equipSlot,
       int count,
       String description,
       String quality,
@@ -207,7 +220,8 @@ public record DrpgStateDto(
       int bonusSan,
       boolean consumable,
       boolean weapon,
-      boolean armor
+      boolean armor,
+      boolean equipment
   ) {
     public static PartyItemSlotViewDto of(com.example.htmlmud.domain.party.model.PartyItemSlot s) {
       if (s == null) return null;
@@ -218,6 +232,7 @@ public record DrpgStateDto(
           s.getIcon(),
           s.getItemType() != null ? s.getItemType().name() : "MISC",
           s.getSubType(),
+          s.getEquipSlot() != null ? s.getEquipSlot().name() : null,
           s.getCount(),
           s.getDescription(),
           s.getQuality(),
@@ -231,7 +246,8 @@ public record DrpgStateDto(
           s.getBonusSan(),
           s.isConsumable(),
           s.isWeapon(),
-          s.isArmor()
+          s.isArmor(),
+          s.isEquipment()
       );
     }
   }
@@ -281,6 +297,7 @@ public record DrpgStateDto(
       String madnessState,
       int aberrationCounter,
       PartyItemSlotViewDto equippedWeapon,
-      PartyItemSlotViewDto equippedArmor
+      PartyItemSlotViewDto equippedArmor,
+      Map<String, PartyItemSlotViewDto> equipment
   ) {}
 }

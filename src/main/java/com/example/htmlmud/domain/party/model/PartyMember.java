@@ -1,6 +1,9 @@
 package com.example.htmlmud.domain.party.model;
 
+import java.util.EnumMap;
+import java.util.Map;
 import com.example.htmlmud.domain.model.entity.LivingStats;
+import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
@@ -65,58 +68,94 @@ public class PartyMember {
   @Builder.Default
   private int maxAberrationCounter = 100;
 
-  // 裝備槽位
-  private PartyItemSlot equippedWeapon;
-  private PartyItemSlot equippedArmor;
+  // 7 大部位裝備槽位 (全部位容器)
+  @Builder.Default
+  private Map<EquipmentSlot, PartyItemSlot> equipment = new EnumMap<>(EquipmentSlot.class);
 
   @JsonIgnore
   public int getEffectiveMinDamage() {
-    int bonus = (equippedWeapon != null) ? equippedWeapon.getBonusMinDamage() : 0;
+    int bonus = (equipment != null) ? equipment.values().stream().mapToInt(PartyItemSlot::getBonusMinDamage).sum() : 0;
     return baseMinDamage + bonus;
   }
 
   @JsonIgnore
   public int getEffectiveMaxDamage() {
-    int bonus = (equippedWeapon != null) ? equippedWeapon.getBonusMaxDamage() : 0;
+    int bonus = (equipment != null) ? equipment.values().stream().mapToInt(PartyItemSlot::getBonusMaxDamage).sum() : 0;
     return baseMaxDamage + bonus;
   }
 
   @JsonIgnore
   public int getEffectiveDefense() {
-    int bonus = (equippedArmor != null) ? equippedArmor.getBonusDefense() : 0;
+    int bonus = (equipment != null) ? equipment.values().stream().mapToInt(PartyItemSlot::getBonusDefense).sum() : 0;
     return baseDefense + bonus;
   }
 
-  public PartyItemSlot equipWeapon(PartyItemSlot weapon) {
-    PartyItemSlot old = this.equippedWeapon;
-    this.equippedWeapon = weapon;
+  /**
+   * 通用穿戴方法：換下同槽位舊裝備，動態更新氣血/道心加成
+   */
+  public PartyItemSlot equip(EquipmentSlot slot, PartyItemSlot item) {
+    if (slot == null) return null;
+    if (equipment == null) {
+      equipment = new EnumMap<>(EquipmentSlot.class);
+    }
+    PartyItemSlot old = unequip(slot);
+    if (item != null) {
+      this.equipment.put(slot, item);
+      if (item.getBonusHp() > 0 && stats != null) {
+        stats.setMaxHp(stats.getMaxHp() + item.getBonusHp());
+        stats.setHp(stats.getHp() + item.getBonusHp());
+      }
+      if (item.getBonusSan() > 0) {
+        this.maxSan += item.getBonusSan();
+        this.currentSan += item.getBonusSan();
+      }
+    }
     return old;
+  }
+
+  /**
+   * 通用卸下方法：從槽位移除並扣減相應屬性加成
+   */
+  public PartyItemSlot unequip(EquipmentSlot slot) {
+    if (slot == null || equipment == null) return null;
+    PartyItemSlot old = this.equipment.remove(slot);
+    if (old != null) {
+      if (old.getBonusHp() > 0 && stats != null) {
+        stats.setMaxHp(Math.max(1, stats.getMaxHp() - old.getBonusHp()));
+        stats.setHp(Math.min(stats.getHp(), stats.getMaxHp()));
+      }
+      if (old.getBonusSan() > 0) {
+        this.maxSan = Math.max(1, this.maxSan - old.getBonusSan());
+        this.currentSan = Math.min(this.currentSan, this.maxSan);
+      }
+    }
+    return old;
+  }
+
+  // --- 向下相容代理方法 ---
+
+  public PartyItemSlot getEquippedWeapon() {
+    return equipment != null ? equipment.get(EquipmentSlot.MAIN_HAND) : null;
+  }
+
+  public PartyItemSlot getEquippedArmor() {
+    return equipment != null ? equipment.get(EquipmentSlot.BODY) : null;
+  }
+
+  public PartyItemSlot equipWeapon(PartyItemSlot weapon) {
+    return equip(EquipmentSlot.MAIN_HAND, weapon);
   }
 
   public PartyItemSlot equipArmor(PartyItemSlot armor) {
-    PartyItemSlot old = this.equippedArmor;
-    this.equippedArmor = armor;
-    if (armor != null && armor.getBonusHp() > 0 && stats != null) {
-      stats.setMaxHp(stats.getMaxHp() + armor.getBonusHp());
-      stats.setHp(stats.getHp() + armor.getBonusHp());
-    }
-    return old;
+    return equip(EquipmentSlot.BODY, armor);
   }
 
   public PartyItemSlot unequipWeapon() {
-    PartyItemSlot old = this.equippedWeapon;
-    this.equippedWeapon = null;
-    return old;
+    return unequip(EquipmentSlot.MAIN_HAND);
   }
 
   public PartyItemSlot unequipArmor() {
-    PartyItemSlot old = this.equippedArmor;
-    if (old != null && old.getBonusHp() > 0 && stats != null) {
-      stats.setMaxHp(Math.max(1, stats.getMaxHp() - old.getBonusHp()));
-      stats.setHp(Math.min(stats.getHp(), stats.getMaxHp()));
-    }
-    this.equippedArmor = null;
-    return old;
+    return unequip(EquipmentSlot.BODY);
   }
 
   public boolean learnSkill(PartyMemberSkill newSkill) {

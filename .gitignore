@@ -37,9 +37,9 @@ build/
 !.vscode/extensions.json
 .aider*
 
-### Database locks & local files ###
-data/*.lock.db
-data/*.trace.db
+### Database locks & local runtime files ###
+/data/
+/db/
+/saves/autosave.json
 logs/
 .env
-data/muddb.lock.db

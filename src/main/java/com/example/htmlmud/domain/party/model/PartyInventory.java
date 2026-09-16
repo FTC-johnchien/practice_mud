@@ -3,6 +3,7 @@ package com.example.htmlmud.domain.party.model;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.domain.model.template.ItemTemplate;
 import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
@@ -95,6 +96,19 @@ public class PartyInventory {
       int hp = 0;
       int san = 0;
 
+      EquipmentSlot equipSlot = null;
+      if (t.equipmentProp() != null && t.equipmentProp().slot() != null) {
+        equipSlot = t.equipmentProp().slot();
+      } else if (t.type() == ItemType.WEAPON) {
+        equipSlot = EquipmentSlot.MAIN_HAND;
+      } else if (t.type() == ItemType.SHIELD) {
+        equipSlot = EquipmentSlot.OFF_HAND;
+      } else if (t.type() == ItemType.ACCESSORY) {
+        equipSlot = EquipmentSlot.ACCESSORY_1;
+      } else if (t.type() == ItemType.ARMOR) {
+        equipSlot = EquipmentSlot.fromString(t.subType());
+      }
+
       if (t.type() == ItemType.CONSUMABLE) {
         if ("POTION".equals(t.subType())) {
           icon = "🧪";
@@ -105,25 +119,33 @@ public class PartyInventory {
           effectType = "RESTORE_SAN";
           effectValue = 25;
         }
-      } else if (t.type() == ItemType.WEAPON) {
-        icon = "🗡️";
+      } else if (equipSlot != null) {
+        icon = switch (equipSlot) {
+          case MAIN_HAND -> "🗡️";
+          case OFF_HAND -> "🛡️";
+          case HEAD -> "👑";
+          case BODY -> "🥋";
+          case FEET -> "👢";
+          case ACCESSORY_1, ACCESSORY_2 -> "💍";
+        };
+
         if (t.equipmentProp() != null) {
           minDmg = t.equipmentProp().minDamage();
           maxDmg = t.equipmentProp().maxDamage();
-        } else {
+          def = t.equipmentProp().defense();
+        } else if (t.type() == ItemType.WEAPON) {
           minDmg = 12;
           maxDmg = 20;
-        }
-      } else if (t.type() == ItemType.ARMOR) {
-        icon = "🥋";
-        if (t.equipmentProp() != null) {
-          def = t.equipmentProp().defense();
-        } else {
+        } else if (t.type() == ItemType.ARMOR) {
           def = 6;
         }
+
         if (t.bonusStats() != null) {
-          hp = t.bonusStats().getOrDefault("MAX_HP", 30);
-          san = t.bonusStats().getOrDefault("MAX_SAN", 10);
+          hp += t.bonusStats().getOrDefault("MAX_HP", t.bonusStats().getOrDefault("hp", 0));
+          san += t.bonusStats().getOrDefault("MAX_SAN", t.bonusStats().getOrDefault("san", 0));
+          def += t.bonusStats().getOrDefault("DEFENSE", t.bonusStats().getOrDefault("def", 0));
+          minDmg += t.bonusStats().getOrDefault("MIN_DAMAGE", 0);
+          maxDmg += t.bonusStats().getOrDefault("MAX_DAMAGE", 0);
         }
       } else if (t.type() == ItemType.KEY_ITEM) {
         icon = "🗝️";
@@ -136,6 +158,7 @@ public class PartyInventory {
           .icon(icon)
           .itemType(t.type())
           .subType(t.subType())
+          .equipSlot(equipSlot)
           .count(count)
           .description(t.description())
           .quality(t.quality() != null ? t.quality() : "COMMON")
@@ -155,9 +178,9 @@ public class PartyInventory {
     } else if (templateId.contains("talisman")) {
       return PartyItemSlot.builder().slotId(slotId).itemId(templateId).name("辟邪清心符").icon("📜").itemType(ItemType.CONSUMABLE).subType("TALISMAN").count(count).description("平復心魔與雜念，恢復 25 SAN，可解走火入魔。").quality("RARE").effectType("RESTORE_SAN").effectValue(25).build();
     } else if (templateId.contains("sword")) {
-      return PartyItemSlot.builder().slotId(slotId).itemId(templateId).name("鏽蝕青銅古劍").icon("🗡️").itemType(ItemType.WEAPON).subType("SWORD").count(1).description("古墓出土古劍，攻擊力 +12~20。").quality("UNCOMMON").bonusMinDamage(12).bonusMaxDamage(20).build();
+      return PartyItemSlot.builder().slotId(slotId).itemId(templateId).name("鏽蝕青銅古劍").icon("🗡️").itemType(ItemType.WEAPON).subType("SWORD").equipSlot(com.example.htmlmud.domain.model.enums.EquipmentSlot.MAIN_HAND).count(1).description("古墓出土古劍，攻擊力 +12~20。").quality("UNCOMMON").bonusMinDamage(12).bonusMaxDamage(20).build();
     } else if (templateId.contains("robe")) {
-      return PartyItemSlot.builder().slotId(slotId).itemId(templateId).name("陰煞道袍").icon("🥋").itemType(ItemType.ARMOR).subType("CHEST").count(1).description("玄絲道袍，防禦 +6，生命上限 +30。").quality("RARE").bonusDefense(6).bonusHp(30).build();
+      return PartyItemSlot.builder().slotId(slotId).itemId(templateId).name("陰煞道袍").icon("🥋").itemType(ItemType.ARMOR).subType("CHEST").equipSlot(com.example.htmlmud.domain.model.enums.EquipmentSlot.BODY).count(1).description("玄絲道袍，防禦 +6，生命上限 +30。").quality("RARE").bonusDefense(6).bonusHp(30).build();
     } else {
       return PartyItemSlot.builder().slotId(slotId).itemId(templateId).name("古仙法物").icon("🔮").itemType(ItemType.MISC).count(count).description("古塚中掘出之神秘法物。").quality("COMMON").build();
     }

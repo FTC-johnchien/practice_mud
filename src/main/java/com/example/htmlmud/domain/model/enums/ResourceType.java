@@ -41,7 +41,7 @@ public enum ResourceType {
   INTELLIGENCE(LivingStats::getIntelligence,
       (s, val) -> s.setIntelligence(s.getIntelligence() - val)),
 
-  @JsonProperty("dex") @JsonAlias({"DEX"})
+  @JsonProperty("dex") @JsonAlias({"DEX", "AGI", "agi"})
   DEX(LivingStats::getDex, (s, val) -> s.setDex(s.getDex() - val)),
 
   @JsonProperty("con") @JsonAlias({"CON"})
