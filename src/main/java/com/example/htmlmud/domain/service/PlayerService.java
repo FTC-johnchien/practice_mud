@@ -79,7 +79,9 @@ public class PlayerService {
   // 狀態切換方法
   public void become(Player self, PlayerBehavior nextBehavior) {
     self.setCurrentBehavior(nextBehavior);
-    nextBehavior.onEnter(); // 觸發進場事件
+    ScopedValue.where(MudContext.CURRENT_PLAYER, self).run(() -> {
+      nextBehavior.onEnter(); // 觸發進場事件
+    });
     log.info("{} 切換行為模式至 {}", self.getName(), nextBehavior.getClass().getSimpleName());
 
 

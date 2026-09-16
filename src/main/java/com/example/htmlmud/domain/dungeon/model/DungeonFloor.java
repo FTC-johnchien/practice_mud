@@ -1,5 +1,7 @@
 package com.example.htmlmud.domain.dungeon.model;
 
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +20,10 @@ public class DungeonFloor {
   private DungeonTile[][] tiles;
   private GridCoord startCoord;
   private Direction startFacing;
+  @Builder.Default
+  private int dangerRate = 15;
+  @Builder.Default
+  private List<String> mobPool = new ArrayList<>();
 
   public boolean isInBounds(int x, int y) {
     return x >= 0 && x < width && y >= 0 && y < height;

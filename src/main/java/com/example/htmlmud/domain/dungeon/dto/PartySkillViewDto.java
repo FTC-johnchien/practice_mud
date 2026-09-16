@@ -7,6 +7,7 @@ public record PartySkillViewDto(
     String description,
     String costType,
     int costValue,
+    String costDescription,
     long cooldownMs,
     long remainingCooldownMs,
     boolean available

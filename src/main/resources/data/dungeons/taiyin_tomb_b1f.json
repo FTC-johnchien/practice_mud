@@ -1,0 +1,76 @@
+{
+  "floorId": "taiyin_tomb_b1f",
+  "name": "太陰古塚一層 (B1F)",
+  "description": "青雲觀後山封印的萬劫古塚，傳說埋葬著初窺天外不可名狀星神而發狂的古仙。",
+  "width": 10,
+  "height": 10,
+  "startCoord": {
+    "x": 1,
+    "y": 8
+  },
+  "startFacing": "NORTH",
+  "layout": [
+    "##########",
+    "#.......>#",
+    "#.######.#",
+    "#.######.#",
+    "#...E....#",
+    "#D.T######",
+    "#.########",
+    "#.##X#####",
+    "#<...#####",
+    "##########"
+  ],
+  "legend": {
+    "#": {
+      "type": "WALL",
+      "name": "玄陰青石壁",
+      "description": "堅硬刺骨的玄陰青石砌成之厚壁，表面隱現暗紅血絲符文。"
+    },
+    ".": {
+      "type": "FLOOR",
+      "name": "幽暗石廊",
+      "description": "青苔斑駁的石質古道，兩側隱隱有幽綠磷火浮動。"
+    },
+    "D": {
+      "type": "DOOR",
+      "name": "蝕靈石門",
+      "description": "厚重的青岡石門，門環雕刻著張著巨口的無名神魔。"
+    },
+    "T": {
+      "type": "TREASURE",
+      "name": "古修遺蛻棺槨",
+      "description": "一具被不可名狀紫黑觸鬚纏繞的古仙棺槨，散發陣陣微弱靈光。",
+      "drops": ["taiyin_pill", "bronze_sword"]
+    },
+    "E": {
+      "type": "EVENT",
+      "name": "殘破太陰古碑",
+      "description": "石碑上以古修真言記載著《四象辟邪陣》與域外星蝕的秘密。"
+    },
+    "X": {
+      "type": "TRAP",
+      "name": "深淵黏液陷阱",
+      "description": "地面滲出發出低語呢喃的詭異綠色黏液，踩上將侵蝕心神！"
+    },
+    "<": {
+      "type": "STAIRS_UP",
+      "name": "青雲古階(回地表)",
+      "description": "通往青雲觀後山偏殿的向上石階，生路所在。"
+    },
+    ">": {
+      "type": "STAIRS_DOWN",
+      "name": "通往 B2F 深淵枯井",
+      "description": "深不見底的向下幽穴，下層傳來如巨獸呼吸般的震顫聲。"
+    }
+  },
+  "encounters": {
+    "dangerRate": 15,
+    "mobs": [
+      "taiyin_tomb:corpse_doll",
+      "taiyin_tomb:bone_bat",
+      "taiyin_tomb:blood_python",
+      "taiyin_tomb:tomb_guard"
+    ]
+  }
+}

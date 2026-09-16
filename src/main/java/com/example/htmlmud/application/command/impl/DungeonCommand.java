@@ -94,38 +94,43 @@ public class DungeonCommand implements PlayerCommand {
     switch (input) {
       case "w", "forward", "f", "step w" -> {
         StepResult res = dungeonNavigator.moveForward(floor, pos);
-        self.reply(res.message() + "\n" + dungeonNavigator.renderAsciiMap(floor, pos));
+        self.reply(res.message() + (res.success() ? "\n" + dungeonNavigator.inspectForward(floor, pos) : ""));
         handlePostMovement(self, floor, pos, res);
         broadcastDrpgState(self, floor, pos);
       }
       case "s", "back", "b", "step s" -> {
         StepResult res = dungeonNavigator.moveBackward(floor, pos);
-        self.reply(res.message() + "\n" + dungeonNavigator.renderAsciiMap(floor, pos));
+        self.reply(res.message() + (res.success() ? "\n" + dungeonNavigator.inspectForward(floor, pos) : ""));
         handlePostMovement(self, floor, pos, res);
         broadcastDrpgState(self, floor, pos);
       }
       case "a", "left", "tl", "turn left" -> {
         StepResult res = dungeonNavigator.turnLeft(pos);
-        self.reply(res.message() + "\n" + dungeonNavigator.renderAsciiMap(floor, pos));
+        self.reply(res.message() + "\n" + dungeonNavigator.inspectForward(floor, pos));
         broadcastDrpgState(self, floor, pos);
       }
       case "d", "right", "tr", "turn right" -> {
         StepResult res = dungeonNavigator.turnRight(pos);
-        self.reply(res.message() + "\n" + dungeonNavigator.renderAsciiMap(floor, pos));
+        self.reply(res.message() + "\n" + dungeonNavigator.inspectForward(floor, pos));
         broadcastDrpgState(self, floor, pos);
       }
       case "look", "inspect" -> {
         self.reply(dungeonNavigator.inspectForward(floor, pos));
         broadcastDrpgState(self, floor, pos);
       }
+      case "dummy", "test", "testmob" -> {
+        battleService.startTrainingBattle(self, pos);
+      }
       default -> {
         self.reply("【太陰地宮指令】\n"
-            + "  dungeon / map         - 展開 10x10 靈識感應地圖與前方視野\n"
+            + "  dungeon / map         - 展開靈識感應地圖與前方視野\n"
+            + "  dungeon ascii         - 印出終端文字版 ASCII 感應地圖\n"
             + "  step w / forward      - 向前邁步 (探索/遇敵檢定)\n"
             + "  step s / back         - 向後退步\n"
             + "  step a / left         - 向左轉 90 度\n"
             + "  step d / right        - 向右轉 90 度\n"
-            + "  dungeon look          - 凝神探查正前方地塊");
+            + "  dungeon look          - 凝神探查正前方地塊\n"
+            + "  dungeon dummy         - 召喚太陰玄鐵試道傀儡測試");
       }
     }
   }

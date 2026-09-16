@@ -101,6 +101,15 @@ public record DrpgStateDto(
             if (s.getCostType() == com.example.htmlmud.domain.party.model.ResourceType.RAGE && m.getCurrentRage() < s.getCostValue()) avail = false;
             if (s.getCostType() == com.example.htmlmud.domain.party.model.ResourceType.COMBO && m.getCurrentCombo() < s.getCostValue()) avail = false;
 
+            String costDesc = "無消耗";
+            if (s.getCostType() != null && s.getCostValue() > 0) {
+              costDesc = switch (s.getCostType()) {
+                case RAGE -> s.getCostValue() + " 怒氣";
+                case COMBO -> s.getCostValue() + " 連擊";
+                case MP -> s.getCostValue() + " 真元";
+              };
+            }
+
             skillDtos.add(new PartySkillViewDto(
                 s.getId(),
                 s.getName(),
@@ -108,6 +117,7 @@ public record DrpgStateDto(
                 s.getDescription(),
                 s.getCostType() != null ? s.getCostType().name() : "MP",
                 s.getCostValue(),
+                costDesc,
                 s.getCooldownMs(),
                 m.getRemainingCooldownMs(s.getId()),
                 avail
@@ -131,7 +141,12 @@ public record DrpgStateDto(
             resType,
             curRes,
             maxRes,
-            skillDtos
+            m.isAlive(),
+            skillDtos,
+            m.getMadnessState() != null ? m.getMadnessState().name() : "SANE",
+            m.getAberrationCounter(),
+            PartyItemSlotViewDto.of(m.getEquippedWeapon()),
+            PartyItemSlotViewDto.of(m.getEquippedArmor())
         ));
       }
 
@@ -139,13 +154,16 @@ public record DrpgStateDto(
       String ultName = (party.getEquippedFormation() != null && party.getEquippedFormation().getUltimateSkill() != null)
           ? party.getEquippedFormation().getUltimateSkill().getName() : "";
 
+      PartyInventoryViewDto invView = PartyInventoryViewDto.of(party.getInventory());
+
       partyView = new PartyViewDto(
           party.getPartyName(),
           formName,
           party.getFormationEnergy(),
           ultName,
           party.canCastUltimate(),
-          memberViews
+          memberViews,
+          invView
       );
     }
 
@@ -169,13 +187,77 @@ public record DrpgStateDto(
       boolean[][] openedChests
   ) {}
 
+  public record PartyItemSlotViewDto(
+      String slotId,
+      String itemId,
+      String name,
+      String icon,
+      String itemType,
+      String subType,
+      int count,
+      String description,
+      String quality,
+      String effectType,
+      int effectValue,
+      String grantedSkillName,
+      int bonusMinDamage,
+      int bonusMaxDamage,
+      int bonusDefense,
+      int bonusHp,
+      int bonusSan,
+      boolean consumable,
+      boolean weapon,
+      boolean armor
+  ) {
+    public static PartyItemSlotViewDto of(com.example.htmlmud.domain.party.model.PartyItemSlot s) {
+      if (s == null) return null;
+      return new PartyItemSlotViewDto(
+          s.getSlotId(),
+          s.getItemId(),
+          s.getName(),
+          s.getIcon(),
+          s.getItemType() != null ? s.getItemType().name() : "MISC",
+          s.getSubType(),
+          s.getCount(),
+          s.getDescription(),
+          s.getQuality(),
+          s.getEffectType(),
+          s.getEffectValue(),
+          s.getGrantedSkillName(),
+          s.getBonusMinDamage(),
+          s.getBonusMaxDamage(),
+          s.getBonusDefense(),
+          s.getBonusHp(),
+          s.getBonusSan(),
+          s.isConsumable(),
+          s.isWeapon(),
+          s.isArmor()
+      );
+    }
+  }
+
+  public record PartyInventoryViewDto(
+      int capacity,
+      int usedCount,
+      List<PartyItemSlotViewDto> slots
+  ) {
+    public static PartyInventoryViewDto of(com.example.htmlmud.domain.party.model.PartyInventory inv) {
+      if (inv == null) return new PartyInventoryViewDto(30, 0, List.of());
+      List<PartyItemSlotViewDto> slotDtos = inv.getSlots().stream()
+          .map(PartyItemSlotViewDto::of)
+          .toList();
+      return new PartyInventoryViewDto(inv.getCapacity(), slotDtos.size(), slotDtos);
+    }
+  }
+
   public record PartyViewDto(
       String name,
       String formationName,
       int formationEnergy,
       String ultimateSkillName,
       boolean canCastUltimate,
-      List<PartyMemberViewDto> members
+      List<PartyMemberViewDto> members,
+      PartyInventoryViewDto inventory
   ) {}
 
   public record PartyMemberViewDto(
@@ -194,6 +276,11 @@ public record DrpgStateDto(
       String resourceType,
       int currentResource,
       int maxResource,
-      List<PartySkillViewDto> skills
+      boolean alive,
+      List<PartySkillViewDto> skills,
+      String madnessState,
+      int aberrationCounter,
+      PartyItemSlotViewDto equippedWeapon,
+      PartyItemSlotViewDto equippedArmor
   ) {}
 }

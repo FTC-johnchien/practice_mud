@@ -15,9 +15,10 @@ public class InGameBehavior implements PlayerBehavior {
     log.info("InGameBehavior onEnter()");
     Player self = MudContext.currentPlayer();
 
-    // 進場時自動看一次房間並初始化地牢地圖
+    // 進場時自動看一次房間並初始化地牢地圖與存檔列表
     self.getService().getCommandDispatcher().dispatch("look");
     self.getService().getCommandDispatcher().dispatch("map");
+    self.getService().getCommandDispatcher().dispatch("saves");
   }
 
   @Override

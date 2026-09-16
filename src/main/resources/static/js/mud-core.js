@@ -86,6 +86,10 @@ function handleServerMessage(data) {
         if (typeof updateDrpgView === 'function') {
             updateDrpgView(data);
         }
+    } else if (data.type === 'SAVE_SLOTS') {
+        if (typeof updateSaveSlotsView === 'function') {
+            updateSaveSlotsView(data.slots);
+        }
     } else if (data.type === 'TEXT' || data.content) {
         appendHtml(data.content || data.text);
     } else if (data.type === 'STAT_UPDATE' || data.type === 'stats' || data.hp !== undefined) {

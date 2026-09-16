@@ -41,15 +41,29 @@ public class BattleCommand implements PlayerCommand {
           self.reply("請輸入有效的目標編號！");
         }
       }
+    } else if (input.startsWith("seal ") || input.startsWith("封印 ")) {
+      String sub = input.replaceFirst("^(seal|封印)\\s+", "").trim();
+      try {
+        int idx = Integer.parseInt(sub);
+        battleService.sealTarget(self, idx, pos);
+      } catch (NumberFormatException e) {
+        self.reply("請輸入有效的封印目標編號！");
+      }
     } else if (input.equals("flee") || input.equals("escape") || input.equals("run") || input.equals("遁地")) {
       battleService.flee(self, pos);
     } else if (input.equals("ult") || input.equals("cast") || input.equals("奧義")) {
       battleService.castPartyUltimate(self, pos);
+    } else if (input.equals("test") || input.equals("dummy") || input.equals("木樁")) {
+      battleService.startTrainingBattle(self, pos);
+    } else if (input.equals("charge") || input.equals("充能")) {
+      battleService.chargeCombatResources(self, pos);
     } else if (input.equals("fight") || input.equals("attack") || input.equals("迎戰") || input.isEmpty()) {
       battleService.fight(self, pos);
     } else {
       self.reply("【戰鬥指令】\n"
           + "  battle fight / 迎戰       - 全隊凝神迎戰，拔劍直攻目標\n"
+          + "  battle test / 木樁        - 開啟玄鐵試道傀儡測試戰鬥 (攻低血厚試招用)\n"
+          + "  battle charge / 充能      - 陣法靈威充滿 100 點，並補滿全員怒氣/連擊點/真元\n"
           + "  battle target <編號>     - 切換集火目標 (0: 前排一號, 1: 前排二號...)\n"
           + "  battle flee / 遁地       - 施展遁地金光脫離戰場 (-5 SAN)\n"
           + "  battle ult / 奧義        - 釋放陣法終極奧義 (需靈威 100)");

@@ -1,6 +1,8 @@
 package com.example.htmlmud.domain.party.model;
 
 import com.example.htmlmud.domain.model.entity.LivingStats;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,6 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PartyMember {
   private String id;
   private String name;
@@ -47,7 +50,101 @@ public class PartyMember {
   @Builder.Default
   private java.util.List<PartyMemberSkill> skills = new java.util.ArrayList<>();
 
+  public enum MadnessState {
+    SANE,         // 正常
+    CHAOS,        // 第一階段：走火入魔混亂期 (SAN == 0, 計數中)
+    SEALED,       // 封印鎮魔狀態 (計數暫停, 定身無法行動)
+    ABERRATION,   // 第二階段：徹底異變古神眷族 (HP x10, 敵對狂暴)
+    DEAD_MEAT     // 血肉崩潰 (第一階段自殘至死, 永久陣亡)
+  }
+
+  @Builder.Default
+  private MadnessState madnessState = MadnessState.SANE;
+  @Builder.Default
+  private int aberrationCounter = 0;
+  @Builder.Default
+  private int maxAberrationCounter = 100;
+
+  // 裝備槽位
+  private PartyItemSlot equippedWeapon;
+  private PartyItemSlot equippedArmor;
+
+  @JsonIgnore
+  public int getEffectiveMinDamage() {
+    int bonus = (equippedWeapon != null) ? equippedWeapon.getBonusMinDamage() : 0;
+    return baseMinDamage + bonus;
+  }
+
+  @JsonIgnore
+  public int getEffectiveMaxDamage() {
+    int bonus = (equippedWeapon != null) ? equippedWeapon.getBonusMaxDamage() : 0;
+    return baseMaxDamage + bonus;
+  }
+
+  @JsonIgnore
+  public int getEffectiveDefense() {
+    int bonus = (equippedArmor != null) ? equippedArmor.getBonusDefense() : 0;
+    return baseDefense + bonus;
+  }
+
+  public PartyItemSlot equipWeapon(PartyItemSlot weapon) {
+    PartyItemSlot old = this.equippedWeapon;
+    this.equippedWeapon = weapon;
+    return old;
+  }
+
+  public PartyItemSlot equipArmor(PartyItemSlot armor) {
+    PartyItemSlot old = this.equippedArmor;
+    this.equippedArmor = armor;
+    if (armor != null && armor.getBonusHp() > 0 && stats != null) {
+      stats.setMaxHp(stats.getMaxHp() + armor.getBonusHp());
+      stats.setHp(stats.getHp() + armor.getBonusHp());
+    }
+    return old;
+  }
+
+  public PartyItemSlot unequipWeapon() {
+    PartyItemSlot old = this.equippedWeapon;
+    this.equippedWeapon = null;
+    return old;
+  }
+
+  public PartyItemSlot unequipArmor() {
+    PartyItemSlot old = this.equippedArmor;
+    if (old != null && old.getBonusHp() > 0 && stats != null) {
+      stats.setMaxHp(Math.max(1, stats.getMaxHp() - old.getBonusHp()));
+      stats.setHp(Math.min(stats.getHp(), stats.getMaxHp()));
+    }
+    this.equippedArmor = null;
+    return old;
+  }
+
+  public boolean learnSkill(PartyMemberSkill newSkill) {
+    if (newSkill == null) return false;
+    if (skills == null) {
+      skills = new java.util.ArrayList<>();
+    } else if (!(skills instanceof java.util.ArrayList)) {
+      skills = new java.util.ArrayList<>(skills);
+    }
+    for (PartyMemberSkill s : skills) {
+      if (s.getId().equalsIgnoreCase(newSkill.getId())) {
+        return false; // 已掌握
+      }
+    }
+    skills.add(newSkill);
+    return true;
+  }
+
   public String getSanityStatus() {
+    if (madnessState == MadnessState.ABERRATION) {
+      return "【不可名狀畸變】";
+    }
+    if (madnessState == MadnessState.SEALED) {
+      return "【鎮魔封印中】";
+    }
+    if (madnessState == MadnessState.CHAOS) {
+      return "【走火入魔 " + aberrationCounter + "%】";
+    }
     double ratio = (double) currentSan / maxSan;
     if (ratio >= 0.8) {
       return "【道心澄澈】";
@@ -56,7 +153,7 @@ public class PartyMember {
     } else if (ratio >= 0.2) {
       return "【狂亂囈語】";
     } else {
-      return "【走火入魔】";
+      return "【心魔滋生】";
     }
   }
 

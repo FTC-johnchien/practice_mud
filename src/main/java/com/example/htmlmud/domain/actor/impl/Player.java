@@ -14,6 +14,7 @@ import org.slf4j.MDC;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.domain.actor.behavior.GuestBehavior;
+import com.example.htmlmud.domain.actor.behavior.InGameBehavior;
 import com.example.htmlmud.domain.actor.behavior.PlayerBehavior;
 import com.example.htmlmud.domain.actor.core.MessageOutput;
 import com.example.htmlmud.domain.context.MudContext;
@@ -76,7 +77,7 @@ public final class Player extends Living {
     this.manager = worldManager;
   }
 
-  // 工廠方法 初始設定為 GuestBehavior
+  // 工廠方法 初始設定為 GuestBehavior (相容性保留)
   public static Player createGuest(MessageOutput output, WorldManager worldManager,
       PlayerService playerService) {
     String name = "GUEST";
@@ -88,12 +89,32 @@ public final class Player extends Living {
     return actor;
   }
 
+  // 單機模式工廠方法：直接以正式玩家身份進入遊戲，跳過任何帳密流程
+  public static Player createSinglePlayer(MessageOutput output, WorldManager worldManager,
+      PlayerService playerService, String playerName) {
+    String name = (playerName != null && !playerName.isBlank()) ? playerName : "道友";
+    String playerId = "p-single";
+    LivingStats stats = new LivingStats();
+    stats.setHp(200);
+    stats.setMaxHp(200);
+    stats.setMp(100);
+    stats.setMaxMp(100);
+    Player actor = new Player(output, playerId, name, stats, worldManager, playerService);
+    actor.setConnectionState(ConnectionState.IN_GAME);
+    playerService.become(actor, new InGameBehavior());
+    return actor;
+  }
+
   @Override
   public void start() {
     super.start();
-    // 連線歡迎詞
-    reply("歡迎光臨 Html Mud 世界！");
-    reply("請輸入 帳號 進行登入 或 輸入 'new' 進行註冊：");
+    if (this.connectionState == ConnectionState.IN_GAME) {
+      reply("🌌 歡迎踏入【太陰萬劫・暗黑修仙 DRPG】單機道途！");
+      reply("💡 您可使用上方【💾 存檔】/【📂 讀檔】管理進度，或點擊下方按鈕或輸入指令展開冒險！");
+    } else {
+      reply("歡迎光臨 Html Mud 世界！");
+      reply("請輸入 帳號 進行登入 或 輸入 'new' 進行註冊：");
+    }
   }
 
   @Override

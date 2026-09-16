@@ -16,6 +16,11 @@
         🎮 步進探索模式 (按 W/A/S/D 移動，按 / 或 Enter 輸入指令)
       </div>
 
+      <div class="top-nav-center-actions">
+        <button class="top-nav-btn btn-save-quick" onclick="openSaveModal('save')" title="儲存進度 (F5)">💾 存檔</button>
+        <button class="top-nav-btn btn-load-quick" onclick="openSaveModal('load')" title="載入進度 / 開闢新道途">📂 讀檔 / 新局</button>
+      </div>
+
       <div class="formation-status-wrap" onclick="if(window.triggerFormationAction) triggerFormationAction(); else send('formation toggle');" style="cursor: pointer;" title="點擊切換結成之道門陣法 (F)">
         <div id="formation-info" class="formation-info">
           <span class="formation-name">☯️ 陣法：【未結陣】</span>
@@ -28,9 +33,14 @@
       </div>
     </header>
 
-    <!-- 主畫面視窗：左側 10x10 地牢雷達，右側冒險文字日誌 -->
+    <!-- 主畫面視窗：可切換左側/右側停靠的地牢雷達，右側冒險文字日誌 -->
     <main class="main-viewport">
-      <aside class="dungeon-radar-panel">
+      <aside id="dungeon-radar-panel" class="dungeon-radar-panel">
+        <div class="radar-top-controls">
+          <button id="radar-dock-toggle-btn" class="radar-mini-btn" onclick="toggleRadarPosition()" title="切換地圖左側/右側停靠">⮃ 換邊</button>
+          <button id="radar-mode-toggle-btn" class="radar-mini-btn" onclick="toggleRadarViewMode()" title="切換居中跟隨/全圖俯瞰視野">🎯 視口</button>
+        </div>
+
         <div id="drpg-floor-info" class="radar-header">
           <span class="floor-title">🏛️ 太陰古塚一層 (B1F)</span>
           <span class="coord-tag">[X: 1, Y: 1]</span>
@@ -39,7 +49,7 @@
 
         <div class="radar-grid-container">
           <div id="drpg-grid" class="radar-grid">
-            <!-- 由 drpg-view.js 動態渲染 10x10 地塊 -->
+            <!-- 由 drpg-view.js 動態渲染地塊 -->
           </div>
         </div>
 
@@ -82,6 +92,41 @@
       <!-- 由 drpg-view.js 動態渲染所選隊員的技能按鈕、能量消耗與 CD 倒數 -->
     </section>
 
+    <!-- 隊伍公共行囊抽屜 (可隨時點擊或按 B 開關) -->
+    <section id="bag-drawer" class="bag-drawer hidden">
+      <div class="bag-drawer-header">
+        <div class="bag-header-title">
+          <span>🎒 隊伍公共行囊</span>
+          <span id="bag-capacity-badge" class="bag-capacity-badge">0/30</span>
+        </div>
+        <button class="drawer-close-btn" onclick="toggleBagDrawer(false)">✕ 關閉 (B)</button>
+      <div id="bag-items-list" class="bag-items-list">
+        <!-- 由 drpg-view.js 動態渲染 -->
+      </div>
+    </section>
+
+    <!-- 單機存檔 / 讀檔 / 開闢新途 模態視窗 -->
+    <div id="save-modal" class="modal-overlay hidden" onclick="if(event.target===this) closeSaveModal();">
+      <div class="save-modal-card">
+        <div class="save-modal-header">
+          <div class="save-modal-title">
+            <span id="save-modal-mode-title">📂 仙道命冊・單機存檔管理</span>
+          </div>
+          <button class="drawer-close-btn" onclick="closeSaveModal()">✕ 關閉 (Esc)</button>
+        </div>
+
+        <div class="save-new-game-box">
+          <span class="new-game-label">✨ 開闢新道途：</span>
+          <input type="text" id="new-protagonist-input" class="new-protagonist-field" placeholder="輸入主角道號 (預設: 玄靈子)" maxlength="12">
+          <button class="act-btn btn-new-game" onclick="triggerNewGame()">啟程新道途</button>
+        </div>
+
+        <div id="save-slots-list" class="save-slots-list">
+          <!-- 由 drpg-view.js 動態渲染 Slot 0..5 -->
+        </div>
+      </div>
+    </div>
+
     <!-- 底部操作列：十字步進盤、快捷功能按鍵與文字指令輸入 -->
     <footer class="bottom-control-panel">
       <div class="quick-dpad-wrap">
@@ -95,16 +140,22 @@
         <!-- 探索模式按鍵組 -->
         <div id="action-buttons-group" class="action-buttons-group">
           <button class="act-btn" onclick="if(window.triggerPartyAction) triggerPartyAction(); else send('party');" title="檢視/同步小隊狀態 (P)">👥 小隊 (P)</button>
+          <button class="act-btn btn-bag" onclick="toggleBagDrawer()" title="開啟隊伍公共行囊 (B)">🎒 行囊 (B)</button>
+          <button class="act-btn" onclick="openSaveModal('load')" title="開啟單機存檔/讀檔面板">💾 存讀檔</button>
           <button class="act-btn" onclick="if(window.triggerFormationAction) triggerFormationAction(); else send('formation toggle');" title="切換道門陣法 (F)">☯️ 陣法 (F)</button>
           <button class="act-btn" onclick="if(window.triggerInspectAction) triggerInspectAction(); else send('dungeon look');" title="凝神探查正前方地塊 (I)">👁️ 探查 (I)</button>
           <button class="act-btn" onclick="if(window.triggerRestAction) triggerRestAction(); else send('rest');" title="凝神調息回復氣血與真元 (R)">🌿 休息 (R)</button>
+          <button class="act-btn btn-dummy" onclick="send('battle test')" title="召喚玄鐵試道傀儡 (攻極低血極厚，試招用)">🎯 試道木樁</button>
+          <button class="act-btn btn-charge" onclick="send('battle charge')" title="靈威充能 100 點，滿怒氣/連擊點/真元 (試招奧義用)">⚡ 充能</button>
         </div>
 
         <!-- 戰鬥模式按鍵組 (平時隱藏) -->
         <div id="battle-buttons-group" class="action-buttons-group hidden">
           <button class="act-btn btn-fight" onclick="send('battle fight')" title="全隊集火主動迎戰 (Space)">⚔️ 迎戰 (Space)</button>
+          <button class="act-btn btn-bag" onclick="toggleBagDrawer()" title="戰鬥中開啟隊伍行囊使用丹藥/法寶 (B)">🎒 行囊 (B)</button>
           <button class="act-btn btn-flee" onclick="send('battle flee')" title="遁地撤退 (-5 SAN) (Esc)">🏃 遁地 (Esc)</button>
           <button class="act-btn btn-ult" onclick="send('formation cast')" title="釋放小隊陣法專屬奧義 (U)">⚡ 陣法奧義 (U)</button>
+          <button class="act-btn btn-charge" onclick="send('battle charge')" title="戰鬥中充能滿 100 靈威與隊員戰意">⚡ 充能</button>
           <button class="act-btn" onclick="send('party')" title="檢視小隊詳細戰況 (P)">👥 小隊 (P)</button>
         </div>
       </div>

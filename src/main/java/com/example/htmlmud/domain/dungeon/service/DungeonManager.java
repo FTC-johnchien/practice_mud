@@ -1,6 +1,7 @@
 package com.example.htmlmud.domain.dungeon.service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Service;
@@ -10,31 +11,57 @@ import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
 import com.example.htmlmud.domain.dungeon.model.DungeonTile;
 import com.example.htmlmud.domain.dungeon.model.GridCoord;
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
 public class DungeonManager {
 
+  private final DungeonFloorLoader dungeonFloorLoader;
   private final Map<String, DungeonFloor> floorRegistry = new HashMap<>();
   private final Map<String, DungeonPosition> playerPositions = new ConcurrentHashMap<>();
 
+  public DungeonManager() {
+    this(new DungeonFloorLoader(new com.fasterxml.jackson.databind.ObjectMapper()));
+  }
+
+  public DungeonManager(DungeonFloorLoader loader) {
+    this.dungeonFloorLoader = loader != null ? loader : new DungeonFloorLoader(new com.fasterxml.jackson.databind.ObjectMapper());
+  }
+
   @PostConstruct
   public void init() {
-    DungeonFloor b1f = buildTombB1F();
-    floorRegistry.put(b1f.getId(), b1f);
-    log.info("Initialized DRPG dungeon floor: {} (10x10)", b1f.getName());
+    List<DungeonFloor> floors = dungeonFloorLoader.loadAllFloors();
+    for (DungeonFloor floor : floors) {
+      floorRegistry.put(floor.getId(), floor);
+      log.info("Registered Data-Driven DRPG dungeon floor: {} [{}]", floor.getName(), floor.getId());
+    }
+    if (floorRegistry.isEmpty()) {
+      DungeonFloor b1f = buildTombB1F();
+      floorRegistry.put(b1f.getId(), b1f);
+      log.warn("No dungeon floors found in JSON, used fallback floor: {}", b1f.getName());
+    }
   }
 
   public DungeonFloor getFloor(String id) {
     return floorRegistry.get(id);
   }
 
+  public void setPlayerPosition(String playerId, DungeonPosition pos) {
+    if (playerId != null && pos != null) {
+      playerPositions.put(playerId, pos);
+    }
+  }
+
   public DungeonPosition getOrCreatePosition(String playerId, String floorId) {
     return playerPositions.computeIfAbsent(playerId, id -> {
       DungeonFloor floor = getFloor(floorId);
-      if (floor == null) {
+      if (floor == null && !floorRegistry.isEmpty()) {
         floor = floorRegistry.values().iterator().next();
+      }
+      if (floor == null) {
+        floor = buildTombB1F();
       }
       return new DungeonPosition(
           floor.getId(),

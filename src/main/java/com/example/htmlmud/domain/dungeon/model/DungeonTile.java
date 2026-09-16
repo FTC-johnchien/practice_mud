@@ -1,10 +1,16 @@
 package com.example.htmlmud.domain.dungeon.model;
 
+import java.util.ArrayList;
+import java.util.List;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class DungeonTile {
 
   public enum TileType {
@@ -46,6 +52,8 @@ public class DungeonTile {
   private boolean passable;
   private String eventId;
   private boolean triggered;
+  @Builder.Default
+  private List<String> drops = new ArrayList<>();
 
   public static DungeonTile wall() {
     return DungeonTile.builder()

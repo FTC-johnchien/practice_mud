@@ -37,6 +37,9 @@ public class BattleEnemy {
   @Builder.Default
   private int xp = 30;
   private String dropItemId;
+  private String droppedDaoSkillId;
+  private String droppedDaoSkillName;
+  private String droppedDaoMemberName;
 
   public void takeDamage(int dmg) {
     this.hp = Math.max(0, this.hp - dmg);

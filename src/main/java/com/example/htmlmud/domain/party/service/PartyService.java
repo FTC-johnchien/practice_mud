@@ -28,6 +28,19 @@ public class PartyService {
     return partyCache.computeIfAbsent(playerName, this::createInitialParty);
   }
 
+  public void setParty(String playerName, Party party) {
+    if (playerName != null && party != null) {
+      partyCache.put(playerName, party);
+    }
+  }
+
+  public Party resetParty(String playerName, String protagonistName) {
+    String pName = (protagonistName != null && !protagonistName.isBlank()) ? protagonistName : playerName;
+    Party party = createInitialParty(pName);
+    partyCache.put(playerName, party);
+    return party;
+  }
+
   @PostConstruct
   public void initDefaultFormations() {
     // 1. 正道正宗：《四象辟邪陣》

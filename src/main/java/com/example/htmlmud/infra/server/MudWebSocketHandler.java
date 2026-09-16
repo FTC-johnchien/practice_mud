@@ -39,11 +39,9 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
     // new ConcurrentWebSocketSessionDecorator(session, 1000, 64 * 1024);
 
     try {
-
-      // Guest階段 使用工廠方法建立 Guest Actor (ID=0)
-      // 將必要的 Service 注入給 Actor，讓 Actor 擁有處理業務的能力
-      Player self = Player.createGuest(new WebSocketOutput(session, objectMapper), worldManager,
-          playerService);
+      // 單機模式：直接建立單機玩家 Actor，無需任何帳密驗證
+      Player self = Player.createSinglePlayer(new WebSocketOutput(session, objectMapper), worldManager,
+          playerService, "道友");
 
       // 啟動 Actor 的虛擬執行緒 (Virtual Thread)
       self.start();
@@ -51,7 +49,7 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
       // 註冊到網路層 SessionRegistry
       sessionRegistry.register(session, self);
 
-      log.info("連線建立 (Guest Actor Created): {}", session.getId());
+      log.info("單機連線建立 (Single Player Actor Created): {}", session.getId());
       // eventPublisher.publishEvent(new SessionEvent.Established(session.getId(), Instant.now()));
     } catch (Exception e) {
       log.error("連線初始化失敗", e);
