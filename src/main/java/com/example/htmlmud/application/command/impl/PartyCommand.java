@@ -28,6 +28,7 @@ public class PartyCommand implements PlayerCommand {
   private final DungeonManager dungeonManager;
   private final DungeonNavigator dungeonNavigator;
   private final com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService;
+  private final com.example.htmlmud.domain.service.GameStateBroadcastService broadcastService;
 
   public Party getOrCreateParty(String playerName) {
     return partyService.getOrCreateParty(playerName);
@@ -44,13 +45,7 @@ public class PartyCommand implements PlayerCommand {
     Party party = getOrCreateParty(self.getName());
     String input = args != null ? args.trim() : "";
 
-    if (input.isEmpty()) {
-      self.reply("【小隊編制】已同步 6 人小隊狀態與陣法靈威。");
-      broadcastDrpgState(self);
-      return;
-    }
-
-    if (input.equals("status") || input.equals("list") || input.equals("detail")) {
+    if (input.isEmpty() || input.equals("status") || input.equals("list") || input.equals("detail")) {
       self.reply(partyService.formatPartyStatus(party));
       broadcastDrpgState(self);
       return;
@@ -140,12 +135,7 @@ public class PartyCommand implements PlayerCommand {
 
   private void broadcastDrpgState(Player player) {
     if (player == null) return;
-    DungeonFloor floor = dungeonManager.getFloor("taiyin_tomb_b1f");
-    DungeonPosition pos = dungeonManager.getOrCreatePosition(player.getName(), "taiyin_tomb_b1f");
-    String inspect = dungeonNavigator.inspectForward(floor, pos);
-    Party party = partyService.getOrCreateParty(player.getName());
-    var battleView = battleService.createBattleView(player.getName());
-    player.sendJson(DrpgStateDto.of(floor, pos, inspect, party, battleView));
+    broadcastService.broadcastState(player);
   }
 
   @Override

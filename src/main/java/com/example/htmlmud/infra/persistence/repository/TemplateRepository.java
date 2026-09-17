@@ -173,6 +173,9 @@ public class TemplateRepository {
   }
 
   public static Optional<RaceTemplate> findRace(String id) {
+    if (id == null) {
+      return Optional.empty();
+    }
     return Optional.ofNullable(raceTemplates.get(id));
   }
 

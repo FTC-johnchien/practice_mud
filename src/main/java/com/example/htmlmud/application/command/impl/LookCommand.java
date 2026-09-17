@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public class LookCommand implements PlayerCommand {
 
   private final ObjectMapper objectMapper;
+  private final com.example.htmlmud.domain.service.GameStateBroadcastService broadcastService;
 
 
   @Override
@@ -39,7 +40,16 @@ public class LookCommand implements PlayerCommand {
     Object target = TargetSelector.findTarget(self, room, args);
     switch (target) {
       case Room r -> {
-        self.reply(r.lookAtRoom(self));
+        if (!self.isInDungeon()) {
+          // 城鎮模式下已具備現代圖形化主舞台，僅在帶 raw/mud 參數時才印出原始 MUD 文本
+          if ("raw".equalsIgnoreCase(args) || "mud".equalsIgnoreCase(args)) {
+            self.reply(r.lookAtRoom(self));
+          }
+          broadcastService.broadcastState(self);
+        } else {
+          self.reply(r.lookAtRoom(self));
+          broadcastService.broadcastState(self);
+        }
       }
       case Direction d -> {
         self.reply(room.lookDirection(self, d)); // 這裡是看特定方向

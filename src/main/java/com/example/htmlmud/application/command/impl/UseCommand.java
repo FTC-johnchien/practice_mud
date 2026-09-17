@@ -27,7 +27,7 @@ public class UseCommand implements PlayerCommand {
   public void execute(String args) {
     Player self = MudContext.currentPlayer();
     String input = args != null ? args.trim() : "";
-    DungeonPosition pos = dungeonManager.getOrCreatePosition(self.getName(), "taiyin_tomb_b1f");
+    DungeonPosition pos = dungeonManager.getPlayerPosition(self.getName());
 
     String[] parts = input.split("\\s+");
     if (parts.length >= 2) {

@@ -107,7 +107,7 @@
     "exits": {
       "north": "forest_entrance",
       "south": "square",
-      "northwest": "mozhu_mines:mine_entrance"
+      "west": "mozhu_mines:mine_entrance"
     },
     "spawns": [
       {
@@ -177,10 +177,21 @@
   {
     "id": "village_elder_house",
     "name": "村長小屋",
-    "description": "test。",
+    "description": "簡樸整潔的木屋內，牆上掛著墨家非攻道圖與墨竹山地貌圖，一位鬚髮皆白的老者正面對殘卷沉思。",
     "exits": {
       "west": "front_of_village_elder_house"
-    }
+    },
+    "spawns": [
+      {
+        "type": "MOB",
+        "id": "village_elder",
+        "count": 1,
+        "maxCount": 1,
+        "time": 60,
+        "rate": 1,
+        "isHidden": false
+      }
+    ]
   },
   {
     "id": "basement",
@@ -221,9 +232,38 @@
   {
     "id": "inn",
     "name": "村莊客棧",
-    "description": "一家樸素溫馨的小客棧，空氣中飄著麥酒與烤麵包的香氣，幾名疲憊的旅人正坐在角落歇息。",
+    "description": "一家樸素溫馨的小客棧，空氣中飄著麥酒與烤麵包的香氣，幾名疲憊的旅人正坐在角落歇息，掌櫃福伯笑瞇瞇地在櫃檯前迎客。",
     "exits": {
       "east": "square"
-    }
+    },
+    "spawns": [
+      {
+        "type": "MOB",
+        "id": "innkeeper",
+        "count": 1,
+        "maxCount": 1,
+        "time": 60,
+        "rate": 1,
+        "isHidden": false
+      },
+      {
+        "type": "MOB",
+        "id": "tie_niu",
+        "count": 1,
+        "maxCount": 1,
+        "time": 60,
+        "rate": 1,
+        "isHidden": false
+      },
+      {
+        "type": "MOB",
+        "id": "ling_shuang",
+        "count": 1,
+        "maxCount": 1,
+        "time": 60,
+        "rate": 1,
+        "isHidden": false
+      }
+    ]
   }
 ]

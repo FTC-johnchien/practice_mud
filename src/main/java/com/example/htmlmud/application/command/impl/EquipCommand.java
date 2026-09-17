@@ -27,7 +27,7 @@ public class EquipCommand implements PlayerCommand {
   public void execute(String args) {
     Player self = MudContext.currentPlayer();
     String input = args != null ? args.trim() : "";
-    DungeonPosition pos = dungeonManager.getOrCreatePosition(self.getName(), "taiyin_tomb_b1f");
+    DungeonPosition pos = dungeonManager.getPlayerPosition(self.getName());
 
     if (input.startsWith("unequip ") || input.startsWith("卸下 ")) {
       String sub = input.replaceFirst("^(unequip|卸下)\\s+", "");

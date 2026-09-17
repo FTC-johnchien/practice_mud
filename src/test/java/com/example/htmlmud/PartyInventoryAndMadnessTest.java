@@ -185,4 +185,42 @@ class PartyInventoryAndMadnessTest {
     assertThat(learned.getName()).isEqualTo("青元貫日劍");
     assertThat(learned.getCostType()).isEqualTo(ResourceType.RAGE); // 自動適配為力士怒氣資源
   }
+
+  @Test
+  @DisplayName("測試背包物品去綴比對堆疊與 5+2 裝備欄格式化輸出")
+  void testItemPrefixNormalizationAndEquipmentSlots() {
+    Party party = partyService.getOrCreateParty("tester");
+
+    // 1. 驗證消耗品去綴堆疊：初始行囊已有 taiyin_pill，再加入 taiyin_tomb:taiyin_pill 應合併堆疊而非建立新格位
+    int initialSlotsCount = party.getInventory().getSlots().size();
+    PartyItemSlot pillSlotBefore = party.getInventory().getSlots().stream()
+        .filter(s -> s.getItemId().contains("taiyin_pill"))
+        .findFirst().orElse(null);
+    assertThat(pillSlotBefore).isNotNull();
+    int countBefore = pillSlotBefore.getCount();
+
+    boolean addedPill = party.getInventory().addItem("taiyin_tomb:taiyin_pill", 2);
+    assertThat(addedPill).isTrue();
+    // 總格數不變，數量增加 2
+    assertThat(party.getInventory().getSlots().size()).isEqualTo(initialSlotsCount);
+    assertThat(pillSlotBefore.getCount()).isEqualTo(countBefore + 2);
+
+    // 2. 驗證非堆疊裝備（如青銅古劍）即便 ID 相同也會分別佔用獨立格位
+    party.getInventory().addItem("bronze_sword", 1);
+    party.getInventory().addItem("taiyin_tomb:bronze_sword", 1);
+    long swordCount = party.getInventory().getSlots().stream()
+        .filter(s -> s.getItemId().contains("bronze_sword"))
+        .count();
+    assertThat(swordCount).isGreaterThanOrEqualTo(2);
+
+    // 3. 驗證 formatPartyStatus 包含 5+2 槽位資訊
+    String status = partyService.formatPartyStatus(party);
+    assertThat(status).contains("[主手:");
+    assertThat(status).contains("[副手:");
+    assertThat(status).contains("[頭部:");
+    assertThat(status).contains("[身軀:");
+    assertThat(status).contains("[靴履:");
+    assertThat(status).contains("[飾品1:");
+    assertThat(status).contains("[飾品2:");
+  }
 }

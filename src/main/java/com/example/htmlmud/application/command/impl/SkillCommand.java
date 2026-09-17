@@ -29,7 +29,7 @@ public class SkillCommand implements PlayerCommand {
   public void execute(String args) {
     Player self = MudContext.currentPlayer();
     String input = args != null ? args.trim() : "";
-    DungeonPosition pos = dungeonManager.getOrCreatePosition(self.getName(), "taiyin_tomb_b1f");
+    DungeonPosition pos = dungeonManager.getPlayerPosition(self.getName());
 
     // 格式支援：
     // 1. "skill cast 0 sword_pierce 1" 或 "cast 0 sword_pierce 1"

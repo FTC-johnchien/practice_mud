@@ -19,6 +19,8 @@ public class SaveData {
   private String title;
   private String playerId;
   private String protagonistName;
+  private boolean inDungeon;
+  private String currentRoomId;
   private String floorId;
   private int floorX;
   private int floorY;

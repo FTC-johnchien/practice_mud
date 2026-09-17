@@ -27,7 +27,7 @@ public class SealCommand implements PlayerCommand {
   public void execute(String args) {
     Player self = MudContext.currentPlayer();
     String input = args != null ? args.trim() : "";
-    DungeonPosition pos = dungeonManager.getOrCreatePosition(self.getName(), "taiyin_tomb_b1f");
+    DungeonPosition pos = dungeonManager.getPlayerPosition(self.getName());
 
     if (input.isEmpty()) {
       self.reply("請指定封印目標！用法: seal <隊員編號0-5 或 敵方畸變體編號>");

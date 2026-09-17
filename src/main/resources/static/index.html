@@ -3,11 +3,172 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>道祖是克蘇魯 - DRPG 靈境探索</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=1.4.0">
   <script src="https://cdn.jsdelivr.net/npm/ansi_up@5.1.0/ansi_up.min.js"></script>
 </head>
 <body>
+
+  <!-- 全螢幕暗黑仙俠主標題封面 (Title Screen Overlay) -->
+  <div id="title-screen-overlay" class="title-screen-overlay">
+    <div class="title-stars-bg"></div>
+    <div class="title-vignette"></div>
+
+    <div class="title-content-box">
+      <div class="title-header-group">
+        <div class="title-rune-emblem">☯️</div>
+        <h1 class="game-main-title">道祖是克蘇魯</h1>
+        <div class="game-sub-title">太 陰 萬 劫 ‧ 暗 黑 修 仙 D R P G</div>
+        <p class="game-tagline">第一人稱 3D 靈境探索 ‧ 半即時小隊陣法戰鬥 ‧ 不可名狀異變</p>
+      </div>
+
+      <div class="title-menu-actions">
+        <button id="btn-continue-game" class="title-menu-btn btn-primary-glow" onclick="continueLatestSave()" disabled>
+          <span class="btn-icon">⚔️</span>
+          <span class="btn-text">
+            <strong class="btn-main-label">繼續冒險</strong>
+            <small id="continue-slot-hint" class="btn-sub-label">載入道途中...</small>
+          </span>
+        </button>
+
+        <button id="btn-open-load" class="title-menu-btn" onclick="openSaveModal('load')">
+          <span class="btn-icon">📂</span>
+          <span class="btn-text">
+            <strong class="btn-main-label">選擇存檔</strong>
+            <small class="btn-sub-label">瀏覽五大槽位與自動存檔</small>
+          </span>
+        </button>
+
+        <button id="btn-open-new-game" class="title-menu-btn btn-new-glow" onclick="openNewGameModal()">
+          <span class="btn-icon">✨</span>
+          <span class="btn-text">
+            <strong class="btn-main-label">開闢新途</strong>
+            <small class="btn-sub-label">塑形道號 ‧ 挑選初始陣法</small>
+          </span>
+        </button>
+
+        <button id="btn-open-guide" class="title-menu-btn" onclick="openGuideModal()">
+          <span class="btn-icon">📜</span>
+          <span class="btn-text">
+            <strong class="btn-main-label">太陰秘錄</strong>
+            <small class="btn-sub-label">玩法指南 ‧ 道心異變禁忌</small>
+          </span>
+        </button>
+      </div>
+
+      <div class="title-footer-note">
+        <span>© 青雲觀秘藏 ‧ 單機探索版 v1.2</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 開闢新道途設定彈窗 (New Game Setup Modal) -->
+  <div id="new-game-modal" class="modal-overlay hidden" onclick="if(event.target===this) closeNewGameModal();">
+    <div class="new-game-modal-card">
+      <div class="modal-header">
+        <span class="modal-title-text">✨ 仙道塑魂 ‧ 開闢新道途</span>
+        <button class="drawer-close-btn" onclick="closeNewGameModal()">✕</button>
+      </div>
+
+      <div class="modal-body-content">
+        <div class="form-group">
+          <label class="form-label" for="new-game-protagonist-input">👤 主角真傳道號：</label>
+          <input type="text" id="new-game-protagonist-input" class="form-input" placeholder="輸入道號 (預設: 玄靈子)" value="玄靈子" maxlength="10" onkeypress="if(event.key==='Enter') startPrologueFlow();">
+          <small class="form-tip">你將率領五位生死同門踏入萬劫太陰古塚。</small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">☯️ 啟程初始道門陣法：</label>
+          <div class="formation-select-grid">
+            <div id="card-four-symbols" class="formation-card selected" onclick="selectFormation('formation_four_symbols')">
+              <div class="form-card-badge positive">正宗道法</div>
+              <div class="form-card-title">☯️ 《四象辟邪陣》</div>
+              <div class="form-card-desc">依青龍、白虎、朱雀、玄武列陣，鎮守心神。全隊受擊減免 10%，道心動搖率下降 25%。</div>
+              <div class="form-card-ult">⚡ 陣法奧義：【四象純陽真火】(純陽焚煞，不損道心)</div>
+            </div>
+
+            <div id="card-xuan-yin" class="formation-card" onclick="selectFormation('formation_xuan_yin')">
+              <div class="form-card-badge dangerous">禁忌古神</div>
+              <div class="form-card-title">🌌 《玄陰噬魂陣》</div>
+              <div class="form-card-desc">參照天外星蝕殘片所創之魔陣，全隊道術傷害暴增 25%，但每場戰鬥開始損耗全員 3 點 SAN！</div>
+              <div class="form-card-ult">⚡ 陣法奧義：【不可名狀星蝕】(毀滅全體，全隊 -8 SAN)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer-actions">
+        <button class="btn-modal-cancel" onclick="closeNewGameModal()">返回選單</button>
+        <button class="btn-modal-confirm" onclick="startPrologueFlow()">踏入命運 ‧ 啟程</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 沉浸式序幕故事導讀彈窗 (Prologue Modal) -->
+  <div id="prologue-modal" class="modal-overlay hidden">
+    <div class="prologue-modal-card">
+      <div class="prologue-scroll-border">
+        <div class="prologue-header">
+          <span class="prologue-seal">太陰絕筆</span>
+          <h2>📜 序章 ‧ 盲目星蝕</h2>
+        </div>
+
+        <div class="prologue-text-body">
+          <p class="prologue-p"><span class="drop-cap">天</span>寶末年，九曜逆行，青雲觀後山封印萬載的太陰古塚傳來如巨獸心搏般的悶響。腥羶腐朽的死氣混合著天外不可名狀之囈語，自深不見底的玄陰幽穴中蔓延而出……</p>
+          <p class="prologue-p">掌門真人羽化前以精血書就泣血符書：「天外盲目癡愚之星神不可窺探……古塚深處，埋藏著初窺群星而徹底發狂的太陰古仙遺蛻……若任其破土，億萬生靈將淪為無神死肉……」</p>
+          <p class="prologue-p">作為青雲觀最後的真傳，你手握辟邪青銅古劍，率領五名同門步入古塚石階。青苔石門在你身後轟然閉闔，深淵幽冥中，數雙散發詭異磷光的瞳孔悄然睜開……</p>
+        </div>
+
+        <div class="prologue-actions">
+          <button class="btn-skip-prologue" onclick="finishPrologueAndEnter()">跳過 (Skip)</button>
+          <button class="btn-enter-dungeon" onclick="finishPrologueAndEnter()">拔劍 ‧ 踏入太陰古塚</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 玩法指南秘錄彈窗 (Guide Modal) -->
+  <div id="guide-modal" class="modal-overlay hidden" onclick="if(event.target===this) closeGuideModal();">
+    <div class="guide-modal-card">
+      <div class="modal-header">
+        <span class="modal-title-text">📜 太陰秘錄 ‧ 求生道規 (遊戲指南)</span>
+        <button class="drawer-close-btn" onclick="closeGuideModal()">✕</button>
+      </div>
+
+      <div class="guide-cards-grid">
+        <div class="guide-card">
+          <div class="guide-card-icon">🧭</div>
+          <div class="guide-card-title">一、3D 靈境與雷達導航</div>
+          <p class="guide-card-text">按 <strong>W/S</strong> 前進退步，<strong>A/D</strong> 轉向，<strong>I</strong> 探查前方。點擊 <strong>⮃ 換邊</strong> 可切換地圖左置/右置，<strong>🎯 視口</strong> 可切換跟隨或全圖模式。</p>
+        </div>
+
+        <div class="guide-card">
+          <div class="guide-card-icon">⚔️</div>
+          <div class="guide-card-title">二、半即時戰鬥與三態資源</div>
+          <p class="guide-card-text">隊員依行動軸自動攻防，點選隊員可釋放絕學。符道消耗 <strong>真元 (MP)</strong>，力士受擊積累 <strong>怒氣 (Rage)</strong>，刺客平攻獲取 <strong>連擊點 (Combo)</strong>。</p>
+        </div>
+
+        <div class="guide-card">
+          <div class="guide-card-icon">🧠</div>
+          <div class="guide-card-title">三、道心 SAN 與走火入魔</div>
+          <p class="guide-card-text">SAN 歸 0 進入 <strong>走火入魔 (傷害+100%、自殘 15%、40% 背刺隊友)</strong>；可施符 <strong>[施符鎮魔]</strong> 凍結失控；計數滿 100% 將異變為敵方 Boss，討伐可剖出【道核】傳承其生前絕學！</p>
+        </div>
+
+        <div class="guide-card">
+          <div class="guide-card-icon">☯️</div>
+          <div class="guide-card-title">四、陣法靈威與公共行囊</div>
+          <p class="guide-card-text">前後排孔位享有專屬陣法加成，靈威滿 100 可釋放 <strong>【⚡ 陣法奧義】</strong>。按 <strong>B</strong> 開啟 30 格公共行囊，隨時使用丹藥、穿脫武器防具強化小隊戰力。</p>
+        </div>
+      </div>
+
+      <div class="modal-footer-actions">
+        <button class="btn-modal-confirm" onclick="closeGuideModal()">合上秘錄</button>
+      </div>
+    </div>
+  </div>
 
   <div class="game-container">
     <!-- 頂部資訊列：模式提示與陣法靈威槽 -->
@@ -17,6 +178,7 @@
       </div>
 
       <div class="top-nav-center-actions">
+        <button class="top-nav-btn btn-menu-quick" onclick="openTitleScreen()" title="返回遊戲主封面與秘錄">🏠 主選單</button>
         <button class="top-nav-btn btn-save-quick" onclick="openSaveModal('save')" title="儲存進度 (F5)">💾 存檔</button>
         <button class="top-nav-btn btn-load-quick" onclick="openSaveModal('load')" title="載入進度 / 開闢新道途">📂 讀檔 / 新局</button>
       </div>
@@ -57,6 +219,73 @@
           【正前方】凝神探查中...
         </div>
       </aside>
+
+      <!-- 城鎮模式核心主舞台 (Town Main Stage - 取代舊 MUD 純文字，全視覺化互動) -->
+      <section id="town-nav-panel" class="town-nav-panel town-main-stage hidden">
+        <div class="town-top-bar">
+          <div class="town-header">
+            <div class="town-title-wrap">
+              <span id="town-zone-badge" class="town-zone-badge">桃源新手村</span>
+              <span id="town-room-title" class="town-room-title">村莊客棧</span>
+            </div>
+            <span id="town-room-id-tag" class="coord-tag">newbie_village:inn</span>
+          </div>
+          <button class="radar-mini-btn" onclick="toggleRadarPosition()" title="切換主舞台與日誌左右停靠">⮃ 換邊</button>
+        </div>
+
+        <div id="town-room-desc" class="town-desc-card">
+          一家樸素溫馨的小客棧，空氣中飄著麥酒與烤麵包的香氣。
+        </div>
+
+        <!-- 城鎮中段：左側導航羅盤，右側環境生靈與地面物品（直排無須向下捲動） -->
+        <div class="town-stage-body">
+          <!-- 左欄：道路羅盤與特殊出路 -->
+          <div class="town-stage-left">
+            <div class="town-compass-section">
+              <div class="town-section-title">🧭 道路方位 (WASD / 點擊移動)</div>
+              <div class="compass-grid">
+                <button id="exit-btn-north" class="compass-btn compass-north disabled" onclick="sendTownMove('north')">
+                  <span class="compass-dir">▲ 北</span>
+                  <span class="compass-target" id="exit-name-north">無出路</span>
+                </button>
+                <button id="exit-btn-west" class="compass-btn compass-west disabled" onclick="sendTownMove('west')">
+                  <span class="compass-dir">◀ 西</span>
+                  <span class="compass-target" id="exit-name-west">無出路</span>
+                </button>
+                <div class="compass-center">🧭</div>
+                <button id="exit-btn-east" class="compass-btn compass-east disabled" onclick="sendTownMove('east')">
+                  <span class="compass-dir">東 ▶</span>
+                  <span class="compass-target" id="exit-name-east">無出路</span>
+                </button>
+                <button id="exit-btn-south" class="compass-btn compass-south disabled" onclick="sendTownMove('south')">
+                  <span class="compass-dir">▼ 南</span>
+                  <span class="compass-target" id="exit-name-south">無出路</span>
+                </button>
+              </div>
+              <div id="town-special-exits" class="town-special-exits"></div>
+            </div>
+          </div>
+
+          <!-- 右欄：環境人物/生靈 + 地面散落物品 (直排，獨立平滑滾動) -->
+          <div class="town-stage-right">
+            <!-- 身旁人物與能力標籤 (NPCs + Capabilities) -->
+            <div class="town-npcs-section">
+              <div class="town-section-title">👥 當前環境人物與生靈 <span id="town-npc-count" class="entity-count-badge"></span></div>
+              <div id="town-npcs-list" class="town-npcs-list">
+                <!-- 由 drpg-view.js 動態渲染 NPC 卡片與互動能力標籤 -->
+              </div>
+            </div>
+
+            <!-- 地面散落物品 -->
+            <div class="town-items-section">
+              <div class="town-section-title">📦 地面散落靈物 <span id="town-item-count" class="entity-count-badge"></span></div>
+              <div id="town-items-list" class="town-items-list">
+                <!-- 由 drpg-view.js 動態渲染 -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <!-- 右側主體：戰場敵方陣列 + 戰鬥冒險日誌 -->
       <div class="log-and-battle-area">
@@ -100,6 +329,7 @@
           <span id="bag-capacity-badge" class="bag-capacity-badge">0/30</span>
         </div>
         <button class="drawer-close-btn" onclick="toggleBagDrawer(false)">✕ 關閉 (B)</button>
+      </div>
       <div id="bag-items-list" class="bag-items-list">
         <!-- 由 drpg-view.js 動態渲染 -->
       </div>
@@ -127,14 +357,46 @@
       </div>
     </div>
 
+    <!-- 小隊編制與 5+2 裝備管理 模態視窗 -->
+    <div id="party-modal" class="modal-overlay hidden" onclick="if(event.target===this) togglePartyModal(false);">
+      <div class="party-modal-card">
+        <div class="party-modal-header">
+          <div class="party-modal-title">
+            <span>👥 小隊編制・全隊狀態與 5+2 裝備一覽</span>
+          </div>
+          <button class="drawer-close-btn" onclick="togglePartyModal(false)">✕ 關閉 (P/Esc)</button>
+        </div>
+        <div id="party-modal-formation-info" class="party-modal-formation-info">
+          <!-- 由 drpg-view.js 動態渲染陣法資訊與奧義 -->
+        </div>
+        <div id="party-modal-members-list" class="party-modal-members-list">
+          <!-- 由 drpg-view.js 動態渲染 6 名隊員詳細卡片與 7 大裝備部位 -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 終端指令開發者控制台 (預設隱藏，按 ~ 或點擊開啟) -->
+    <div id="dev-console-modal" class="modal-overlay hidden" onclick="if(event.target===this) toggleDevConsole(false);">
+      <div class="dev-console-card">
+        <div class="dev-console-header">
+          <span>⌨️ 仙道靈識終端 (Dev Console - 按 ~ 或 Esc 關閉)</span>
+          <button class="drawer-close-btn" onclick="toggleDevConsole(false)">✕</button>
+        </div>
+        <div class="dev-console-input-wrap">
+          <input type="text" id="dev-cmd-input" class="dev-cmd-input-field" placeholder="輸入除錯或自訂 MUD 指令 (例如: look, saves, party, shop, who)..." autocomplete="off">
+          <button class="send-btn" onclick="handleDevEnter()">發送</button>
+        </div>
+      </div>
+    </div>
+
     <!-- 底部操作列：十字步進盤、快捷功能按鍵與文字指令輸入 -->
     <footer class="bottom-control-panel">
       <div class="quick-dpad-wrap">
         <div class="dpad-grid">
-          <button class="dpad-btn dpad-forward" onclick="if(window.sendStep) sendStep('w'); else send('step w');" title="前進 (W)">▲</button>
-          <button class="dpad-btn dpad-left" onclick="if(window.sendStep) sendStep('a'); else send('step a');" title="左轉 90度 (A)">◀</button>
-          <button class="dpad-btn dpad-backward" onclick="if(window.sendStep) sendStep('s'); else send('step s');" title="後退 (S)">▼</button>
-          <button class="dpad-btn dpad-right" onclick="if(window.sendStep) sendStep('d'); else send('step d');" title="右轉 90度 (D)">▶</button>
+          <button class="dpad-btn dpad-forward" onclick="handleDpad('north')" title="北 / 前進 (W)">▲</button>
+          <button class="dpad-btn dpad-left" onclick="handleDpad('west')" title="西 / 左 (A)">◀</button>
+          <button class="dpad-btn dpad-backward" onclick="handleDpad('south')" title="南 / 後退 (S)">▼</button>
+          <button class="dpad-btn dpad-right" onclick="handleDpad('east')" title="東 / 右 (D)">▶</button>
         </div>
 
         <!-- 探索模式按鍵組 -->
@@ -147,6 +409,7 @@
           <button class="act-btn" onclick="if(window.triggerRestAction) triggerRestAction(); else send('rest');" title="凝神調息回復氣血與真元 (R)">🌿 休息 (R)</button>
           <button class="act-btn btn-dummy" onclick="send('battle test')" title="召喚玄鐵試道傀儡 (攻極低血極厚，試招用)">🎯 試道木樁</button>
           <button class="act-btn btn-charge" onclick="send('battle charge')" title="靈威充能 100 點，滿怒氣/連擊點/真元 (試招奧義用)">⚡ 充能</button>
+          <button class="act-btn" onclick="toggleDevConsole()" title="打開開發者終端 (~)">⌨️ 終端 (~)</button>
         </div>
 
         <!-- 戰鬥模式按鍵組 (平時隱藏) -->
@@ -160,15 +423,15 @@
         </div>
       </div>
 
-      <div class="input-container">
+      <div class="input-container hidden">
         <input type="text" id="cmd-input" class="cmd-input-field" placeholder="按 / 或 Enter 輸入文字指令，Esc 切回步進..." autocomplete="off">
         <button class="send-btn" onclick="handleEnter()">發送</button>
       </div>
     </footer>
   </div>
 
-  <script src="js/mud-core.js"></script>
-  <script src="js/mud-ui.js"></script>
+  <script src="js/mud-core.js?v=1.2.2"></script>
+  <script src="js/mud-ui.js?v=1.2.2"></script>
 
   <script>
     let ws = null;
@@ -180,6 +443,7 @@
       ws = new WebSocket(socketUrl);
       ws.onopen = () => {
         appendHtml("系統：神識已連結至太陰地宮！", "#10b981");
+        send('saves quiet', true);
       };
       ws.onclose = () => {
         appendHtml("系統：靈識中斷，3秒後嘗試凝神重連...", "#ef4444");
@@ -188,11 +452,12 @@
       ws.onmessage = (event) => handleServerMessage(event.data);
     }
 
-    function send(cmd) {
+    function send(cmd, silent = false) {
       if (!cmd || !ws || ws.readyState !== WebSocket.OPEN) return;
       ws.send(JSON.stringify({ type: "INPUT", text: cmd }));
-      // 指令步進不需洗版文字日誌，僅特別指令記錄
-      if (!cmd.startsWith('step ')) {
+      // 步進與靜默指令不需洗版文字日誌，僅玩家操作記錄
+      const isSilentCmd = silent || cmd.startsWith('step ') || cmd.includes('quiet') || cmd.includes('silent');
+      if (!isSilentCmd) {
         appendHtml("> " + cmd, "#6b7280");
       }
     }
@@ -200,6 +465,6 @@
     window.send = send;
     connect();
   </script>
-  <script src="js/drpg-view.js"></script>
+  <script src="js/drpg-view.js?v=1.4.0"></script>
 </body>
 </html>

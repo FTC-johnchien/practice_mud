@@ -87,6 +87,7 @@
   {
     "id": "wild_rat",
     "name": "巨大的野鼠",
+    "race": "rat",
     "aliases": [
       "wild rat",
       "rat",
@@ -142,6 +143,104 @@
         "itemId": "newbie_village:village_elder_house_key",
         "chance": 0.5
       }
+    ]
+  },
+  {
+    "id": "innkeeper",
+    "name": "客棧掌櫃·福伯",
+    "gender": "MALE",
+    "race": "human",
+    "aliases": [
+      "innkeeper",
+      "shopkeeper",
+      "boss",
+      "fu",
+      "福伯"
+    ],
+    "kind": "FRIENDLY",
+    "level": 30,
+    "maxHp": 3000,
+    "str": 20,
+    "dex": 20,
+    "defense": 10,
+    "description": "客棧的福伯笑瞇瞇地擦拭著櫃檯，身後擺滿了乾糧與清心靈茶。",
+    "lookDescription": "一位精明卻熱心的老掌櫃，在新手村經營這家客棧已有幾十年。",
+    "dialogues": [
+      "客官是要打尖還是住店？本店的烤麵包與清心靈茶最能定心回血！（輸入 'shop' 或 'list' 瀏覽貨品）",
+      "聽說北邊墨竹礦坑近日煞氣沖天，宋家大師兄進去後便狂亂癲狂，客官入山千萬要多備乾糧！",
+      "疲憊的話不妨在此客棧安歇（輸入 'rest'），喝碗熱酒睡上一覺，氣血理智便能全復！"
+    ]
+  },
+  {
+    "id": "village_elder",
+    "name": "新手村長·白石老人",
+    "gender": "MALE",
+    "race": "human",
+    "aliases": [
+      "elder",
+      "village elder",
+      "baishi",
+      "村長",
+      "白石老人"
+    ],
+    "kind": "FRIENDLY",
+    "level": 40,
+    "maxHp": 4000,
+    "str": 25,
+    "dex": 25,
+    "defense": 15,
+    "description": "白石老人鬚髮皆白，手握旱煙，愁眉不展地望著北方的崇山峻嶺。",
+    "lookDescription": "新手村德高望重的村長，聽聞曾是墨家外門弟子。",
+    "dialogues": [
+      "唉……北方的墨竹山廢棄礦坑近來陰煞翻湧，大師兄宋天衡誤入魔道，成了畸變妖邪……",
+      "道友若能替天行道，深入礦坑斬殺妖邪大師兄並帶回長老黑話玉牌，老夫定將墨家秘傳重謝！",
+      "礦坑內步步殺機，若理智枯竭將遭天道畸變，出發前切記至客棧福伯處備足辟邪清心靈茶！"
+    ]
+  },
+  {
+    "id": "tie_niu",
+    "name": "力士·鐵牛",
+    "gender": "MALE",
+    "race": "human",
+    "aliases": [
+      "tie_niu",
+      "iron",
+      "鐵牛"
+    ],
+    "kind": "FRIENDLY",
+    "level": 10,
+    "maxHp": 180,
+    "str": 15,
+    "dex": 6,
+    "defense": 12,
+    "description": "一名身形魁梧如鐵塔的玄甲力士，正抱著大碗豪飲濁酒。",
+    "lookDescription": "搬山力士・玄甲體修，性格豪爽耿直，擅長持盾怒目嘲諷與裂地重擊。",
+    "dialogues": [
+      "俺這身筋骨硬得很！道友若要探險尋道，帶上俺鐵牛準沒錯！（點擊 [🤝 招募] 邀請入隊）",
+      "聽說那礦坑裡的妖物力大無窮？嘿，俺的玄重鎚可不是吃素的！"
+    ]
+  },
+  {
+    "id": "ling_shuang",
+    "name": "醫修·凌霜",
+    "gender": "FEMALE",
+    "race": "human",
+    "aliases": [
+      "ling_shuang",
+      "ling",
+      "凌霜"
+    ],
+    "kind": "FRIENDLY",
+    "level": 10,
+    "maxHp": 80,
+    "str": 6,
+    "dex": 8,
+    "defense": 3,
+    "description": "一名身著素白青囊長袍的溫婉醫修，正低頭細心整理著辟邪草藥。",
+    "lookDescription": "懸壺青囊・素問靈醫，精通九轉回春與辟邪清心咒，能穩定道心理智。",
+    "dialogues": [
+      "道友請留步。地牢陰煞侵骨，極耗神識道心。若需同行醫治，霜兒願隨行相助。（點擊 [🤝 招募] 邀請入隊）",
+      "心神寧定方能窺見大道，切記不可在心神狂亂時強行涉險。"
     ]
   }
 ]

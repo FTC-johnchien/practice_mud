@@ -57,6 +57,7 @@ public class DungeonFloorLoader {
     private String name;
     private String description;
     private Boolean passable;
+    private String eventId;
     private List<String> drops;
   }
 
@@ -69,6 +70,7 @@ public class DungeonFloorLoader {
     private String name;
     private String description;
     private Boolean passable;
+    private String eventId;
     private List<String> drops;
   }
 
@@ -133,6 +135,7 @@ public class DungeonFloorLoader {
                 .name(legendItem.getName() != null ? legendItem.getName() : type.getDefaultName())
                 .description(legendItem.getDescription() != null ? legendItem.getDescription() : "")
                 .passable(passable)
+                .eventId(legendItem.getEventId())
                 .drops(legendItem.getDrops() != null ? new ArrayList<>(legendItem.getDrops()) : new ArrayList<>())
                 .build();
             tiles[y][x] = tile;
@@ -164,6 +167,7 @@ public class DungeonFloorLoader {
               .name(ov.getName() != null ? ov.getName() : type.getDefaultName())
               .description(ov.getDescription() != null ? ov.getDescription() : "")
               .passable(passable)
+              .eventId(ov.getEventId())
               .drops(ov.getDrops() != null ? new ArrayList<>(ov.getDrops()) : new ArrayList<>())
               .build();
           tiles[ov.getY()][ov.getX()] = tile;

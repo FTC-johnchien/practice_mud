@@ -22,8 +22,7 @@ public class NewGameCommand implements PlayerCommand {
   @Override
   public void execute(String args) {
     Player player = MudContext.currentPlayer();
-    String name = (args != null && !args.isBlank()) ? args.trim() : "玄靈子";
-    saveCommand.handleNew(player, name);
+    saveCommand.handleNew(player, args);
   }
 
   @Override

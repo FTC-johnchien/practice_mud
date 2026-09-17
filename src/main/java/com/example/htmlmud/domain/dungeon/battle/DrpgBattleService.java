@@ -1,11 +1,13 @@
 package com.example.htmlmud.domain.dungeon.battle;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.model.enums.ItemType;
@@ -16,6 +18,7 @@ import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
 import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
 import com.example.htmlmud.domain.dungeon.service.DungeonManager;
 import com.example.htmlmud.domain.dungeon.service.DungeonNavigator;
+import com.example.htmlmud.domain.event.MobEvents;
 import com.example.htmlmud.domain.model.template.ItemTemplate;
 import com.example.htmlmud.domain.model.template.MobTemplate;
 import com.example.htmlmud.domain.party.model.FormationTemplate;
@@ -42,6 +45,9 @@ public class DrpgBattleService {
       "taiyin_pill", "purify_talisman", "bronze_sword", "yin_robe", "ancient_relic", "tomb_key"
   );
 
+  @org.springframework.beans.factory.annotation.Autowired(required = false)
+  private ApplicationEventPublisher eventPublisher;
+
   @org.springframework.beans.factory.annotation.Autowired
   public DrpgBattleService(PartyService partyService, DungeonManager dungeonManager, DungeonNavigator dungeonNavigator) {
     this.partyService = partyService;
@@ -51,6 +57,10 @@ public class DrpgBattleService {
 
   public DrpgBattleService(PartyService partyService, DungeonManager dungeonManager) {
     this(partyService, dungeonManager, new DungeonNavigator());
+  }
+
+  public void setEventPublisher(ApplicationEventPublisher eventPublisher) {
+    this.eventPublisher = eventPublisher;
   }
 
   public boolean isInBattle(String playerId) {
@@ -166,8 +176,26 @@ public class DrpgBattleService {
       idx++;
       var opt = TemplateRepository.findMob(templateId);
       String name = opt.map(MobTemplate::name).orElse("太陰妖邪") + " " + (char)('A' + idx - 1);
-      int maxHp = 220 + (idx * 60);
-      RowPosition row = (templateId.contains("bat") || templateId.contains("mage")) ? RowPosition.BACK : RowPosition.FRONT;
+      int maxHp = opt.map(MobTemplate::maxHp).filter(h -> h > 0).orElse(220 + (idx * 60));
+      int minDmg = opt.map(MobTemplate::minDamage).filter(d -> d > 0).orElse(10 + idx * 2);
+      int maxDmg = opt.map(MobTemplate::maxDamage).filter(d -> d > 0).orElse(18 + idx * 3);
+      int def = opt.map(MobTemplate::defense).filter(d -> d > 0).orElse(4 + idx);
+      int dex = opt.map(MobTemplate::dex).filter(d -> d > 0).orElse(10);
+      long attackInterval = opt.map(MobTemplate::attackSpeed).filter(s -> s > 0).orElse(2200);
+
+      String dropId = opt.map(MobTemplate::loot)
+          .filter(l -> l != null && !l.isEmpty())
+          .map(l -> l.get(ThreadLocalRandom.current().nextInt(l.size())).itemId())
+          .orElse(null);
+      if (dropId == null) {
+        if (templateId.contains("mozhu")) {
+          dropId = "mozhu_mines:corrupted_spirit_stone";
+        } else {
+          dropId = TOMB_ITEMS.get(ThreadLocalRandom.current().nextInt(TOMB_ITEMS.size()));
+        }
+      }
+
+      RowPosition row = (templateId.contains("bat") || templateId.contains("mage") || templateId.contains("crystal")) ? RowPosition.BACK : RowPosition.FRONT;
 
       BattleEnemy enemy = BattleEnemy.builder()
           .id("mob-" + idx)
@@ -175,16 +203,16 @@ public class DrpgBattleService {
           .name(name)
           .hp(maxHp)
           .maxHp(maxHp)
-          .minDamage(10 + idx * 2)
-          .maxDamage(18 + idx * 3)
-          .defense(4 + idx)
-          .dex(10)
+          .minDamage(minDmg)
+          .maxDamage(maxDmg)
+          .defense(def)
+          .dex(dex)
           .row(row)
-          .attackIntervalMs(2200 + ThreadLocalRandom.current().nextLong(-300, 400))
+          .attackIntervalMs(attackInterval)
           .nextAttackTime(System.currentTimeMillis() + ThreadLocalRandom.current().nextLong(1200, 2200))
           .alive(true)
           .xp(35 + idx * 10)
-          .dropItemId(TOMB_ITEMS.get(ThreadLocalRandom.current().nextInt(TOMB_ITEMS.size())))
+          .dropItemId(dropId)
           .build();
       enemies.add(enemy);
     }
@@ -212,6 +240,63 @@ public class DrpgBattleService {
 
     // 啟動虛擬執行緒戰鬥心跳
     Thread.ofVirtual().name("BattleLoop-" + player.getName()).start(() -> {
+      runBattleLoop(player, ctx, pos);
+    });
+  }
+
+  public void startBossBattle(Player player, DungeonPosition pos, String bossTemplateId) {
+    if (isInBattle(player.getName())) {
+      player.reply("【首領之戰】當前已在戰鬥交鋒之中！");
+      return;
+    }
+    Party party = partyService.getOrCreateParty(player.getName());
+    var opt = TemplateRepository.findMob(bossTemplateId);
+    String name = opt.map(MobTemplate::name).orElse("煞氣領主");
+    int hp = opt.map(MobTemplate::maxHp).filter(h -> h > 0).orElse(450);
+    int minDmg = opt.map(MobTemplate::minDamage).filter(d -> d > 0).orElse(20);
+    int maxDmg = opt.map(MobTemplate::maxDamage).filter(d -> d > 0).orElse(35);
+    int def = opt.map(MobTemplate::defense).filter(d -> d > 0).orElse(10);
+    long atkSpeed = opt.map(MobTemplate::attackSpeed).filter(s -> s > 0).orElse(2000);
+
+    List<BattleEnemy> enemies = new ArrayList<>();
+    BattleEnemy boss = BattleEnemy.builder()
+        .id("boss-1")
+        .templateId(bossTemplateId)
+        .name("👑 " + name)
+        .hp(hp)
+        .maxHp(hp)
+        .minDamage(minDmg)
+        .maxDamage(maxDmg)
+        .defense(def)
+        .dex(12)
+        .row(RowPosition.FRONT)
+        .attackIntervalMs(atkSpeed)
+        .nextAttackTime(System.currentTimeMillis() + 1500)
+        .alive(true)
+        .xp(500)
+        .dropItemId("mozhu_mines:black_obsidian_scythe")
+        .build();
+    enemies.add(boss);
+
+    BattleContext ctx = BattleContext.builder()
+        .battleId("boss-" + player.getName() + "-" + System.currentTimeMillis())
+        .playerId(player.getName())
+        .party(party)
+        .enemies(enemies)
+        .state(BattleState.FIGHTING)
+        .selectedTargetIndex(0)
+        .build();
+
+    long now = System.currentTimeMillis();
+    for (PartyMember m : party.getMembers()) {
+      m.setNextAttackTime(now + ThreadLocalRandom.current().nextLong(500, 1500));
+    }
+
+    broadcastLog(player, ctx, "\n\u001B[1;31m🔥🔥🔥【煞氣首領降臨】血肉白骨祭壇劇烈震顫，" + name + " 發出癲狂嘶吼，壓迫感撲面而來！請拔劍迎戰！🔥🔥🔥\u001B[0m");
+    activeBattles.put(player.getName(), ctx);
+    pushDrpgState(player, pos, ctx);
+
+    Thread.ofVirtual().name("BossBattleLoop-" + player.getName()).start(() -> {
       runBattleLoop(player, ctx, pos);
     });
   }
@@ -677,7 +762,11 @@ public class DrpgBattleService {
     }
   }
 
-  private void resolveVictory(Player player, BattleContext ctx, DungeonPosition pos) {
+  public BattleContext getActiveBattle(String playerName) {
+    return activeBattles.get(playerName);
+  }
+
+  public void resolveVictory(Player player, BattleContext ctx, DungeonPosition pos) {
     activeBattles.remove(player.getName());
     int totalXp = ctx.getEnemies().stream().mapToInt(BattleEnemy::getXp).sum();
 
@@ -714,16 +803,50 @@ public class DrpgBattleService {
       }
     }
 
-    // 2. 普通戰利品掉落入背包
-    String dropItemId = TOMB_ITEMS.get(ThreadLocalRandom.current().nextInt(TOMB_ITEMS.size()));
-    var opt = TemplateRepository.findItem(dropItemId);
-    String dropName = opt.map(ItemTemplate::name).orElse("太陰靈物");
-    boolean added = ctx.getParty().getInventory().addItem(dropItemId, 1);
-    if (added) {
-      droppedItemNames.add(dropName);
+    // 2. 檢查首領擊殺並發布 Spring Event (觸發 MozhuMinesQuestListener 等任務監聽器)
+    for (BattleEnemy e : ctx.getEnemies()) {
+      if (!e.isAlive() && e.getTemplateId() != null && e.getTemplateId().contains("boss_song_tianheng")) {
+        if (eventPublisher != null) {
+          try {
+            eventPublisher.publishEvent(new MobEvents.MobDead(
+                e.getTemplateId(),
+                player.getName(),
+                Map.of(),
+                Instant.now()
+            ));
+          } catch (Exception ex) {
+            log.error("Failed to publish boss defeat event", ex);
+          }
+        }
+        ctx.getParty().getInventory().addItem("mozhu_mines:black_obsidian_scythe", 1);
+        ctx.getParty().getInventory().addItem("mozhu_mines:elder_token", 1);
+        droppedItemNames.add("【黑曜骨鐮】");
+        droppedItemNames.add("【長老黑話玉牌】");
+      }
     }
 
-    // 3. 戰後清理 (解開封印 / 移除永久死肉與異變者)
+    // 3. 普通戰利品掉落入背包
+    for (BattleEnemy e : ctx.getEnemies()) {
+      if (!e.isAlive() && e.getDropItemId() != null && (e.getTemplateId() == null || !e.getTemplateId().contains("boss_song_tianheng"))) {
+        String dropItemId = e.getDropItemId();
+        var opt = TemplateRepository.findItem(dropItemId);
+        String dropName = opt.map(ItemTemplate::name).orElse(dropItemId);
+        boolean added = ctx.getParty().getInventory().addItem(dropItemId, 1);
+        if (added) {
+          droppedItemNames.add(dropName);
+        }
+      }
+    }
+    if (droppedItemNames.isEmpty()) {
+      String fallbackId = TOMB_ITEMS.get(ThreadLocalRandom.current().nextInt(TOMB_ITEMS.size()));
+      var opt = TemplateRepository.findItem(fallbackId);
+      String dropName = opt.map(ItemTemplate::name).orElse("靈石碎片");
+      if (ctx.getParty().getInventory().addItem(fallbackId, 1)) {
+        droppedItemNames.add(dropName);
+      }
+    }
+
+    // 4. 戰後清理 (解開封印 / 移除永久死肉與異變者)
     postBattleCleanup(player, ctx);
 
     String lootSummary = droppedItemNames.isEmpty() ? "（行囊已滿，未能裝入物品）" : String.join("、", droppedItemNames);
@@ -944,7 +1067,10 @@ public class DrpgBattleService {
 
   public void pushDrpgState(Player player, DungeonPosition pos, BattleContext battleCtx) {
     if (player == null) return;
-    String floorId = pos != null ? pos.getFloorId() : "taiyin_tomb_b1f";
+    if (pos == null) {
+      pos = dungeonManager.getPlayerPosition(player.getName());
+    }
+    String floorId = pos != null ? pos.getFloorId() : "mozhu_mines_b1f";
     DungeonFloor floor = dungeonManager.getFloor(floorId);
     Party party = partyService.getOrCreateParty(player.getName());
     String inspect = (floor != null && pos != null) ? dungeonNavigator.inspectForward(floor, pos) : "";

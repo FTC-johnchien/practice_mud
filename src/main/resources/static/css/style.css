@@ -136,6 +136,15 @@ body, html {
   transition: flex-direction 0.2s ease;
 }
 
+.log-and-battle-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: #050608;
+  position: relative;
+}
+
 .main-viewport.layout-radar-right {
   flex-direction: row-reverse;
 }
@@ -1637,7 +1646,7 @@ body, html {
   height: 100vh;
   background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(4px);
-  z-index: 999;
+  z-index: 2000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1850,4 +1859,1134 @@ body, html {
 .slot-btn-del:hover {
   background: #991b1b;
   color: #fff;
+}
+
+/* ==========================================================================
+   主標題封面 (Title Screen Overlay) 與三階段開局流程樣式
+   ========================================================================== */
+
+.title-screen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: radial-gradient(circle at center 40%, #151c2c 0%, #080b12 85%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.title-screen-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.title-stars-bg {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(#38bdf8 1px, transparent 1px), radial-gradient(#a855f7 1px, transparent 1px);
+  background-size: 60px 60px;
+  background-position: 0 0, 30px 30px;
+  opacity: 0.12;
+  animation: stars-drift 120s linear infinite;
+}
+
+@keyframes stars-drift {
+  from { background-position: 0 0, 30px 30px; }
+  to { background-position: 600px 600px, 630px 630px; }
+}
+
+.title-vignette {
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+}
+
+.title-content-box {
+  position: relative;
+  z-index: 2;
+  width: 90%;
+  max-width: 580px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+  animation: title-appear 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes title-appear {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.title-rune-emblem {
+  font-size: 42px;
+  filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.8));
+  animation: rune-pulse 3s ease-in-out infinite;
+  margin-bottom: -6px;
+}
+
+@keyframes rune-pulse {
+  0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.6)); }
+  50% { transform: scale(1.08) rotate(180deg); filter: drop-shadow(0 0 22px rgba(168, 85, 247, 0.9)); }
+}
+
+.game-main-title {
+  margin: 0;
+  font-size: 38px;
+  font-weight: 900;
+  letter-spacing: 6px;
+  background: linear-gradient(135deg, #ffffff 20%, #93c5fd 60%, #c084fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
+}
+
+.game-sub-title {
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 4px;
+  color: #38bdf8;
+  margin-top: 4px;
+  text-transform: uppercase;
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+}
+
+.game-tagline {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 6px 0 0 0;
+  letter-spacing: 1px;
+}
+
+.title-menu-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.title-menu-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 12px 20px;
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid #334155;
+  border-radius: 8px;
+  color: #e2e8f0;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+}
+
+.title-menu-btn:hover:not(:disabled) {
+  background: rgba(51, 65, 85, 0.9);
+  border-color: #60a5fa;
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
+}
+
+.title-menu-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(80%);
+}
+
+.title-menu-btn.btn-primary-glow:not(:disabled) {
+  border-color: #0284c7;
+  background: linear-gradient(90deg, rgba(14, 116, 144, 0.4) 0%, rgba(30, 41, 59, 0.8) 100%);
+}
+
+.title-menu-btn.btn-primary-glow:not(:disabled):hover {
+  border-color: #38bdf8;
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.4);
+}
+
+.title-menu-btn.btn-new-glow {
+  border-color: #b45309;
+  background: linear-gradient(90deg, rgba(180, 83, 9, 0.25) 0%, rgba(30, 41, 59, 0.8) 100%);
+}
+
+.title-menu-btn.btn-new-glow:hover {
+  border-color: #f59e0b;
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.35);
+}
+
+.title-menu-btn .btn-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.title-menu-btn .btn-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title-menu-btn .btn-main-label {
+  font-size: 16px;
+  color: #f8fafc;
+  letter-spacing: 1px;
+}
+
+.title-menu-btn .btn-sub-label {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.title-footer-note {
+  font-size: 11px;
+  color: #475569;
+  letter-spacing: 0.5px;
+}
+
+/* ==========================================================================
+   開闢新途設定彈窗 (New Game Modal)
+   ========================================================================== */
+
+.new-game-modal-card {
+  background: #111827;
+  border: 2px solid #334155;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 600px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85), 0 0 30px rgba(245, 158, 11, 0.2);
+}
+
+.modal-header {
+  padding: 14px 18px;
+  background: #0b0f19;
+  border-bottom: 1px solid #1f2937;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title-text {
+  font-size: 15px;
+  font-weight: bold;
+  color: #f59e0b;
+  letter-spacing: 0.5px;
+}
+
+.modal-body-content {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 13px;
+  font-weight: bold;
+  color: #cbd5e1;
+}
+
+.form-input {
+  background: #0a0d14;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 9px 12px;
+  color: #f8fafc;
+  font-size: 14px;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+}
+
+.form-tip {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.formation-select-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.formation-card {
+  position: relative;
+  background: #182030;
+  border: 2px solid #334155;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.formation-card:hover {
+  background: #1f2a3f;
+  border-color: #60a5fa;
+}
+
+.formation-card.selected {
+  background: rgba(30, 58, 138, 0.25);
+  border-color: #38bdf8;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+}
+
+.form-card-badge {
+  align-self: flex-start;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.form-card-badge.positive {
+  background: rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  border: 1px solid #10b981;
+}
+
+.form-card-badge.dangerous {
+  background: rgba(168, 85, 247, 0.25);
+  color: #c084fc;
+  border: 1px solid #a855f7;
+}
+
+.form-card-title {
+  font-size: 13px;
+  font-weight: bold;
+  color: #f1f5f9;
+}
+
+.form-card-desc {
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.form-card-ult {
+  font-size: 10px;
+  color: #fbbf24;
+  margin-top: 4px;
+}
+
+.modal-footer-actions {
+  padding: 12px 18px;
+  background: #0b0f19;
+  border-top: 1px solid #1f2937;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-modal-cancel {
+  padding: 8px 16px;
+  border-radius: 6px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #94a3b8;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.btn-modal-cancel:hover {
+  background: #334155;
+  color: #fff;
+}
+
+.btn-modal-confirm {
+  padding: 8px 20px;
+  border-radius: 6px;
+  background: #b45309;
+  border: 1px solid #f59e0b;
+  color: #fff;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+}
+
+.btn-modal-confirm:hover {
+  background: #d97706;
+}
+
+/* ==========================================================================
+   序幕故事導讀彈窗 (Prologue Modal)
+   ========================================================================== */
+
+.prologue-modal-card {
+  background: #0f141f;
+  border: 2px solid #b45309;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 620px;
+  padding: 8px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.9), 0 0 35px rgba(180, 83, 9, 0.3);
+}
+
+.prologue-scroll-border {
+  border: 1px dashed rgba(245, 158, 11, 0.4);
+  border-radius: 6px;
+  padding: 24px 28px;
+  background: radial-gradient(circle at center, #151b29 0%, #0c1018 100%);
+}
+
+.prologue-header {
+  text-align: center;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.prologue-seal {
+  display: inline-block;
+  font-size: 10px;
+  color: #f87171;
+  border: 1px solid #ef4444;
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin-bottom: 6px;
+  letter-spacing: 2px;
+}
+
+.prologue-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #fbbf24;
+  letter-spacing: 3px;
+}
+
+.prologue-text-body {
+  font-family: 'PingFang TC', 'Microsoft JhengHei', serif;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.drop-cap {
+  font-size: 28px;
+  float: left;
+  line-height: 1;
+  padding-right: 6px;
+  color: #fbbf24;
+  font-weight: bold;
+}
+
+.prologue-actions {
+  margin-top: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-skip-prologue {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.btn-skip-prologue:hover {
+  color: #cbd5e1;
+}
+
+.btn-enter-dungeon {
+  background: #047857;
+  border: 1px solid #10b981;
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 10px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+  transition: all 0.2s ease;
+}
+
+.btn-enter-dungeon:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.6);
+}
+
+/* ==========================================================================
+   玩法指南秘錄彈窗 (Guide Modal)
+   ========================================================================== */
+
+.guide-modal-card {
+  background: #111827;
+  border: 2px solid #3b82f6;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 680px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85), 0 0 30px rgba(59, 130, 246, 0.3);
+}
+
+.guide-cards-grid {
+  padding: 18px;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  max-height: 60vh;
+}
+
+.guide-card {
+  background: #182030;
+  border: 1px solid #2d3748;
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.guide-card-icon {
+  font-size: 24px;
+}
+
+.guide-card-title {
+  font-size: 13px;
+  font-weight: bold;
+  color: #60a5fa;
+}
+
+.guide-card-text {
+  margin: 0;
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+.btn-menu-quick {
+  border-color: #8b5cf6;
+  color: #c4b5fd;
+}
+.btn-menu-quick:hover {
+  background: rgba(139, 92, 246, 0.25);
+  color: #fff;
+}
+
+/* 小隊編制與 5+2 裝備管理模態視窗 */
+.party-modal-card {
+  background: #151922;
+  border: 2px solid #38bdf8;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 860px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.85), 0 0 25px rgba(56, 189, 248, 0.25);
+  overflow: hidden;
+}
+
+.party-modal-header {
+  padding: 12px 18px;
+  background: #11141c;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.party-modal-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.party-modal-formation-info {
+  padding: 10px 18px;
+  background: rgba(56, 189, 248, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+.party-modal-members-list {
+  padding: 16px;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 14px;
+}
+
+.party-detail-card {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+
+.party-detail-card:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(30, 41, 59, 0.9);
+}
+
+.party-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.party-detail-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.party-detail-name {
+  font-size: 14px;
+  font-weight: bold;
+  color: #f1f5f9;
+}
+
+.party-detail-role {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.party-detail-bars {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+}
+
+.party-detail-equip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.equip-slot-box {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 5px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+}
+
+.equip-slot-box.has-item {
+  border-color: rgba(56, 189, 248, 0.35);
+  background: rgba(15, 23, 42, 0.95);
+}
+
+.equip-slot-box.empty {
+  border-style: dashed;
+  opacity: 0.65;
+}
+
+.equip-slot-title {
+  font-size: 10px;
+  color: #64748b;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.equip-slot-name {
+  font-weight: 600;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.equip-slot-stats {
+  font-size: 10px;
+  color: #38bdf8;
+}
+
+.equip-slot-act {
+  margin-top: 2px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.equip-tag.empty-slot {
+  opacity: 0.45;
+  border-style: dashed;
+  color: #94a3b8;
+  font-size: 8px;
+}
+
+.equip-tag.equipped-slot {
+  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(14, 165, 233, 0.15);
+  color: #f1f5f9;
+}
+
+/* ==========================================================================
+   城鎮主舞台、正交羅盤與能力標籤 (Town Main Stage & Capability Chips)
+   ========================================================================== */
+
+.town-main-stage {
+  flex: 1.4;
+  min-width: 0;
+  background: #0b0f17;
+  border-right: 2px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  padding: 14px 18px;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.main-viewport.layout-radar-right .town-main-stage {
+  border-right: none;
+  border-left: 2px solid var(--border-color);
+}
+
+.town-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #1f2937;
+  padding-bottom: 8px;
+}
+
+.town-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.town-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.town-zone-badge {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.town-room-title {
+  font-weight: bold;
+  color: #f3f4f6;
+  font-size: 18px;
+  letter-spacing: 0.5px;
+}
+
+.town-desc-card {
+  background: rgba(17, 24, 39, 0.7);
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #cbd5e1;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* 城鎮主體雙欄佈局：左側固定導航，右側滾動生靈與物品 */
+.town-stage-body {
+  display: flex;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 800px) {
+  .town-stage-body {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+}
+
+.town-stage-left {
+  width: 250px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.town-stage-right {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.town-stage-right::-webkit-scrollbar {
+  width: 6px;
+}
+.town-stage-right::-webkit-scrollbar-thumb {
+  background: #25334d;
+  border-radius: 3px;
+}
+.town-stage-right::-webkit-scrollbar-thumb:hover {
+  background: #3b82f6;
+}
+
+.entity-count-badge {
+  font-size: 11px;
+  color: #38bdf8;
+  font-weight: normal;
+  margin-left: 4px;
+}
+
+.town-section-title {
+  font-size: 12px;
+  font-weight: bold;
+  color: #94a3b8;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 4 正交方向羅盤 */
+.compass-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 44px);
+  gap: 6px;
+}
+
+.compass-btn {
+  background: #161f30;
+  border: 1px solid #2d3b55;
+  color: #e2e8f0;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  padding: 4px;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.compass-btn:hover:not(.disabled) {
+  background: #2563eb;
+  border-color: #60a5fa;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+}
+
+.compass-btn.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  border-style: dashed;
+}
+
+.compass-north { grid-column: 2; grid-row: 1; }
+.compass-west  { grid-column: 1; grid-row: 2; }
+.compass-center {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: #64748b;
+}
+.compass-east  { grid-column: 3; grid-row: 2; }
+.compass-south { grid-column: 2; grid-row: 3; }
+
+.compass-dir {
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.compass-target {
+  font-size: 10px;
+  color: #93c5fd;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 95px;
+}
+
+.compass-btn.disabled .compass-target {
+  color: #64748b;
+}
+
+.town-special-exits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.special-exit-btn {
+  background: rgba(14, 165, 233, 0.2);
+  border: 1px solid #0284c7;
+  color: #7dd3fc;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.special-exit-btn:hover {
+  background: #0284c7;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.4);
+}
+
+/* NPC 直排卡片與互動能力標籤 */
+.town-npcs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.npc-card {
+  background: #131a28;
+  border: 1px solid #243048;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color 0.2s ease, transform 0.15s ease;
+}
+
+.npc-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.npc-card.is-hostile {
+  background: rgba(69, 10, 10, 0.35);
+  border-color: #7f1d1d;
+}
+.npc-card.is-hostile:hover {
+  border-color: #ef4444;
+}
+
+.npc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #1e293b;
+  padding-bottom: 4px;
+}
+
+.npc-name {
+  font-weight: bold;
+  color: #fbbf24;
+  font-size: 14px;
+}
+
+.npc-desc {
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+.capability-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.cap-chip {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.cap-chip:active {
+  transform: scale(0.96);
+}
+
+.cap-ask {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: #3b82f6;
+  color: #93c5fd;
+}
+.cap-ask:hover { background: #2563eb; color: #fff; box-shadow: 0 0 8px rgba(59, 130, 246, 0.5); }
+
+.cap-shop {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: #f59e0b;
+  color: #fcd34d;
+}
+.cap-shop:hover { background: #d97706; color: #fff; box-shadow: 0 0 8px rgba(245, 158, 11, 0.5); }
+
+.cap-recruit {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #10b981;
+  color: #6ee7b7;
+}
+.cap-recruit:hover { background: #059669; color: #fff; box-shadow: 0 0 8px rgba(16, 185, 129, 0.5); }
+
+.cap-dismiss {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #fca5a5;
+}
+.cap-dismiss:hover { background: #dc2626; color: #fff; box-shadow: 0 0 8px rgba(239, 68, 68, 0.5); }
+
+.cap-rest {
+  background: rgba(168, 85, 247, 0.2);
+  border-color: #a855f7;
+  color: #d8b4fe;
+}
+.cap-rest:hover { background: #9333ea; color: #fff; box-shadow: 0 0 8px rgba(168, 85, 247, 0.5); }
+
+.cap-quest {
+  background: rgba(249, 115, 22, 0.2);
+  border-color: #f97316;
+  color: #fdba74;
+}
+.cap-quest:hover { background: #ea580c; color: #fff; box-shadow: 0 0 8px rgba(249, 115, 22, 0.5); }
+
+.cap-fight {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+  color: #fca5a5;
+}
+.cap-fight:hover { background: #dc2626; color: #fff; box-shadow: 0 0 10px rgba(239, 68, 68, 0.6); }
+
+.cap-enter {
+  background: rgba(236, 72, 153, 0.2);
+  border-color: #ec4899;
+  color: #f472b6;
+}
+.cap-enter:hover { background: #db2777; color: #fff; box-shadow: 0 0 8px rgba(236, 72, 153, 0.5); }
+
+/* 地面物品清單 */
+.town-items-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ground-item-chip {
+  background: #1a2234;
+  border: 1px solid #334155;
+  color: #e2e8f0;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.ground-item-chip:hover {
+  background: #1e293b;
+  border-color: #10b981;
+  color: #34d399;
+  transform: translateY(-1px);
+}
+
+/* 開發者終端 (Dev Console Modal) */
+.dev-console-card {
+  background: #0f172a;
+  border: 2px solid #3b82f6;
+  border-radius: 8px;
+  padding: 16px;
+  width: 560px;
+  max-width: 90vw;
+  box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
+}
+
+.dev-console-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #93c5fd;
+  font-weight: bold;
+}
+
+.dev-console-input-wrap {
+  display: flex;
+  gap: 8px;
+}
+
+.dev-cmd-input-field {
+  flex: 1;
+  background: #020617;
+  border: 1px solid #334155;
+  color: #38bdf8;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-family: monospace;
+  border-radius: 6px;
+  outline: none;
+}
+
+.dev-cmd-input-field:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
 }

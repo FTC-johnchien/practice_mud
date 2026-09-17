@@ -17,8 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 public class MoveCommand implements PlayerCommand {
 
   private final WorldManager worldManager;
-
   private final LookCommand lookCommand;
+  private final com.example.htmlmud.domain.service.GameStateBroadcastService broadcastService;
+  private final com.example.htmlmud.domain.party.service.PartyService partyService;
 
 
   @Override
@@ -77,8 +78,16 @@ public class MoveCommand implements PlayerCommand {
 
     targetRoom.enter(player, dir.opposite());
 
-    // 7. 自動 Look (讓玩家看到新環境)
-    // 直接調用 LookCommand 執行邏輯
-    lookCommand.execute("");
+    // 7. 自動更新環境狀態
+    if (!player.isInDungeon()) {
+      // 城鎮模式下具備圖形化主舞台，日誌中僅需簡潔行進提示，免除原始 MUD 房間文字洗版
+      com.example.htmlmud.domain.party.model.Party party = (partyService != null) ? partyService.getOrCreateParty(player.getName()) : null;
+      boolean isSolo = (party == null || party.getMembers() == null || party.getMembers().size() <= 1);
+      String traveler = isSolo ? "【" + player.getName() + "】" : "小隊";
+      player.reply("\u001B[1;32m🚶 " + traveler + "向" + dir.getDisplayName() + "前行，抵達【" + targetRoom.getTemplate().name() + "】。\u001B[0m");
+      broadcastService.broadcastState(player);
+    } else {
+      lookCommand.execute("");
+    }
   }
 }

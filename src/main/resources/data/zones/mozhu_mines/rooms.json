@@ -4,7 +4,7 @@
     "name": "廢棄靈石礦坑入口",
     "description": "這裡是墨竹山外圍荒廢已久的地下礦坑入口。四周岩壁斑駁漆黑，陰冷刺骨的煞氣順著黑黢黢的深坑裂隙向上吞吐翻湧。南邊有一條雜草叢生的小徑通往新手村，往下則是一座垂直向下的腐朽深坑斜道。",
     "exits": {
-      "southeast": "newbie_village:north_of_the_village",
+      "east": "newbie_village:north_of_the_village",
       "down": "rotting_shaft"
     },
     "spawns": [

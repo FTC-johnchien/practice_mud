@@ -2,6 +2,7 @@ package com.example.htmlmud.domain.service;
 
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.actor.impl.Living;
+import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.entity.SkillEntry;
@@ -191,7 +192,7 @@ public class SkillService {
 
     // 檢查種族是否有設定 nature attack (Race Default)
     // log.info("resolveCombatSkillId name:{} race:{}", self.getName(), self.getStats().getRace());
-    RaceTemplate race = TemplateRepository.getRaceTemplates().get(self.getStats().getRace());
+    RaceTemplate race = TemplateRepository.findRace(self.getStats().getRace()).orElse(null);
     // log.info("resolveCombatSkillId name:{} race:{}", self.getName(), race);
     switch (category) {
       case DODGE -> {
@@ -215,15 +216,19 @@ public class SkillService {
       }
       case MEDICAL -> {
       }
-      // 武器類
+      // 武器類 / 徒手類
       default -> {
         if (race != null && race.combat() != null && race.combat().naturalAttacks() != null) {
-
           // 權重隨機抽選 (Weighted Random)
           return RandomUtil.pickWeighted(race.combat().naturalAttacks()).getId();
         }
 
-        // 真的都沒有，就用普通的撞擊/揮拳
+        // 真的都沒有：若是空手 (UNARMED) 且為玩家或人族，保底使用基本拳腳 basic_fist
+        if (category == SkillCategory.UNARMED && (self instanceof Player || "human".equalsIgnoreCase(self.getStats().getRace()))) {
+          return "basic_fist";
+        }
+
+        // 野獸或一般怪物保底
         return "mob_hit";
       }
     }

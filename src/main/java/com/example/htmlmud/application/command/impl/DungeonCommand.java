@@ -51,6 +51,8 @@ public class DungeonCommand implements PlayerCommand {
   private final DungeonNavigator dungeonNavigator;
   private final PartyService partyService;
   private final com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService;
+  private final MoveCommand moveCommand;
+  private final com.example.htmlmud.domain.service.GameStateBroadcastService broadcastService;
 
   @Override
   public String getKey() {
@@ -60,13 +62,98 @@ public class DungeonCommand implements PlayerCommand {
   @Override
   public void execute(String args) {
     Player self = MudContext.currentPlayer();
-    String floorId = "taiyin_tomb_b1f";
-    DungeonFloor floor = dungeonManager.getFloor(floorId);
-    if (floor == null) {
-      self.reply("【系統】地牢尚未開啟。");
+    String input = args != null ? args.trim().toLowerCase() : "";
+
+    // 處理 enter / switch 指令：例如 "dungeon enter mozhu_mines_b1f" 或 "dungeon switch taiyin"
+    if (input.startsWith("enter") || input.startsWith("switch")) {
+      String[] parts = input.split("\\s+");
+      String targetFloor = parts.length > 1 ? parts[1] : null;
+      if (targetFloor == null || targetFloor.isBlank()) {
+        String currentRoom = self.getCurrentRoomId();
+        if (currentRoom != null && currentRoom.contains("taiyin")) {
+          targetFloor = "taiyin_tomb_b1f";
+        } else {
+          targetFloor = "mozhu_mines_b1f";
+        }
+      } else if (targetFloor.equals("mozhu") || targetFloor.equals("mine")) {
+        targetFloor = "mozhu_mines_b1f";
+      } else if (targetFloor.equals("taiyin") || targetFloor.equals("tomb")) {
+        targetFloor = "taiyin_tomb_b1f";
+      }
+      DungeonFloor target = dungeonManager.getFloor(targetFloor);
+      if (target == null) {
+        self.reply("【系統】找不到地牢代號：" + targetFloor + "，目前開放：" + String.join(", ", dungeonManager.getAllFloorIds()));
+        return;
+      }
+      self.setInDungeon(true);
+      DungeonPosition pos = dungeonManager.switchFloor(self.getName(), targetFloor);
+      self.reply("\n\u001B[1;32m🌀【踏入迷宮】你已步入【" + target.getName() + "】！靈識雷達展開！\u001B[0m\n"
+          + dungeonNavigator.inspectForward(target, pos));
+      broadcastService.broadcastState(self);
       return;
     }
-    DungeonPosition pos = dungeonManager.getOrCreatePosition(self.getName(), floorId);
+
+    // 處理 list 指令：例如 "dungeon list"
+    if (input.equals("list")) {
+      self.reply("【開放地牢列表】\n" + String.join("\n", dungeonManager.getAllFloorIds()));
+      return;
+    }
+
+    // 若玩家處於城鎮模式中 (未進入地牢)：
+    if (!self.isInDungeon()) {
+      switch (input) {
+        case "w", "step w" -> moveCommand.execute("north");
+        case "s", "step s" -> moveCommand.execute("south");
+        case "a", "step a" -> moveCommand.execute("west");
+        case "d", "step d" -> moveCommand.execute("east");
+        default -> {
+          self.reply("【城鎮導航】使用 W/A/S/D 或點擊羅盤在城鎮中穿梭。");
+          broadcastService.broadcastState(self);
+        }
+      }
+      return;
+    }
+
+    // 取得當前位置或預設進入當前所在區域地牢
+    DungeonPosition pos = dungeonManager.getOrCreatePosition(self.getName(), null);
+    if (pos == null || pos.getFloorId() == null) {
+      String defaultFloor = "mozhu_mines_b1f";
+      String currentRoom = self.getCurrentRoomId();
+      if (currentRoom != null && currentRoom.contains("taiyin")) {
+        defaultFloor = "taiyin_tomb_b1f";
+      }
+      pos = dungeonManager.getOrCreatePosition(self.getName(), defaultFloor);
+    }
+    DungeonFloor floor = dungeonManager.getFloor(pos.getFloorId());
+    if (floor == null) {
+      floor = dungeonManager.getFloor("mozhu_mines_b1f");
+      if (floor == null) {
+        self.reply("【系統】地牢尚未開啟。");
+        return;
+      }
+      pos = dungeonManager.switchFloor(self.getName(), floor.getId());
+    }
+
+    // 處理 leave 撤離指令
+    if (input.equals("leave") || input.equals("exit") || input.equals("out")) {
+      DungeonTile currentTile = floor.getTile(pos.getX(), pos.getY());
+      if (currentTile != null && currentTile.getType() == DungeonTile.TileType.STAIRS_UP) {
+        self.setInDungeon(false);
+        self.reply("\n\u001B[1;36m🚪【撤出地牢】你沿著向上石階攀爬而出，安全重返地表！\u001B[0m\n");
+        if ("mozhu_mines_b1f".equals(floor.getId())) {
+          self.setCurrentRoomId("mozhu_mines:mine_entrance");
+        } else if ("taiyin_tomb_b1f".equals(floor.getId())) {
+          self.setCurrentRoomId("newbie_village:inn");
+        } else {
+          self.setCurrentRoomId("newbie_village:inn");
+        }
+        self.getService().getCommandDispatcher().dispatch("look");
+        return;
+      } else {
+        self.reply("⚠️ 此處無返回地表的出口（需走到向上階梯 < 處才能撤出）！");
+        return;
+      }
+    }
 
     if (battleService.isInBattle(self.getName())) {
       self.reply("\u001B[1;31m⚠️ 戰鬥交鋒中，無法隨意移步！請點擊【⚔️ 迎戰】進攻或【🏃 遁地撤退】！\u001B[0m");
@@ -74,11 +161,9 @@ public class DungeonCommand implements PlayerCommand {
       return;
     }
 
-    String input = args != null ? args.trim().toLowerCase() : "";
-
     // 處理無參數、map 或 ascii 指令
     if (input.isEmpty() || input.equals("map")) {
-      self.reply("【靈識感應】已掃描太陰地宮一層 (B1F) 靈識雷達 [X: " + pos.getX() + ", Y: " + pos.getY() + "]，朝向: " + pos.getFacing().getSymbol() + " " + pos.getFacing().getChineseName() + "。\n"
+      self.reply("【靈識感應】已掃描" + floor.getName() + " 靈識雷達 [X: " + pos.getX() + ", Y: " + pos.getY() + "]，朝向: " + pos.getFacing().getSymbol() + " " + pos.getFacing().getChineseName() + "。\n"
           + dungeonNavigator.inspectForward(floor, pos));
       broadcastDrpgState(self, floor, pos);
       return;
@@ -122,15 +207,18 @@ public class DungeonCommand implements PlayerCommand {
         battleService.startTrainingBattle(self, pos);
       }
       default -> {
-        self.reply("【太陰地宮指令】\n"
-            + "  dungeon / map         - 展開靈識感應地圖與前方視野\n"
-            + "  dungeon ascii         - 印出終端文字版 ASCII 感應地圖\n"
-            + "  step w / forward      - 向前邁步 (探索/遇敵檢定)\n"
-            + "  step s / back         - 向後退步\n"
-            + "  step a / left         - 向左轉 90 度\n"
-            + "  step d / right        - 向右轉 90 度\n"
-            + "  dungeon look          - 凝神探查正前方地塊\n"
-            + "  dungeon dummy         - 召喚太陰玄鐵試道傀儡測試");
+        self.reply("【地牢指令】\n"
+            + "  dungeon / map              - 展開靈識感應地圖與前方視野\n"
+            + "  dungeon ascii              - 印出終端文字版 ASCII 感應地圖\n"
+            + "  dungeon enter [地牢代號]   - 踏入指定地牢 (如 mozhu_mines_b1f)\n"
+            + "  dungeon leave              - 在向上階梯處撤出地牢回到地表\n"
+            + "  dungeon list               - 列出當前開放的所有地牢\n"
+            + "  step w / forward           - 向前邁步 (探索/遇敵檢定)\n"
+            + "  step s / back              - 向後退步\n"
+            + "  step a / left              - 向左轉 90 度\n"
+            + "  step d / right             - 向右轉 90 度\n"
+            + "  dungeon look               - 凝神探查正前方地塊\n"
+            + "  dungeon dummy              - 召喚試道傀儡演練絕學");
       }
     }
   }
@@ -144,7 +232,7 @@ public class DungeonCommand implements PlayerCommand {
     int delta = ThreadLocalRandom.current().nextInt(8, 17);
     int danger = pos.addDanger(delta);
     if (danger >= 100) {
-      triggerRandomEncounter(self, pos);
+      triggerRandomEncounter(self, floor, pos);
       pos.resetDanger();
       return;
     }
@@ -153,11 +241,14 @@ public class DungeonCommand implements PlayerCommand {
     handleTileEvent(self, floor, pos);
   }
 
-  private void triggerRandomEncounter(Player self, DungeonPosition pos) {
-    int count = ThreadLocalRandom.current().nextInt(1, 4);
+  private void triggerRandomEncounter(Player self, DungeonFloor floor, DungeonPosition pos) {
+    List<String> mobs = (floor.getMobPool() != null && !floor.getMobPool().isEmpty())
+        ? floor.getMobPool()
+        : TOMB_MOBS;
+    int count = ThreadLocalRandom.current().nextInt(1, 3);
     List<String> mobIds = new ArrayList<>();
     for (int i = 0; i < count; i++) {
-      mobIds.add(TOMB_MOBS.get(ThreadLocalRandom.current().nextInt(TOMB_MOBS.size())));
+      mobIds.add(mobs.get(ThreadLocalRandom.current().nextInt(mobs.size())));
     }
     battleService.startBattle(self, pos, mobIds);
   }
@@ -170,15 +261,32 @@ public class DungeonCommand implements PlayerCommand {
       case TREASURE -> {
         if (!pos.isChestOpened(pos.getX(), pos.getY())) {
           pos.markChestOpened(pos.getX(), pos.getY());
-          String itemId = TOMB_ITEMS.get(ThreadLocalRandom.current().nextInt(TOMB_ITEMS.size()));
+          List<String> dropPool = (tile.getDrops() != null && !tile.getDrops().isEmpty())
+              ? tile.getDrops()
+              : TOMB_ITEMS;
+          String itemId = dropPool.get(ThreadLocalRandom.current().nextInt(dropPool.size()));
           var opt = TemplateRepository.findItem(itemId);
           String itemName = opt.map(ItemTemplate::name).orElse("古仙秘寶");
           String itemDesc = opt.map(ItemTemplate::description).orElse("");
-          self.reply("\n\u001B[1;33m🎁【開啟古仙棺槨】沉重的石蓋緩緩滑開，青幽靈光流轉！你獲得了法寶：【"
-              + itemName + "】！\n" + itemDesc + "\u001B[0m\n");
+          Party party = partyService.getOrCreateParty(self.getName());
+          boolean added = party.getInventory().addItem(itemId, 1);
+          if (added) {
+            self.reply("\n\u001B[1;33m🎁【開啟寶箱】沉重的箱蓋緩緩開啟，靈光流轉！你獲得了寶物：【"
+                + itemName + "】！已收納入隊伍行囊！\n" + itemDesc + "\u001B[0m\n");
+          } else {
+            self.reply("\n\u001B[1;33m🎁【開啟寶箱】沉重的箱蓋緩緩開啟，靈光流轉！發現了寶物【"
+                + itemName + "】！\n\u001B[1;31m⚠️ 隊伍行囊已滿，寶物散落於地無法收納！\u001B[0m\n");
+          }
+          broadcastDrpgState(self, floor, pos);
         } else {
-          self.reply("【古仙棺槨】這座石槨已被開啟，裡面空無一物。");
+          self.reply("【寶箱】這座寶箱已被開啟，裡面空無一物。");
         }
+      }
+      case BOSS -> {
+        String bossMobId = (tile.getEventId() != null && !tile.getEventId().isBlank())
+            ? tile.getEventId()
+            : "mozhu_mines:boss_song_tianheng";
+        battleService.startBossBattle(self, pos, bossMobId);
       }
       case TRAP -> {
         Party party = partyService.getOrCreateParty(self.getName());
@@ -186,27 +294,29 @@ public class DungeonCommand implements PlayerCommand {
           m.takeDamage(15);
           m.consumeSan(5);
         }
-        self.reply("\n\u001B[1;35m⚠️【觸發深淵黏液陷阱】地面突然塌陷，不可名狀的腐蝕黏液自地底噴湧而出！全隊受到 15 點腐蝕傷害，道心動搖 (-5 SAN)！\u001B[0m\n");
+        self.reply("\n\u001B[1;35m⚠️【觸發陷阱】地面突然陷落，菌絲煞氣噴湧！全隊受到 15 點腐蝕傷害，道心動搖 (-5 SAN)！\u001B[0m\n");
       }
       case STAIRS_DOWN -> {
-        self.reply("\n\u001B[1;36m🏛️【通往下層古階】前方是一條深不見底的玄黑石階，直通太陰古塚二層 (B2F)... (前方幽冥死氣濃烈，暫未開放)\u001B[0m\n");
+        self.reply("\n\u001B[1;36m🏛️【" + tile.getName() + "】" + tile.getDescription() + "\u001B[0m\n");
+      }
+      case STAIRS_UP -> {
+        self.reply("\n\u001B[1;32m🪜【" + tile.getName() + "】" + tile.getDescription() + " (輸入 'dungeon leave' 可返回地表)\u001B[0m\n");
       }
       case DOOR -> {
-        self.reply("\n\u001B[1;32m🚪【穿過玄冥石門】厚重石門兩側刻滿了辟邪雲紋，穿過此門步入深處。\u001B[0m\n");
+        self.reply("\n\u001B[1;32m🚪【" + tile.getName() + "】" + tile.getDescription() + "\u001B[0m\n");
+      }
+      case EVENT -> {
+        self.reply("\n\u001B[1;36m📜【" + tile.getName() + "】" + tile.getDescription() + "\u001B[0m\n");
       }
       default -> {}
     }
   }
 
   public void broadcastDrpgState(Player player, DungeonFloor floor, DungeonPosition pos) {
-    if (player == null || floor == null || pos == null) {
+    if (player == null) {
       return;
     }
-    Party party = partyService.getOrCreateParty(player.getName());
-    String inspect = dungeonNavigator.inspectForward(floor, pos);
-    var battleView = battleService.createBattleView(player.getName());
-    DrpgStateDto dto = DrpgStateDto.of(floor, pos, inspect, party, battleView);
-    player.sendJson(dto);
+    broadcastService.broadcastState(player);
   }
 
   @Override

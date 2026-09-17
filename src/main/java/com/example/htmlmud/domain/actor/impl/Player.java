@@ -67,6 +67,11 @@ public final class Player extends Living {
   @Setter
   private PlayerBehavior currentBehavior;
 
+  // 標記玩家是否處於 DRPG 迷宮地牢模式中 (false 代表身處城鎮/野外 MUD 房間)
+  @Getter
+  @Setter
+  private boolean inDungeon = false;
+
 
 
   private Player(MessageOutput output, String id, String name, LivingStats state,
@@ -99,8 +104,10 @@ public final class Player extends Living {
     stats.setMaxHp(200);
     stats.setMp(100);
     stats.setMaxMp(100);
+    stats.setCoin(100);
     Player actor = new Player(output, playerId, name, stats, worldManager, playerService);
     actor.setConnectionState(ConnectionState.IN_GAME);
+    actor.setCurrentRoomId("newbie_village:inn");
     playerService.become(actor, new InGameBehavior());
     return actor;
   }
@@ -110,7 +117,8 @@ public final class Player extends Living {
     super.start();
     if (this.connectionState == ConnectionState.IN_GAME) {
       reply("🌌 歡迎踏入【太陰萬劫・暗黑修仙 DRPG】單機道途！");
-      reply("💡 您可使用上方【💾 存檔】/【📂 讀檔】管理進度，或點擊下方按鈕或輸入指令展開冒險！");
+      reply("💡 身處【新手村・福伯客棧】，可與福伯交談/買賣靈藥乾糧（shop/buy），或前往【墨竹礦坑】歷練！");
+      reply("💡 您可使用上方【💾 存檔】/【📂 讀檔】管理進度，或點擊下方按鈕展開冒險！");
     } else {
       reply("歡迎光臨 Html Mud 世界！");
       reply("請輸入 帳號 進行登入 或 輸入 'new' 進行註冊：");

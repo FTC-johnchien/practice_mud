@@ -137,5 +137,41 @@
     ],
     "description": "看起來很有年代感的鑰匙。",
     "value": 0
+  },
+  {
+    "id": "purify_tea",
+    "name": "辟邪清心靈茶",
+    "aliases": [
+      "tea",
+      "purify tea",
+      "spirit tea"
+    ],
+    "description": "以墨竹嫩葉配合百年清心草沖泡的靈茶，香氣幽遠，服用可回復 25 點道心 (SAN) 與 20 點真元 (MP)。",
+    "type": "CONSUMABLE",
+    "subType": "TALISMAN",
+    "behavior": {
+      "effect": "RESTORE_SAN",
+      "value": 25
+    },
+    "value": 5,
+    "quality": "UNCOMMON"
+  },
+  {
+    "id": "healing_salve",
+    "name": "百草金創藥膏",
+    "aliases": [
+      "salve",
+      "healing salve",
+      "potion"
+    ],
+    "description": "村中老醫以百年何首烏與金銀花熬製的靈膏，塗抹傷口可迅速癒合，回復 60 點氣血 (HP)。",
+    "type": "CONSUMABLE",
+    "subType": "POTION",
+    "behavior": {
+      "effect": "HEAL",
+      "value": 60
+    },
+    "value": 8,
+    "quality": "UNCOMMON"
   }
 ]

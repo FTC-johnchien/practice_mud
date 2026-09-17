@@ -26,6 +26,7 @@ public class RestCommand implements PlayerCommand {
   private final DungeonManager dungeonManager;
   private final DungeonNavigator dungeonNavigator;
   private final com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService;
+  private final com.example.htmlmud.domain.service.GameStateBroadcastService broadcastService;
 
   @Override
   public String getKey() {
@@ -42,7 +43,23 @@ public class RestCommand implements PlayerCommand {
 
     Party party = partyService.getOrCreateParty(self.getName());
 
-    // 回復隊伍成員氣血、真元與理智
+    // 1. 若處於客棧 (Hub Safe Zone)，全體氣血、真元、道心理智全數回滿
+    boolean isInn = self.getCurrentRoomId() != null && self.getCurrentRoomId().contains("inn");
+    if (isInn) {
+      for (PartyMember member : party.getMembers()) {
+        member.heal(member.getStats() != null ? member.getStats().getMaxHp() : 200);
+        member.restoreSan(100);
+        if (member.getStats() != null) {
+          member.getStats().setMp(member.getStats().getMaxMp());
+        }
+      }
+      self.reply("🛌【客棧安歇】小隊在客棧暖榻上飽食安睡，飲下一碗溫熱的百草參茶……\n"
+          + "全體成員氣血、真元與道心理智全數回滿！神完氣足！");
+      broadcastService.broadcastState(self);
+      return;
+    }
+
+    // 2. 一般野外或地牢環境下盤膝調息
     for (PartyMember member : party.getMembers()) {
       member.heal(30);
       member.restoreSan(10);
@@ -52,24 +69,20 @@ public class RestCommand implements PlayerCommand {
     }
 
     // 地牢環境下調息：陰煞匯聚，靈壓警戒度 +15
-    DungeonFloor floor = dungeonManager.getFloor("taiyin_tomb_b1f");
-    DungeonPosition pos = floor != null ? dungeonManager.getOrCreatePosition(self.getName(), floor.getId()) : null;
+    DungeonPosition pos = dungeonManager.getOrCreatePosition(self.getName(), null);
+    DungeonFloor floor = (pos != null && pos.getFloorId() != null) ? dungeonManager.getFloor(pos.getFloorId()) : null;
     int danger = 0;
-    if (pos != null) {
+    if (pos != null && floor != null) {
       pos.addDanger(15);
       danger = pos.getDangerLevel();
     }
 
     self.reply("【凝神調息】小隊席地盤膝調息，運轉大周天心法……\n"
         + "全體成員氣血回復 30 點、真元回復 20 點，心神平復 10 點！\n"
-        + "（於陰煞地宮深處調息，四周陰靈騷動，警戒靈壓上升至 " + danger + "%）");
+        + "（於陰煞深處調息，四周陰靈騷動，警戒靈壓上升至 " + danger + "%）");
 
     // 推送最新狀態給前端
-    if (floor != null && pos != null) {
-      String forward = dungeonNavigator.inspectForward(floor, pos);
-      var battleView = battleService.createBattleView(self.getName());
-      self.sendJson(DrpgStateDto.of(floor, pos, forward, party, battleView));
-    }
+    broadcastService.broadcastState(self);
   }
 
   @Override

@@ -29,7 +29,7 @@ public class BattleCommand implements PlayerCommand {
   public void execute(String args) {
     Player self = MudContext.currentPlayer();
     String input = args != null ? args.trim().toLowerCase() : "";
-    DungeonPosition pos = dungeonManager.getOrCreatePosition(self.getName(), "taiyin_tomb_b1f");
+    DungeonPosition pos = dungeonManager.getPlayerPosition(self.getName());
 
     if (input.startsWith("target ") || input.startsWith("t ")) {
       String[] parts = input.split("\\s+");

@@ -33,7 +33,7 @@ class MozhuMinesIntegrationTest {
     assertTrue(entrance.isPresent(), "mine_entrance 房間應存在");
     assertNotNull(entrance.get().exits());
     assertTrue(entrance.get().exits().containsKey("down"), "mine_entrance 應有 down 出口");
-    assertTrue(entrance.get().exits().containsKey("southeast"), "mine_entrance 應有連回新手村的東南出口");
+    assertTrue(entrance.get().exits().containsKey("east"), "mine_entrance 應有連回新手村的正東出口");
 
     Optional<RoomTemplate> altar = TemplateRepository.findRoom("mozhu_mines:void_moon_altar");
     assertTrue(altar.isPresent(), "void_moon_altar (Boss 房) 應存在");

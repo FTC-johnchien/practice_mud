@@ -1,0 +1,84 @@
+{
+  "floorId": "mozhu_mines_b1f",
+  "name": "墨竹山廢棄靈石礦坑一層 (B1F)",
+  "description": "墨竹山外圍荒廢已久的地下礦坑，岩壁嵌滿了煞氣靈石晶簇與蠕動菌絲。深處傳來畸變大師兄癲狂的咆哮與齒骨磨擦聲。",
+  "width": 10,
+  "height": 10,
+  "startCoord": {
+    "x": 1,
+    "y": 8
+  },
+  "startFacing": "NORTH",
+  "layout": [
+    "##########",
+    "#...B...S#",
+    "#.#####..#",
+    "#.#...#..#",
+    "#.#.E.#.D#",
+    "#.###.####",
+    "#...#.#.T#",
+    "#.X.#.##.#",
+    "#<..#....#",
+    "##########"
+  ],
+  "legend": {
+    "#": {
+      "type": "WALL",
+      "name": "玄陰青黑岩壁",
+      "description": "陰冷堅硬的青黑玄岩，岩壁縫隙嵌滿了暗紫色異化靈石晶簇，不時滴淌冰涼濁水。"
+    },
+    ".": {
+      "type": "FLOOR",
+      "name": "腐朽枕木坑道",
+      "description": "廢棄已久的礦坑主道，腐朽發黑的枕木上生長著詭異的微光苔蘚與乾涸血跡。"
+    },
+    "D": {
+      "type": "DOOR",
+      "name": "加固避煞木門",
+      "description": "採礦雜役用礦坑廢料加固的粗糙木門，門楣貼著一張褪色的避煞黃符。"
+    },
+    "T": {
+      "type": "TREASURE",
+      "name": "雜役遺留木箱",
+      "description": "角落裡半掩在碎石堆中的舊木箱，銅鎖已鏽蝕碎裂。",
+      "drops": [
+        "mozhu_mines:corrupted_spirit_stone",
+        "mozhu_mines:miner_pickaxe",
+        "newbie_village:village_bread"
+      ]
+    },
+    "E": {
+      "type": "EVENT",
+      "name": "墨家十戒非攻殘碑",
+      "description": "斷裂的墨家古碑，碑文隱現「非攻、節用、兼愛」道紋，在此打坐可使道心稍獲撫平。"
+    },
+    "X": {
+      "type": "TRAP",
+      "name": "菌絲煞氣泥沼",
+      "description": "地面覆蓋著一層粉紅色的血肉質菌絲泥沼，踏入將遭受煞氣侵蝕心神！"
+    },
+    "<": {
+      "type": "STAIRS_UP",
+      "name": "腐朽深坑斜道(回地面)",
+      "description": "通往墨竹山靈石礦坑入口的向上木架斜道，生路所在。"
+    },
+    "B": {
+      "type": "BOSS",
+      "name": "虛月血肉祭壇",
+      "description": "地下圓形石殿中央聳立著血肉白骨祭壇，畸變大師兄·宋天衡正背對著你散發令人窒息的煞氣！",
+      "eventId": "mozhu_mines:boss_song_tianheng"
+    },
+    "S": {
+      "type": "STAIRS_DOWN",
+      "name": "古老通風豎井",
+      "description": "直通外門劍閣與地表的古老通風豎井，陣道微風向上吹拂。"
+    }
+  },
+  "encounters": {
+    "dangerRate": 15,
+    "mobs": [
+      "mozhu_mines:corrupted_servant",
+      "mozhu_mines:shao_crystal_beast"
+    ]
+  }
+}

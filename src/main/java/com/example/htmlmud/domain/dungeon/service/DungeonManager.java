@@ -1,5 +1,6 @@
 package com.example.htmlmud.domain.dungeon.service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,10 @@ public class DungeonManager {
     return floorRegistry.get(id);
   }
 
+  public List<String> getAllFloorIds() {
+    return new ArrayList<>(floorRegistry.keySet());
+  }
+
   public void setPlayerPosition(String playerId, DungeonPosition pos) {
     if (playerId != null && pos != null) {
       playerPositions.put(playerId, pos);
@@ -55,23 +60,47 @@ public class DungeonManager {
   }
 
   public DungeonPosition getOrCreatePosition(String playerId, String floorId) {
-    return playerPositions.computeIfAbsent(playerId, id -> {
-      DungeonFloor floor = getFloor(floorId);
-      if (floor == null && !floorRegistry.isEmpty()) {
-        floor = floorRegistry.values().iterator().next();
+    DungeonPosition pos = playerPositions.get(playerId);
+    if (pos != null && floorId != null && !floorId.isBlank() && !floorId.equals(pos.getFloorId())) {
+      return switchFloor(playerId, floorId);
+    }
+    return playerPositions.computeIfAbsent(playerId, id -> createInitialPosition(floorId));
+  }
+
+  public DungeonPosition getPlayerPosition(String playerId) {
+    return getOrCreatePosition(playerId, null);
+  }
+
+  public DungeonPosition switchFloor(String playerId, String targetFloorId) {
+    DungeonPosition newPos = createInitialPosition(targetFloorId);
+    playerPositions.put(playerId, newPos);
+    return newPos;
+  }
+
+  private DungeonPosition createInitialPosition(String floorId) {
+    DungeonFloor floor = getFloor(floorId);
+    if (floor == null && !floorRegistry.isEmpty()) {
+      if (floorId != null) {
+        floor = floorRegistry.get(floorId);
       }
       if (floor == null) {
-        floor = buildTombB1F();
+        floor = floorRegistry.get("mozhu_mines_b1f");
       }
-      return new DungeonPosition(
-          floor.getId(),
-          floor.getStartCoord().x(),
-          floor.getStartCoord().y(),
-          floor.getStartFacing(),
-          floor.getWidth(),
-          floor.getHeight()
-      );
-    });
+      if (floor == null) {
+        floor = floorRegistry.values().iterator().next();
+      }
+    }
+    if (floor == null) {
+      floor = buildTombB1F();
+    }
+    return new DungeonPosition(
+        floor.getId(),
+        floor.getStartCoord().x(),
+        floor.getStartCoord().y(),
+        floor.getStartFacing(),
+        floor.getWidth(),
+        floor.getHeight()
+    );
   }
 
   private DungeonFloor buildTombB1F() {

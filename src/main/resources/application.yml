@@ -7,6 +7,15 @@ spring:
     virtual:
       enabled: true
 
+  # 靜態資源快取配置 (避免瀏覽器快取舊的 CSS / JS)
+  web:
+    resources:
+      cache:
+        period: 0
+        cachecontrol:
+          no-cache: true
+          must-revalidate: true
+
   datasource:
     # 資料儲存在專案根目錄的 ./db/muddb.mv.db
     url: jdbc:h2:file:./db/muddb;AUTO_SERVER=TRUE;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE

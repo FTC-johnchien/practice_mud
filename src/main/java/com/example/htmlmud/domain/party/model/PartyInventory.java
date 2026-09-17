@@ -27,6 +27,14 @@ public class PartyInventory {
     addItem("purify_talisman", 2);
   }
 
+  public static boolean isSameItemId(String id1, String id2) {
+    if (id1 == null || id2 == null) return false;
+    if (id1.equalsIgnoreCase(id2)) return true;
+    String s1 = id1.contains(":") ? id1.substring(id1.indexOf(":") + 1) : id1;
+    String s2 = id2.contains(":") ? id2.substring(id2.indexOf(":") + 1) : id2;
+    return s1.equalsIgnoreCase(s2);
+  }
+
   public synchronized boolean addItem(String templateId) {
     return addItem(templateId, 1);
   }
@@ -34,9 +42,9 @@ public class PartyInventory {
   public synchronized boolean addItem(String templateId, int count) {
     if (templateId == null || count <= 0) return false;
 
-    // 1. 若可堆疊，嘗試尋找現有槽位
+    // 1. 若可堆疊，嘗試尋找現有槽位 (支援 ID 跨前綴比對)
     for (PartyItemSlot slot : slots) {
-      if (templateId.equals(slot.getItemId()) && slot.isStackable()) {
+      if (isSameItemId(templateId, slot.getItemId()) && slot.isStackable()) {
         slot.setCount(slot.getCount() + count);
         return true;
       }
@@ -118,6 +126,30 @@ public class PartyInventory {
           icon = "📜";
           effectType = "RESTORE_SAN";
           effectValue = 25;
+        } else if ("FOOD".equals(t.subType())) {
+          icon = "🍞";
+          effectType = "HEAL_HP";
+          effectValue = 20;
+        } else {
+          icon = "💊";
+          effectType = "HEAL_HP";
+          effectValue = 30;
+        }
+
+        if (t.consumableProp() != null) {
+          if (t.consumableProp().effect() != null) {
+            String effStr = t.consumableProp().effect().toUpperCase();
+            if (effStr.contains("SAN")) {
+              effectType = "RESTORE_SAN";
+            } else if (effStr.contains("HEAL") || effStr.contains("HP")) {
+              effectType = "HEAL_HP";
+            } else if (effStr.contains("MP")) {
+              effectType = "RESTORE_MP";
+            }
+          }
+          if (t.consumableProp().value() > 0) {
+            effectValue = t.consumableProp().value();
+          }
         }
       } else if (equipSlot != null) {
         icon = switch (equipSlot) {

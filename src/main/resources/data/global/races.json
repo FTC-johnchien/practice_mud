@@ -22,11 +22,7 @@
       "naturalAttacks": [
         {
           "id": "basic_fist",
-          "weight": 80
-        },
-        {
-          "id": "mob_hit",
-          "weight": 20
+          "weight": 100
         }
       ],
       "naturalDodge": "basic_dodge",

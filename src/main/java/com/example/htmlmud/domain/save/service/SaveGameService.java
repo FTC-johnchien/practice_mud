@@ -118,7 +118,14 @@ public class SaveGameService {
   }
 
   public SaveData saveGame(String playerId, int slotId, String customTitle) {
-    String floorId = "taiyin_tomb_b1f";
+    return saveGame(playerId, slotId, customTitle, false, "newbie_village:inn");
+  }
+
+  public SaveData saveGame(String playerId, int slotId, String customTitle, boolean inDungeon, String currentRoomId) {
+    DungeonPosition currentPos = dungeonManager.getOrCreatePosition(playerId, null);
+    String floorId = (currentPos != null && currentPos.getFloorId() != null)
+        ? currentPos.getFloorId()
+        : "mozhu_mines_b1f";
     Party party = partyService.getOrCreateParty(playerId);
     DungeonPosition pos = dungeonManager.getOrCreatePosition(playerId, floorId);
 
@@ -129,7 +136,7 @@ public class SaveGameService {
 
     String title = customTitle;
     if (title == null || title.isBlank()) {
-      title = (slotId == 0) ? "太陰古塚探索進度 (自動存檔)" : protagonistName + "的修仙道途 (第" + slotId + "槽)";
+      title = (slotId == 0) ? "探索進度 (自動存檔)" : protagonistName + "的修仙道途 (第" + slotId + "槽)";
     }
 
     Set<String> openedChests = new HashSet<>();
@@ -144,6 +151,8 @@ public class SaveGameService {
         .title(title)
         .playerId(playerId)
         .protagonistName(protagonistName)
+        .inDungeon(inDungeon)
+        .currentRoomId(currentRoomId)
         .floorId(pos.getFloorId())
         .floorX(pos.getX())
         .floorY(pos.getY())
@@ -233,20 +242,25 @@ public class SaveGameService {
       }
     }
 
-    // 重置地牢坐標為入口
-    DungeonFloor floor = dungeonManager.getFloor("taiyin_tomb_b1f");
+    // 重置地牢坐標為入口 (預設進入垂直切片 MVP 之 墨竹礦坑 B1F)
+    String defaultFloorId = "mozhu_mines_b1f";
+    DungeonFloor floor = dungeonManager.getFloor(defaultFloorId);
+    if (floor == null) {
+      floor = dungeonManager.getFloor("taiyin_tomb_b1f");
+      if (floor != null) defaultFloorId = "taiyin_tomb_b1f";
+    }
     int startX = (floor != null && floor.getStartCoord() != null) ? floor.getStartCoord().x() : 1;
-    int startY = (floor != null && floor.getStartCoord() != null) ? floor.getStartCoord().y() : 8;
+    int startY = (floor != null && floor.getStartCoord() != null) ? floor.getStartCoord().y() : 1;
     Direction facing = (floor != null && floor.getStartFacing() != null) ? floor.getStartFacing() : Direction.NORTH;
     int w = (floor != null) ? floor.getWidth() : 10;
     int h = (floor != null) ? floor.getHeight() : 10;
 
-    DungeonPosition pos = new DungeonPosition("taiyin_tomb_b1f", startX, startY, facing, w, h);
+    DungeonPosition pos = new DungeonPosition(defaultFloorId, startX, startY, facing, w, h);
     dungeonManager.setPlayerPosition(playerId, pos);
 
     // 自動儲存初始狀態至 slot 0 (Autosave)
     try {
-      saveGame(playerId, 0, pName + " 初入太陰古塚 (新道途)");
+      saveGame(playerId, 0, pName + " 踏入修仙道途 (新手村與墨竹礦坑)");
     } catch (Exception ignored) {}
 
     log.info("Created new single-player adventure for {} (protagonist: {})", playerId, pName);

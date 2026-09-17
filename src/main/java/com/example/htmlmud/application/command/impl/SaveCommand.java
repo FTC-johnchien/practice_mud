@@ -24,6 +24,7 @@ public class SaveCommand implements PlayerCommand {
   private final SaveGameService saveGameService;
   private final DungeonManager dungeonManager;
   private final DungeonCommand dungeonCommand;
+  private final com.example.htmlmud.domain.service.GameStateBroadcastService broadcastService;
 
   @Override
   public String getKey() {
@@ -40,6 +41,12 @@ public class SaveCommand implements PlayerCommand {
       return;
     }
 
+    if (input.equalsIgnoreCase("quiet") || input.equalsIgnoreCase("silent")
+        || input.equalsIgnoreCase("json") || input.equalsIgnoreCase("list quiet")) {
+      broadcastSaveSlots(player);
+      return;
+    }
+
     String[] tokens = input.split("\\s+", 2);
     String sub = tokens[0].toLowerCase();
 
@@ -53,10 +60,10 @@ public class SaveCommand implements PlayerCommand {
       return;
     }
 
-    // 支援 save new <name>
+    // 支援 save new <name> [formationId]
     if ("new".equals(sub)) {
-      String name = (tokens.length > 1) ? tokens[1] : "玄靈子";
-      handleNew(player, name);
+      String rest = (tokens.length > 1) ? tokens[1] : "";
+      handleNew(player, rest);
       return;
     }
 
@@ -78,7 +85,7 @@ public class SaveCommand implements PlayerCommand {
         return;
       }
       String customTitle = (tokens.length > 1) ? tokens[1] : null;
-      var data = saveGameService.saveGame(player.getName(), slotId, customTitle);
+      var data = saveGameService.saveGame(player.getName(), slotId, customTitle, player.isInDungeon(), player.getCurrentRoomId());
       player.reply("\n\u001B[1;32m💾【道印封存】進度已成功烙印至【存檔槽位 " + slotId + "】！\n標題: "
           + data.getTitle() + " | 時間: " + data.getSavedAt() + "\u001B[0m\n");
 
@@ -102,10 +109,11 @@ public class SaveCommand implements PlayerCommand {
       player.reply("\n\u001B[1;36m📂【道途重臨】已成功讀取【存檔槽位 " + slotId + "】！\n進度標題: "
           + data.getTitle() + " | 主角: " + data.getProtagonistName() + "\u001B[0m\n");
 
-      // 同步最新 DRPG 地牢與隊伍狀態至前端
-      DungeonFloor floor = dungeonManager.getFloor(data.getFloorId() != null ? data.getFloorId() : "taiyin_tomb_b1f");
-      DungeonPosition pos = dungeonManager.getOrCreatePosition(player.getName(), floor != null ? floor.getId() : "taiyin_tomb_b1f");
-      dungeonCommand.broadcastDrpgState(player, floor, pos);
+      player.setInDungeon(data.isInDungeon());
+      if (data.getCurrentRoomId() != null && !data.getCurrentRoomId().isBlank()) {
+        player.setCurrentRoomId(data.getCurrentRoomId());
+      }
+      broadcastService.broadcastState(player);
       broadcastSaveSlots(player);
     } catch (NumberFormatException e) {
       player.reply("⚠️ 存檔槽位必須為數字 (0~5)！");
@@ -114,14 +122,25 @@ public class SaveCommand implements PlayerCommand {
     }
   }
 
-  public void handleNew(Player player, String protagonistName) {
+  public void handleNew(Player player, String args) {
     try {
-      saveGameService.createNewGame(player.getName(), protagonistName, "formation_four_symbols");
-      player.reply("\n\u001B[1;33m✨【新途啟程】道心初定！主角【" + protagonistName + "】率領問道旅團踏入太陰古塚！\u001B[0m\n");
+      String protagonistName = "玄靈子";
+      String formationId = "formation_four_symbols";
+      if (args != null && !args.isBlank()) {
+        String[] tokens = args.trim().split("\\s+");
+        if (tokens.length > 0 && !tokens[0].isBlank()) {
+          protagonistName = tokens[0];
+        }
+        if (tokens.length > 1 && !tokens[1].isBlank()) {
+          formationId = tokens[1];
+        }
+      }
+      saveGameService.createNewGame(player.getName(), protagonistName, formationId);
+      player.reply("\n\u001B[1;33m✨【新途啟程】道心初定！主角【" + protagonistName + "】踏入【新手村客棧】！\u001B[0m\n");
 
-      DungeonFloor floor = dungeonManager.getFloor("taiyin_tomb_b1f");
-      DungeonPosition pos = dungeonManager.getOrCreatePosition(player.getName(), "taiyin_tomb_b1f");
-      dungeonCommand.broadcastDrpgState(player, floor, pos);
+      player.setInDungeon(false);
+      player.setCurrentRoomId("newbie_village:inn");
+      broadcastService.broadcastState(player);
       broadcastSaveSlots(player);
     } catch (Exception e) {
       player.reply("❌ 開闢新遊戲失敗: " + e.getMessage());

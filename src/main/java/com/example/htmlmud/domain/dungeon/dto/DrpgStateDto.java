@@ -12,10 +12,16 @@ import com.example.htmlmud.domain.party.model.PartyMember;
 
 public record DrpgStateDto(
     String type,
+    String mode, // "TOWN" or "DUNGEON"
+    TownViewDto town,
     DungeonViewDto dungeon,
     PartyViewDto party,
     BattleViewDto battle
 ) {
+
+  public DrpgStateDto(String type, DungeonViewDto dungeon, PartyViewDto party, BattleViewDto battle) {
+    this(type, "DUNGEON", null, dungeon, party, battle);
+  }
 
   public static DrpgStateDto of(DungeonFloor floor, DungeonPosition pos, String forwardInspection, Party party) {
     return of(floor, pos, forwardInspection, party, null);
@@ -63,124 +69,184 @@ public record DrpgStateDto(
       );
     }
 
-    PartyViewDto partyView = null;
-    if (party != null) {
-      List<PartyMemberViewDto> memberViews = new ArrayList<>();
-      for (PartyMember m : party.getMembers()) {
-        int hp = m.getStats() != null ? m.getStats().getHp() : 100;
-        int maxHp = m.getStats() != null ? m.getStats().getMaxHp() : 100;
-        int mp = m.getStats() != null ? m.getStats().getMp() : 50;
-        int maxMp = m.getStats() != null ? m.getStats().getMaxMp() : 50;
-        int san = m.getCurrentSan();
-        int maxSan = m.getMaxSan();
+    PartyViewDto partyView = toPartyViewDto(party);
+    return new DrpgStateDto("DRPG_STATE", "DUNGEON", null, dungeonView, partyView, battle);
+  }
 
-        String level = "NORMAL";
-        if (san <= 20) {
-          level = "MADNESS";
-        } else if (san <= 50) {
-          level = "DANGER";
-        } else if (san <= 75) {
-          level = "WARNING";
-        }
+  public static DrpgStateDto ofTown(
+      String zoneId,
+      String zoneName,
+      String roomId,
+      String roomName,
+      String description,
+      boolean safeZone,
+      List<TownExitDto> exits,
+      List<TownNpcDto> npcs,
+      List<TownItemDto> items,
+      Party party
+  ) {
+    TownViewDto townView = new TownViewDto(zoneId, zoneName, roomId, roomName, description, safeZone, exits, npcs, items);
+    PartyViewDto partyView = toPartyViewDto(party);
+    return new DrpgStateDto("DRPG_STATE", "TOWN", townView, null, partyView, null);
+  }
 
-        String resType = m.getResourceType() != null ? m.getResourceType().name() : "MP";
-        int curRes = mp;
-        int maxRes = maxMp;
-        if (m.getResourceType() == com.example.htmlmud.domain.party.model.ResourceType.RAGE) {
-          curRes = m.getCurrentRage();
-          maxRes = m.getMaxRage();
-        } else if (m.getResourceType() == com.example.htmlmud.domain.party.model.ResourceType.COMBO) {
-          curRes = m.getCurrentCombo();
-          maxRes = m.getMaxCombo();
-        }
+  public static PartyViewDto toPartyViewDto(Party party) {
+    if (party == null) return null;
+    List<PartyMemberViewDto> memberViews = new ArrayList<>();
+    for (PartyMember m : party.getMembers()) {
+      int hp = m.getStats() != null ? m.getStats().getHp() : 100;
+      int maxHp = m.getStats() != null ? m.getStats().getMaxHp() : 100;
+      int mp = m.getStats() != null ? m.getStats().getMp() : 50;
+      int maxMp = m.getStats() != null ? m.getStats().getMaxMp() : 50;
+      int san = m.getCurrentSan();
+      int maxSan = m.getMaxSan();
 
-        List<PartySkillViewDto> skillDtos = new ArrayList<>();
-        if (m.getSkills() != null) {
-          for (var s : m.getSkills()) {
-            boolean avail = true;
-            if (m.isOnCooldown(s.getId())) avail = false;
-            if (s.getCostType() == com.example.htmlmud.domain.party.model.ResourceType.MP && mp < s.getCostValue()) avail = false;
-            if (s.getCostType() == com.example.htmlmud.domain.party.model.ResourceType.RAGE && m.getCurrentRage() < s.getCostValue()) avail = false;
-            if (s.getCostType() == com.example.htmlmud.domain.party.model.ResourceType.COMBO && m.getCurrentCombo() < s.getCostValue()) avail = false;
-
-            String costDesc = "無消耗";
-            if (s.getCostType() != null && s.getCostValue() > 0) {
-              costDesc = switch (s.getCostType()) {
-                case RAGE -> s.getCostValue() + " 怒氣";
-                case COMBO -> s.getCostValue() + " 連擊";
-                case MP -> s.getCostValue() + " 真元";
-              };
-            }
-
-            skillDtos.add(new PartySkillViewDto(
-                s.getId(),
-                s.getName(),
-                s.getIcon(),
-                s.getDescription(),
-                s.getCostType() != null ? s.getCostType().name() : "MP",
-                s.getCostValue(),
-                costDesc,
-                s.getCooldownMs(),
-                m.getRemainingCooldownMs(s.getId()),
-                avail
-            ));
-          }
-        }
-
-        Map<String, PartyItemSlotViewDto> equipMap = new HashMap<>();
-        if (m.getEquipment() != null) {
-          m.getEquipment().forEach((slot, item) -> {
-            if (slot != null && item != null) {
-              equipMap.put(slot.name(), PartyItemSlotViewDto.of(item));
-            }
-          });
-        }
-
-        memberViews.add(new PartyMemberViewDto(
-            m.getId(),
-            m.getName(),
-            m.getRoleTitle(),
-            m.getRow() != null ? m.getRow().name() : "FRONT",
-            hp,
-            maxHp,
-            mp,
-            maxMp,
-            san,
-            maxSan,
-            m.getSanityStatus(),
-            level,
-            resType,
-            curRes,
-            maxRes,
-            m.isAlive(),
-            skillDtos,
-            m.getMadnessState() != null ? m.getMadnessState().name() : "SANE",
-            m.getAberrationCounter(),
-            PartyItemSlotViewDto.of(m.getEquippedWeapon()),
-            PartyItemSlotViewDto.of(m.getEquippedArmor()),
-            equipMap
-        ));
+      String level = "NORMAL";
+      if (san <= 20) {
+        level = "MADNESS";
+      } else if (san <= 50) {
+        level = "DANGER";
+      } else if (san <= 75) {
+        level = "WARNING";
       }
 
-      String formName = party.getEquippedFormation() != null ? party.getEquippedFormation().getName() : "無";
-      String ultName = (party.getEquippedFormation() != null && party.getEquippedFormation().getUltimateSkill() != null)
-          ? party.getEquippedFormation().getUltimateSkill().getName() : "";
+      String resType = m.getResourceType() != null ? m.getResourceType().name() : "MP";
+      int curRes = mp;
+      int maxRes = maxMp;
+      if (m.getResourceType() == com.example.htmlmud.domain.party.model.ResourceType.RAGE) {
+        curRes = m.getCurrentRage();
+        maxRes = m.getMaxRage();
+      } else if (m.getResourceType() == com.example.htmlmud.domain.party.model.ResourceType.COMBO) {
+        curRes = m.getCurrentCombo();
+        maxRes = m.getMaxCombo();
+      }
 
-      PartyInventoryViewDto invView = PartyInventoryViewDto.of(party.getInventory());
+      List<PartySkillViewDto> skillDtos = new ArrayList<>();
+      if (m.getSkills() != null) {
+        for (var s : m.getSkills()) {
+          boolean avail = true;
+          if (m.isOnCooldown(s.getId())) avail = false;
+          if (s.getCostType() == com.example.htmlmud.domain.party.model.ResourceType.MP && mp < s.getCostValue()) avail = false;
+          if (s.getCostType() == com.example.htmlmud.domain.party.model.ResourceType.RAGE && m.getCurrentRage() < s.getCostValue()) avail = false;
+          if (s.getCostType() == com.example.htmlmud.domain.party.model.ResourceType.COMBO && m.getCurrentCombo() < s.getCostValue()) avail = false;
 
-      partyView = new PartyViewDto(
-          party.getPartyName(),
-          formName,
-          party.getFormationEnergy(),
-          ultName,
-          party.canCastUltimate(),
-          memberViews,
-          invView
-      );
+          String costDesc = "無消耗";
+          if (s.getCostType() != null && s.getCostValue() > 0) {
+            costDesc = switch (s.getCostType()) {
+              case RAGE -> s.getCostValue() + " 怒氣";
+              case COMBO -> s.getCostValue() + " 連擊";
+              case MP -> s.getCostValue() + " 真元";
+            };
+          }
+
+          skillDtos.add(new PartySkillViewDto(
+              s.getId(),
+              s.getName(),
+              s.getIcon(),
+              s.getDescription(),
+              s.getCostType() != null ? s.getCostType().name() : "MP",
+              s.getCostValue(),
+              costDesc,
+              s.getCooldownMs(),
+              m.getRemainingCooldownMs(s.getId()),
+              avail
+          ));
+        }
+      }
+
+      Map<String, PartyItemSlotViewDto> equipMap = new HashMap<>();
+      if (m.getEquipment() != null) {
+        m.getEquipment().forEach((slot, item) -> {
+          if (slot != null && item != null) {
+            equipMap.put(slot.name(), PartyItemSlotViewDto.of(item));
+          }
+        });
+      }
+
+      memberViews.add(new PartyMemberViewDto(
+          m.getId(),
+          m.getName(),
+          m.getRoleTitle(),
+          m.getRow() != null ? m.getRow().name() : "FRONT",
+          hp,
+          maxHp,
+          mp,
+          maxMp,
+          san,
+          maxSan,
+          m.getSanityStatus(),
+          level,
+          resType,
+          curRes,
+          maxRes,
+          m.isAlive(),
+          skillDtos,
+          m.getMadnessState() != null ? m.getMadnessState().name() : "SANE",
+          m.getAberrationCounter(),
+          PartyItemSlotViewDto.of(m.getEquippedWeapon()),
+          PartyItemSlotViewDto.of(m.getEquippedArmor()),
+          equipMap
+      ));
     }
 
-    return new DrpgStateDto("DRPG_STATE", dungeonView, partyView, battle);
+    String formName = party.getEquippedFormation() != null ? party.getEquippedFormation().getName() : "無";
+    String ultName = (party.getEquippedFormation() != null && party.getEquippedFormation().getUltimateSkill() != null)
+        ? party.getEquippedFormation().getUltimateSkill().getName() : "";
+
+    PartyInventoryViewDto invView = PartyInventoryViewDto.of(party.getInventory());
+
+    return new PartyViewDto(
+        party.getPartyName(),
+        formName,
+        party.getFormationEnergy(),
+        ultName,
+        party.canCastUltimate(),
+        memberViews,
+        invView
+    );
   }
+
+  public record TownExitDto(
+      String direction,
+      String displayName,
+      String targetRoomId,
+      String targetRoomName
+  ) {}
+
+  public record TownCapabilityDto(
+      String type,
+      String label,
+      String command,
+      String icon
+  ) {}
+
+  public record TownNpcDto(
+      String id,
+      String alias,
+      String name,
+      String title,
+      String status,
+      List<TownCapabilityDto> capabilities
+  ) {}
+
+  public record TownItemDto(
+      String id,
+      String name,
+      String icon,
+      int count
+  ) {}
+
+  public record TownViewDto(
+      String zoneId,
+      String zoneName,
+      String roomId,
+      String roomName,
+      String description,
+      boolean safeZone,
+      List<TownExitDto> exits,
+      List<TownNpcDto> npcs,
+      List<TownItemDto> items
+  ) {}
 
   public record DungeonViewDto(
       String floorId,

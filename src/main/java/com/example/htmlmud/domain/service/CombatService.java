@@ -224,6 +224,8 @@ public class CombatService {
         }
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
+      } catch (Throwable t) {
+        log.error("CombatRound 執行異常 self:{} target:{}", self.getId(), (target != null ? target.getId() : "null"), t);
       }
     });
   }

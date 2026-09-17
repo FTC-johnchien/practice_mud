@@ -5,6 +5,9 @@
 
 // 內部狀態快取
 const drpgState = {
+  mode: 'TOWN',
+  lastTown: null,
+  isDevConsoleOpen: false,
   lastDungeon: null,
   lastParty: null,
   lastBattle: null,
@@ -17,7 +20,16 @@ const drpgState = {
   radarMode: localStorage.getItem('drpg_radar_mode') || 'centered', // 'centered' 或 'full'
   saveSlots: [],
   isSaveModalOpen: false,
-  saveModalMode: 'load'
+  saveModalMode: 'load',
+  isPartyModalOpen: false,
+  // 進入遊戲世界流程狀態 (三階段)
+  isTitleScreenOpen: true,
+  hasEnteredGameWorld: false,
+  isNewGameModalOpen: false,
+  isPrologueModalOpen: false,
+  isGuideModalOpen: false,
+  selectedFormation: 'formation_four_symbols',
+  latestSaveSlot: null
 };
 
 /**
@@ -35,10 +47,10 @@ function applyRadarPosition() {
   if (!mainViewport) return;
   if (drpgState.radarPosition === 'right') {
     mainViewport.classList.add('layout-radar-right');
-    if (btn) btn.innerText = '⮂ 地圖置左';
+    if (btn) btn.innerText = '⮂ 置左';
   } else {
     mainViewport.classList.remove('layout-radar-right');
-    if (btn) btn.innerText = '⮃ 地圖置右';
+    if (btn) btn.innerText = '⮃ 置右';
   }
 }
 
@@ -74,14 +86,84 @@ function sendStep(dir) {
 }
 
 /**
+ * 十字方向發送 (根據當前 mode 自動分流至城鎮出口或地牢步進)
+ */
+function handleDpad(dir) {
+  if (drpgState.mode === 'TOWN') {
+    sendTownMove(dir);
+  } else {
+    const dirMap = { north: 'w', south: 's', west: 'a', east: 'd' };
+    sendStep(dirMap[dir] || dir);
+  }
+}
+
+function sendTownMove(dir) {
+  const now = Date.now();
+  if (now - drpgState.lastStepTime < 120) {
+    return;
+  }
+  drpgState.lastStepTime = now;
+  send(dir);
+}
+
+/**
+ * 開發者終端控制台切換
+ */
+function toggleDevConsole(forceState) {
+  const modal = document.getElementById('dev-console-modal');
+  const input = document.getElementById('dev-cmd-input');
+  if (!modal) return;
+
+  drpgState.isDevConsoleOpen = (typeof forceState === 'boolean') ? forceState : !drpgState.isDevConsoleOpen;
+  if (drpgState.isDevConsoleOpen) {
+    modal.classList.remove('hidden');
+    if (input) {
+      input.value = '';
+      setTimeout(() => input.focus(), 50);
+    }
+  } else {
+    modal.classList.add('hidden');
+    if (input) input.blur();
+  }
+}
+
+function handleDevEnter() {
+  const input = document.getElementById('dev-cmd-input');
+  if (!input) return;
+  const cmd = input.value.trim();
+  if (cmd) {
+    send(cmd);
+    input.value = '';
+  }
+  toggleDevConsole(false);
+}
+
+/**
  * 接收後端推送的 DRPG_STATE 結構化資料
  */
 function updateDrpgView(payload) {
   if (!payload) return;
 
-  if (payload.dungeon) {
-    drpgState.lastDungeon = payload.dungeon;
-    renderMinimap(payload.dungeon);
+  const mode = payload.mode || (payload.dungeon ? 'DUNGEON' : 'TOWN');
+  drpgState.mode = mode;
+
+  const dungeonPanel = document.getElementById('dungeon-radar-panel');
+  const townPanel = document.getElementById('town-nav-panel');
+
+  if (mode === 'TOWN') {
+    if (dungeonPanel) dungeonPanel.classList.add('hidden');
+    if (townPanel) townPanel.classList.remove('hidden');
+    if (payload.town) {
+      drpgState.lastTown = payload.town;
+      renderTownNav(payload.town);
+    }
+  } else {
+    if (townPanel) townPanel.classList.add('hidden');
+    if (dungeonPanel) dungeonPanel.classList.remove('hidden');
+    if (payload.dungeon) {
+      drpgState.lastDungeon = payload.dungeon;
+      renderMinimap(payload.dungeon);
+    }
   }
 
   if (payload.party) {
@@ -89,6 +171,9 @@ function updateDrpgView(payload) {
     renderPartyHud(payload.party);
     if (drpgState.isBagDrawerOpen) {
       renderBagDrawer();
+    }
+    if (drpgState.isPartyModalOpen) {
+      renderPartyModal();
     }
   }
 
@@ -100,6 +185,196 @@ function updateDrpgView(payload) {
     drpgState.lastBattle = null;
     hideBattleArena();
     toggleBattleMode(false);
+  }
+}
+
+/**
+ * 標準化城鎮 NPC 能力標籤 (支援後端富物件與前端向後相容)
+ */
+function normalizeTownCapability(cap, npc) {
+  if (typeof cap === 'object' && cap && cap.label) {
+    return {
+      type: (cap.type || 'ASK').toLowerCase(),
+      label: cap.label,
+      icon: cap.icon || '✨',
+      command: cap.command || `ask ${npc.alias || npc.id}`
+    };
+  }
+  const key = (typeof cap === 'string' ? cap : (cap && cap.type ? cap.type : '')).toUpperCase();
+  const alias = npc.alias || npc.id;
+  switch (key) {
+    case 'SHOP': return { type: 'shop', label: '貨棧買賣', icon: '🛒', command: 'shop' };
+    case 'TALK': return { type: 'ask', label: '相談交談', icon: '💬', command: `ask ${alias}` };
+    case 'REST': return { type: 'rest', label: '客棧安歇', icon: '🛏️', command: 'rest' };
+    case 'RECRUIT': return { type: 'recruit', label: '招募入隊', icon: '🤝', command: `recruit ${alias}` };
+    case 'DISMISS': return { type: 'dismiss', label: '請離隊友', icon: '👋', command: `dismiss ${alias}` };
+    case 'QUEST': return { type: 'quest', label: '任務指引', icon: '📜', command: `ask ${alias}` };
+    case 'FIGHT': return { type: 'fight', label: '拔劍迎擊', icon: '⚔️', command: `kill ${alias}` };
+    default: return { type: 'ask', label: '交談', icon: '💬', command: `ask ${alias}` };
+  }
+}
+
+/**
+ * 渲染城鎮導航與能力標籤面板
+ */
+function renderTownNav(town) {
+  if (!town) return;
+
+  const zoneBadge = document.getElementById('town-zone-badge');
+  const roomTitle = document.getElementById('town-room-title');
+  const roomIdTag = document.getElementById('town-room-id-tag');
+  const roomDesc = document.getElementById('town-room-desc');
+
+  if (zoneBadge) zoneBadge.innerText = town.zoneName || '新手村';
+  if (roomTitle) roomTitle.innerText = town.roomName || '客棧';
+  if (roomIdTag) roomIdTag.innerText = town.roomId || '';
+  if (roomDesc) roomDesc.innerText = town.description || '';
+
+  // 1. 羅盤出口渲染 (正交 4 向)
+  const exits = town.exits || [];
+  const exitMap = {};
+  const specialExits = [];
+
+  exits.forEach(ex => {
+    const d = (ex.direction || '').toLowerCase();
+    if (['north', 'south', 'west', 'east'].includes(d)) {
+      exitMap[d] = ex;
+    } else {
+      specialExits.push(ex);
+    }
+  });
+
+  const dirs = [
+    { key: 'north', btnId: 'exit-btn-north', nameId: 'exit-name-north', label: '▲ 北' },
+    { key: 'south', btnId: 'exit-btn-south', nameId: 'exit-name-south', label: '▼ 南' },
+    { key: 'west',  btnId: 'exit-btn-west',  nameId: 'exit-name-west',  label: '◀ 西' },
+    { key: 'east',  btnId: 'exit-btn-east',  nameId: 'exit-name-east',  label: '東 ▶' }
+  ];
+
+  dirs.forEach(d => {
+    const btn = document.getElementById(d.btnId);
+    const nameEl = document.getElementById(d.nameId);
+    const ex = exitMap[d.key];
+    if (btn && nameEl) {
+      if (ex) {
+        btn.classList.remove('disabled');
+        btn.disabled = false;
+        btn.title = `前往：${ex.targetRoomName || ex.targetRoomId} (${d.key})`;
+        nameEl.innerText = ex.targetRoomName || ex.targetRoomId;
+      } else {
+        btn.classList.add('disabled');
+        btn.disabled = true;
+        btn.title = '無出路';
+        nameEl.innerText = '無出路';
+      }
+    }
+  });
+
+  // 特殊出口渲染 (up, down, enter 等)
+  const specialContainer = document.getElementById('town-special-exits');
+  if (specialContainer) {
+    specialContainer.innerHTML = '';
+    specialExits.forEach(ex => {
+      const btn = document.createElement('button');
+      btn.className = 'special-exit-btn';
+      let icon = '🚪';
+      if (ex.direction === 'up') icon = '🪜 向上';
+      else if (ex.direction === 'down') icon = '🪜 向下';
+      else if (ex.direction === 'enter') icon = '⛩️ 踏入';
+
+      btn.innerHTML = `${icon} ${ex.targetRoomName || ex.targetRoomId}`;
+      btn.onclick = () => {
+        if (ex.actionCommand) {
+          send(ex.actionCommand);
+        } else {
+          send(ex.direction);
+        }
+      };
+      specialContainer.appendChild(btn);
+    });
+  }
+
+  // 2. 身旁人物與互動能力標籤渲染
+  const npcsContainer = document.getElementById('town-npcs-list');
+  const npcCountBadge = document.getElementById('town-npc-count');
+  if (npcsContainer) {
+    npcsContainer.innerHTML = '';
+    const npcs = town.npcs || [];
+    if (npcCountBadge) {
+      npcCountBadge.innerText = npcs.length > 0 ? `(${npcs.length})` : '';
+    }
+
+    if (npcs.length === 0) {
+      npcsContainer.innerHTML = '<div style="font-size:12px; color:#64748b; padding:8px 4px;">(周圍暫無其他生靈)</div>';
+    } else {
+      npcs.forEach(npc => {
+        const card = document.createElement('div');
+        card.className = 'npc-card';
+
+        const caps = npc.capabilities || [];
+        const isHostile = caps.some(c => (typeof c === 'string' ? c === 'FIGHT' : c && c.type === 'FIGHT'));
+        if (isHostile) card.classList.add('is-hostile');
+
+        const header = document.createElement('div');
+        header.className = 'npc-header';
+        const roleHtml = isHostile
+          ? `<span style="font-size:10px; color:#f87171; background:rgba(239,68,68,0.2); border:1px solid #ef4444; padding:1px 6px; border-radius:3px;">敵對</span>`
+          : `<span style="font-size:11px; color:#94a3b8;">${npc.title || ''}</span>`;
+        header.innerHTML = `<span class="npc-name">${npc.name}</span>${roleHtml}`;
+        card.appendChild(header);
+
+        if (npc.description) {
+          const desc = document.createElement('div');
+          desc.className = 'npc-desc';
+          desc.innerText = npc.description;
+          card.appendChild(desc);
+        }
+
+        const chipsWrap = document.createElement('div');
+        chipsWrap.className = 'capability-chips';
+
+        caps.forEach(cap => {
+          const norm = normalizeTownCapability(cap, npc);
+          const chip = document.createElement('button');
+          chip.className = `cap-chip cap-${norm.type}`;
+          chip.innerHTML = `<span>${norm.icon}</span><span>${norm.label}</span>`;
+          chip.onclick = () => {
+            if (norm.command) {
+              send(norm.command);
+            }
+          };
+          chipsWrap.appendChild(chip);
+        });
+
+        card.appendChild(chipsWrap);
+        npcsContainer.appendChild(card);
+      });
+    }
+  }
+
+  // 3. 地面物品渲染
+  const itemsContainer = document.getElementById('town-items-list');
+  const itemCountBadge = document.getElementById('town-item-count');
+  if (itemsContainer) {
+    itemsContainer.innerHTML = '';
+    const items = town.items || [];
+    if (itemCountBadge) {
+      itemCountBadge.innerText = items.length > 0 ? `(${items.length})` : '';
+    }
+    if (items.length === 0) {
+      itemsContainer.innerHTML = '<div style="font-size:12px; color:#64748b; padding:4px;">(地面空無一物)</div>';
+    } else {
+      items.forEach(it => {
+        const chip = document.createElement('button');
+        chip.className = 'ground-item-chip';
+        chip.innerText = `拾取 ${it.name} x${it.count || it.amount || 1}`;
+        chip.onclick = () => {
+          if (it.actionCommand) send(it.actionCommand);
+          else send('get ' + it.id);
+        };
+        itemsContainer.appendChild(chip);
+      });
+    }
   }
 }
 
@@ -382,28 +657,28 @@ function renderPartyHud(party) {
       resLabel = `連擊 ${curRes}/${maxRes}`;
     }
 
-    // 裝備展示
-    const weaponName = m.equippedWeapon ? `${m.equippedWeapon.icon} ${m.equippedWeapon.name}` : '🗡️ 空手';
-    const unequipWeaponBtn = m.equippedWeapon ? `<button class="unequip-mini-btn" onclick="event.stopPropagation(); send('item unequip weapon ${idx}')" title="卸下武器放回行囊">✕</button>` : '';
-    const armorName = m.equippedArmor ? `${m.equippedArmor.icon} ${m.equippedArmor.name}` : '🥋 布衣';
-    const unequipArmorBtn = m.equippedArmor ? `<button class="unequip-mini-btn" onclick="event.stopPropagation(); send('item unequip armor ${idx}')" title="卸下防具放回行囊">✕</button>` : '';
+    // 7 大部位裝備槽位 (5 基礎 + 2 飾品)
+    const allSlots = [
+      { key: 'MAIN_HAND', alias: 'weapon', label: '主手', icon: '🗡️', defaultName: '空主' },
+      { key: 'OFF_HAND', alias: 'shield', label: '副手', icon: '🛡️', defaultName: '空副' },
+      { key: 'HEAD', alias: 'head', label: '頭部', icon: '👑', defaultName: '空頭' },
+      { key: 'BODY', alias: 'armor', label: '身軀', icon: '🥋', defaultName: '空身' },
+      { key: 'FEET', alias: 'feet', label: '靴履', icon: '👢', defaultName: '空履' },
+      { key: 'ACCESSORY_1', alias: 'acc1', label: '飾品1', icon: '💍', defaultName: '空飾1' },
+      { key: 'ACCESSORY_2', alias: 'acc2', label: '飾品2', icon: '📿', defaultName: '空飾2' }
+    ];
 
-    // 其它部位裝備 (副手、頭部、靴履、法寶)
-    let extraEquipHtml = '';
-    if (m.equipment) {
-      const otherSlots = [
-        { key: 'OFF_HAND', alias: 'shield', label: '副手' },
-        { key: 'HEAD', alias: 'head', label: '頭部' },
-        { key: 'FEET', alias: 'feet', label: '靴履' },
-        { key: 'ACCESSORY_1', alias: 'acc1', label: '法寶一' },
-        { key: 'ACCESSORY_2', alias: 'acc2', label: '法寶二' }
-      ];
-      for (const slot of otherSlots) {
-        const item = m.equipment[slot.key];
-        if (item) {
-          const btn = `<button class="unequip-mini-btn" onclick="event.stopPropagation(); send('item unequip ${slot.alias} ${idx}')" title="卸下${slot.label}放回行囊">✕</button>`;
-          extraEquipHtml += `<span class="equip-tag" title="${item.description || slot.label}">${item.icon || '📦'} ${item.name}${btn}</span>`;
-        }
+    let equipHtml = '';
+    for (const slot of allSlots) {
+      let item = m.equipment ? m.equipment[slot.key] : null;
+      if (!item && slot.key === 'MAIN_HAND' && m.equippedWeapon) item = m.equippedWeapon;
+      if (!item && slot.key === 'BODY' && m.equippedArmor) item = m.equippedArmor;
+
+      if (item) {
+        const btn = `<button class="unequip-mini-btn" onclick="event.stopPropagation(); send('item unequip ${slot.alias} ${idx}')" title="卸下${slot.label}【${item.name}】放回行囊">✕</button>`;
+        equipHtml += `<span class="equip-tag equipped-slot" title="${slot.label}: ${item.name} (${item.description || ''})">${item.icon || slot.icon} ${item.name}${btn}</span>`;
+      } else {
+        equipHtml += `<span class="equip-tag empty-slot" title="${slot.label} (未穿戴)">${slot.icon}${slot.defaultName}</span>`;
       }
     }
 
@@ -416,9 +691,7 @@ function renderPartyHud(party) {
         </div>
         <div class="member-title" title="${m.roleTitle}">${m.roleTitle}</div>
         <div class="member-equip-row">
-          <span class="equip-tag" title="${m.equippedWeapon ? m.equippedWeapon.description : '空手'}">${weaponName}${unequipWeaponBtn}</span>
-          <span class="equip-tag" title="${m.equippedArmor ? m.equippedArmor.description : '布衣'}">${armorName}${unequipArmorBtn}</span>
-          ${extraEquipHtml}
+          ${equipHtml}
         </div>
       </div>
       <div class="card-bars-side">
@@ -819,7 +1092,173 @@ function triggerPartyAction() {
     void list.offsetWidth;
     list.classList.add('party-pulse');
   }
+  togglePartyModal();
   send('party');
+}
+
+/**
+ * 開啟 / 關閉小隊 5+2 裝備與隊伍編制管理面板
+ */
+function togglePartyModal(forceOpen) {
+  const modal = document.getElementById('party-modal');
+  if (!modal) return;
+
+  if (forceOpen === undefined) {
+    drpgState.isPartyModalOpen = !drpgState.isPartyModalOpen;
+  } else {
+    drpgState.isPartyModalOpen = !!forceOpen;
+  }
+
+  if (drpgState.isPartyModalOpen) {
+    modal.classList.remove('hidden');
+    renderPartyModal();
+  } else {
+    modal.classList.add('hidden');
+  }
+}
+
+function closePartyModal() {
+  togglePartyModal(false);
+}
+
+function renderPartyModal() {
+  const modal = document.getElementById('party-modal');
+  if (!modal || modal.classList.contains('hidden')) return;
+
+  const party = drpgState.lastParty;
+  const formInfoEl = document.getElementById('party-modal-formation-info');
+  const membersListEl = document.getElementById('party-modal-members-list');
+  if (!party || !party.members) {
+    if (membersListEl) membersListEl.innerHTML = '<div style="color:#94a3b8;padding:20px;text-align:center;">尚未載入小隊資料，請稍候...</div>';
+    return;
+  }
+
+  // 渲染陣法與靈威狀態
+  if (formInfoEl) {
+    const ultBtn = party.canCastUltimate
+      ? `<button class="act-btn btn-ult" onclick="send('formation cast')" style="padding:2px 8px;font-size:11px;">⚡ 施展陣法奧義【${party.ultimateSkillName}】</button>`
+      : `<span style="color:#94a3b8;font-size:11px;">奧義【${party.ultimateSkillName || '無'}】(充能 ${party.formationEnergy || 0}/100)</span>`;
+
+    formInfoEl.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span>☯️ 當前道門陣法：<strong style="color:#38bdf8;">${party.formationName || '四象辟邪陣'}</strong></span>
+        <button class="act-btn" onclick="send('formation toggle')" style="padding:2px 8px;font-size:11px;">切換陣法 (F)</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span>⚡ 靈威：${party.formationEnergy || 0}/100</span>
+        ${ultBtn}
+      </div>
+    `;
+  }
+
+  if (!membersListEl) return;
+  membersListEl.innerHTML = '';
+
+  const allSlots = [
+    { key: 'MAIN_HAND', alias: 'weapon', label: '主手武器', icon: '🗡️' },
+    { key: 'OFF_HAND', alias: 'shield', label: '副手防具', icon: '🛡️' },
+    { key: 'HEAD', alias: 'head', label: '頭部盔甲', icon: '👑' },
+    { key: 'BODY', alias: 'armor', label: '身軀道袍', icon: '🥋' },
+    { key: 'FEET', alias: 'feet', label: '靴履護具', icon: '👢' },
+    { key: 'ACCESSORY_1', alias: 'acc1', label: '本命法寶', icon: '💍' },
+    { key: 'ACCESSORY_2', alias: 'acc2', label: '輔佐靈寶', icon: '📿' }
+  ];
+
+  party.members.forEach((m, idx) => {
+    const card = document.createElement('div');
+    card.className = 'party-detail-card';
+
+    const rowBadge = m.row === 'FRONT' ? '前衛' : '後衛';
+    const rowClass = `badge-${m.row.toLowerCase()}`;
+
+    // 依職業三態資源判定能量條
+    const resType = m.resourceType || 'MP';
+    const curRes = m.currentResource !== undefined ? m.currentResource : m.mp;
+    const maxRes = m.maxResource !== undefined ? m.maxResource : m.maxMp;
+    let resLabel = `MP: ${curRes}/${maxRes}`;
+    if (resType === 'RAGE') resLabel = `怒氣: ${curRes}/${maxRes}`;
+    else if (resType === 'COMBO') resLabel = `連擊: ${curRes}/${maxRes}`;
+
+    // 產生 5+2 裝備槽位
+    let equipSlotsHtml = '';
+    for (const slot of allSlots) {
+      let item = m.equipment ? m.equipment[slot.key] : null;
+      if (!item && slot.key === 'MAIN_HAND' && m.equippedWeapon) item = m.equippedWeapon;
+      if (!item && slot.key === 'BODY' && m.equippedArmor) item = m.equippedArmor;
+
+      if (item) {
+        let statsParts = [];
+        if (item.bonusMinDamage || item.bonusMaxDamage) statsParts.push(`攻 ${item.bonusMinDamage}~${item.bonusMaxDamage}`);
+        if (item.bonusDefense) statsParts.push(`防 +${item.bonusDefense}`);
+        if (item.bonusHp) statsParts.push(`血 +${item.bonusHp}`);
+        if (item.bonusSan) statsParts.push(`心 +${item.bonusSan}`);
+        const statsStr = statsParts.length > 0 ? statsParts.join(' ') : '基礎裝備';
+
+        equipSlotsHtml += `
+          <div class="equip-slot-box has-item" title="${item.description || ''}">
+            <div class="equip-slot-title">
+              <span>${slot.icon} ${slot.label}</span>
+              <button class="unequip-mini-btn" onclick="send('item unequip ${slot.alias} ${idx}')" title="卸下放回行囊">✕ 卸下</button>
+            </div>
+            <div class="equip-slot-name">${item.icon || '📦'} ${item.name}</div>
+            <div class="equip-slot-stats">${statsStr}</div>
+          </div>
+        `;
+      } else {
+        equipSlotsHtml += `
+          <div class="equip-slot-box empty">
+            <div class="equip-slot-title">
+              <span>${slot.icon} ${slot.label}</span>
+            </div>
+            <div class="equip-slot-name" style="color:#64748b;font-weight:normal;">(未穿戴)</div>
+            <div class="equip-slot-act">
+              <button class="item-act-mini-btn" onclick="toggleBagDrawer(true)" title="開啟行囊挑選裝備穿戴">🎒 挑選</button>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    let skillsHtml = '';
+    const skills = m.skills || [];
+    if (skills.length > 0) {
+      skillsHtml = `
+        <div style="font-size:11px;color:#94a3b8;font-weight:bold;margin-top:8px;">修習武學與道門道術 (${skills.length})：</div>
+        <div class="party-skills-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
+          ${skills.map(s => `
+            <div class="party-skill-chip" title="${s.description || ''}" style="background:rgba(30,41,59,0.8);border:1px solid #334155;border-radius:5px;padding:3px 8px;font-size:11px;display:flex;align-items:center;gap:4px;">
+              <span>${s.icon || '⚔️'}</span>
+              <strong style="color:#e2e8f0;">${s.name}</strong>
+              <span style="color:#60a5fa;font-size:10px;">(${s.costDescription || '無消耗'})</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    card.innerHTML = `
+      <div class="party-detail-header">
+        <div class="party-detail-name-wrap">
+          <span style="color:#38bdf8;font-weight:bold;">#${idx + 1}</span>
+          <span class="party-detail-name">${m.name}</span>
+          <span class="member-row ${rowClass}">${rowBadge}</span>
+          <button class="item-act-mini-btn" onclick="send('formation switch ${idx}')" title="切換前排/後排站位" style="font-size:10px;">站位切換</button>
+        </div>
+        <span class="party-detail-role">${m.roleTitle}</span>
+      </div>
+      <div class="party-detail-bars">
+        <div style="font-size:11px;color:#f87171;">HP: ${m.hp}/${m.maxHp}</div>
+        <div style="font-size:11px;color:#60a5fa;">${resLabel}</div>
+        <div style="font-size:11px;color:#34d399;">SAN: ${m.san}/${m.maxSan}</div>
+      </div>
+      <div style="font-size:11px;color:#94a3b8;font-weight:bold;margin-top:2px;">裝備槽位 (5 基礎 + 2 飾品)：</div>
+      <div class="party-detail-equip-grid">
+        ${equipSlotsHtml}
+      </div>
+      ${skillsHtml}
+    `;
+    membersListEl.appendChild(card);
+  });
 }
 
 function triggerFormationAction() {
@@ -858,8 +1297,8 @@ function openSaveModal(mode) {
   if (title) {
     title.innerText = (mode === 'save') ? '💾 仙道命冊・選擇存檔槽位 (覆蓋進度)' : '📂 仙道命冊・讀取存檔 / 開闢新道途';
   }
-  // 主動向後端查詢最新存檔
-  send('saves');
+  // 主動向後端查詢最新存檔 (靜默模式，不印出 ASCII 表格)
+  send('saves quiet', true);
   renderSaveSlots();
 }
 
@@ -877,6 +1316,22 @@ function closeSaveModal() {
  */
 function updateSaveSlotsView(slots) {
   drpgState.saveSlots = slots || [];
+
+  // 解析最新存檔 (優先排除空存檔)
+  const populated = drpgState.saveSlots.filter(s => !s.empty);
+  if (populated.length > 0) {
+    populated.sort((a, b) => {
+      const timeA = a.savedAt || '';
+      const timeB = b.savedAt || '';
+      return timeB.localeCompare(timeA);
+    });
+    drpgState.latestSaveSlot = populated[0];
+  } else {
+    drpgState.latestSaveSlot = null;
+  }
+
+  updateContinueButtonLabel();
+
   if (drpgState.isSaveModalOpen) {
     renderSaveSlots();
   }
@@ -991,6 +1446,7 @@ function triggerSaveSlot(slotId) {
 function triggerLoadSlot(slotId) {
   send(`load ${slotId}`);
   closeSaveModal();
+  enterGameWorld();
 }
 
 function triggerDeleteSlot(slotId) {
@@ -1005,6 +1461,196 @@ function triggerNewGame() {
   send(`new ${name}`);
   if (input) input.value = '';
   closeSaveModal();
+  enterGameWorld();
+}
+
+/* ==========================================================================
+   三階段進入遊戲流程控制器 (Stage 1: 封面 -> Stage 2: 模式/序幕 -> Stage 3: 靈境)
+   ========================================================================== */
+
+/**
+ * 開啟主標題封面 (Title Screen)
+ */
+function openTitleScreen() {
+  drpgState.isTitleScreenOpen = true;
+  const overlay = document.getElementById('title-screen-overlay');
+  if (overlay) overlay.classList.remove('hidden');
+  updateContinueButtonLabel();
+  if (typeof send === 'function') {
+    send('saves quiet', true);
+  }
+}
+
+/**
+ * 關閉主標題封面
+ */
+function closeTitleScreen() {
+  drpgState.isTitleScreenOpen = false;
+  const overlay = document.getElementById('title-screen-overlay');
+  if (overlay) overlay.classList.add('hidden');
+}
+
+/**
+ * 正式進入遊戲世界 (階段三)
+ */
+function enterGameWorld() {
+  drpgState.hasEnteredGameWorld = true;
+  closeTitleScreen();
+  closeNewGameModal();
+  closePrologueModal();
+  closeGuideModal();
+  closeSaveModal();
+  updateContinueButtonLabel();
+}
+
+/**
+ * 繼續最近存檔 (階段一快捷進入)
+ */
+function continueLatestSave() {
+  if (drpgState.hasEnteredGameWorld) {
+    enterGameWorld();
+    return;
+  }
+  if (drpgState.latestSaveSlot && !drpgState.latestSaveSlot.empty) {
+    send(`load ${drpgState.latestSaveSlot.slotId}`);
+    enterGameWorld();
+  } else {
+    openNewGameModal();
+  }
+}
+
+/**
+ * 開啟開闢新途視窗 (階段二)
+ */
+function openNewGameModal() {
+  drpgState.isNewGameModalOpen = true;
+  const modal = document.getElementById('new-game-modal');
+  if (modal) modal.classList.remove('hidden');
+  const input = document.getElementById('new-game-protagonist-input');
+  if (input && !input.value) {
+    input.value = '玄靈子';
+  }
+  selectFormation(drpgState.selectedFormation || 'formation_four_symbols');
+}
+
+/**
+ * 關閉開闢新途視窗
+ */
+function closeNewGameModal() {
+  drpgState.isNewGameModalOpen = false;
+  const modal = document.getElementById('new-game-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+/**
+ * 挑選初始陣法
+ */
+function selectFormation(formationId) {
+  drpgState.selectedFormation = formationId;
+  const cardFour = document.getElementById('card-four-symbols');
+  const cardXuan = document.getElementById('card-xuan-yin');
+  if (cardFour && cardXuan) {
+    if (formationId === 'formation_xuan_yin') {
+      cardXuan.classList.add('selected');
+      cardFour.classList.remove('selected');
+    } else {
+      cardFour.classList.add('selected');
+      cardXuan.classList.remove('selected');
+    }
+  }
+}
+
+/**
+ * 點擊「踏入命運 ‧ 啟程」，進入序章故事 (階段二 -> 序幕)
+ */
+function startPrologueFlow() {
+  const input = document.getElementById('new-game-protagonist-input');
+  const name = (input && input.value.trim()) ? input.value.trim() : '玄靈子';
+  closeNewGameModal();
+  openPrologueModal();
+}
+
+/**
+ * 開啟序章故事導讀
+ */
+function openPrologueModal() {
+  drpgState.isPrologueModalOpen = true;
+  const modal = document.getElementById('prologue-modal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+/**
+ * 關閉序章故事導讀
+ */
+function closePrologueModal() {
+  drpgState.isPrologueModalOpen = false;
+  const modal = document.getElementById('prologue-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+/**
+ * 完成序章導讀 / 點擊跳過，發送開局指令並正式踏入古塚 (階段二 -> 階段三)
+ */
+function finishPrologueAndEnter() {
+  const input = document.getElementById('new-game-protagonist-input');
+  const name = (input && input.value.trim()) ? input.value.trim() : '玄靈子';
+  const formationId = drpgState.selectedFormation || 'formation_four_symbols';
+  send(`new ${name} ${formationId}`);
+  enterGameWorld();
+}
+
+/**
+ * 開啟太陰秘錄 (遊戲指南)
+ */
+function openGuideModal() {
+  drpgState.isGuideModalOpen = true;
+  const modal = document.getElementById('guide-modal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+/**
+ * 關閉太陰秘錄
+ */
+function closeGuideModal() {
+  drpgState.isGuideModalOpen = false;
+  const modal = document.getElementById('guide-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+/**
+ * 動態更新封面「繼續冒險」按鈕的提示文字與狀態
+ */
+function updateContinueButtonLabel() {
+  const continueBtn = document.getElementById('btn-continue-game');
+  const continueHint = document.getElementById('continue-slot-hint');
+  if (!continueBtn) return;
+
+  if (drpgState.hasEnteredGameWorld) {
+    continueBtn.disabled = false;
+    const mainLabel = continueBtn.querySelector('.btn-main-label');
+    if (mainLabel) mainLabel.innerText = '返回靈境探索';
+    if (continueHint) {
+      const charName = (drpgState.lastParty && drpgState.lastParty.members && drpgState.lastParty.members[0])
+          ? drpgState.lastParty.members[0].name
+          : '玄靈子';
+      continueHint.innerText = `目前進度：${charName} (古塚靈境)`;
+    }
+  } else if (drpgState.latestSaveSlot && !drpgState.latestSaveSlot.empty) {
+    continueBtn.disabled = false;
+    const mainLabel = continueBtn.querySelector('.btn-main-label');
+    if (mainLabel) mainLabel.innerText = '繼續冒險';
+    if (continueHint) {
+      const slotTag = drpgState.latestSaveSlot.slotId === 0 ? '⚡自動存檔' : `槽位${drpgState.latestSaveSlot.slotId}`;
+      continueHint.innerText = `${slotTag}：${drpgState.latestSaveSlot.protagonistName || '無名'} (${drpgState.latestSaveSlot.floorName || '太陰古塚'})`;
+    }
+  } else {
+    continueBtn.disabled = true;
+    const mainLabel = continueBtn.querySelector('.btn-main-label');
+    if (mainLabel) mainLabel.innerText = '繼續冒險';
+    if (continueHint) {
+      continueHint.innerText = '尚無修仙道痕 (請開闢新途)';
+    }
+  }
 }
 
 /**
@@ -1037,7 +1683,20 @@ function initKeyboardControls() {
   }
 
   window.addEventListener('keydown', (e) => {
-    // 1. 若目前正在輸入框中打字
+    // 0. 若正在開發者控制台中打字
+    const devInputEl = document.getElementById('dev-cmd-input');
+    if (drpgState.isDevConsoleOpen || document.activeElement === devInputEl) {
+      if (e.key === 'Escape' || e.key === '`' || e.key === '~') {
+        e.preventDefault();
+        toggleDevConsole(false);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        handleDevEnter();
+      }
+      return;
+    }
+
+    // 1. 若目前正在舊版文字輸入框中打字
     if (document.activeElement === inputEl) {
       if (e.key === 'Escape') {
         inputEl.blur();
@@ -1046,20 +1705,76 @@ function initKeyboardControls() {
       return;
     }
 
-    const key = e.key.toLowerCase();
-
-    // 2. 快捷鍵轉至文字輸入
-    if (key === '/' || e.key === 'Enter') {
-      e.preventDefault();
-      if (inputEl) {
-        inputEl.focus();
-        updateModeBadge(true);
+    // 若在主角自訂道號輸入框打字
+    const newNameInput = document.getElementById('new-game-protagonist-input');
+    if (newNameInput && document.activeElement === newNameInput) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        startPrologueFlow();
+      } else if (e.key === 'Escape') {
+        closeNewGameModal();
       }
       return;
     }
 
-    // 3. 戰鬥中與非戰鬥共通快捷鍵
+    // 2. 若在主封面或任一全螢幕模態視窗中，攔截快捷鍵防止穿透，並支援 Esc 依序返回
+    const isAnyModalOrTitleOpen = drpgState.isTitleScreenOpen || drpgState.isSaveModalOpen || drpgState.isNewGameModalOpen || drpgState.isPrologueModalOpen || drpgState.isGuideModalOpen || drpgState.isPartyModalOpen;
+    if (isAnyModalOrTitleOpen) {
+      if (e.key === 'Escape') {
+        if (drpgState.isPartyModalOpen) {
+          closePartyModal();
+          return;
+        }
+        if (drpgState.isPrologueModalOpen) {
+          closePrologueModal();
+          return;
+        }
+        if (drpgState.isNewGameModalOpen) {
+          closeNewGameModal();
+          return;
+        }
+        if (drpgState.isGuideModalOpen) {
+          closeGuideModal();
+          return;
+        }
+        if (drpgState.isSaveModalOpen) {
+          closeSaveModal();
+          return;
+        }
+        if (drpgState.isTitleScreenOpen && drpgState.hasEnteredGameWorld) {
+          enterGameWorld();
+          return;
+        }
+      }
+      return; // 阻止在選單/封面中按 WASD 造成背景移動
+    }
+
+    // 快捷鍵 ~ 開啟/關閉開發者終端
+    if (e.key === '`' || e.key === '~') {
+      e.preventDefault();
+      toggleDevConsole();
+      return;
+    }
+
+    const key = e.key.toLowerCase();
+
+    // 3. 快捷鍵轉至文字指令輸入 (開啟開發者終端)
+    if (key === '/' || e.key === 'Enter') {
+      e.preventDefault();
+      toggleDevConsole(true);
+      return;
+    }
+
+    // 4. 戰鬥中與非戰鬥共通快捷鍵
     if (e.key === 'Escape') {
+      if (drpgState.isDevConsoleOpen) {
+        toggleDevConsole(false);
+        return;
+      }
+      if (drpgState.isPartyModalOpen) {
+        closePartyModal();
+        return;
+      }
       if (drpgState.isSaveModalOpen) {
         closeSaveModal();
         return;
@@ -1091,7 +1806,7 @@ function initKeyboardControls() {
       return;
     }
 
-    // 4. 數字鍵 1~6 快捷選取隊員展開技能盤
+    // 5. 數字鍵 1~6 快捷選取隊員展開技能盤
     if (['1', '2', '3', '4', '5', '6'].includes(key)) {
       e.preventDefault();
       const idx = parseInt(key) - 1;
@@ -1099,7 +1814,7 @@ function initKeyboardControls() {
       return;
     }
 
-    // 5. 戰鬥中快捷鍵
+    // 6. 戰鬥中快捷鍵
     if (drpgState.lastBattle && drpgState.lastBattle.inBattle) {
       if (key === ' ' || key === 'Spacebar' || e.code === 'Space') {
         e.preventDefault();
@@ -1117,19 +1832,19 @@ function initKeyboardControls() {
       return;
     }
 
-    // 6. 探索模式步進與快捷功能
+    // 7. 探索模式步進與快捷功能 (支援城鎮出口與地牢步進自適應)
     if (key === 'w' || e.key === 'ArrowUp') {
       e.preventDefault();
-      sendStep('w');
+      handleDpad('north');
     } else if (key === 's' || e.key === 'ArrowDown') {
       e.preventDefault();
-      sendStep('s');
+      handleDpad('south');
     } else if (key === 'a' || e.key === 'ArrowLeft') {
       e.preventDefault();
-      sendStep('a');
+      handleDpad('west');
     } else if (key === 'd' || e.key === 'ArrowRight') {
       e.preventDefault();
-      sendStep('d');
+      handleDpad('east');
     } else if (key === 'm') {
       e.preventDefault();
       triggerMapAction();
@@ -1161,12 +1876,21 @@ window.triggerFormationAction = triggerFormationAction;
 window.triggerInspectAction = triggerInspectAction;
 window.triggerRestAction = triggerRestAction;
 window.sendStep = sendStep;
+window.handleDpad = handleDpad;
+window.sendTownMove = sendTownMove;
+window.toggleDevConsole = toggleDevConsole;
+window.handleDevEnter = handleDevEnter;
+window.renderTownNav = renderTownNav;
 window.updateDrpgView = updateDrpgView;
 window.selectPartyMember = selectPartyMember;
 window.closeSkillDrawer = closeSkillDrawer;
 window.castPartySkill = castPartySkill;
 window.toggleBagDrawer = toggleBagDrawer;
 window.renderBagDrawer = renderBagDrawer;
+window.triggerPartyAction = triggerPartyAction;
+window.togglePartyModal = togglePartyModal;
+window.closePartyModal = closePartyModal;
+window.renderPartyModal = renderPartyModal;
 window.selectBattleTarget = selectBattleTarget;
 window.triggerBattleMode = toggleBattleMode;
 window.toggleRadarPosition = toggleRadarPosition;
@@ -1179,8 +1903,28 @@ window.triggerLoadSlot = triggerLoadSlot;
 window.triggerDeleteSlot = triggerDeleteSlot;
 window.triggerNewGame = triggerNewGame;
 
+// 新增流程函式全域掛載
+window.openTitleScreen = openTitleScreen;
+window.closeTitleScreen = closeTitleScreen;
+window.enterGameWorld = enterGameWorld;
+window.continueLatestSave = continueLatestSave;
+window.openNewGameModal = openNewGameModal;
+window.closeNewGameModal = closeNewGameModal;
+window.selectFormation = selectFormation;
+window.startPrologueFlow = startPrologueFlow;
+window.openPrologueModal = openPrologueModal;
+window.closePrologueModal = closePrologueModal;
+window.finishPrologueAndEnter = finishPrologueAndEnter;
+window.openGuideModal = openGuideModal;
+window.closeGuideModal = closeGuideModal;
+
 window.addEventListener('DOMContentLoaded', () => {
   initKeyboardControls();
   applyRadarPosition();
   updateRadarModeBtn();
-});
+  setTimeout(() => {
+    if (typeof send === 'function' && (!drpgState.saveSlots || drpgState.saveSlots.length === 0)) {
+      send('saves quiet', true);
+    }
+  }, 300);
+});

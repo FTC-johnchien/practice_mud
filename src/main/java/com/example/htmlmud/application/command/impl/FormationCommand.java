@@ -27,6 +27,7 @@ public class FormationCommand implements PlayerCommand {
   private final DungeonManager dungeonManager;
   private final DungeonNavigator dungeonNavigator;
   private final com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService;
+  private final com.example.htmlmud.domain.service.GameStateBroadcastService broadcastService;
 
   @Override
   public String getKey() {
@@ -129,12 +130,7 @@ public class FormationCommand implements PlayerCommand {
 
   private void broadcastDrpgState(Player player) {
     if (player == null) return;
-    DungeonFloor floor = dungeonManager.getFloor("taiyin_tomb_b1f");
-    DungeonPosition pos = dungeonManager.getOrCreatePosition(player.getName(), "taiyin_tomb_b1f");
-    String inspect = dungeonNavigator.inspectForward(floor, pos);
-    Party party = partyService.getOrCreateParty(player.getName());
-    var battleView = battleService.createBattleView(player.getName());
-    player.sendJson(DrpgStateDto.of(floor, pos, inspect, party, battleView));
+    broadcastService.broadcastState(player);
   }
 
   @Override

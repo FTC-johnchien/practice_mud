@@ -14,6 +14,8 @@ import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
 import com.example.htmlmud.domain.party.model.ResourceType;
 import com.example.htmlmud.domain.party.model.RowPosition;
+import com.example.htmlmud.domain.model.enums.EquipmentSlot;
+import com.example.htmlmud.domain.party.model.PartyItemSlot;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,7 +38,7 @@ public class PartyService {
 
   public Party resetParty(String playerName, String protagonistName) {
     String pName = (protagonistName != null && !protagonistName.isBlank()) ? protagonistName : playerName;
-    Party party = createInitialParty(pName);
+    Party party = createSoloParty(pName);
     partyCache.put(playerName, party);
     return party;
   }
@@ -103,6 +105,10 @@ public class PartyService {
   }
 
   public Party createInitialParty(String leaderName) {
+    return createFullParty(leaderName);
+  }
+
+  public Party createSoloParty(String leaderName) {
     Party party = Party.builder()
         .id("party-" + leaderName)
         .partyName(leaderName + "的問道旅團")
@@ -139,150 +145,193 @@ public class PartyService {
         ))
         .build());
 
-    // 2. 初始結識夥伴 1：玄甲力士 (肉盾)
-    LivingStats tankStats = new LivingStats();
-    tankStats.setHp(180);
-    tankStats.setMaxHp(180);
-    tankStats.setMp(20);
-    tankStats.setMaxMp(20);
-    tankStats.setStr(15);
-    tankStats.setCon(16);
-    tankStats.setDex(6);
-
-    party.addMember(PartyMember.builder()
-        .id("m-iron")
-        .name("鐵牛")
-        .roleTitle("搬山力士・玄甲體修")
-        .row(RowPosition.FRONT)
-        .stats(tankStats)
-        .baseMinDamage(10)
-        .baseMaxDamage(18)
-        .baseDefense(12)
-        .currentSan(90)
-        .maxSan(100)
-        .resourceType(ResourceType.RAGE)
-        .skills(List.of(
-            PartyMemberSkill.builder().id("tank_taunt").name("金剛怒目").icon("🛡️").description("怒吼嘲諷全體敵人強行攻擊自己 5 秒，並提升 30% 防禦").costType(ResourceType.RAGE).costValue(30).cooldownMs(10000).taunt(true).build(),
-            PartyMemberSkill.builder().id("tank_smash").name("裂地崩山").icon("🔨").description("揮舞玄重鎚重砸前排，造成 200% 鈍擊傷害並震懾暈眩 2 秒").costType(ResourceType.RAGE).costValue(60).cooldownMs(12000).damageMultiplier(2.0).stun(true).stunDurationSeconds(2).build()
-        ))
-        .build());
-
-    // 3. 初始結識夥伴 2：驚鴻快劍 (前衛 物理快攻)
-    LivingStats rogueStats = new LivingStats();
-    rogueStats.setHp(110);
-    rogueStats.setMaxHp(110);
-    rogueStats.setMp(50);
-    rogueStats.setMaxMp(50);
-    rogueStats.setStr(11);
-    rogueStats.setCon(9);
-    rogueStats.setDex(16);
-
-    party.addMember(PartyMember.builder()
-        .id("m-yan")
-        .name("燕青")
-        .roleTitle("驚鴻瞬影・穿林快劍")
-        .row(RowPosition.FRONT)
-        .stats(rogueStats)
-        .baseMinDamage(18)
-        .baseMaxDamage(28)
-        .baseDefense(6)
-        .currentSan(92)
-        .maxSan(100)
-        .resourceType(ResourceType.COMBO)
-        .skills(List.of(
-            PartyMemberSkill.builder().id("rogue_shadow_strike").name("穿心瞬影").icon("⚡").description("化作殘影直刺敵方弱點，造成 220% 暴擊傷害").costType(ResourceType.COMBO).costValue(2).cooldownMs(3000).damageMultiplier(2.2).build(),
-            PartyMemberSkill.builder().id("rogue_seven_star").name("七曜絕殺").icon("🌟").description("消耗 5 層連擊點，瞬間打出 5 連穿刺總計 450% 毀滅性爆發！").costType(ResourceType.COMBO).costValue(5).cooldownMs(10000).damageMultiplier(4.5).build()
-        ))
-        .build());
-
-    // 4. 初始結識夥伴 3：青囊醫修 (後衛 補師/驅魔)
-    LivingStats healerStats = new LivingStats();
-    healerStats.setHp(80);
-    healerStats.setMaxHp(80);
-    healerStats.setMp(100);
-    healerStats.setMaxMp(100);
-    healerStats.setStr(6);
-    healerStats.setCon(8);
-    healerStats.setDex(8);
-    healerStats.setIntelligence(14);
-
-    party.addMember(PartyMember.builder()
-        .id("m-ling")
-        .name("凌霜")
-        .roleTitle("懸壺青囊・素問靈醫")
-        .row(RowPosition.BACK)
-        .stats(healerStats)
-        .baseMinDamage(5)
-        .baseMaxDamage(10)
-        .baseDefense(3)
-        .currentSan(95)
-        .maxSan(100)
-        .resourceType(ResourceType.MP)
-        .skills(List.of(
-            PartyMemberSkill.builder().id("heal_single").name("九轉回春").icon("🌿").description("運轉素問真元，為我方血量最低成員回復 40 點氣血").costType(ResourceType.MP).costValue(30).cooldownMs(5000).heal(true).healAmount(40).build(),
-            PartyMemberSkill.builder().id("heal_all_purify").name("辟邪清心咒").icon("✨").description("誦唸辟邪心咒，回復全隊 25 點氣血並平復道心 (+10 SAN)").costType(ResourceType.MP).costValue(40).cooldownMs(12000).heal(true).aoe(true).healAmount(25).sanRestore(10).build()
-        ))
-        .build());
-
-    // 5. 初始結識夥伴 4：太陰符修 (後衛 道術控場)
-    LivingStats taoistStats = new LivingStats();
-    taoistStats.setHp(85);
-    taoistStats.setMaxHp(85);
-    taoistStats.setMp(120);
-    taoistStats.setMaxMp(120);
-    taoistStats.setStr(6);
-    taoistStats.setCon(7);
-    taoistStats.setDex(9);
-    taoistStats.setIntelligence(15);
-
-    party.addMember(PartyMember.builder()
-        .id("m-mo")
-        .name("墨衍")
-        .roleTitle("太陰御符・天機策士")
-        .row(RowPosition.BACK)
-        .stats(taoistStats)
-        .baseMinDamage(8)
-        .baseMaxDamage(16)
-        .baseDefense(4)
-        .currentSan(88)
-        .maxSan(100)
-        .resourceType(ResourceType.MP)
-        .skills(List.of(
-            PartyMemberSkill.builder().id("taoist_seal").name("太陰定身符").icon("📜").description("祭出黃陵定身符，定身敵方單體 4 秒無法行動").costType(ResourceType.MP).costValue(35).cooldownMs(8000).stun(true).stunDurationSeconds(4).build(),
-            PartyMemberSkill.builder().id("taoist_thunder").name("五雷天罡符").icon("🌩️").description("引太陰玄雷轟擊敵方全體，造成 160% 道術雷傷害").costType(ResourceType.MP).costValue(50).cooldownMs(10000).damageMultiplier(1.6).aoe(true).build()
-        ))
-        .build());
-
-    // 6. 初始結識夥伴 5：洞虛術士 (後衛 觀星奧義)
-    LivingStats starStats = new LivingStats();
-    starStats.setHp(75);
-    starStats.setMaxHp(75);
-    starStats.setMp(140);
-    starStats.setMaxMp(140);
-    starStats.setStr(5);
-    starStats.setCon(6);
-    starStats.setDex(10);
-    starStats.setIntelligence(17);
-
-    party.addMember(PartyMember.builder()
-        .id("m-zi")
-        .name("芷若")
-        .roleTitle("九幽星宿・洞虛術士")
-        .row(RowPosition.BACK)
-        .stats(starStats)
-        .baseMinDamage(12)
-        .baseMaxDamage(22)
-        .baseDefense(3)
-        .currentSan(82)
-        .maxSan(100)
-        .resourceType(ResourceType.MP)
-        .skills(List.of(
-            PartyMemberSkill.builder().id("star_warp").name("星移斗轉").icon("🌌").description("撕裂敵方單體防禦，造成 180% 虛空暗蝕傷害").costType(ResourceType.MP).costValue(30).cooldownMs(6000).damageMultiplier(1.8).build(),
-            PartyMemberSkill.builder().id("star_meteor").name("九幽星隕").icon("☄️").description("引動九幽星辰墜落，對敵方全體造成 220% 巨額星煞傷害！").costType(ResourceType.MP).costValue(60).cooldownMs(15000).damageMultiplier(2.2).aoe(true).build()
-        ))
-        .build());
-
     return party;
+  }
+
+  public Party createFullParty(String leaderName) {
+    Party party = createSoloParty(leaderName);
+    recruitCompanion(party, "iron");
+    recruitCompanion(party, "yan");
+    recruitCompanion(party, "ling");
+    recruitCompanion(party, "mo");
+    recruitCompanion(party, "zi");
+    return party;
+  }
+
+  public PartyMember createCompanion(String key) {
+    if (key == null) return null;
+    String k = key.toLowerCase();
+    if (k.contains("iron") || k.contains("tie_niu") || k.contains("鐵牛")) {
+      LivingStats tankStats = new LivingStats();
+      tankStats.setHp(180);
+      tankStats.setMaxHp(180);
+      tankStats.setMp(20);
+      tankStats.setMaxMp(20);
+      tankStats.setStr(15);
+      tankStats.setCon(16);
+      tankStats.setDex(6);
+
+      return PartyMember.builder()
+          .id("m-iron")
+          .name("鐵牛")
+          .roleTitle("搬山力士・玄甲體修")
+          .row(RowPosition.FRONT)
+          .stats(tankStats)
+          .baseMinDamage(10)
+          .baseMaxDamage(18)
+          .baseDefense(12)
+          .currentSan(90)
+          .maxSan(100)
+          .resourceType(ResourceType.RAGE)
+          .skills(List.of(
+              PartyMemberSkill.builder().id("tank_taunt").name("金剛怒目").icon("🛡️").description("怒吼嘲諷全體敵人強行攻擊自己 5 秒，並提升 30% 防禦").costType(ResourceType.RAGE).costValue(30).cooldownMs(10000).taunt(true).build(),
+              PartyMemberSkill.builder().id("tank_smash").name("裂地崩山").icon("🔨").description("揮舞玄重鎚重砸前排，造成 200% 鈍擊傷害並震懾暈眩 2 秒").costType(ResourceType.RAGE).costValue(60).cooldownMs(12000).damageMultiplier(2.0).stun(true).stunDurationSeconds(2).build()
+          ))
+          .build();
+    } else if (k.contains("ling") || k.contains("ling_shuang") || k.contains("凌霜")) {
+      LivingStats healerStats = new LivingStats();
+      healerStats.setHp(80);
+      healerStats.setMaxHp(80);
+      healerStats.setMp(100);
+      healerStats.setMaxMp(100);
+      healerStats.setStr(6);
+      healerStats.setCon(8);
+      healerStats.setDex(8);
+      healerStats.setIntelligence(14);
+
+      return PartyMember.builder()
+          .id("m-ling")
+          .name("凌霜")
+          .roleTitle("懸壺青囊・素問靈醫")
+          .row(RowPosition.BACK)
+          .stats(healerStats)
+          .baseMinDamage(5)
+          .baseMaxDamage(10)
+          .baseDefense(3)
+          .currentSan(95)
+          .maxSan(100)
+          .resourceType(ResourceType.MP)
+          .skills(List.of(
+              PartyMemberSkill.builder().id("heal_single").name("九轉回春").icon("🌿").description("運轉素問真元，為我方血量最低成員回復 40 點氣血").costType(ResourceType.MP).costValue(30).cooldownMs(5000).heal(true).healAmount(40).build(),
+              PartyMemberSkill.builder().id("heal_all_purify").name("辟邪清心咒").icon("✨").description("誦唸辟邪心咒，回復全隊 25 點氣血並平復道心 (+10 SAN)").costType(ResourceType.MP).costValue(40).cooldownMs(12000).heal(true).aoe(true).healAmount(25).sanRestore(10).build()
+          ))
+          .build();
+    } else if (k.contains("yan") || k.contains("yan_qing") || k.contains("燕青")) {
+      LivingStats rogueStats = new LivingStats();
+      rogueStats.setHp(110);
+      rogueStats.setMaxHp(110);
+      rogueStats.setMp(50);
+      rogueStats.setMaxMp(50);
+      rogueStats.setStr(11);
+      rogueStats.setCon(9);
+      rogueStats.setDex(16);
+
+      return PartyMember.builder()
+          .id("m-yan")
+          .name("燕青")
+          .roleTitle("驚鴻瞬影・穿林快劍")
+          .row(RowPosition.FRONT)
+          .stats(rogueStats)
+          .baseMinDamage(18)
+          .baseMaxDamage(28)
+          .baseDefense(6)
+          .currentSan(92)
+          .maxSan(100)
+          .resourceType(ResourceType.COMBO)
+          .skills(List.of(
+              PartyMemberSkill.builder().id("rogue_shadow_strike").name("穿心瞬影").icon("⚡").description("化作殘影直刺敵方弱點，造成 220% 暴擊傷害").costType(ResourceType.COMBO).costValue(2).cooldownMs(3000).damageMultiplier(2.2).build(),
+              PartyMemberSkill.builder().id("rogue_seven_star").name("七曜絕殺").icon("🌟").description("消耗 5 層連擊點，瞬間打出 5 連穿刺總計 450% 毀滅性爆發！").costType(ResourceType.COMBO).costValue(5).cooldownMs(10000).damageMultiplier(4.5).build()
+          ))
+          .build();
+    } else if (k.contains("mo") || k.contains("mo_yan") || k.contains("墨衍")) {
+      LivingStats taoistStats = new LivingStats();
+      taoistStats.setHp(85);
+      taoistStats.setMaxHp(85);
+      taoistStats.setMp(120);
+      taoistStats.setMaxMp(120);
+      taoistStats.setStr(6);
+      taoistStats.setCon(7);
+      taoistStats.setDex(9);
+      taoistStats.setIntelligence(15);
+
+      return PartyMember.builder()
+          .id("m-mo")
+          .name("墨衍")
+          .roleTitle("太陰御符・天機策士")
+          .row(RowPosition.BACK)
+          .stats(taoistStats)
+          .baseMinDamage(8)
+          .baseMaxDamage(16)
+          .baseDefense(4)
+          .currentSan(88)
+          .maxSan(100)
+          .resourceType(ResourceType.MP)
+          .skills(List.of(
+              PartyMemberSkill.builder().id("taoist_seal").name("太陰定身符").icon("📜").description("祭出黃陵定身符，定身敵方單體 4 秒無法行動").costType(ResourceType.MP).costValue(35).cooldownMs(8000).stun(true).stunDurationSeconds(4).build(),
+              PartyMemberSkill.builder().id("taoist_thunder").name("五雷天罡符").icon("🌩️").description("引太陰玄雷轟擊敵方全體，造成 160% 道術雷傷害").costType(ResourceType.MP).costValue(50).cooldownMs(10000).damageMultiplier(1.6).aoe(true).build()
+          ))
+          .build();
+    } else if (k.contains("zi") || k.contains("zhi_ruo") || k.contains("芷若")) {
+      LivingStats starStats = new LivingStats();
+      starStats.setHp(75);
+      starStats.setMaxHp(75);
+      starStats.setMp(140);
+      starStats.setMaxMp(140);
+      starStats.setStr(5);
+      starStats.setCon(6);
+      starStats.setDex(10);
+      starStats.setIntelligence(17);
+
+      return PartyMember.builder()
+          .id("m-zi")
+          .name("芷若")
+          .roleTitle("九幽星宿・洞虛術士")
+          .row(RowPosition.BACK)
+          .stats(starStats)
+          .baseMinDamage(12)
+          .baseMaxDamage(22)
+          .baseDefense(3)
+          .currentSan(82)
+          .maxSan(100)
+          .resourceType(ResourceType.MP)
+          .skills(List.of(
+              PartyMemberSkill.builder().id("star_warp").name("星移斗轉").icon("🌌").description("撕裂敵方單體防禦，造成 180% 虛空暗蝕傷害").costType(ResourceType.MP).costValue(30).cooldownMs(6000).damageMultiplier(1.8).build(),
+              PartyMemberSkill.builder().id("star_meteor").name("九幽星隕").icon("☄️").description("引動九幽星辰墜落，對敵方全體造成 220% 巨額星煞傷害！").costType(ResourceType.MP).costValue(60).cooldownMs(15000).damageMultiplier(2.2).aoe(true).build()
+          ))
+          .build();
+    }
+    return null;
+  }
+
+  public boolean recruitCompanion(Party party, String companionKey) {
+    if (party == null || companionKey == null) return false;
+    if (party.size() >= Party.MAX_PARTY_SIZE) return false;
+
+    PartyMember companion = createCompanion(companionKey);
+    if (companion == null) return false;
+
+    // 檢查是否已在隊伍中
+    boolean alreadyInParty = party.getMembers().stream()
+        .anyMatch(m -> m.getId().equals(companion.getId()) || m.getName().equals(companion.getName()));
+    if (alreadyInParty) return false;
+
+    party.addMember(companion);
+    return true;
+  }
+
+  public boolean dismissCompanion(Party party, String memberIdOrName) {
+    if (party == null || memberIdOrName == null) return false;
+    PartyMember target = party.getMembers().stream()
+        .filter(m -> m.getId().equalsIgnoreCase(memberIdOrName) || m.getName().equalsIgnoreCase(memberIdOrName))
+        .findFirst().orElse(null);
+
+    if (target == null) return false;
+    if ("m-leader".equals(target.getId()) || party.getMembers().indexOf(target) == 0) {
+      return false; // 主角隊長不可請離
+    }
+
+    party.removeMember(target.getId());
+    return true;
   }
 
   public String formatPartyStatus(Party party) {
@@ -318,6 +367,16 @@ public class PartyService {
           m.getStats().getMp(), m.getStats().getMaxMp(),
           m.getCurrentSan(), m.getMaxSan(), m.getSanityStatus()));
 
+      Map<EquipmentSlot, PartyItemSlot> eq = m.getEquipment();
+      sb.append(String.format("       裝備: [主手: %s] [副手: %s] [頭部: %s] [身軀: %s] [靴履: %s] [飾品1: %s] [飾品2: %s]\n",
+          formatEquipSlotName(eq, EquipmentSlot.MAIN_HAND),
+          formatEquipSlotName(eq, EquipmentSlot.OFF_HAND),
+          formatEquipSlotName(eq, EquipmentSlot.HEAD),
+          formatEquipSlotName(eq, EquipmentSlot.BODY),
+          formatEquipSlotName(eq, EquipmentSlot.FEET),
+          formatEquipSlotName(eq, EquipmentSlot.ACCESSORY_1),
+          formatEquipSlotName(eq, EquipmentSlot.ACCESSORY_2)));
+
       if (slot != null && eff != null) {
         sb.append(String.format("       陣位加成: %-12s | 攻:%2d~%2d(x%.2f) 防:%2d(x%.2f) | %s\n",
             slot.getSlotName(),
@@ -329,6 +388,14 @@ public class PartyService {
     }
     sb.append("======================================================================\n");
     return sb.toString();
+  }
+
+  private String formatEquipSlotName(Map<EquipmentSlot, PartyItemSlot> eq, EquipmentSlot slot) {
+    if (eq == null || !eq.containsKey(slot) || eq.get(slot) == null) {
+      return "空";
+    }
+    PartyItemSlot item = eq.get(slot);
+    return item.getName();
   }
 
   public String formatFormationDetails(FormationTemplate formation) {
