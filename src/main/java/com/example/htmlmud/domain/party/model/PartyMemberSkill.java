@@ -36,4 +36,15 @@ public class PartyMemberSkill {
   private int healAmount = 0;
   @Builder.Default
   private int sanRestore = 0;
+  @Builder.Default
+  private java.util.List<String> allowedWeapons = java.util.List.of();
+
+  public boolean isWeaponAllowed(String weaponTypeStr) {
+    if (allowedWeapons == null || allowedWeapons.isEmpty()) return true;
+    if (weaponTypeStr == null) return false;
+    for (String w : allowedWeapons) {
+      if (w.equalsIgnoreCase(weaponTypeStr)) return true;
+    }
+    return false;
+  }
 }

@@ -26,33 +26,32 @@ class PartyFormationTest {
   @Test
   @DisplayName("測試初始小隊建立與前後衛編制")
   void testInitialPartyCreation() {
-    assertEquals(6, party.size(), "初始應有滿編 6 人（3 前衛、3 後衛）");
+    assertEquals(5, party.size(), "初始應有滿編 5 人（3 前衛、2 後衛）");
     assertEquals("李長生", party.getMember(0).getName());
     assertEquals(RowPosition.FRONT, party.getMember(0).getRow(), "主角為前衛");
     assertEquals(RowPosition.FRONT, party.getMember(1).getRow(), "鐵牛為前衛");
     assertEquals(RowPosition.FRONT, party.getMember(2).getRow(), "燕青為前衛");
     assertEquals(RowPosition.BACK, party.getMember(3).getRow(), "凌霜為後衛");
     assertEquals(RowPosition.BACK, party.getMember(4).getRow(), "墨衍為後衛");
-    assertEquals(RowPosition.BACK, party.getMember(5).getRow(), "芷若為後衛");
     assertNotNull(party.getEquippedFormation(), "應預設裝備《四象辟邪陣》");
   }
 
   @Test
-  @DisplayName("測試小隊上限 6 人限制")
+  @DisplayName("測試小隊上限 5 人限制")
   void testPartyMaxCap() {
-    // 初始已是滿編 6 人
-    assertEquals(6, party.size(), "初始應已達 6 人滿編");
+    // 初始已是滿編 5 人
+    assertEquals(5, party.size(), "初始應已達 5 人滿編");
 
-    // 嘗試加入第 7 人應被拒絕
-    boolean seventhAdded = party.addMember(PartyMember.builder()
-        .id("m-7")
-        .name("道友7")
+    // 嘗試加入第 6 人應被拒絕
+    boolean sixthAdded = party.addMember(PartyMember.builder()
+        .id("m-6")
+        .name("道友6")
         .roleTitle("散修")
         .row(RowPosition.BACK)
         .stats(new LivingStats())
         .build());
-    assertFalse(seventhAdded, "超過 6 人上限應拒絕加入");
-    assertEquals(6, party.size());
+    assertFalse(sixthAdded, "超過 5 人上限應拒絕加入");
+    assertEquals(5, party.size());
   }
 
   @Test

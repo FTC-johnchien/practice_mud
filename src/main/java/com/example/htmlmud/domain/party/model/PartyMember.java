@@ -72,6 +72,10 @@ public class PartyMember {
   @Builder.Default
   private Map<EquipmentSlot, PartyItemSlot> equipment = new EnumMap<>(EquipmentSlot.class);
 
+  // 仇恨值 (Threat / Aggro)
+  @Builder.Default
+  private int threat = 0;
+
   @JsonIgnore
   public int getEffectiveMinDamage() {
     int bonus = (equipment != null) ? equipment.values().stream().mapToInt(PartyItemSlot::getBonusMinDamage).sum() : 0;
@@ -274,5 +278,77 @@ public class PartyMember {
         this.alive = true;
       }
     }
+  }
+
+  public void addThreat(int amount) {
+    this.threat = Math.max(0, this.threat + amount);
+  }
+
+  public void resetThreat() {
+    this.threat = 0;
+  }
+
+  public com.example.htmlmud.domain.model.enums.WeaponType getMainHandWeaponType() {
+    PartyItemSlot weapon = getEquippedWeapon();
+    if (weapon == null || weapon.getSubType() == null) {
+      return com.example.htmlmud.domain.model.enums.WeaponType.UNARMED;
+    }
+    String sub = weapon.getSubType().toUpperCase();
+    try {
+      return com.example.htmlmud.domain.model.enums.WeaponType.valueOf(sub);
+    } catch (Exception ignored) {}
+
+    if (sub.contains("SWORD")) return com.example.htmlmud.domain.model.enums.WeaponType.SWORD;
+    if (sub.contains("BLADE")) return com.example.htmlmud.domain.model.enums.WeaponType.BLADE;
+    if (sub.contains("HAMMER") || sub.contains("BLUNT") || sub.contains("MACE") || sub.contains("MAUL")) {
+      return com.example.htmlmud.domain.model.enums.WeaponType.BLUNT;
+    }
+    if (sub.contains("DAGGER") || sub.contains("KNIFE")) return com.example.htmlmud.domain.model.enums.WeaponType.DAGGER;
+    if (sub.contains("STAFF") || sub.contains("WAND") || sub.contains("ROD")) return com.example.htmlmud.domain.model.enums.WeaponType.STAFF;
+    if (sub.contains("BOW")) return com.example.htmlmud.domain.model.enums.WeaponType.BOW;
+    if (sub.contains("AXE")) return com.example.htmlmud.domain.model.enums.WeaponType.AXE;
+    if (sub.contains("SPEAR") || sub.contains("POLEARM")) return com.example.htmlmud.domain.model.enums.WeaponType.POLEARM;
+
+    return com.example.htmlmud.domain.model.enums.WeaponType.UNARMED;
+  }
+
+  public String getBasicSkillId() {
+    com.example.htmlmud.domain.model.enums.WeaponType wt = getMainHandWeaponType();
+    return switch (wt) {
+      case SWORD -> "basic_sword";
+      case BLADE -> "basic_blade";
+      case BLUNT, HAMMER, MACE, MAUL, CLUB, FLAIL -> "basic_blunt";
+      case DAGGER, DIRK, KNIFE, STILETTO -> "basic_dagger";
+      case STAFF, WAND, ROD, SCEPTER -> "basic_magic_staff";
+      case BOW, CROSSBOW -> "basic_archery";
+      case AXE, POLEAXE -> "basic_axe";
+      case POLEARM, HALBERD, SPEAR, JAVELIN -> "basic_polearm";
+      case WHIP, CHAIN, ROPE -> "basic_whip";
+      case DART, SHURIKEN, STONE -> "basic_throwing";
+      default -> "basic_fist";
+    };
+  }
+
+  public com.example.htmlmud.domain.model.template.SkillTemplate getEnabledBasicSkill() {
+    String skillId = getBasicSkillId();
+    return com.example.htmlmud.infra.persistence.repository.TemplateRepository.findSkill(skillId).orElse(null);
+  }
+
+  public com.example.htmlmud.domain.model.config.MoveAction getRandomBasicMove() {
+    var skill = getEnabledBasicSkill();
+    if (skill != null && skill.getMoves() != null && !skill.getMoves().isEmpty()) {
+      int idx = java.util.concurrent.ThreadLocalRandom.current().nextInt(skill.getMoves().size());
+      return skill.getMoves().get(idx);
+    }
+    return null;
+  }
+
+  public boolean isSkillUsable(PartyMemberSkill skill) {
+    if (skill == null) return false;
+    if (skill.getAllowedWeapons() == null || skill.getAllowedWeapons().isEmpty()) {
+      return true;
+    }
+    var wt = getMainHandWeaponType();
+    return skill.isWeaponAllowed(wt.name()) || skill.isWeaponAllowed(wt.getDescription());
   }
 }

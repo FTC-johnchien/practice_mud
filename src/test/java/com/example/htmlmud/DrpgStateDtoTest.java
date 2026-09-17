@@ -46,7 +46,7 @@ class DrpgStateDtoTest {
 
     assertThat(state.party()).isNotNull();
     assertThat(state.party().name()).isEqualTo("道初真人的問道旅團");
-    assertThat(state.party().members()).hasSize(6);
+    assertThat(state.party().members()).hasSize(5);
 
     // 驗證成員 1: 道初真人 (前衛)
     var leader = state.party().members().get(0);

@@ -1246,7 +1246,7 @@ body, html {
   border: 1px solid rgba(56, 189, 248, 0.4);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(56, 189, 248, 0.2);
   border-radius: 8px;
-  z-index: 150;
+  z-index: 2200;
   display: flex;
   flex-direction: column;
   backdrop-filter: blur(8px);

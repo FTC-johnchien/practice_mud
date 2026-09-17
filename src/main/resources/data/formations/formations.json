@@ -1,0 +1,126 @@
+[
+  {
+    "id": "formation_four_symbols",
+    "name": "四象辟邪陣",
+    "description": "正統道家護法大陣，依青龍、白虎、朱雀、玄武四象而列，鎮守心神，破除污濁煞氣。",
+    "passiveAura": "【辟邪靈言】全隊受擊傷害減少 10%，道心動搖機率下降 25%。",
+    "ultimateSkill": {
+      "id": "skill_four_symbols_flame",
+      "name": "四象純陽真火",
+      "description": "引動天地四象純陽真火，焚滅全體妖邪，並為全隊驅散一層污濁狀態！",
+      "energyCost": 100,
+      "sanCost": 0,
+      "effectType": "AOE_DAMAGE",
+      "basePower": 120
+    },
+    "slots": [
+      {
+        "slotIndex": 0,
+        "slotName": "天樞【陣眼主位】",
+        "requiredRow": "FRONT",
+        "attackMultiplier": 1.15,
+        "defenseMultiplier": 1.10,
+        "sanResistanceBonus": 10,
+        "specialBonusDesc": "全招式威力+15%"
+      },
+      {
+        "slotIndex": 1,
+        "slotName": "天璇【玄武巨盾】",
+        "requiredRow": "FRONT",
+        "attackMultiplier": 0.90,
+        "defenseMultiplier": 1.35,
+        "sanResistanceBonus": 15,
+        "specialBonusDesc": "免傷+35%，受擊率大幅提升"
+      },
+      {
+        "slotIndex": 2,
+        "slotName": "天璣【白虎先鋒】",
+        "requiredRow": "FRONT",
+        "attackMultiplier": 1.25,
+        "defenseMultiplier": 1.05,
+        "sanResistanceBonus": 0,
+        "specialBonusDesc": "近戰暴擊率提升"
+      },
+      {
+        "slotIndex": 3,
+        "slotName": "天權【朱雀靈符】",
+        "requiredRow": "BACK",
+        "attackMultiplier": 1.20,
+        "defenseMultiplier": 0.95,
+        "sanResistanceBonus": 5,
+        "specialBonusDesc": "道術傷害+20%"
+      },
+      {
+        "slotIndex": 4,
+        "slotName": "玉衡【青龍生息】",
+        "requiredRow": "BACK",
+        "attackMultiplier": 0.85,
+        "defenseMultiplier": 1.00,
+        "sanResistanceBonus": 20,
+        "specialBonusDesc": "治療效果+30%"
+      }
+    ]
+  },
+  {
+    "id": "formation_xuan_yin",
+    "name": "玄陰噬魂陣",
+    "description": "參照域外不可名狀星屑所創的凶煞魔陣，以瘋狂與道心為代價，換取撕裂虛空的毀滅威能。",
+    "passiveAura": "【深淵共鳴】全隊道術傷害提高 25%，但每場戰鬥開始全員損失 3 點道心 SAN。",
+    "ultimateSkill": {
+      "id": "skill_abyss_eclipse",
+      "name": "不可名狀星蝕",
+      "description": "撕開星空裂隙，召喚無形盲目癡愚之凝視，對敵方全體造成毀滅性暗蝕傷害！",
+      "energyCost": 100,
+      "sanCost": 8,
+      "effectType": "AOE_DAMAGE",
+      "basePower": 250
+    },
+    "slots": [
+      {
+        "slotIndex": 0,
+        "slotName": "歸墟【古神祭眼】",
+        "requiredRow": "BACK",
+        "attackMultiplier": 1.40,
+        "defenseMultiplier": 0.80,
+        "sanResistanceBonus": -10,
+        "specialBonusDesc": "道術傷害+40%，SAN衰減加劇"
+      },
+      {
+        "slotIndex": 1,
+        "slotName": "冥煞【死肉魔傀】",
+        "requiredRow": "FRONT",
+        "attackMultiplier": 1.10,
+        "defenseMultiplier": 1.30,
+        "sanResistanceBonus": 0,
+        "specialBonusDesc": "承受主要打擊"
+      },
+      {
+        "slotIndex": 2,
+        "slotName": "血刃【弒生狂劍】",
+        "requiredRow": "FRONT",
+        "attackMultiplier": 1.35,
+        "defenseMultiplier": 0.90,
+        "sanResistanceBonus": -5,
+        "specialBonusDesc": "物理傷害+35%"
+      },
+      {
+        "slotIndex": 3,
+        "slotName": "幽蠱【百足噬靈】",
+        "requiredRow": "FRONT",
+        "attackMultiplier": 1.15,
+        "defenseMultiplier": 1.10,
+        "sanResistanceBonus": 0,
+        "specialBonusDesc": "附加劇毒與詛咒"
+      },
+      {
+        "slotIndex": 4,
+        "slotName": "濁魂【引渡巫使】",
+        "requiredRow": "BACK",
+        "attackMultiplier": 1.20,
+        "defenseMultiplier": 0.90,
+        "sanResistanceBonus": 0,
+        "specialBonusDesc": "吸取敵方生命反哺隊伍"
+      }
+    ]
+  }
+]

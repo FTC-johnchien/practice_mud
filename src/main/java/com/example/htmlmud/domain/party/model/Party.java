@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Party {
-  public static final int MAX_PARTY_SIZE = 6;
+  public static final int MAX_PARTY_SIZE = 5;
 
   private String id;
   @Builder.Default

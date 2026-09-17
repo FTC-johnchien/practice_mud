@@ -14,6 +14,9 @@ import com.example.htmlmud.domain.model.template.RoomExit;
 import com.example.htmlmud.domain.model.template.RoomTemplate;
 import com.example.htmlmud.domain.model.template.SkillTemplate;
 import com.example.htmlmud.domain.model.template.ZoneTemplate;
+import com.example.htmlmud.domain.model.template.CompanionTemplate;
+import com.example.htmlmud.domain.party.model.FormationTemplate;
+import com.example.htmlmud.domain.party.model.PartyMemberSkill;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +39,10 @@ public class TemplateRepository {
 
   @Getter
   private static final Map<String, RaceTemplate> raceTemplates = new ConcurrentHashMap<>();
+
+  private static final Map<String, CompanionTemplate> companionTemplates = new ConcurrentHashMap<>();
+  private static final Map<String, FormationTemplate> formationTemplates = new ConcurrentHashMap<>();
+  private static final Map<String, PartyMemberSkill> partySkillTemplates = new ConcurrentHashMap<>();
 
 
 
@@ -63,6 +70,42 @@ public class TemplateRepository {
     MOB_BASIC_SKILL_IDS.put(SkillCategory.UNARMED, "mob_hit");
     MOB_BASIC_SKILL_IDS.put(SkillCategory.DODGE, "mob_basic_dodge");
     MOB_BASIC_SKILL_IDS.put(SkillCategory.PARRY, "mob_basic_parry");
+
+    initDataDrivenDefaults();
+  }
+
+  public static synchronized void initDataDrivenDefaults() {
+    com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+    if (partySkillTemplates.isEmpty()) {
+      try (var is = TemplateRepository.class.getClassLoader().getResourceAsStream("data/party/party_skills.json")) {
+        if (is != null) {
+          java.util.List<PartyMemberSkill> skills = mapper.readValue(is, new com.fasterxml.jackson.core.type.TypeReference<java.util.List<PartyMemberSkill>>() {});
+          for (PartyMemberSkill s : skills) registerPartySkill(s);
+        }
+      } catch (Exception e) {
+        log.error("Failed to load data/party/party_skills.json", e);
+      }
+    }
+    if (companionTemplates.isEmpty()) {
+      try (var is = TemplateRepository.class.getClassLoader().getResourceAsStream("data/companions/default_companions.json")) {
+        if (is != null) {
+          java.util.List<CompanionTemplate> companions = mapper.readValue(is, new com.fasterxml.jackson.core.type.TypeReference<java.util.List<CompanionTemplate>>() {});
+          for (CompanionTemplate c : companions) registerCompanion(c);
+        }
+      } catch (Exception e) {
+        log.error("Failed to load data/companions/default_companions.json", e);
+      }
+    }
+    if (formationTemplates.isEmpty()) {
+      try (var is = TemplateRepository.class.getClassLoader().getResourceAsStream("data/formations/formations.json")) {
+        if (is != null) {
+          java.util.List<FormationTemplate> formations = mapper.readValue(is, new com.fasterxml.jackson.core.type.TypeReference<java.util.List<FormationTemplate>>() {});
+          for (FormationTemplate f : formations) registerFormation(f);
+        }
+      } catch (Exception e) {
+        log.error("Failed to load data/formations/formations.json", e);
+      }
+    }
   }
 
 
@@ -111,6 +154,13 @@ public class TemplateRepository {
           return Optional.of(entry.getValue());
         }
       }
+    }
+    // 檢查是否為 Companion，動態轉為 MobTemplate (Single Source of Truth)
+    String cleanId = id.contains(":") ? id.substring(id.indexOf(":") + 1) : id;
+    Optional<CompanionTemplate> compOpt = findCompanion(cleanId);
+    if (compOpt.isPresent()) {
+      String zoneId = id.contains(":") ? id.substring(0, id.indexOf(":")) : "newbie_village";
+      return Optional.of(compOpt.get().toMobTemplate(zoneId));
     }
     return Optional.empty();
   }
@@ -177,6 +227,83 @@ public class TemplateRepository {
       return Optional.empty();
     }
     return Optional.ofNullable(raceTemplates.get(id));
+  }
+
+  public static void registerCompanion(CompanionTemplate tpl) {
+    if (tpl != null && tpl.id() != null) {
+      companionTemplates.put(tpl.id(), tpl);
+      if (tpl.aliases() != null) {
+        for (String alias : tpl.aliases()) {
+          companionTemplates.putIfAbsent(alias, tpl);
+        }
+      }
+      // 自動轉換為 MobTemplate 註冊至城鎮怪物表，供城鎮房間直接生成 (Single Source of Truth)
+      String homeZone = "newbie_village";
+      if (tpl.homeRoomId() != null && tpl.homeRoomId().contains(":")) {
+        homeZone = tpl.homeRoomId().substring(0, tpl.homeRoomId().indexOf(":"));
+      }
+      MobTemplate mobTpl = tpl.toMobTemplate(homeZone);
+      mobTemplates.put(homeZone + ":" + tpl.id(), mobTpl);
+      mobTemplates.put(tpl.id(), mobTpl);
+      if (tpl.aliases() != null) {
+        for (String alias : tpl.aliases()) {
+          mobTemplates.putIfAbsent(homeZone + ":" + alias, mobTpl);
+          mobTemplates.putIfAbsent(alias, mobTpl);
+        }
+      }
+    }
+  }
+
+  public static Optional<CompanionTemplate> findCompanion(String id) {
+    if (id == null) return Optional.empty();
+    CompanionTemplate t = companionTemplates.get(id);
+    if (t != null) return Optional.of(t);
+    // 檢查大小寫與別名
+    for (CompanionTemplate c : companionTemplates.values()) {
+      if (c.id().equalsIgnoreCase(id) || c.name().equalsIgnoreCase(id)) {
+        return Optional.of(c);
+      }
+      if (c.aliases() != null) {
+        for (String a : c.aliases()) {
+          if (a.equalsIgnoreCase(id)) return Optional.of(c);
+        }
+      }
+    }
+    return Optional.empty();
+  }
+
+  public static Map<String, CompanionTemplate> getAllCompanions() {
+    return java.util.Collections.unmodifiableMap(companionTemplates);
+  }
+
+  public static void registerFormation(FormationTemplate tpl) {
+    if (tpl != null && tpl.getId() != null) {
+      formationTemplates.put(tpl.getId(), tpl);
+    }
+  }
+
+  public static Optional<FormationTemplate> findFormation(String id) {
+    if (id == null) return Optional.empty();
+    return Optional.ofNullable(formationTemplates.get(id));
+  }
+
+  public static Map<String, FormationTemplate> getAllFormations() {
+    return java.util.Collections.unmodifiableMap(formationTemplates);
+  }
+
+  public static void registerPartySkill(PartyMemberSkill skill) {
+    if (skill != null && skill.getId() != null) {
+      partySkillTemplates.put(skill.getId(), skill);
+    }
+  }
+
+  public static Optional<PartyMemberSkill> findPartySkill(String id) {
+    if (id == null) return Optional.empty();
+    return Optional.ofNullable(partySkillTemplates.get(id));
+  }
+
+  public static Map<String, PartyMemberSkill> getAllPartySkills() {
+    return java.util.Collections.unmodifiableMap(partySkillTemplates);
   }
 
 

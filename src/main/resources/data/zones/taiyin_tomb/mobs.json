@@ -76,6 +76,13 @@
     "attackSpeed": 2400,
     "description": "昔年殉葬的古宗護法道奴，身軀與玄鐵甲冑早已因血肉畸變融為一體，散發恐怖的道威殘息。",
     "expReward": 85,
+    "equipment": {
+      "MAIN_HAND": "taiyin_tomb:bronze_sword",
+      "BODY": "taiyin_tomb:yin_robe"
+    },
+    "enabledSkills": {
+      "SWORD": "basic_blade"
+    },
     "loot": [
       {
         "itemId": "taiyin_tomb:bronze_sword",

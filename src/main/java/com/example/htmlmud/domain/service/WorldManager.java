@@ -28,6 +28,9 @@ import com.example.htmlmud.domain.model.template.RoomTemplate;
 import com.example.htmlmud.domain.model.template.SkillTemplate;
 import com.example.htmlmud.domain.model.template.SpawnRule;
 import com.example.htmlmud.domain.model.template.ZoneTemplate;
+import com.example.htmlmud.domain.model.template.CompanionTemplate;
+import com.example.htmlmud.domain.party.model.FormationTemplate;
+import com.example.htmlmud.domain.party.model.PartyMemberSkill;
 import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
 import com.example.htmlmud.infra.util.IdUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -100,6 +103,72 @@ public class WorldManager {
     log.info("loadGlobalData");
     loadSkillData();
     loadRaceData();
+    loadPartySkillData();
+    loadCompanionData();
+    loadFormationData();
+  }
+
+  private void loadPartySkillData() {
+    log.info("loadPartySkillData: classpath:data/party/**/*.json");
+    try {
+      Resource[] resources = resourceResolver.getResources("classpath:data/party/**/*.json");
+      if (resources == null || resources.length == 0) return;
+      for (Resource res : resources) {
+        try (var is = res.getInputStream()) {
+          List<PartyMemberSkill> skills = objectMapper.readValue(is, new TypeReference<List<PartyMemberSkill>>() {});
+          for (PartyMemberSkill s : skills) {
+            TemplateRepository.registerPartySkill(s);
+          }
+          log.info("Loaded {} party skills from {}", skills.size(), res.getFilename());
+        } catch (Exception e) {
+          log.error("Failed to parse party skill file: {} - Error: {}", res.getFilename(), e.getMessage());
+        }
+      }
+    } catch (IOException e) {
+      log.error("Error reading party skills", e);
+    }
+  }
+
+  private void loadCompanionData() {
+    log.info("loadCompanionData: classpath:data/companions/**/*.json");
+    try {
+      Resource[] resources = resourceResolver.getResources("classpath:data/companions/**/*.json");
+      if (resources == null || resources.length == 0) return;
+      for (Resource res : resources) {
+        try (var is = res.getInputStream()) {
+          List<CompanionTemplate> companions = objectMapper.readValue(is, new TypeReference<List<CompanionTemplate>>() {});
+          for (CompanionTemplate c : companions) {
+            TemplateRepository.registerCompanion(c);
+          }
+          log.info("Loaded {} companions from {}", companions.size(), res.getFilename());
+        } catch (Exception e) {
+          log.error("Failed to parse companion file: {} - Error: {}", res.getFilename(), e.getMessage());
+        }
+      }
+    } catch (IOException e) {
+      log.error("Error reading companions", e);
+    }
+  }
+
+  private void loadFormationData() {
+    log.info("loadFormationData: classpath:data/formations/**/*.json");
+    try {
+      Resource[] resources = resourceResolver.getResources("classpath:data/formations/**/*.json");
+      if (resources == null || resources.length == 0) return;
+      for (Resource res : resources) {
+        try (var is = res.getInputStream()) {
+          List<FormationTemplate> formations = objectMapper.readValue(is, new TypeReference<List<FormationTemplate>>() {});
+          for (FormationTemplate f : formations) {
+            TemplateRepository.registerFormation(f);
+          }
+          log.info("Loaded {} formations from {}", formations.size(), res.getFilename());
+        } catch (Exception e) {
+          log.error("Failed to parse formation file: {} - Error: {}", res.getFilename(), e.getMessage());
+        }
+      }
+    } catch (IOException e) {
+      log.error("Error reading formations", e);
+    }
   }
 
 

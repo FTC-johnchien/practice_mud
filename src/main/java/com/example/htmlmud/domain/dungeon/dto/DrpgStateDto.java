@@ -129,6 +129,7 @@ public record DrpgStateDto(
           if (s.getCostType() == com.example.htmlmud.domain.party.model.ResourceType.MP && mp < s.getCostValue()) avail = false;
           if (s.getCostType() == com.example.htmlmud.domain.party.model.ResourceType.RAGE && m.getCurrentRage() < s.getCostValue()) avail = false;
           if (s.getCostType() == com.example.htmlmud.domain.party.model.ResourceType.COMBO && m.getCurrentCombo() < s.getCostValue()) avail = false;
+          if (!m.isSkillUsable(s)) avail = false;
 
           String costDesc = "無消耗";
           if (s.getCostType() != null && s.getCostValue() > 0) {
@@ -137,6 +138,9 @@ public record DrpgStateDto(
               case COMBO -> s.getCostValue() + " 連擊";
               case MP -> s.getCostValue() + " 真元";
             };
+          }
+          if (!m.isSkillUsable(s) && s.getAllowedWeapons() != null && !s.getAllowedWeapons().isEmpty()) {
+            costDesc += " (需" + String.join("/", s.getAllowedWeapons()) + ")";
           }
 
           skillDtos.add(new PartySkillViewDto(

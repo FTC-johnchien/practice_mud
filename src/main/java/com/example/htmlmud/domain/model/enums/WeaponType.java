@@ -6,6 +6,8 @@ public enum WeaponType {
 
   BLADE("刀"),
 
+  BLUNT("鈍器"),
+
   BOW("弓"),
 
   CHAIN("鎖鏈"),

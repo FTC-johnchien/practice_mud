@@ -87,6 +87,7 @@ class PartyInventoryAndMadnessTest {
     PartyMember member = party.getMembers().get(1);
 
     member.getStats().setHp(30);
+    member.setCurrentSan(90);
     member.consumeSan(40);
     assertThat(member.getCurrentSan()).isEqualTo(50);
 

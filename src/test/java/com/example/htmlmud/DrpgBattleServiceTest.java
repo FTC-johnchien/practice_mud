@@ -53,7 +53,7 @@ class DrpgBattleServiceTest {
     BattleContext ctx = battleService.getBattle("tester");
     assertThat(ctx).isNotNull();
     assertThat(ctx.getEnemies()).hasSize(2);
-    assertThat(ctx.getParty().getMembers()).hasSize(6);
+    assertThat(ctx.getParty().getMembers()).hasSize(5);
 
     // 驗證主角為 COMBO 資源，鐵牛為 RAGE 資源，凌霜為 MP 資源
     PartyMember leader = ctx.getParty().getMembers().get(0);
@@ -77,7 +77,16 @@ class DrpgBattleServiceTest {
     PartyMember iron = ctx.getParty().getMembers().get(1);
     PartyMember ling = ctx.getParty().getMembers().get(3);
 
-    // 1. 燕青/主角 COMBO 技能
+    // 1. 燕青/主角 COMBO 技能 (先裝備劍)
+    leader.getEquipment().put(com.example.htmlmud.domain.model.enums.EquipmentSlot.MAIN_HAND,
+        com.example.htmlmud.domain.party.model.PartyItemSlot.builder()
+            .slotId("slot-sword")
+            .itemId("iron_sword")
+            .name("鐵劍")
+            .itemType(com.example.htmlmud.domain.model.enums.ItemType.WEAPON)
+            .equipSlot(com.example.htmlmud.domain.model.enums.EquipmentSlot.MAIN_HAND)
+            .subType("SWORD")
+            .build());
     leader.setCurrentCombo(0);
     battleService.castSkill(dummyPlayer, 0, "sword_pierce", 0, dungeonPos);
     // 未達 2 連擊點，施放失敗，技能不進入冷卻

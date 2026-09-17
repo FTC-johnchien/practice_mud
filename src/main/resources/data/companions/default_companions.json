@@ -1,0 +1,187 @@
+[
+  {
+    "id": "leader",
+    "name": "天劍傳人",
+    "roleTitle": "太陰傳真・天劍弟子",
+    "gender": "MALE",
+    "race": "human",
+    "aliases": ["leader", "主角", "天劍"],
+    "homeRoomId": "newbie_village:inn",
+    "defaultRow": "FRONT",
+    "resourceType": "COMBO",
+    "maxHp": 120,
+    "maxMp": 60,
+    "maxSan": 100,
+    "baseMinDamage": 15,
+    "baseMaxDamage": 25,
+    "baseDefense": 5,
+    "str": 12,
+    "con": 10,
+    "dex": 10,
+    "intelligence": 10,
+    "description": "太陰劍宗嫡傳弟子，以三尺青鋒叩問長生。",
+    "lookDescription": "太陰傳真・天劍弟子，身法靈動，劍氣如霜。",
+    "dialogues": [
+      "道阻且長，行則將至。"
+    ],
+    "skills": ["sword_pierce", "sword_storm"]
+  },
+  {
+    "id": "tie_niu",
+    "name": "鐵牛",
+    "roleTitle": "搬山力士・玄甲體修",
+    "gender": "MALE",
+    "race": "human",
+    "aliases": ["tie_niu", "iron", "鐵牛"],
+    "homeRoomId": "newbie_village:inn",
+    "defaultRow": "FRONT",
+    "resourceType": "RAGE",
+    "maxHp": 180,
+    "maxMp": 20,
+    "maxSan": 100,
+    "baseMinDamage": 10,
+    "baseMaxDamage": 18,
+    "baseDefense": 14,
+    "str": 15,
+    "con": 16,
+    "dex": 6,
+    "intelligence": 5,
+    "description": "一名身形魁梧如鐵塔的玄甲力士，正抱著大碗豪飲濁酒。",
+    "lookDescription": "搬山力士・玄甲體修，性格豪爽耿直，擅長持盾怒目嘲諷與裂地重擊。",
+    "dialogues": [
+      "俺這身筋骨硬得很！道友若要探險尋道，帶上俺鐵牛準沒錯！（點擊 [🤝 招募] 邀請入隊）",
+      "聽說那礦坑裡的妖物力大無窮？嘿，俺的玄重鎚可不是吃素的！"
+    ],
+    "initialEquipment": {
+      "MAIN_HAND": "taiyin_tomb:iron_heavy_hammer",
+      "BODY": "taiyin_tomb:black_iron_armor",
+      "OFF_HAND": "taiyin_tomb:bronze_shield"
+    },
+    "skills": ["tank_taunt", "tank_smash"]
+  },
+  {
+    "id": "yan_qing",
+    "name": "燕青",
+    "roleTitle": "赤霞傳人・追魂遊俠",
+    "gender": "MALE",
+    "race": "human",
+    "aliases": ["yan_qing", "yan", "燕青"],
+    "homeRoomId": "newbie_village:inn",
+    "defaultRow": "FRONT",
+    "resourceType": "COMBO",
+    "maxHp": 110,
+    "maxMp": 40,
+    "maxSan": 100,
+    "baseMinDamage": 18,
+    "baseMaxDamage": 28,
+    "baseDefense": 4,
+    "str": 10,
+    "con": 8,
+    "dex": 16,
+    "intelligence": 8,
+    "description": "一名目光如隼的黑衣遊俠，雙手反握寒光匕首。",
+    "lookDescription": "赤霞傳人・追魂遊俠，動作迅捷無倫，擅長穿心瞬影與連擊爆發。",
+    "dialogues": [
+      "我的匕首只為值得追隨的隊長而動。"
+    ],
+    "initialEquipment": {
+      "MAIN_HAND": "taiyin_tomb:dagger_twin",
+      "BODY": "taiyin_tomb:leather_vest"
+    },
+    "skills": ["rogue_shadow_strike", "rogue_seven_star"]
+  },
+  {
+    "id": "ling_shuang",
+    "name": "凌霜",
+    "roleTitle": "妙手醫仙・百草丹修",
+    "gender": "FEMALE",
+    "race": "human",
+    "aliases": ["ling_shuang", "ling", "凌霜"],
+    "homeRoomId": "newbie_village:inn",
+    "defaultRow": "BACK",
+    "resourceType": "MP",
+    "maxHp": 90,
+    "maxMp": 120,
+    "maxSan": 100,
+    "baseMinDamage": 8,
+    "baseMaxDamage": 14,
+    "baseDefense": 3,
+    "str": 6,
+    "con": 8,
+    "dex": 10,
+    "intelligence": 15,
+    "description": "一名身著素白青囊長袍的溫婉醫修，正低頭細心整理著辟邪草藥。",
+    "lookDescription": "懸壺青囊・素問靈醫，精通九轉回春與辟邪清心咒，能穩定道心理智。",
+    "dialogues": [
+      "道友請留步。地牢陰煞侵骨，極耗神識道心。若需同行醫治，霜兒願隨行相助。（點擊 [🤝 招募] 邀請入隊）",
+      "心神寧定方能窺見大道，切記不可在心神狂亂時強行涉險。"
+    ],
+    "initialEquipment": {
+      "MAIN_HAND": "taiyin_tomb:herbal_staff",
+      "BODY": "taiyin_tomb:linen_robe"
+    },
+    "skills": ["heal_single", "heal_all_purify"]
+  },
+  {
+    "id": "mo_yan",
+    "name": "墨衍",
+    "roleTitle": "九幽冥客・幽冥符修",
+    "gender": "MALE",
+    "race": "human",
+    "aliases": ["mo_yan", "mo", "墨衍", "墨道人"],
+    "homeRoomId": "newbie_village:inn",
+    "defaultRow": "BACK",
+    "resourceType": "MP",
+    "maxHp": 95,
+    "maxMp": 110,
+    "maxSan": 90,
+    "baseMinDamage": 12,
+    "baseMaxDamage": 20,
+    "baseDefense": 4,
+    "str": 7,
+    "con": 8,
+    "dex": 9,
+    "intelligence": 14,
+    "description": "一位面容清癯的黃袍符修，腰間懸掛數枚太陰玄冥古玉。",
+    "lookDescription": "九幽冥客・幽冥符修，深諳太陰定身之術與五雷天罡。",
+    "dialogues": [
+      "天機不可洩，但若下地宮除魔，貧道自當奉陪。"
+    ],
+    "initialEquipment": {
+      "MAIN_HAND": "taiyin_tomb:ghost_seal",
+      "BODY": "taiyin_tomb:yin_robe"
+    },
+    "skills": ["taoist_seal", "taoist_thunder"]
+  },
+  {
+    "id": "zhi_ruo",
+    "name": "芷若",
+    "roleTitle": "紫霄仙子・紫霄法修",
+    "gender": "FEMALE",
+    "race": "human",
+    "aliases": ["zhi_ruo", "zi", "芷若"],
+    "homeRoomId": "newbie_village:inn",
+    "defaultRow": "BACK",
+    "resourceType": "MP",
+    "maxHp": 85,
+    "maxMp": 140,
+    "maxSan": 95,
+    "baseMinDamage": 14,
+    "baseMaxDamage": 24,
+    "baseDefense": 2,
+    "str": 5,
+    "con": 6,
+    "dex": 11,
+    "intelligence": 16,
+    "description": "一位眉目如畫的紫裙女修，周身隱現玄奧星宿微光。",
+    "lookDescription": "紫霄仙子・紫霄法修，以星辰為引，善引動九幽星隕焚敵。",
+    "dialogues": [
+      "道友可曾聽過星空深處的呢喃？"
+    ],
+    "initialEquipment": {
+      "MAIN_HAND": "taiyin_tomb:star_wand",
+      "BODY": "taiyin_tomb:yin_robe"
+    },
+    "skills": ["star_warp", "star_meteor"]
+  }
+]

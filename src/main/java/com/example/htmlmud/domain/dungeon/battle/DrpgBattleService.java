@@ -197,23 +197,30 @@ public class DrpgBattleService {
 
       RowPosition row = (templateId.contains("bat") || templateId.contains("mage") || templateId.contains("crystal")) ? RowPosition.BACK : RowPosition.FRONT;
 
-      BattleEnemy enemy = BattleEnemy.builder()
-          .id("mob-" + idx)
-          .templateId(templateId)
-          .name(name)
-          .hp(maxHp)
-          .maxHp(maxHp)
-          .minDamage(minDmg)
-          .maxDamage(maxDmg)
-          .defense(def)
-          .dex(dex)
-          .row(row)
-          .attackIntervalMs(attackInterval)
-          .nextAttackTime(System.currentTimeMillis() + ThreadLocalRandom.current().nextLong(1200, 2200))
-          .alive(true)
-          .xp(35 + idx * 10)
-          .dropItemId(dropId)
-          .build();
+      BattleEnemy enemy = null;
+      var mobOpt = TemplateRepository.findMob(templateId);
+      if (mobOpt.isPresent()) {
+        enemy = BattleEnemy.fromTemplate("mob-" + idx, mobOpt.get(), row, dropId);
+        enemy.setNextAttackTime(System.currentTimeMillis() + ThreadLocalRandom.current().nextLong(1200, 2200));
+      } else {
+        enemy = BattleEnemy.builder()
+            .id("mob-" + idx)
+            .templateId(templateId)
+            .name(name)
+            .hp(maxHp)
+            .maxHp(maxHp)
+            .minDamage(minDmg)
+            .maxDamage(maxDmg)
+            .defense(def)
+            .dex(dex)
+            .row(row)
+            .attackIntervalMs(attackInterval)
+            .nextAttackTime(System.currentTimeMillis() + ThreadLocalRandom.current().nextLong(1200, 2200))
+            .alive(true)
+            .xp(35 + idx * 10)
+            .dropItemId(dropId)
+            .build();
+      }
       enemies.add(enemy);
     }
 
@@ -226,9 +233,10 @@ public class DrpgBattleService {
         .selectedTargetIndex(0)
         .build();
 
-    // 隊員首次攻擊隨機錯開，製造錯落交鋒節奏
+    // 隊員首次攻擊隨機錯開，製造錯落交鋒節奏，並重置初始仇恨
     long now = System.currentTimeMillis();
     for (PartyMember m : party.getMembers()) {
+      m.resetThreat();
       m.setNextAttackTime(now + ThreadLocalRandom.current().nextLong(600, 1600));
     }
 
@@ -425,6 +433,7 @@ public class DrpgBattleService {
             if (target != null && target.isAlive()) {
               int dmg = calculatePlayerDamage(member, target);
               target.takeDamage(dmg);
+              member.addThreat(dmg);
 
               // 連擊點累積
               if (member.getResourceType() == ResourceType.COMBO) {
@@ -433,7 +442,26 @@ public class DrpgBattleService {
               // 陣法靈威積累
               ctx.getParty().addFormationEnergy(2);
 
-              broadcastLog(player, ctx, "🗡️ " + member.getName() + " 運勁平刺，擊中【" + target.getName() + "】造成 " + dmg + " 點傷害！");
+              // 招式與武器動詞動態呈現
+              String moveName = "運勁平擊";
+              var move = member.getRandomBasicMove();
+              if (move != null && move.name() != null) {
+                moveName = move.name();
+              }
+              var wt = member.getMainHandWeaponType();
+              String icon = switch (wt) {
+                case SWORD -> "🗡️";
+                case BLADE -> "⚔️";
+                case BLUNT, HAMMER, MACE, MAUL, CLUB, FLAIL -> "🔨";
+                case DAGGER, DIRK, KNIFE, STILETTO -> "⚡";
+                case STAFF, WAND, ROD, SCEPTER -> "✨";
+                case BOW, CROSSBOW -> "🏹";
+                case AXE, POLEAXE -> "🪓";
+                case POLEARM, HALBERD, SPEAR, JAVELIN -> "🔱";
+                default -> "👊";
+              };
+
+              broadcastLog(player, ctx, icon + " " + member.getName() + " 施展【" + moveName + "】，擊中【" + target.getName() + "】造成 " + dmg + " 點傷害！");
 
               if (!target.isAlive()) {
                 broadcastLog(player, ctx, "\u001B[1;32m💥【" + target.getName() + "】被斬殺倒地！\u001B[0m");
@@ -522,7 +550,7 @@ public class DrpgBattleService {
   }
 
   private PartyMember selectPartyTarget(BattleContext ctx) {
-    // 若有嘲諷目標且活著，強制打嘲諷者
+    // 1. 若有嘲諷目標且活著，強制打嘲諷者
     if (ctx.isTaunted()) {
       for (PartyMember m : ctx.getParty().getMembers()) {
         if (m.getId().equals(ctx.getTauntedByMemberId()) && m.isAlive()) {
@@ -531,22 +559,40 @@ public class DrpgBattleService {
       }
     }
 
-    // 優先挑選前排活著的隊員
-    List<PartyMember> frontAlive = ctx.getParty().getMembers().stream()
-        .filter(m -> m.isAlive() && m.getRow() == RowPosition.FRONT)
+    // 2. 存活隊員列表
+    List<PartyMember> aliveMembers = ctx.getParty().getMembers().stream()
+        .filter(PartyMember::isAlive)
+        .toList();
+    if (aliveMembers.isEmpty()) {
+      return null;
+    }
+
+    // 依據有效仇恨 (Effective Threat = Threat * (FRONT ? 1.3 : 1.0)) 評估最高仇恨者
+    PartyMember highestThreatMember = null;
+    double maxEffectiveThreat = -1;
+    for (PartyMember m : aliveMembers) {
+      double effectiveThreat = m.getThreat() * (m.getRow() == RowPosition.FRONT ? 1.3 : 1.0);
+      if (effectiveThreat > maxEffectiveThreat) {
+        maxEffectiveThreat = effectiveThreat;
+        highestThreatMember = m;
+      }
+    }
+
+    // 若已有建立仇恨 (maxEffectiveThreat > 0)，直接鎖定最高仇恨者
+    if (maxEffectiveThreat > 0 && highestThreatMember != null) {
+      return highestThreatMember;
+    }
+
+    // 3. 初始無仇恨狀態，優先挑選前排活著的隊員
+    List<PartyMember> frontAlive = aliveMembers.stream()
+        .filter(m -> m.getRow() == RowPosition.FRONT)
         .toList();
     if (!frontAlive.isEmpty()) {
       return frontAlive.get(ThreadLocalRandom.current().nextInt(frontAlive.size()));
     }
 
     // 前排無人，打後排
-    List<PartyMember> backAlive = ctx.getParty().getMembers().stream()
-        .filter(PartyMember::isAlive)
-        .toList();
-    if (!backAlive.isEmpty()) {
-      return backAlive.get(ThreadLocalRandom.current().nextInt(backAlive.size()));
-    }
-    return null;
+    return aliveMembers.get(ThreadLocalRandom.current().nextInt(aliveMembers.size()));
   }
 
   /**
@@ -599,6 +645,11 @@ public class DrpgBattleService {
       return;
     }
 
+    if (!member.isSkillUsable(skill)) {
+      player.reply("【武器不符】「" + skill.getName() + "」需要裝備 " + String.join("/", skill.getAllowedWeapons()) + "，當前手持武器無法施展！");
+      return;
+    }
+
     if (member.isOnCooldown(skill.getId())) {
       long remainSec = (member.getRemainingCooldownMs(skill.getId()) / 1000) + 1;
       player.reply("招式冷卻中，尚需 " + remainSec + " 秒！");
@@ -636,6 +687,7 @@ public class DrpgBattleService {
             if (skill.getSanRestore() > 0) m.restoreSan(skill.getSanRestore());
           }
         }
+        member.addThreat(skill.getHealAmount());
         broadcastLog(player, ctx, "\u001B[1;32m✨ " + member.getName() + " 施展【" + skill.getName() + "】，甘露靈泉籠罩全隊！氣血恢復，道心安穩！\u001B[0m");
       } else {
         // 單體補血，挑選血量比例最低的隊員
@@ -644,10 +696,12 @@ public class DrpgBattleService {
             .min((a, b) -> Integer.compare(a.getStats().getHp(), b.getStats().getHp()))
             .orElse(member);
         lowest.heal(skill.getHealAmount());
+        member.addThreat(skill.getHealAmount() / 2);
         broadcastLog(player, ctx, "\u001B[1;32m🌿 " + member.getName() + " 運轉【" + skill.getName() + "】，一道春生靈氣注入 " + lowest.getName() + "，恢復 " + skill.getHealAmount() + " 點氣血！\u001B[0m");
       }
     } else if (skill.isTaunt()) {
       ctx.setTaunt(member.getId(), 5000);
+      member.addThreat(600);
       broadcastLog(player, ctx, "\u001B[1;33m🛡️ " + member.getName() + " 爆發【" + skill.getName() + "】，金剛威儀震懾全場！所有怪物仇恨被強行吸引！\u001B[0m");
     } else {
       // 傷害技能
@@ -656,6 +710,7 @@ public class DrpgBattleService {
           if (e.isAlive()) {
             int dmg = (int) (calculatePlayerDamage(member, e) * skill.getDamageMultiplier());
             e.takeDamage(dmg);
+            member.addThreat(dmg);
             if (skill.isStun()) e.applyStun(skill.getStunDurationSeconds() * 1000L);
             if (!e.isAlive()) broadcastLog(player, ctx, "\u001B[1;32m💥【" + e.getName() + "】在靈力轟擊下灰飛煙滅！\u001B[0m");
           }
@@ -667,6 +722,7 @@ public class DrpgBattleService {
         if (target != null && target.isAlive()) {
           int dmg = (int) (calculatePlayerDamage(member, target) * skill.getDamageMultiplier());
           target.takeDamage(dmg);
+          member.addThreat(dmg);
           if (skill.isStun()) target.applyStun(skill.getStunDurationSeconds() * 1000L);
           broadcastLog(player, ctx, "\u001B[1;33m🔥 " + member.getName() + " 施展【" + skill.getName() + "】，直取【" + target.getName() + "】要害，造成 " + dmg + " 點毀滅打擊！\u001B[0m");
           if (!target.isAlive()) {

@@ -110,7 +110,7 @@ public class GameStateBroadcastService {
       if (mob.getTemplate().shopId() != null) {
         caps.add(new TownCapabilityDto("SHOP", "貨棧買賣", "shop", "🛒"));
       }
-      if (id.contains("innkeeper") || tmpl.id().contains("inn")) {
+      if (id.contains("innkeeper") || (mob.getAliases() != null && mob.getAliases().contains("innkeeper"))) {
         caps.add(new TownCapabilityDto("REST", "客棧安歇", "rest", "🛏️"));
       }
       if (id.contains("tie_niu") || id.contains("ling_shuang") || id.contains("iron") || id.contains("ling") || id.contains("companion")) {
