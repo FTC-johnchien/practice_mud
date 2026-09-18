@@ -85,9 +85,25 @@ public record DrpgStateDto(
       List<TownItemDto> items,
       Party party
   ) {
+    return ofTown(zoneId, zoneName, roomId, roomName, description, safeZone, exits, npcs, items, party, null);
+  }
+
+  public static DrpgStateDto ofTown(
+      String zoneId,
+      String zoneName,
+      String roomId,
+      String roomName,
+      String description,
+      boolean safeZone,
+      List<TownExitDto> exits,
+      List<TownNpcDto> npcs,
+      List<TownItemDto> items,
+      Party party,
+      BattleViewDto battle
+  ) {
     TownViewDto townView = new TownViewDto(zoneId, zoneName, roomId, roomName, description, safeZone, exits, npcs, items);
     PartyViewDto partyView = toPartyViewDto(party);
-    return new DrpgStateDto("DRPG_STATE", "TOWN", townView, null, partyView, null);
+    return new DrpgStateDto("DRPG_STATE", "TOWN", townView, null, partyView, battle);
   }
 
   public static PartyViewDto toPartyViewDto(Party party) {
@@ -198,6 +214,20 @@ public record DrpgStateDto(
         }
       }
 
+      List<TacticsRuleViewDto> tacticsDtos = (m.getTactics() != null)
+          ? m.getTactics().stream().map(r -> TacticsRuleViewDto.of(r, m)).toList()
+          : List.of();
+
+      int memberLevel = (m.getStats() != null) ? m.getStats().getLevel() : 1;
+      int memberExp = (m.getStats() != null) ? m.getStats().getExp() : 0;
+      long nextExp = (m.getStats() != null) ? m.getStats().getNextLevelExp() : 180;
+      int freePoints = (m.getStats() != null) ? m.getStats().getFreeStatPoints() : 0;
+      int str = (m.getStats() != null) ? m.getStats().getStr() : 5;
+      int con = (m.getStats() != null) ? m.getStats().getCon() : 5;
+      int dex = (m.getStats() != null) ? m.getStats().getDex() : 5;
+      int intStat = (m.getStats() != null) ? m.getStats().getIntelligence() : 5;
+      int wis = (m.getStats() != null) ? m.getStats().getWis() : 5;
+
       memberViews.add(new PartyMemberViewDto(
           m.getId(),
           m.getName(),
@@ -226,7 +256,17 @@ public record DrpgStateDto(
           availableStances,
           m.getClassId(),
           m.getEffectiveClassName(),
-          m.getClassTemplate().map(com.example.htmlmud.domain.model.template.ClassTemplate::description).orElse("")
+          m.getClassTemplate().map(com.example.htmlmud.domain.model.template.ClassTemplate::description).orElse(""),
+          tacticsDtos,
+          memberLevel,
+          memberExp,
+          nextExp,
+          freePoints,
+          str,
+          con,
+          dex,
+          intStat,
+          wis
       ));
     }
 
@@ -417,8 +457,58 @@ public record DrpgStateDto(
       List<PartyStanceSkillDto> availableStances,
       String classId,
       String className,
-      String classDescription
+      String classDescription,
+      List<TacticsRuleViewDto> tactics,
+      int level,
+      int exp,
+      long nextLevelExp,
+      int freeStatPoints,
+      int str,
+      int con,
+      int dex,
+      int intStat,
+      int wis
   ) {}
+
+  public record TacticsRuleViewDto(
+      int priority,
+      String condition,
+      String conditionLabel,
+      int conditionValue,
+      String target,
+      String targetLabel,
+      String skillId,
+      String skillName,
+      boolean enabled,
+      String description
+  ) {
+    public static TacticsRuleViewDto of(com.example.htmlmud.domain.party.model.TacticsRule r, com.example.htmlmud.domain.party.model.PartyMember m) {
+      if (r == null) return null;
+      String skillName = r.getSkillId();
+      var skOpt = com.example.htmlmud.infra.persistence.repository.TemplateRepository.findSkill(r.getSkillId());
+      if (skOpt.isPresent()) {
+        skillName = skOpt.get().getName();
+      } else if (m.getSkills() != null) {
+        skillName = m.getSkills().stream()
+            .filter(s -> s.getId().equalsIgnoreCase(r.getSkillId()))
+            .map(com.example.htmlmud.domain.party.model.PartyMemberSkill::getName)
+            .findFirst()
+            .orElse(r.getSkillId());
+      }
+      return new TacticsRuleViewDto(
+          r.getPriority(),
+          r.getCondition() != null ? r.getCondition().name() : "",
+          r.getCondition() != null ? r.getCondition().getLabel() : "",
+          r.getConditionValue(),
+          r.getTarget() != null ? r.getTarget().name() : "",
+          r.getTarget() != null ? r.getTarget().getLabel() : "",
+          r.getSkillId(),
+          skillName,
+          r.isEnabled(),
+          r.formatDescription(skillName)
+      );
+    }
+  }
 
   public record PartyStanceSkillDto(
       String skillId,

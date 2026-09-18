@@ -42,6 +42,11 @@ public class GameStateBroadcastService {
   private final DrpgBattleService battleService;
   private final WorldManager worldManager;
 
+  @jakarta.annotation.PostConstruct
+  public void init() {
+    battleService.setStateBroadcaster(this::broadcastState);
+  }
+
   public void broadcastState(Player player) {
     if (player == null) return;
     Party party = partyService.getOrCreateParty(player.getName());
@@ -170,8 +175,9 @@ public class GameStateBroadcastService {
       items.add(new TownItemDto(item.getId(), displayName, "📦", 1));
     }
 
+    var battleView = battleService.createBattleView(player.getName());
     DrpgStateDto dto = DrpgStateDto.ofTown(
-        zoneId, zoneName, tmpl.id(), tmpl.name(), tmpl.description(), safe, exits, npcs, items, party
+        zoneId, zoneName, tmpl.id(), tmpl.name(), tmpl.description(), safe, exits, npcs, items, party, battleView
     );
     player.sendJson(dto);
   }

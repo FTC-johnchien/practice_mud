@@ -40,20 +40,8 @@ public class FormationCommand implements PlayerCommand {
     Party party = partyService.getOrCreateParty(self.getName());
     String input = args != null ? args.trim() : "";
 
-    if (input.isEmpty() || input.equals("toggle") || input.equals("switch")) {
-      FormationTemplate current = party.getEquippedFormation();
-      String targetId = (current != null && "formation_four_symbols".equals(current.getId()))
-          ? "formation_xuan_yin"
-          : "formation_four_symbols";
-      FormationTemplate next = partyService.getFormation(targetId);
-      if (next != null) {
-        party.setEquippedFormation(next);
-        self.reply("【變換道門陣法】小隊結成【" + next.getName() + "】！\n"
-            + partyService.formatFormationDetails(next));
-      } else if (current != null) {
-        self.reply(partyService.formatFormationDetails(current));
-      }
-      broadcastDrpgState(self);
+    if (input.isEmpty() || input.equals("toggle")) {
+      toggleFormation(self, party);
       return;
     }
 
@@ -61,6 +49,28 @@ public class FormationCommand implements PlayerCommand {
     String subCmd = parts[0].toLowerCase();
 
     switch (subCmd) {
+      case "switch", "row" -> {
+        if (parts.length >= 2) {
+          try {
+            int mIdx = Integer.parseInt(parts[1]);
+            if (mIdx >= 0 && mIdx < party.getMembers().size()) {
+              var m = party.getMembers().get(mIdx);
+              var next = (m.getRow() == com.example.htmlmud.domain.party.model.RowPosition.FRONT)
+                  ? com.example.htmlmud.domain.party.model.RowPosition.BACK
+                  : com.example.htmlmud.domain.party.model.RowPosition.FRONT;
+              m.setRow(next);
+              String rowName = (next == com.example.htmlmud.domain.party.model.RowPosition.FRONT) ? "前衛" : "後衛";
+              self.reply("【站位變更】已將隊員「" + m.getName() + "」的戰鬥站位切換為【" + rowName + "】！");
+              broadcastDrpgState(self);
+              return;
+            } else {
+              self.reply("隊員編號超出範圍 (0 ~ " + (party.getMembers().size() - 1) + ")！");
+              return;
+            }
+          } catch (NumberFormatException ignored) {}
+        }
+        toggleFormation(self, party);
+      }
       case "info", "status" -> {
         if (party.getEquippedFormation() != null) {
           self.reply(partyService.formatFormationDetails(party.getEquippedFormation()));
@@ -126,6 +136,22 @@ public class FormationCommand implements PlayerCommand {
             + "  formation cast          - 釋放小隊陣法專屬奧義大招 (需 100 靈威)");
       }
     }
+  }
+
+  private void toggleFormation(Player self, Party party) {
+    FormationTemplate current = party.getEquippedFormation();
+    String targetId = (current != null && "formation_four_symbols".equals(current.getId()))
+        ? "formation_xuan_yin"
+        : "formation_four_symbols";
+    FormationTemplate next = partyService.getFormation(targetId);
+    if (next != null) {
+      party.setEquippedFormation(next);
+      self.reply("【變換道門陣法】小隊結成【" + next.getName() + "】！\n"
+          + partyService.formatFormationDetails(next));
+    } else if (current != null) {
+      self.reply(partyService.formatFormationDetails(current));
+    }
+    broadcastDrpgState(self);
   }
 
   private void broadcastDrpgState(Player player) {

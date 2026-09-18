@@ -38,18 +38,20 @@ public class LivingStats {
 
 
   public int coin = 0; // 錢幣
-  public int exp = 0; // 經驗值
+  public int exp = 0; // 經驗值 (當前等級已積累修為)
+  public long nextLevelExp = 180; // 晉升下一級所需修為
   public int combatExp = 0; // 戰鬥經驗值
   public int potential; // 潛力 (影響 學習特定高級武功的限制)
+  public int freeStatPoints = 0; // 自由分配屬性點數 (主角專屬)
 
 
   // 基礎屬性
   public int str = 5; // 力量 strength (影響 物理傷害、角色負重上限)
-  public int intelligence = 5; // 智力 intelligence (影響 魔法傷害、法力上限MP、學習技能的速度)
-  public int dex = 5; // 靈巧 dexterity (影響 物理威力 命中率Hit Rate、盜賊技能成功率、遠程武器瞄準（弓箭）、暗器投擲、雙手武器的協調性)
-  public int con = 5; // 體質 constitution (影響 生命值HP上限、防禦力、體力恢復速度)
+  public int intelligence = 5; // 悟性/智力 intelligence (影響 魔法傷害、法力上限MP、學習技能的速度)
+  public int dex = 5; // 靈巧/身法 dexterity (影響 物理威力 命中率Hit Rate、暴擊率、閃避)
+  public int con = 5; // 根骨/體質 constitution (影響 生命值HP上限、防禦力、體力恢復速度)
+  public int wis = 5; // 定力/精神 wisdom (影響 治療效果、法力恢復、道心抗性)
 
-  // private int wis = 5; // 智慧 wisdom (影響 魔法威力)
   // private int agi = 5; // 敏捷 agility (影響 移動速度、躲避率Evasion 閃避攻擊、戰鬥中的出手順序（主動性）。)
   // private int cha; // 魅力 charisma
   // private int luk; // 福緣 luck
@@ -99,15 +101,16 @@ public class LivingStats {
 
     copy.coin = this.coin;
     copy.exp = this.exp;
+    copy.nextLevelExp = this.nextLevelExp;
     copy.combatExp = this.combatExp;
     copy.potential = this.potential;
-
-
+    copy.freeStatPoints = this.freeStatPoints;
 
     copy.str = this.str;
     copy.intelligence = this.intelligence;
     copy.dex = this.dex;
     copy.con = this.con;
+    copy.wis = this.wis;
 
     return copy;
   }

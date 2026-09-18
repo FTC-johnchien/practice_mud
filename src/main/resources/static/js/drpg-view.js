@@ -111,6 +111,23 @@ function sendTownMove(dir) {
     return;
   }
   drpgState.lastStepTime = now;
+
+  // 檢查城鎮房間是否存在該方向出口
+  if (drpgState.lastTown && Array.isArray(drpgState.lastTown.exits)) {
+    const hasExit = drpgState.lastTown.exits.some(e => (e.direction || '').toLowerCase() === dir.toLowerCase());
+    if (!hasExit) {
+      const dirNames = { north: '北 (W)', south: '南 (S)', west: '西 (A)', east: '東 (D)' };
+      const avail = drpgState.lastTown.exits.map(e => {
+        const d = (e.direction || '').toLowerCase();
+        return `${dirNames[d] || d}: ${e.targetRoomName || e.targetRoomId}`;
+      }).join('、');
+      if (typeof appendHtml === 'function') {
+        appendHtml(`<span style="color:#f59e0b;">【前路不通】此處往 ${dirNames[dir] || dir} 並無路徑。可用出口：[${avail || '無'}]</span>`);
+      }
+      return;
+    }
+  }
+
   send(dir);
 }
 
@@ -172,6 +189,9 @@ function updateDrpgView(payload) {
     if (battlePanel) battlePanel.classList.add('hidden');
     drpgState.lastBattle = null;
     toggleBattleMode(false);
+    if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'BUTTON')) {
+      document.activeElement.blur();
+    }
 
     if (mode === 'TOWN') {
       if (dungeonPanel) dungeonPanel.classList.add('hidden');
@@ -343,6 +363,8 @@ function renderTownNav(town) {
         const roleHtml = isHostile
           ? `<span style="font-size:10px; color:#f87171; background:rgba(239,68,68,0.2); border:1px solid #ef4444; padding:1px 6px; border-radius:3px;">敵對</span>`
           : `<span style="font-size:11px; color:#94a3b8;">${npc.title || ''}</span>`;
+        const header = document.createElement('div');
+        header.className = 'npc-header';
         header.innerHTML = `<span class="npc-name">${npc.name}</span>${rankBadge}${roleHtml}`;
         card.appendChild(header);
 
@@ -725,8 +747,10 @@ function renderPartyHud(party) {
         <div class="card-name-row">
           <span class="member-idx">#${idx + 1}</span>
           <span class="member-name" title="${m.name}">${m.name}</span>
+          <span class="member-level-badge" title="境界等級 Lv.${m.level || 1}">Lv.${m.level || 1}</span>
           <span class="member-row badge-${m.row.toLowerCase()}">${rowBadge}</span>
           ${m.className ? `<span class="member-class-badge" title="${m.classDescription || ''}" style="font-size:9px;color:#7dd3fc;background:#0f172a;border:1px solid #0284c7;border-radius:3px;padding:0 3px;">${m.className}</span>` : ''}
+          ${(idx === 0 && m.freeStatPoints > 0) ? `<span class="hud-free-points-pill" title="尚有 ${m.freeStatPoints} 點未分配自由點數！點擊開啟配點" onclick="event.stopPropagation(); openPartyModal(0);">+${m.freeStatPoints}點</span>` : ''}
         </div>
         <div class="member-title" title="${m.roleTitle}">${m.roleTitle}</div>
         <div class="member-equip-row">
@@ -1151,6 +1175,13 @@ function renderBattleArena(battle) {
     const isAlive = e.alive;
     const rowClass = (e.row || 'FRONT').toLowerCase();
 
+    // 支援敵人體型自訂網格跨欄跨行 (預設 1/5 格，Boss/巨獸可自訂佔 2 欄或多行)
+    const colSpan = e.colSpan || (e.rank === 'BOSS' ? 2 : 1);
+    card.style.gridColumn = `span ${colSpan}`;
+    if (e.rowSpan && e.rowSpan > 1) {
+      card.style.gridRow = `span ${e.rowSpan}`;
+    }
+
     card.className = `enemy-card row-${rowClass}${isTarget && isAlive ? ' selected-target' : ''}${!isAlive ? ' dead' : ''}`;
     card.title = isAlive ? `點擊鎖定【${e.name}】為集火目標` : '已伏誅';
     card.onclick = () => {
@@ -1347,11 +1378,395 @@ function togglePartyModal(forceOpen) {
     renderPartyModal();
   } else {
     modal.classList.add('hidden');
+    if (document.activeElement) {
+      document.activeElement.blur();
+    }
   }
+}
+
+function openPartyModal(memberIdx) {
+  if (typeof memberIdx === 'number') {
+    drpgState.selectedModalMemberIdx = memberIdx;
+  }
+  togglePartyModal(true);
 }
 
 function closePartyModal() {
   togglePartyModal(false);
+  if (document.activeElement) {
+    document.activeElement.blur();
+  }
+}
+
+function selectPartyModalMember(idx) {
+  drpgState.selectedModalMemberIdx = idx;
+  drpgState.isAddingTactics = false;
+  renderPartyModal();
+}
+
+function selectPartyFormationTab() {
+  drpgState.selectedModalMemberIdx = 'FORMATION';
+  drpgState.isAddingTactics = false;
+  renderPartyModal();
+}
+
+function switchPartyModalSubTab(tab) {
+  drpgState.partyModalSubTab = tab;
+  drpgState.isAddingTactics = false;
+  renderPartyModal();
+}
+
+function toggleAddTacticsForm(show) {
+  drpgState.isAddingTactics = (show !== undefined) ? !!show : !drpgState.isAddingTactics;
+  renderPartyModal();
+}
+
+function handleTacticsCondChange() {
+  const condEl = document.getElementById('t-builder-cond');
+  const valEl = document.getElementById('t-builder-val');
+  const valLabel = document.getElementById('t-builder-val-label');
+  if (!condEl || !valEl) return;
+  const cond = condEl.value;
+  if (cond === 'ALWAYS' || cond === 'ENEMY_IS_BOSS') {
+    valEl.style.display = 'none';
+    if (valLabel) valLabel.style.display = 'none';
+  } else {
+    valEl.style.display = 'inline-block';
+    if (valLabel) valLabel.style.display = 'inline-block';
+    if (cond === 'ALLY_HP_LESS_THAN' || cond === 'SELF_HP_LESS_THAN') {
+      if (valLabel) valLabel.innerText = '氣血 (%):';
+      valEl.value = 50;
+    } else if (cond === 'RESOURCE_GTE') {
+      if (valLabel) valLabel.innerText = '資源 (點):';
+      valEl.value = 30;
+    } else if (cond === 'ENEMY_COUNT_GTE') {
+      if (valLabel) valLabel.innerText = '數量 (體):';
+      valEl.value = 2;
+    }
+  }
+}
+
+function submitAddTactics(memberIdx) {
+  const prioEl = document.getElementById('t-builder-prio');
+  const condEl = document.getElementById('t-builder-cond');
+  const valEl = document.getElementById('t-builder-val');
+  const targetEl = document.getElementById('t-builder-target');
+  const skillEl = document.getElementById('t-builder-skill');
+
+  if (!prioEl || !condEl || !targetEl || !skillEl) return;
+  const prio = parseInt(prioEl.value) || 1;
+  const cond = condEl.value;
+  const val = parseInt(valEl ? valEl.value : 0) || 0;
+  const target = targetEl.value;
+  const skillId = skillEl.value;
+
+  send(`party tactics ${memberIdx} add ${prio} ${cond} ${val} ${target} ${skillId}`);
+  drpgState.isAddingTactics = false;
+}
+
+function renderMemberTactics(m, idx) {
+  if (idx === 0) {
+    return `
+      <div class="tactics-leader-box">
+        <div class="tactics-leader-icon">👑</div>
+        <div class="tactics-leader-title">隊長（道友親自操控）</div>
+        <div class="tactics-leader-desc">
+          主角為問道隊伍之核心領袖，戰鬥中所有普通攻擊、絕技道法、陣法奧義與行囊靈藥均由道友在戰場中即時親自下達指令，享有 100% 自由決策權，無需設定自動戰術方針。
+        </div>
+        <div class="tactics-leader-tip">
+          💡 提示：點擊上方頁籤切換至同伴（如「鐵牛」、「凌霜」），即可為同伴設定專屬的 Gambit 戰鬥 AI 方針！
+        </div>
+      </div>
+    `;
+  }
+
+  const tacticsList = m.tactics || [];
+  const nextPriority = tacticsList.length > 0
+    ? Math.max(...tacticsList.map(r => r.priority)) + 1
+    : 1;
+
+  let builderHtml = '';
+  if (drpgState.isAddingTactics) {
+    let skillOptionsHtml = `<option value="basic_attack">🗡️ 基礎普攻 (${m.basicSkillName || '普通攻擊'})</option>`;
+    if (m.skills && m.skills.length > 0) {
+      m.skills.forEach(s => {
+        skillOptionsHtml += `<option value="${s.id}">⚡ ${s.name} (${s.costDescription || (s.costValue ? s.costValue + '消耗' : '絕技')})</option>`;
+      });
+    }
+    if (m.availableStances && m.availableStances.length > 0) {
+      m.availableStances.forEach(st => {
+        skillOptionsHtml += `<option value="${st.skillId}">⚔️ ${st.skillName} (套路)</option>`;
+      });
+    }
+
+    builderHtml = `
+      <div class="tactics-builder-card">
+        <div class="tactics-builder-title">➕ 新增戰術方針規則 (Gambit Rule)</div>
+        <div class="tactics-builder-row">
+          <label style="font-size:12px;color:#94a3b8;">優先級：</label>
+          <input type="number" id="t-builder-prio" value="${nextPriority}" min="1" max="99" style="width:55px;" />
+
+          <label style="font-size:12px;color:#94a3b8;">觸發條件：</label>
+          <select id="t-builder-cond" onchange="handleTacticsCondChange()">
+            <option value="ALLY_HP_LESS_THAN">隊友氣血低於 (%)</option>
+            <option value="SELF_HP_LESS_THAN">自身氣血低於 (%)</option>
+            <option value="RESOURCE_GTE">自身資源 >= (點/怒氣/連擊)</option>
+            <option value="ENEMY_COUNT_GTE">敵方存活數量 >= (體)</option>
+            <option value="ENEMY_IS_BOSS">敵方存在首領 (Boss)</option>
+            <option value="ALWAYS">無條件施展 (必定觸發)</option>
+          </select>
+
+          <label id="t-builder-val-label" style="font-size:12px;color:#94a3b8;">閥值：</label>
+          <input type="number" id="t-builder-val" value="50" min="0" max="9999" style="width:65px;" />
+        </div>
+        <div class="tactics-builder-row">
+          <label style="font-size:12px;color:#94a3b8;">目標：</label>
+          <select id="t-builder-target">
+            <option value="LOWEST_HP_ALLY">氣血最低隊友</option>
+            <option value="SELF">自身</option>
+            <option value="CURRENT_ENEMY">當前集火目標</option>
+            <option value="ALL_ENEMIES">全體敵怪</option>
+            <option value="ALL_ALLIES">全體隊友</option>
+          </select>
+
+          <label style="font-size:12px;color:#94a3b8;">執行武學：</label>
+          <select id="t-builder-skill">
+            ${skillOptionsHtml}
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:6px;">
+          <button class="act-btn btn-green" type="button" onclick="submitAddTactics(${idx})">💾 確定新增規則</button>
+          <button class="act-btn" type="button" onclick="toggleAddTacticsForm(false)">✕ 取消</button>
+        </div>
+      </div>
+    `;
+  }
+
+  let rulesHtml = '';
+  if (tacticsList.length === 0) {
+    rulesHtml = '<div class="tactics-empty-hint">尚無設定戰術方針。該同伴在戰鬥中將默認執行基礎套路普通攻擊。</div>';
+  } else {
+    const sorted = [...tacticsList].sort((a, b) => a.priority - b.priority);
+    rulesHtml = `
+      <div class="tactics-rule-list">
+        ${sorted.map(r => {
+          const isAlways = (r.condition === 'ALWAYS');
+          const isBoss = (r.condition === 'ENEMY_IS_BOSS');
+          const valDisplay = (!isAlways && !isBoss) ? ` ${r.conditionValue}` : '';
+          return `
+            <div class="tactics-rule-row ${r.enabled ? 'enabled' : 'disabled'}">
+              <div class="tactics-prio-badge">#${r.priority}</div>
+              <div class="tactics-rule-desc">
+                <span class="tactics-cond-tag">${r.conditionLabel}${valDisplay}</span>
+                <span class="tactics-arrow">➜</span>
+                <span class="tactics-target-tag">對 ${r.targetLabel}</span>
+                <span class="tactics-arrow">➜</span>
+                <span class="tactics-skill-tag">施展【${r.skillName}】</span>
+              </div>
+              <div class="tactics-rule-actions">
+                <button class="act-btn btn-sm ${r.enabled ? 'btn-green' : 'btn-gray'}" type="button"
+                  onclick="send('party tactics ${idx} toggle ${r.priority}')" title="點擊啟用或停用此規則">
+                  ${r.enabled ? '🟢 啟用中' : '⚪ 已停用'}
+                </button>
+                <button class="act-btn btn-sm btn-red" type="button"
+                  onclick="send('party tactics ${idx} delete ${r.priority}')" title="刪除此規則">
+                  🗑️ 刪除
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  return `
+    <div class="tactics-container">
+      <div class="tactics-header-banner">
+        <div>
+          <div class="tactics-banner-title">🎯 同伴戰鬥方針設定 (Gambit AI)</div>
+          <div class="tactics-banner-desc">戰鬥中輪到該同伴行動時，將依優先級序號 (#1, #2, #3...) 由上至下判定條件，首條滿足者即刻施展。</div>
+        </div>
+        <div class="tactics-banner-actions">
+          <button class="act-btn btn-blue btn-sm" type="button" onclick="toggleAddTacticsForm(true)">➕ 新增方針</button>
+          <button class="act-btn btn-sm" type="button" onclick="send('party tactics ${idx} reset')">🔄 重置預設</button>
+          <button class="act-btn btn-red btn-sm" type="button" onclick="send('party tactics ${idx} clear')">🗑️ 清空方針</button>
+        </div>
+      </div>
+      ${builderHtml}
+      ${rulesHtml}
+    </div>
+  `;
+}
+
+/**
+ * 渲染全隊共有的道門陣法奧義與站位配置視圖
+ */
+function renderTeamFormationView(party) {
+  const isSymbols = Boolean(party.formationName && party.formationName.includes('四象'));
+  const energy = party.formationEnergy || 0;
+  const energyPct = Math.min(100, Math.max(0, energy));
+  const ultName = party.ultimateSkillName || (isSymbols ? '四象封魔印' : '百鬼噬心');
+  const inBattle = Boolean(drpgState.lastBattle && drpgState.lastBattle.inBattle);
+  const canCast = Boolean(party.canCastUltimate || (energy >= 100 && inBattle));
+
+  // 前排與後排成員劃分
+  const frontMembers = [];
+  const backMembers = [];
+  (party.members || []).forEach((mem, idx) => {
+    if (mem.row === 'FRONT') frontMembers.push({ mem, idx });
+    else backMembers.push({ mem, idx });
+  });
+
+  const renderMemberSlot = (item) => {
+    const { mem, idx } = item;
+    const isAlive = (mem.alive !== undefined) ? mem.alive : (mem.hp > 0);
+    const hpPct = Math.min(100, Math.max(0, (mem.hp / mem.maxHp) * 100));
+    const rowClass = mem.row === 'FRONT' ? 'badge-front' : 'badge-back';
+    const rowBadge = mem.row === 'FRONT' ? '前衛' : '後衛';
+    const nextRow = mem.row === 'FRONT' ? '後衛' : '前衛';
+    return `
+      <div class="formation-slot-card" style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="color:#38bdf8;font-weight:bold;font-size:13px;">#${idx + 1} ${mem.name}</span>
+            <span class="member-row ${rowClass}" style="font-size:10px;">[${rowBadge}]</span>
+          </div>
+          ${mem.className ? `<span style="font-size:10px;color:#7dd3fc;background:#1e293b;padding:1px 6px;border-radius:4px;">${mem.className}</span>` : ''}
+        </div>
+        <div style="font-size:11px;color:#94a3b8;">${mem.roleTitle || '同伴'}</div>
+        <div style="font-size:11px;color:#f87171;display:flex;justify-content:space-between;">
+          <span>❤️ 氣血: ${mem.hp}/${mem.maxHp}</span>
+          <span>🧘 心: ${mem.san}/${mem.maxSan}</span>
+        </div>
+        <div style="width:100%;height:4px;background:#334155;border-radius:2px;overflow:hidden;">
+          <div style="width:${hpPct}%;height:100%;background:${isAlive ? '#10b981' : '#ef4444'};"></div>
+        </div>
+        <div style="margin-top:4px;display:flex;gap:6px;">
+          <button class="act-btn btn-sm" onclick="send('party switch ${idx}')" style="flex:1;padding:4px;font-size:11px;background:#1e293b;border:1px solid #475569;color:#cbd5e1;" title="將 #${idx + 1} ${mem.name} 切換至${nextRow}">
+            🔄 調至${nextRow}
+          </button>
+          <button class="act-btn btn-sm" onclick="selectPartyModalMember(${idx})" style="padding:4px 8px;font-size:11px;background:#334155;border:1px solid #64748b;color:#f1f5f9;" title="檢視個人裝備與武學">
+            👤 詳情
+          </button>
+        </div>
+      </div>
+    `;
+  };
+
+  const frontHtml = frontMembers.length > 0
+    ? frontMembers.map(renderMemberSlot).join('')
+    : '<div style="color:#64748b;font-size:12px;padding:12px;text-align:center;grid-column:1/-1;">(前衛空缺，後排將直接承受猛烈衝擊！)</div>';
+
+  const backHtml = backMembers.length > 0
+    ? backMembers.map(renderMemberSlot).join('')
+    : '<div style="color:#64748b;font-size:12px;padding:12px;text-align:center;grid-column:1/-1;">(後衛空缺，全體在前線禦敵)</div>';
+
+  return `
+    <div class="team-formation-container" style="display:flex;flex-direction:column;gap:16px;">
+      <!-- 1. 當前陣法與靈威奧義展示卡 -->
+      <div style="background:linear-gradient(135deg, rgba(30,27,75,0.8), rgba(15,23,42,0.9));border:1px solid #6366f1;border-radius:8px;padding:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+          <div>
+            <div style="font-size:18px;font-weight:bold;color:#c084fc;display:flex;align-items:center;gap:8px;">
+              <span>☯️ 小隊當前結成陣法：【${party.formationName || '四象辟邪陣'}】</span>
+              <span style="font-size:11px;background:#4338ca;color:#e0e7ff;padding:2px 8px;border-radius:4px;">全隊陣眼常駐加持</span>
+            </div>
+            <div style="font-size:12px;color:#cbd5e1;margin-top:4px;">
+              ${isSymbols ? '🛡️ 光環加成：全隊物理與法術承傷減免 15%，步步為營，道心穩如磐石。' : '💀 光環加成：全隊暴擊率 +20%，敵弱我強，擊殺時引導煞氣回饋全隊靈威。'}
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="act-btn" onclick="send('formation toggle')" style="background:#4f46e5;color:#fff;padding:6px 14px;font-size:12px;border:none;border-radius:6px;cursor:pointer;font-weight:bold;">
+              🔄 切換陣法 (F)
+            </button>
+          </div>
+        </div>
+
+        <!-- 陣法奧義與充能進度條 -->
+        <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(99,102,241,0.3);border-radius:6px;padding:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;font-weight:bold;color:#facc15;">⚡ 全隊終極奧義：【${ultName}】</span>
+            <span style="font-size:12px;color:#94a3b8;">小隊靈威充能：<strong style="color:${energy >= 100 ? '#4ade80' : '#38bdf8'};">${energy}</strong> / 100</span>
+          </div>
+          <div style="width:100%;height:8px;background:#1e293b;border-radius:4px;overflow:hidden;margin-bottom:8px;">
+            <div style="width:${energyPct}%;height:100%;background:linear-gradient(90deg, #6366f1, #a855f7, #f59e0b);transition:width 0.3s ease;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#94a3b8;">
+            <span>${isSymbols ? '效果：引青龍白虎朱雀玄武四相真靈鎮壓敵方全體，造成巨額靈能衝擊並大幅降低敵方攻擊。' : '效果：自九幽深淵引動萬千厲鬼撲殺敵陣，撕裂護甲並附加幽火流血持續重創。'}</span>
+            ${canCast
+              ? `<button class="act-btn btn-ult" onclick="send('formation cast')" style="padding:4px 12px;font-size:11px;font-weight:bold;">⚡ 施展陣法奧義 (U)</button>`
+              : `<span style="color:#64748b;">(靈威滿 100 且戰鬥中方可施展)</span>`}
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. 小隊戰鬥站位調配盤 (前衛 vs 後衛) -->
+      <div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div>
+            <div style="font-size:15px;font-weight:bold;color:#e2e8f0;">🛡️ 隊伍戰鬥站位編排 (前後排陣形)</div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:2px;">前衛優先承受近戰普攻與敵方仇恨；後衛受前衛掩護減免 20% 物理傷害。點擊即可自由調動站位。</div>
+          </div>
+          <div style="font-size:11px;color:#cbd5e1;background:#0f172a;padding:4px 10px;border-radius:4px;">
+            總人數：${(party.members || []).length} / 5
+          </div>
+        </div>
+
+        <!-- 前衛排 -->
+        <div style="margin-bottom:14px;">
+          <div style="font-size:12px;font-weight:bold;color:#f87171;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+            <span>⚔️ 前衛戰鬥線 (Front Row)</span>
+            <span style="font-size:10px;color:#94a3b8;font-weight:normal;">- 承傷核心、反擊與拉怪第一線</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:10px;">
+            ${frontHtml}
+          </div>
+        </div>
+
+        <!-- 後衛排 -->
+        <div>
+          <div style="font-size:12px;font-weight:bold;color:#60a5fa;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+            <span>🏹 後衛支援線 (Back Row)</span>
+            <span style="font-size:10px;color:#94a3b8;font-weight:normal;">- 遠程輸出、術法引導與回血輔佐</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:10px;">
+            ${backHtml}
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. 道門可用陣法典籍庫 -->
+      <div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:16px;">
+        <div style="font-size:15px;font-weight:bold;color:#e2e8f0;margin-bottom:10px;">📜 道門陣法典籍庫</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:12px;">
+          <!-- 四象辟邪陣 -->
+          <div style="background:#0f172a;border:1px solid ${isSymbols ? '#38bdf8' : '#334155'};border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-weight:bold;color:#38bdf8;font-size:14px;">☯️ 《四象辟邪陣》</span>
+              ${isSymbols
+                ? '<span style="font-size:11px;color:#34d399;font-weight:bold;">✔ 當前運轉中</span>'
+                : '<button class="act-btn btn-sm" onclick="send(\'formation equip formation_four_symbols\')" style="padding:3px 10px;font-size:11px;background:#0284c7;color:#fff;">結成此陣</button>'}
+            </div>
+            <div style="font-size:11px;color:#cbd5e1;">正統道門防禦大陣。四相真靈護體，隊伍受到物理與法術傷害減免 15%，道心守護，步步為營。</div>
+            <div style="font-size:11px;color:#facc15;">專屬奧義：【四象封魔印】（群體靈能重創 + 敵方全體弱化）</div>
+          </div>
+
+          <!-- 玄陰噬魂陣 -->
+          <div style="background:#0f172a;border:1px solid ${!isSymbols ? '#a855f7' : '#334155'};border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-weight:bold;color:#c084fc;font-size:14px;">💀 《玄陰噬魂陣》</span>
+              ${!isSymbols
+                ? '<span style="font-size:11px;color:#34d399;font-weight:bold;">✔ 當前運轉中</span>'
+                : '<button class="act-btn btn-sm" onclick="send(\'formation equip formation_xuan_yin\')" style="padding:3px 10px;font-size:11px;background:#7e22ce;color:#fff;">結成此陣</button>'}
+            </div>
+            <div style="font-size:11px;color:#cbd5e1;">太陰古墓禁忌凶陣。引動九幽星煞，隊伍暴擊率 +20%，敵弱我強，斬殺強敵反哺靈威。</div>
+            <div style="font-size:11px;color:#facc15;">專屬奧義：【百鬼噬心】（幽冥群體穿甲撕裂 + 流血重創）</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function renderPartyModal() {
@@ -1360,13 +1775,30 @@ function renderPartyModal() {
 
   const party = drpgState.lastParty;
   const formInfoEl = document.getElementById('party-modal-formation-info');
+  const memberTabsEl = document.getElementById('party-modal-member-tabs');
+  const subTabsEl = document.getElementById('party-modal-sub-tabs');
   const membersListEl = document.getElementById('party-modal-members-list');
-  if (!party || !party.members) {
+
+  if (!party || !party.members || party.members.length === 0) {
     if (membersListEl) membersListEl.innerHTML = '<div style="color:#94a3b8;padding:20px;text-align:center;">尚未載入小隊資料，請稍候...</div>';
     return;
   }
 
-  // 渲染陣法與靈威狀態
+  // 1. 確保選中狀態正常
+  const isFormationMode = (drpgState.selectedModalMemberIdx === 'FORMATION');
+  if (!isFormationMode) {
+    if (typeof drpgState.selectedModalMemberIdx !== 'number' || drpgState.selectedModalMemberIdx >= party.members.length || drpgState.selectedModalMemberIdx < 0) {
+      drpgState.selectedModalMemberIdx = 0;
+    }
+  }
+  if (!drpgState.partyModalSubTab) {
+    drpgState.partyModalSubTab = 'EQUIP';
+  }
+
+  const selIdx = drpgState.selectedModalMemberIdx;
+  const m = (!isFormationMode && party.members[selIdx]) ? party.members[selIdx] : party.members[0];
+
+  // 2. 渲染陣法與靈威狀態
   if (formInfoEl) {
     const ultBtn = party.canCastUltimate
       ? `<button class="act-btn btn-ult" onclick="send('formation cast')" style="padding:2px 8px;font-size:11px;">⚡ 施展陣法奧義【${party.ultimateSkillName}】</button>`
@@ -1384,9 +1816,81 @@ function renderPartyModal() {
     `;
   }
 
+  // 3. 渲染頂部隊員切換頁籤列
+  if (memberTabsEl) {
+    const memberBtns = party.members.map((mem, idx) => {
+      const isSel = (!isFormationMode && selIdx === idx);
+      const isAlive = (mem.alive !== undefined) ? mem.alive : (mem.hp > 0);
+      const rowBadge = mem.row === 'FRONT' ? '前衛' : '後衛';
+      const hpPct = Math.min(100, Math.max(0, (mem.hp / mem.maxHp) * 100));
+      return `
+        <button class="party-member-tab-btn ${isSel ? 'active' : ''}" type="button" onclick="selectPartyModalMember(${idx})">
+          <span style="font-weight:bold;">#${idx + 1} ${mem.name}</span>
+          <span class="member-level-badge" style="font-size:10px;">Lv.${mem.level || 1}</span>
+          <span style="font-size:10px; color:${mem.row === 'FRONT' ? '#f87171' : '#60a5fa'};">[${rowBadge}]</span>
+          ${mem.className ? `<span style="font-size:10px; color:#38bdf8;">${mem.className}</span>` : ''}
+          ${(idx === 0 && mem.freeStatPoints > 0) ? `<span class="hud-free-points-pill" style="margin-left:2px;">+${mem.freeStatPoints}</span>` : ''}
+          <div style="width:40px; height:4px; background:#334155; border-radius:2px; overflow:hidden;">
+            <div style="width:${hpPct}%; height:100%; background:${isAlive ? '#10b981' : '#ef4444'};"></div>
+          </div>
+        </button>
+      `;
+    }).join('');
+
+    const formationBtn = `
+      <button class="party-member-tab-btn ${isFormationMode ? 'active' : ''}" type="button" onclick="selectPartyFormationTab()" style="${isFormationMode ? 'border-color:#a855f7; box-shadow:0 -2px 10px rgba(168,85,247,0.3);' : 'border-left:2px solid #a855f7;'}">
+        <span style="font-weight:bold; color:#c084fc;">☯️ 全隊陣法奧義</span>
+        <span style="font-size:10px; color:#a855f7;">[全隊]</span>
+        <span style="font-size:10px; color:#e9d5ff;">${party.formationName || '四象辟邪陣'}</span>
+      </button>
+    `;
+
+    memberTabsEl.innerHTML = memberBtns + formationBtn;
+  }
+
+  // 4. 若為全隊陣法模式，直接渲染陣法奧義視圖
+  if (isFormationMode) {
+    if (subTabsEl) subTabsEl.style.display = 'none';
+    if (membersListEl) {
+      membersListEl.innerHTML = renderTeamFormationView(party);
+    }
+    return;
+  }
+
+  if (subTabsEl) subTabsEl.style.display = 'flex';
+
+  // 5. 渲染子分頁切換列 (屬性裝備 / 武學法術 / 戰術方針)
+  if (subTabsEl) {
+    const activeSub = drpgState.partyModalSubTab;
+    const tacticsCount = (m.tactics && m.tactics.length > 0) ? `(${m.tactics.length})` : '';
+    subTabsEl.innerHTML = `
+      <button class="party-sub-tab-btn ${activeSub === 'EQUIP' ? 'active' : ''}" type="button" onclick="switchPartyModalSubTab('EQUIP')">
+        🛡️ 屬性與裝備
+      </button>
+      <button class="party-sub-tab-btn ${activeSub === 'SPELLBOOK' ? 'active' : ''}" type="button" onclick="switchPartyModalSubTab('SPELLBOOK')">
+        📖 武學法術
+      </button>
+      <button class="party-sub-tab-btn ${activeSub === 'TACTICS' ? 'active' : ''}" type="button" onclick="switchPartyModalSubTab('TACTICS')">
+        🎯 戰術方針 (Gambit AI) ${tacticsCount}
+      </button>
+    `;
+  }
+
   if (!membersListEl) return;
   membersListEl.innerHTML = '';
 
+  // 6. 依子頁籤渲染內容
+  if (drpgState.partyModalSubTab === 'SPELLBOOK') {
+    membersListEl.innerHTML = renderMemberSpellbook(m, selIdx);
+    return;
+  }
+
+  if (drpgState.partyModalSubTab === 'TACTICS') {
+    membersListEl.innerHTML = renderMemberTactics(m, selIdx);
+    return;
+  }
+
+  // 預設 'EQUIP' 屬性與裝備
   const allSlots = [
     { key: 'MAIN_HAND', alias: 'weapon', label: '主手武器', icon: '🗡️' },
     { key: 'OFF_HAND', alias: 'shield', label: '副手防具', icon: '🛡️' },
@@ -1397,92 +1901,208 @@ function renderPartyModal() {
     { key: 'ACCESSORY_2', alias: 'acc2', label: '輔佐靈寶', icon: '📿' }
   ];
 
-  party.members.forEach((m, idx) => {
-    const card = document.createElement('div');
-    card.className = 'party-detail-card';
+  const rowBadge = m.row === 'FRONT' ? '前衛' : '後衛';
+  const rowClass = `badge-${m.row.toLowerCase()}`;
 
-    const rowBadge = m.row === 'FRONT' ? '前衛' : '後衛';
-    const rowClass = `badge-${m.row.toLowerCase()}`;
+  const resType = m.resourceType || 'MP';
+  const curRes = m.currentResource !== undefined ? m.currentResource : m.mp;
+  const maxRes = m.maxResource !== undefined ? m.maxResource : m.maxMp;
+  let resLabel = `MP: ${curRes}/${maxRes}`;
+  if (resType === 'RAGE') resLabel = `怒氣: ${curRes}/${maxRes}`;
+  else if (resType === 'COMBO') resLabel = `連擊: ${curRes}/${maxRes}`;
 
-    // 依職業三態資源判定能量條
-    const resType = m.resourceType || 'MP';
-    const curRes = m.currentResource !== undefined ? m.currentResource : m.mp;
-    const maxRes = m.maxResource !== undefined ? m.maxResource : m.maxMp;
-    let resLabel = `MP: ${curRes}/${maxRes}`;
-    if (resType === 'RAGE') resLabel = `怒氣: ${curRes}/${maxRes}`;
-    else if (resType === 'COMBO') resLabel = `連擊: ${curRes}/${maxRes}`;
+  let equipSlotsHtml = '';
+  for (const slot of allSlots) {
+    let item = m.equipment ? m.equipment[slot.key] : null;
+    if (!item && slot.key === 'MAIN_HAND' && m.equippedWeapon) item = m.equippedWeapon;
+    if (!item && slot.key === 'BODY' && m.equippedArmor) item = m.equippedArmor;
 
-    // 產生 5+2 裝備槽位
-    let equipSlotsHtml = '';
-    for (const slot of allSlots) {
-      let item = m.equipment ? m.equipment[slot.key] : null;
-      if (!item && slot.key === 'MAIN_HAND' && m.equippedWeapon) item = m.equippedWeapon;
-      if (!item && slot.key === 'BODY' && m.equippedArmor) item = m.equippedArmor;
+    if (item) {
+      let statsParts = [];
+      if (item.bonusMinDamage || item.bonusMaxDamage) statsParts.push(`攻 ${item.bonusMinDamage}~${item.bonusMaxDamage}`);
+      if (item.bonusDefense) statsParts.push(`防 +${item.bonusDefense}`);
+      if (item.bonusHp) statsParts.push(`血 +${item.bonusHp}`);
+      if (item.bonusSan) statsParts.push(`心 +${item.bonusSan}`);
+      const statsStr = statsParts.length > 0 ? statsParts.join(' ') : '基礎裝備';
 
-      if (item) {
-        let statsParts = [];
-        if (item.bonusMinDamage || item.bonusMaxDamage) statsParts.push(`攻 ${item.bonusMinDamage}~${item.bonusMaxDamage}`);
-        if (item.bonusDefense) statsParts.push(`防 +${item.bonusDefense}`);
-        if (item.bonusHp) statsParts.push(`血 +${item.bonusHp}`);
-        if (item.bonusSan) statsParts.push(`心 +${item.bonusSan}`);
-        const statsStr = statsParts.length > 0 ? statsParts.join(' ') : '基礎裝備';
-
-        equipSlotsHtml += `
-          <div class="equip-slot-box has-item" title="${item.description || ''}">
-            <div class="equip-slot-title">
-              <span>${slot.icon} ${slot.label}</span>
-              <button class="unequip-mini-btn" onclick="send('item unequip ${slot.alias} ${idx}')" title="卸下放回行囊">✕ 卸下</button>
-            </div>
-            <div class="equip-slot-name">${item.icon || '📦'} ${item.name}</div>
-            <div class="equip-slot-stats">${statsStr}</div>
+      equipSlotsHtml += `
+        <div class="equip-slot-box has-item" title="${item.description || ''}">
+          <div class="equip-slot-title">
+            <span>${slot.icon} ${slot.label}</span>
+            <button class="unequip-mini-btn" onclick="send('item unequip ${slot.alias} ${selIdx}')" title="卸下放回行囊">✕ 卸下</button>
           </div>
-        `;
-      } else {
-        equipSlotsHtml += `
-          <div class="equip-slot-box empty">
-            <div class="equip-slot-title">
-              <span>${slot.icon} ${slot.label}</span>
-            </div>
-            <div class="equip-slot-name" style="color:#64748b;font-weight:normal;">(未穿戴)</div>
-            <div class="equip-slot-act">
-              <button class="item-act-mini-btn" onclick="toggleBagDrawer(true)" title="開啟行囊挑選裝備穿戴">🎒 挑選</button>
-            </div>
-          </div>
-        `;
-      }
-    }
-
-    // 產生 WoW 經典修仙武學典籍 (Spellbook)
-    const spellbookHtml = renderMemberSpellbook(m, idx);
-
-    card.innerHTML = `
-      <div class="party-detail-header">
-        <div class="party-detail-name-wrap">
-          <span style="color:#38bdf8;font-weight:bold;">#${idx + 1}</span>
-          <span class="party-detail-name">${m.name}</span>
-          <span class="member-row ${rowClass}">${rowBadge}</span>
-          ${m.className ? `<span class="member-class-badge" title="${m.classDescription || ''}" style="background:#1e293b;border:1px solid #38bdf8;color:#7dd3fc;padding:1px 6px;border-radius:4px;font-size:10px;">🏷️ ${m.className}</span>` : ''}
-          <button class="item-act-mini-btn" onclick="send('formation switch ${idx}')" title="切換前排/後排站位" style="font-size:10px;">站位切換</button>
+          <div class="equip-slot-name">${item.icon || '📦'} ${item.name}</div>
+          <div class="equip-slot-stats">${statsStr}</div>
         </div>
-        <span class="party-detail-role">${m.roleTitle}</span>
+      `;
+    } else {
+      equipSlotsHtml += `
+        <div class="equip-slot-box empty">
+          <div class="equip-slot-title">
+            <span>${slot.icon} ${slot.label}</span>
+          </div>
+          <div class="equip-slot-name" style="color:#64748b;font-weight:normal;">(未穿戴)</div>
+          <div class="equip-slot-act">
+            <button class="item-act-mini-btn" onclick="toggleBagDrawer(true)" title="開啟行囊挑選裝備穿戴">🎒 挑選</button>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  const isLeader = (m.id && (m.id === 'm-leader' || m.id.includes('leader'))) || selIdx === 0;
+  const level = m.level || 1;
+  const exp = m.exp || 0;
+  const nextExp = m.nextLevelExp || 180;
+  const expPct = Math.min(100, Math.max(0, Math.floor((exp / nextExp) * 100)));
+  const freePoints = m.freeStatPoints || 0;
+
+  const strVal = m.str || 5;
+  const conVal = m.con || 5;
+  const dexVal = m.dex || 5;
+  const intVal = m.intStat !== undefined ? m.intStat : (m.intelligence || 5);
+  const wisVal = m.wis || 5;
+
+  const renderStatAddBtn = (statKey, label) => {
+    if (!isLeader) return '';
+    if (freePoints > 0) {
+      return `<button class="stat-add-btn" onclick="send('party stat add ${statKey} 1')" title="點擊投入 1 點自由修為點數提升【${label}】">+1</button>`;
+    } else {
+      return `<button class="stat-add-btn disabled" disabled title="無可用自由修為點數">+1</button>`;
+    }
+  };
+
+  let freePointsBannerHtml = '';
+  if (isLeader) {
+    if (freePoints > 0) {
+      freePointsBannerHtml = `
+        <div class="free-points-banner">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span>⭐</span>
+            <span><strong>道胎未定・造化充盈</strong>：尚有 <strong style="font-size:15px;color:#fde047;">${freePoints}</strong> 點自由修為點數！</span>
+          </div>
+          <span style="font-size:11px;color:#fef3c7;">(點擊下方屬性右側 [+1] 按鈕即刻分配)</span>
+        </div>
+      `;
+    } else {
+      freePointsBannerHtml = `
+        <div style="font-size:11px;color:#94a3b8;display:flex;justify-content:space-between;padding:2px 4px;">
+          <span>⭐ 自由修為點數：0 點</span>
+          <span style="color:#64748b;">(主角每升一級額外獲贈 2 點自由分配點數)</span>
+        </div>
+      `;
+    }
+  } else {
+    freePointsBannerHtml = `
+      <div style="font-size:11px;color:#94a3b8;display:flex;justify-content:space-between;padding:2px 4px;">
+        <span>🏷️ 成長模式：【職業範本自適應】</span>
+        <span style="color:#64748b;">(同伴升級自動提升五維，無需手動微操)</span>
       </div>
-      <div class="party-detail-bars">
-        <div style="font-size:11px;color:#f87171;">HP: ${m.hp}/${m.maxHp}</div>
-        <div style="font-size:11px;color:#60a5fa;">${resLabel}</div>
-        <div style="font-size:11px;color:#34d399;">SAN: ${m.san}/${m.maxSan}</div>
-      </div>
-      <div style="font-size:11px;color:#94a3b8;font-weight:bold;margin-top:2px;">裝備槽位 (5 基礎 + 2 飾品)：</div>
-      <div class="party-detail-equip-grid">
-        ${equipSlotsHtml}
-      </div>
-      ${spellbookHtml}
     `;
-    membersListEl.appendChild(card);
-  });
+  }
+
+  const card = document.createElement('div');
+  card.className = 'party-detail-card';
+  card.innerHTML = `
+    <div class="party-detail-header">
+      <div class="party-detail-name-wrap">
+        <span style="color:#38bdf8;font-weight:bold;font-size:16px;">#${selIdx + 1} ${m.name}</span>
+        <span class="member-level-badge" style="font-size:11px;background:#0f172a;border:1px solid #eab308;padding:1px 6px;border-radius:4px;">Lv.${level}</span>
+        <span class="member-row ${rowClass}">[${rowBadge}]</span>
+        ${m.className ? `<span class="member-class-badge" title="${m.classDescription || ''}" style="background:#1e293b;border:1px solid #38bdf8;color:#7dd3fc;padding:2px 8px;border-radius:4px;font-size:11px;">🏷️ ${m.className}</span>` : ''}
+        <button class="item-act-mini-btn" onclick="send('party switch ${selIdx}')" title="切換前排/後排站位" style="font-size:11px;">🔄 站位切換 (${rowBadge})</button>
+      </div>
+      <span class="party-detail-role" style="font-size:12px;color:#94a3b8;">${m.roleTitle}</span>
+    </div>
+
+    <!-- 1. 修為境界與 EXP 進度條 -->
+    <div class="party-detail-exp-card">
+      <div class="party-detail-exp-header">
+        <div class="party-detail-exp-title">
+          <span>✨ 境界修為</span>
+          <strong style="color:#fde047;">Lv.${level}</strong>
+        </div>
+        <div class="party-detail-exp-val">EXP: ${exp} / ${nextExp} (${expPct}%)</div>
+      </div>
+      <div class="party-detail-exp-bar" title="晉升下一級所需修為：${exp}/${nextExp} (${expPct}%)">
+        <div class="party-detail-exp-fill" style="width:${expPct}%;"></div>
+      </div>
+    </div>
+
+    <!-- 2. 自由點數提示橫幅 -->
+    ${freePointsBannerHtml}
+
+    <!-- 3. 五維先天道基屬性網格 -->
+    <div style="font-size:13px;color:#cbd5e1;font-weight:bold;margin-top:2px;display:flex;justify-content:space-between;align-items:center;">
+      <span>☯️ 五維先天道基：</span>
+      ${isLeader && freePoints > 0 ? `<span style="font-size:11px;color:#facc15;">請點擊右側 [+1] 分配點數</span>` : ''}
+    </div>
+    <div class="party-detail-stats-grid">
+      <div class="stat-item-box">
+        <div class="stat-item-header">
+          <span class="stat-item-label">💪 力量 STR</span>
+          ${renderStatAddBtn('str', '力量')}
+        </div>
+        <div class="stat-item-val">${strVal}</div>
+        <div class="stat-item-desc">物理傷害、負重、招架</div>
+      </div>
+
+      <div class="stat-item-box">
+        <div class="stat-item-header">
+          <span class="stat-item-label">🫀 根骨 CON</span>
+          ${renderStatAddBtn('con', '根骨')}
+        </div>
+        <div class="stat-item-val">${conVal}</div>
+        <div class="stat-item-desc">血量上限 (+10/點)、減傷</div>
+      </div>
+
+      <div class="stat-item-box">
+        <div class="stat-item-header">
+          <span class="stat-item-label">⚡ 靈巧 DEX</span>
+          ${renderStatAddBtn('dex', '靈巧')}
+        </div>
+        <div class="stat-item-val">${dexVal}</div>
+        <div class="stat-item-desc">暴擊率、命中、身法閃避</div>
+      </div>
+
+      <div class="stat-item-box">
+        <div class="stat-item-header">
+          <span class="stat-item-label">🧠 悟性 INT</span>
+          ${renderStatAddBtn('int', '悟性')}
+        </div>
+        <div class="stat-item-val">${intVal}</div>
+        <div class="stat-item-desc">真元上限 (+8/點)、法術</div>
+      </div>
+
+      <div class="stat-item-box">
+        <div class="stat-item-header">
+          <span class="stat-item-label">🧘 定力 WIS</span>
+          ${renderStatAddBtn('wis', '定力')}
+        </div>
+        <div class="stat-item-val">${wisVal}</div>
+        <div class="stat-item-desc">治療增幅、法力恢復、抗性</div>
+      </div>
+    </div>
+
+    <!-- 4. 當前實時動態條 (HP / MP / SAN) -->
+    <div class="party-detail-bars" style="background:rgba(15,23,42,0.6);padding:10px;border-radius:6px;">
+      <div style="font-size:12px;color:#f87171;font-weight:bold;">❤️ 氣血 HP: ${m.hp}/${m.maxHp}</div>
+      <div style="font-size:12px;color:#60a5fa;font-weight:bold;">⚡ ${resLabel}</div>
+      <div style="font-size:12px;color:#34d399;font-weight:bold;">🧘 道心 SAN: ${m.san}/${m.maxSan} (${m.sanityStatus || '心境平穩'})</div>
+    </div>
+
+    <!-- 5. 裝備槽位 (5 基礎 + 2 飾品) -->
+    <div style="font-size:13px;color:#cbd5e1;font-weight:bold;margin-top:4px;">🛡️ 裝備槽位 (5 基礎 + 2 飾品)：</div>
+    <div class="party-detail-equip-grid">
+      ${equipSlotsHtml}
+    </div>
+  `;
+  membersListEl.appendChild(card);
 }
 
 /**
  * 渲染單一成員的 WoW 經典修仙武學典籍 (Spellbook)
+ * 陣法奧義已抽離至全隊陣法面板，此處專注於兵刃套路與門派絕技
  */
 function renderMemberSpellbook(m, memberIdx) {
   if (!drpgState.spellbookState) {
@@ -1492,17 +2112,19 @@ function renderMemberSpellbook(m, memberIdx) {
     drpgState.spellbookState[memberIdx] = { tab: 'STANCES', page: 1 };
   }
   const curState = drpgState.spellbookState[memberIdx];
+  if (curState.tab !== 'STANCES' && curState.tab !== 'SKILLS') {
+    curState.tab = 'STANCES';
+  }
   const curTab = curState.tab || 'STANCES';
   let curPage = curState.page || 1;
 
-  // 1. 整理各 Tab 項目
+  // 1. 整理各 Tab 項目 (兵刃套路與門派絕技)
   const stances = m.availableStances || [];
   const skills = m.skills || [];
 
   const tabs = [
     { key: 'STANCES', label: '🗡️ 兵刃套路', count: stances.length > 0 ? stances.length : 1 },
-    { key: 'SKILLS', label: '⚡ 門派絕技', count: skills.length },
-    { key: 'FORMATION', label: '☯️ 陣法奧義', count: 2 }
+    { key: 'SKILLS', label: '⚡ 門派絕技', count: skills.length }
   ];
 
   let items = [];
@@ -1562,28 +2184,6 @@ function renderMemberSpellbook(m, memberIdx) {
         canSwitch: false
       });
     }
-  } else if (curTab === 'FORMATION') {
-    const isSymbols = (drpgState.lastParty && drpgState.lastParty.formationName && drpgState.lastParty.formationName.includes('四象'));
-    items = [
-      {
-        id: 'formation_four_symbols',
-        name: '四象真武陣',
-        icon: '☯️',
-        cost: '陣法站位',
-        desc: '四象靈獸護體，隊伍防禦 +15%，承傷減免，步步為營。',
-        isCurrent: isSymbols,
-        canSwitch: false
-      },
-      {
-        id: 'formation_dark_ghost',
-        name: '玄陰噬魂陣',
-        icon: '💀',
-        cost: '陣法站位',
-        desc: '引動至陰煞氣，暴擊率 +20%，敵弱我強，殺戮回靈。',
-        isCurrent: !isSymbols,
-        canSwitch: false
-      }
-    ];
   }
 
   // 分頁計算 (每頁 4 個條目，2x2 雙欄卡片佈局)
@@ -1605,8 +2205,6 @@ function renderMemberSpellbook(m, memberIdx) {
       actBtnHtml = `<button class="spell-switch-btn" onclick="send('party enable ${memberIdx} ${it.id}')" title="啟用為當前主力普攻套路">⚡ 啟用套路</button>`;
     } else if (curTab === 'SKILLS') {
       actBtnHtml = '<span style="font-size:9px;color:#60a5fa;">戰鬥快捷施展</span>';
-    } else if (curTab === 'FORMATION') {
-      actBtnHtml = `<button class="spell-switch-btn" onclick="send('formation toggle')" title="切換小隊陣法">☯️ 切換陣法</button>`;
     }
 
     return `
@@ -1657,6 +2255,10 @@ function renderMemberSpellbook(m, memberIdx) {
         <div class="wow-spellbook-tabs">
           ${tabsHtml}
         </div>
+      </div>
+      <div style="margin-top:12px;padding:8px 14px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);border-radius:6px;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#c7d2fe;">
+        <span>☯️ <strong>全隊陣法奧義</strong>屬於全隊共有，不局限於個人武學。請前往全隊陣法面板進行切換與站位調配。</span>
+        <button class="act-btn btn-sm" onclick="selectPartyFormationTab()" style="padding:3px 10px;font-size:11px;background:#4f46e5;color:#fff;">前往全隊陣法 ➔</button>
       </div>
     </div>
   `;
@@ -2096,45 +2698,63 @@ function initKeyboardControls() {
     inputEl.addEventListener('blur', () => updateModeBadge(false));
   }
 
-  window.addEventListener('keydown', (e) => {
-    // 0. 若正在開發者控制台中打字
-    const devInputEl = document.getElementById('dev-cmd-input');
-    if (drpgState.isDevConsoleOpen || document.activeElement === devInputEl) {
-      if (e.key === 'Escape' || e.key === '`' || e.key === '~') {
-        e.preventDefault();
-        toggleDevConsole(false);
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        handleDevEnter();
-      }
-      return;
-    }
-
-    // 1. 若目前正在舊版文字輸入框中打字
-    if (document.activeElement === inputEl) {
-      if (e.key === 'Escape') {
-        inputEl.blur();
+  // 點擊非輸入框區域自動釋放文字焦點，確保 WASD 隨時可用
+  document.addEventListener('pointerdown', (e) => {
+    if (!e.target.closest('input, textarea, select, #dev-console-modal')) {
+      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+        document.activeElement.blur();
         updateModeBadge(false);
       }
-      return;
     }
+  });
 
-    // 若在主角自訂道號輸入框打字
+  window.addEventListener('keydown', (e) => {
+    // 0. 若目前正在任何文字輸入控制項或下拉選單中
+    const activeEl = document.activeElement;
+    const devInputEl = document.getElementById('dev-cmd-input');
     const newNameInput = document.getElementById('new-game-protagonist-input');
-    if (newNameInput && document.activeElement === newNameInput) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        startPrologueFlow();
-      } else if (e.key === 'Escape') {
-        closeNewGameModal();
+
+    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT')) {
+      if (drpgState.isDevConsoleOpen || activeEl === devInputEl) {
+        if (e.key === 'Escape' || e.key === '`' || e.key === '~') {
+          e.preventDefault();
+          toggleDevConsole(false);
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          handleDevEnter();
+        }
+        return;
       }
-      return;
+      if (activeEl === inputEl) {
+        if (e.key === 'Escape') {
+          inputEl.blur();
+          updateModeBadge(false);
+        }
+        return;
+      }
+      if (newNameInput && activeEl === newNameInput) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          startPrologueFlow();
+        } else if (e.key === 'Escape') {
+          closeNewGameModal();
+        }
+        return;
+      }
+      if (e.key === 'Escape') {
+        activeEl.blur();
+      }
+      return; // 正在其他輸入項 (如貨棧數量、方針數值) 打字時，不觸發 WASD 移動或功能鍵
     }
 
-    // 2. 若在主封面或任一全螢幕模態視窗中，攔截快捷鍵防止穿透，並支援 Esc 依序返回
-    const isAnyModalOrTitleOpen = drpgState.isTitleScreenOpen || drpgState.isSaveModalOpen || drpgState.isNewGameModalOpen || drpgState.isPrologueModalOpen || drpgState.isGuideModalOpen || drpgState.isPartyModalOpen;
+    // 1. 若在主封面或任一模態視窗中，攔截快捷鍵防止穿透，並支援 Esc 依序返回關閉
+    const isAnyModalOrTitleOpen = drpgState.isTitleScreenOpen || drpgState.isSaveModalOpen || drpgState.isNewGameModalOpen || drpgState.isPrologueModalOpen || drpgState.isGuideModalOpen || drpgState.isPartyModalOpen || drpgState.isShopModalOpen;
     if (isAnyModalOrTitleOpen) {
       if (e.key === 'Escape') {
+        if (drpgState.isShopModalOpen) {
+          toggleShopModal(false);
+          return;
+        }
         if (drpgState.isPartyModalOpen) {
           closePartyModal();
           return;
@@ -2160,7 +2780,7 @@ function initKeyboardControls() {
           return;
         }
       }
-      return; // 阻止在選單/封面中按 WASD 造成背景移動
+      return; // 阻止在選單/封面/彈窗中按 WASD 造成背景地圖移動
     }
 
     // 快捷鍵 ~ 開啟/關閉開發者終端
@@ -2309,6 +2929,7 @@ window.triggerPartyAction = triggerPartyAction;
 window.togglePartyModal = togglePartyModal;
 window.closePartyModal = closePartyModal;
 window.renderPartyModal = renderPartyModal;
+window.selectPartyFormationTab = selectPartyFormationTab;
 window.selectBattleTarget = selectBattleTarget;
 window.triggerBattleMode = toggleBattleMode;
 window.toggleRadarPosition = toggleRadarPosition;
@@ -2356,8 +2977,46 @@ function openShopModal(data) {
     coinEl.innerText = `${data.playerCoin || 0} 靈石`;
   }
 
-  // 若彈窗已經開啟，僅更新頂部靈石數額即可，避免重置商品輸入框數量
+  // 若彈窗已經開啟，動態刷新各商品的剩餘庫存與購買按鈕狀態，而不重置整個 DOM 避免干擾輸入
   if (drpgState.isShopModalOpen && !modal.classList.contains('hidden')) {
+    if (data.goods && data.goods.length > 0) {
+      data.goods.forEach(item => {
+        const row = document.getElementById(`shop-item-${item.id}`);
+        if (!row) return;
+        const stockEl = row.querySelector('.shop-item-stock');
+        if (stockEl) {
+          if (item.stock !== undefined && item.stock >= 0) {
+            stockEl.style.color = item.stock > 0 ? '#38bdf8' : '#ef4444';
+            stockEl.innerText = `(庫存: ${item.stock})`;
+          } else {
+            stockEl.style.color = '#10b981';
+            stockEl.innerText = '(充足)';
+          }
+        }
+        const buyBtn = row.querySelector('.shop-buy-btn');
+        const qtyInput = document.getElementById(`shop-qty-${item.id}`);
+        const isOutOfStock = (item.stock !== undefined && item.stock === 0);
+        if (qtyInput && item.stock !== undefined && item.stock >= 0) {
+          qtyInput.max = item.stock;
+          if (parseInt(qtyInput.value) > item.stock) {
+            qtyInput.value = Math.max(1, item.stock);
+          }
+        }
+        if (buyBtn) {
+          if (isOutOfStock) {
+            buyBtn.disabled = true;
+            buyBtn.style.opacity = '0.5';
+            buyBtn.style.cursor = 'not-allowed';
+            buyBtn.innerText = '❌ 售罄';
+          } else {
+            buyBtn.disabled = false;
+            buyBtn.style.opacity = '1';
+            buyBtn.style.cursor = 'pointer';
+            buyBtn.innerText = '🛒 購買';
+          }
+        }
+      });
+    }
     return;
   }
 
@@ -2419,6 +3078,9 @@ function toggleShopModal(show) {
     modal.classList.remove('hidden');
   } else {
     modal.classList.add('hidden');
+    if (document.activeElement) {
+      document.activeElement.blur();
+    }
   }
 }
 
@@ -2445,6 +3107,13 @@ window.toggleShopModal = toggleShopModal;
 window.renderShopCatalogInLog = renderShopCatalogInLog;
 window.adjustShopQty = adjustShopQty;
 window.triggerShopBuy = triggerShopBuy;
+window.openPartyModal = openPartyModal;
+window.togglePartyModal = togglePartyModal;
+window.selectPartyModalMember = selectPartyModalMember;
+window.switchPartyModalSubTab = switchPartyModalSubTab;
+window.toggleAddTacticsForm = toggleAddTacticsForm;
+window.handleTacticsCondChange = handleTacticsCondChange;
+window.submitAddTactics = submitAddTactics;
 
 window.addEventListener('DOMContentLoaded', () => {
   initKeyboardControls();

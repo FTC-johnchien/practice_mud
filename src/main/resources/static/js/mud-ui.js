@@ -7,6 +7,9 @@ function handleEnter() {
         send(cmd); // send 函數會由各自的 HTML 實現 (WS 或 JavaFX)
         cmdInput.value = "";
     }
+    if (cmdInput) {
+        cmdInput.blur();
+    }
 }
 
 // 綁定輸入框 Enter 監聽

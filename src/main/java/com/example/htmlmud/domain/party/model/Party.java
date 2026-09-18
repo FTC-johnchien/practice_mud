@@ -274,6 +274,15 @@ public class Party {
   }
 
   @JsonIgnore
+  public PartyMember getLeader() {
+    if (members == null || members.isEmpty()) return null;
+    return members.stream()
+        .filter(PartyMember::isLeader)
+        .findFirst()
+        .orElse(members.get(0));
+  }
+
+  @JsonIgnore
   public boolean isAllDead() {
     return members.stream().noneMatch(PartyMember::isAlive);
   }

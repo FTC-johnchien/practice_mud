@@ -42,12 +42,32 @@ public class DrpgBattleService {
 
   private final Map<String, BattleContext> activeBattles = new ConcurrentHashMap<>();
 
+  private java.util.function.Consumer<Player> stateBroadcaster;
+
+  public void setStateBroadcaster(java.util.function.Consumer<Player> stateBroadcaster) {
+    this.stateBroadcaster = stateBroadcaster;
+  }
+
   private static final List<String> TOMB_ITEMS = List.of(
       "taiyin_pill", "purify_talisman", "bronze_sword", "yin_robe", "ancient_relic", "tomb_key"
   );
 
   @org.springframework.beans.factory.annotation.Autowired(required = false)
   private ApplicationEventPublisher eventPublisher;
+
+  @org.springframework.beans.factory.annotation.Autowired(required = false)
+  private com.example.htmlmud.domain.service.XpProgressionService xpProgressionService;
+
+  public com.example.htmlmud.domain.service.XpProgressionService getXpProgressionService() {
+    if (xpProgressionService == null) {
+      xpProgressionService = new com.example.htmlmud.domain.service.XpProgressionService();
+    }
+    return xpProgressionService;
+  }
+
+  public void setXpProgressionService(com.example.htmlmud.domain.service.XpProgressionService xpProgressionService) {
+    this.xpProgressionService = xpProgressionService;
+  }
 
   @org.springframework.beans.factory.annotation.Autowired
   public DrpgBattleService(PartyService partyService, DungeonManager dungeonManager, DungeonNavigator dungeonNavigator) {
@@ -427,6 +447,12 @@ public class DrpgBattleService {
               }
             }
 
+            // 隊友戰術 AI 檢定 (非主角隊員自動依據職責施展急救/嘲諷/絕技)
+            if (!isLeader && tryTriggerCompanionTactics(player, ctx, member, pos)) {
+              if (ctx.isOver()) break;
+              continue;
+            }
+
             // 正常攻擊流程
             BattleEnemy target = (member.getRow() == RowPosition.FRONT)
                 ? ctx.getFrontTargetEnemy() : ctx.getTargetEnemy();
@@ -439,6 +465,10 @@ public class DrpgBattleService {
               // 連擊點累積
               if (member.getResourceType() == ResourceType.COMBO) {
                 member.gainCombo(1);
+              }
+              // 怒氣累積 (力士每次普通攻擊命中獲得 15 點怒氣)
+              if (member.getResourceType() == ResourceType.RAGE) {
+                member.gainRage(15);
               }
               // 陣法靈威積累
               ctx.getParty().addFormationEnergy(2);
@@ -686,26 +716,128 @@ public class DrpgBattleService {
     }
 
     // 資源扣除檢驗
-    if (skill.getCostType() == ResourceType.MP) {
-      if (!member.consumeMp(skill.getCostValue())) {
+    if (!consumeSkillResource(member, skill)) {
+      if (skill.getCostType() == ResourceType.MP) {
         player.reply("真元不足！需要 " + skill.getCostValue() + " MP！");
-        return;
-      }
-    } else if (skill.getCostType() == ResourceType.RAGE) {
-      if (!member.consumeRage(skill.getCostValue())) {
+      } else if (skill.getCostType() == ResourceType.RAGE) {
         player.reply("怒氣未滿！需要 " + skill.getCostValue() + " 點怒氣！");
-        return;
-      }
-    } else if (skill.getCostType() == ResourceType.COMBO) {
-      if (!member.consumeCombo(skill.getCostValue())) {
+      } else if (skill.getCostType() == ResourceType.COMBO) {
         player.reply("連擊點不足！需要 " + skill.getCostValue() + " 層連擊！");
-        return;
+      } else {
+        player.reply("資源不足，無法施展招式！");
       }
+      return;
     }
 
+    applySkillEffects(player, ctx, member, skill, targetIdx, "");
+    pushDrpgState(player, pos, ctx);
+  }
+
+  /**
+   * 隊友戰術 AI (Gambit System)：動態根據隊員個人自訂之 TacticsRule 優先級規則鏈進行求值
+   */
+  private boolean tryTriggerCompanionTactics(Player player, BattleContext ctx, PartyMember member, DungeonPosition pos) {
+    if (member == null || !member.isAlive() || member.getSkills() == null || member.getSkills().isEmpty()) {
+      return false;
+    }
+
+    // 確保有預設戰術方針
+    if (member.getTactics() == null || member.getTactics().isEmpty()) {
+      member.initDefaultTactics();
+    }
+
+    for (com.example.htmlmud.domain.party.model.TacticsRule rule : member.getTactics()) {
+      if (!rule.isEnabled() || rule.getSkillId() == null) continue;
+
+      PartyMemberSkill skill = member.getSkills().stream()
+          .filter(s -> s.getId().equalsIgnoreCase(rule.getSkillId()))
+          .findFirst()
+          .orElse(null);
+
+      if (skill == null || !canCastSkill(member, skill)) {
+        continue;
+      }
+
+      // 評估觸發條件 (Condition)
+      boolean conditionMet = evaluateTacticsCondition(ctx, member, rule);
+      if (!conditionMet) {
+        continue;
+      }
+
+      // 觸發執行！
+      consumeSkillResource(member, skill);
+      applySkillEffects(player, ctx, member, skill, -1, "【戰術方針】");
+      return true;
+    }
+
+    return false;
+  }
+
+  private boolean evaluateTacticsCondition(BattleContext ctx, PartyMember member,
+      com.example.htmlmud.domain.party.model.TacticsRule rule) {
+    if (rule.getCondition() == null) return false;
+
+    return switch (rule.getCondition()) {
+      case ALLY_HP_LESS_THAN -> ctx.getParty().getMembers().stream()
+          .filter(PartyMember::isAlive)
+          .anyMatch(m -> m.getStats() != null && m.getStats().getMaxHp() > 0
+              && ((double) m.getStats().getHp() / m.getStats().getMaxHp() * 100.0 <= rule.getConditionValue()));
+
+      case SELF_HP_LESS_THAN -> member.getStats() != null && member.getStats().getMaxHp() > 0
+          && ((double) member.getStats().getHp() / member.getStats().getMaxHp() * 100.0 <= rule.getConditionValue());
+
+      case ENEMY_COUNT_GTE -> ctx.getEnemies().stream().filter(BattleEnemy::isAlive).count() >= rule.getConditionValue();
+
+      case ENEMY_IS_BOSS -> ctx.getEnemies().stream().anyMatch(e -> e.isAlive()
+          && (e.getHp() > 400 || (e.getTemplateId() != null && e.getTemplateId().contains("boss"))));
+
+      case RESOURCE_GTE -> {
+        if (member.getResourceType() == ResourceType.RAGE) {
+          yield member.getCurrentRage() >= rule.getConditionValue();
+        } else if (member.getResourceType() == ResourceType.COMBO) {
+          yield member.getCurrentCombo() >= rule.getConditionValue();
+        } else if (member.getResourceType() == ResourceType.MP && member.getStats() != null) {
+          yield member.getStats().getMp() >= rule.getConditionValue();
+        }
+        yield true;
+      }
+
+      case ALWAYS -> true;
+    };
+  }
+
+  private boolean canCastSkill(PartyMember member, PartyMemberSkill skill) {
+    if (member == null || skill == null) return false;
+    if (!member.isSkillUsable(skill)) return false;
+    if (member.isOnCooldown(skill.getId())) return false;
+    if (skill.getCostType() == ResourceType.MP) {
+      return member.getStats() != null && member.getStats().getMp() >= skill.getCostValue();
+    } else if (skill.getCostType() == ResourceType.RAGE) {
+      return member.getCurrentRage() >= skill.getCostValue();
+    } else if (skill.getCostType() == ResourceType.COMBO) {
+      return member.getCurrentCombo() >= skill.getCostValue();
+    }
+    return true;
+  }
+
+  private boolean consumeSkillResource(PartyMember member, PartyMemberSkill skill) {
+    if (skill.getCostType() == ResourceType.MP) {
+      return member.consumeMp(skill.getCostValue());
+    } else if (skill.getCostType() == ResourceType.RAGE) {
+      return member.consumeRage(skill.getCostValue());
+    } else if (skill.getCostType() == ResourceType.COMBO) {
+      return member.consumeCombo(skill.getCostValue());
+    }
+    return true;
+  }
+
+  private void applySkillEffects(Player player, BattleContext ctx, PartyMember member,
+      PartyMemberSkill skill, int targetIdx, String prefixTag) {
     // 進入冷卻
     member.setCooldown(skill.getId(), skill.getCooldownMs());
     ctx.getParty().addFormationEnergy(8);
+
+    String tag = (prefixTag != null && !prefixTag.isEmpty()) ? prefixTag + " " : "";
 
     // 執行技能效果
     if (skill.isHeal()) {
@@ -717,21 +849,23 @@ public class DrpgBattleService {
           }
         }
         member.addThreat(skill.getHealAmount());
-        broadcastLog(player, ctx, "\u001B[1;32m✨ " + member.getName() + " 施展【" + skill.getName() + "】，甘露靈泉籠罩全隊！氣血恢復，道心安穩！\u001B[0m");
+        broadcastLog(player, ctx, "\u001B[1;32m" + tag + "✨ " + member.getName() + " 施展【" + skill.getName() + "】，甘露靈泉籠罩全隊！氣血恢復，道心安穩！\u001B[0m");
       } else {
         // 單體補血，挑選血量比例最低的隊員
         PartyMember lowest = ctx.getParty().getMembers().stream()
             .filter(PartyMember::isAlive)
-            .min((a, b) -> Integer.compare(a.getStats().getHp(), b.getStats().getHp()))
+            .min((a, b) -> Double.compare(
+                (double) a.getStats().getHp() / Math.max(1, a.getStats().getMaxHp()),
+                (double) b.getStats().getHp() / Math.max(1, b.getStats().getMaxHp())))
             .orElse(member);
         lowest.heal(skill.getHealAmount());
         member.addThreat(skill.getHealAmount() / 2);
-        broadcastLog(player, ctx, "\u001B[1;32m🌿 " + member.getName() + " 運轉【" + skill.getName() + "】，一道春生靈氣注入 " + lowest.getName() + "，恢復 " + skill.getHealAmount() + " 點氣血！\u001B[0m");
+        broadcastLog(player, ctx, "\u001B[1;32m" + tag + "🌿 " + member.getName() + " 運轉【" + skill.getName() + "】，一道春生靈氣注入 " + lowest.getName() + "，恢復 " + skill.getHealAmount() + " 點氣血！\u001B[0m");
       }
     } else if (skill.isTaunt()) {
       ctx.setTaunt(member.getId(), 5000);
       member.addThreat(600);
-      broadcastLog(player, ctx, "\u001B[1;33m🛡️ " + member.getName() + " 爆發【" + skill.getName() + "】，金剛威儀震懾全場！所有怪物仇恨被強行吸引！\u001B[0m");
+      broadcastLog(player, ctx, "\u001B[1;33m" + tag + "🛡️ " + member.getName() + " 爆發【" + skill.getName() + "】，金剛威儀震懾全場！所有怪物仇恨被強行吸引！\u001B[0m");
     } else {
       // 傷害技能
       if (skill.isAoe()) {
@@ -744,21 +878,21 @@ public class DrpgBattleService {
             if (!e.isAlive()) broadcastLog(player, ctx, "\u001B[1;32m💥【" + e.getName() + "】在靈力轟擊下灰飛煙滅！\u001B[0m");
           }
         }
-        broadcastLog(player, ctx, "\u001B[1;36m🌩️ " + member.getName() + " 祭出【" + skill.getName() + "】，排山倒海的威能橫掃敵方全體！\u001B[0m");
+        broadcastLog(player, ctx, "\u001B[1;36m" + tag + "🌩️ " + member.getName() + " 祭出【" + skill.getName() + "】，排山倒海的威能橫掃敵方全體！\u001B[0m");
         if (ctx.isAllEnemiesDead()) ctx.setState(BattleState.VICTORY);
       } else {
         BattleEnemy target = null;
         if (targetIdx >= 0 && targetIdx < ctx.getEnemies().size() && ctx.getEnemies().get(targetIdx).isAlive()) {
           target = ctx.getEnemies().get(targetIdx);
         } else {
-          target = ctx.getTargetEnemy();
+          target = (member.getRow() == RowPosition.FRONT) ? ctx.getFrontTargetEnemy() : ctx.getTargetEnemy();
         }
         if (target != null && target.isAlive()) {
           int dmg = (int) (calculatePlayerDamage(member, target) * skill.getDamageMultiplier());
           target.takeDamage(dmg);
           member.addThreat(dmg);
           if (skill.isStun()) target.applyStun(skill.getStunDurationSeconds() * 1000L);
-          broadcastLog(player, ctx, "\u001B[1;33m🔥 " + member.getName() + " 施展【" + skill.getName() + "】，直取【" + target.getName() + "】要害，造成 " + dmg + " 點毀滅打擊！\u001B[0m");
+          broadcastLog(player, ctx, "\u001B[1;33m" + tag + "🔥 " + member.getName() + " 施展【" + skill.getName() + "】，直取【" + target.getName() + "】要害，造成 " + dmg + " 點毀滅打擊！\u001B[0m");
           if (!target.isAlive()) {
             broadcastLog(player, ctx, "\u001B[1;32m💥【" + target.getName() + "】慘叫倒地氣絕！\u001B[0m");
             if (ctx.isAllEnemiesDead()) ctx.setState(BattleState.VICTORY);
@@ -766,8 +900,6 @@ public class DrpgBattleService {
         }
       }
     }
-
-    pushDrpgState(player, pos, ctx);
   }
 
   public void castPartyUltimate(Player player, DungeonPosition pos) {
@@ -859,11 +991,46 @@ public class DrpgBattleService {
   public void resolveVictory(Player player, BattleContext ctx, DungeonPosition pos) {
     activeBattles.remove(player.getName());
     int totalXp = ctx.getEnemies().stream().mapToInt(BattleEnemy::getXp).sum();
+    if (totalXp <= 0) {
+      totalXp = Math.max(30, ctx.getEnemies().size() * 30);
+    }
 
     // 重置戰鬥資源
     for (PartyMember m : ctx.getParty().getMembers()) {
       m.setCurrentRage(0);
       m.setCurrentCombo(0);
+    }
+
+    // 發放戰鬥修為與判定升級
+    List<String> levelUpAnnouncements = new ArrayList<>();
+    var xpService = getXpProgressionService();
+    for (PartyMember m : ctx.getParty().getMembers()) {
+      if (m.isAlive() && m.getMadnessState() != PartyMember.MadnessState.DEAD_MEAT) {
+        var res = xpService.awardExp(m, totalXp);
+        if (res.isLeveledUp()) {
+          levelUpAnnouncements.add(res.formatAnnouncement());
+        }
+      }
+    }
+
+    // 同步主角實體屬性
+    if (player != null && player.getStats() != null) {
+      PartyMember leader = ctx.getParty().getLeader();
+      if (leader != null && leader.getStats() != null) {
+        player.getStats().setLevel(leader.getStats().getLevel());
+        player.getStats().setExp(leader.getStats().getExp());
+        player.getStats().setNextLevelExp(leader.getStats().getNextLevelExp());
+        player.getStats().setHp(leader.getStats().getHp());
+        player.getStats().setMaxHp(leader.getStats().getMaxHp());
+        player.getStats().setMp(leader.getStats().getMp());
+        player.getStats().setMaxMp(leader.getStats().getMaxMp());
+        player.getStats().setStr(leader.getStats().getStr());
+        player.getStats().setCon(leader.getStats().getCon());
+        player.getStats().setDex(leader.getStats().getDex());
+        player.getStats().setIntelligence(leader.getStats().getIntelligence());
+        player.getStats().setWis(leader.getStats().getWis());
+        player.getStats().setFreeStatPoints(leader.getStats().getFreeStatPoints());
+      }
     }
 
     List<String> droppedItemNames = new ArrayList<>();
@@ -941,11 +1108,15 @@ public class DrpgBattleService {
 
     String lootSummary = droppedItemNames.isEmpty() ? "（行囊已滿，未能裝入物品）" : String.join("、", droppedItemNames);
 
-    String victoryMsg = "\n\u001B[1;32m═══════════════════【戰鬥大捷】═══════════════════\n"
-        + "  小隊合力斬除太陰妖邪！全員獲得修為 " + totalXp + " 點！\n"
-        + "  戰利品已收納入隊伍行囊：【" + lootSummary + "】！\n"
-        + "══════════════════════════════════════════════════\u001B[0m\n";
-    broadcastLog(player, ctx, victoryMsg);
+    StringBuilder victorySb = new StringBuilder();
+    victorySb.append("\n\u001B[1;32m═══════════════════【戰鬥大捷】═══════════════════\n");
+    victorySb.append("  小隊合力斬除太陰妖邪！全員獲得修為 ").append(totalXp).append(" 點！\n");
+    for (String ann : levelUpAnnouncements) {
+      victorySb.append("  \u001B[1;33m").append(ann).append("\u001B[1;32m\n");
+    }
+    victorySb.append("  戰利品已收納入隊伍行囊：【").append(lootSummary).append("】！\n");
+    victorySb.append("══════════════════════════════════════════════════\u001B[0m\n");
+    broadcastLog(player, ctx, victorySb.toString());
 
     // 推送戰鬥結束，回到地牢普通狀態
     pushDrpgState(player, pos, null);
@@ -967,9 +1138,18 @@ public class DrpgBattleService {
 
     postBattleCleanup(player, ctx);
 
-    // 傳送回一層入口 (1, 1)
+    // 傳送回當前樓層起始入口 (動態讀取該地牢 startCoord，避免硬編碼瞬移至深層)
     if (pos != null) {
-      pos.setCoord(1, 1);
+      if (pos.getFloorId() != null) {
+        DungeonFloor floor = dungeonManager.getFloor(pos.getFloorId());
+        if (floor != null && floor.getStartCoord() != null) {
+          pos.setCoord(floor.getStartCoord().x(), floor.getStartCoord().y());
+        } else {
+          pos.setCoord(1, 1);
+        }
+      } else {
+        pos.setCoord(1, 1);
+      }
     }
 
     String defeatMsg = "\n\u001B[1;31m═══════════════════【小隊潰敗】═══════════════════\n"
@@ -1157,6 +1337,10 @@ public class DrpgBattleService {
 
   public void pushDrpgState(Player player, DungeonPosition pos, BattleContext battleCtx) {
     if (player == null) return;
+    if (stateBroadcaster != null) {
+      stateBroadcaster.accept(player);
+      return;
+    }
     if (pos == null) {
       pos = dungeonManager.getPlayerPosition(player.getName());
     }

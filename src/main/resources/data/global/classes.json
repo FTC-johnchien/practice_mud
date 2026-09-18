@@ -15,8 +15,8 @@
       "hpPerLevel": 30,
       "mpPerLevel": 0,
       "statWeights": {
+        "CON": 3.0,
         "STR": 1.5,
-        "CON": 1.2,
         "DEX": 0.5
       }
     },
@@ -62,11 +62,12 @@
       "WIS": 10
     },
     "growth": {
-      "hpPerLevel": 10,
-      "mpPerLevel": 20,
+      "hpPerLevel": 12,
+      "mpPerLevel": 25,
       "statWeights": {
-        "INT": 2.0,
-        "WIS": 1.0
+        "INT": 3.5,
+        "WIS": 1.0,
+        "CON": 0.5
       }
     },
     "proficiencies": {
@@ -104,12 +105,12 @@
       "WIS": 4
     },
     "growth": {
-      "hpPerLevel": 18,
+      "hpPerLevel": 15,
       "mpPerLevel": 0,
       "statWeights": {
-        "DEX": 2.0,
-        "STR": 0.5,
-        "AGI": 1.0
+        "DEX": 3.5,
+        "STR": 1.0,
+        "CON": 0.5
       }
     },
     "proficiencies": {
@@ -150,11 +151,12 @@
       "WIS": 12
     },
     "growth": {
-      "hpPerLevel": 15,
-      "mpPerLevel": 15,
+      "hpPerLevel": 18,
+      "mpPerLevel": 18,
       "statWeights": {
-        "WIS": 2.0,
-        "CON": 1.0
+        "WIS": 2.5,
+        "CON": 1.5,
+        "INT": 1.0
       }
     },
     "proficiencies": {
@@ -193,11 +195,11 @@
     },
     "growth": {
       "hpPerLevel": 20,
-      "mpPerLevel": 10,
+      "mpPerLevel": 8,
       "statWeights": {
-        "DEX": 1.5,
-        "STR": 1.0,
-        "INT": 0.5
+        "DEX": 2.5,
+        "STR": 1.5,
+        "CON": 1.0
       }
     },
     "proficiencies": {
@@ -235,11 +237,12 @@
       "WIS": 5
     },
     "growth": {
-      "hpPerLevel": 35,
-      "mpPerLevel": 5,
+      "hpPerLevel": 28,
+      "mpPerLevel": 10,
       "statWeights": {
         "CON": 2.0,
-        "STR": 1.0
+        "STR": 2.0,
+        "WIS": 1.0
       }
     },
     "proficiencies": {

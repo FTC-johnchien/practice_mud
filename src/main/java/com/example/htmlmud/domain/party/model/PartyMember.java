@@ -81,6 +81,10 @@ public class PartyMember {
   @Builder.Default
   private int threat = 0;
 
+  // 戰術方針規則清單 (Tactics / Gambit Rules)
+  @Builder.Default
+  private java.util.List<TacticsRule> tactics = new java.util.ArrayList<>();
+
   @JsonIgnore
   public int getEffectiveMinDamage() {
     int bonus = (equipment != null) ? equipment.values().stream().mapToInt(PartyItemSlot::getBonusMinDamage).sum() : 0;
@@ -245,6 +249,58 @@ public class PartyMember {
     return false;
   }
 
+  public boolean isLeader() {
+    return id != null && (id.equals("m-leader") || id.contains("leader"));
+  }
+
+  public void setLeader(boolean leader) {
+    if (leader) {
+      if (this.id == null || !this.id.contains("leader")) {
+        this.id = "m-leader";
+      }
+    } else {
+      if (this.id != null && this.id.contains("leader")) {
+        this.id = "m-companion";
+      }
+    }
+  }
+
+  public int getLevel() {
+    return stats != null ? stats.getLevel() : 1;
+  }
+
+  public int getExp() {
+    return stats != null ? stats.getExp() : 0;
+  }
+
+  public long getNextLevelExp() {
+    return stats != null ? stats.getNextLevelExp() : 180;
+  }
+
+  public int getFreeStatPoints() {
+    return stats != null ? stats.getFreeStatPoints() : 0;
+  }
+
+  public int getStr() {
+    return stats != null ? stats.getStr() : 5;
+  }
+
+  public int getCon() {
+    return stats != null ? stats.getCon() : 5;
+  }
+
+  public int getDex() {
+    return stats != null ? stats.getDex() : 5;
+  }
+
+  public int getIntelligence() {
+    return stats != null ? stats.getIntelligence() : 5;
+  }
+
+  public int getWis() {
+    return stats != null ? stats.getWis() : 5;
+  }
+
   public void restoreMp(int amount) {
     if (this.stats != null) {
       this.stats.setMp(Math.min(this.stats.getMaxMp(), this.stats.getMp() + amount));
@@ -261,6 +317,12 @@ public class PartyMember {
 
   public void setCooldown(String skillId, long cdMs) {
     cooldownUntil.put(skillId, System.currentTimeMillis() + cdMs);
+  }
+
+  public void resetCooldowns() {
+    if (cooldownUntil != null) {
+      cooldownUntil.clear();
+    }
   }
 
   public void takeDamage(int damage) {
@@ -452,5 +514,80 @@ public class PartyMember {
   @JsonIgnore
   public String getEffectiveClassName() {
     return getClassTemplate().map(com.example.htmlmud.domain.model.template.ClassTemplate::name).orElse(this.roleTitle);
+  }
+
+  public java.util.List<TacticsRule> getTactics() {
+    if (tactics == null) {
+      tactics = new java.util.ArrayList<>();
+    }
+    return tactics;
+  }
+
+  public void addTacticsRule(TacticsRule rule) {
+    getTactics().add(rule);
+    tactics.sort(java.util.Comparator.comparingInt(TacticsRule::getPriority));
+  }
+
+  public void clearTactics() {
+    getTactics().clear();
+  }
+
+  public void resetTactics() {
+    clearTactics();
+    initDefaultTactics();
+  }
+
+  public void initDefaultTactics() {
+    getTactics().clear();
+    if (skills == null || skills.isEmpty()) return;
+
+    int p = 1;
+    // 1. 治療招式預設規則
+    for (PartyMemberSkill s : skills) {
+      if (s.isHeal()) {
+        addTacticsRule(TacticsRule.builder()
+            .priority(p++)
+            .condition(TacticsCondition.ALLY_HP_LESS_THAN)
+            .conditionValue(45)
+            .target(TacticsTarget.LOWEST_HP_ALLY)
+            .skillId(s.getId())
+            .enabled(true)
+            .build());
+      }
+    }
+
+    // 2. 嘲諷招式預設規則
+    for (PartyMemberSkill s : skills) {
+      if (s.isTaunt()) {
+        addTacticsRule(TacticsRule.builder()
+            .priority(p++)
+            .condition(TacticsCondition.ENEMY_COUNT_GTE)
+            .conditionValue(2)
+            .target(TacticsTarget.ALL_ENEMIES)
+            .skillId(s.getId())
+            .enabled(true)
+            .build());
+      }
+    }
+
+    // 3. 輸出招式預設規則
+    for (PartyMemberSkill s : skills) {
+      if (!s.isHeal() && !s.isTaunt()) {
+        TacticsCondition cond = (s.getCostType() == ResourceType.RAGE || s.getCostType() == ResourceType.COMBO)
+            ? TacticsCondition.RESOURCE_GTE
+            : TacticsCondition.ALWAYS;
+        int val = (s.getCostType() == ResourceType.RAGE) ? Math.max(40, s.getCostValue())
+            : (s.getCostType() == ResourceType.COMBO) ? Math.max(3, s.getCostValue()) : 0;
+
+        addTacticsRule(TacticsRule.builder()
+            .priority(p++)
+            .condition(cond)
+            .conditionValue(val)
+            .target(s.isAoe() ? TacticsTarget.ALL_ENEMIES : TacticsTarget.CURRENT_ENEMY)
+            .skillId(s.getId())
+            .enabled(true)
+            .build());
+      }
+    }
   }
 }

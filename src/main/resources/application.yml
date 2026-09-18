@@ -31,8 +31,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    # 使用 H2 方言
-    database-platform: org.hibernate.dialect.H2Dialect
+    open-in-view: false
     show-sql: false
 
   # H2 管理介面，單機開發超好用

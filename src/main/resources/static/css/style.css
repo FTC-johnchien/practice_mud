@@ -767,6 +767,55 @@ body, html {
   color: #fff;
 }
 
+.act-btn.btn-green {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #10b981;
+  color: #34d399;
+}
+
+.act-btn.btn-green:hover {
+  background: rgba(16, 185, 129, 0.45);
+  color: #ffffff;
+}
+
+.act-btn.btn-blue {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: #38bdf8;
+  color: #7dd3fc;
+}
+
+.act-btn.btn-blue:hover {
+  background: rgba(56, 189, 248, 0.45);
+  color: #ffffff;
+}
+
+.act-btn.btn-red {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #fca5a5;
+}
+
+.act-btn.btn-red:hover {
+  background: rgba(239, 68, 68, 0.45);
+  color: #ffffff;
+}
+
+.act-btn.btn-gray {
+  background: rgba(100, 116, 139, 0.2);
+  border-color: #64748b;
+  color: #cbd5e1;
+}
+
+.act-btn.btn-gray:hover {
+  background: rgba(100, 116, 139, 0.45);
+  color: #ffffff;
+}
+
+.act-btn.btn-sm {
+  padding: 3px 8px;
+  font-size: 11px;
+}
+
 .input-container {
   flex: 1;
   display: flex;
@@ -959,10 +1008,10 @@ body, html {
   border-radius: 10px;
 }
 
-/* 敵方陣營容器 (支援 1~7 隻怪彈性網格) */
+/* 敵方陣營容器 (固定 5 欄網格，每隻怪預設佔 1/5，Boss/巨怪可自訂佔 2 格或多格) */
 .battle-enemies-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
   align-items: stretch;
 }
@@ -1049,9 +1098,10 @@ body, html {
   gap: 8px;
 }
 
+/* 我方戰隊在戰場主舞台的快速狀態列 (固定 5 欄網格，每位隊員佔 1/5) */
 .battle-party-quick-bar {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -2574,12 +2624,294 @@ body, html {
   color: #cbd5e1;
 }
 
+/* 現代 RPG 角色面板：頂部隊員切換頁籤列 */
+.party-modal-member-tabs {
+  display: flex;
+  background: rgba(15, 23, 42, 0.9);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+  overflow-x: auto;
+  padding: 10px 16px 0 16px;
+  gap: 8px;
+}
+
+.party-member-tab-btn {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  padding: 8px 14px;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.party-member-tab-btn:hover {
+  background: rgba(51, 65, 85, 0.8);
+  color: #f1f5f9;
+}
+
+.party-member-tab-btn.active {
+  background: #1e293b;
+  color: #38bdf8;
+  border-color: #38bdf8;
+  border-bottom: 2px solid #1e293b;
+  font-weight: bold;
+  box-shadow: 0 -2px 10px rgba(56, 189, 248, 0.2);
+}
+
+/* 現代 RPG 角色面板：子分類切換 (屬性裝備 / 武學法術 / 戰術方針) */
+.party-modal-sub-tabs {
+  display: flex;
+  background: #1e293b;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px 16px;
+  gap: 10px;
+}
+
+.party-sub-tab-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 5px 14px;
+  color: #94a3b8;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.party-sub-tab-btn:hover {
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.party-sub-tab-btn.active {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+  font-weight: bold;
+}
+
 .party-modal-members-list {
   padding: 16px;
   overflow-y: auto;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-  gap: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+/* ==========================================================================
+   同伴戰術方針 (Tactics / Gambit AI) 樣式
+   ========================================================================== */
+.tactics-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.tactics-header-banner {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tactics-banner-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tactics-banner-desc {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.tactics-banner-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.tactics-builder-card {
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid #38bdf8;
+  border-radius: 8px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.2s ease;
+}
+
+.tactics-builder-title {
+  font-size: 13px;
+  font-weight: bold;
+  color: #fbbf24;
+}
+
+.tactics-builder-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tactics-builder-row select,
+.tactics-builder-row input {
+  background: #1e293b;
+  border: 1px solid #475569;
+  color: #f1f5f9;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  outline: none;
+}
+
+.tactics-builder-row select:focus,
+.tactics-builder-row input:focus {
+  border-color: #38bdf8;
+}
+
+.tactics-rule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tactics-rule-row {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.tactics-rule-row.disabled {
+  opacity: 0.55;
+  background: rgba(15, 23, 42, 0.6);
+  border-style: dashed;
+}
+
+.tactics-rule-row:hover {
+  border-color: #38bdf8;
+  background: rgba(30, 41, 59, 0.9);
+}
+
+.tactics-prio-badge {
+  background: #0284c7;
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  min-width: 28px;
+  text-align: center;
+}
+
+.tactics-rule-desc {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.tactics-cond-tag {
+  color: #fbbf24;
+  font-weight: bold;
+}
+
+.tactics-target-tag {
+  color: #a78bfa;
+  font-weight: bold;
+}
+
+.tactics-skill-tag {
+  color: #38bdf8;
+  font-weight: bold;
+}
+
+.tactics-arrow {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.tactics-rule-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.tactics-empty-hint {
+  text-align: center;
+  color: #94a3b8;
+  padding: 30px 20px;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px dashed #334155;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.tactics-leader-box {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 32px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.tactics-leader-icon {
+  font-size: 40px;
+}
+
+.tactics-leader-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fbbf24;
+}
+
+.tactics-leader-desc {
+  color: #cbd5e1;
+  font-size: 13px;
+  max-width: 540px;
+  line-height: 1.6;
+}
+
+.tactics-leader-tip {
+  color: #38bdf8;
+  font-size: 12px;
+  background: rgba(56, 189, 248, 0.1);
+  padding: 6px 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  margin-top: 6px;
 }
 
 .party-detail-card {
@@ -2625,6 +2957,175 @@ body, html {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 6px;
+}
+
+/* 境界修為與經驗值進度條 */
+.party-detail-exp-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.party-detail-exp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.party-detail-exp-title {
+  color: #fbbf24;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.party-detail-exp-val {
+  color: #94a3b8;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+}
+
+.party-detail-exp-bar {
+  width: 100%;
+  height: 6px;
+  background: #1e293b;
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.party-detail-exp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24, #fde047);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+  transition: width 0.3s ease;
+}
+
+/* 自由分配點數榮譽橫幅 */
+.free-points-banner {
+  background: linear-gradient(90deg, rgba(180, 83, 9, 0.4), rgba(245, 158, 11, 0.25));
+  border: 1px solid #f59e0b;
+  border-radius: 6px;
+  padding: 6px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #fef08a;
+  animation: pulse-border 2s infinite alternate;
+}
+
+@keyframes pulse-border {
+  0% { border-color: rgba(245, 158, 11, 0.5); box-shadow: 0 0 4px rgba(245, 158, 11, 0.2); }
+  100% { border-color: rgba(251, 191, 36, 1); box-shadow: 0 0 12px rgba(245, 158, 11, 0.5); }
+}
+
+/* 5 維基礎屬性網格與加點按鈕 */
+.party-detail-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 6px;
+}
+
+.stat-item-box {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.stat-item-box:hover {
+  border-color: rgba(56, 189, 248, 0.3);
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.stat-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat-item-label {
+  font-size: 11px;
+  color: #cbd5e1;
+  font-weight: bold;
+}
+
+.stat-item-val {
+  font-size: 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: bold;
+  color: #38bdf8;
+}
+
+.stat-item-desc {
+  font-size: 10px;
+  color: #64748b;
+  line-height: 1.2;
+}
+
+.stat-add-btn {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #fff;
+  border: 1px solid #f59e0b;
+  border-radius: 4px;
+  padding: 1px 7px;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(217, 119, 6, 0.4);
+  transition: all 0.15s ease;
+}
+
+.stat-add-btn:hover {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.8);
+  transform: scale(1.05);
+}
+
+.stat-add-btn:active {
+  transform: scale(0.95);
+}
+
+.stat-add-btn:disabled, .stat-add-btn.disabled {
+  background: #334155;
+  border-color: #475569;
+  color: #64748b;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+  opacity: 0.5;
+}
+
+/* 底部 HUD 隊員卡片等級與自由點數角標 */
+.member-level-badge {
+  font-size: 10px;
+  color: #facc15;
+  font-weight: bold;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.hud-free-points-pill {
+  background: linear-gradient(135deg, #b45309, #d97706);
+  color: #fef08a;
+  border: 1px solid #f59e0b;
+  border-radius: 4px;
+  padding: 0 4px;
+  font-size: 9px;
+  font-weight: bold;
+  cursor: pointer;
+  animation: pulse-border 1.5s infinite alternate;
 }
 
 .party-detail-equip-grid {
@@ -3195,6 +3696,7 @@ body, html {
 
 .wow-spellbook-page {
   flex: 1;
+  min-width: 0;
   padding: 8px 10px;
   display: flex;
   flex-direction: column;
@@ -3203,7 +3705,8 @@ body, html {
 }
 
 .wow-spellbook-tabs {
-  width: 105px;
+  width: 110px;
+  flex-shrink: 0;
   background: rgba(15, 23, 42, 0.7);
   display: flex;
   flex-direction: column;

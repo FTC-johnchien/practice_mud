@@ -52,7 +52,7 @@
 ## 3. 專案技術棧 (Tech Stack)
 * **專案名稱**：`htmlmud`
 * **語言平台**：Java JDK 25（啟用 Preview 特性）。
-* **核心框架**：Spring Boot 3.5.10。
+* **核心框架**：Spring Boot 4.1.1。
 * **架構風格**：單體模組化 (Modular Monolith) + 領域驅動設計 (DDD)。
 * **並發模型**：Java 21+ Virtual Threads (Loom) + 自研輕量級 Actor 郵箱模型（無鎖並發、訊息驅動）。
 * **資料持久化**：
@@ -263,6 +263,113 @@
       - `default_companions.json` 為鐵牛、燕青、墨道人、芷若注入門派特色武學至 `learnedStances`。
     - **自動化測試升級 (`SkillsTaxonomyAndWeaponBindingTest`)**：
       - 新增 4 項專屬測試，覆蓋全域技能多層目錄遞迴加載、9 大武器種類招式映射、夥伴門派特色武學及高階技能屬性校驗。
+  * **2026-09-18（Spring Boot 4.1.1 升級與階段一核心手感優化：同伴戰術 AI、地牢伏擊調息、動態滅團重生點）**：
+    - **Spring Boot 4.1.1 框架升級**：
+      - 將專案由 Spring Boot 3.5.10 成功平滑升級至最新 Spring Boot 4.1.1（Jakarta EE 11 / Tomcat 11.0.24 / Hibernate 7.4.5）。
+      - 清理 `application.yml` 中已過時的 `database-platform: org.hibernate.dialect.H2Dialect` 與顯式配置 `open-in-view: false`，消除啟動警示。
+    - **同伴戰術 AI（Gambit / Auto-Tactics）實裝**：
+      - 在 `DrpgBattleService.java` 的戰鬥循環中引入 `tryTriggerCompanionTactics`。
+      - 醫修（凌霜）：任一隊員血量 $\le 45\%$ 時自動施展【神聖治癒/甘露靈泉】急救，扣除真元並進入冷卻。
+      - 力士（鐵牛）：敵群 $\ge 2$ 或面對首領時，自動施展【金剛怒目/獅子吼】全場嘲諷（仇恨 +600，嘲諷 5 秒）。
+      - 輸出/法師/刺客：資源充沛（怒氣 $\ge 40$、連擊點 $\ge 3$、真元 $\ge 35\%$）時自動打出爆發絕技。
+      - 主角保留 100% 手動出招主導權，大幅釋放玩家在即時戰鬥中微操 5 人的認知超載。
+    - **地牢調息夜襲伏擊（Ambush）與安全節點（Safe Nodes）機制**：
+      - `RestCommand.java` 引入地牢安全判定：墨家非攻殘碑（`EVENT`）與向上階梯（`STAIRS_UP`）為絕對安全節點，調息 100% 成功且不增加靈壓。
+      - 危險廊道調息進行暗骰：基礎 $25\% + (\text{Danger} \times 0.5\%)$。觸發伏擊時立即中斷調息並遭遇妖邪突襲開戰，徹底封堵原地刷滿血魔道心的作弊漏洞。
+    - **滅團重生坐標動態化**：
+      - `DrpgBattleService.resolveDefeat` 移除寫死 `(1, 1)`，改為動態讀取當前樓層 `floor.getStartCoord()`，墨竹礦坑 B1F 精確退回起點 `(1, 8)`。
+    - **新增自動化整合測試 (`PhaseOneMechanicsTest`)**：
+      - 新增 4 項專屬測試，自動化驗證動態重生坐標、安全節點調息免靈壓、醫修殘血自動急救、力士主動嘲諷。
+  * **2026-09-18（模組化隊友戰術 AI 指針系統 / Gambit System 實裝）**：
+    - **戰術規則引擎 (Tactics Rule Engine)**：
+      - 新增 `TacticsCondition`（條件：`ALLY_HP_LESS_THAN`, `SELF_HP_LESS_THAN`, `ENEMY_COUNT_GTE`, `ENEMY_IS_BOSS`, `RESOURCE_GTE`, `ALWAYS`）。
+      - 新增 `TacticsTarget`（目標：`LOWEST_HP_ALLY`, `SELF`, `CURRENT_ENEMY`, `ALL_ENEMIES`, `ALL_ALLIES`）。
+      - 新增 `TacticsRule`（優先級 `priority`、條件、閥值、目標、技能ID、啟用開關、沉浸式文本格式化）。
+    - **成員實體與戰鬥求值整合**：
+      - `PartyMember` 具備 `tactics` 規則鏈，支援按優先級排序、重置職業預設、清空與新增規則。
+      - `DrpgBattleService.tryTriggerCompanionTactics` 動態循序求值，支援雙補師（Healer A 於 60% 觸發小急救、Healer B 於 35% 觸發起死回生）、雙坦克（Tank 1 群怪嘲諷、Tank 2 首領單嘲）等高度客製化戰術博弈。
+    - **玩家交互指令 (`PartyCommand`)**：
+      - 實裝 `party tactics <隊員編號>`：檢視當前規則鏈清單與中文說明。
+      - 實裝 `party tactics <隊員編號> clear`：清空規則。
+      - 實裝 `party tactics <隊員編號> reset`：恢復職業預設戰術。
+      - 實裝 `party tactics <隊員編號> add <優先級> <條件> <數值> <目標> <技能ID>`：新增或覆蓋規則。
+    - **新增自動化整合測試 (`CustomCompanionTacticsTest`)**：
+      - 新增 3 項測試，驗證雙補師血量閥值分流、雙坦群嘲與首領單嘲分工、CLI 指令互動與狀態連動。
+  * **2026-09-18（前端城鎮環境人物渲染拋錯修復 / Town NPC Card Render Bugfix）**：
+    - **問題定位**：`drpg-view.js` 在渲染城鎮右欄人物清單（`town-npcs-list`）時，於第 346 行直接存取未宣告的 `header` 變數（`header.innerHTML = ...`），導致瀏覽器拋出 `Uncaught ReferenceError: header is not defined`。此異常在第一位 NPC 即刻中斷渲染循環，造成計數角標顯示 `(3)` 但下方生靈卡片與能力按鈕完全空白。
+    - **修復方案**：補齊 `const header = document.createElement('div'); header.className = 'npc-header';`，並重新同步靜態資源，徹底恢復客棧掌櫃福伯、力士鐵牛、醫修凌霜等生靈卡片與能力標籤（交談/買賣/招募/安歇）正常渲染。
+  * **2026-09-18（五大 UI/UX 與遊戲機制缺陷徹底修復：貨棧庫存即時扣減、城鎮狀態跳轉地牢根除、戰場 5-Slot 網格、WASD 焦點解鎖、現代 RPG 狀態與同伴戰術 AI 全視覺化）**：
+    - **缺陷 1：貨棧購買後彈窗內商品庫存即時扣減與售罄狀態聯動**：
+      - 定位 `drpg-view.js:openShopModal` 當彈窗開啟中僅更新頂部靈石數額並直接 `return`，跳過了各行商品庫存更新邏輯。
+      - 重構為動態遍歷商品，即時更新 `.shop-item-stock` 文本與顏色（剩餘庫存藍色 `#38bdf8`，售罄紅色 `#ef4444`）、動態限制數量選擇器 `max` 屬性，並於庫存為 0 時自動切換按鈕為 `❌ 售罄` 並禁用點擊。
+    - **缺陷 2：客棧中卸下裝備或戰鬥遁地錯誤跳轉地牢雷達與 WASD 鎖死根除**：
+      - 定位 `DrpgBattleService.pushDrpgState` 硬編碼發送 `mode: "DUNGEON"` 與 `mozhu_mines_b1f`，導致在客棧（`newbie_village:inn`）中卸除裝備或戰鬥遁地時覆蓋了城鎮模式，客戶端切入地牢雷達，且因客棧無北方出口導致按 W 無效（按 `>` 發送 `east` 方能走進廣場重置城鎮）。
+      - 在 `DrpgBattleService` 引入 `stateBroadcaster` 鉤子，由 `GameStateBroadcastService` 集中判定玩家所在房間類型（`broadcastTownState` vs `broadcastDungeonState`），並將戰鬥視圖注入城鎮 DTO，徹底根除偽地牢模式切換。
+    - **缺陷 3：戰場主舞台我方與敵方 5 槽位網格化（固定 1/5 寬度）與怪物體型支援**：
+      - 將 `.battle-enemies-container` 與 `.battle-party-quick-bar` 的 CSS Grid 由 `auto-fit` 重構為 `repeat(5, minmax(0, 1fr))`，確保單人或 2 人隊伍、1~2 隻小怪時各自穩定佔用單排 1/5 槽位，杜絕 100% / 50% 膨脹變形。
+      - 敵怪卡片支援 `colSpan` 與 `rowSpan` 體型屬性（預設 1 格，Boss 與首領自動跨 2 格或多格），保留未來巨型怪物的視覺震撼感。
+    - **缺陷 4：WASD 偶發性無作用與表單/模態視窗焦點鎖定修復**：
+      - 在關閉角色狀態、貨棧、存檔等模態視窗時，主動調用 `document.activeElement.blur()`，解除按鈕焦點殘留。
+      - 在鍵盤事件監聽器中新增輸入框型態檢查（`INPUT`, `TEXTAREA`, `SELECT`），當玩家在輸入框打字時避免按鍵被吞噬或誤發遊戲移動，關閉彈窗後立刻恢復全局 WASD 與熱鍵響應。
+    - **缺陷 5：現代 RPG 單人角色狀態頁籤、WoW 法術書防擠壓與同伴戰術方針 (Gambit AI) 全視覺化面板**：
+      - 依現代 RPG（如柏德之門、女神異聞錄、FF12）標準重構 `#party-modal`：
+        1. **頂部隊員切換列 (`party-modal-member-tabs`)**：直觀呈現 `#1 玄靈子`、`#2 鐵牛`、`#3 凌霜` 等隊員頁籤，自帶血條與職業徽章，點擊秒切。
+        2. **子分頁切換列 (`party-modal-sub-tabs`)**：劃分【🛡️ 屬性與裝備】、【📖 武學法術】、【🎯 戰術方針 (Gambit AI)】三大子頁面。
+        3. **【🛡️ 屬性與裝備】**：單人滿版卡片，完整展示氣血、真元/怒氣/連擊、道心 SAN 與 7 大裝備槽位（卸下/挑選）。
+        4. **【📖 武學法術】**：WoW 風格典籍獨佔滿版寬度，給予 `.wow-spellbook-page` 增加 `min-width: 0`，給予 `.wow-spellbook-tabs` 增加 `flex-shrink: 0`，徹底解決鐵牛「門派絕技」撐爆容器擠丟右側標籤的 Bug。
+        5. **【🎯 戰術方針 (Gambit AI)】**：
+           - 主角（隊長）：展示「👑 隊長手操模式」卡片，說明主角擁有 100% 即時戰略決策權。
+           - 同伴（鐵牛、凌霜等）：完整可視化展示當前戰術規則鏈清單（#1, #2...），帶有條件、閥值、目標與武學標籤。支援一鍵點擊【🟢 啟用中 / ⚪ 已停用】（`party tactics <idx> toggle <priority>`）、一鍵【🗑️ 刪除】（`party tactics <idx> delete <priority>`）、【➕ 新增方針】（展開規則構建表單）、【🔄 重置門派預設】與【🗑️ 清空方針】。
+      - `PartyCommand` 擴充 `toggle` 與 `delete` CLI 子指令，並於 `CustomCompanionTacticsTest` 補齊自動化測試。
+  * **2026-09-18（四大戰鬥站位、全隊陣法架構、怒氣積累機制與 WASD 焦點防鎖定優化）**：
+    - **站位切換支援與廣播聯動**：
+      - `PartyCommand` 與 `FormationCommand` 新增 `switch` / `row` 子指令（`party switch <idx> [front|back]`），支援即時切換隊員前衛/後衛戰鬥站位，並即時廣播 DRPG 狀態更新。
+      - 前端個人狀態卡片與全隊站位盤全面更新為 `send('party switch ' + idx)`，徽章與站位狀態無延遲同步。
+    - **全隊陣法奧義從個人武學典籍抽離為獨立面板**：
+      - 個人武學典籍 (`renderMemberSpellbook`) 移除了每個隊員重複出現的「☯️ 陣法奧義」分頁，專注於「🗡️ 兵刃套路」與「⚡ 門派絕技」，並附有一鍵跳轉全隊陣法指引。
+      - 在角色狀態面板頂部隊員列右側新增【☯️ 全隊陣法奧義】專屬分頁 (`renderTeamFormationView`)，集結呈現：
+        1. 當前啟用陣法光環與名稱（四象辟邪陣防禦減傷 vs 玄陰噬魂陣暴擊弒魂）。
+        2. 靈威充能條（0~100）與全隊終極奧義施展按鈕。
+        3. 5 人隊伍前後排站位調配盤（視覺化呈現前衛 Front Row 與後衛 Back Row，提供一鍵調至前衛/後衛）。
+        4. 道門陣法典籍庫（可一鍵切換結成《四象辟邪陣》或《玄陰噬魂陣》）。
+    - **怒氣積累機制修復（鐵牛普攻獲取怒氣）**：
+      - 定位 `DrpgBattleService` 普攻判定中漏掉了怒氣生成，導致力士在面對木樁未受傷時怒氣始終為 0。
+      - 補齊 `if (member.getResourceType() == ResourceType.RAGE) { member.gainRage(15); }`，鐵牛每次揮舞重錘普攻皆可獲取 15 點怒氣，確保戰術方針正常觸發。
+    - **戰鬥脫離與 WASD 輸入焦點防鎖定**：
+      - `mud-ui.js:handleEnter()` 發送指令後立即呼叫 `cmdInput.blur()`，杜絕玩家手動輸入 `party` 等指令後文字框隱性佔據焦點導致 WASD 被吞噬。
+      - 新增全域 `pointerdown` 監聽器，點擊非輸入框遊戲區域自動釋放文字焦點。
+      - 城鎮模式中若玩家朝無出路方向按鍵（如客棧中僅有東向出口，按 W/A/S），主動於日誌輸出前路不通提示與可用出口清單，提供明確視覺回饋。
+  * **2026-09-18（階段一：戰鬥經驗值結算與 1~1000 級成長曲線、主角自由配點與隊友職業自適應成長實裝）**：
+    - **1~1000 級平滑冪次經驗需求曲線**：
+      - 實裝 `XpProgressionService.calculateNextLevelExp(level)`：公式 $\text{NextLevelExp}(L) = \lfloor 60 \times L^{1.6} + 120 \times L \rfloor$。
+      - 兼具等級 1~20 的平滑過渡（Lv.1 需求 180 EXP，升級節奏緊湊）與高等級防數值溢出（Lv.1000 約 400 萬 EXP，在 long 與 int 範圍內，拒絕階乘與指數爆炸）。
+    - **隊友職業自適應成長 (Class-Adaptive Growth) 與離散 Delta 計算**：
+      - 全 6 大職業成長範本（`classes.json`）平衡為每級 5 點基礎屬性預算（如戰士 CON 3.0, STR 1.5, DEX 0.5；劍客 DEX 2.5, STR 1.5, CON 1.0；法師 INT 3.5, WIS 1.0, CON 0.5）。
+      - 採用無狀態離散取整算法：$\Delta = \lfloor \text{newLevel} \times w \rfloor - \lfloor (\text{newLevel} - 1) \times w \rfloor$，消除浮點數累加誤差。
+      - 同伴升級依據職業模板自動提升 HP、MP 與基礎 5 維（STR/CON/DEX/INT/WIS），無自由分配點數，免除玩家操控 5 人隊伍時的微操疲勞。
+    - **主角專屬特權與自由分配點數 (Free Stat Allocation)**：
+      - 主角（隊長）升級除了享受職業基礎成長外，額外獲贈 **+2 自由修為點數 (`freeStatPoints`)**。
+      - 支援 CLI 指令：`party stat`（檢視當前等級、經驗值條與未分配點數）與 `party stat add <str|con|dex|int|wis> [點數]`（自由分配至 5 維屬性，體質 CON 加點額外提升生命上限 HP +10，悟性 INT 加點額外提升真元上限 MP +8）。
+      - 狀態即時與 `Player` 實體及存檔系統雙向同步。
+    - **戰鬥大捷經驗結算與突破境界廣播**：
+      - `DrpgBattleService.resolveVictory`：累計敵群擊殺經驗值，全員平分並為所有存活隊友發放修為。
+      - 支援跨多等級爆發跳級（Multi-level jump）與升級氣血/真元回滿。
+      - 戰後日誌輸出金光灌頂突破播報（`【金光灌頂】隊員「鐵牛」突破境界！(Lv.1 ➔ Lv.2) 基礎屬性成長: CON+3, STR+2, DEX+1`）。
+    - **自動化測試全量覆蓋 (`XpProgressionServiceTest`)**：
+      - 涵蓋經驗公式曲線平滑度、同伴職業自適應成長、主角 +2 點數獲取與手動分配、多等級跳級等 4 項測試全數通過。
+  * **2026-09-18（階段二：角色狀態面板與 HUD 視覺化修為條與 [+] 自由加點 UI 實裝）**：
+    - **角色狀態面板 (C 鍵) 修為境界條與五維屬性網格可視化**：
+      - 前端 `drpg-view.js` 重構 `renderPartyModal()` 的屬性裝備 (`EQUIP`) 子分頁：
+        1. **境界修為卡片 (`.party-detail-exp-card`)**：展示當前境界等級（`Lv.X`）、數值進度 (`EXP: 当前 / 晋升需求`) 與藍金色漸層修為能量條 (`.party-detail-exp-fill`)。
+        2. **自由分配點數橫幅 (`.free-points-banner`)**：主角若有可用自由點數，展示微光閃爍的金色尊榮橫幅 `⭐ 道胎未定・造化充盈：尚有 N 點自由修為點數！`；若無點數或為隊員，則溫馨提示成長模式規則。
+        3. **五維先天道基網格 (`.party-detail-stats-grid`)**：精細排版力量 (STR)、根骨 (CON)、靈巧 (DEX)、悟性 (INT)、定力 (WIS) 之數值、英文代號與武學影響領域。
+        4. **主角專屬 `[+1]` 點擊配點按鈕 (`.stat-add-btn`)**：主角若有自由點數，五維右側點亮加點按鈕，滑鼠點擊直接調用 `send('party stat add <stat> 1')`，享受無縫即時加點與氣血/真元上限連動提升。
+    - **底部 HUD 隊員卡片與頁籤等級視覺化**：
+      - 底部小隊卡片標題列新增金色境界等級徽章（`.member-level-badge`：`Lv.X`）。
+      - 若主角擁有未分配自由點數，底部卡片即時亮起微光金標 `[+N點]`（`.hud-free-points-pill`），點擊可直接開啟配點視窗。
+      - 隊員切換頁籤（`#party-modal-member-tabs`）同步顯示各隊員等級與加點提示角標。
+    - **後端雙向資料同步加固 (`PartyCommand.java`)**：
+      - 加點成功後，除基礎 5 維外，同步將氣血 HP、氣血上限 MaxHP、真元 MP、真元上限 MaxMP 完整鏡像同步至 `Player.getStats()`，確保持久化與內存無任何數值漂移。
 
 ---
 
@@ -270,6 +377,8 @@
 * **測試時間**：2026-09-18
 * **測試指令**：`.\test.ps1`（或 `mvnw test`）
 * **測試項目**：
+  * `CustomCompanionTacticsTest`：雙補師血量百分比差異化急救（60% 小補 vs 35% 大補）、雙坦怪物數量群嘲與首領單嘲分工、`party tactics` 檢視/清空/新增/重置等 3 項測試全過。
+  * `PhaseOneMechanicsTest`：滅團重生坐標動態化、地牢安全節點調息、同伴醫修殘血自動急救、同伴力士戰鬥自動嘲諷等 4 項測試全過。
   * `SkillsTaxonomyAndWeaponBindingTest`：全域技能庫 67 個技能多層子目錄遞迴載入、9 大武器種類招式映射、夥伴初始門派特色套路配置、8 大門派高階武學參數與屬性完好等 4 項測試全過。
   * `GlobalItemsAndShopOverridesTest`：全域物品庫（兵刃、防具、飾品、消耗品、素材、貨幣、任務信物）遞迴載入、帶 zoneId 前綴與純 ID 的雙向智慧容錯查詢、商店本地化實例參數（定價覆寫、價格倍率、名稱說明原型繼承）、線程安全限量庫存管理與動態扣減、真實 `newbie_village/shops.json` 客棧貨棧等 5 項測試全過。
   * `MobRankAndClassificationTest`：`MobRank`（NORMAL/ELITE/BOSS）階級定義、預設值與舊版 `kind: "BOSS"` 向下相容升級、真實資料檔宋天衡/哥布林王/福伯/白石老人正交標籤解析、`BattleEnemy` 階級繼承與【首領】前綴動態注入、招募夥伴唯一性（`isUnique`）等 5 項測試全過。
@@ -282,15 +391,16 @@
   * `DrpgBattleServiceTest`：包含集火目標動態切換、技能施放、嘲諷仇恨、陣亡結算等 7 項測試全過。
   * `HtmlmudApplicationTests`：Spring Boot 啟動與資料庫配置驗證。
   * `MozhuMinesIntegrationTest`：礦坑場景動態載入、Boss 戰鬥與任務掉落驗證。
-  * `MozhuMinesDungeonIntegrationTest`：墨竹礦坑 10x10 DRPG 地牢載入、迷霧開圖、步進與首領祭壇觸發驗證。
+  * `MozhuMinesDungeonIntegrationTest`：墨竹礦坑 10x10 DRPG 地牢載入、迷霧開圖、步进與首領祭壇觸發驗證。
   * `NewbieToMozhuLoopIntegrationTest`：新手村客棧整備購藥 -> 啟程前往礦坑 -> B1F 步進探索使用靈藥 -> 首領討伐掉落 -> 撤離回村安歇之完整閉環驗證。
   * `TownDungeonDualModeIntegrationTest`：單人開局、客棧招募/請離夥伴、雙模狀態廣播、4 正交方向拓撲移動、靜默存檔查詢與簡約城鎮行進日誌驗證。
   * `PartyEquipmentIntegrationTest` / `PartyFormationTest`：隊伍陣法與裝備協同驗證。
   * `PartyInventoryAndMadnessTest`：DRPG 地牢步進、San 值/狂亂度、消耗品去綴堆疊與 5+2 裝備輸出測試。
   * `TaiyinTombDungeonTest`：太陰古塚步進與暗雷測試。
   * `SaveGameServiceTest`：單機多槽位 JSON 存讀檔驗證。
+  * `XpProgressionServiceTest`：1~1000級平滑經驗需求曲線計算、主角升級獲得職業成長與 +2 自由分配修為點數、同伴自適應職業範本（戰士/劍客等）無自由點數自動成長、多等級爆發跳級（Multi-level jump）等 4 項測試全過。
   * `WorldDataIntegrityTest`：4 大區域載入、出口拓撲無懸空、自然攻擊與技能映射、Bug 迴歸測試。
-* **結果**：`Tests run: 94, Failures: 0, Errors: 0, Skipped: 0` -> **BUILD SUCCESS (94 項測試全數綠燈通過)**
+* **結果**：`Tests run: 106, Failures: 0, Errors: 0, Skipped: 0` -> **BUILD SUCCESS (106 項測試全數綠燈通過)**
 
 ---
 
