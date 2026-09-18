@@ -158,6 +158,7 @@
       "福伯"
     ],
     "kind": "FRIENDLY",
+    "isUnique": true,
     "level": 30,
     "maxHp": 3000,
     "str": 20,
@@ -169,6 +170,11 @@
       "客官是要打尖還是住店？本店的烤麵包與清心靈茶最能定心回血！（輸入 'shop' 或 'list' 瀏覽貨品）",
       "聽說北邊墨竹礦坑近日煞氣沖天，宋家大師兄進去後便狂亂癲狂，客官入山千萬要多備乾糧！",
       "疲憊的話不妨在此客棧安歇（輸入 'rest'），喝碗熱酒睡上一覺，氣血理智便能全復！"
+    ],
+    "capabilities": [
+      { "type": "TALK", "label": "交談", "command": "talk innkeeper", "icon": "💬" },
+      { "type": "SHOP", "label": "貨棧買賣", "command": "shop", "icon": "🛒" },
+      { "type": "REST", "label": "客棧安歇", "command": "rest", "icon": "🛏️" }
     ]
   },
   {
@@ -184,6 +190,7 @@
       "白石老人"
     ],
     "kind": "FRIENDLY",
+    "isUnique": true,
     "level": 40,
     "maxHp": 4000,
     "str": 25,
@@ -195,6 +202,10 @@
       "唉……北方的墨竹山廢棄礦坑近來陰煞翻湧，大師兄宋天衡誤入魔道，成了畸變妖邪……",
       "道友若能替天行道，深入礦坑斬殺妖邪大師兄並帶回長老黑話玉牌，老夫定將墨家秘傳重謝！",
       "礦坑內步步殺機，若理智枯竭將遭天道畸變，出發前切記至客棧福伯處備足辟邪清心靈茶！"
+    ],
+    "capabilities": [
+      { "type": "TALK", "label": "交談", "command": "talk village_elder", "icon": "💬" },
+      { "type": "QUEST", "label": "任務指引", "command": "talk village_elder", "icon": "📜" }
     ]
   }
 ]

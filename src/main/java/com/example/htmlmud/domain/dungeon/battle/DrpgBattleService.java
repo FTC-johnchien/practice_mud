@@ -30,6 +30,7 @@ import com.example.htmlmud.domain.party.model.ResourceType;
 import com.example.htmlmud.domain.party.model.RowPosition;
 import com.example.htmlmud.domain.party.service.PartyService;
 import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
+import com.example.htmlmud.infra.util.RandomUtil;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -497,7 +498,35 @@ public class DrpgBattleService {
               if (enemy.getId().startsWith("aberration-")) {
                 broadcastLog(player, ctx, "\u001B[1;35m🐙【" + enemy.getName() + "】深淵血肉肉瘤劇烈痙攣，爆發不可名狀凝視，重創 " + targetMember.getName() + " 造成 " + finalDmg + " 點暗蝕傷害！\u001B[0m");
               } else {
-                broadcastLog(player, ctx, "\u001B[1;31m⚡【" + enemy.getName() + "】爪擊撕咬，重創 " + targetMember.getName() + " 造成 " + finalDmg + " 點傷害！\u001B[0m");
+                String moveName = null;
+                String raceId = enemy.getRace();
+                if (raceId != null) {
+                  var raceOpt = TemplateRepository.findRace(raceId);
+                  if (raceOpt.isPresent() && raceOpt.get().combat() != null && raceOpt.get().combat().naturalAttacks() != null && !raceOpt.get().combat().naturalAttacks().isEmpty()) {
+                    var attack = RandomUtil.pickWeighted(raceOpt.get().combat().naturalAttacks());
+                    if (attack != null) {
+                      var skOpt = TemplateRepository.findSkill(attack.getId());
+                      if (skOpt.isPresent() && skOpt.get().getMoves() != null && !skOpt.get().getMoves().isEmpty()) {
+                        var moves = skOpt.get().getMoves();
+                        moveName = moves.get(ThreadLocalRandom.current().nextInt(moves.size())).name();
+                      }
+                    }
+                  }
+                }
+                if (moveName == null && enemy.getSkills() != null && !enemy.getSkills().isEmpty()) {
+                  String skId = enemy.getSkills().get(ThreadLocalRandom.current().nextInt(enemy.getSkills().size()));
+                  var skOpt = TemplateRepository.findSkill(skId);
+                  if (skOpt.isPresent() && skOpt.get().getMoves() != null && !skOpt.get().getMoves().isEmpty()) {
+                    var moves = skOpt.get().getMoves();
+                    moveName = moves.get(ThreadLocalRandom.current().nextInt(moves.size())).name();
+                  }
+                }
+
+                if (moveName != null) {
+                  broadcastLog(player, ctx, "\u001B[1;31m⚡【" + enemy.getName() + "】施展【" + moveName + "】，重創 " + targetMember.getName() + " 造成 " + finalDmg + " 點傷害！\u001B[0m");
+                } else {
+                  broadcastLog(player, ctx, "\u001B[1;31m⚡【" + enemy.getName() + "】發起猛烈撲擊，重創 " + targetMember.getName() + " 造成 " + finalDmg + " 點傷害！\u001B[0m");
+                }
               }
 
               if (!targetMember.isAlive()) {
@@ -718,7 +747,12 @@ public class DrpgBattleService {
         broadcastLog(player, ctx, "\u001B[1;36m🌩️ " + member.getName() + " 祭出【" + skill.getName() + "】，排山倒海的威能橫掃敵方全體！\u001B[0m");
         if (ctx.isAllEnemiesDead()) ctx.setState(BattleState.VICTORY);
       } else {
-        BattleEnemy target = ctx.getTargetEnemy();
+        BattleEnemy target = null;
+        if (targetIdx >= 0 && targetIdx < ctx.getEnemies().size() && ctx.getEnemies().get(targetIdx).isAlive()) {
+          target = ctx.getEnemies().get(targetIdx);
+        } else {
+          target = ctx.getTargetEnemy();
+        }
         if (target != null && target.isAlive()) {
           int dmg = (int) (calculatePlayerDamage(member, target) * skill.getDamageMultiplier());
           target.takeDamage(dmg);

@@ -1,13 +1,20 @@
 package com.example.htmlmud.application.command.impl;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.CommandAlias;
 import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.context.MudContext;
+import com.example.htmlmud.domain.model.template.ShopTemplate;
+import com.example.htmlmud.domain.model.template.ShopTemplate.ShopItemTemplate;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.service.PartyService;
+import com.example.htmlmud.domain.service.GameStateBroadcastService;
+import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,15 +25,44 @@ import lombok.extern.slf4j.Slf4j;
 public class ShopCommand implements PlayerCommand {
 
   private final PartyService partyService;
+  private final GameStateBroadcastService broadcastService;
 
-  public record ShopItem(int index, String id, String templateId, String name, int price, String description) {}
+  private final Map<String, Integer> shopStockTracker = new ConcurrentHashMap<>();
 
-  private static final List<ShopItem> INN_GOODS = List.of(
-      new ShopItem(1, "bread", "newbie_village:village_bread", "村莊烤麵包", 2, "乾糧，食用回復 20 點氣血"),
-      new ShopItem(2, "tea", "newbie_village:purify_tea", "辟邪清心靈茶", 5, "靈茶，飲用回復 25 點道心 (SAN) 與 20 點真元"),
-      new ShopItem(3, "salve", "newbie_village:healing_salve", "百草金創藥膏", 8, "靈膏，塗抹迅速回復 60 點氣血"),
-      new ShopItem(4, "pickaxe", "mozhu_mines:miner_pickaxe", "雜役採礦鐵鎬", 15, "耐用鐵鎬，可於礦坑挖掘靈石或破障")
-  );
+  public record ShopCatalogDto(
+      String type,
+      String shopId,
+      String shopName,
+      int playerCoin,
+      List<ShopCatalogItemDto> goods
+  ) {
+    public record ShopCatalogItemDto(
+        int index,
+        String id,
+        String templateId,
+        String name,
+        int price,
+        int stock,
+        String description
+    ) {}
+  }
+
+  public int getStock(String shopId, ShopItemTemplate item) {
+    if (item.getEffectiveStock() < 0) return -1;
+    String stockKey = shopId + ":" + item.id();
+    return shopStockTracker.computeIfAbsent(stockKey, k -> item.getEffectiveStock());
+  }
+
+  public synchronized void deductStock(String shopId, ShopItemTemplate item, int count) {
+    if (item.getEffectiveStock() < 0) return;
+    String stockKey = shopId + ":" + item.id();
+    int current = shopStockTracker.getOrDefault(stockKey, item.getEffectiveStock());
+    shopStockTracker.put(stockKey, Math.max(0, current - count));
+  }
+
+  public void resetShopStock(String shopId) {
+    shopStockTracker.keySet().removeIf(k -> k.startsWith(shopId + ":"));
+  }
 
   @Override
   public String getKey() {
@@ -38,14 +74,24 @@ public class ShopCommand implements PlayerCommand {
     Player self = MudContext.currentPlayer();
     String roomId = self.getCurrentRoomId();
 
-    boolean isInn = roomId != null && roomId.contains("inn");
-    if (!isInn) {
+    // 動態自 TemplateRepository 解析當前房間的商店，若無則嘗試新手村客棧作為保底
+    Optional<ShopTemplate> shopOpt = TemplateRepository.findShopByRoomId(roomId);
+    if (shopOpt.isEmpty()) {
+      if (roomId != null && roomId.contains("inn")) {
+        shopOpt = TemplateRepository.findShop("newbie_village:inn_shop");
+      }
+    }
+
+    if (shopOpt.isEmpty()) {
       self.reply("此處荒郊野嶺，並無商販或客棧掌櫃可以交易。（請前往新手村客棧尋找福伯）");
       return;
     }
 
+    ShopTemplate shop = shopOpt.get();
+    List<ShopItemTemplate> goods = shop.goods();
+
     if (args == null || args.isBlank() || "list".equalsIgnoreCase(args.trim())) {
-      showShopList(self);
+      showShopList(self, shop);
       return;
     }
 
@@ -54,59 +100,124 @@ public class ShopCommand implements PlayerCommand {
       input = input.substring(4).trim();
     }
 
-    ShopItem selected = null;
+    // 解析購買數量 (支援: "1 5" 或 "tea 3" 或 "1")
+    int count = 1;
+    String itemKeyword = input;
+    String[] tokens = input.split("\\s+");
+    if (tokens.length >= 2) {
+      try {
+        int parsedCount = Integer.parseInt(tokens[tokens.length - 1]);
+        if (parsedCount > 0) {
+          count = parsedCount;
+          // 前面的 tokens 為商品識別名稱/編號
+          itemKeyword = input.substring(0, input.lastIndexOf(tokens[tokens.length - 1])).trim();
+        }
+      } catch (NumberFormatException ignored) {
+        // 最後一個 token 不是數字，則整串當做商品名稱
+      }
+    }
+
+    ShopItemTemplate selected = null;
     try {
-      int idx = Integer.parseInt(input);
-      selected = INN_GOODS.stream().filter(i -> i.index() == idx).findFirst().orElse(null);
+      int idx = Integer.parseInt(itemKeyword);
+      selected = goods.stream().filter(i -> i.index() == idx).findFirst().orElse(null);
     } catch (NumberFormatException ignored) {
-      String nameOrId = input.toLowerCase();
-      selected = INN_GOODS.stream().filter(i -> i.id().equalsIgnoreCase(nameOrId)
-          || i.templateId().equalsIgnoreCase(nameOrId)
-          || i.name().contains(nameOrId)).findFirst().orElse(null);
+      String nameOrId = itemKeyword.toLowerCase();
+      selected = goods.stream().filter(i -> (i.id() != null && i.id().equalsIgnoreCase(nameOrId))
+          || (i.templateId() != null && i.templateId().equalsIgnoreCase(nameOrId))
+          || i.getEffectiveName().toLowerCase().contains(nameOrId)).findFirst().orElse(null);
     }
 
     if (selected == null) {
       self.reply("掌櫃福伯擦著汗道：「客官，小店沒有這件貨物，請對照貨架清單輸入代號或編號！」");
-      showShopList(self);
+      showShopList(self, shop);
       return;
     }
 
+    // 檢核限量庫存
+    int availableStock = getStock(shop.id(), selected);
+    if (availableStock == 0) {
+      self.reply("掌櫃福伯抱歉地躬身道：「客官來得不巧，小店的【" + selected.getEffectiveName() + "】已全數售罄，尚在等待進貨呢！」");
+      return;
+    }
+    if (availableStock > 0 && availableStock < count) {
+      self.reply("掌櫃福伯抱歉地笑道：「客官，小店【" + selected.getEffectiveName() + "】庫存吃緊，當前僅剩 "
+          + availableStock + " 件，無法滿足 " + count + " 件之需！」");
+      return;
+    }
+
+    int effectivePrice = selected.getEffectivePrice();
     int currentCoin = self.getStats().getCoin();
-    if (currentCoin < selected.price()) {
-      self.reply("掌櫃福伯抱歉地笑道：「客官身上的靈石/盤纏不夠呢！（需要 " + selected.price()
+    int totalPrice = effectivePrice * count;
+    if (currentCoin < totalPrice) {
+      self.reply("掌櫃福伯抱歉地笑道：「客官身上的靈石/盤纏不夠呢！（需要 " + totalPrice
           + " 靈石，您當前僅有 " + currentCoin + " 靈石）」");
       return;
     }
 
     Party party = partyService.getOrCreateParty(self.getName());
-    boolean added = party.getInventory().addItem(selected.templateId(), 1);
+    String templateIdToGive = selected.templateId() != null ? selected.templateId() : selected.id();
+    boolean added = party.getInventory().addItem(templateIdToGive, count);
     if (!added) {
       self.reply("小隊行囊空間已滿，無法再裝入新物品！");
       return;
     }
 
-    self.getStats().setCoin(currentCoin - selected.price());
-    self.reply("💰【購買成功】你花費了 " + selected.price() + " 靈石購入了【" + selected.name() + "】！\n"
-        + "物品已安全收納入【隊伍行囊】。（剩餘靈石/盤纏: " + self.getStats().getCoin() + " 靈石）");
+    // 扣減金幣與庫存
+    self.getStats().setCoin(currentCoin - totalPrice);
+    deductStock(shop.id(), selected, count);
+
+    int remainingStock = getStock(shop.id(), selected);
+    String stockNotice = remainingStock >= 0 ? "（小店剩餘庫存: " + remainingStock + "）" : "（供應充足）";
+
+    self.reply("💰【購買成功】你花費了 " + totalPrice + " 靈石購入了 " + count + " 件【" + selected.getEffectiveName() + "】！\n"
+        + "物品已安全收納入【隊伍行囊】。" + stockNotice + "（剩餘靈石/盤纏: " + self.getStats().getCoin() + " 靈石）");
+
+    broadcastService.broadcastState(self);
+    sendShopCatalog(self, shop);
   }
 
-  private void showShopList(Player self) {
+  private void showShopList(Player self, ShopTemplate shop) {
+    if (self.getOutput() != null) {
+      sendShopCatalog(self, shop);
+      self.reply("🏪 已開啟【" + shop.name() + "】交易櫃檯，掌櫃正笑吟吟地候著您。（可於彈出視窗點選購買或按 Esc 關閉）");
+      return;
+    }
+
     StringBuilder sb = new StringBuilder();
-    sb.append("🛒【村莊客棧·福伯的百寶貨架】\n");
-    sb.append("福伯笑吟吟地招呼：「客官要進墨竹山吧？帶足乾糧和清心靈茶才是保命上策！」\n");
+    sb.append("🛒【").append(shop.name()).append("】\n");
+    sb.append("掌櫃笑吟吟地招呼：「客官要進墨竹山吧？帶足乾糧和清心靈茶才是保命上策！」\n");
     sb.append("----------------------------------------------------------------------\n");
-    for (ShopItem item : INN_GOODS) {
-      sb.append(String.format(" [%d] %-10s - %-14s 價格: %2d 靈石 (%s)\n",
-          item.index(), item.id(), item.name(), item.price(), item.description()));
+    for (ShopItemTemplate item : shop.goods()) {
+      int s = getStock(shop.id(), item);
+      String stockLabel = s >= 0 ? ("庫存: " + s) : "充足";
+      sb.append(String.format(" [%d] %-10s - %-14s 價格: %2d 靈石 [%s] (%s)\n",
+          item.index(), item.id(), item.getEffectiveName(), item.getEffectivePrice(), stockLabel, item.getEffectiveDescription()));
     }
     sb.append("----------------------------------------------------------------------\n");
     sb.append("💰 您當前持有靈石/盤纏: ").append(self.getStats().getCoin()).append(" 靈石\n");
-    sb.append("💡 輸入「buy <商品代號或編號>」（例如 buy 1 或 buy tea）即可購入並存入隊伍行囊！");
+    sb.append("💡 輸入「buy <商品> [數量]」（例如 buy 1 5 或 buy tea 2）即可購入！");
     self.reply(sb.toString());
+  }
+
+  private void sendShopCatalog(Player self, ShopTemplate shop) {
+    if (self.getOutput() == null) return;
+    List<ShopCatalogDto.ShopCatalogItemDto> dtos = shop.goods().stream()
+        .map(g -> new ShopCatalogDto.ShopCatalogItemDto(
+            g.index(),
+            g.id(),
+            g.templateId() != null ? g.templateId() : g.id(),
+            g.getEffectiveName(),
+            g.getEffectivePrice(),
+            getStock(shop.id(), g),
+            g.getEffectiveDescription()))
+        .toList();
+    ShopCatalogDto catalogDto = new ShopCatalogDto("SHOP_CATALOG", shop.id(), shop.name(), self.getStats().getCoin(), dtos);
+    self.getOutput().sendJson(catalogDto);
   }
 
   @Override
   public String getDescription() {
-    return "客棧貨棧 (查看貨架商品或購買乾糧與靈藥)";
+    return "貨棧買賣 (查看貨架商品或購買乾糧與靈藥)";
   }
 }

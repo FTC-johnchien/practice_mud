@@ -44,7 +44,7 @@
   {
     "id": "rat",
     "name": "鼠類",
-    "description": "在陰暗潮濕處繁衍的狡黠生物，行動敏捷，常以尖牙利爪成群襲擊過路者。",
+    "description": "在陰暗潮濕處繁衍的狡黠生物，行動敏捷，常以尖牙利爪成群襲擊過路者，擅長縮身急竄避險。",
     "stats": {
       "STR": 0.5,
       "CON": 0.6,
@@ -67,13 +67,14 @@
           "weight": 60
         }
       ],
-      "naturalDodge": "mob_beast_dodge",
-      "naturalParry": "mob_beast_parry",
+      "naturalDodge": "mob_rat_dodge",
+      "naturalParry": "mob_rat_parry",
       "naturalArmor": 2,
       "attacksPerRound": 1
     },
     "innateSkills": {
-      "mob_beast_dodge": 0.5
+      "mob_rat_dodge": 0.5,
+      "mob_rat_parry": 0.5
     },
     "resistances": {
       "POISON": 0.2,
@@ -83,7 +84,7 @@
   {
     "id": "wolf",
     "name": "狼族",
-    "description": "生性殘暴且具高度戰術協作能力的荒野掠食者，擁有極為敏銳的狩獵直覺。",
+    "description": "生性殘暴且具高度戰術協作能力的荒野掠食者，擁有極為敏銳的狩獵直覺與野性格擋防禦。",
     "stats": {
       "STR": 1.2,
       "CON": 1.1,
@@ -117,6 +118,7 @@
     },
     "innateSkills": {
       "mob_beast_dodge": 0.6,
+      "mob_beast_parry": 0.5,
       "mob_wild_blood": 0.5
     },
     "resistances": {
@@ -168,7 +170,7 @@
   {
     "id": "dragon",
     "name": "龍族",
-    "description": "遠古的強大生物，擁有堅硬的鱗片與無與倫比的力量。",
+    "description": "遠古的強大生物，擁有堅硬的逆鱗、覆滿重鱗的巨爪與無與倫比的力量。",
     "stats": {
       "STR": 5.0,
       "CON": 8.0,
@@ -199,15 +201,102 @@
           "weight": 10
         }
       ],
+      "naturalDodge": "mob_dragon_dodge",
+      "naturalParry": "mob_dragon_parry",
       "attacksPerRound": 3
     },
     "innateSkills": {
+      "mob_dragon_dodge": 0.5,
+      "mob_dragon_parry": 0.8,
       "mob_dragon_breath": 1.0,
       "mob_dragon_roar": 0.8
     },
     "resistances": {
       "FIRE": 1.0,
       "PHYSICAL": 0.3
+    }
+  },
+  {
+    "id": "undead",
+    "name": "不死族",
+    "description": "幽冥死氣凝聚或骨骼殘骸復甦的妖邪，無痛覺且骨骼可詭異錯位，常以枯骨硬架兵刃。",
+    "stats": {
+      "STR": 1.1,
+      "CON": 1.4,
+      "DEX": 0.8,
+      "INT": 0.5
+    },
+    "bodyParts": [
+      "HEAD",
+      "BODY",
+      "FEET",
+      "MAIN_HAND",
+      "OFF_HAND"
+    ],
+    "combat": {
+      "naturalAttacks": [
+        {
+          "id": "mob_claw",
+          "weight": 50
+        },
+        {
+          "id": "mob_hit",
+          "weight": 50
+        }
+      ],
+      "naturalDodge": "mob_undead_dodge",
+      "naturalParry": "mob_undead_parry",
+      "naturalArmor": 8,
+      "attacksPerRound": 1
+    },
+    "innateSkills": {
+      "mob_undead_dodge": 0.5,
+      "mob_undead_parry": 0.5
+    },
+    "resistances": {
+      "POISON": 1.0,
+      "ICE": 0.3,
+      "FIRE": -0.3,
+      "PHYSICAL": 0.1
+    }
+  },
+  {
+    "id": "beast",
+    "name": "野獸",
+    "description": "荒野各地的兇猛野獸，具備極強的生存本能與野性閃招。",
+    "stats": {
+      "STR": 1.2,
+      "CON": 1.1,
+      "DEX": 1.2,
+      "INT": 0.4
+    },
+    "bodyParts": [
+      "HEAD",
+      "BODY",
+      "FEET"
+    ],
+    "combat": {
+      "naturalAttacks": [
+        {
+          "id": "mob_claw",
+          "weight": 50
+        },
+        {
+          "id": "mob_bite",
+          "weight": 50
+        }
+      ],
+      "naturalDodge": "mob_beast_dodge",
+      "naturalParry": "mob_beast_parry",
+      "naturalArmor": 3,
+      "attacksPerRound": 1
+    },
+    "innateSkills": {
+      "mob_beast_dodge": 0.5,
+      "mob_beast_parry": 0.5
+    },
+    "resistances": {
+      "PHYSICAL": 0.0
     }
   }
 ]

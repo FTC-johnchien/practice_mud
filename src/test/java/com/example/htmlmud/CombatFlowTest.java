@@ -103,5 +103,9 @@ class CombatFlowTest {
     boolean ratAttacked = capturedMessages.stream().anyMatch(m -> m.contains("野鼠") && (m.contains("咬") || m.contains("抓") || m.contains("撞") || m.contains("傷害")));
     System.out.println("ratAttacked: " + ratAttacked);
     assertThat(ratAttacked).isTrue();
+
+    // 驗證訊息中不再包含出戲的時間戳 [xx.xxx]
+    boolean hasTimestamp = capturedMessages.stream().anyMatch(m -> m.matches(".*\\[\\d{2}\\.\\d{3}\\].*"));
+    assertThat(hasTimestamp).as("戰鬥日誌中不應存在出戲的時間戳前綴").isFalse();
   }
 }

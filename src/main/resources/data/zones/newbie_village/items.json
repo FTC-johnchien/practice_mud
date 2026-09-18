@@ -173,5 +173,113 @@
     },
     "value": 8,
     "quality": "UNCOMMON"
+  },
+  {
+    "id": "steel_blade",
+    "name": "百辟精鋼刀",
+    "aliases": ["blade", "steel blade", "刀"],
+    "description": "百煉精鋼打造的厚背單刀，刀刃鋒利無比，揮舞時虎虎生風。",
+    "type": "WEAPON",
+    "subType": "BLADE",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "揮刀斬向",
+      "minDamage": 14,
+      "maxDamage": 22,
+      "attackSpeed": 2100,
+      "maxDurability": 80
+    },
+    "value": 15,
+    "quality": "COMMON"
+  },
+  {
+    "id": "iron_axe",
+    "name": "開山大斧",
+    "aliases": ["axe", "iron axe", "斧"],
+    "description": "沉重沉凝的雙刃闊斧，具有劈山碎石之威。",
+    "type": "WEAPON",
+    "subType": "AXE",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "掄起巨斧劈向",
+      "minDamage": 16,
+      "maxDamage": 26,
+      "attackSpeed": 2400,
+      "maxDurability": 90
+    },
+    "value": 18,
+    "quality": "COMMON"
+  },
+  {
+    "id": "copper_staff",
+    "name": "齊眉熟銅棍",
+    "aliases": ["staff", "copper staff", "棍"],
+    "description": "一根長七尺二寸的熟銅齊眉棍，兩端包銅，揮舞時呼呼作響。",
+    "type": "WEAPON",
+    "subType": "STAFF",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "揮棍砸向",
+      "minDamage": 12,
+      "maxDamage": 20,
+      "attackSpeed": 1900,
+      "maxDurability": 100
+    },
+    "value": 15,
+    "quality": "COMMON"
+  },
+  {
+    "id": "iron_hammer",
+    "name": "八棱玄鐵錘",
+    "aliases": ["hammer", "iron hammer", "錘"],
+    "description": "八棱沉重的玄鐵重錘，砸下時伴隨開山破岳之勢。",
+    "type": "WEAPON",
+    "subType": "HAMMER",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "當頭怒砸向",
+      "minDamage": 18,
+      "maxDamage": 28,
+      "attackSpeed": 2500,
+      "maxDurability": 120
+    },
+    "value": 20,
+    "quality": "COMMON"
+  },
+  {
+    "id": "shadow_dagger",
+    "name": "無影短匕",
+    "aliases": ["dagger", "shadow dagger", "匕首"],
+    "description": "寒芒內斂的漆黑短刃，輕靈隱匿，專取要害刺殺。",
+    "type": "WEAPON",
+    "subType": "DAGGER",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "疾刺向",
+      "minDamage": 10,
+      "maxDamage": 16,
+      "attackSpeed": 1400,
+      "maxDurability": 60
+    },
+    "value": 12,
+    "quality": "COMMON"
+  },
+  {
+    "id": "hunter_bow",
+    "name": "穿雲桑木弓",
+    "aliases": ["bow", "hunter bow", "弓"],
+    "description": "山中獵戶以百年桑木與鹿筋精心絞製的硬弓，穿透力極強。",
+    "type": "WEAPON",
+    "subType": "BOW",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "挽弓射向",
+      "minDamage": 13,
+      "maxDamage": 21,
+      "attackSpeed": 2000,
+      "maxDurability": 70
+    },
+    "value": 16,
+    "quality": "COMMON"
   }
 ]

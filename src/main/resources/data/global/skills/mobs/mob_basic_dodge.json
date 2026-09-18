@@ -1,17 +1,60 @@
 {
   "id": "mob_basic_dodge",
-  "name": "閃躲律動",
-  "type": "PASSIVE",
-  "tags": ["DODGE", "MOB"],
-  "description": "NPC 專用的基礎閃避技巧。",
-  "mechanics": {
-    "dodgeMod": 0.05
-  },
-  "messages": {
-    "dodge": [
-      "$N 往旁邊跨了一步，剛好躲開了你的攻擊。",
-      "$N 側身一閃，避開了這一擊。",
-      "$N 腳步滑動，讓攻擊擦身而過。"
+  "name": "本能躲閃",
+  "description": "類人族或粗鄙生靈在遭受攻擊時憑藉求生本能做出的躲避動作。",
+  "type": "REACTIVE",
+  "school": "NATURAL",
+  "tags": [
+    "DEFENSIVE",
+    "EVASION",
+    "MOB",
+    "BASIC"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED",
+      "CLUB",
+      "AXE",
+      "SWORD"
     ]
-  }
+  },
+  "costs": {
+    "stamina": 2
+  },
+  "scaling": {
+    "dodgeRatePerLevel": 0.004
+  },
+  "mechanics": {
+    "dodgeRate": 0.10,
+    "maxLevel": 100,
+    "scaleStat": "DEX",
+    "scaleFactor": 1.1,
+    "formulas": {
+      "successRate": "skill.mechanics.dodgeRate + (user.dex * 0.005)"
+    }
+  },
+  "moves": [
+    {
+      "name": "滾地翻避",
+      "weight": 50,
+      "msg": {
+        "success": "眼見$n的$w斬來，$N怪叫一聲，極其狼狽地就地一個翻滾，在塵土飛揚中躲開了攻擊！"
+      }
+    },
+    {
+      "name": "抱頭縮頸",
+      "weight": 40,
+      "msg": {
+        "success": "$N猛然雙手抱頭向前一撲，$n砍向$l的$w帶著破風聲從$N背後險險掠過。"
+      }
+    },
+    {
+      "name": "粗鄙側躍",
+      "weight": 35,
+      "msg": {
+        "success": "$N腳步凌亂地向旁猛跨了一大步，雖無章法，卻剛好避開了$n$w的鋒芒。"
+      }
+    }
+  ]
 }

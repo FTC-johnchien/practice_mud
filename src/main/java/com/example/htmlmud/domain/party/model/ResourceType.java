@@ -1,12 +1,16 @@
 package com.example.htmlmud.domain.party.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 /**
  * 小隊成員戰鬥放招資源類型
  */
 public enum ResourceType {
   MP("真元", "點"),
   RAGE("怒氣", "點"),
-  COMBO("連擊點", "層");
+  COMBO("連擊點", "層"),
+  ENERGY("精力", "點"),
+  FORCE("內力", "點");
 
   private final String displayName;
   private final String unit;
@@ -22,5 +26,19 @@ public enum ResourceType {
 
   public String getUnit() {
     return unit;
+  }
+
+  @JsonCreator
+  public static ResourceType fromString(String value) {
+    if (value == null || value.isBlank()) return MP;
+    String upper = value.trim().toUpperCase();
+    return switch (upper) {
+      case "MANA", "MP" -> MP;
+      case "RAGE" -> RAGE;
+      case "COMBO" -> COMBO;
+      case "ENERGY" -> ENERGY;
+      case "FORCE" -> FORCE;
+      default -> MP;
+    };
   }
 }

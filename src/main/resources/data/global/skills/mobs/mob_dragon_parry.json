@@ -1,0 +1,64 @@
+{
+  "id": "mob_dragon_parry",
+  "name": "太古龍鱗格擋",
+  "description": "依靠太古真龍千錘百煉的堅硬龍鱗與足以開山裂石的龍爪，正面硬憾並震潰一切襲來的兵刃攻擊。",
+  "type": "REACTIVE",
+  "school": "NATURAL",
+  "tags": [
+    "DEFENSIVE",
+    "PARRY",
+    "NATURAL",
+    "DRAGON"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED"
+    ]
+  },
+  "costs": {
+    "stamina": 4
+  },
+  "scaling": {
+    "parryRatePerLevel": 0.006
+  },
+  "mechanics": {
+    "parryRate": 0.25,
+    "maxLevel": 100,
+    "scaleStat": "STR",
+    "scaleFactor": 1.6,
+    "formulas": {
+      "successRate": "skill.mechanics.parryRate + (user.str * 0.01) + (user.con * 0.005)"
+    }
+  },
+  "moves": [
+    {
+      "name": "逆鱗震刃",
+      "weight": 50,
+      "msg": {
+        "success": "$n手中的$w狠狠劈在$N身軀之上，竟在如鋼鐵鑄就的太古龍鱗上劃出刺目火星，「鐺」的一聲被狂暴彈開！"
+      }
+    },
+    {
+      "name": "龍爪截架",
+      "weight": 40,
+      "msg": {
+        "success": "$N發出震天龍吟，覆滿幽光重鱗的龍爪如精鋼鐵鉗般一合，正面死死扣住了$n斬向$l的$w！"
+      }
+    },
+    {
+      "name": "金石硬撼",
+      "weight": 35,
+      "msg": {
+        "success": "$N巍然不動，僅僅憑藉著浩瀚的龍族體魄正面迎擊，$n只覺虎口劇震，$w被硬生生震偏數尺！"
+      }
+    },
+    {
+      "name": "巨尾橫掃封阻",
+      "weight": 30,
+      "msg": {
+        "success": "$N巨尾如天柱般橫空掃過，狂暴的力道將$n的攻擊路線徹底封死，連人帶兵器震退！"
+      }
+    }
+  ]
+}

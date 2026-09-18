@@ -1,0 +1,90 @@
+{
+  "id": "taiji_sword",
+  "name": "太極劍法",
+  "description": "武當派鎮派劍術，以柔克剛，以靜制動。劍招連綿不絕，圓潤無方，兼具極強的招架與破綻反擊之威。",
+  "type": "PASSIVE",
+  "school": "WUDANG",
+  "tags": [
+    "WEAPON",
+    "SWORD",
+    "TAIJI",
+    "INTERNAL",
+    "COUNTER"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      "SWORD"
+    ]
+  },
+  "costs": {
+    "stamina": 4
+  },
+  "scaling": {
+    "damagePerLevel": 0.8,
+    "hitRatePerLevel": 0.003,
+    "critRatePerLevel": 0.002
+  },
+  "mechanics": {
+    "critRate": 0.08,
+    "damage": 16,
+    "damageType": "SLASH",
+    "hitRate": 0.95,
+    "maxLevel": 100,
+    "scaleStat": "INT",
+    "scaleFactor": 1.2
+  },
+  "moves": [
+    {
+      "name": "白鶴亮翅",
+      "weight": 35,
+      "damageMod": 1.1,
+      "hitRateMod": 0.1,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N身形微側，右手$W挽出一道雪亮劍花，宛如白鶴展翅，斜削$n的$l。",
+        "hit": "$n身形一窒，避無可避，$W劍鋒自其胸肋劃過，鮮血飛濺，受到 $d 點傷害！",
+        "crit": "【太極化勁】$N劍勢如行雲流水，借力打力洞穿其要害，重創 $d 點暴擊傷害！",
+        "miss": "$n深吸一口氣，急退三步，堪堪避開這飄逸的一劍。"
+      }
+    },
+    {
+      "name": "順水推舟",
+      "weight": 30,
+      "damageMod": 1.2,
+      "hitRateMod": 0.08,
+      "critRateMod": 0.08,
+      "msg": {
+        "cast": "$N隨風借力，$W順著對手來勢輕輕一引，劍尖如影隨形疾點$n的$l。",
+        "hit": "「哧」的一聲輕響，$W鋒芒破開防禦，直透體內，造成 $d 點傷害！",
+        "crit": "【綿勁透骨】太極綿勁自$W爆發開來，震裂$n周身經脈，造成 $d 點穿透重擊！",
+        "miss": "$n橫架兵刃，借反衝之力翻身後撤。"
+      }
+    },
+    {
+      "name": "仙人指路",
+      "weight": 20,
+      "damageMod": 1.35,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.15,
+      "msg": {
+        "cast": "$N凝神聚氣，手中$W虛實莫測，驀地中宮一挺，直指$n的眉心！",
+        "hit": "劍氣森寒，$W精準點中$n，罡氣貫體，受到 $d 點破防重創！",
+        "crit": "【真氣凝罡】$W劍尖激盪出一道半尺青芒，狠狠撕裂防禦，爆發 $d 點致命重傷！",
+        "miss": "$n猛地側頭，一縷斷髮飄落，驚險避過。"
+      }
+    },
+    {
+      "name": "流星趕月",
+      "weight": 15,
+      "damageMod": 1.5,
+      "hitRateMod": 0.02,
+      "critRateMod": 0.2,
+      "msg": {
+        "cast": "$N足踏七星，腰隨劍轉，$W化作數道追星殘影，連珠般點向$n！",
+        "hit": "$W化為暴風驟雨般的流光，洞穿$n多處要穴，造成 $d 點巨額傷害！",
+        "crit": "【流星破曉】滿堂寒芒乍收，$W已然見血！爆出驚人的 $d 點毀滅傷害！",
+        "miss": "$n身法極快，如鬼魅般在劍影縫隙中滑出。"
+      }
+    }
+  ]
+}

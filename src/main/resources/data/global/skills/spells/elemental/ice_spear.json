@@ -1,0 +1,81 @@
+{
+  "id": "ice_spear",
+  "name": "玄冰聚煞引",
+  "description": "太陰門秘傳法術，凝聚天地至陰至寒之氣，化為冰煞長槍穿刺敵人。極寒冰勁能凍結對手氣血，使其動作遲緩。",
+  "type": "MAGIC",
+  "school": "TAIYIN",
+  "tags": [
+    "MAGIC",
+    "SPELL",
+    "ICE",
+    "SLOW",
+    "PIERCE"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      "STAFF",
+      "SWORD",
+      "UNARMED",
+      null
+    ]
+  },
+  "costs": {
+    "mp": 12,
+    "stamina": 2
+  },
+  "scaling": {
+    "damagePerLevel": 1.0,
+    "hitRatePerLevel": 0.003,
+    "critRatePerLevel": 0.003
+  },
+  "mechanics": {
+    "critRate": 0.08,
+    "damage": 20,
+    "damageType": "ICE",
+    "hitRate": 0.95,
+    "maxLevel": 100,
+    "scaleStat": "INT",
+    "scaleFactor": 1.35
+  },
+  "moves": [
+    {
+      "name": "寒霜凝晶",
+      "weight": 40,
+      "damageMod": 1.05,
+      "hitRateMod": 0.1,
+      "critRateMod": 0.05,
+      "msg": {
+        "cast": "$N周身寒氣暴湧，雙手一揮，數枚散發著幽藍寒芒的冰魄飛針破空疾射$n！",
+        "hit": "寒針刺入體內瞬間化凍為煞，$n凍得嘴唇發紫氣血凝滯，受到 $d 點冰寒傷害！",
+        "crit": "【玄冰凍髓】極寒冰魄直侵骨髓，$n周身覆上一層寒霜，受到 $d 點冰魄暴擊！",
+        "miss": "$n運足真氣猛然一震，將飛來的冰針震成冰粉消散。"
+      }
+    },
+    {
+      "name": "玄冰破煞",
+      "weight": 35,
+      "damageMod": 1.25,
+      "hitRateMod": 0.06,
+      "critRateMod": 0.08,
+      "msg": {
+        "cast": "$N口誦陰煞咒文，空氣中水汽驟然凝結成一柄晶瑩剔透的丈二玄冰長槍，呼嘯刺向$n！",
+        "hit": "冰槍狂暴洞穿甲胄！在$n體內爆裂成千百冰屑，造成 $d 點極寒穿刺傷害！",
+        "crit": "【太陰冰煞】森白冰煞在$n經絡中寸寸凍結，$n血液凝固痛苦不堪，承受 $d 點重創！",
+        "miss": "$n橫挪三尺，冰槍擦身而過，將後方石壁凍結成一片霜雪。"
+      }
+    },
+    {
+      "name": "千里冰封",
+      "weight": 25,
+      "damageMod": 1.45,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.15,
+      "msg": {
+        "cast": "$N雙掌按地，地面瞬間蔓延出無數幽藍冰稜，極度寒潮如怒潮般將$n困於中心！",
+        "hit": "冰風暴沖天而起！$n被極致寒煞徹底籠罩，四肢僵硬動彈不得，受到 $d 點巨額冰霜打擊！",
+        "crit": "【極寒寂滅】絕對零度的陰煞冰封萬物，$n護體功法全面結冰碎裂，承受 $d 點毀滅打擊！",
+        "miss": "$n當機立斷縱身向上一躍，堪堪躲過地面蔓延的冰刺。"
+      }
+    }
+  ]
+}

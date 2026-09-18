@@ -1,5 +1,6 @@
 package com.example.htmlmud.application.factory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -15,8 +16,10 @@ import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.entity.SkillEntry;
 import com.example.htmlmud.domain.model.enums.ItemType;
+import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.domain.model.template.ItemTemplate;
 import com.example.htmlmud.domain.model.template.MobTemplate;
+import com.example.htmlmud.domain.model.template.RaceTemplate;
 import com.example.htmlmud.domain.service.MobService;
 import com.example.htmlmud.domain.service.RoomService;
 import com.example.htmlmud.infra.mapper.ItemTemplateMapper;
@@ -90,6 +93,35 @@ public class WorldFactory {
         // 設定 mob 已啟用的技能
         mob.getEnabledSkills().put(entry.getKey(), entry.getValue());
       }
+    }
+
+    // 依據種族自動補齊天然防禦 (DODGE, PARRY) 與攻擊技能 (Race Natural Skills Binding)
+    String raceId = tpl.race() != null ? tpl.race() : stats.getRace();
+    if (raceId != null) {
+      TemplateRepository.findRace(raceId).ifPresent(raceTpl -> {
+        if (raceTpl.combat() != null) {
+          // 1. 天然身法閃避 (Dodge)
+          if (!mob.getEnabledSkills().containsKey(SkillCategory.DODGE) && raceTpl.combat().naturalDodge() != null) {
+            String dodgeSkill = raceTpl.combat().naturalDodge();
+            mob.getLearnedSkills().put(dodgeSkill, SkillEntry.createMobSkillEntry(dodgeSkill, mob.getLevel()));
+            mob.getEnabledSkills().put(SkillCategory.DODGE, dodgeSkill);
+          }
+          // 2. 天然兵刃/肢體招架 (Parry)
+          if (!mob.getEnabledSkills().containsKey(SkillCategory.PARRY) && raceTpl.combat().naturalParry() != null) {
+            String parrySkill = raceTpl.combat().naturalParry();
+            mob.getLearnedSkills().put(parrySkill, SkillEntry.createMobSkillEntry(parrySkill, mob.getLevel()));
+            mob.getEnabledSkills().put(SkillCategory.PARRY, parrySkill);
+          }
+          // 3. 天然攻擊招式 (Natural Attacks)
+          if (raceTpl.combat().naturalAttacks() != null) {
+            for (var atk : raceTpl.combat().naturalAttacks()) {
+              if (atk.id() != null && !mob.getLearnedSkills().containsKey(atk.id())) {
+                mob.getLearnedSkills().put(atk.id(), SkillEntry.createMobSkillEntry(atk.id(), mob.getLevel()));
+              }
+            }
+          }
+        }
+      });
     }
 
 
@@ -176,22 +208,57 @@ public class WorldFactory {
     corpse.getContents().addAll(player.getStats().equipment.values());
   }
 
-  private void createMobCorpse(Mob mob, GameItem corpse) {
-    // List<String> keywords = new ArrayList<>(mob.getTemplate().aliases());
-    // keywords.add("corpse");
-    // corpse.setKeywords(keywords); // 假設您有 keywords 欄位
+  public List<GameItem> generateMobDrops(Mob mob) {
+    List<GameItem> drops = new ArrayList<>();
+    if (mob == null || mob.getTemplate() == null) return drops;
 
-    // 3. 【產生掉落物】：根據 LootTable 骰骰子
     List<LootEntry> lootTable = mob.getTemplate().loot();
     if (lootTable != null) {
       for (LootEntry entry : lootTable) {
         if (ThreadLocalRandom.current().nextDouble() < entry.chance()) {
-          GameItem loot = createItem(entry.itemId()); // 呼叫既有的 createItem
+          GameItem loot = createItem(entry.itemId());
           if (loot != null) {
-            corpse.addContent(loot);
+            drops.add(loot);
           }
         }
       }
+    }
+    return drops;
+  }
+
+  public GameItem createLootPouch(Mob mob, List<GameItem> drops) {
+    GameItem pouch = new GameItem();
+    pouch.setId(UUID.randomUUID().toString());
+    pouch.setType(ItemType.CONTAINER);
+
+    boolean isBossOrElite = mob != null && mob.getTemplate() != null && 
+        (mob.getTemplate().id().contains("boss") || 
+         mob.getTemplate().id().contains("elite") || 
+         mob.getName().contains("頭領") || 
+         mob.getName().contains("長老") || 
+         mob.getName().contains("大師兄"));
+
+    if (isBossOrElite) {
+      pouch.setName("【" + mob.getName() + "的戰利品寶箱】");
+      pouch.setDescription("散發著幽幽靈光的秘寶箱，隱隱透出法寶神兵的氣息。");
+      pouch.setAliases(new ArrayList<>(List.of("box", "chest", "treasure", "loot", "箱子", "寶箱")));
+    } else {
+      String mobName = (mob != null) ? mob.getName() : "妖獸";
+      pouch.setName("【散落的儲物袋】");
+      pouch.setDescription("一隻以粗麻縫製的低階儲物袋，裡面似乎裝著擊殺 " + mobName + " 後遺留下來的戰利品。");
+      pouch.setAliases(new ArrayList<>(List.of("pouch", "bag", "loot", "儲物袋", "袋子")));
+    }
+
+    if (drops != null) {
+      pouch.getContents().addAll(drops);
+    }
+    return pouch;
+  }
+
+  private void createMobCorpse(Mob mob, GameItem corpse) {
+    List<GameItem> drops = generateMobDrops(mob);
+    for (GameItem drop : drops) {
+      corpse.addContent(drop);
     }
   }
 

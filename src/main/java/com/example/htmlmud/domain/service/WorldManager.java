@@ -29,6 +29,8 @@ import com.example.htmlmud.domain.model.template.SkillTemplate;
 import com.example.htmlmud.domain.model.template.SpawnRule;
 import com.example.htmlmud.domain.model.template.ZoneTemplate;
 import com.example.htmlmud.domain.model.template.CompanionTemplate;
+import com.example.htmlmud.domain.model.template.ClassTemplate;
+import com.example.htmlmud.domain.model.template.ShopTemplate;
 import com.example.htmlmud.domain.party.model.FormationTemplate;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
 import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
@@ -101,11 +103,65 @@ public class WorldManager {
 
   private void loadGlobalData() {
     log.info("loadGlobalData");
+    loadGlobalItemData();
     loadSkillData();
     loadRaceData();
+    loadClassData();
     loadPartySkillData();
     loadCompanionData();
     loadFormationData();
+  }
+
+  private void loadGlobalItemData() {
+    log.info("loadGlobalItemData: classpath:data/global/items/**/*.json");
+    try {
+      Resource[] resources = resourceResolver.getResources("classpath:data/global/items/**/*.json");
+      if (resources == null || resources.length == 0) {
+        log.info("No global item files found");
+        return;
+      }
+      for (Resource res : resources) {
+        try (var is = res.getInputStream()) {
+          com.fasterxml.jackson.databind.JsonNode rootNode = objectMapper.readTree(is);
+          if (rootNode.isArray()) {
+            List<ItemTemplate> items = objectMapper.convertValue(rootNode, new TypeReference<List<ItemTemplate>>() {});
+            for (ItemTemplate item : items) {
+              TemplateRepository.registerItem(item);
+            }
+            log.info("Loaded {} global items from {}", items.size(), res.getFilename());
+          } else if (rootNode.isObject()) {
+            ItemTemplate item = objectMapper.convertValue(rootNode, ItemTemplate.class);
+            TemplateRepository.registerItem(item);
+            log.info("Loaded global item {} from {}", item.id(), res.getFilename());
+          }
+        } catch (Exception e) {
+          log.error("Failed to parse global item file: {} - Error: {}", res.getFilename(), e.getMessage());
+        }
+      }
+    } catch (IOException e) {
+      log.error("Error reading global items", e);
+    }
+  }
+
+  private void loadClassData() {
+    log.info("loadClassData: classpath:data/global/classes.json");
+    try {
+      Resource[] resources = resourceResolver.getResources("classpath:data/global/classes.json");
+      if (resources == null || resources.length == 0) return;
+      for (Resource res : resources) {
+        try (var is = res.getInputStream()) {
+          List<ClassTemplate> classes = objectMapper.readValue(is, new TypeReference<List<ClassTemplate>>() {});
+          for (ClassTemplate c : classes) {
+            TemplateRepository.registerClass(c);
+          }
+          log.info("Loaded {} classes from {}", classes.size(), res.getFilename());
+        } catch (Exception e) {
+          log.error("Failed to parse class file: {} - Error: {}", res.getFilename(), e.getMessage());
+        }
+      }
+    } catch (IOException e) {
+      log.error("Error reading classes", e);
+    }
   }
 
   private void loadPartySkillData() {
@@ -313,6 +369,35 @@ public class WorldManager {
 
         // init roomActor
         getRoomActor(newRoomId);
+      }
+
+      // 讀取 shop 資料 (若存在)
+      try {
+        resource = resourceResolver.getResource("classpath:data/zones/" + zoneId + "/shops.json");
+        if (resource != null && resource.exists()) {
+          List<ShopTemplate> shops = objectMapper.readValue(resource.getInputStream(),
+              new TypeReference<List<ShopTemplate>>() {});
+          for (ShopTemplate shop : shops) {
+            String shopId = IdUtils.resolveId(zoneId, shop.id());
+            String roomId = shop.roomId() != null ? IdUtils.resolveId(zoneId, shop.roomId()) : null;
+            String npcId = shop.npcId() != null ? IdUtils.resolveId(zoneId, shop.npcId()) : null;
+            List<ShopTemplate.ShopItemTemplate> updatedGoods = shop.goods().stream()
+                .map(g -> g.toBuilder()
+                    .templateId(IdUtils.resolveId(zoneId, g.templateId()))
+                    .build())
+                .toList();
+            ShopTemplate newShop = shop.toBuilder()
+                .id(shopId)
+                .roomId(roomId)
+                .npcId(npcId)
+                .goods(updatedGoods)
+                .build();
+            TemplateRepository.registerShop(newShop);
+            log.info("Registered shop: [{}] for room [{}] with {} items", shopId, roomId, updatedGoods.size());
+          }
+        }
+      } catch (Exception e) {
+        log.warn("No shops loaded for zone {} ({})", zoneId, e.getMessage());
       }
 
     } catch (Exception e) {

@@ -18,7 +18,10 @@ import com.example.htmlmud.domain.dungeon.service.DungeonManager;
 import com.example.htmlmud.domain.dungeon.service.DungeonNavigator;
 import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.enums.Direction;
+import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.domain.model.enums.MobKind;
+import com.example.htmlmud.domain.model.template.NpcCapability;
+import com.example.htmlmud.domain.model.template.NpcCapability.NpcCapabilityType;
 import com.example.htmlmud.domain.model.template.RoomTemplate;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.service.PartyService;
@@ -104,39 +107,67 @@ public class GameStateBroadcastService {
       String status = "狀態佳";
 
       List<TownCapabilityDto> caps = new ArrayList<>();
-      if (mob.getTemplate().kind() == MobKind.FRIENDLY) {
-        caps.add(new TownCapabilityDto("TALK", "交談", "ask " + alias, "💬"));
-      }
-      if (mob.getTemplate().shopId() != null) {
-        caps.add(new TownCapabilityDto("SHOP", "貨棧買賣", "shop", "🛒"));
-      }
-      if (id.contains("innkeeper") || (mob.getAliases() != null && mob.getAliases().contains("innkeeper"))) {
-        caps.add(new TownCapabilityDto("REST", "客棧安歇", "rest", "🛏️"));
-      }
-      if (id.contains("tie_niu") || id.contains("ling_shuang") || id.contains("iron") || id.contains("ling") || id.contains("companion")) {
-        boolean inParty = (party != null && party.getMembers() != null && party.getMembers().stream().anyMatch(m ->
-            (m.getId() != null && (m.getId().equals(id) || m.getId().contains(alias))) ||
-            (m.getName() != null && (m.getName().contains(name) || name.contains(m.getName())))));
-        if (inParty) {
-          caps.add(new TownCapabilityDto("DISMISS", "請離隊友", "dismiss " + alias, "👋"));
-        } else {
-          caps.add(new TownCapabilityDto("RECRUIT", "招募入隊", "recruit " + alias, "🤝"));
+      List<NpcCapability> templateCaps = mob.getTemplate().capabilities();
+      if (templateCaps != null && !templateCaps.isEmpty()) {
+        for (NpcCapability cap : templateCaps) {
+          if (cap.isType(NpcCapabilityType.RECRUIT)) {
+            boolean inParty = (party != null && party.getMembers() != null && party.getMembers().stream().anyMatch(m ->
+                (m.getId() != null && (m.getId().equals(id) || m.getId().contains(alias))) ||
+                (m.getName() != null && (m.getName().contains(name) || name.contains(m.getName())))));
+            if (inParty) {
+              caps.add(new TownCapabilityDto("DISMISS", "請離隊友", "dismiss " + alias, "👋"));
+            } else {
+              caps.add(new TownCapabilityDto("RECRUIT", cap.label(), cap.command() != null ? cap.command() : "recruit " + alias, cap.icon() != null ? cap.icon() : "🤝"));
+            }
+          } else {
+            caps.add(new TownCapabilityDto(cap.type(), cap.label(), cap.command(), cap.icon()));
+          }
+        }
+      } else {
+        if (mob.getTemplate().kind() == MobKind.FRIENDLY) {
+          caps.add(new TownCapabilityDto("TALK", "交談", "ask " + alias, "💬"));
+        }
+        if (mob.getTemplate().shopId() != null) {
+          caps.add(new TownCapabilityDto("SHOP", "貨棧買賣", "shop", "🛒"));
+        }
+        if (id.contains("innkeeper") || (mob.getAliases() != null && mob.getAliases().contains("innkeeper"))) {
+          caps.add(new TownCapabilityDto("REST", "客棧安歇", "rest", "🛏️"));
+        }
+        if (id.contains("tie_niu") || id.contains("ling_shuang") || id.contains("iron") || id.contains("ling") || id.contains("companion")) {
+          boolean inParty = (party != null && party.getMembers() != null && party.getMembers().stream().anyMatch(m ->
+              (m.getId() != null && (m.getId().equals(id) || m.getId().contains(alias))) ||
+              (m.getName() != null && (m.getName().contains(name) || name.contains(m.getName())))));
+          if (inParty) {
+            caps.add(new TownCapabilityDto("DISMISS", "請離隊友", "dismiss " + alias, "👋"));
+          } else {
+            caps.add(new TownCapabilityDto("RECRUIT", "招募入隊", "recruit " + alias, "🤝"));
+          }
+        }
+        if (id.contains("elder")) {
+          caps.add(new TownCapabilityDto("QUEST", "任務指引", "ask " + alias, "📜"));
+        }
+        if (mob.getTemplate().kind() == MobKind.AGGRESSIVE || mob.getTemplate().kind() == MobKind.BOSS) {
+          caps.add(new TownCapabilityDto("FIGHT", "拔劍迎擊", "kill " + alias, "⚔️"));
         }
       }
-      if (id.contains("elder")) {
-        caps.add(new TownCapabilityDto("QUEST", "任務指引", "ask " + alias, "📜"));
-      }
-      if (mob.getTemplate().kind() == MobKind.AGGRESSIVE) {
-        caps.add(new TownCapabilityDto("FIGHT", "拔劍迎擊", "kill " + alias, "⚔️"));
+
+      String mobRank = (mob.getTemplate().rank() != null) ? mob.getTemplate().rank().name() : "NORMAL";
+      boolean isUnique = mob.getTemplate().isUnique();
+      if ((title == null || title.isBlank()) && mob.getTemplate().rank() != null && mob.getTemplate().rank() != com.example.htmlmud.domain.model.enums.MobRank.NORMAL) {
+        title = mob.getTemplate().rank().getDisplayName();
       }
 
-      npcs.add(new TownNpcDto(id, alias, name, title, status, caps));
+      npcs.add(new TownNpcDto(id, alias, name, title, status, caps, mobRank, isUnique));
     }
 
     List<TownItemDto> items = new ArrayList<>();
     for (GameItem item : room.getItems()) {
       if (item == null) continue;
-      items.add(new TownItemDto(item.getId(), item.getDisplayName(), "📦", 1));
+      String displayName = item.getDisplayName();
+      if (item.getType() == ItemType.CONTAINER && item.getContents() != null && !item.getContents().isEmpty()) {
+        displayName += " (內含 " + item.getContents().size() + " 件靈物)";
+      }
+      items.add(new TownItemDto(item.getId(), displayName, "📦", 1));
     }
 
     DrpgStateDto dto = DrpgStateDto.ofTown(

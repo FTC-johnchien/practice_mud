@@ -1,0 +1,267 @@
+[
+  {
+    "id": "rusty_sword",
+    "name": "生鏽的鐵劍",
+    "aliases": ["sword", "rusty", "weapon", "鐵劍"],
+    "description": "一把缺口的鐵劍，看起來隨時會斷掉。",
+    "type": "WEAPON",
+    "subType": "SWORD",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "揮向",
+      "minDamage": 10,
+      "maxDamage": 15,
+      "attackSpeed": 2000,
+      "maxDurability": 50
+    },
+    "value": 10,
+    "quality": "COMMON"
+  },
+  {
+    "id": "iron_sword",
+    "name": "精鋼劍",
+    "aliases": ["iron sword", "steel sword", "劍"],
+    "description": "精鋼鍛打的三尺青鋒，寒氣逼人，鋒利堅韌。",
+    "type": "WEAPON",
+    "subType": "SWORD",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "揮劍刺向",
+      "minDamage": 14,
+      "maxDamage": 22,
+      "attackSpeed": 1900,
+      "maxDurability": 100
+    },
+    "value": 50,
+    "quality": "COMMON"
+  },
+  {
+    "id": "steel_blade",
+    "name": "百辟精鋼刀",
+    "aliases": ["blade", "steel blade", "刀"],
+    "description": "百煉精鋼打造的厚背單刀，刀刃鋒利無比，揮舞時虎虎生風。",
+    "type": "WEAPON",
+    "subType": "BLADE",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "揮刀斬向",
+      "minDamage": 14,
+      "maxDamage": 22,
+      "attackSpeed": 2100,
+      "maxDurability": 80
+    },
+    "value": 15,
+    "quality": "COMMON"
+  },
+  {
+    "id": "standard_spear",
+    "name": "制式長槍",
+    "aliases": ["spear", "standard spear", "weapon", "長槍"],
+    "description": "一把標準的長槍，看起來保養得很好，丈二紅纓，刺擊破甲。",
+    "type": "WEAPON",
+    "subType": "SPEAR",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "挺槍刺向",
+      "minDamage": 15,
+      "maxDamage": 25,
+      "defense": 2,
+      "attackSpeed": 2200,
+      "hitRate": 10,
+      "range": 1,
+      "maxDurability": 100
+    },
+    "value": 20,
+    "quality": "COMMON"
+  },
+  {
+    "id": "copper_staff",
+    "name": "齊眉熟銅棍",
+    "aliases": ["staff", "copper staff", "棍"],
+    "description": "一根長七尺二寸的熟銅齊眉棍，兩端包銅，揮舞時呼呼作響。",
+    "type": "WEAPON",
+    "subType": "STAFF",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "揮棍砸向",
+      "minDamage": 12,
+      "maxDamage": 20,
+      "attackSpeed": 1900,
+      "maxDurability": 100
+    },
+    "value": 15,
+    "quality": "COMMON"
+  },
+  {
+    "id": "wooden_staff",
+    "name": "新手法杖",
+    "aliases": ["wooden staff", "staff", "法杖"],
+    "description": "簡單刻劃了聚靈符印的柳木法杖，能導引術法真元。",
+    "type": "WEAPON",
+    "subType": "STAFF",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "凝神施法指向",
+      "minDamage": 8,
+      "maxDamage": 14,
+      "attackSpeed": 2000,
+      "maxDurability": 70
+    },
+    "bonusStats": {
+      "int": 3
+    },
+    "value": 25,
+    "quality": "COMMON"
+  },
+  {
+    "id": "iron_axe",
+    "name": "開山大斧",
+    "aliases": ["axe", "iron axe", "斧"],
+    "description": "沉重沉凝的雙刃闊斧，具有劈山碎石之威。",
+    "type": "WEAPON",
+    "subType": "AXE",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "掄起巨斧劈向",
+      "minDamage": 16,
+      "maxDamage": 26,
+      "attackSpeed": 2400,
+      "maxDurability": 90
+    },
+    "value": 18,
+    "quality": "COMMON"
+  },
+  {
+    "id": "iron_hammer",
+    "name": "八棱玄鐵錘",
+    "aliases": ["hammer", "iron hammer", "錘"],
+    "description": "八棱沉重的玄鐵重錘，砸下時伴隨開山破岳之勢。",
+    "type": "WEAPON",
+    "subType": "HAMMER",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "當頭怒砸向",
+      "minDamage": 18,
+      "maxDamage": 28,
+      "attackSpeed": 2500,
+      "maxDurability": 120
+    },
+    "value": 20,
+    "quality": "COMMON"
+  },
+  {
+    "id": "shadow_dagger",
+    "name": "無影短匕",
+    "aliases": ["dagger", "shadow dagger", "匕首"],
+    "description": "寒芒內斂的漆黑短刃，輕靈隱匿，專取要害刺殺。",
+    "type": "WEAPON",
+    "subType": "DAGGER",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "疾刺向",
+      "minDamage": 10,
+      "maxDamage": 16,
+      "attackSpeed": 1400,
+      "maxDurability": 60
+    },
+    "value": 12,
+    "quality": "COMMON"
+  },
+  {
+    "id": "hunter_bow",
+    "name": "穿雲桑木弓",
+    "aliases": ["bow", "hunter bow", "弓"],
+    "description": "山中獵戶以百年桑木與鹿筋精心絞製的硬弓，穿透力極強。",
+    "type": "WEAPON",
+    "subType": "BOW",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "挽弓射向",
+      "minDamage": 13,
+      "maxDamage": 21,
+      "attackSpeed": 2000,
+      "maxDurability": 70
+    },
+    "value": 16,
+    "quality": "COMMON"
+  },
+  {
+    "id": "bronze_sword",
+    "name": "鏽蝕青銅古劍",
+    "aliases": ["bronze sword", "sword", "古劍"],
+    "description": "自古墓殉葬坑中發掘之古劍，劍身雖有斑駁綠鏽，刃口卻透出逼人寒芒。",
+    "type": "WEAPON",
+    "subType": "SWORD",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "斬向",
+      "minDamage": 14,
+      "maxDamage": 22,
+      "attackSpeed": 2000,
+      "maxDurability": 80
+    },
+    "value": 60,
+    "quality": "UNCOMMON",
+    "level": 2
+  },
+  {
+    "id": "black_obsidian_scythe",
+    "name": "黑曜骨鐮",
+    "aliases": ["scythe", "bone scythe", "obsidian", "骨鐮"],
+    "description": "從虛月煞氣異化畸變體上剝離下來的黑曜骨質巨鐮，刀刃泛著幽藍森寒的煞氣微光。",
+    "type": "WEAPON",
+    "subType": "SPEAR",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "揮動骨鐮怒斬",
+      "minDamage": 22,
+      "maxDamage": 35,
+      "defense": 4,
+      "attackSpeed": 1600,
+      "hitRate": 15,
+      "range": 1,
+      "maxDurability": 120
+    },
+    "value": 150,
+    "quality": "RARE"
+  },
+  {
+    "id": "miner_pickaxe",
+    "name": "斑駁靈石鶴嘴鋤",
+    "aliases": ["pickaxe", "axe", "pick", "鐵鎬"],
+    "description": "墨竹山礦坑底層雜役慣用的採礦鶴嘴鋤，鋤尖沾染了乾涸已久的暗褐色煞氣泥漿。",
+    "type": "WEAPON",
+    "subType": "BLUNT",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "重重鑿擊",
+      "minDamage": 12,
+      "maxDamage": 18,
+      "defense": 1,
+      "attackSpeed": 2000,
+      "hitRate": 8,
+      "range": 1,
+      "maxDurability": 80
+    },
+    "value": 25,
+    "quality": "COMMON"
+  },
+  {
+    "id": "goblin_club",
+    "name": "哥布林狼牙棒",
+    "aliases": ["club", "goblin club", "狼牙棒"],
+    "description": "粗木鑲嵌尖銳獸骨與生鐵釘的粗暴重型鈍器，揮擊力道狂暴。",
+    "type": "WEAPON",
+    "subType": "HAMMER",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "狂暴砸向",
+      "minDamage": 13,
+      "maxDamage": 23,
+      "attackSpeed": 2200,
+      "maxDurability": 85
+    },
+    "value": 20,
+    "quality": "COMMON"
+  }
+]

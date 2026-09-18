@@ -15,6 +15,7 @@ import com.example.htmlmud.domain.party.model.PartyMemberSkill;
 import com.example.htmlmud.domain.party.model.ResourceType;
 import com.example.htmlmud.domain.party.model.RowPosition;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
+import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.domain.model.template.CompanionTemplate;
 import com.example.htmlmud.domain.model.template.ItemTemplate;
 import com.example.htmlmud.domain.party.model.PartyItemSlot;
@@ -149,6 +150,7 @@ public class PartyService {
           .id("m-" + tpl.id())
           .name(tpl.name())
           .roleTitle(tpl.roleTitle())
+          .classId(tpl.classId())
           .row(tpl.defaultRow())
           .stats(stats)
           .baseMinDamage(tpl.baseMinDamage())
@@ -188,6 +190,17 @@ public class PartyService {
           }
         }
       }
+      // 初始化主修武學套路 (Learned Stances) - 100% Data-Driven
+      if (tpl.learnedStances() != null && !tpl.learnedStances().isEmpty()) {
+        for (String stanceId : tpl.learnedStances()) {
+          member.learnStance(stanceId);
+        }
+      } else {
+        member.learnStance("basic_fist");
+      }
+      member.enableSkill(SkillCategory.DODGE, "basic_dodge");
+      member.enableSkill(SkillCategory.PARRY, "basic_parry");
+
       return member;
     }
 

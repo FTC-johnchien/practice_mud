@@ -1,0 +1,22 @@
+[
+  {
+    "id": "rusty_ring",
+    "name": "老舊的戒指",
+    "aliases": ["rusty ring", "rusty", "ring", "戒指"],
+    "description": "一個有年代的戒指，表面雕有模糊微光陣法。",
+    "type": "ACCESSORY",
+    "subType": "FINGER",
+    "stats": {
+      "slot": "FINGER",
+      "defense": 1
+    },
+    "bonusStats": {
+      "int": 1,
+      "str": 1,
+      "critRate": 10,
+      "critDamage": 20
+    },
+    "value": 20,
+    "quality": "COMMON"
+  }
+]

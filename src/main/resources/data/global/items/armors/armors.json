@@ -1,0 +1,71 @@
+[
+  {
+    "id": "rusty_armor",
+    "name": "生鏽的盔甲",
+    "aliases": ["rusty armor", "rusty", "armor", "盔甲"],
+    "description": "一件破爛的鐵甲，雖斑駁鏽蝕，但仍能抵禦些許刀劍衝擊。",
+    "type": "ARMOR",
+    "subType": "CHEST",
+    "stats": {
+      "slot": "CHEST",
+      "defense": 5,
+      "maxDurability": 50
+    },
+    "value": 20,
+    "quality": "COMMON"
+  },
+  {
+    "id": "rusty_shield",
+    "name": "生鏽的盾牌",
+    "aliases": ["rusty shield", "rusty", "shield", "盾牌"],
+    "description": "一塊破爛的木皮鐵箍盾牌，防護尚可。",
+    "type": "SHIELD",
+    "subType": "OFF_HAND",
+    "stats": {
+      "slot": "OFF_HAND",
+      "attackVerb": "撞擊",
+      "minDamage": 3,
+      "maxDamage": 5,
+      "defense": 3,
+      "attackSpeed": 2500,
+      "maxDurability": 50
+    },
+    "value": 20,
+    "quality": "COMMON"
+  },
+  {
+    "id": "yin_robe",
+    "name": "陰煞道袍",
+    "aliases": ["robe", "yin robe", "armor", "道袍"],
+    "description": "以深海玄絲混雜陰煞之氣編織之道袍，能護持周身，抵禦暗蝕。",
+    "type": "ARMOR",
+    "subType": "CHEST",
+    "stats": {
+      "slot": "CHEST",
+      "defense": 6,
+      "maxDurability": 100
+    },
+    "bonusStats": {
+      "MAX_HP": 30,
+      "MAX_SAN": 10
+    },
+    "value": 80,
+    "quality": "RARE",
+    "level": 3
+  },
+  {
+    "id": "leather_armor",
+    "name": "熟皮獵甲",
+    "aliases": ["leather armor", "leather", "皮甲"],
+    "description": "熟牛皮硝製的輕便護甲，不阻礙身法移動。",
+    "type": "ARMOR",
+    "subType": "CHEST",
+    "stats": {
+      "slot": "CHEST",
+      "defense": 4,
+      "maxDurability": 60
+    },
+    "value": 30,
+    "quality": "COMMON"
+  }
+]

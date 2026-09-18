@@ -135,7 +135,9 @@ public class Room extends VirtualActor<RoomMessage> {
         // WorldManager.markDirty(this.template.id());
       }
       case RoomMessage.DropItem(var item) -> {
-        items.add(item);
+        if (item != null && !items.contains(item)) {
+          items.add(item);
+        }
       }
       case RoomMessage.Record() -> {
         roomService.record(this.getTemplate().id(), items);
@@ -246,18 +248,30 @@ public class Room extends VirtualActor<RoomMessage> {
   }
 
   public void removePlayer(String playerId) {
+    if (playerId != null) {
+      players.removeIf(player -> player.getId().equals(playerId));
+    }
     this.send(new RoomMessage.RemovePlayer(playerId));
   }
 
   public void removeMob(String mobId) {
+    if (mobId != null) {
+      mobs.removeIf(mob -> mob.getId().equals(mobId));
+    }
     this.send(new RoomMessage.RemoveMob(mobId));
   }
 
   public void removeItem(String itemId) {
+    if (itemId != null) {
+      items.removeIf(item -> item.getId().equals(itemId));
+    }
     this.send(new RoomMessage.RemoveItem(itemId));
   }
 
   public void dropItem(GameItem item) {
+    if (item != null && !items.contains(item)) {
+      items.add(item);
+    }
     this.send(new RoomMessage.DropItem(item));
   }
 

@@ -831,33 +831,44 @@ body, html {
 /* ========================================================
    DRPG 戰鬥交鋒面板 (Battle Arena Panel)
    ======================================================== */
+/* ========================================================
+   DRPG 戰鬥交鋒主舞台 (Battle Arena Main Stage)
+   ======================================================== */
 .log-and-battle-area {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  min-width: 0;
-  height: 100%;
+  background: #050608;
+  position: relative;
   overflow: hidden;
 }
 
-.battle-arena-panel {
-  background: linear-gradient(180deg, #181116 0%, #11141c 100%);
-  border-bottom: 2px solid #b91c1c;
-  padding: 10px 16px;
-  flex-shrink: 0;
+.battle-main-stage {
+  flex: 1.4;
+  min-width: 0;
+  background: radial-gradient(circle at 50% 20%, #1c141d 0%, #0d1117 80%, #06090e 100%);
+  border-right: 2px solid #b91c1c;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  padding: 12px 18px;
+  gap: 10px;
+  overflow: hidden;
+  box-shadow: inset 0 0 30px rgba(185, 28, 28, 0.15);
   animation: arena-appear 0.3s ease-out;
 }
 
-.battle-arena-panel.hidden {
+.battle-main-stage.hidden {
   display: none !important;
 }
 
+.main-viewport.layout-radar-right .battle-main-stage {
+  border-right: none;
+  border-left: 2px solid #b91c1c;
+}
+
 @keyframes arena-appear {
-  from { opacity: 0; transform: translateY(-10px); }
+  from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -879,7 +890,7 @@ body, html {
 
 .battle-title {
   font-weight: bold;
-  font-size: 14px;
+  font-size: 15px;
   color: #f87171;
   letter-spacing: 0.5px;
 }
@@ -894,57 +905,178 @@ body, html {
   animation: pulse-danger 1.5s infinite;
 }
 
+.battle-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .battle-tip {
   font-size: 11px;
   color: #94a3b8;
 }
 
-.battle-enemies-container {
+.battle-arena-body {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
   gap: 12px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* 敵方陣營外殼與標題 */
+.battle-enemies-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.battle-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: bold;
+  color: #fca5a5;
+  border-bottom: 1px solid rgba(239, 68, 68, 0.25);
+  padding-bottom: 4px;
+}
+
+.battle-tip-sub {
+  font-size: 11px;
+  font-weight: normal;
+  color: #94a3b8;
+}
+
+.battle-count-badge {
+  font-size: 10px;
+  background: rgba(239, 68, 68, 0.25);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fecaca;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+/* 敵方陣營容器 (支援 1~7 隻怪彈性網格) */
+.battle-enemies-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
   align-items: stretch;
 }
 
+/* 敵方卡片 */
 .enemy-card {
-  background: #191f2e;
+  background: #141b27;
   border: 1px solid #334155;
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 8px 12px;
-  min-width: 150px;
-  flex: 1;
-  max-width: 220px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
   position: relative;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 .enemy-card:hover {
   border-color: #f87171;
-  background: #23202e;
+  background: #231b26;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
 }
 
+/* 當選中為集火目標時的光環準星效果 */
 .enemy-card.selected-target {
   border: 2px solid #ef4444 !important;
-  box-shadow: 0 0 12px rgba(239, 68, 68, 0.65);
-  background: #28161b;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.75), inset 0 0 8px rgba(239, 68, 68, 0.2);
+  background: #2c161f;
+  transform: scale(1.02);
 }
 
 .enemy-card.selected-target::after {
   content: "🎯 集火鎖定";
   position: absolute;
-  top: -8px;
-  right: 8px;
-  font-size: 9px;
+  top: -9px;
+  right: 10px;
+  font-size: 10px;
   background: #ef4444;
-  color: #fff;
-  padding: 0 4px;
-  border-radius: 3px;
+  color: #ffffff;
+  padding: 1px 6px;
+  border-radius: 4px;
   font-weight: bold;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  animation: pulse-danger 1.5s infinite;
+}
+
+/* 戰場交鋒中線 */
+.battle-clash-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 2px 0;
+}
+
+.clash-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.4), transparent);
+}
+
+.battle-focus-hint {
+  font-size: 12px;
+  color: #cbd5e1;
+  background: rgba(15, 23, 42, 0.85);
+  padding: 3px 14px;
+  border-radius: 12px;
+  border: 1px solid #475569;
+  white-space: nowrap;
+}
+
+.focus-name-highlight {
+  color: #f87171;
+  font-weight: bold;
+}
+
+/* 我方戰隊在戰場主舞台的快速狀態列 */
+.battle-party-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.battle-party-quick-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+}
+
+.battle-party-mini-card {
+  background: rgba(17, 24, 39, 0.85);
+  border: 1px solid #374151;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.battle-party-mini-card:hover {
+  border-color: #60a5fa;
+  background: #1e293b;
+}
+
+.battle-party-mini-card.active-selected {
+  border-color: #3b82f6;
+  background: #1e2538;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
 }
 
 .enemy-card.dead {
@@ -1134,10 +1266,18 @@ body, html {
   transform: translateY(1px);
 }
 
-.skill-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  border-color: #334155;
+.skill-btn:disabled,
+.skill-btn.cant-cast {
+  opacity: 0.55;
+  cursor: pointer;
+  border-color: #475569;
+  border-style: dashed;
+}
+
+.skill-btn.cant-cast:hover {
+  border-color: #f59e0b;
+  background: #252836;
+  opacity: 0.85;
 }
 
 .skill-btn-title-row {
@@ -2948,6 +3088,31 @@ body, html {
   transform: translateY(-1px);
 }
 
+.ground-item-chip.is-loot-pouch {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: #f59e0b;
+  color: #fbbf24;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+}
+.ground-item-chip.is-loot-pouch:hover {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: #fbbf24;
+  color: #fef08a;
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+}
+.ground-item-chip.is-chest {
+  background: rgba(168, 85, 247, 0.15);
+  border-color: #a855f7;
+  color: #c084fc;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);
+}
+.ground-item-chip.is-chest:hover {
+  background: rgba(168, 85, 247, 0.25);
+  border-color: #c084fc;
+  color: #f3e8ff;
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+}
+
 /* 開發者終端 (Dev Console Modal) */
 .dev-console-card {
   background: #0f172a;
@@ -2990,3 +3155,527 @@ body, html {
   border-color: #38bdf8;
   box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
 }
+
+/* ==========================================================================
+   WoW 經典修仙武學典籍 (Spellbook Component) 視覺樣式
+   ========================================================================== */
+.wow-spellbook-container {
+  margin-top: 10px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+  border: 1px solid #475569;
+  border-radius: 8px;
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.wow-spellbook-header {
+  padding: 6px 12px;
+  background: rgba(15, 23, 42, 0.9);
+  border-bottom: 1px solid #334155;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+}
+
+.wow-spellbook-title {
+  color: #38bdf8;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wow-spellbook-layout {
+  display: flex;
+  min-height: 190px;
+}
+
+.wow-spellbook-page {
+  flex: 1;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-right: 1px solid #334155;
+}
+
+.wow-spellbook-tabs {
+  width: 105px;
+  background: rgba(15, 23, 42, 0.7);
+  display: flex;
+  flex-direction: column;
+  padding: 6px 4px;
+  gap: 5px;
+}
+
+.spellbook-tab-btn {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid #475569;
+  border-radius: 4px;
+  color: #94a3b8;
+  padding: 6px 4px;
+  font-size: 10px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.spellbook-tab-btn:hover {
+  background: #334155;
+  color: #f1f5f9;
+  border-color: #64748b;
+}
+
+.spellbook-tab-btn.active {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: #ffffff;
+  border-color: #38bdf8;
+  font-weight: bold;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+}
+
+.spell-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.spell-card {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 6px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  transition: all 0.2s ease;
+  position: relative;
+  min-height: 64px;
+}
+
+.spell-card:hover {
+  border-color: #64748b;
+  background: rgba(30, 41, 59, 0.9);
+}
+
+.spell-card.active-spell {
+  border-color: #0284c7;
+  background: rgba(2, 132, 199, 0.12);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+}
+
+.spell-icon-box {
+  width: 38px;
+  height: 38px;
+  border-radius: 6px;
+  background: #020617;
+  border: 1px solid #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.8);
+}
+
+.spell-card.active-spell .spell-icon-box {
+  border-color: #38bdf8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+}
+
+.spell-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.spell-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.spell-name {
+  font-size: 11px;
+  font-weight: bold;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spell-card.active-spell .spell-name {
+  color: #38bdf8;
+}
+
+.spell-cost-badge {
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  white-space: nowrap;
+}
+
+.spell-desc {
+  font-size: 9px;
+  color: #94a3b8;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.spell-action-row {
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.spell-active-badge {
+  font-size: 9px;
+  color: #10b981;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.spell-switch-btn {
+  background: #1e293b;
+  border: 1px solid #475569;
+  border-radius: 3px;
+  color: #cbd5e1;
+  font-size: 9px;
+  padding: 2px 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.spell-switch-btn:hover {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #38bdf8;
+}
+
+.spellbook-pagination {
+  padding: 4px 6px;
+  background: rgba(15, 23, 42, 0.7);
+  border-top: 1px dashed #334155;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.spellbook-page-btn {
+  background: #1e293b;
+  border: 1px solid #475569;
+  border-radius: 3px;
+  color: #cbd5e1;
+  font-size: 10px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+.spellbook-page-btn:hover:not(:disabled) {
+  background: #334155;
+  color: #ffffff;
+  border-color: #64748b;
+}
+
+.spellbook-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ==========================================================
+   貨棧買賣互動櫃檯卡片 (Shop Catalog Card in Log)
+   ========================================================== */
+.shop-catalog-card {
+  margin: 8px 0;
+  padding: 12px 14px;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
+  border: 1px solid #38bdf8;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(56, 189, 248, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #e2e8f0;
+}
+
+.shop-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px dashed rgba(56, 189, 248, 0.3);
+  padding-bottom: 6px;
+}
+
+.shop-card-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #38bdf8;
+}
+
+.shop-card-coin {
+  font-size: 12px;
+  color: #fbbf24;
+}
+
+.shop-card-greeting {
+  font-size: 11px;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.shop-goods-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.shop-item-row {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.shop-item-row:hover {
+  border-color: rgba(56, 189, 248, 0.5);
+  background: rgba(30, 41, 59, 0.8);
+}
+
+.shop-item-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shop-item-badge {
+  font-size: 10px;
+  background: #334155;
+  color: #94a3b8;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.shop-item-name {
+  font-weight: bold;
+  font-size: 13px;
+  color: #f1f5f9;
+}
+
+.shop-item-price {
+  margin-left: auto;
+  font-size: 12px;
+  color: #f59e0b;
+  font-weight: bold;
+}
+
+.shop-item-desc {
+  font-size: 11px;
+  color: #94a3b8;
+  padding-left: 20px;
+}
+
+.shop-item-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.shop-qty-picker {
+  display: inline-flex;
+  align-items: center;
+  background: #0f172a;
+  border: 1px solid #475569;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.qty-btn {
+  background: #1e293b;
+  border: none;
+  color: #cbd5e1;
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qty-btn:hover {
+  background: #334155;
+  color: #ffffff;
+}
+
+.shop-qty-input {
+  width: 32px;
+  height: 22px;
+  background: transparent;
+  border: none;
+  color: #f8fafc;
+  text-align: center;
+  font-size: 11px;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.shop-qty-input::-webkit-outer-spin-button,
+.shop-qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.shop-buy-btn {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  border: 1px solid #38bdf8;
+  color: #ffffff;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: bold;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.shop-buy-btn:hover {
+  background: linear-gradient(135deg, #0369a1, #075985);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+  transform: translateY(-1px);
+}
+
+.shop-buy-btn:active {
+  transform: translateY(0);
+}
+
+/* 貨棧買賣專屬模態視窗 (Shop Modal) */
+.shop-modal-card {
+  background: #151922;
+  border: 2px solid #f59e0b;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 820px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85), 0 0 25px rgba(245, 158, 11, 0.25);
+  overflow: hidden;
+}
+
+.shop-modal-header {
+  padding: 12px 18px;
+  background: #11141c;
+  border-bottom: 1px solid rgba(245, 158, 11, 0.25);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.shop-modal-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fbbf24;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shop-modal-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.shop-modal-coin-badge {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 16px;
+  padding: 3px 12px;
+  font-size: 13px;
+  color: #fde68a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.shop-modal-coin-badge strong {
+  color: #fbbf24;
+  font-size: 15px;
+}
+
+.shop-modal-greeting {
+  padding: 10px 18px;
+  background: rgba(245, 158, 11, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 12px;
+  color: #d1d5db;
+  font-style: italic;
+}
+
+.shop-modal-goods-list {
+  padding: 16px;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 12px;
+  max-height: 60vh;
+}
+
+.shop-modal-card .shop-item-row {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.shop-modal-card .shop-item-row:hover {
+  border-color: rgba(245, 158, 11, 0.6);
+  background: rgba(30, 41, 59, 0.85);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.shop-modal-card .shop-item-desc {
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1.4;
+  min-height: 28px;
+}
+
+.shop-modal-footer {
+  padding: 10px 18px;
+  background: #11141c;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+  color: #64748b;
+  text-align: right;
+}

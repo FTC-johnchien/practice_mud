@@ -137,6 +137,8 @@ public record DrpgStateDto(
               case RAGE -> s.getCostValue() + " 怒氣";
               case COMBO -> s.getCostValue() + " 連擊";
               case MP -> s.getCostValue() + " 真元";
+              case ENERGY -> s.getCostValue() + " 精力";
+              case FORCE -> s.getCostValue() + " 內力";
             };
           }
           if (!m.isSkillUsable(s) && s.getAllowedWeapons() != null && !s.getAllowedWeapons().isEmpty()) {
@@ -167,6 +169,35 @@ public record DrpgStateDto(
         });
       }
 
+      var basicSkill = m.getEnabledBasicSkill();
+      String basicSkillId = m.getEffectiveBasicSkillId();
+      String basicSkillName = (basicSkill != null) ? basicSkill.getName() : "基礎武學";
+
+      com.example.htmlmud.domain.model.enums.SkillCategory currentCat =
+          PartyMember.toSkillCategory(m.getMainHandWeaponType());
+      List<PartyStanceSkillDto> availableStances = new ArrayList<>();
+
+      // 1. 預設基礎套路 (如 basic_sword, basic_fist 等)
+      String defaultBasicId = m.getBasicSkillId();
+      var defSkillOpt = com.example.htmlmud.infra.persistence.repository.TemplateRepository.findSkill(defaultBasicId);
+      String defName = defSkillOpt.map(com.example.htmlmud.domain.model.template.SkillTemplate::getName).orElse(defaultBasicId);
+      String defDesc = defSkillOpt.map(com.example.htmlmud.domain.model.template.SkillTemplate::getDescription).orElse("");
+      availableStances.add(new PartyStanceSkillDto(defaultBasicId, defName, currentCat.name(), defDesc, defaultBasicId.equals(basicSkillId)));
+
+      // 2. 角色已學的該武器分類套路 (若有)
+      if (m.getLearnedStances() != null) {
+        for (String stId : m.getLearnedStances()) {
+          if (stId.equals(defaultBasicId)) continue;
+          var skOpt = com.example.htmlmud.infra.persistence.repository.TemplateRepository.findSkill(stId);
+          if (skOpt.isPresent()) {
+            var sk = skOpt.get();
+            if (PartyMember.resolveSkillCategory(sk) == currentCat) {
+              availableStances.add(new PartyStanceSkillDto(stId, sk.getName(), currentCat.name(), sk.getDescription(), stId.equals(basicSkillId)));
+            }
+          }
+        }
+      }
+
       memberViews.add(new PartyMemberViewDto(
           m.getId(),
           m.getName(),
@@ -189,7 +220,13 @@ public record DrpgStateDto(
           m.getAberrationCounter(),
           PartyItemSlotViewDto.of(m.getEquippedWeapon()),
           PartyItemSlotViewDto.of(m.getEquippedArmor()),
-          equipMap
+          equipMap,
+          basicSkillId,
+          basicSkillName,
+          availableStances,
+          m.getClassId(),
+          m.getEffectiveClassName(),
+          m.getClassTemplate().map(com.example.htmlmud.domain.model.template.ClassTemplate::description).orElse("")
       ));
     }
 
@@ -230,8 +267,14 @@ public record DrpgStateDto(
       String name,
       String title,
       String status,
-      List<TownCapabilityDto> capabilities
-  ) {}
+      List<TownCapabilityDto> capabilities,
+      String rank,
+      boolean isUnique
+  ) {
+    public TownNpcDto(String id, String alias, String name, String title, String status, List<TownCapabilityDto> capabilities) {
+      this(id, alias, name, title, status, capabilities, "NORMAL", false);
+    }
+  }
 
   public record TownItemDto(
       String id,
@@ -368,6 +411,20 @@ public record DrpgStateDto(
       int aberrationCounter,
       PartyItemSlotViewDto equippedWeapon,
       PartyItemSlotViewDto equippedArmor,
-      Map<String, PartyItemSlotViewDto> equipment
+      Map<String, PartyItemSlotViewDto> equipment,
+      String basicSkillId,
+      String basicSkillName,
+      List<PartyStanceSkillDto> availableStances,
+      String classId,
+      String className,
+      String classDescription
+  ) {}
+
+  public record PartyStanceSkillDto(
+      String skillId,
+      String skillName,
+      String category,
+      String description,
+      boolean isCurrentEnabled
   ) {}
 }

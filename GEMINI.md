@@ -13,6 +13,12 @@
   1. **拒絕過度設計**：現階段專注於「單體模組化 (Modular Monolith)」，嚴格遵循現代 Java 25 高併發最佳實踐（Virtual Threads, Loom, Actor Pattern, Records, Sealed Types），暫不引入複雜分散式架構。
   2. 修改代碼時提供完整、清晰且含必要註解的程式碼區塊。
   3. 若發現設計有併發競爭、死鎖、記憶體洩漏或架構瑕疵，主動嚴格指出並提出重構建議。
+  4. **歷史計畫與架構約束審查機制 (Architecture Review Rule)**：
+     - 本專案已建立實施計畫與架構決策歸檔中樞：`docs/plans/`。
+     - **每次進行重大功能規劃、機制重構或修復疑難 Bug 前，AI 必須主動 Review `docs/plans/` 歷史計畫**，嚴格對齊既有的架構決策（如 Actor 無鎖併發、雙模地圖狀態機、5+2 裝備結構、戰利品自動合併等），杜絕架構退化與破壞性修改。
+     - 完成重要開發後，同步在 `docs/plans/` 歸檔新的 Implementation Plan。
+  5. **隊伍人數規範 (Party Size Rule)**：小隊編制上限嚴格定調為 **5 人 (`Party.MAX_PARTY_SIZE = 5`)**（對齊 Git commit `989f0debfc50ad008480af4d15953be531920b81`）。嚴格杜絕殘留「6人小隊」之表述與數值硬編碼。
+  6. **雙端 Git 同步鐵律 (Cross-Platform Git Sync)**：Git 倉庫根目錄為 `practice_mud`。`GEMINI.md` 與 `docs/` 目錄必須永久納入 `practice_mud` 的 Git 追蹤與同步，杜絕公司與家中狀態脫節。
 
 ---
 
@@ -101,6 +107,19 @@
   * **雙模架構整合 (`GameStateBroadcastService`)**：統一城鎮拓撲與 DRPG 地牢狀態廣播（`mode: "TOWN"` 與 `"DUNGEON"`）。
   * **正交四向 (N, S, W, E) 簡化**：捨棄複雜斜向方位，全面採用北、南、西、東 4 方向；前端 WASD 與方向鍵無縫支援雙模移動。
   * **能力標籤 (Capabilities Chips) 取代常駐輸入框**：隱藏常駐對話輸入框，免除鍵盤焦點衝突；NPC 與設施自動渲染互動能力標籤（交談、買賣、安歇、招募、請離、踏入地牢、拾取）；保留 `~` 終端控制台用於除錯。
+* [x] **Items 全域化與商店/地圖本地化參數 (Global Items & Localized Shop Overrides)**：
+  * **物品原型 (Prototype) 全域收斂 (`data/global/items/`)**：
+    * 建立兵刃 (`weapons/`)、防具 (`armors/`)、飾品 (`accessories/`)、消耗品 (`consumables/`)、素材 (`materials/`)、貨幣 (`currencies/`) 與任務信物 (`quest/`) 七大子目錄。
+    * 支援 Spring 通配符 `classpath:data/global/items/**/*.json` 遞迴自動掃描與純淨 ID 註冊。
+  * **智慧雙向容錯查詢 (`TemplateRepository.findItem`)**：
+    * 輸入帶前綴 `newbie_village:healing_salve` 自動剝除前綴查得全域 `healing_salve`。
+    * 輸入純 ID `black_obsidian_scythe` 若無直接匹配，自動回退查找區域特有物品。確保所有既有 90 項測試與存檔 100% 零破壞。
+  * **商店本地化參數與實例覆寫 (`ShopTemplate.ShopItemTemplate`)**：
+    * 支援本地指定價格 (`price`)、價格倍率 (`priceMultiplier`) 與限量庫存 (`stock`)。
+    * 實例若未填寫名稱、說明或定價，自動繼承全域物品原型數值與描述 (`getEffectivePrice()`, `getEffectiveName()`, `getEffectiveDescription()`)。
+  * **動態限量庫存扣減與售罄狀態**：
+    * `ShopCommand` 整合線程安全 `shopStockTracker`，結算時檢核庫存並動態扣減；缺貨或售罄時給予沉浸式掌櫃回絕提示。
+    * 前端 `drpg-view.js` 商店彈窗即時展示庫存標籤（`庫存: N` 或 `充足`），並於庫存為 0 時動態禁用按鈕標註 `❌ 售罄`。
 * [x] **城鎮主舞台重構與文字日誌純淨化 (Town Main Stage & Clean Event Logs)**：
   * **根除存檔槽位洗版 Bug**：在 `SaveCommand` 實裝 `quiet` / `silent` / `json` 靜默模式，僅向前端推送 `SAVE_SLOTS` JSON 結構，不向終端噴發 20 行 ASCII 字符表格；修正 `InGameBehavior`、`index.html` 與 `drpg-view.js` 連線時的重複呼叫。
   * **城鎮互動焦點移入主要視窗 (Town Main Stage)**：全面釋放左側空間，將城鎮主舞台升級為中央主要視窗（佔 60% 寬度），整合格調高雅的道途橫幅、環境描述卡、正交 4 向羅盤、地面靈物與雙欄卡片式 NPC 互動能力標籤（名字自傳不截斷、大尺寸能力標籤點擊）。
@@ -121,14 +140,146 @@
     * **野鼠無法還擊 Bug 根除**：定位 `newbie_village/mobs.json` 中 `wild_rat` 缺少 `race` 屬性，觸發 `TemplateRepository.findRace(null)` 時因 `ConcurrentHashMap` 禁止 null key 拋出 NPE，導致怪物攻擊回合虛擬執行緒瞬間崩潰。已修復 NPE 防禦、為野鼠補齊 `"race": "rat"` 並加固執行緒例外日誌，野鼠已能正常發動利爪抓擊與撕咬反擊並造成實質傷害。
     * **玩家赤手空拳張開血盆大口咬人修復**：修正 `LivingStats` 預設種族為 `"human"`（原為不存在的 `"DRAGON"`）；清理 `races.json` 中人族天生攻擊混入的野獸 `mob_hit`；於 `SkillService` 建立空手保底機制（未裝備武器時 100% 套用 `basic_fist` 基本拳腳：直拳突刺、側身鞭腿、上勾拳、手刀），徹底回歸正統武俠拳腳體驗。
     * **戰鬥流整合測試實裝 (`CombatFlowTest`)**：自動化驗證玩家主動發起攻擊、基本拳腳招式輸出、怪物受擊仇恨反擊以及即時傷害扣血之完整閉環。
+  * **戰鬥交鋒主舞台化、敵群彈性陣列與精準集火鎖定 (Battle Main Stage, Multi-Enemy & Target Focus Lock)**：
+    * **戰鬥主舞台化 (Battle Arena Main Stage)**：將戰鬥交鋒面板提升為中央主舞台（佔 60% 寬度），右側 40% 為 100% 全高度戰鬥情報日誌，徹底根除怪物卡片將戰鬥日誌壓扁的痛點；支援 `⇄ 換邊` 功能。
+    * **敵群 1~7 體彈性陣列佈局**：採用自適應 CSS Grid 雙排陣列，支援 1 至 7 隻（甚至更多）敵怪同場對峙；每隻怪具備前/後衛徽章、血條、編號、眩暈狀態標籤。
+    * **集火目標鎖定與轉火閉環**：修復 `BattleContext.getFrontTargetEnemy()` 原先固定索敵 index 0 的 Bug，改為嚴格優先遵循玩家指定的 `selectedTargetIndex`；新增 `testTargetSwitchingAndFocusFire` 單元測試；前端卡片點擊時即時賦予金紅色 `🎯 集火鎖定` 動態光環與對峙線提示。
+  * **武器普攻動態綁定、出戲時間戳拔除與角色狀態 (C) 全面視覺化 (Weapon Auto-Attack, Clean Combat Logs & Character Info Modal)**：
+    * **持劍施展劍法與真實傷害結算**：修復 MUD 探索戰鬥中 `Player` 未關聯 `PartyMember` 裝備導致誤判徒手拳腳與 4 點抓癢傷害之問題；`SkillService` 與 `CombatService` 依據隊長裝備動態解析普攻套路（手持青銅古劍自動施展 `basic_sword`：順勢一劈、中宮直刺、斜劍穿花），並正確套用武器 14~22 傷害與武器名稱。
+    * **拔除出戲毫秒時間戳記**：徹底移除戰鬥日誌前綴冗餘的 `[11.339]` 時間戳，還原純淨、流暢的武學交鋒沉浸體驗；`CombatFlowTest` 新增自動化正則斷言，杜絕時間戳迴歸。
+    * **角色狀態介面升級 (Character Info / C 鍵支援)**：
+      - 底欄按鈕正式由 `👥 小隊 (P)` 升級為 `👤 狀態 (C)`，鍵盤熱鍵同時相容 WoW 玩家肌肉記憶的 `C` 鍵與 MUD/DRPG 習慣的 `P` 鍵。
+      - 彈窗升級為 `👤 角色狀態・小隊成員與 5+2 裝備一覽`。
+    * **普攻套路 (Auto-Attack Stance) 與主動絕技分層**：
+      - 每名隊員卡片清楚標示【🗡️ 當前武器普攻套路】（如 `【基礎劍法】 [✔ 每輪戰鬥自動施展]`）與【⚡ 修習主動絕技與道術】。
+      - `PartyMember` 支援 `enabledSkills` (`Map<SkillCategory, String>`) 與 `party enable <idx> <skillId>` 指令，實現武器專修武學切換與空手自動回歸機制。
+      - 新增 `WeaponSkillBindingTest`，自動化驗證空手、穿戴長劍、自訂武學掛載、卸除武器回退之完整狀態流。
+  * **集火目標鎖定同步修復、多武器普攻切換、多種高級劍法專修與非人種族天生攻擊系統 (Target Sync, Multi-Weapon, Advanced Sword Stances & Race Natural Attacks)**：
+    * **集火目標鎖定與轉火同步修正**：修復前端在收到戰鬥狀態廣播時 `isSelectedTarget` 丟失之問題，優化為即時檢查 `battle.selectedTargetIndex === e.index || e.isTarget` 並配合樂觀更新，確保玩家點擊任意目標時金紅色光環與對峙線精準常駐。
+    * **多武器種類自動普攻動態綁定與貨棧供給**：
+      - 新增 6 款標準武器於新手村物品庫與貨棧：百辟精鋼刀（`BLADE`）、開山大斧（`AXE`）、齊眉熟銅棍（`STAFF`）、八棱玄鐵錘（`HAMMER`）、無影短匕（`DAGGER`）、穿雲桑木弓（`BOW`）。
+      - 行囊開局自帶鋼刀與長槍，裝備任一武器即可自動無縫切換為對應門派基礎武學套路（刀法、棍法、鈍器、匕首、弓箭、拳腳）。
+    * **角色狀態介面互動切換高級武學套路 (Interactive Stance Switching)**：
+      - 擴充三套高級劍法標準 JSON：【武當太極劍法】（`taiji_sword`，白鶴亮翅、順水推舟、仙人指路、流星趕月）、【太陰幽冥劍法】（`taiyin_sword`，陰魂泣血、白骨穿心、幽冥磷火、太陰蝕日）、【天劍飛仙術】（`tianjian_sword`，青鋒掠影、劍氣破霄、萬流歸宗、天外飛仙）。
+      - 主角預設精通多門劍法與拳腳，狀態彈窗（`C` 鍵）支援一鍵點擊切換當前主力普攻套路（`party enable <idx> <skillId>`），並高亮標記當前主力套路。
+    * **非人種族天然攻擊體系 (Non-Human Race Natural Attacks)**：
+      - `BattleEnemy` 攜帶種族屬性，戰鬥循環中依種族天然攻擊池（`naturalAttacks` 權重）動態抽選招式（如野鼠隨機施展【試探抓擊】、【十字撕裂】、【快速輕咬】、【碎骨咬合】；龍族隨機施展爪擊、撕咬、甩尾、重擊與吐息），徹底告別死板的文字廣播。
+    * **整合測試升級 (`MultiWeaponAndStanceTest`)**：自動化驗證持劍多劍法切換、多武器普攻映射、卸武空手拳腳回退，以及非人怪物種族攻擊池抽取。
+  * **生靈死亡清理、主角道號同步、地面靈物拾取修復、技能抽屜防閃爍與 WoW 經典典籍 (Mob Removal, Protagonist Sync, Item Pickup, Anti-Flicker & WoW Spellbook)**：
+    * **怪物陣亡即時隱退**：在 `LivingService.onDeath` 注入狀態廣播並於擊殺時立即調用 `room.removeMob(mob.getId())`，根除怪物已死但仍殘留在畫面生靈清單與迎擊按鈕之問題。
+    * **主角道號全生命週期同步**：修復單機模式連線時 Actor 預設名稱為「道友」之問題，改為讀取當前啟動槽位之主角名（預設「玄靈子」），並於 `SaveCommand` 建立與讀取新檔時強制同步更新 `player.setName(protagonistName)`。
+    * **地面動態靈物與屍體拾取（UUID 匹配 & 行囊同步）**：修復 `TargetSelector.isMatchItem` 支援比對 UUID 與 Template ID，並於 `GetCommand` 撿起物品時同步收納至隊伍行囊 `Party.getInventory()`，同時向房間廣播更新狀態即刻消除地面拾取標籤。
+    * **戰鬥技能抽屜懸停防閃爍與點擊防丟失**：定位 500ms 戰鬥心跳推送導致前端 DOM 樹銷毀重建（引發 hover 閃爍與點擊吞噬）之問題；在 `renderSkillDrawer` 與 `renderBattlePartyQuickBar` 引進 In-place DOM 局部更新，按鈕節點永久常駐，懸停流暢無痕且 100% 響應點擊。
+    * **WoW 經典風格修仙武學典籍 (Spellbook Component)**：
+      - 狀態面板（`C` / `P` 鍵）全面升級為魔獸世界經典法術書架構：
+        1. **右側垂直 Tab 標籤列**：清晰劃分【🗡️ 兵刃套路】、【⚡ 門派絕技】、【☯️ 陣法奧義】。
+        2. **左側雙欄網格卡片書頁**：38x38 典雅浮雕圖示、武學名稱、消耗類型、修為心法描述與操作按鈕（啟用主力/快捷施展/參悟中標籤）。
+        3. **底部分頁控制器**：支援 `◀ 上一頁`、`下一頁 ▶`，每頁穩定展示 4 門武學，無論習得多少神功絕技皆永不擠壓變形。
+    * **怪物死亡消散、戰利品儲物袋 (Loot Box) 一鍵搜刮與去屍體化 (Loot Pouch & No-Corpse Clutter)**：
+      - **無掉落直接消散**：怪物氣血歸零時若掉落表（Loot Table）未擲骰出任何物品，怪物倒地化作一縷青煙消散，地面**不產生任何殘留實體或空屍體按鈕**，主舞台地面乾淨清爽。
+      - **有掉落生成【散落的儲物袋 / 戰利品寶箱】**：普通怪物死亡化為 `【散落的儲物袋】`（`ItemType.CONTAINER`），精英/首領怪死亡化為 `【戰利品寶箱】`，掉落物全數收納於容器中。
+      - **同場戰鬥戰利品自動合併 (Loot Auto-Merge)**：當同房間內連續擊殺多隻普通怪時，後續掉落物**自動歸攏合併進同一個【散落的儲物袋】**，按鈕動態呈現件數提示（如 `[👝 搜刮 【散落的儲物袋】 (內含 4 件靈物)]`），地面始終保持單一儲物袋不洗版。
+      - **一鍵搜刮 (Loot All) 與容器自動消散**：玩家點擊 `[👝 搜刮 【散落的儲物袋】]` 或 `[📦 開啟 戰利品寶箱]`（支援 `get`/`loot`/`open`），後端自動將內部所有道具取出並納入小隊背包 `PartyInventory`，條列輸出獲得物品清單；容器本體搜刮完畢後即刻隨風消散，**徹底杜絕將整具怪物屍體塞入背包之窘境**。
+      - **地面靈物視覺標籤升級**：`drpg-view.js` 與 `style.css` 針對儲物袋與寶箱賦予專屬琥珀金光 (`.is-loot-pouch`) 與紫晶靈光 (`.is-chest`)，清晰標示 `[👝 搜刮]` 與 `[📦 開啟]`。
+    * **新增自動化整合測試 (`ItemPickupAndEntitySyncTest`)**：自動化驗證 UUID 物品匹配、儲物袋多怪掉落自動合併、一鍵搜刮入行囊、容器即刻銷毀消散、空屍體禁止入包、開局主角道號一致性。
+  * **全實體資料驅動 (Data-Driven) 架構審查與關聯模型歸檔 (`docs/plans/`)**：
+    - 完成對專案內所有 Zones、Rooms、Mobs、NPCs、Items、Skills、Races、Classes、Dungeons 的全面 Review。
+    - 確認 95% 以上核心實體完全由 `resources/data/` 動態載入，客棧夥伴採 Single Source of Truth 自動註冊為城鎮生靈，戰利品與天然攻擊池全數資料驅動。
+    - 繪製完整 Mermaid 實體關係圖與 Runtime 生命週期圖，歸檔於 [`docs/plans/2026-09-18_data_driven_architecture_and_entity_relations.md`](./docs/plans/2026-09-18_data_driven_architecture_and_entity_relations.md)。
+  * **四大核心實體資料驅動升級與 NPC 組件化能力實裝 (Full Data-Driven & NpcCapability)**：
+    - **職業資料驅動 (`classes.json` $\to$ `ClassTemplate`)**：建立 `ClassTemplate` 模型（包含成長、屬性權重、武器防具專精），擴充 `ResourceType` 支援 `MP`, `MANA`, `RAGE`, `COMBO`, `ENERGY`, `FORCE` 彈性自適應反序列化，`WorldManager` 啟動自動解析載入 6 大職業。
+    - **夥伴初始武學套路資料化 (`learnedStances`)**：`CompanionTemplate` 擴充 `learnedStances` 欄位並配置主角與客棧夥伴專屬開局套路，`PartyService` 移除寫死 `if-else` 改為 100% 資料驅動。
+    - **貨棧商店清單資料化 (`shops.json` $\to$ `ShopTemplate`)**：建立 `ShopTemplate` 模型與新手村 `shops.json`，`ShopCommand` 移除寫死貨物陣列，動態透過 `TemplateRepository.findShopByRoomId(roomId)` 提供交易服務。
+    - **NPC 分類與組件化能力模式 (`NpcCapability`)**：建立 `NpcCapability` 模型，在 `mobs.json` 與 `default_companions.json` 聲明能力清單（交談、買賣、安歇、招募、任務）；`GameStateBroadcastService` 捨棄 hardcode 檢查，100% 依據資料動態渲染前端大尺寸能力標籤，並智慧相容隊友入隊/請離狀態切換。
+  * **貨棧互動購買介面、職業系統實裝與交談指令修復 (Shop UI Buy Buttons, Class Binding & Talk Command)**：
+    - **貨棧買賣商品清單卡片與批量購買**：
+      - 後端 `ShopCommand` 擴充支援 `buy <id|index> [count]` 批量購買（支援名稱與貨架序號，自動驗證靈石與小隊背包容量並堆疊收納）。
+      - 新增 `ShopCatalogDto`，當點選 `[🛒 貨棧買賣]` 時推送 `SHOP_CATALOG` 結構化事件。
+      - 前端 `drpg-view.js` 與 `mud-core.js` 於右側日誌渲染修仙水墨風格商品櫃檯卡片，每件商品內建 `[-] [數量 1] [+]` 步進器與 `[🛒 購買]` 按鈕，點擊即時發送指令並動態反饋。
+    - **`classes.json` 與角色實體完整關聯整合**：
+      - `default_companions.json` 與 `CompanionTemplate` 為 6 位夥伴明確配置 `classId`（`SWORDSMAN` 俠客, `WARRIOR` 戰士, `ROGUE` 刺客, `CLERIC` 醫修, `MAGE` 法師）。
+      - `PartyMember` 實體綁定 `classId`，提供 `getClassTemplate()` 動態關聯職業模板成長係數與專精武器。
+      - `DrpgStateDto` 傳輸 `classId`、`className`、`classDescription`；前端 HUD 隊員卡片與小隊狀態面板（`C` 鍵）清晰展示職業專精徽章。
+    - **NPC 與隊友沉浸式交談指令實裝 (`TalkCommand`)**：
+      - 實裝 `TalkCommand`（別名 `ask`, `chat`, `speak`, `talkto`），解析 `talk <target>`。
+      - 依序搜尋當前房間生靈與小隊成員，從資料庫中動態隨機抽選 NPC/夥伴專屬 `dialogues` 台詞並格式化輸出沉浸式問答對白。
+  * **小隊招募與請離雙向指令修復與能力按鈕打通 (Party Recruit & Dismiss Bugfixes)**：
+    - **`PartyCommand` 支援 `recruit` / `hire` / `dismiss` / `fire` 子指令**：
+      - 修復前端點擊 `[🤝 招募入隊]` 發送 `party recruit <id>` 時被導向 `default` 並顯示指令列表的 Bug。
+      - `PartyCommand` 擴充子命令處理，直接調用 `partyService.recruitCompanion(party, target)` 與 `dismissCompanion(party, target)`，招募成功立即向隊長回饋入隊宣言並廣播即時更新前端狀態。
+    - **獨立 `DismissCommand` 與 `RecruitCommand` 語意解耦**：
+      - 新增獨立的 `DismissCommand`（支援 `dismiss` / `fire` / `請離`），根除 `RecruitCommand` 誤把 `dismiss <id>` 當作 `recruit` 執行的別名參數切割缺陷。
+      - `RecruitCommand`（支援 `recruit` / `hire` / `join` / `招募`）與 `DismissCommand` 互不干擾。
+  * **貨棧交易視窗獨立模態化與純文字日誌洗版根除 (Shop Modal Popup & Clean Event Log)**：
+    - **貨棧交易改為專屬獨立彈窗 (`#shop-modal`)**：
+      - 前端 `index.html` 與 `style.css` 建立精緻暗金水墨風格的貨棧買賣彈出視窗（`#shop-modal`）。
+      - 視窗頂部即時顯示貨棧招牌、當前盤纏靈石計數（`💰 盤纏靈石: XX 靈石`）與右上角 `✕ 關閉 (Esc)` 按鈕。
+      - 包含掌櫃親切招呼語、多欄網格商品卡片（每件商品包含編號、名稱、單價、功效說明、`[-] [數量] [+]` 步進器與 `[🛒 購買]` 快捷鍵）以及底部小隊行囊提示。
+      - 支援鍵盤 `Esc` 鍵即刻關閉，點擊視窗外部半透明背景無縫返回主畫面。
+    - **根除 20 行純文字 ASCII 表格洗版**：
+      - 後端 `ShopCommand.java` 重構 `showShopList`：連線環境僅推送結構化 `SHOP_CATALOG` 事件並回傳單行極簡開啟提示（`🏪 已開啟【新手村客棧貨棧】交易櫃檯，掌櫃正笑吟吟地候著您。`），不再向日誌噴發 20 行重複純文字表格。
+      - 購買成功後再次推送更新後的 `SHOP_CATALOG`，前端 `openShopModal` 智慧判斷僅局部刷新靈石數額，不重刷或重置已輸入的購買數量。
+    - **自動化測試擴充 (`DataDrivenExpansionTest`)**：
+      - 新增 Test 9 `testShopCatalogPushAndCleanReply`，自動化驗證 `shop` 指令觸發 `SHOP_CATALOG` 結構化事件推送、日誌純淨無表格洗版、以及購買商品後靈石即時同步刷新。
+  * **戰鬥邏輯、傷害公式、防禦博弈 (Parry/Dodge) 與屬性成長架構規範歸檔 (`docs/plans/`)**：
+    - 完成傷害計算、身法閃避（`Dodge`）、兵刃招架（`Parry`）、盾牌格擋（`Block`）、暴擊與一次擲骰圓桌判定（One-Roll Combat Table）詳細設計。
+    - 結合魂系氣力條（`Stamina`）博弈：閃避扣 2 精力、招架扣 3 精力，精力歸零陷入架勢崩潰（Poise Break）並受到 +20% 易傷。
+    - 確立角色升級混合雙軌制：客棧夥伴 100% 依據 `classes.json` 的 `growth` 自動成長（避免 5 人小隊微操疲勞）；主角享有專屬特權，每級獲得基礎成長 + 2 點自由潛能點（`Potential`）自由配點。
+    - 完整架構規範歸檔於 [`docs/plans/2026-09-18_combat_logic_damage_parry_dodge_and_growth.md`](./docs/plans/2026-09-18_combat_logic_damage_parry_dodge_and_growth.md) 並同步更新 Plan 索引。
+  * **多種族專屬 Parry / Dodge 防禦技能庫與生靈生成自動綁定 (Race Natural Defense Skills & Auto-Binding)**：
+    - **6 大種族防禦技能專屬化 (100% Data-Driven)**：
+      - 鼠類 (`rat`)：【狡鼠閃避】（`mob_rat_dodge`：急停鼠竄、縮身遁隙、打滾鑽縫）與【尖齒偏架】（`mob_rat_parry`：尖牙偏迎、前爪格偏、細尾抽干擾）。
+      - 龍族 (`dragon`)：【真龍騰挪】（`mob_dragon_dodge`：龍翼震空、騰雲掠影、神龍擺尾）與【太古龍鱗格擋】（`mob_dragon_parry`：逆鱗震刃、龍爪截架、金石硬撼）。
+      - 不死族 (`undead`)：【死體錯位】（`mob_undead_dodge`：骨節錯位、腐肉滑卸）與【枯骨封架】（`mob_undead_parry`：白骨硬架、死氣纏刃）。
+      - 猛獸/狼族 (`beast`/`wolf`)：【野性閃避】（`mob_beast_dodge`）與【野獸格擋】（`mob_beast_parry`）。
+      - 類人族 (`humanoid`)：【本能躲閃】（`mob_basic_dodge`）與【粗暴格擋】（`mob_basic_parry`）。
+      - 人類 (`human`)：【身法閃避】（`basic_dodge`）與【基礎招架】（`basic_parry`）。
+    - **生靈生成與戰鬥怪動態綁定**：
+      - `WorldFactory.createMob` 依怪物種族自動註冊並激活對應的 `naturalDodge` 與 `naturalParry` 至 `enabledSkills` 與 `learnedSkills`。
+      - `BattleEnemy.fromTemplate` 自動映射種族防禦技能 ID，使 DRPG 戰鬥怪具備真實種族防禦反制力。
+      - `PartyService` 招募冒險夥伴時自動綁定基礎身法與招架。
+    - **小隊人數上限全面統一為 5 人**：
+      - 對齊 Git commit `989f0debfc50ad008480af4d15953be531920b81`，全面根除代碼與文檔中殘留的「6 人」描述，動態綁定 `Party.MAX_PARTY_SIZE = 5`。
+    - **跨端 Git 同步機制加固**：
+      - 將 `GEMINI.md` 與 `docs/plans/` 完整納入 `practice_mud` Git 倉庫版本追蹤，確保公司與家中無縫接軌。
+    - **自動化測試升級 (`RaceSkillsBindingTest`)**：
+      - 新增 5 項測試，自動化覆蓋 7 大種族定義完整性、野鼠/不死族/龍族技能綁定、戰鬥怪技能映射以及隊員防禦技能開局啟用。
+  * **2026-09-18（Skills 技能資料整理與武器分類治理）**：
+    - **技能二級目錄體系規範化**：
+      - 將 `resources/data/global/skills/` 徹底重構為二級目錄架構：`weapons/` (刀、劍、槍、鈍器、短兵、弓弩、暗器、斧、鞭)、`martial_arts/` (拳腳空手、身法、招架)、`cultivation/` (內功心法、打坐禪定)、`spells/` (五行道術、輔助醫道)、`corrupted/` (克蘇魯墮落) 與 `mobs/` (怪物專屬防禦)。
+      - 舊有 59 個技能零遺失平移，保持原始技能 ID 完全相容。
+    - **新增 8 個門派高階武學與五行道術**：
+      - 刀法：霸刀門・霸刀歸一斬 (`badao_blade`)、狂風門・狂風絕息刀 (`storm_blade`)。
+      - 槍法：天策府・破陣遊龍槍 (`dragon_spear`)。
+      - 棍杖：少林寺・瘋魔杖法 (`mad_demon_staff`)。
+      - 短兵：暗影閣・無影幽冥刺 (`shadow_strike`)。
+      - 斧鉞：巨力門・開山裂地斧 (`mountain_split_axe`)。
+      - 道術：神霄派・九天應元雷訣 (`thunder_strike` - `LIGHTNING`)、太陰門・玄冰聚煞引 (`ice_spear` - `ICE`)。
+      - 全域技能擴充至 67 個，枚舉（`WeaponType`, `DamageType`）安全校驗。
+    - **程式碼加固與夥伴門派武學套路初始化**：
+      - `TemplateRepository` 擴充 `getAllSkills()` 查詢方法。
+      - `PartyMember.getMainHandWeaponType()` 支援 `PICKAXE` -> `AXE`、`SCYTHE` -> `POLEARM` 副武器歸類。
+      - `PartyMember.resolveSkillCategory()` 增強被動招架/身法（`REACTIVE`）與道術（`MAGIC`）之安全降級，防止 NPE。
+      - `default_companions.json` 為鐵牛、燕青、墨道人、芷若注入門派特色武學至 `learnedStances`。
+    - **自動化測試升級 (`SkillsTaxonomyAndWeaponBindingTest`)**：
+      - 新增 4 項專屬測試，覆蓋全域技能多層目錄遞迴加載、9 大武器種類招式映射、夥伴門派特色武學及高階技能屬性校驗。
 
 ---
 
 ## 6. 最新測試與健康狀況 (Latest Test Results)
-* **測試時間**：2026-09-17
+* **測試時間**：2026-09-18
 * **測試指令**：`.\test.ps1`（或 `mvnw test`）
 * **測試項目**：
-  * `CombatFlowTest`：玩家空手基本拳腳招式判定、野鼠即時反擊與傷害結算驗證。
+  * `SkillsTaxonomyAndWeaponBindingTest`：全域技能庫 67 個技能多層子目錄遞迴載入、9 大武器種類招式映射、夥伴初始門派特色套路配置、8 大門派高階武學參數與屬性完好等 4 項測試全過。
+  * `GlobalItemsAndShopOverridesTest`：全域物品庫（兵刃、防具、飾品、消耗品、素材、貨幣、任務信物）遞迴載入、帶 zoneId 前綴與純 ID 的雙向智慧容錯查詢、商店本地化實例參數（定價覆寫、價格倍率、名稱說明原型繼承）、線程安全限量庫存管理與動態扣減、真實 `newbie_village/shops.json` 客棧貨棧等 5 項測試全過。
+  * `MobRankAndClassificationTest`：`MobRank`（NORMAL/ELITE/BOSS）階級定義、預設值與舊版 `kind: "BOSS"` 向下相容升級、真實資料檔宋天衡/哥布林王/福伯/白石老人正交標籤解析、`BattleEnemy` 階級繼承與【首領】前綴動態注入、招募夥伴唯一性（`isUnique`）等 5 項測試全過。
+  * `RaceSkillsBindingTest`：7 大種族定義、野鼠/人類/不死族/太古赤龍動態技能綁定、BattleEnemy 防禦技能關聯、小隊成員身法招架啟用等 5 項測試全過。
+  * `DataDrivenExpansionTest`：`classes.json` 職業模板載入、夥伴 `learnedStances` 開局套路資料化、`shops.json` 貨棧商品動態載入與房間映射、NPC `capabilities` 組件化能力標籤、隊員職業關聯、貨棧批量購買與靈石扣減、NPC 交談對話觸發、`party recruit` / `recruit` / `dismiss` / `party dismiss` 雙向招募請離、貨棧獨立彈窗結構化事件推送與日誌純淨化等 9 項測試全過。
+  * `ItemPickupAndEntitySyncTest`：UUID 物品匹配、儲物袋一鍵搜刮入行囊、容器即刻銷毀消散、空屍體禁止入包、開局主角道號一致性驗證。
+  * `MultiWeaponAndStanceTest`：多武器普攻綁定、三套高級劍法套路切換、空手回歸與怪物種族天然攻擊驗證。
+  * `WeaponSkillBindingTest`：武器普攻動態綁定、空手拳腳、自訂劍法掛載與卸除武器回歸驗證。
+  * `CombatFlowTest`：玩家持劍/空手招式判定、出戲時間戳拔除驗證、野鼠即時反擊與傷害結算。
+  * `DrpgBattleServiceTest`：包含集火目標動態切換、技能施放、嘲諷仇恨、陣亡結算等 7 項測試全過。
   * `HtmlmudApplicationTests`：Spring Boot 啟動與資料庫配置驗證。
   * `MozhuMinesIntegrationTest`：礦坑場景動態載入、Boss 戰鬥與任務掉落驗證。
   * `MozhuMinesDungeonIntegrationTest`：墨竹礦坑 10x10 DRPG 地牢載入、迷霧開圖、步進與首領祭壇觸發驗證。
@@ -139,7 +290,7 @@
   * `TaiyinTombDungeonTest`：太陰古塚步進與暗雷測試。
   * `SaveGameServiceTest`：單機多槽位 JSON 存讀檔驗證。
   * `WorldDataIntegrityTest`：4 大區域載入、出口拓撲無懸空、自然攻擊與技能映射、Bug 迴歸測試。
-* **結果**：`Tests run: 53, Failures: 0, Errors: 0, Skipped: 0` -> **BUILD SUCCESS (53 項測試全數綠燈通過)**
+* **結果**：`Tests run: 94, Failures: 0, Errors: 0, Skipped: 0` -> **BUILD SUCCESS (94 項測試全數綠燈通過)**
 
 ---
 

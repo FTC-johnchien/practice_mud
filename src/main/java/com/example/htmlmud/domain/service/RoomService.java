@@ -346,10 +346,13 @@ public class RoomService {
 
   private String getMobDescription(List<Mob> mobs, AnsiColor color) {
 
-    // Key 是 "狀態 + 名字"
+    // Key 是 "前綴 + 名字 + 狀態"
     Map<String, Long> groups = mobs.stream()
         .collect(groupingBy(
-            m -> m.getName() + "(" + m.getTemplate().aliases().get(0) + ") " + getHealthStatus(m),
+            m -> {
+              String prefix = (m.getTemplate().rank() != null) ? m.getTemplate().rank().getPrefix() : "";
+              return prefix + m.getName() + "(" + m.getTemplate().aliases().get(0) + ") " + getHealthStatus(m);
+            },
             counting()));
 
     // 輸出

@@ -106,6 +106,9 @@ public class SaveCommand implements PlayerCommand {
     try {
       int slotId = Integer.parseInt(slotStr.trim());
       var data = saveGameService.loadGame(player.getName(), slotId);
+      if (data.getProtagonistName() != null && !data.getProtagonistName().isBlank()) {
+        player.setName(data.getProtagonistName());
+      }
       player.reply("\n\u001B[1;36m📂【道途重臨】已成功讀取【存檔槽位 " + slotId + "】！\n進度標題: "
           + data.getTitle() + " | 主角: " + data.getProtagonistName() + "\u001B[0m\n");
 
@@ -135,6 +138,7 @@ public class SaveCommand implements PlayerCommand {
           formationId = tokens[1];
         }
       }
+      player.setName(protagonistName);
       saveGameService.createNewGame(player.getName(), protagonistName, formationId);
       player.reply("\n\u001B[1;33m✨【新途啟程】道心初定！主角【" + protagonistName + "】踏入【新手村客棧】！\u001B[0m\n");
 

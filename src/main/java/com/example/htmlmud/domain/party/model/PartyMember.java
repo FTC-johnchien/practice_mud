@@ -20,6 +20,7 @@ public class PartyMember {
   private String id;
   private String name;
   private String roleTitle;
+  private String classId;
   private RowPosition row;
   private LivingStats stats;
   @Builder.Default
@@ -52,6 +53,10 @@ public class PartyMember {
   private java.util.Map<String, Long> cooldownUntil = new java.util.concurrent.ConcurrentHashMap<>();
   @Builder.Default
   private java.util.List<PartyMemberSkill> skills = new java.util.ArrayList<>();
+  @Builder.Default
+  private java.util.Map<com.example.htmlmud.domain.model.enums.SkillCategory, String> enabledSkills = new java.util.concurrent.ConcurrentHashMap<>();
+  @Builder.Default
+  private java.util.Set<String> learnedStances = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
   public enum MadnessState {
     SANE,         // 正常
@@ -306,8 +311,8 @@ public class PartyMember {
     if (sub.contains("DAGGER") || sub.contains("KNIFE")) return com.example.htmlmud.domain.model.enums.WeaponType.DAGGER;
     if (sub.contains("STAFF") || sub.contains("WAND") || sub.contains("ROD")) return com.example.htmlmud.domain.model.enums.WeaponType.STAFF;
     if (sub.contains("BOW")) return com.example.htmlmud.domain.model.enums.WeaponType.BOW;
-    if (sub.contains("AXE")) return com.example.htmlmud.domain.model.enums.WeaponType.AXE;
-    if (sub.contains("SPEAR") || sub.contains("POLEARM")) return com.example.htmlmud.domain.model.enums.WeaponType.POLEARM;
+    if (sub.contains("AXE") || sub.contains("PICKAXE")) return com.example.htmlmud.domain.model.enums.WeaponType.AXE;
+    if (sub.contains("SPEAR") || sub.contains("POLEARM") || sub.contains("SCYTHE")) return com.example.htmlmud.domain.model.enums.WeaponType.POLEARM;
 
     return com.example.htmlmud.domain.model.enums.WeaponType.UNARMED;
   }
@@ -329,9 +334,93 @@ public class PartyMember {
     };
   }
 
+  public String getEffectiveBasicSkillId() {
+    com.example.htmlmud.domain.model.enums.WeaponType wt = getMainHandWeaponType();
+    com.example.htmlmud.domain.model.enums.SkillCategory cat = toSkillCategory(wt);
+    if (enabledSkills != null && enabledSkills.containsKey(cat)) {
+      String customSkill = enabledSkills.get(cat);
+      if (customSkill != null && !customSkill.isBlank()) {
+        return customSkill;
+      }
+    }
+    return getBasicSkillId();
+  }
+
   public com.example.htmlmud.domain.model.template.SkillTemplate getEnabledBasicSkill() {
-    String skillId = getBasicSkillId();
+    String skillId = getEffectiveBasicSkillId();
     return com.example.htmlmud.infra.persistence.repository.TemplateRepository.findSkill(skillId).orElse(null);
+  }
+
+  public void enableSkill(com.example.htmlmud.domain.model.enums.SkillCategory category, String skillId) {
+    if (enabledSkills == null) {
+      enabledSkills = new java.util.concurrent.ConcurrentHashMap<>();
+    }
+    if (skillId == null || skillId.isBlank()) {
+      enabledSkills.remove(category);
+    } else {
+      enabledSkills.put(category, skillId);
+    }
+  }
+
+  public void learnStance(String skillId) {
+    if (learnedStances == null) {
+      learnedStances = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    }
+    if (skillId != null && !skillId.isBlank()) {
+      learnedStances.add(skillId);
+    }
+  }
+
+  public java.util.Set<String> getLearnedStances() {
+    if (learnedStances == null) {
+      learnedStances = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    }
+    return learnedStances;
+  }
+
+  public static com.example.htmlmud.domain.model.enums.SkillCategory toSkillCategory(com.example.htmlmud.domain.model.enums.WeaponType wt) {
+    if (wt == null) return com.example.htmlmud.domain.model.enums.SkillCategory.UNARMED;
+    return switch (wt) {
+      case SWORD -> com.example.htmlmud.domain.model.enums.SkillCategory.SWORD;
+      case BLADE -> com.example.htmlmud.domain.model.enums.SkillCategory.BLADE;
+      case BLUNT, HAMMER, MACE, MAUL, CLUB, FLAIL -> com.example.htmlmud.domain.model.enums.SkillCategory.HAMMER;
+      case DAGGER, DIRK, KNIFE, STILETTO -> com.example.htmlmud.domain.model.enums.SkillCategory.DAGGER;
+      case STAFF -> com.example.htmlmud.domain.model.enums.SkillCategory.STAFF;
+      case WAND, ROD, SCEPTER -> com.example.htmlmud.domain.model.enums.SkillCategory.WAND;
+      case BOW, CROSSBOW -> com.example.htmlmud.domain.model.enums.SkillCategory.BOW;
+      case AXE, POLEAXE -> com.example.htmlmud.domain.model.enums.SkillCategory.AXE;
+      case POLEARM, HALBERD -> com.example.htmlmud.domain.model.enums.SkillCategory.POLEARM;
+      case SPEAR -> com.example.htmlmud.domain.model.enums.SkillCategory.SPEAR;
+      case WHIP, CHAIN, ROPE -> com.example.htmlmud.domain.model.enums.SkillCategory.WHIP;
+      case DART, SHURIKEN, STONE, JAVELIN -> com.example.htmlmud.domain.model.enums.SkillCategory.DAGGER;
+      default -> com.example.htmlmud.domain.model.enums.SkillCategory.UNARMED;
+    };
+  }
+
+  public static com.example.htmlmud.domain.model.enums.SkillCategory resolveSkillCategory(com.example.htmlmud.domain.model.template.SkillTemplate template) {
+    if (template == null) return com.example.htmlmud.domain.model.enums.SkillCategory.UNARMED;
+    if (template.getType() == com.example.htmlmud.domain.model.enums.SkillType.REACTIVE) {
+      if (template.getTags() != null && template.getTags().contains("DODGE")) {
+        return com.example.htmlmud.domain.model.enums.SkillCategory.DODGE;
+      }
+      if (template.getTags() != null && template.getTags().contains("PARRY")) {
+        return com.example.htmlmud.domain.model.enums.SkillCategory.PARRY;
+      }
+    }
+    if (template.getType() == com.example.htmlmud.domain.model.enums.SkillType.MAGIC) {
+      return com.example.htmlmud.domain.model.enums.SkillCategory.MAGIC;
+    }
+    if (template.getUsage() != null && template.getUsage().allowedWeapons() != null) {
+      for (var wt : template.getUsage().allowedWeapons()) {
+        if (wt != null) {
+          return toSkillCategory(wt);
+        }
+      }
+    }
+    if (template.getType() == com.example.htmlmud.domain.model.enums.SkillType.UNARMED) {
+      return com.example.htmlmud.domain.model.enums.SkillCategory.UNARMED;
+    }
+    return com.example.htmlmud.domain.model.enums.SkillCategory.FORCE;
   }
 
   public com.example.htmlmud.domain.model.config.MoveAction getRandomBasicMove() {
@@ -350,5 +439,18 @@ public class PartyMember {
     }
     var wt = getMainHandWeaponType();
     return skill.isWeaponAllowed(wt.name()) || skill.isWeaponAllowed(wt.getDescription());
+  }
+
+  @JsonIgnore
+  public java.util.Optional<com.example.htmlmud.domain.model.template.ClassTemplate> getClassTemplate() {
+    if (this.classId == null || this.classId.isBlank()) {
+      return java.util.Optional.empty();
+    }
+    return com.example.htmlmud.infra.persistence.repository.TemplateRepository.findClass(this.classId);
+  }
+
+  @JsonIgnore
+  public String getEffectiveClassName() {
+    return getClassTemplate().map(com.example.htmlmud.domain.model.template.ClassTemplate::name).orElse(this.roleTitle);
   }
 }

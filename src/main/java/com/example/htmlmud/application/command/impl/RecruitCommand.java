@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@CommandAlias({"hire", "join", "dismiss", "fire"})
+@CommandAlias({"hire", "join", "招募"})
 public class RecruitCommand implements PlayerCommand {
 
   private final PartyService partyService;
@@ -33,9 +33,9 @@ public class RecruitCommand implements PlayerCommand {
 
     if (args == null || args.isBlank()) {
       self.reply("【結識與招募指令】\n"
-          + "  recruit <人物名稱/ID> - 邀請同道知己加入問道旅團 (上限 6 人)\n"
+          + "  recruit <人物名稱/ID> - 邀請同道知己加入問道旅團 (上限 " + Party.MAX_PARTY_SIZE + " 人)\n"
           + "  dismiss <隊員名稱/ID> - 請離隊員返回客棧安歇\n"
-          + "當前旅團人數: " + party.size() + "/6");
+          + "當前旅團人數: " + party.size() + "/" + Party.MAX_PARTY_SIZE);
       return;
     }
 
@@ -56,7 +56,7 @@ public class RecruitCommand implements PlayerCommand {
 
   private void handleRecruit(Player self, Party party, String target) {
     if (party.size() >= Party.MAX_PARTY_SIZE) {
-      self.reply("【旅團滿編】問道旅團已達上限 6 人，無法再結納更多隊友！");
+      self.reply("【旅團滿編】問道旅團已達上限 " + Party.MAX_PARTY_SIZE + " 人，無法再結納更多隊友！");
       return;
     }
 

@@ -1,0 +1,124 @@
+[
+  {
+    "id": "village_bread",
+    "name": "村莊烤麵包",
+    "aliases": ["bread", "food", "麵包"],
+    "description": "剛出爐的農家麵包，乾糧噴香，食用回復 20 點氣血。",
+    "type": "CONSUMABLE",
+    "subType": "FOOD",
+    "behavior": {
+      "effect": "HEAL",
+      "value": 20
+    },
+    "value": 2,
+    "quality": "COMMON",
+    "isStackable": true
+  },
+  {
+    "id": "purify_tea",
+    "name": "辟邪清心靈茶",
+    "aliases": ["tea", "purify tea", "spirit tea", "靈茶"],
+    "description": "以墨竹嫩葉配合百年清心草沖泡的靈茶，香氣幽遠，服用可回復 25 點道心 (SAN) 與 20 點真元 (MP)。",
+    "type": "CONSUMABLE",
+    "subType": "TALISMAN",
+    "behavior": {
+      "effect": "RESTORE_SAN",
+      "value": 25
+    },
+    "value": 5,
+    "quality": "UNCOMMON",
+    "isStackable": true
+  },
+  {
+    "id": "healing_salve",
+    "name": "百草金創藥膏",
+    "aliases": ["salve", "healing salve", "potion", "金創藥"],
+    "description": "村中老醫以百年何首烏與金銀花熬製的靈膏，塗抹傷口可迅速癒合，回復 60 點氣血 (HP)。",
+    "type": "CONSUMABLE",
+    "subType": "POTION",
+    "behavior": {
+      "effect": "HEAL",
+      "value": 60
+    },
+    "value": 8,
+    "quality": "UNCOMMON",
+    "isStackable": true
+  },
+  {
+    "id": "taiyin_pill",
+    "name": "太陰培元丹",
+    "aliases": ["pill", "taiyin pill", "dan", "培元丹"],
+    "description": "太陰古修所煉之靈丹，服之可調和體內陰陽，迅速恢復 50 點氣血。",
+    "type": "CONSUMABLE",
+    "subType": "POTION",
+    "behavior": {
+      "effect": "HEAL_HP",
+      "value": 50
+    },
+    "value": 30,
+    "quality": "UNCOMMON",
+    "level": 1,
+    "isStackable": true
+  },
+  {
+    "id": "purify_talisman",
+    "name": "辟邪清心符",
+    "aliases": ["talisman", "purify talisman", "fu", "靈符"],
+    "description": "朱砂混合太華清氣所畫之靈符，點燃可平復翻湧之雜念，回復 25 點道心。",
+    "type": "CONSUMABLE",
+    "subType": "TALISMAN",
+    "behavior": {
+      "effect": "RESTORE_SAN",
+      "value": 25
+    },
+    "value": 50,
+    "quality": "RARE",
+    "level": 1,
+    "isStackable": true
+  },
+  {
+    "id": "corrupted_spirit_stone",
+    "name": "煞氣靈石碎片",
+    "aliases": ["stone", "spirit stone", "corrupted", "碎片"],
+    "description": "表面佈滿暗紫色扭曲紋路的靈石碎片，蘊含狂暴真元，服用回復 50 點生命。",
+    "type": "CONSUMABLE",
+    "subType": "POTION",
+    "behavior": {
+      "effect": "HEAL",
+      "value": 50
+    },
+    "value": 15,
+    "quality": "UNCOMMON",
+    "isStackable": true
+  },
+  {
+    "id": "healing_potion",
+    "name": "初級金創藥水",
+    "aliases": ["healing potion", "potion", "藥水"],
+    "description": "標準煉金配方的紅色藥水，飲用立即回復 40 點氣血。",
+    "type": "CONSUMABLE",
+    "subType": "POTION",
+    "behavior": {
+      "effect": "HEAL",
+      "value": 40
+    },
+    "value": 10,
+    "quality": "COMMON",
+    "isStackable": true
+  },
+  {
+    "id": "mana_potion",
+    "name": "初級法力靈露",
+    "aliases": ["mana potion", "mana", "靈露"],
+    "description": "散發淡藍光芒的靈露，飲用立即回復 30 點真元 (MP)。",
+    "type": "CONSUMABLE",
+    "subType": "POTION",
+    "behavior": {
+      "effect": "RESTORE_MP",
+      "value": 30
+    },
+    "value": 15,
+    "quality": "COMMON",
+    "isStackable": true
+  }
+]

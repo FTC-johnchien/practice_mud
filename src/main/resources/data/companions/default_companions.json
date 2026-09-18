@@ -3,6 +3,7 @@
     "id": "leader",
     "name": "天劍傳人",
     "roleTitle": "太陰傳真・天劍弟子",
+    "classId": "SWORDSMAN",
     "gender": "MALE",
     "race": "human",
     "aliases": ["leader", "主角", "天劍"],
@@ -24,12 +25,17 @@
     "dialogues": [
       "道阻且長，行則將至。"
     ],
-    "skills": ["sword_pierce", "sword_storm"]
+    "initialEquipment": {
+      "MAIN_HAND": "taiyin_tomb:bronze_sword"
+    },
+    "skills": ["sword_pierce", "sword_storm"],
+    "learnedStances": ["basic_sword", "taiji_sword", "taiyin_sword", "tianjian_sword", "basic_fist"]
   },
   {
     "id": "tie_niu",
     "name": "鐵牛",
     "roleTitle": "搬山力士・玄甲體修",
+    "classId": "WARRIOR",
     "gender": "MALE",
     "race": "human",
     "aliases": ["tie_niu", "iron", "鐵牛"],
@@ -57,12 +63,18 @@
       "BODY": "taiyin_tomb:black_iron_armor",
       "OFF_HAND": "taiyin_tomb:bronze_shield"
     },
-    "skills": ["tank_taunt", "tank_smash"]
+    "skills": ["tank_taunt", "tank_smash"],
+    "learnedStances": ["basic_blunt", "mad_demon_staff", "basic_axe", "mountain_split_axe", "basic_fist", "iron_cloth"],
+    "capabilities": [
+      { "type": "TALK", "label": "交談", "command": "talk tie_niu", "icon": "💬" },
+      { "type": "RECRUIT", "label": "招募入隊", "command": "party recruit tie_niu", "icon": "🤝" }
+    ]
   },
   {
     "id": "yan_qing",
     "name": "燕青",
     "roleTitle": "赤霞傳人・追魂遊俠",
+    "classId": "ROGUE",
     "gender": "MALE",
     "race": "human",
     "aliases": ["yan_qing", "yan", "燕青"],
@@ -88,12 +100,18 @@
       "MAIN_HAND": "taiyin_tomb:dagger_twin",
       "BODY": "taiyin_tomb:leather_vest"
     },
-    "skills": ["rogue_shadow_strike", "rogue_seven_star"]
+    "skills": ["rogue_shadow_strike", "rogue_seven_star"],
+    "learnedStances": ["basic_dagger", "shadow_strike", "basic_polearm", "dragon_spear", "basic_fist", "cloud_step"],
+    "capabilities": [
+      { "type": "TALK", "label": "交談", "command": "talk yan_qing", "icon": "💬" },
+      { "type": "RECRUIT", "label": "招募入隊", "command": "party recruit yan_qing", "icon": "🤝" }
+    ]
   },
   {
     "id": "ling_shuang",
     "name": "凌霜",
     "roleTitle": "妙手醫仙・百草丹修",
+    "classId": "CLERIC",
     "gender": "FEMALE",
     "race": "human",
     "aliases": ["ling_shuang", "ling", "凌霜"],
@@ -120,12 +138,18 @@
       "MAIN_HAND": "taiyin_tomb:herbal_staff",
       "BODY": "taiyin_tomb:linen_robe"
     },
-    "skills": ["heal_single", "heal_all_purify"]
+    "skills": ["heal_single", "heal_all_purify"],
+    "learnedStances": ["basic_dagger", "basic_magic_staff", "basic_fist"],
+    "capabilities": [
+      { "type": "TALK", "label": "交談", "command": "talk ling_shuang", "icon": "💬" },
+      { "type": "RECRUIT", "label": "招募入隊", "command": "party recruit ling_shuang", "icon": "🤝" }
+    ]
   },
   {
     "id": "mo_yan",
     "name": "墨衍",
     "roleTitle": "九幽冥客・幽冥符修",
+    "classId": "MAGE",
     "gender": "MALE",
     "race": "human",
     "aliases": ["mo_yan", "mo", "墨衍", "墨道人"],
@@ -151,12 +175,18 @@
       "MAIN_HAND": "taiyin_tomb:ghost_seal",
       "BODY": "taiyin_tomb:yin_robe"
     },
-    "skills": ["taoist_seal", "taoist_thunder"]
+    "skills": ["taoist_seal", "taoist_thunder"],
+    "learnedStances": ["basic_blade", "storm_blade", "basic_magic", "thunder_strike", "basic_fist"],
+    "capabilities": [
+      { "type": "TALK", "label": "交談", "command": "talk mo_yan", "icon": "💬" },
+      { "type": "RECRUIT", "label": "招募入隊", "command": "party recruit mo_yan", "icon": "🤝" }
+    ]
   },
   {
     "id": "zhi_ruo",
     "name": "芷若",
     "roleTitle": "紫霄仙子・紫霄法修",
+    "classId": "MAGE",
     "gender": "FEMALE",
     "race": "human",
     "aliases": ["zhi_ruo", "zi", "芷若"],
@@ -182,6 +212,11 @@
       "MAIN_HAND": "taiyin_tomb:star_wand",
       "BODY": "taiyin_tomb:yin_robe"
     },
-    "skills": ["star_warp", "star_meteor"]
+    "skills": ["star_warp", "star_meteor"],
+    "learnedStances": ["basic_magic_staff", "basic_magic", "ice_spear", "basic_fist"],
+    "capabilities": [
+      { "type": "TALK", "label": "交談", "command": "talk zhi_ruo", "icon": "💬" },
+      { "type": "RECRUIT", "label": "招募入隊", "command": "party recruit zhi_ruo", "icon": "🤝" }
+    ]
   }
 ]

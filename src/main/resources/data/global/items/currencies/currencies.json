@@ -1,0 +1,22 @@
+[
+  {
+    "id": "copper_coin",
+    "name": "銅幣",
+    "aliases": ["coin", "copper", "銅錢", "錢"],
+    "type": "CURRENCY",
+    "description": "人間世俗與修仙界最基礎的流通銅錢。",
+    "value": 1,
+    "quality": "COMMON",
+    "isStackable": true
+  },
+  {
+    "id": "silver_coin",
+    "name": "碎銀",
+    "aliases": ["silver", "銀子", "銀兩"],
+    "type": "CURRENCY",
+    "description": "成色普通的紋銀碎銀，一兩碎銀折合百枚銅錢。",
+    "value": 100,
+    "quality": "COMMON",
+    "isStackable": true
+  }
+]

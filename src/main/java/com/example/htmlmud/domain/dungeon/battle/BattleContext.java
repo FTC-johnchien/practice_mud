@@ -66,14 +66,22 @@ public class BattleContext {
   }
 
   public BattleEnemy getFrontTargetEnemy() {
-    // 優先找前排活著的
+    // 1. 若玩家已明確指定鎖定集火目標，且該目標活著，全隊集中火力優先擊殺！
+    if (selectedTargetIndex >= 0 && selectedTargetIndex < enemies.size()) {
+      BattleEnemy selected = enemies.get(selectedTargetIndex);
+      if (selected.isAlive()) {
+        return selected;
+      }
+    }
+    // 2. 否則前衛自動尋敵：優先找前排活著的
     for (int i = 0; i < enemies.size(); i++) {
       BattleEnemy e = enemies.get(i);
       if (e.isAlive() && e.getRow() == RowPosition.FRONT) {
+        selectedTargetIndex = i;
         return e;
       }
     }
-    // 前排無人生還，轉向後排
+    // 3. 前排無人生還，轉向任意存活後排敵人
     return getTargetEnemy();
   }
 

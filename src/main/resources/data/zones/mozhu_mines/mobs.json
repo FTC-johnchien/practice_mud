@@ -68,6 +68,8 @@
     "race": "human",
     "aliases": ["song", "brother", "tianheng", "boss"],
     "kind": "AGGRESSIVE",
+    "rank": "BOSS",
+    "isUnique": true,
     "level": 15,
     "maxHp": 450,
     "str": 38,

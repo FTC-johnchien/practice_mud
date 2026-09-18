@@ -1,0 +1,58 @@
+{
+  "id": "mob_undead_parry",
+  "name": "枯骨封架",
+  "description": "不死族以死寂的白骨肢體或幽冥死氣正面硬接兵刃，毫無痛楚感地封鎖敵方攻勢。",
+  "type": "REACTIVE",
+  "school": "NATURAL",
+  "tags": [
+    "DEFENSIVE",
+    "PARRY",
+    "UNDEAD"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED",
+      "SWORD",
+      "BLADE"
+    ]
+  },
+  "costs": {
+    "stamina": 2
+  },
+  "scaling": {
+    "parryRatePerLevel": 0.004
+  },
+  "mechanics": {
+    "parryRate": 0.16,
+    "maxLevel": 100,
+    "scaleStat": "CON",
+    "scaleFactor": 1.3,
+    "formulas": {
+      "successRate": "skill.mechanics.parryRate + (user.con * 0.006) + (user.str * 0.003)"
+    }
+  },
+  "moves": [
+    {
+      "name": "白骨硬架",
+      "weight": 50,
+      "msg": {
+        "success": "$N森白的骨臂交叉封在身前，「咔嚓」一聲死死架住了$n的$w，枯骨竟堅逾金石！"
+      }
+    },
+    {
+      "name": "死氣纏刃",
+      "weight": 40,
+      "msg": {
+        "success": "$N枯瘦的掌心湧起濃烈黑霧，空手硬接$n劈來的$w，死氣如毒蛇般盤旋將兵刃震偏！"
+      }
+    },
+    {
+      "name": "斷刃封鎖",
+      "weight": 35,
+      "msg": {
+        "success": "$N以殘破的肢骨猛烈敲擊在$n的$w前端，以毫不知痛的瘋狂架勢將攻勢格開！"
+      }
+    }
+  ]
+}

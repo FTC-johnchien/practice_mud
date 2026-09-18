@@ -1,0 +1,80 @@
+{
+  "id": "shadow_strike",
+  "name": "無影幽冥刺",
+  "description": "暗影閣頂級刺殺術，身法如鬼魅，出刀無聲息。專取人咽喉、心口等要害，見血封喉。",
+  "type": "WEAPON",
+  "school": "SHADOW",
+  "tags": [
+    "WEAPON",
+    "DAGGER",
+    "STEALTH",
+    "CRIT",
+    "BLEED"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      "DAGGER",
+      "KNIFE",
+      "DIRK",
+      "STILETTO"
+    ]
+  },
+  "costs": {
+    "stamina": 3
+  },
+  "scaling": {
+    "damagePerLevel": 0.8,
+    "hitRatePerLevel": 0.005,
+    "critRatePerLevel": 0.005
+  },
+  "mechanics": {
+    "critRate": 0.2,
+    "damage": 15,
+    "damageType": "PIERCE",
+    "hitRate": 0.98,
+    "maxLevel": 100,
+    "scaleStat": "DEX",
+    "scaleFactor": 1.45
+  },
+  "moves": [
+    {
+      "name": "鬼影潛行",
+      "weight": 40,
+      "damageMod": 1.05,
+      "hitRateMod": 0.12,
+      "critRateMod": 0.15,
+      "msg": {
+        "cast": "$N身形忽然一晃，詭異地自陰影中遁出，手中短匕$W如毒蛇吐信直刺$n後心！",
+        "hit": "寒芒一閃，$W悄然沒入$n肌膚，劇毒與煞氣同時侵入，造成 $d 點背刺傷害！",
+        "crit": "【幽冥背刺】$W完全刺入心脈破綻，$n雙眼圓睜痛徹心扉，承受 $d 點極致暴擊！",
+        "miss": "$n背後汗毛倒豎，憑本能反手一揮，匕首自衣角掠過。"
+      }
+    },
+    {
+      "name": "斷喉割裂",
+      "weight": 35,
+      "damageMod": 1.25,
+      "hitRateMod": 0.1,
+      "critRateMod": 0.2,
+      "msg": {
+        "cast": "$N欺身近前，$W反手一抹，化作一道冰冷幽藍的弧線平削$n的咽喉！",
+        "hit": "噗的一聲輕響，$n頸側血箭狂飆，痛苦地捂住脖頸，受到 $d 點割裂重創！",
+        "crit": "【見血封喉】這一抹冷酷而精準，動脈破裂血流如注，$n承受 $d 點致命傷！",
+        "miss": "$n仰面後仰，冰冷的刀鋒貼著喉結掠過，留下一道淺淺血絲。"
+      }
+    },
+    {
+      "name": "無影絕殺",
+      "weight": 25,
+      "damageMod": 1.5,
+      "hitRateMod": 0.08,
+      "critRateMod": 0.3,
+      "msg": {
+        "cast": "$N瞬息間化身為三道幽影，自死角同時出刺，三柄$W帶著森寒殺意直取$n全身死穴！",
+        "hit": "血光乍現！三道刺擊全數命中，$n要害千瘡百孔，癱倒在地受到 $d 點恐怖傷害！",
+        "crit": "【幽冥索命】暗影煞氣在體內同時爆開，$n護體功法全面崩解，承受 $d 點毀滅性刺殺打擊！",
+        "miss": "$n狂亂揮舞兵刃護住周身，鐺的一聲脆響格開致命一刺。"
+      }
+    }
+  ]
+}

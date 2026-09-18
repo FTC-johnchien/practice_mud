@@ -141,4 +141,25 @@ class DrpgBattleServiceTest {
     battleService.fight(dummyPlayer, dungeonPos);
     assertThat(battleService.isInBattle("tester")).isTrue();
   }
+
+  @Test
+  @DisplayName("測試點選敵人鎖定集火目標：前衛隊員普攻與技能精準轉火至指定目標")
+  void testTargetSwitchingAndFocusFire() {
+    // 怪物 0: corpse_doll (前衛), 怪物 1: bone_bat (後衛)
+    List<String> mobIds = List.of("taiyin_tomb:corpse_doll", "taiyin_tomb:bone_bat");
+    battleService.startBattle(dummyPlayer, dungeonPos, mobIds);
+    BattleContext ctx = battleService.getBattle("tester");
+    assertThat(ctx.getEnemies()).hasSize(2);
+
+    // 初始狀態：前衛隊員自動打前排第 0 隻
+    assertThat(ctx.getFrontTargetEnemy()).isSameAs(ctx.getEnemies().get(0));
+
+    // 玩家手動鎖定第 1 隻 (後衛 bone_bat)
+    battleService.selectTarget(dummyPlayer, 1, dungeonPos);
+    assertThat(ctx.getSelectedTargetIndex()).isEqualTo(1);
+
+    // 關鍵修復驗證：前衛隊員不再死腦筋打第 0 隻，而是優先攻擊玩家指定的集火目標！
+    assertThat(ctx.getFrontTargetEnemy()).isSameAs(ctx.getEnemies().get(1));
+    assertThat(ctx.getTargetEnemy()).isSameAs(ctx.getEnemies().get(1));
+  }
 }

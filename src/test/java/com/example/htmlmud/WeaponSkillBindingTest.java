@@ -1,112 +1,60 @@
 package com.example.htmlmud;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
+import com.example.htmlmud.domain.model.enums.ItemType;
+import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.domain.model.enums.WeaponType;
 import com.example.htmlmud.domain.party.model.PartyItemSlot;
 import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import com.example.htmlmud.domain.party.model.RowPosition;
 
-import java.util.List;
-import java.util.Map;
+class WeaponSkillBindingTest {
 
-import static org.junit.jupiter.api.Assertions.*;
+  @Test
+  @DisplayName("驗證武器普攻動態綁定：空手拳腳、裝備長劍切換劍法、自訂主修掛載與卸除武器回歸")
+  void testWeaponSkillBindingAndStanceSwitch() {
+    PartyMember member = PartyMember.builder()
+        .id("m-test")
+        .name("劍修道友")
+        .row(RowPosition.FRONT)
+        .build();
 
-@SpringBootTest
-public class WeaponSkillBindingTest {
+    // 1. 初始空手狀態
+    assertThat(member.getEquippedWeapon()).isNull();
+    assertThat(member.getEffectiveBasicSkillId()).isEqualTo("basic_fist");
 
-    private PartyMember member;
+    // 2. 穿戴長劍
+    PartyItemSlot sword = PartyItemSlot.builder()
+        .itemId("taiyin_tomb:bronze_sword")
+        .name("青銅古劍")
+        .itemType(ItemType.WEAPON)
+        .subType(WeaponType.SWORD.name())
+        .equipSlot(EquipmentSlot.MAIN_HAND)
+        .bonusMinDamage(14)
+        .bonusMaxDamage(22)
+        .build();
+    member.equip(EquipmentSlot.MAIN_HAND, sword);
 
-    @BeforeEach
-    void setUp() {
-        member = new PartyMember();
-        member.setId("test_warrior");
-        member.setName("測試戰士");
-    }
+    assertThat(member.getEquippedWeapon()).isNotNull();
+    assertThat(member.getEquippedWeapon().getName()).isEqualTo("青銅古劍");
+    assertThat(member.getEffectiveBasicSkillId()).isEqualTo("basic_sword");
 
-    @Test
-    void testUnarmedDefaultsToBasicFist() {
-        assertEquals(WeaponType.UNARMED, member.getMainHandWeaponType());
-        assertEquals("basic_fist", member.getBasicSkillId());
+    // 3. 玩家主動啟用自訂劍法 (例如天劍訣)
+    member.enableSkill(SkillCategory.SWORD, "tianjian_sword");
+    assertThat(member.getEffectiveBasicSkillId()).isEqualTo("tianjian_sword");
 
-        var skill = member.getEnabledBasicSkill();
-        assertNotNull(skill);
-        assertEquals("basic_fist", skill.getId());
+    // 4. 卸下武器變回空手 -> 自動回退至空手套路 (basic_fist)
+    member.unequip(EquipmentSlot.MAIN_HAND);
+    assertThat(member.getEquippedWeapon()).isNull();
+    assertThat(member.getEffectiveBasicSkillId()).isEqualTo("basic_fist");
 
-        var move = member.getRandomBasicMove();
-        assertNotNull(move);
-        assertNotNull(move.name());
-    }
-
-    @Test
-    void testEquipSwordBindsBasicSword() {
-        PartyItemSlot sword = PartyItemSlot.builder()
-                .itemId("iron_sword")
-                .name("鐵劍")
-                .equipSlot(EquipmentSlot.MAIN_HAND)
-                .subType("SWORD")
-                .bonusMaxDamage(5)
-                .build();
-        member.setEquipment(new java.util.EnumMap<>(Map.of(EquipmentSlot.MAIN_HAND, sword)));
-
-        assertEquals(WeaponType.SWORD, member.getMainHandWeaponType());
-        assertEquals("basic_sword", member.getBasicSkillId());
-
-        var skill = member.getEnabledBasicSkill();
-        assertNotNull(skill);
-        assertEquals("basic_sword", skill.getId());
-    }
-
-    @Test
-    void testEquipBluntBindsBasicBlunt() {
-        PartyItemSlot mace = PartyItemSlot.builder()
-                .itemId("oak_mace")
-                .name("橡木重錘")
-                .equipSlot(EquipmentSlot.MAIN_HAND)
-                .subType("BLUNT")
-                .bonusMaxDamage(6)
-                .build();
-        member.setEquipment(new java.util.EnumMap<>(Map.of(EquipmentSlot.MAIN_HAND, mace)));
-
-        assertEquals(WeaponType.BLUNT, member.getMainHandWeaponType());
-        assertEquals("basic_blunt", member.getBasicSkillId());
-
-        var skill = member.getEnabledBasicSkill();
-        assertNotNull(skill);
-        assertEquals("basic_blunt", skill.getId());
-    }
-
-    @Test
-    void testActiveSkillWeaponRestriction() {
-        PartyMemberSkill swordSkill = PartyMemberSkill.builder()
-                .id("sword_pierce")
-                .name("破空刺")
-                .allowedWeapons(List.of("SWORD", "BLADE"))
-                .build();
-
-        // 徒手時不能使用破空刺
-        assertFalse(member.isSkillUsable(swordSkill));
-
-        // 裝備鐵劍後可以使用
-        PartyItemSlot sword = PartyItemSlot.builder()
-                .itemId("iron_sword")
-                .name("鐵劍")
-                .equipSlot(EquipmentSlot.MAIN_HAND)
-                .subType("SWORD")
-                .build();
-        member.getEquipment().put(EquipmentSlot.MAIN_HAND, sword);
-        assertTrue(member.isSkillUsable(swordSkill));
-
-        // 換成斧頭/錘子不能使用
-        PartyItemSlot mace = PartyItemSlot.builder()
-                .itemId("oak_mace")
-                .name("橡木重錘")
-                .equipSlot(EquipmentSlot.MAIN_HAND)
-                .subType("BLUNT")
-                .build();
-        member.getEquipment().put(EquipmentSlot.MAIN_HAND, mace);
-        assertFalse(member.isSkillUsable(swordSkill));
-    }
+    // 5. 再次穿戴長劍 -> 依然記憶之前啟用的天劍訣
+    member.equip(EquipmentSlot.MAIN_HAND, sword);
+    assertThat(member.getEffectiveBasicSkillId()).isEqualTo("tianjian_sword");
+  }
 }

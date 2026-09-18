@@ -1,0 +1,90 @@
+{
+  "id": "tianjian_sword",
+  "name": "天劍飛仙術",
+  "description": "天劍派嫡傳真訣，人劍合一，以氣御劍。出劍如飛仙臨塵，快絕人寰，劍罡縱橫百步。",
+  "type": "PASSIVE",
+  "school": "TIANJIAN",
+  "tags": [
+    "WEAPON",
+    "SWORD",
+    "HOLY",
+    "FAST",
+    "COMBO"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      "SWORD"
+    ]
+  },
+  "costs": {
+    "stamina": 4
+  },
+  "scaling": {
+    "damagePerLevel": 0.85,
+    "hitRatePerLevel": 0.003,
+    "critRatePerLevel": 0.003
+  },
+  "mechanics": {
+    "critRate": 0.10,
+    "damage": 17,
+    "damageType": "SLASH",
+    "hitRate": 0.94,
+    "maxLevel": 100,
+    "scaleStat": "DEX",
+    "scaleFactor": 1.25
+  },
+  "moves": [
+    {
+      "name": "青鋒掠影",
+      "weight": 35,
+      "damageMod": 1.15,
+      "hitRateMod": 0.08,
+      "critRateMod": 0.08,
+      "msg": {
+        "cast": "$N清嘯一聲，長袖飄飄，$W宛如一道青色驚鴻，以不可思議的疾速掠向$n的$l。",
+        "hit": "青芒一閃即逝，$n頸側已被$W劃出一道血痕，受到 $d 點迅捷傷害！",
+        "crit": "【劍氣縱橫】$N這一劍快得無影無蹤，$W帶著尖銳破空呼嘯，爆發 $d 點驚鴻暴擊！",
+        "miss": "$n早有提防，縮頸藏頭，青色劍芒擦著髮髻掠過。"
+      }
+    },
+    {
+      "name": "劍氣破霄",
+      "weight": 30,
+      "damageMod": 1.25,
+      "hitRateMod": 0.06,
+      "critRateMod": 0.12,
+      "msg": {
+        "cast": "$N手捏劍訣，真元灌注，$W吞吐出三尺純陽金芒，凌空直劈$n！",
+        "hit": "「轟！」純陽劍罡當頭劈落，震裂$n周身罡氣護甲，造成 $d 點破甲重擊！",
+        "crit": "【天罡開山】金色劍芒撕裂空氣，宛如天雷貫頂，重重劈在$n胸膛，轟出 $d 點極致傷害！",
+        "miss": "$n橫向疾移三步，劍罡在地面斬出一道深不見底的溝壑。"
+      }
+    },
+    {
+      "name": "萬流歸宗",
+      "weight": 20,
+      "damageMod": 1.4,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.15,
+      "msg": {
+        "cast": "$N長劍一震，半空中幻化出無數道璀璨劍影，宛如百川入海，全數奔湧向$n！",
+        "hit": "萬千劍光歸於一點，盡數刺入$n體內，造成 $d 點連綿不絕的刺穿傷害！",
+        "crit": "【萬劍歸一】無數劍影驟然凝為一柄丈長巨劍，貫穿$n軀幹，造成 $d 點滅頂重創！",
+        "miss": "$n雙掌翻飛，激盪出磅礡氣勁，硬生生逼退了漫天虛影。"
+      }
+    },
+    {
+      "name": "天外飛仙",
+      "weight": 15,
+      "damageMod": 1.65,
+      "hitRateMod": 0.03,
+      "critRateMod": 0.22,
+      "msg": {
+        "cast": "$N身劍合一，騰空而起，如天外飛仙般自九霄之巔俯衝而下，$W直刺$n百會穴！",
+        "hit": "仙光耀世，一道熾烈的白光貫穿長空，$n避無可避被直刺要害，爆出 $d 點驚天威能！",
+        "crit": "【人劍合一・飛仙極境】天地間唯餘一劍！$W刺穿一切防線，產生 $d 點毀天滅地的絕命一擊！",
+        "miss": "$n使出渾身解數，向後狂躍數十丈，狼狽不堪地摔在地上才堪堪避過。"
+      }
+    }
+  ]
+}

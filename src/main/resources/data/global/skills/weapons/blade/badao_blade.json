@@ -1,0 +1,78 @@
+{
+  "id": "badao_blade",
+  "name": "霸刀歸一斬",
+  "description": "霸刀門至剛至陽的絕學，講究刀勢沉雄、一往無前。刀氣如怒濤翻滾，招招劈山斷嶽。",
+  "type": "WEAPON",
+  "school": "BADAO",
+  "tags": [
+    "WEAPON",
+    "BLADE",
+    "RAGE",
+    "HEAVY"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      "BLADE",
+      "SABER",
+      "SCIMITAR"
+    ]
+  },
+  "costs": {
+    "stamina": 5
+  },
+  "scaling": {
+    "damagePerLevel": 1.2,
+    "hitRatePerLevel": 0.002,
+    "critRatePerLevel": 0.003
+  },
+  "mechanics": {
+    "critRate": 0.12,
+    "damage": 22,
+    "damageType": "SLASH",
+    "hitRate": 0.9,
+    "maxLevel": 100,
+    "scaleStat": "STR",
+    "scaleFactor": 1.4
+  },
+  "moves": [
+    {
+      "name": "力劈華山",
+      "weight": 40,
+      "damageMod": 1.15,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.08,
+      "msg": {
+        "cast": "$N雙手握緊$W，暴喝一聲，挾帶萬鈞之勢自上而下狠狠劈向$n的$l！",
+        "hit": "刀風呼嘯，$W重重砍在$n的身上，震得骨肉俱裂，造成 $d 點霸道傷害！",
+        "crit": "【霸刀破甲】$W刀芒暴漲，如天崩地裂般硬生生劈開防禦，造成 $d 點毀滅暴擊！",
+        "miss": "$n狼狽翻滾，地表被$W劈出一道觸目驚心的深深溝壑。"
+      }
+    },
+    {
+      "name": "橫掃千軍",
+      "weight": 35,
+      "damageMod": 1.25,
+      "hitRateMod": 0.08,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N腰身發力，借旋轉之勢將$W橫空掃出一道刺目血光，直斬向$n！",
+        "hit": "血色刀弧掠過，$n躲閃不及，被雄厚刀勁橫掃飛出，受到 $d 點重創！",
+        "crit": "【血煞狂嘯】霸道刀罡撕裂空氣，$n被雄渾力道震退三丈，遭受 $d 點重擊！",
+        "miss": "$n急忙低頭矮身，刀刃削飛了數縷長髮。"
+      }
+    },
+    {
+      "name": "歸一絕斬",
+      "weight": 25,
+      "damageMod": 1.5,
+      "hitRateMod": 0.02,
+      "critRateMod": 0.2,
+      "msg": {
+        "cast": "$N周身血氣翻湧，所有煞氣凝於$W刀鋒之上，發出撕心裂肺的呼嘯，全力斬向$n！",
+        "hit": "一聲巨響！刀氣貫體而過，$n胸膛被劈出一道深痕，遭受 $d 點恐怖傷害！",
+        "crit": "【霸絕天下】極致的狂怒灌注刀身，$n護體罡氣如紙片般粉碎，承受 $d 點天崩地裂般的打擊！",
+        "miss": "$n感知到生死危機，奮不顧身施展遁術側躍避過。"
+      }
+    }
+  ]
+}

@@ -1,17 +1,61 @@
 {
   "id": "mob_basic_parry",
-  "name": "戰鬥格擋",
-  "type": "PASSIVE",
-  "tags": ["PARRY", "MOB"],
-  "description": "利用手中的武器或盾牌進行防禦。",
-  "mechanics": {
-    "parryMod": 0.1
-  },
-  "messages": {
-    "parried": [
-      "$N 豎起手中的$w，擋住了你的攻勢。",
-      "$N 大喝一聲，將你的兵器架開。",
-      "$N 快速揮舞$w，封住了你的攻擊路線。"
+  "name": "粗暴格擋",
+  "description": "類人族或雜役異化者以手中的粗糙武器、木棒、鎬頭或硬物胡亂迎擊架開敵人的攻勢。",
+  "type": "REACTIVE",
+  "school": "NATURAL",
+  "tags": [
+    "DEFENSIVE",
+    "PARRY",
+    "MOB",
+    "BASIC"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED",
+      "CLUB",
+      "AXE",
+      "SWORD",
+      "HAMMER"
     ]
-  }
+  },
+  "costs": {
+    "stamina": 3
+  },
+  "scaling": {
+    "parryRatePerLevel": 0.004
+  },
+  "mechanics": {
+    "parryRate": 0.12,
+    "maxLevel": 100,
+    "scaleStat": "STR",
+    "scaleFactor": 1.2,
+    "formulas": {
+      "successRate": "skill.mechanics.parryRate + (user.str * 0.005)"
+    }
+  },
+  "moves": [
+    {
+      "name": "粗木橫截",
+      "weight": 50,
+      "msg": {
+        "success": "$N發出怒吼，雙手緊握$W猛地橫在身前，「砰」的一聲生生架住了$n劈來的$w！"
+      }
+    },
+    {
+      "name": "蠻力砸偏",
+      "weight": 40,
+      "msg": {
+        "success": "$N眼神凶狠，掄起$W狠狠砸在$n$w的刀脊上，狂暴的力量將攻擊徹底打偏！"
+      }
+    },
+    {
+      "name": "粗糙硬擋",
+      "weight": 35,
+      "msg": {
+        "success": "$N將$W胡亂一舞，剛好在半空撞上了$n攻向$l的利刃，火花四濺中擋下了攻勢。"
+      }
+    }
+  ]
 }

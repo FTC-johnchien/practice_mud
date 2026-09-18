@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
+import com.example.htmlmud.domain.model.enums.MobRank;
+import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.domain.model.template.MobTemplate;
 import com.example.htmlmud.domain.party.model.RowPosition;
 import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
@@ -20,7 +22,11 @@ import lombok.NoArgsConstructor;
 public class BattleEnemy {
   private String id;
   private String templateId;
+  private String race;
   private String name;
+  @Builder.Default
+  private MobRank rank = MobRank.NORMAL;
+  private boolean isUnique;
   private int hp;
   private int maxHp;
   @Builder.Default
@@ -52,6 +58,8 @@ public class BattleEnemy {
   private Map<EquipmentSlot, String> equipment = new HashMap<>();
   @Builder.Default
   private List<String> skills = new ArrayList<>();
+  private String dodgeSkillId;
+  private String parrySkillId;
 
   public static BattleEnemy fromTemplate(String id, MobTemplate tpl, RowPosition row, String dropId) {
     if (tpl == null) return null;
@@ -82,14 +90,43 @@ public class BattleEnemy {
     }
 
     List<String> mobSkills = new ArrayList<>();
+    String dodgeSkill = null;
+    String parrySkill = null;
+
     if (tpl.enabledSkills() != null) {
       mobSkills.addAll(tpl.enabledSkills().values());
+      dodgeSkill = tpl.enabledSkills().get(SkillCategory.DODGE);
+      parrySkill = tpl.enabledSkills().get(SkillCategory.PARRY);
     }
+
+    // 依據種族自動補齊天然防禦技能 (Dodge, Parry)
+    String raceId = tpl.race();
+    if (raceId != null) {
+      var raceOpt = TemplateRepository.findRace(raceId);
+      if (raceOpt.isPresent() && raceOpt.get().combat() != null) {
+        var raceCombat = raceOpt.get().combat();
+        if (dodgeSkill == null && raceCombat.naturalDodge() != null) {
+          dodgeSkill = raceCombat.naturalDodge();
+          if (!mobSkills.contains(dodgeSkill)) mobSkills.add(dodgeSkill);
+        }
+        if (parrySkill == null && raceCombat.naturalParry() != null) {
+          parrySkill = raceCombat.naturalParry();
+          if (!mobSkills.contains(parrySkill)) mobSkills.add(parrySkill);
+        }
+      }
+    }
+
+    MobRank rank = tpl.rank() != null ? tpl.rank() : MobRank.NORMAL;
+    boolean isUnique = tpl.isUnique();
+    String displayName = (rank != MobRank.NORMAL ? rank.getPrefix() : "") + tpl.name();
 
     return BattleEnemy.builder()
         .id(id)
         .templateId(tpl.id())
-        .name(tpl.name())
+        .race(tpl.race())
+        .name(displayName)
+        .rank(rank)
+        .isUnique(isUnique)
         .hp(hp)
         .maxHp(hp)
         .minDamage(minD)
@@ -100,6 +137,8 @@ public class BattleEnemy {
         .attackIntervalMs(attackInterval)
         .equipment(equipMap)
         .skills(mobSkills)
+        .dodgeSkillId(dodgeSkill)
+        .parrySkillId(parrySkill)
         .dropItemId(dropId)
         .alive(true)
         .xp(tpl.expReward() > 0 ? tpl.expReward() : 30)

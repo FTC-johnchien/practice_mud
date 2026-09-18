@@ -34,6 +34,7 @@ public class CombatService {
 
   private final SkillService skillService;
   private final XpService xpService;
+  private final org.springframework.beans.factory.ObjectProvider<com.example.htmlmud.domain.party.service.PartyService> partyServiceProvider;
 
 
 
@@ -143,6 +144,18 @@ public class CombatService {
     }
 
     DamageSource weapon = attacker.getCurrentAttackSource();
+    if (attacker instanceof Player player && partyServiceProvider != null) {
+      var ps = partyServiceProvider.getIfAvailable();
+      if (ps != null) {
+        var party = ps.getOrCreateParty(player.getName());
+        if (party != null && !party.getMembers().isEmpty()) {
+          var leader = party.getMembers().get(0);
+          var equippedWeapon = leader.getEquippedWeapon();
+          String wName = (equippedWeapon != null) ? equippedWeapon.getName() : "徒手";
+          weapon = new DamageSource(wName, "攻擊", leader.getEffectiveMinDamage(), leader.getEffectiveMaxDamage(), 2000, 0, -1);
+        }
+      }
+    }
 
     // 2. 傷害公式 (範例：攻擊力 - 防禦力，浮動 10%)
     int damage = random(weapon.minDamage(), weapon.maxDamage());
@@ -274,7 +287,19 @@ public class CombatService {
     // 5. 格式化戰鬥訊息
     String sWeapon = "";
     String tWeapon = "";
-    if (self.getMainHandWeapon() != null) {
+    if (self instanceof Player player && partyServiceProvider != null) {
+      var ps = partyServiceProvider.getIfAvailable();
+      if (ps != null) {
+        var party = ps.getOrCreateParty(player.getName());
+        if (party != null && !party.getMembers().isEmpty()) {
+          var leader = party.getMembers().get(0);
+          if (leader.getEquippedWeapon() != null) {
+            sWeapon = leader.getEquippedWeapon().getName();
+          }
+        }
+      }
+    }
+    if (sWeapon.isEmpty() && self.getMainHandWeapon() != null) {
       sWeapon = self.getMainHandWeapon().getDisplayName();
     }
     if (target.getMainHandWeapon() != null) {
@@ -301,11 +326,9 @@ public class CombatService {
     msg = CombineString(msg, sWeapon, tWeapon, part);
     msg = msg.replace("$d", ColorText.damage(dmgAmout));
 
-    // 產生 [秒.毫秒] 的時間戳記前綴
-    long nowMs = System.currentTimeMillis();
-    String timestamp = String.format("[%02d.%03d] ", (nowMs / 1000) % 60, nowMs % 1000);
+    // 發送純淨無時間戳戰鬥訊息
     for (Player receiver : audiences) {
-      MessageUtil.send(timestamp + msg, self, target, receiver);
+      MessageUtil.send(msg, self, target, receiver);
     }
   }
 

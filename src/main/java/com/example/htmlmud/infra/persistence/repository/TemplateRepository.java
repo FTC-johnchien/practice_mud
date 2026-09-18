@@ -15,6 +15,8 @@ import com.example.htmlmud.domain.model.template.RoomTemplate;
 import com.example.htmlmud.domain.model.template.SkillTemplate;
 import com.example.htmlmud.domain.model.template.ZoneTemplate;
 import com.example.htmlmud.domain.model.template.CompanionTemplate;
+import com.example.htmlmud.domain.model.template.ClassTemplate;
+import com.example.htmlmud.domain.model.template.ShopTemplate;
 import com.example.htmlmud.domain.party.model.FormationTemplate;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
 import lombok.Getter;
@@ -43,6 +45,8 @@ public class TemplateRepository {
   private static final Map<String, CompanionTemplate> companionTemplates = new ConcurrentHashMap<>();
   private static final Map<String, FormationTemplate> formationTemplates = new ConcurrentHashMap<>();
   private static final Map<String, PartyMemberSkill> partySkillTemplates = new ConcurrentHashMap<>();
+  private static final Map<String, ClassTemplate> classTemplates = new ConcurrentHashMap<>();
+  private static final Map<String, ShopTemplate> shopTemplates = new ConcurrentHashMap<>();
 
 
 
@@ -173,7 +177,12 @@ public class TemplateRepository {
     if (id == null) return Optional.empty();
     ItemTemplate tpl = itemTemplates.get(id);
     if (tpl != null) return Optional.of(tpl);
-    if (!id.contains(":")) {
+
+    if (id.contains(":")) {
+      String cleanId = id.substring(id.indexOf(":") + 1);
+      ItemTemplate globalTpl = itemTemplates.get(cleanId);
+      if (globalTpl != null) return Optional.of(globalTpl);
+    } else {
       for (Map.Entry<String, ItemTemplate> entry : itemTemplates.entrySet()) {
         if (entry.getKey().endsWith(":" + id)) {
           return Optional.of(entry.getValue());
@@ -189,6 +198,10 @@ public class TemplateRepository {
 
   public static Optional<SkillTemplate> findSkill(String id) {
     return Optional.ofNullable(skillTemplates.get(id));
+  }
+
+  public static Map<String, SkillTemplate> getAllSkills() {
+    return skillTemplates;
   }
 
   public static SkillTemplate getSkill(String id) {
@@ -304,6 +317,52 @@ public class TemplateRepository {
 
   public static Map<String, PartyMemberSkill> getAllPartySkills() {
     return java.util.Collections.unmodifiableMap(partySkillTemplates);
+  }
+
+  public static void registerClass(ClassTemplate tpl) {
+    if (tpl != null && tpl.id() != null) {
+      classTemplates.put(tpl.id(), tpl);
+      classTemplates.put(tpl.id().toLowerCase(), tpl);
+    }
+  }
+
+  public static Optional<ClassTemplate> findClass(String id) {
+    if (id == null) return Optional.empty();
+    return Optional.ofNullable(classTemplates.get(id));
+  }
+
+  public static Map<String, ClassTemplate> getAllClasses() {
+    return java.util.Collections.unmodifiableMap(classTemplates);
+  }
+
+  public static void registerShop(ShopTemplate tpl) {
+    if (tpl != null && tpl.id() != null) {
+      shopTemplates.put(tpl.id(), tpl);
+      if (tpl.roomId() != null) {
+        shopTemplates.put("room:" + tpl.roomId(), tpl);
+      }
+    }
+  }
+
+  public static Optional<ShopTemplate> findShop(String id) {
+    if (id == null) return Optional.empty();
+    return Optional.ofNullable(shopTemplates.get(id));
+  }
+
+  public static Optional<ShopTemplate> findShopByRoomId(String roomId) {
+    if (roomId == null) return Optional.empty();
+    ShopTemplate shop = shopTemplates.get("room:" + roomId);
+    if (shop != null) return Optional.of(shop);
+    for (ShopTemplate s : shopTemplates.values()) {
+      if (roomId.equals(s.roomId()) || (s.roomId() != null && roomId.endsWith(":" + s.roomId()))) {
+        return Optional.of(s);
+      }
+    }
+    return Optional.empty();
+  }
+
+  public static Map<String, ShopTemplate> getAllShops() {
+    return java.util.Collections.unmodifiableMap(shopTemplates);
   }
 
 

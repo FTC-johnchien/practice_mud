@@ -1,5 +1,6 @@
 package com.example.htmlmud.domain.service;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Player;
@@ -10,13 +11,20 @@ import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.domain.model.skill.dto.ActiveSkillResult;
 import com.example.htmlmud.domain.model.template.RaceTemplate;
 import com.example.htmlmud.domain.model.template.SkillTemplate;
+import com.example.htmlmud.domain.party.model.Party;
+import com.example.htmlmud.domain.party.model.PartyMember;
+import com.example.htmlmud.domain.party.service.PartyService;
 import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
 import com.example.htmlmud.infra.util.RandomUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class SkillService {
+
+  private final ObjectProvider<PartyService> partyServiceProvider;
 
   // --- 核心方法：取得當前該用的技能 ---
   public SkillTemplate getEffectiveSkill(Living self, SkillCategory category) {
@@ -152,6 +160,17 @@ public class SkillService {
    * 決定要用哪一招 (優先級判定)
    */
   private String resolveAutoAttackSkillId(Living self) {
+    // 0. 若為玩家，優先穿透取得小隊隊長 (PartyMember) 當前裝備與武學
+    if (self instanceof Player player && partyServiceProvider != null) {
+      PartyService partyService = partyServiceProvider.getIfAvailable();
+      if (partyService != null) {
+        Party party = partyService.getOrCreateParty(player.getName());
+        if (party != null && !party.getMembers().isEmpty()) {
+          PartyMember leader = party.getMembers().get(0);
+          return leader.getEffectiveBasicSkillId();
+        }
+      }
+    }
 
     // 赤手空拳預設 UNARMED
     SkillCategory category = SkillCategory.UNARMED;
@@ -223,9 +242,15 @@ public class SkillService {
           return RandomUtil.pickWeighted(race.combat().naturalAttacks()).getId();
         }
 
-        // 真的都沒有：若是空手 (UNARMED) 且為玩家或人族，保底使用基本拳腳 basic_fist
-        if (category == SkillCategory.UNARMED && (self instanceof Player || "human".equalsIgnoreCase(self.getStats().getRace()))) {
-          return "basic_fist";
+        // 玩家或人族：依武器分類取得預設基礎技能
+        if (self instanceof Player || "human".equalsIgnoreCase(self.getStats().getRace())) {
+          String defaultSkill = TemplateRepository.getDefaultSkillId(category);
+          if (defaultSkill != null) {
+            return defaultSkill;
+          }
+          if (category == SkillCategory.UNARMED) {
+            return "basic_fist";
+          }
         }
 
         // 野獸或一般怪物保底

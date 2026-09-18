@@ -1,0 +1,32 @@
+[
+  {
+    "id": "village_elder_house_key",
+    "name": "村長小屋的鑰匙",
+    "aliases": ["key", "house key", "鑰匙"],
+    "description": "白石老人親手交給你的黃銅古舊鑰匙，可解開村長藏寶密室。",
+    "type": "KEY_ITEM",
+    "subType": "KEY_ITEM",
+    "value": 0,
+    "quality": "RARE"
+  },
+  {
+    "id": "elder_token",
+    "name": "墨竹山長老黑話玉牌",
+    "aliases": ["token", "elder token", "jade", "玉牌"],
+    "description": "墨竹山外門長老的隨身信物。玉牌表面被現代思維錨點刻滿了「閉環、賦能、底層邏輯」等黑色幽默陣列。",
+    "type": "KEY_ITEM",
+    "subType": "KEY_ITEM",
+    "value": 999,
+    "quality": "EPIC"
+  },
+  {
+    "id": "silver_medallion",
+    "name": "銀葉徽章",
+    "aliases": ["medallion", "silver medallion", "徽章"],
+    "description": "一枚雕刻著銀葉圖案的精緻銀質徽章，似乎是銀葉村遺失的信物。",
+    "type": "KEY_ITEM",
+    "subType": "KEY_ITEM",
+    "value": 100,
+    "quality": "UNCOMMON"
+  }
+]

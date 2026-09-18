@@ -13,6 +13,7 @@ public record CompanionTemplate(
     String id,
     String name,
     String roleTitle,
+    String classId,
     Gender gender,
     RowPosition defaultRow,
     ResourceType resourceType,
@@ -33,7 +34,9 @@ public record CompanionTemplate(
     String homeRoomId,
     String description,
     String lookDescription,
-    List<String> dialogues
+    List<String> dialogues,
+    List<String> learnedStances,
+    List<NpcCapability> capabilities
 ) {
   public CompanionTemplate {
     if (gender == null) gender = Gender.MALE;
@@ -43,6 +46,12 @@ public record CompanionTemplate(
     if (skills == null) skills = List.of();
     if (aliases == null) aliases = List.of();
     if (dialogues == null) dialogues = List.of();
+    if (learnedStances == null) learnedStances = List.of();
+    if (capabilities == null) capabilities = List.of();
+  }
+
+  public MobTemplate toMobTemplate() {
+    return toMobTemplate(null);
   }
 
   public MobTemplate toMobTemplate(String zoneId) {
@@ -60,6 +69,8 @@ public record CompanionTemplate(
         .gender(gender != null ? gender : Gender.MALE)
         .aliases(aliases != null && !aliases.isEmpty() ? aliases : List.of(id, name))
         .kind(com.example.htmlmud.domain.model.enums.MobKind.FRIENDLY)
+        .rank(com.example.htmlmud.domain.model.enums.MobRank.NORMAL)
+        .isUnique(true)
         .level(10)
         .maxHp(maxHp)
         .maxMp(maxMp)
@@ -75,6 +86,7 @@ public record CompanionTemplate(
         .lookDescription(lookDescription != null ? lookDescription : (description != null ? description : roleTitle))
         .dialogues(dialogues != null ? dialogues : List.of())
         .equipment(eq)
+        .capabilities(capabilities != null ? capabilities : List.of())
         .build();
   }
 }

@@ -1,0 +1,64 @@
+{
+  "id": "mob_rat_dodge",
+  "name": "狡鼠閃避",
+  "description": "陰溝與碎石縫隙中繁衍的本能技巧，身形矮小猥瑣，能在間不容髮之際縮身逃竄以規避傷害。",
+  "type": "REACTIVE",
+  "school": "NATURAL",
+  "tags": [
+    "DEFENSIVE",
+    "EVASION",
+    "NATURAL",
+    "AGILITY"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED"
+    ]
+  },
+  "costs": {
+    "stamina": 2
+  },
+  "scaling": {
+    "dodgeRatePerLevel": 0.005
+  },
+  "mechanics": {
+    "dodgeRate": 0.18,
+    "maxLevel": 100,
+    "scaleStat": "DEX",
+    "scaleFactor": 1.5,
+    "formulas": {
+      "successRate": "skill.mechanics.dodgeRate + (user.dex * 0.08) - (target.hitRate * 0.4)"
+    }
+  },
+  "moves": [
+    {
+      "name": "急停鼠竄",
+      "weight": 50,
+      "msg": {
+        "success": "面對$n襲來的$w，$N身形疾速一頓，隨即四爪蹬地猛地向側面竄開，$w只劈碎了一地碎石。"
+      }
+    },
+    {
+      "name": "縮身遁隙",
+      "weight": 40,
+      "msg": {
+        "success": "$N尖叫一聲，整隻身軀猛地收縮成一團毛球，$n砍向$l的$w擦著鼠毛掠過，竟落了個空！"
+      }
+    },
+    {
+      "name": "打滾鑽縫",
+      "weight": 35,
+      "msg": {
+        "success": "$N極其猥瑣地就地一滾，鑽入岩縫死角，讓$n勢在必得的$w硬生生砸在岩壁上火花四射。"
+      }
+    },
+    {
+      "name": "佯倒假死",
+      "weight": 20,
+      "msg": {
+        "success": "就在$n揮動$w斬至的剎那，$N突然四腳朝天仰倒滑行，以滑稽卻極其狡黠的姿勢避開了致命一擊！"
+      }
+    }
+  ]
+}

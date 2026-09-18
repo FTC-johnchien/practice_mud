@@ -1,0 +1,57 @@
+{
+  "id": "mob_rat_parry",
+  "name": "尖齒偏架",
+  "description": "鼠類以堅硬的門齒或細長的前爪在千鈞一髮之際偏轉攻擊的本能防禦。",
+  "type": "REACTIVE",
+  "school": "NATURAL",
+  "tags": [
+    "DEFENSIVE",
+    "PARRY",
+    "NATURAL",
+    "PHYSICAL"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED"
+    ]
+  },
+  "costs": {
+    "stamina": 2
+  },
+  "scaling": {
+    "parryRatePerLevel": 0.003
+  },
+  "mechanics": {
+    "parryRate": 0.08,
+    "maxLevel": 100,
+    "scaleStat": "DEX",
+    "scaleFactor": 1.2,
+    "formulas": {
+      "successRate": "skill.mechanics.parryRate + (user.dex * 0.006) + (user.str * 0.002)"
+    }
+  },
+  "moves": [
+    {
+      "name": "尖牙偏迎",
+      "weight": 50,
+      "msg": {
+        "success": "$N發出刺耳尖嘯，鋒利的門牙精準咬向$n的$w側面，「錚」的一聲火星濺落，硬生生將攻勢帶偏！"
+      }
+    },
+    {
+      "name": "前爪格偏",
+      "weight": 40,
+      "msg": {
+        "success": "$N兩隻前爪凌空疾拍，巧妙擊打在$w前段發力點，將原本攻向$l的一擊盪開！"
+      }
+    },
+    {
+      "name": "細尾抽干擾",
+      "weight": 30,
+      "msg": {
+        "success": "$N身軀一擰，細長堅韌的鼠尾如鋼鞭般抽打在$n的手腕上，讓$w軌跡失準偏開！"
+      }
+    }
+  ]
+}

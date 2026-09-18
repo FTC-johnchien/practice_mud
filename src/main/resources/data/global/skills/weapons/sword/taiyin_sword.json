@@ -1,0 +1,90 @@
+{
+  "id": "taiyin_sword",
+  "name": "太陰幽冥劍法",
+  "description": "古塚深處流傳的幽冥劍術，引九幽陰煞與黃泉死氣入劍，每一式皆伴隨厲鬼哀鳴與蝕骨寒煞。",
+  "type": "PASSIVE",
+  "school": "TAIYIN",
+  "tags": [
+    "WEAPON",
+    "SWORD",
+    "DARK",
+    "CORRUPTED",
+    "CRIT"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      "SWORD"
+    ]
+  },
+  "costs": {
+    "stamina": 5
+  },
+  "scaling": {
+    "damagePerLevel": 0.9,
+    "hitRatePerLevel": 0.002,
+    "critRatePerLevel": 0.003
+  },
+  "mechanics": {
+    "critRate": 0.12,
+    "damage": 18,
+    "damageType": "DARK",
+    "hitRate": 0.90,
+    "maxLevel": 100,
+    "scaleStat": "DEX",
+    "scaleFactor": 1.3
+  },
+  "moves": [
+    {
+      "name": "陰魂泣血",
+      "weight": 35,
+      "damageMod": 1.15,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.1,
+      "msg": {
+        "cast": "$N面色森冷，手中$W泛起森然黑芒，伴隨著淒厲的鬼哭之聲，毒蛇吐信般刺向$n的$l。",
+        "hit": "黑芒閃爍，$n被$W刺入皮肉，傷口頓時泛起焦黑屍斑，受到 $d 點陰煞傷害！",
+        "crit": "【黃泉索命】陰煞之氣自$W猛然灌入，$n渾身血脈逆流，爆出 $d 點極度恐懼重創！",
+        "miss": "$n心頭狂跳，察覺到那股死寂陰氣，急忙向後翻滾躲避。"
+      }
+    },
+    {
+      "name": "白骨穿心",
+      "weight": 30,
+      "damageMod": 1.3,
+      "hitRateMod": 0.02,
+      "critRateMod": 0.15,
+      "msg": {
+        "cast": "$N身法飄忽如孤魂野鬼，欺身直進，手中$W直取$n胸口大穴！",
+        "hit": "「噗嗤」一聲脆響，$W毫無阻礙地刺破骨肉，直透肺腑，造成 $d 點穿心劇痛！",
+        "crit": "【穿心蝕骨】$W深深扎入心脈，暗黑靈壓驟然爆發，將$n轟出數丈，造成 $d 點狂暴重擊！",
+        "miss": "$n千鈞一髮之際揮舞兵刃護在胸前，「鏘」的一聲將劍尖盪開。"
+      }
+    },
+    {
+      "name": "幽冥磷火",
+      "weight": 20,
+      "damageMod": 1.4,
+      "hitRateMod": 0.04,
+      "critRateMod": 0.18,
+      "msg": {
+        "cast": "$N反手一撩，$W周圍騰起幽綠色的冥府冷火，化作一道森寒弧光劈向$n的$l。",
+        "hit": "冷火附著在$n體表熊熊燃燒，皮肉瞬間被陰蝕潰爛，受到 $d 點暗蝕烈焰傷害！",
+        "crit": "【九幽冥焚】幽冥冷火炸裂成漫天磷光，$n慘遭腐蝕劇毒侵蝕，受到 $d 點恐怖穿透傷害！",
+        "miss": "$n疾踩狂風步，險險從幽綠劍芒旁擦身而過。"
+      }
+    },
+    {
+      "name": "太陰蝕日",
+      "weight": 15,
+      "damageMod": 1.6,
+      "hitRateMod": 0.0,
+      "critRateMod": 0.25,
+      "msg": {
+        "cast": "$N周身黑霧暴湧，天地為之一暗，手中$W彷彿化為吞噬一切光芒的冥河深淵，斬向$n！",
+        "hit": "無盡黑暗籠罩四方，$W如死神鐮刀般無情斬落，爆發出 $d 點毀天滅地的終極傷害！",
+        "crit": "【萬魂噬滅】深淵魔音在$n腦海轟鳴，道心幾乎崩潰，肉身崩裂，造成 $d 點粉碎性絕殺！",
+        "miss": "$n憑藉強大的求生直覺，在黑芒合攏前的一瞬拼命跳出圈外。"
+      }
+    }
+  ]
+}

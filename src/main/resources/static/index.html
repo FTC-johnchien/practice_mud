@@ -287,24 +287,56 @@
         </div>
       </section>
 
-      <!-- 右側主體：戰場敵方陣列 + 戰鬥冒險日誌 -->
-      <div class="log-and-battle-area">
-        <!-- 戰鬥交鋒面板 (戰鬥時動態顯示) -->
-        <section id="battle-arena-panel" class="battle-arena-panel hidden">
-          <div class="battle-arena-header">
-            <div class="battle-header-left">
-              <span class="battle-title">⚔️ 太陰地宮・交鋒戰場</span>
-              <span id="battle-status-badge" class="battle-status-badge">戰鬥交鋒中</span>
-            </div>
-            <div class="battle-header-right">
-              <span class="battle-tip">點擊敵怪可鎖定集火目標，點擊下方隊員可施放專屬招式</span>
-            </div>
+      <!-- 3. 戰鬥交鋒主舞台 (戰鬥爆發時展開，佔 60% 寬度，支援 1~7 隻怪雙排陣列與直覺集火) -->
+      <section id="battle-arena-panel" class="battle-arena-panel battle-main-stage hidden">
+        <div class="battle-arena-header">
+          <div class="battle-header-left">
+            <span class="battle-title">⚔️ 生死交鋒・戰場對峙</span>
+            <span id="battle-status-badge" class="battle-status-badge">戰鬥交鋒中</span>
           </div>
-          <div id="battle-enemies-container" class="battle-enemies-container">
-            <!-- 由 drpg-view.js 動態渲染敵方前排與後排 -->
+          <div class="battle-header-right">
+            <span class="battle-tip">💡 點擊敵怪鎖定全隊集火目標，點擊下方隊員施放招式，按 Space 迎戰，Esc 遁地</span>
+            <button id="battle-swap-side-btn" class="town-switch-side-btn" onclick="toggleRadarPosition()" title="切換左右視窗佈局">⇄ 換邊</button>
           </div>
-        </section>
+        </div>
 
+        <!-- 戰場交鋒主體：上部敵方陣線、中部鎖定準星線、下部我方戰陣概覽 -->
+        <div class="battle-arena-body">
+          <!-- 敵方陣營 (支援 1~7 隻彈性雙排佈局) -->
+          <div class="battle-enemies-wrapper">
+            <div class="battle-section-title">
+              <span>👹 敵方陣線</span>
+              <span id="battle-enemies-count" class="battle-count-badge">2 體</span>
+            </div>
+            <div id="battle-enemies-container" class="battle-enemies-container">
+              <!-- 由 drpg-view.js 動態渲染敵方前排與後排 -->
+            </div>
+          </div>
+
+          <!-- 戰場交鋒線 (集火目標提示 & 陣法流光) -->
+          <div class="battle-clash-divider">
+            <div class="clash-line"></div>
+            <div id="battle-focus-hint" class="battle-focus-hint">
+              🎯 全隊集火目標：<span id="battle-focus-name" class="focus-name-highlight">未指定</span>
+            </div>
+            <div class="clash-line"></div>
+          </div>
+
+          <!-- 我方戰陣快速指令/技能指引區 -->
+          <div class="battle-party-wrapper">
+            <div class="battle-section-title">
+              <span>🛡️ 我方作戰隊伍</span>
+              <span class="battle-tip-sub">點擊下方隊員卡片可展開專屬技能</span>
+            </div>
+            <div id="battle-party-quick-bar" class="battle-party-quick-bar">
+              <!-- 由 drpg-view.js 動態渲染當前隊員快速狀態 -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. 右側主體：全高戰鬥/冒險情報日誌 (100% 全高貫通，不再被怪物卡片壓扁) -->
+      <div class="log-and-battle-area">
         <section id="log"></section>
       </div>
     </main>
@@ -362,15 +394,42 @@
       <div class="party-modal-card">
         <div class="party-modal-header">
           <div class="party-modal-title">
-            <span>👥 小隊編制・全隊狀態與 5+2 裝備一覽</span>
+            <span>👤 角色狀態・小隊成員與 5+2 裝備一覽</span>
           </div>
-          <button class="drawer-close-btn" onclick="togglePartyModal(false)">✕ 關閉 (P/Esc)</button>
+          <button class="drawer-close-btn" onclick="togglePartyModal(false)">✕ 關閉 (C/P/Esc)</button>
         </div>
         <div id="party-modal-formation-info" class="party-modal-formation-info">
           <!-- 由 drpg-view.js 動態渲染陣法資訊與奧義 -->
         </div>
         <div id="party-modal-members-list" class="party-modal-members-list">
           <!-- 由 drpg-view.js 動態渲染 6 名隊員詳細卡片與 7 大裝備部位 -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 貨棧交易 模態視窗 -->
+    <div id="shop-modal" class="modal-overlay hidden" onclick="if(event.target===this) toggleShopModal(false);">
+      <div class="shop-modal-card">
+        <div class="shop-modal-header">
+          <div class="shop-modal-title">
+            <span id="shop-modal-title-text">🏪 貨棧櫃檯</span>
+          </div>
+          <div class="shop-modal-header-right">
+            <div class="shop-modal-coin-badge">
+              <span>💰 盤纏靈石:</span>
+              <strong id="shop-modal-coin-val">0</strong>
+            </div>
+            <button class="drawer-close-btn" onclick="toggleShopModal(false)">✕ 關閉 (Esc)</button>
+          </div>
+        </div>
+        <div id="shop-modal-greeting" class="shop-modal-greeting">
+          掌櫃笑吟吟地招呼：「客官要進墨竹山吧？帶足乾糧和清心靈茶才是保命上策！」
+        </div>
+        <div id="shop-modal-goods-list" class="shop-modal-goods-list">
+          <!-- 由 drpg-view.js 動態渲染商品卡片清單 -->
+        </div>
+        <div class="shop-modal-footer">
+          <span>💡 購買後物品將自動收納至隊伍公共行囊 (B)，按 Esc 可隨時返回旅程。</span>
         </div>
       </div>
     </div>
@@ -401,7 +460,7 @@
 
         <!-- 探索模式按鍵組 -->
         <div id="action-buttons-group" class="action-buttons-group">
-          <button class="act-btn" onclick="if(window.triggerPartyAction) triggerPartyAction(); else send('party');" title="檢視/同步小隊狀態 (P)">👥 小隊 (P)</button>
+          <button class="act-btn" onclick="if(window.triggerPartyAction) triggerPartyAction(); else send('party');" title="檢視角色資訊、武學與裝備 (C / P)">👤 狀態 (C)</button>
           <button class="act-btn btn-bag" onclick="toggleBagDrawer()" title="開啟隊伍公共行囊 (B)">🎒 行囊 (B)</button>
           <button class="act-btn" onclick="openSaveModal('load')" title="開啟單機存檔/讀檔面板">💾 存讀檔</button>
           <button class="act-btn" onclick="if(window.triggerFormationAction) triggerFormationAction(); else send('formation toggle');" title="切換道門陣法 (F)">☯️ 陣法 (F)</button>
@@ -419,7 +478,7 @@
           <button class="act-btn btn-flee" onclick="send('battle flee')" title="遁地撤退 (-5 SAN) (Esc)">🏃 遁地 (Esc)</button>
           <button class="act-btn btn-ult" onclick="send('formation cast')" title="釋放小隊陣法專屬奧義 (U)">⚡ 陣法奧義 (U)</button>
           <button class="act-btn btn-charge" onclick="send('battle charge')" title="戰鬥中充能滿 100 靈威與隊員戰意">⚡ 充能</button>
-          <button class="act-btn" onclick="send('party')" title="檢視小隊詳細戰況 (P)">👥 小隊 (P)</button>
+          <button class="act-btn" onclick="send('party')" title="檢視角色資訊、武學與裝備 (C / P)">👤 狀態 (C)</button>
         </div>
       </div>
 
@@ -446,8 +505,9 @@
         send('saves quiet', true);
       };
       ws.onclose = () => {
-        appendHtml("系統：靈識中斷，3秒後嘗試凝神重連...", "#ef4444");
-        setTimeout(connect, 3000);
+        appendHtml("系統：靈識中斷...", "#ef4444");
+        // appendHtml("系統：靈識中斷，3秒後嘗試凝神重連...", "#ef4444");
+        // setTimeout(connect, 3000);
       };
       ws.onmessage = (event) => handleServerMessage(event.data);
     }

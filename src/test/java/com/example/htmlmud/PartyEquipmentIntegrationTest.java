@@ -58,6 +58,7 @@ class PartyEquipmentIntegrationTest {
   void testMudItemTemplateEquipAndAttributeAggregation() {
     Party party = partyService.getOrCreateParty("equipment_tester");
     PartyMember member = party.getMembers().get(0);
+    member.getEquipment().clear(); // 清空初始裝備以驗證純淨基線屬性累加
 
     int initialMinDmg = member.getEffectiveMinDamage();
     int initialMaxDmg = member.getEffectiveMaxDamage();

@@ -22,6 +22,8 @@ const drpgState = {
   isSaveModalOpen: false,
   saveModalMode: 'load',
   isPartyModalOpen: false,
+  isShopModalOpen: false,
+  lastShopCatalog: null,
   // 進入遊戲世界流程狀態 (三階段)
   isTitleScreenOpen: true,
   hasEnteredGameWorld: false,
@@ -44,13 +46,19 @@ function toggleRadarPosition() {
 function applyRadarPosition() {
   const mainViewport = document.querySelector('.main-viewport');
   const btn = document.getElementById('radar-dock-toggle-btn');
+  const townBtn = document.getElementById('town-swap-side-btn');
+  const battleBtn = document.getElementById('battle-swap-side-btn');
   if (!mainViewport) return;
   if (drpgState.radarPosition === 'right') {
     mainViewport.classList.add('layout-radar-right');
     if (btn) btn.innerText = '⮂ 置左';
+    if (townBtn) townBtn.innerText = '⮂ 置左';
+    if (battleBtn) battleBtn.innerText = '⮂ 置左';
   } else {
     mainViewport.classList.remove('layout-radar-right');
     if (btn) btn.innerText = '⮃ 置右';
+    if (townBtn) townBtn.innerText = '⮃ 置右';
+    if (battleBtn) battleBtn.innerText = '⮃ 置右';
   }
 }
 
@@ -149,42 +157,51 @@ function updateDrpgView(payload) {
 
   const dungeonPanel = document.getElementById('dungeon-radar-panel');
   const townPanel = document.getElementById('town-nav-panel');
+  const battlePanel = document.getElementById('battle-arena-panel');
 
-  if (mode === 'TOWN') {
+  const inBattle = Boolean(payload.battle && payload.battle.inBattle);
+
+  if (inBattle) {
     if (dungeonPanel) dungeonPanel.classList.add('hidden');
-    if (townPanel) townPanel.classList.remove('hidden');
-    if (payload.town) {
-      drpgState.lastTown = payload.town;
-      renderTownNav(payload.town);
-    }
-  } else {
     if (townPanel) townPanel.classList.add('hidden');
-    if (dungeonPanel) dungeonPanel.classList.remove('hidden');
-    if (payload.dungeon) {
-      drpgState.lastDungeon = payload.dungeon;
-      renderMinimap(payload.dungeon);
+    if (battlePanel) battlePanel.classList.remove('hidden');
+    drpgState.lastBattle = payload.battle;
+    renderBattleArena(payload.battle);
+    toggleBattleMode(true);
+  } else {
+    if (battlePanel) battlePanel.classList.add('hidden');
+    drpgState.lastBattle = null;
+    toggleBattleMode(false);
+
+    if (mode === 'TOWN') {
+      if (dungeonPanel) dungeonPanel.classList.add('hidden');
+      if (townPanel) townPanel.classList.remove('hidden');
+      if (payload.town) {
+        drpgState.lastTown = payload.town;
+        renderTownNav(payload.town);
+      }
+    } else {
+      if (townPanel) townPanel.classList.add('hidden');
+      if (dungeonPanel) dungeonPanel.classList.remove('hidden');
+      if (payload.dungeon) {
+        drpgState.lastDungeon = payload.dungeon;
+        renderMinimap(payload.dungeon);
+      }
     }
   }
 
   if (payload.party) {
     drpgState.lastParty = payload.party;
     renderPartyHud(payload.party);
+    if (inBattle) {
+      renderBattlePartyQuickBar(payload.party);
+    }
     if (drpgState.isBagDrawerOpen) {
       renderBagDrawer();
     }
     if (drpgState.isPartyModalOpen) {
       renderPartyModal();
     }
-  }
-
-  if (payload.battle && payload.battle.inBattle) {
-    drpgState.lastBattle = payload.battle;
-    renderBattleArena(payload.battle);
-    toggleBattleMode(true);
-  } else {
-    drpgState.lastBattle = null;
-    hideBattleArena();
-    toggleBattleMode(false);
   }
 }
 
@@ -315,12 +332,18 @@ function renderTownNav(town) {
         const isHostile = caps.some(c => (typeof c === 'string' ? c === 'FIGHT' : c && c.type === 'FIGHT'));
         if (isHostile) card.classList.add('is-hostile');
 
-        const header = document.createElement('div');
-        header.className = 'npc-header';
+        const rank = npc.rank || 'NORMAL';
+        let rankBadge = '';
+        if (rank === 'BOSS') {
+          rankBadge = `<span style="font-size:10px; color:#f59e0b; background:rgba(245,158,11,0.2); border:1px solid #f59e0b; padding:1px 6px; border-radius:3px; margin-left:4px;">👑 首領</span>`;
+        } else if (rank === 'ELITE') {
+          rankBadge = `<span style="font-size:10px; color:#38bdf8; background:rgba(56,189,248,0.2); border:1px solid #38bdf8; padding:1px 6px; border-radius:3px; margin-left:4px;">⭐ 精英</span>`;
+        }
+
         const roleHtml = isHostile
           ? `<span style="font-size:10px; color:#f87171; background:rgba(239,68,68,0.2); border:1px solid #ef4444; padding:1px 6px; border-radius:3px;">敵對</span>`
           : `<span style="font-size:11px; color:#94a3b8;">${npc.title || ''}</span>`;
-        header.innerHTML = `<span class="npc-name">${npc.name}</span>${roleHtml}`;
+        header.innerHTML = `<span class="npc-name">${npc.name}</span>${rankBadge}${roleHtml}`;
         card.appendChild(header);
 
         if (npc.description) {
@@ -367,7 +390,22 @@ function renderTownNav(town) {
       items.forEach(it => {
         const chip = document.createElement('button');
         chip.className = 'ground-item-chip';
-        chip.innerText = `拾取 ${it.name} x${it.count || it.amount || 1}`;
+        const name = it.name || '物品';
+        const isChest = name.includes('寶箱') || name.includes('棺槨') || name.includes('秘寶');
+        const isPouch = name.includes('儲物袋') || name.includes('包裹') || (it.type === 'CONTAINER');
+
+        if (isChest) {
+          chip.classList.add('is-chest');
+          chip.innerHTML = `<span>📦</span> 開啟 ${name}`;
+        } else if (isPouch) {
+          chip.classList.add('is-loot-pouch');
+          chip.innerHTML = `<span>👝</span> 搜刮 ${name}`;
+        } else {
+          const count = it.count || it.amount || 1;
+          const countStr = count > 1 ? ` x${count}` : '';
+          chip.innerHTML = `<span>📦</span> 拾取 ${name}${countStr}`;
+        }
+
         chip.onclick = () => {
           if (it.actionCommand) send(it.actionCommand);
           else send('get ' + it.id);
@@ -688,6 +726,7 @@ function renderPartyHud(party) {
           <span class="member-idx">#${idx + 1}</span>
           <span class="member-name" title="${m.name}">${m.name}</span>
           <span class="member-row badge-${m.row.toLowerCase()}">${rowBadge}</span>
+          ${m.className ? `<span class="member-class-badge" title="${m.classDescription || ''}" style="font-size:9px;color:#7dd3fc;background:#0f172a;border:1px solid #0284c7;border-radius:3px;padding:0 3px;">${m.className}</span>` : ''}
         </div>
         <div class="member-title" title="${m.roleTitle}">${m.roleTitle}</div>
         <div class="member-equip-row">
@@ -739,6 +778,9 @@ function selectPartyMember(idx) {
 /**
  * 渲染所選隊員的技能抽屜 (Skill Drawer)
  */
+/**
+ * 渲染所選隊員的技能抽屜 (Skill Drawer，具備 DOM 複用與 In-place 更新，徹底根除 hover 閃爍與點擊丟失)
+ */
 function renderSkillDrawer() {
   const drawer = document.getElementById('skill-drawer');
   if (!drawer || !drpgState.lastParty || !drpgState.lastParty.members) return;
@@ -762,13 +804,66 @@ function renderSkillDrawer() {
     badgeIcon = '⚔️ 連擊點';
   }
 
-  // 構造技能按鍵
   const skills = m.skills || [];
-  let skillsHtml = '';
-  if (skills.length === 0) {
-    skillsHtml = '<span style="color:#9ca3af;font-size:12px;">該成員專注於自動平砍，暫無主動奧義。</span>';
+  const currentMemberIdxStr = String(drpgState.selectedMemberIdx);
+  const container = drawer.querySelector('.drawer-skills-container');
+
+  // 若尚未初始化骨架，或切換了隊員，或技能數量改變，則重新建立骨架
+  const needFullRebuild = !container || 
+      drawer.dataset.memberIdx !== currentMemberIdxStr || 
+      drawer.dataset.skillCount !== String(skills.length);
+
+  if (needFullRebuild) {
+    drawer.dataset.memberIdx = currentMemberIdxStr;
+    drawer.dataset.skillCount = String(skills.length);
+
+    let skillsHtml = '';
+    if (skills.length === 0) {
+      skillsHtml = '<span style="color:#9ca3af;font-size:12px;">該成員專注於自動平砍，暫無主動奧義。</span>';
+    } else {
+      skillsHtml = skills.map((s, sIdx) => {
+        return `
+          <button class="skill-btn" data-skill-idx="${sIdx}" data-skill-id="${s.id}">
+            <div class="skill-btn-title-row">
+              <span class="skill-btn-name">${s.icon || '⚡'} ${s.name}</span>
+              <span class="skill-btn-cost"></span>
+            </div>
+            <div class="skill-btn-desc">${s.description}</div>
+            <div class="skill-cd-overlay hidden"></div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    drawer.innerHTML = `
+      <div class="drawer-member-info">
+        <div>
+          <span class="drawer-member-name">#${drpgState.selectedMemberIdx + 1} ${m.name}</span>
+          <span class="drawer-member-role">${m.roleTitle}</span>
+        </div>
+        <span class="drawer-resource-badge ${badgeCls}">${badgeIcon} ${curRes}/${maxRes}</span>
+      </div>
+      <div class="drawer-skills-container">
+        ${skillsHtml}
+      </div>
+      <button class="drawer-close-btn" onclick="closeSkillDrawer()" title="關閉技能盤 (Esc)">✕</button>
+    `;
   } else {
-    skillsHtml = skills.map(s => {
+    // 隊員與技能樹未變，僅 In-place 更新數值與狀態，不銷毀 DOM 節點
+    const resBadge = drawer.querySelector('.drawer-resource-badge');
+    if (resBadge) {
+      resBadge.className = `drawer-resource-badge ${badgeCls}`;
+      resBadge.textContent = `${badgeIcon} ${curRes}/${maxRes}`;
+    }
+  }
+
+  // 對各個按鈕進行 In-place 狀態更新 (Class, 點擊事件, 剩餘冷卻, 能量消耗)
+  if (skills.length > 0) {
+    const btnNodes = drawer.querySelectorAll('.drawer-skills-container .skill-btn');
+    skills.forEach((s, sIdx) => {
+      const btn = btnNodes[sIdx];
+      if (!btn) return;
+
       const isAlive = (m.alive !== undefined) ? m.alive : (m.hp > 0);
       const onCd = s.remainingCooldownMs > 0;
       let resOk = s.available;
@@ -795,34 +890,63 @@ function renderSkillDrawer() {
         }
       }
 
-      return `
-        <button class="skill-btn" ${canCast ? '' : 'disabled'}
-          onclick="castPartySkill(${drpgState.selectedMemberIdx}, '${s.id}')"
-          title="${s.name} - ${s.description}">
-          <div class="skill-btn-title-row">
-            <span class="skill-btn-name">${s.icon || '⚡'} ${s.name}</span>
-            <span class="skill-btn-cost ${costTagClass}">${costLabel}</span>
-          </div>
-          <div class="skill-btn-desc">${s.description}</div>
-          ${onCd ? `<div class="skill-cd-overlay">⌛ ${cdSec}s</div>` : ''}
-        </button>
-      `;
-    }).join('');
-  }
+      // 更新按鈕 class (絕不替換元素節點)
+      btn.className = `skill-btn ${canCast ? '' : 'cant-cast'}`;
+      btn.title = `${s.name} - ${s.description}${!canCast ? ' (點擊查看限制)' : ''}`;
 
-  drawer.innerHTML = `
-    <div class="drawer-member-info">
-      <div>
-        <span class="drawer-member-name">#${drpgState.selectedMemberIdx + 1} ${m.name}</span>
-        <span class="drawer-member-role">${m.roleTitle}</span>
-      </div>
-      <span class="drawer-resource-badge ${badgeCls}">${badgeIcon} ${curRes}/${maxRes}</span>
-    </div>
-    <div class="drawer-skills-container">
-      ${skillsHtml}
-    </div>
-    <button class="drawer-close-btn" onclick="closeSkillDrawer()" title="關閉技能盤 (Esc)">✕</button>
-  `;
+      const costSpan = btn.querySelector('.skill-btn-cost');
+      if (costSpan) {
+        costSpan.className = `skill-btn-cost ${costTagClass}`;
+        costSpan.textContent = costLabel;
+      }
+
+      const cdOverlay = btn.querySelector('.skill-cd-overlay');
+      if (cdOverlay) {
+        if (onCd) {
+          cdOverlay.classList.remove('hidden');
+          cdOverlay.textContent = `⌛ ${cdSec}s`;
+        } else {
+          cdOverlay.classList.add('hidden');
+        }
+      }
+
+      // 綁定最新狀態點擊
+      btn.onclick = () => {
+        onSkillBtnClick(drpgState.selectedMemberIdx, s.id, canCast, s.name, costLabel, onCd, cdSec, s.costDescription || '');
+      };
+    });
+  }
+}
+
+/**
+ * 點擊隊員技能按鈕 (若不可用則給予戰術原因提示，絕不靜默無效)
+ */
+function onSkillBtnClick(memberIdx, skillId, canCast, skillName, costLabel, onCd, cdSec, costDesc) {
+  if (!canCast) {
+    let warnMsg = '';
+    if (onCd) {
+      warnMsg = `⏳【調息中】「${skillName}」正在調息冷卻中，尚需 ${cdSec} 秒！`;
+    } else if (costDesc && costDesc.includes('需')) {
+      warnMsg = `⚠️【兵刃未備】「${skillName}」${costDesc}！當前未佩戴合適兵刃（或處於赤手狀態）。請在小隊面板 (P) 佩戴對應兵刃。`;
+    } else {
+      warnMsg = `⚠️【元氣未備】「${skillName}」釋放條件不足（需 ${costLabel}）！請在戰鬥中累積足夠點數後再施展。`;
+    }
+    if (typeof appendHtml === 'function') {
+      appendHtml(warnMsg, '#f59e0b');
+    }
+    const focusHint = document.getElementById('battle-focus-hint');
+    if (focusHint) {
+      const prevHtml = focusHint.innerHTML;
+      focusHint.innerHTML = `<span style="color:#f59e0b; font-weight:bold;">${warnMsg}</span>`;
+      setTimeout(() => {
+        if (focusHint && drpgState.lastBattle) {
+          renderBattleArena(drpgState.lastBattle);
+        }
+      }, 3500);
+    }
+    return;
+  }
+  castPartySkill(memberIdx, skillId);
 }
 
 /**
@@ -964,12 +1088,14 @@ function renderBagDrawer() {
 }
 
 /**
- * 渲染戰場敵方陣列 (Battle Arena)
+ * 渲染戰場敵方陣列與主舞台交鋒態勢 (Battle Arena Main Stage)
  */
 function renderBattleArena(battle) {
   const panel = document.getElementById('battle-arena-panel');
   const enemiesBox = document.getElementById('battle-enemies-container');
   const badge = document.getElementById('battle-status-badge');
+  const countBadge = document.getElementById('battle-enemies-count');
+  const focusNameEl = document.getElementById('battle-focus-name');
 
   if (!panel || !enemiesBox) return;
 
@@ -992,15 +1118,46 @@ function renderBattleArena(battle) {
     }
   }
 
+  const enemies = battle.enemies || [];
+  if (countBadge) {
+    countBadge.innerText = `${enemies.length} 體`;
+  }
+
+  // 尋找當前鎖定集火目標 (優先以 battle.selectedTargetIndex 或 isTarget 判定)
+  let selectedEnemy = null;
+  if (battle.selectedTargetIndex !== undefined && battle.selectedTargetIndex >= 0) {
+    selectedEnemy = enemies.find(e => e.index === battle.selectedTargetIndex && e.alive);
+  }
+  if (!selectedEnemy) {
+    selectedEnemy = enemies.find(e => (e.isTarget || e.isSelectedTarget) && e.alive);
+  }
+  if (!selectedEnemy) {
+    // 預設鎖定前排第一個存活者，或任意存活者
+    selectedEnemy = enemies.find(e => e.row === 'FRONT' && e.alive) || enemies.find(e => e.alive);
+  }
+
+  if (focusNameEl) {
+    if (selectedEnemy) {
+      focusNameEl.innerText = `#${selectedEnemy.index + 1} ${selectedEnemy.name} (${selectedEnemy.row === 'FRONT' ? '前衛' : '後衛'})`;
+    } else {
+      focusNameEl.innerText = '無（全體覆滅）';
+    }
+  }
+
   enemiesBox.innerHTML = '';
-  (battle.enemies || []).forEach(e => {
+  enemies.forEach(e => {
     const card = document.createElement('div');
-    const isTarget = e.isSelectedTarget;
+    const isTarget = (selectedEnemy && selectedEnemy.index === e.index) || e.isTarget || (battle.selectedTargetIndex === e.index);
     const isAlive = e.alive;
     const rowClass = (e.row || 'FRONT').toLowerCase();
 
-    card.className = `enemy-card row-${rowClass}${isTarget ? ' selected-target' : ''}${!isAlive ? ' dead' : ''}`;
-    card.onclick = () => selectBattleTarget(e.index);
+    card.className = `enemy-card row-${rowClass}${isTarget && isAlive ? ' selected-target' : ''}${!isAlive ? ' dead' : ''}`;
+    card.title = isAlive ? `點擊鎖定【${e.name}】為集火目標` : '已伏誅';
+    card.onclick = () => {
+      if (isAlive) {
+        selectBattleTarget(e.index);
+      }
+    };
 
     const hpPct = Math.min(100, Math.max(0, (e.hp / e.maxHp) * 100));
     const rowBadge = e.row === 'FRONT' ? '前衛' : '後衛';
@@ -1020,10 +1177,74 @@ function renderBattleArena(battle) {
     `;
     enemiesBox.appendChild(card);
   });
+
+  if (drpgState.lastParty) {
+    renderBattlePartyQuickBar(drpgState.lastParty);
+  }
 }
 
 /**
- * 隱藏戰場面板
+ * 渲染戰場我方隊員快速資訊列 (Battle Party Quick Bar)
+ */
+function renderBattlePartyQuickBar(party) {
+  const bar = document.getElementById('battle-party-quick-bar');
+  if (!bar || !party || !party.members) return;
+
+  const cards = bar.querySelectorAll('.battle-party-mini-card');
+  if (cards.length !== party.members.length) {
+    bar.innerHTML = party.members.map((m, idx) => {
+      const isSelected = (drpgState.selectedMemberIdx === idx);
+      const isAlive = (m.alive !== undefined) ? m.alive : (m.hp > 0);
+      const hpPct = Math.min(100, Math.max(0, (m.hp / m.maxHp) * 100));
+      const rowBadge = m.row === 'FRONT' ? '前衛' : '後衛';
+
+      return `
+        <div class="battle-party-mini-card ${isSelected ? 'active-selected' : ''}" data-idx="${idx}"
+          onclick="selectPartyMemberForSkill(${idx})" title="點擊展開 #${idx + 1} ${m.name} 的專屬技能盤">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="bpmc-name" style="font-weight:bold; color:#e2e8f0; font-size:12px;">#${idx + 1} ${m.name}</span>
+            <span class="bpmc-badge" style="font-size:9px; color:${m.row === 'FRONT' ? '#f87171' : '#60a5fa'};">[${rowBadge}]</span>
+          </div>
+          <div class="enemy-hp-wrap" style="height:10px; margin:2px 0;">
+            <div class="hp-bar" style="width:${hpPct}%; background:${isAlive ? '#10b981' : '#6b7280'}; height:100%;"></div>
+          </div>
+          <div style="font-size:9px; color:#94a3b8; display:flex; justify-content:space-between;">
+            <span class="bpmc-hp-text">HP ${m.hp}/${m.maxHp}</span>
+            <span style="color:#38bdf8; font-weight:bold;">⚡ 招式盤</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } else {
+    party.members.forEach((m, idx) => {
+      const card = cards[idx];
+      if (!card) return;
+      const isSelected = (drpgState.selectedMemberIdx === idx);
+      const isAlive = (m.alive !== undefined) ? m.alive : (m.hp > 0);
+      const hpPct = Math.min(100, Math.max(0, (m.hp / m.maxHp) * 100));
+      const rowBadge = m.row === 'FRONT' ? '前衛' : '後衛';
+
+      card.className = `battle-party-mini-card ${isSelected ? 'active-selected' : ''}`;
+      const nameEl = card.querySelector('.bpmc-name');
+      if (nameEl) nameEl.textContent = `#${idx + 1} ${m.name}`;
+      const badgeEl = card.querySelector('.bpmc-badge');
+      if (badgeEl) {
+        badgeEl.textContent = `[${rowBadge}]`;
+        badgeEl.style.color = (m.row === 'FRONT' ? '#f87171' : '#60a5fa');
+      }
+      const hpBar = card.querySelector('.hp-bar');
+      if (hpBar) {
+        hpBar.style.width = `${hpPct}%`;
+        hpBar.style.background = isAlive ? '#10b981' : '#6b7280';
+      }
+      const hpText = card.querySelector('.bpmc-hp-text');
+      if (hpText) hpText.textContent = `HP ${m.hp}/${m.maxHp}`;
+    });
+  }
+}
+
+/**
+ * 隱藏戰場主舞台
  */
 function hideBattleArena() {
   const panel = document.getElementById('battle-arena-panel');
@@ -1033,10 +1254,22 @@ function hideBattleArena() {
 }
 
 /**
- * 鎖定集火目標
+ * 鎖定集火目標 (具備本地即時準星反饋)
  */
 function selectBattleTarget(idx) {
   send(`battle target ${idx}`);
+
+  // 即時樂觀更新目標鎖定
+  if (drpgState.lastBattle) {
+    drpgState.lastBattle.selectedTargetIndex = idx;
+    if (drpgState.lastBattle.enemies) {
+      drpgState.lastBattle.enemies.forEach(e => {
+        e.isTarget = (e.index === idx);
+        e.isSelectedTarget = (e.index === idx);
+      });
+    }
+    renderBattleArena(drpgState.lastBattle);
+  }
 }
 
 /**
@@ -1219,22 +1452,8 @@ function renderPartyModal() {
       }
     }
 
-    let skillsHtml = '';
-    const skills = m.skills || [];
-    if (skills.length > 0) {
-      skillsHtml = `
-        <div style="font-size:11px;color:#94a3b8;font-weight:bold;margin-top:8px;">修習武學與道門道術 (${skills.length})：</div>
-        <div class="party-skills-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
-          ${skills.map(s => `
-            <div class="party-skill-chip" title="${s.description || ''}" style="background:rgba(30,41,59,0.8);border:1px solid #334155;border-radius:5px;padding:3px 8px;font-size:11px;display:flex;align-items:center;gap:4px;">
-              <span>${s.icon || '⚔️'}</span>
-              <strong style="color:#e2e8f0;">${s.name}</strong>
-              <span style="color:#60a5fa;font-size:10px;">(${s.costDescription || '無消耗'})</span>
-            </div>
-          `).join('')}
-        </div>
-      `;
-    }
+    // 產生 WoW 經典修仙武學典籍 (Spellbook)
+    const spellbookHtml = renderMemberSpellbook(m, idx);
 
     card.innerHTML = `
       <div class="party-detail-header">
@@ -1242,6 +1461,7 @@ function renderPartyModal() {
           <span style="color:#38bdf8;font-weight:bold;">#${idx + 1}</span>
           <span class="party-detail-name">${m.name}</span>
           <span class="member-row ${rowClass}">${rowBadge}</span>
+          ${m.className ? `<span class="member-class-badge" title="${m.classDescription || ''}" style="background:#1e293b;border:1px solid #38bdf8;color:#7dd3fc;padding:1px 6px;border-radius:4px;font-size:10px;">🏷️ ${m.className}</span>` : ''}
           <button class="item-act-mini-btn" onclick="send('formation switch ${idx}')" title="切換前排/後排站位" style="font-size:10px;">站位切換</button>
         </div>
         <span class="party-detail-role">${m.roleTitle}</span>
@@ -1255,10 +1475,204 @@ function renderPartyModal() {
       <div class="party-detail-equip-grid">
         ${equipSlotsHtml}
       </div>
-      ${skillsHtml}
+      ${spellbookHtml}
     `;
     membersListEl.appendChild(card);
   });
+}
+
+/**
+ * 渲染單一成員的 WoW 經典修仙武學典籍 (Spellbook)
+ */
+function renderMemberSpellbook(m, memberIdx) {
+  if (!drpgState.spellbookState) {
+    drpgState.spellbookState = {};
+  }
+  if (!drpgState.spellbookState[memberIdx]) {
+    drpgState.spellbookState[memberIdx] = { tab: 'STANCES', page: 1 };
+  }
+  const curState = drpgState.spellbookState[memberIdx];
+  const curTab = curState.tab || 'STANCES';
+  let curPage = curState.page || 1;
+
+  // 1. 整理各 Tab 項目
+  const stances = m.availableStances || [];
+  const skills = m.skills || [];
+
+  const tabs = [
+    { key: 'STANCES', label: '🗡️ 兵刃套路', count: stances.length > 0 ? stances.length : 1 },
+    { key: 'SKILLS', label: '⚡ 門派絕技', count: skills.length },
+    { key: 'FORMATION', label: '☯️ 陣法奧義', count: 2 }
+  ];
+
+  let items = [];
+  if (curTab === 'STANCES') {
+    if (stances.length > 0) {
+      items = stances.map(st => {
+        let icon = '🗡️';
+        const sId = (st.skillId || '').toLowerCase();
+        if (sId.includes('blade')) icon = '⚔️';
+        else if (sId.includes('axe')) icon = '🪓';
+        else if (sId.includes('staff')) icon = '🦯';
+        else if (sId.includes('hammer') || sId.includes('blunt')) icon = '🔨';
+        else if (sId.includes('dagger')) icon = '⚡';
+        else if (sId.includes('bow')) icon = '🏹';
+        else if (sId.includes('fist') || sId.includes('unarmed')) icon = '👊';
+
+        return {
+          id: st.skillId,
+          name: st.skillName,
+          icon: icon,
+          cost: '自動普攻',
+          desc: st.description || '隨武器揮舞自動施展之套路招式。',
+          isCurrent: !!st.isCurrentEnabled,
+          canSwitch: !st.isCurrentEnabled
+        };
+      });
+    } else {
+      items.push({
+        id: m.basicSkillId || 'basic_attack',
+        name: m.basicSkillName || '基礎武學',
+        icon: '🗡️',
+        cost: '自動普攻',
+        desc: '隨手施展之門派基礎套路。',
+        isCurrent: true,
+        canSwitch: false
+      });
+    }
+  } else if (curTab === 'SKILLS') {
+    if (skills.length > 0) {
+      items = skills.map(s => ({
+        id: s.id,
+        name: s.name,
+        icon: s.icon || '⚡',
+        cost: s.costDescription || (s.costValue ? `${s.costValue} 消耗` : '無消耗'),
+        desc: s.description || '引導煞氣或靈威爆發之奧義招式。',
+        isCurrent: false,
+        canSwitch: false
+      }));
+    } else {
+      items.push({
+        id: 'none',
+        name: '暫無主動絕技',
+        icon: '📜',
+        cost: '專注平砍',
+        desc: '該角色當前專注於武器套路平砍，未修習主動絕技。',
+        isCurrent: false,
+        canSwitch: false
+      });
+    }
+  } else if (curTab === 'FORMATION') {
+    const isSymbols = (drpgState.lastParty && drpgState.lastParty.formationName && drpgState.lastParty.formationName.includes('四象'));
+    items = [
+      {
+        id: 'formation_four_symbols',
+        name: '四象真武陣',
+        icon: '☯️',
+        cost: '陣法站位',
+        desc: '四象靈獸護體，隊伍防禦 +15%，承傷減免，步步為營。',
+        isCurrent: isSymbols,
+        canSwitch: false
+      },
+      {
+        id: 'formation_dark_ghost',
+        name: '玄陰噬魂陣',
+        icon: '💀',
+        cost: '陣法站位',
+        desc: '引動至陰煞氣，暴擊率 +20%，敵弱我強，殺戮回靈。',
+        isCurrent: !isSymbols,
+        canSwitch: false
+      }
+    ];
+  }
+
+  // 分頁計算 (每頁 4 個條目，2x2 雙欄卡片佈局)
+  const pageSize = 4;
+  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+  if (curPage > totalPages) curPage = totalPages;
+  curState.page = curPage;
+
+  const startIdx = (curPage - 1) * pageSize;
+  const pageItems = items.slice(startIdx, startIdx + pageSize);
+
+  // 雙欄網格條目 HTML
+  const spellsGridHtml = pageItems.map(it => {
+    const activeClass = it.isCurrent ? 'active-spell' : '';
+    let actBtnHtml = '';
+    if (it.isCurrent) {
+      actBtnHtml = '<span class="spell-active-badge">✔ 參悟運轉中</span>';
+    } else if (it.canSwitch) {
+      actBtnHtml = `<button class="spell-switch-btn" onclick="send('party enable ${memberIdx} ${it.id}')" title="啟用為當前主力普攻套路">⚡ 啟用套路</button>`;
+    } else if (curTab === 'SKILLS') {
+      actBtnHtml = '<span style="font-size:9px;color:#60a5fa;">戰鬥快捷施展</span>';
+    } else if (curTab === 'FORMATION') {
+      actBtnHtml = `<button class="spell-switch-btn" onclick="send('formation toggle')" title="切換小隊陣法">☯️ 切換陣法</button>`;
+    }
+
+    return `
+      <div class="spell-card ${activeClass}" title="${it.desc}">
+        <div class="spell-icon-box">${it.icon}</div>
+        <div class="spell-info">
+          <div class="spell-name-row">
+            <span class="spell-name">${it.name}</span>
+            <span class="spell-cost-badge">${it.cost}</span>
+          </div>
+          <div class="spell-desc">${it.desc}</div>
+          <div class="spell-action-row">
+            ${actBtnHtml}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // 右側垂直 Tab 標籤列
+  const tabsHtml = tabs.map(t => {
+    const isSelected = (curTab === t.key);
+    return `
+      <button class="spellbook-tab-btn ${isSelected ? 'active' : ''}"
+        onclick="switchSpellbookTab(${memberIdx}, '${t.key}')" title="${t.label}">
+        ${t.label} (${t.count})
+      </button>
+    `;
+  }).join('');
+
+  return `
+    <div class="wow-spellbook-container">
+      <div class="wow-spellbook-header">
+        <span class="wow-spellbook-title">📖 修仙武學典籍・道種法術書 (Spellbook)</span>
+        <span style="font-size:10px;color:#94a3b8;">${tabs.find(t=>t.key===curTab)?.label || ''}</span>
+      </div>
+      <div class="wow-spellbook-layout">
+        <div class="wow-spellbook-page">
+          <div class="spell-grid">
+            ${spellsGridHtml}
+          </div>
+          <div class="spellbook-pagination">
+            <button class="spellbook-page-btn" onclick="switchSpellbookPage(${memberIdx}, -1)" ${curPage <= 1 ? 'disabled' : ''}>◀ 上一頁</button>
+            <span>第 ${curPage} 頁 / 共 ${totalPages} 頁 (共 ${items.length} 條目)</span>
+            <button class="spellbook-page-btn" onclick="switchSpellbookPage(${memberIdx}, 1)" ${curPage >= totalPages ? 'disabled' : ''}>下一頁 ▶</button>
+          </div>
+        </div>
+        <div class="wow-spellbook-tabs">
+          ${tabsHtml}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function switchSpellbookTab(memberIdx, tab) {
+  if (!drpgState.spellbookState) drpgState.spellbookState = {};
+  drpgState.spellbookState[memberIdx] = { tab: tab, page: 1 };
+  renderPartyModal();
+}
+
+function switchSpellbookPage(memberIdx, delta) {
+  if (!drpgState.spellbookState) drpgState.spellbookState = {};
+  if (!drpgState.spellbookState[memberIdx]) drpgState.spellbookState[memberIdx] = { tab: 'STANCES', page: 1 };
+  drpgState.spellbookState[memberIdx].page = Math.max(1, (drpgState.spellbookState[memberIdx].page || 1) + delta);
+  renderPartyModal();
 }
 
 function triggerFormationAction() {
@@ -1771,6 +2185,10 @@ function initKeyboardControls() {
         toggleDevConsole(false);
         return;
       }
+      if (drpgState.isShopModalOpen) {
+        toggleShopModal(false);
+        return;
+      }
       if (drpgState.isPartyModalOpen) {
         closePartyModal();
         return;
@@ -1825,7 +2243,7 @@ function initKeyboardControls() {
       } else if (key === 't') {
         e.preventDefault();
         send('battle target 0');
-      } else if (key === 'p') {
+      } else if (key === 'p' || key === 'c') {
         e.preventDefault();
         triggerPartyAction();
       }
@@ -1848,7 +2266,7 @@ function initKeyboardControls() {
     } else if (key === 'm') {
       e.preventDefault();
       triggerMapAction();
-    } else if (key === 'p') {
+    } else if (key === 'p' || key === 'c') {
       e.preventDefault();
       triggerPartyAction();
     } else if (key === 'f') {
@@ -1917,6 +2335,116 @@ window.closePrologueModal = closePrologueModal;
 window.finishPrologueAndEnter = finishPrologueAndEnter;
 window.openGuideModal = openGuideModal;
 window.closeGuideModal = closeGuideModal;
+
+/**
+ * 開啟貨棧交易模態視窗 (Shop Modal)
+ */
+function openShopModal(data) {
+  if (!data) return;
+  drpgState.lastShopCatalog = data;
+
+  const modal = document.getElementById('shop-modal');
+  if (!modal) return;
+
+  const titleEl = document.getElementById('shop-modal-title-text');
+  if (titleEl) {
+    titleEl.innerText = `🏪【${data.shopName || '貨棧櫃檯'}】`;
+  }
+
+  const coinEl = document.getElementById('shop-modal-coin-val');
+  if (coinEl) {
+    coinEl.innerText = `${data.playerCoin || 0} 靈石`;
+  }
+
+  // 若彈窗已經開啟，僅更新頂部靈石數額即可，避免重置商品輸入框數量
+  if (drpgState.isShopModalOpen && !modal.classList.contains('hidden')) {
+    return;
+  }
+
+  drpgState.isShopModalOpen = true;
+  const goodsContainer = document.getElementById('shop-modal-goods-list');
+  if (goodsContainer) {
+    let goodsHtml = '';
+    if (data.goods && data.goods.length > 0) {
+      data.goods.forEach(item => {
+        const isOutOfStock = (item.stock !== undefined && item.stock === 0);
+        const stockHtml = (item.stock !== undefined && item.stock >= 0)
+          ? `<span class="shop-item-stock" style="color: ${item.stock > 0 ? '#38bdf8' : '#ef4444'}; margin-left: 8px; font-size: 0.85em;">(庫存: ${item.stock})</span>`
+          : `<span class="shop-item-stock" style="color: #10b981; margin-left: 8px; font-size: 0.85em;">(充足)</span>`;
+        const buyBtnText = isOutOfStock ? '❌ 售罄' : '🛒 購買';
+        const buyBtnDisabled = isOutOfStock ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
+        const maxQty = (item.stock !== undefined && item.stock > 0) ? item.stock : 99;
+
+        goodsHtml += `
+          <div class="shop-item-row" id="shop-item-${item.id}">
+            <div class="shop-item-info">
+              <span class="shop-item-badge">#${item.index}</span>
+              <span class="shop-item-name">${item.name}</span>
+              <span class="shop-item-price">💰 ${item.price} 靈石</span>
+              ${stockHtml}
+            </div>
+            <div class="shop-item-desc">${item.description || ''}</div>
+            <div class="shop-item-actions">
+              <div class="shop-qty-picker">
+                <button class="qty-btn" type="button" onclick="adjustShopQty('${item.id}', -1)">-</button>
+                <input type="number" id="shop-qty-${item.id}" class="shop-qty-input" value="1" min="1" max="${maxQty}" />
+                <button class="qty-btn" type="button" onclick="adjustShopQty('${item.id}', 1)">+</button>
+              </div>
+              <button class="shop-buy-btn" type="button" ${buyBtnDisabled} onclick="triggerShopBuy('${item.id}')">${buyBtnText}</button>
+            </div>
+          </div>
+        `;
+      });
+    } else {
+      goodsHtml = '<div style="color: #94a3b8; padding: 20px; text-align: center;">貨架空空如也，掌櫃尚在進貨中...</div>';
+    }
+    goodsContainer.innerHTML = goodsHtml;
+  }
+
+  modal.classList.remove('hidden');
+}
+
+/**
+ * 開關貨棧交易視窗
+ */
+function toggleShopModal(show) {
+  const modal = document.getElementById('shop-modal');
+  if (!modal) return;
+  if (show === undefined) {
+    drpgState.isShopModalOpen = !drpgState.isShopModalOpen;
+  } else {
+    drpgState.isShopModalOpen = !!show;
+  }
+  if (drpgState.isShopModalOpen) {
+    modal.classList.remove('hidden');
+  } else {
+    modal.classList.add('hidden');
+  }
+}
+
+function renderShopCatalogInLog(data) {
+  openShopModal(data);
+}
+
+function adjustShopQty(itemId, delta) {
+  const input = document.getElementById(`shop-qty-${itemId}`);
+  if (!input) return;
+  let val = parseInt(input.value) || 1;
+  val = Math.max(1, Math.min(99, val + delta));
+  input.value = val;
+}
+
+function triggerShopBuy(itemId) {
+  const input = document.getElementById(`shop-qty-${itemId}`);
+  const qty = input ? (parseInt(input.value) || 1) : 1;
+  send(`buy ${itemId} ${qty}`);
+}
+
+window.openShopModal = openShopModal;
+window.toggleShopModal = toggleShopModal;
+window.renderShopCatalogInLog = renderShopCatalogInLog;
+window.adjustShopQty = adjustShopQty;
+window.triggerShopBuy = triggerShopBuy;
 
 window.addEventListener('DOMContentLoaded', () => {
   initKeyboardControls();

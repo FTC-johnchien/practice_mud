@@ -1,0 +1,109 @@
+[
+  {
+    "id": "inn_shop",
+    "name": "新手村客棧貨棧",
+    "npcId": "innkeeper",
+    "roomId": "inn",
+    "goods": [
+      {
+        "index": 1,
+        "id": "bread",
+        "templateId": "village_bread",
+        "name": "村莊烤麵包",
+        "price": 2,
+        "stock": -1,
+        "description": "乾糧，食用回復 20 點氣血"
+      },
+      {
+        "index": 2,
+        "id": "tea",
+        "templateId": "purify_tea",
+        "name": "辟邪清心靈茶",
+        "price": 5,
+        "stock": -1,
+        "description": "靈茶，飲用回復 25 點道心 (SAN) 與 20 點真元"
+      },
+      {
+        "index": 3,
+        "id": "salve",
+        "templateId": "healing_salve",
+        "name": "百草金創藥膏",
+        "price": 8,
+        "stock": 10,
+        "description": "靈膏，塗抹迅速回復 60 點氣血（客棧限量備貨 10 盒）"
+      },
+      {
+        "index": 4,
+        "id": "pickaxe",
+        "templateId": "miner_pickaxe",
+        "name": "雜役採礦鐵鎬",
+        "price": 25,
+        "stock": 5,
+        "description": "耐用鐵鎬，可於礦坑挖掘靈石或破障（限量 5 把）"
+      },
+      {
+        "index": 5,
+        "id": "blade",
+        "templateId": "steel_blade",
+        "name": "百辟精鋼刀",
+        "price": 15,
+        "stock": 3,
+        "description": "厚背單刀，攻擊力 14~22，自動引用 [基本刀法]（限量 3 把）"
+      },
+      {
+        "index": 6,
+        "id": "spear",
+        "templateId": "standard_spear",
+        "name": "制式長槍",
+        "price": 20,
+        "stock": 3,
+        "description": "長矛長槍，攻擊力 15~25，自動引用 [基礎長柄/槍術]（限量 3 把）"
+      },
+      {
+        "index": 7,
+        "id": "axe",
+        "templateId": "iron_axe",
+        "name": "開山大斧",
+        "price": 18,
+        "stock": 2,
+        "description": "雙刃闊斧，攻擊力 16~26，自動引用 [基礎斧法]（限量 2 把）"
+      },
+      {
+        "index": 8,
+        "id": "staff",
+        "templateId": "copper_staff",
+        "name": "齊眉熟銅棍",
+        "price": 15,
+        "stock": 2,
+        "description": "熟銅長棍，攻擊力 12~20，自動引用 [基礎棍杖]（限量 2 把）"
+      },
+      {
+        "index": 9,
+        "id": "hammer",
+        "templateId": "iron_hammer",
+        "name": "八棱玄鐵錘",
+        "price": 20,
+        "stock": 2,
+        "description": "八棱重錘，攻擊力 18~28，自動引用 [基礎鈍器]（限量 2 把）"
+      },
+      {
+        "index": 10,
+        "id": "dagger",
+        "templateId": "shadow_dagger",
+        "name": "無影短匕",
+        "price": 12,
+        "stock": 3,
+        "description": "精巧短匕，攻擊力 10~16，自動引用 [基礎短刃]（限量 3 把）"
+      },
+      {
+        "index": 11,
+        "id": "bow",
+        "templateId": "hunter_bow",
+        "name": "穿雲桑木弓",
+        "price": 16,
+        "stock": 2,
+        "description": "獵戶桑木弓，攻擊力 13~21，自動引用 [基礎箭術]（限量 2 把）"
+      }
+    ]
+  }
+]

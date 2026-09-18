@@ -1,0 +1,57 @@
+{
+  "id": "mob_dragon_dodge",
+  "name": "真龍騰挪",
+  "description": "遠古真龍挾帶著浩蕩龍威在空中或地面所展現的龐大身姿變幻，雖不以靈動見長，但龍翼振空之勢足以掀偏萬物。",
+  "type": "REACTIVE",
+  "school": "NATURAL",
+  "tags": [
+    "DEFENSIVE",
+    "EVASION",
+    "NATURAL",
+    "DRAGON"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED"
+    ]
+  },
+  "costs": {
+    "stamina": 4
+  },
+  "scaling": {
+    "dodgeRatePerLevel": 0.003
+  },
+  "mechanics": {
+    "dodgeRate": 0.08,
+    "maxLevel": 100,
+    "scaleStat": "DEX",
+    "scaleFactor": 1.0,
+    "formulas": {
+      "successRate": "skill.mechanics.dodgeRate + (user.dex * 0.04)"
+    }
+  },
+  "moves": [
+    {
+      "name": "龍翼震空",
+      "weight": 50,
+      "msg": {
+        "success": "$N遮天蔽日的龍翼猛然一扇，掀起狂暴颶風，$n揮來的$w被強大氣流生生吹偏，根本無法近身！"
+      }
+    },
+    {
+      "name": "騰雲掠影",
+      "weight": 35,
+      "msg": {
+        "success": "$N龐大的龍軀周身雲霧翻湧，身形在虛空中微微一頓便拔高三丈，讓$n的$w斬了個空！"
+      }
+    },
+    {
+      "name": "神龍擺尾避空",
+      "weight": 40,
+      "msg": {
+        "success": "$N身如驚鴻長蛇，前半身凌空折轉，龐大身軀以不可思議的角度錯開了$n劈向$l的猛烈一擊！"
+      }
+    }
+  ]
+}

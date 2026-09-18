@@ -39,6 +39,8 @@ public class LivingService {
 
   private final ObjectProvider<WorldManager> worldManagerProvider;
 
+  private final ObjectProvider<GameStateBroadcastService> broadcastServiceProvider;
+
   private final LookCommand lookCommand;
 
 
@@ -150,14 +152,44 @@ public class LivingService {
       messageTemplate = "$N被殺死了";
     }
 
-    // 製造屍體丟到房間
-    GameItem corpse = worldFactory.createCorpse(self, killerName);
-    room.dropItem(corpse);
+    // 若為怪物，立即自房間生靈清單移除，並依掉落表決定消散或掉落儲物袋
+    if (self instanceof com.example.htmlmud.domain.actor.impl.Mob mob) {
+      room.removeMob(mob.getId());
 
+      List<GameItem> drops = worldFactory.generateMobDrops(mob);
+      if (drops.isEmpty()) {
+        // 無掉落物：直接化作青煙消散，地面不留任何物品
+        messageTemplate = "\u001B[1;30m💀 $N 倒地身亡，化作一縷青煙消散於天地之間...\u001B[0m";
+      } else {
+        GameItem lootPouch = worldFactory.createLootPouch(mob, drops);
+        // 普通怪的儲物袋（非首領寶箱）：檢查地面是否已有【散落的儲物袋】，若有則自動合併
+        boolean isNormalPouch = "【散落的儲物袋】".equals(lootPouch.getName());
+        Optional<GameItem> existingPouch = isNormalPouch ? room.getItems().stream()
+            .filter(it -> it != null && it.getType() == ItemType.CONTAINER && "【散落的儲物袋】".equals(it.getName()))
+            .findFirst() : Optional.empty();
+
+        if (existingPouch.isPresent()) {
+          GameItem targetPouch = existingPouch.get();
+          targetPouch.getContents().addAll(drops);
+          messageTemplate = "\u001B[1;32m💥 $N 被擊敗倒地，戰利品歸攏入地面的 " + targetPouch.getName() + "！\u001B[0m";
+        } else {
+          room.dropItem(lootPouch);
+          messageTemplate = "\u001B[1;32m💥 $N 被擊敗倒地，戰利品散落在地，化為 " + lootPouch.getName() + "！\u001B[0m";
+        }
+      }
+    } else {
+      // 玩家死亡時保留屍體轉移裝備遺物
+      GameItem corpse = worldFactory.createCorpse(self, killerName);
+      room.dropItem(corpse);
+    }
 
     List<Player> audiences = room.getPlayers();
+    GameStateBroadcastService bs = broadcastServiceProvider.getIfAvailable();
     for (Player receiver : audiences) {
       MessageUtil.send(messageTemplate, self, killer, receiver);
+      if (bs != null) {
+        bs.broadcastState(receiver);
+      }
     }
   }
 

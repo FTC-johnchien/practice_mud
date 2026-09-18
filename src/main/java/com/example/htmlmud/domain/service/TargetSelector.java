@@ -114,6 +114,12 @@ public class TargetSelector {
   }
 
   private boolean isMatchItem(GameItem item, String keyword) {
+    if (item.getId() != null && item.getId().equalsIgnoreCase(keyword)) {
+      return true;
+    }
+    if (item.getTemplate() != null && item.getTemplate().id() != null && item.getTemplate().id().equalsIgnoreCase(keyword)) {
+      return true;
+    }
     return isMatch(item.getName(), item.getAliases(), keyword);
   }
 

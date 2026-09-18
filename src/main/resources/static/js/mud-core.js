@@ -90,6 +90,12 @@ function handleServerMessage(data) {
         if (typeof updateSaveSlotsView === 'function') {
             updateSaveSlotsView(data.slots);
         }
+    } else if (data.type === 'SHOP_CATALOG') {
+        if (typeof openShopModal === 'function') {
+            openShopModal(data);
+        } else if (typeof renderShopCatalogInLog === 'function') {
+            renderShopCatalogInLog(data);
+        }
     } else if (data.type === 'TEXT' || data.content) {
         appendHtml(data.content || data.text);
     } else if (data.type === 'STAT_UPDATE' || data.type === 'stats' || data.hp !== undefined) {

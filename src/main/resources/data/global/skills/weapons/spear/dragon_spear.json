@@ -1,0 +1,80 @@
+{
+  "id": "dragon_spear",
+  "name": "破陣遊龍槍",
+  "description": "天策軍門秘傳槍術，一點寒芒先到，隨後槍出如龍。大開大闔，專破重甲與戰陣。",
+  "type": "WEAPON",
+  "school": "TIANCE",
+  "tags": [
+    "WEAPON",
+    "SPEAR",
+    "POLEARM",
+    "PIERCE",
+    "ARMOR_PIERCE"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      "SPEAR",
+      "POLEARM",
+      "HALBERD",
+      "JAVELIN"
+    ]
+  },
+  "costs": {
+    "stamina": 4
+  },
+  "scaling": {
+    "damagePerLevel": 1.0,
+    "hitRatePerLevel": 0.003,
+    "critRatePerLevel": 0.002
+  },
+  "mechanics": {
+    "critRate": 0.09,
+    "damage": 19,
+    "damageType": "PIERCE",
+    "hitRate": 0.94,
+    "maxLevel": 100,
+    "scaleStat": "STR",
+    "scaleFactor": 1.35
+  },
+  "moves": [
+    {
+      "name": "寒芒破陣",
+      "weight": 40,
+      "damageMod": 1.1,
+      "hitRateMod": 0.08,
+      "critRateMod": 0.06,
+      "msg": {
+        "cast": "$N雙手握槍，丈二長槍如巨蟒出洞，一點銀芒以不可阻擋之勢直刺$n的$l！",
+        "hit": "噗的一聲利響，$W槍尖刺穿甲胃，在$n身上扎出一個血窟窿，造成 $d 點穿刺傷害！",
+        "crit": "【鐵血破甲】$W槍尖銳氣透背而出，$n經脈被雄渾勁道撕裂，受到 $d 點貫穿重創！",
+        "miss": "$n側身滑步，槍尖擦著護肩劃過，激起一串耀目火花。"
+      }
+    },
+    {
+      "name": "游龍擺尾",
+      "weight": 35,
+      "damageMod": 1.2,
+      "hitRateMod": 0.06,
+      "critRateMod": 0.08,
+      "msg": {
+        "cast": "$N化刺為掃，藉由腰力將$W如游龍翻江般掄圓，狠狠橫抽向$n！",
+        "hit": "沉重的槍身狠狠砸在$n肋下，骨裂聲清晰可辨，$n被抽得踉蹌倒退，受到 $d 點傷害！",
+        "crit": "【龍嘯九霄】長槍挾帶著雷霆萬鈞之勢橫掃千軍，$n吐血飛跌，遭受 $d 點崩裂重擊！",
+        "miss": "$n及時縱身躍起，沉重的槍身貼著腳底呼嘯而過。"
+      }
+    },
+    {
+      "name": "落日追魂",
+      "weight": 25,
+      "damageMod": 1.4,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.15,
+      "msg": {
+        "cast": "$N長吸一口氣，周身氣血灌入$W，槍尖激射出數尺白芒，人槍合一直刺$n咽喉！",
+        "hit": "$n避之不及，$W一槍封喉，鮮血狂噴，遭受 $d 點致命穿刺傷害！",
+        "crit": "【追魂奪命】槍勢直指死穴，槍芒爆裂四射，$n被釘在地上，承受 $d 點驚天毀滅重擊！",
+        "miss": "$n咬牙橫架兵刃，火星四射間被巨大衝擊力震得連退五步。"
+      }
+    }
+  ]
+}

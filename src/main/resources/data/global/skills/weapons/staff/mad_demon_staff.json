@@ -1,0 +1,80 @@
+{
+  "id": "mad_demon_staff",
+  "name": "瘋魔杖法",
+  "description": "少林高僧所創之狂猛杖法，招招沉重剛勁，瘋魔之中暗合禪門怒目金剛之意。具備極強的擊退與震懾效果。",
+  "type": "WEAPON",
+  "school": "SHAOLIN",
+  "tags": [
+    "WEAPON",
+    "STAFF",
+    "BLUNT",
+    "STUN",
+    "KNOCKBACK"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      "STAFF",
+      "BLUNT",
+      "CLUB",
+      "HAMMER"
+    ]
+  },
+  "costs": {
+    "stamina": 5
+  },
+  "scaling": {
+    "damagePerLevel": 1.1,
+    "hitRatePerLevel": 0.002,
+    "critRatePerLevel": 0.003
+  },
+  "mechanics": {
+    "critRate": 0.08,
+    "damage": 20,
+    "damageType": "BLUNT",
+    "hitRate": 0.91,
+    "maxLevel": 100,
+    "scaleStat": "CON",
+    "scaleFactor": 1.3
+  },
+  "moves": [
+    {
+      "name": "金剛伏虎",
+      "weight": 40,
+      "damageMod": 1.15,
+      "hitRateMod": 0.06,
+      "critRateMod": 0.06,
+      "msg": {
+        "cast": "$N怒目圓睜，高舉$W如降魔金剛，挟帶萬鈞巨力朝著$n頂門狠狠砸下！",
+        "hit": "只聽「咚」的一聲悶響，$W正中頭肩，$n眼冒金星，骨肉震盪，受到 $d 點鈍擊傷害！",
+        "crit": "【金剛震頂】禪門罡勁自杖端狂暴宣洩，$n頂骨受挫，神魂震盪，承受 $d 點崩嶽暴擊！",
+        "miss": "$n聽得惡風不善，急忙抱頭鼠竄閃到一旁。"
+      }
+    },
+    {
+      "name": "瘋魔亂舞",
+      "weight": 35,
+      "damageMod": 1.25,
+      "hitRateMod": 0.05,
+      "critRateMod": 0.08,
+      "msg": {
+        "cast": "$N步伐凌亂如醉漢，手中$W舞得密不透風，挾著嗚嗚怪嘯連環狂砸向$n！",
+        "hit": "亂杖翻飛，$W如雨點般砸落在$n周身要害，$n口噴鮮血連連倒退，受到 $d 點重創！",
+        "crit": "【怒目瘋狂】怒濤般的杖影徹底瓦解了對手守勢，$n被重擊砸翻在地，遭受 $d 點重創！",
+        "miss": "$n沉著防禦，看準杖影間隙一個側翻脫身而出。"
+      }
+    },
+    {
+      "name": "雷霆掃穴",
+      "weight": 25,
+      "damageMod": 1.45,
+      "hitRateMod": 0.03,
+      "critRateMod": 0.15,
+      "msg": {
+        "cast": "$N暴喝聲震四野，雙臂肌肉墳起，將粗大的$W貼地平掄出一道黑色怒潮，狠掃$n下盤！",
+        "hit": "轟的一聲巨響，$W重重抽在$n雙腿之上，$n筋斷骨折被凌空打飛，受到 $d 點霸道傷害！",
+        "crit": "【掃蕩妖邪】至剛至純的佛門真力將地表石磚犁成齏粉，$n如斷線風箏般倒飛數丈，承受 $d 點致命重傷！",
+        "miss": "$n全力提氣縱身躍起八尺，險險避過這毀天滅地的一掃。"
+      }
+    }
+  ]
+}

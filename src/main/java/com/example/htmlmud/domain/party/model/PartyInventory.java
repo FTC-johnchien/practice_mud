@@ -22,9 +22,11 @@ public class PartyInventory {
 
   public PartyInventory(int capacity) {
     this.capacity = capacity;
-    // 初始預設攜帶一些應急靈藥
+    // 初始預設攜帶一些應急靈藥與可供切換測試的精良兵刃
     addItem("taiyin_pill", 3);
     addItem("purify_talisman", 2);
+    addItem("steel_blade", 1);
+    addItem("standard_spear", 1);
   }
 
   public static boolean isSameItemId(String id1, String id2) {

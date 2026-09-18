@@ -1,0 +1,56 @@
+{
+  "id": "mob_undead_dodge",
+  "name": "死體錯位",
+  "description": "不死族無知覺的殘軀在遭受重創時，憑藉死氣與骨節錯位卸去衝擊的詭異避險之術。",
+  "type": "REACTIVE",
+  "school": "NATURAL",
+  "tags": [
+    "DEFENSIVE",
+    "EVASION",
+    "UNDEAD"
+  ],
+  "usage": {
+    "allowedWeapons": [
+      null,
+      "UNARMED"
+    ]
+  },
+  "costs": {
+    "stamina": 1
+  },
+  "scaling": {
+    "dodgeRatePerLevel": 0.003
+  },
+  "mechanics": {
+    "dodgeRate": 0.10,
+    "maxLevel": 100,
+    "scaleStat": "DEX",
+    "scaleFactor": 1.0,
+    "formulas": {
+      "successRate": "skill.mechanics.dodgeRate + (user.dex * 0.005)"
+    }
+  },
+  "moves": [
+    {
+      "name": "骨節錯位",
+      "weight": 50,
+      "msg": {
+        "success": "伴隨刺耳的骨骼摩擦聲，$N周身白骨猛地詭異錯位，讓$n斬向$l的$w自肋骨空隙間穿過，毫髮無傷！"
+      }
+    },
+    {
+      "name": "腐肉滑卸",
+      "weight": 40,
+      "msg": {
+        "success": "$n手中的$w狠狠削過，卻因$N僵冷滑膩的死氣偏折，只斬落了幾縷灰白死氣，未中實處！"
+      }
+    },
+    {
+      "name": "僵死仰倒",
+      "weight": 30,
+      "msg": {
+        "success": "$N身軀如木樁般筆直向後倒下，以常人絕不可能做出的僵硬死相避開了$n呼嘯而過的$w！"
+      }
+    }
+  ]
+}

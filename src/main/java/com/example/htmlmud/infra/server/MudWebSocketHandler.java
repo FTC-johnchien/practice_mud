@@ -27,21 +27,25 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
   private final GameMetrics gameMetrics;
   private final GameCommandService gameCommandService;
   private final ObjectMapper objectMapper;
-
-
+  private final com.example.htmlmud.domain.save.service.SaveGameService saveGameService;
 
   @Override
   public void afterConnectionEstablished(WebSocketSession session) {
-    // 包裝 Session
-    // 這會自動加上 Lock，確保同時寫入時會排隊，不會噴出 IllegalStateException
-    // 參數說明：session, sendTimeLimit(ms), bufferSizeLimit(bytes)
-    // WebSocketSession concurrentSession =
-    // new ConcurrentWebSocketSessionDecorator(session, 1000, 64 * 1024);
-
     try {
+      String initialName = "玄靈子";
+      try {
+        var slots = saveGameService.listSaveSlots();
+        for (var slot : slots) {
+          if (!slot.isEmpty() && slot.getProtagonistName() != null && !slot.getProtagonistName().isBlank()) {
+            initialName = slot.getProtagonistName();
+            break;
+          }
+        }
+      } catch (Exception ignored) {}
+
       // 單機模式：直接建立單機玩家 Actor，無需任何帳密驗證
       Player self = Player.createSinglePlayer(new WebSocketOutput(session, objectMapper), worldManager,
-          playerService, "道友");
+          playerService, initialName);
 
       // 啟動 Actor 的虛擬執行緒 (Virtual Thread)
       self.start();

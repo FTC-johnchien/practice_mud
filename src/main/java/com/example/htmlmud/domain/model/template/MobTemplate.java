@@ -6,6 +6,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import com.example.htmlmud.domain.model.config.LootEntry;
 import com.example.htmlmud.domain.model.enums.Gender;
 import com.example.htmlmud.domain.model.enums.MobKind;
+import com.example.htmlmud.domain.model.enums.MobRank;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.Builder;
@@ -24,6 +25,10 @@ public record MobTemplate(
     List<String> aliases,
 
     MobKind kind,
+
+    MobRank rank,
+
+    boolean isUnique,
 
     int level,
 
@@ -72,7 +77,10 @@ public record MobTemplate(
     Map<SkillCategory, String> enabledSkills,
 
     // 掉落表：列表中的每個項目代表一種可能的掉落物
-    List<LootEntry> loot
+    List<LootEntry> loot,
+
+    // NPC 專屬組件化能力清單 (TALK, SHOP, REST, RECRUIT, TRAIN, QUEST)
+    List<NpcCapability> capabilities
 
 ) {
   public MobTemplate {
@@ -84,6 +92,22 @@ public record MobTemplate(
     }
     if (kind == null) {
       kind = MobKind.NEUTRAL;
+    }
+    // 相容性處理：若原本舊資料寫 kind == MobKind.BOSS，自動轉換為 rank == BOSS, kind = AGGRESSIVE
+    if (kind == MobKind.BOSS) {
+      if (rank == null || rank == MobRank.NORMAL) {
+        rank = MobRank.BOSS;
+      }
+      kind = MobKind.AGGRESSIVE;
+    }
+    if (rank == null) {
+      rank = MobRank.NORMAL;
+    }
+    if (kind == MobKind.AGGRESSIVE) {
+      isAggressive = true;
+    }
+    if (capabilities == null) {
+      capabilities = List.of();
     }
     if (str == 0) {
       str = 5;

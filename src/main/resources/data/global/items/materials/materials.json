@@ -1,0 +1,32 @@
+[
+  {
+    "id": "rat_tail",
+    "name": "老鼠尾巴",
+    "aliases": ["rat tail", "tail", "鼠尾"],
+    "type": "MATERIAL",
+    "description": "從巨鼠身上割下來的長尾巴，可作為初級鍊金材料或完成懸賞任務。",
+    "value": 5,
+    "quality": "COMMON",
+    "isStackable": true
+  },
+  {
+    "id": "wolf_pelt",
+    "name": "野狼毛皮",
+    "aliases": ["wolf pelt", "pelt", "毛皮"],
+    "type": "MATERIAL",
+    "description": "一張厚實的灰色野狼毛皮，可用於裁縫護甲或換取盤纏。",
+    "value": 25,
+    "quality": "COMMON",
+    "isStackable": true
+  },
+  {
+    "id": "spirit_stone",
+    "name": "下品靈石",
+    "aliases": ["spirit stone", "stone", "靈石"],
+    "type": "MATERIAL",
+    "description": "修仙界通用的天地靈氣結晶，亦可直接吸收補充微量真元。",
+    "value": 50,
+    "quality": "UNCOMMON",
+    "isStackable": true
+  }
+]
