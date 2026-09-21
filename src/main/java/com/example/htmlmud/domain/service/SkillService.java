@@ -14,7 +14,7 @@ import com.example.htmlmud.domain.model.template.SkillTemplate;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.service.PartyService;
-import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
+import com.example.htmlmud.domain.repository.TemplateReader;
 import com.example.htmlmud.infra.util.RandomUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +26,8 @@ public class SkillService {
 
   private final ObjectProvider<PartyService> partyServiceProvider;
 
+  private final TemplateReader templateReader;
+
   // --- 核心方法：取得當前該用的技能 ---
   public SkillTemplate getEffectiveSkill(Living self, SkillCategory category) {
     // 1. 檢查玩家有沒有在這個分類上「掛載」特殊武功
@@ -33,12 +35,12 @@ public class SkillService {
 
     // 2. 如果有掛載，且真的學過，回傳該武功
     if (skillId != null && self.getLearnedSkills().containsKey(skillId)) {
-      return TemplateRepository.getSkill(skillId);
+      return templateReader.requireSkill(skillId);
     }
 
     // 3. 【關鍵】如果沒掛載 (或沒學過)，回傳系統預設的「基礎技能」
     // 例如：SWORD -> basic_sword, UNARMED -> basic_fist
-    return TemplateRepository.getDefaultSkill(category);
+    return templateReader.findDefaultSkill(category);
   }
 
   // 取得當前使用的攻擊招式 TODO skillId可能為null
@@ -59,7 +61,7 @@ public class SkillService {
     }
 
     // 檢查該技能是否支援此分類 (從 JSON data 讀取)
-    SkillTemplate tpl = TemplateRepository.getSkill(skillId);
+    SkillTemplate tpl = templateReader.requireSkill(skillId);
     if (!tpl.getTags().contains(category.name())) {
       throw new MudException("這個技能不能用在這個用途上。");
     }
@@ -98,7 +100,7 @@ public class SkillService {
     // 2. 如果沒有 Enable，使用預設技能 (Fallback)
     if (skillId == null) {
       // 從設定檔讀取：SWORD -> basic_sword
-      skillId = TemplateRepository.getDefaultSkillId(category);
+      skillId = templateReader.findDefaultSkillId(category);
 
       // 嘗試從玩家已學列表取得
       entry = self.getLearnedSkills().get(skillId);
@@ -115,7 +117,7 @@ public class SkillService {
     }
 
     // 回傳技能模板 + 當前等級資料
-    return new ActiveSkillResult(TemplateRepository.getSkill(skillId), entry);
+    return new ActiveSkillResult(templateReader.requireSkill(skillId), entry);
   }
 
   public void learnSkill(Living self, String skillId, int level) {
@@ -138,9 +140,9 @@ public class SkillService {
     // log.info("name:{} skillId:{}", self.getName(), skillId);
 
     // 1. 取得技能模板
-    SkillTemplate skillTemplate = TemplateRepository.getSkill(skillId);
+    SkillTemplate skillTemplate = templateReader.requireSkill(skillId);
     if (skillTemplate == null) {
-      skillTemplate = TemplateRepository.getSkill("mob_hit"); // 系統保底
+      skillTemplate = templateReader.requireSkill("mob_hit"); // 系統保底
     }
 
     // 2. 【關鍵】動態捏造技能狀態
@@ -211,7 +213,7 @@ public class SkillService {
 
     // 檢查種族是否有設定 nature attack (Race Default)
     // log.info("resolveCombatSkillId name:{} race:{}", self.getName(), self.getStats().getRace());
-    RaceTemplate race = TemplateRepository.findRace(self.getStats().getRace()).orElse(null);
+    RaceTemplate race = templateReader.findRace(self.getStats().getRace()).orElse(null);
     // log.info("resolveCombatSkillId name:{} race:{}", self.getName(), race);
     switch (category) {
       case DODGE -> {
@@ -244,7 +246,7 @@ public class SkillService {
 
         // 玩家或人族：依武器分類取得預設基礎技能
         if (self instanceof Player || "human".equalsIgnoreCase(self.getStats().getRace())) {
-          String defaultSkill = TemplateRepository.getDefaultSkillId(category);
+          String defaultSkill = templateReader.findDefaultSkillId(category);
           if (defaultSkill != null) {
             return defaultSkill;
           }

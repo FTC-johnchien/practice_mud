@@ -370,41 +370,25 @@
       - 隊員切換頁籤（`#party-modal-member-tabs`）同步顯示各隊員等級與加點提示角標。
     - **後端雙向資料同步加固 (`PartyCommand.java`)**：
       - 加點成功後，除基礎 5 維外，同步將氣血 HP、氣血上限 MaxHP、真元 MP、真元上限 MaxMP 完整鏡像同步至 `Player.getStats()`，確保持久化與內存無任何數值漂移。
+  * **2026-09-21 ~ 2026-09-22（MUD & DRPG 深度架構整合 Phase 0 ~ 3 完工）**：
+    - **Phase 0 (核心邏輯 Bug 修復)**：修復 `DropCommand` 異常 re-add 背包邏輯、`EquipCommand` 移除內嵌 unequip 呼叫、`Player.lookAtMe` 修正為 `.equals()`、`LivingService.unequip` 恢復裝備解除邏輯、`RoomService.broadcastJson` 實作完成。
+    - **Phase 1 (單一真相源 Single Source of Truth)**：全面廢棄舊全域 `items.json`，改以 `data/global/items/**/*.json` 分類目錄唯一收斂；實作 `PartyItemSlot` 與 `GameItem` / `ItemTemplate` 雙向無損轉換；建立 `CharacterSyncService` 維護世界主體 `Player` 與小隊隊長 `PartyMember` 雙向屬性同步。
+    - **Phase 2 (穩定角色識別與生命週期)**：導入強型別值物件 `CharacterId` 徹底淘汰寫死 `"p-single"`；`PartyService` 與 `DungeonManager` 實作 Dual-Index Alias 雙向容錯索引；`TemplateRepository` 轉型為 Spring Bean 託管元件。
+    - **Phase 3 (技能語意橋接與戰鬥服務解耦)**：建立 `SkillBridgeService` 實現 MUD 熟練度與 DRPG 戰術技能之動態等級縮放與解鎖；`DrpgBattleService` 解構為輕量 Facade，拆解出 `DrpgCombatLoop`、`DrpgEnemyTacticsService` 與 `DrpgRewardService`。
 
 ---
 
 ## 6. 最新測試與健康狀況 (Latest Test Results)
-* **測試時間**：2026-09-18
+* **測試時間**：2026-09-22
 * **測試指令**：`.\test.ps1`（或 `mvnw test`）
-* **測試項目**：
-  * `CustomCompanionTacticsTest`：雙補師血量百分比差異化急救（60% 小補 vs 35% 大補）、雙坦怪物數量群嘲與首領單嘲分工、`party tactics` 檢視/清空/新增/重置等 3 項測試全過。
-  * `PhaseOneMechanicsTest`：滅團重生坐標動態化、地牢安全節點調息、同伴醫修殘血自動急救、同伴力士戰鬥自動嘲諷等 4 項測試全過。
-  * `SkillsTaxonomyAndWeaponBindingTest`：全域技能庫 67 個技能多層子目錄遞迴載入、9 大武器種類招式映射、夥伴初始門派特色套路配置、8 大門派高階武學參數與屬性完好等 4 項測試全過。
-  * `GlobalItemsAndShopOverridesTest`：全域物品庫（兵刃、防具、飾品、消耗品、素材、貨幣、任務信物）遞迴載入、帶 zoneId 前綴與純 ID 的雙向智慧容錯查詢、商店本地化實例參數（定價覆寫、價格倍率、名稱說明原型繼承）、線程安全限量庫存管理與動態扣減、真實 `newbie_village/shops.json` 客棧貨棧等 5 項測試全過。
-  * `MobRankAndClassificationTest`：`MobRank`（NORMAL/ELITE/BOSS）階級定義、預設值與舊版 `kind: "BOSS"` 向下相容升級、真實資料檔宋天衡/哥布林王/福伯/白石老人正交標籤解析、`BattleEnemy` 階級繼承與【首領】前綴動態注入、招募夥伴唯一性（`isUnique`）等 5 項測試全過。
-  * `RaceSkillsBindingTest`：7 大種族定義、野鼠/人類/不死族/太古赤龍動態技能綁定、BattleEnemy 防禦技能關聯、小隊成員身法招架啟用等 5 項測試全過。
-  * `DataDrivenExpansionTest`：`classes.json` 職業模板載入、夥伴 `learnedStances` 開局套路資料化、`shops.json` 貨棧商品動態載入與房間映射、NPC `capabilities` 組件化能力標籤、隊員職業關聯、貨棧批量購買與靈石扣減、NPC 交談對話觸發、`party recruit` / `recruit` / `dismiss` / `party dismiss` 雙向招募請離、貨棧獨立彈窗結構化事件推送與日誌純淨化等 9 項測試全過。
-  * `ItemPickupAndEntitySyncTest`：UUID 物品匹配、儲物袋一鍵搜刮入行囊、容器即刻銷毀消散、空屍體禁止入包、開局主角道號一致性驗證。
-  * `MultiWeaponAndStanceTest`：多武器普攻綁定、三套高級劍法套路切換、空手回歸與怪物種族天然攻擊驗證。
-  * `WeaponSkillBindingTest`：武器普攻動態綁定、空手拳腳、自訂劍法掛載與卸除武器回歸驗證。
-  * `CombatFlowTest`：玩家持劍/空手招式判定、出戲時間戳拔除驗證、野鼠即時反擊與傷害結算。
-  * `DrpgBattleServiceTest`：包含集火目標動態切換、技能施放、嘲諷仇恨、陣亡結算等 7 項測試全過。
-  * `HtmlmudApplicationTests`：Spring Boot 啟動與資料庫配置驗證。
-  * `MozhuMinesIntegrationTest`：礦坑場景動態載入、Boss 戰鬥與任務掉落驗證。
-  * `MozhuMinesDungeonIntegrationTest`：墨竹礦坑 10x10 DRPG 地牢載入、迷霧開圖、步进與首領祭壇觸發驗證。
-  * `NewbieToMozhuLoopIntegrationTest`：新手村客棧整備購藥 -> 啟程前往礦坑 -> B1F 步進探索使用靈藥 -> 首領討伐掉落 -> 撤離回村安歇之完整閉環驗證。
-  * `TownDungeonDualModeIntegrationTest`：單人開局、客棧招募/請離夥伴、雙模狀態廣播、4 正交方向拓撲移動、靜默存檔查詢與簡約城鎮行進日誌驗證。
-  * `PartyEquipmentIntegrationTest` / `PartyFormationTest`：隊伍陣法與裝備協同驗證。
-  * `PartyInventoryAndMadnessTest`：DRPG 地牢步進、San 值/狂亂度、消耗品去綴堆疊與 5+2 裝備輸出測試。
-  * `TaiyinTombDungeonTest`：太陰古塚步進與暗雷測試。
-  * `SaveGameServiceTest`：單機多槽位 JSON 存讀檔驗證。
-  * `XpProgressionServiceTest`：1~1000級平滑經驗需求曲線計算、主角升級獲得職業成長與 +2 自由分配修為點數、同伴自適應職業範本（戰士/劍客等）無自由點數自動成長、多等級爆發跳級（Multi-level jump）等 4 項測試全過。
-  * `WorldDataIntegrityTest`：4 大區域載入、出口拓撲無懸空、自然攻擊與技能映射、Bug 迴歸測試。
-* **結果**：`Tests run: 106, Failures: 0, Errors: 0, Skipped: 0` -> **BUILD SUCCESS (106 項測試全數綠燈通過)**
+* **測試項目**：涵蓋既有 106 項整合/單元測試，以及 MUD & DRPG 深度架構整合 Phase 0~3 升級之全套測試（`PhaseZeroBugFixTest`、`PhaseOneSingleSourceOfTruthTest`、`PhaseTwoCharacterIdTest`、`PhaseThreeSkillBridgeAndBattleRefactorTest`、`CharacterSyncServiceTest` 等共 28 項新測試）。
+* **結果**：`Tests run: 134, Failures: 0, Errors: 0, Skipped: 0` -> **BUILD SUCCESS (134 項測試全數綠燈通過，0 失敗、0 錯誤)**
 
 ---
 
 ## 7. 待辦事項與演進藍圖 (TODOs & Roadmap)
+> **架構改善總清單**：完整之後續架構改進、安全防護 (P0/P1) 與併發演化藍圖，請優先參照永久存檔：👉 **[`docs/plans/FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md)**。
+
 ### 階段一：垂直切片閉環 (Single Town + Single Dungeon MVP)
 - [x] **打通新手村與墨竹礦坑的完整單機遊玩循環 (垂直切片 MVP 完成)**：
   - 城鎮接取指引/客棧購買靈茶乾糧 $\to$ 出發進入墨竹礦坑 $\to$ DRPG 步進探索消耗 San 值 $\to$ 遭遇戰鬥/討伐首領 $\to$ 拾取戰利品撤離回村安歇。

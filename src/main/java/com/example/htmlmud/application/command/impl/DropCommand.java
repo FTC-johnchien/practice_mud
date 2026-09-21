@@ -1,11 +1,8 @@
 package com.example.htmlmud.application.command.impl;
 
-import java.util.Optional;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.CommandAlias;
 import com.example.htmlmud.application.command.PlayerCommand;
-import com.example.htmlmud.domain.actor.impl.Living;
-import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.context.MudContext;
@@ -53,14 +50,7 @@ public class DropCommand implements PlayerCommand {
     // 將物品丟至房間
     room.dropItem(target);
 
-    Optional<GameItem> opt = room.tryPickItem(args, player);
-    if (opt.isPresent()) {
-      GameItem pickItem = opt.get();
-      player.getInventory().add(pickItem);
-      player.reply("$N丟下了 " + pickItem.getDisplayName());
-    } else {
-      player.reply("這裡沒有 '" + args + "'。");
-    }
+    player.reply("$N丟下了 " + target.getDisplayName());
   }
 
 }

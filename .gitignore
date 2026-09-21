@@ -41,5 +41,6 @@ build/
 /data/
 /db/
 /saves/autosave.json
+/saves/slot_*.json
 logs/
 .env

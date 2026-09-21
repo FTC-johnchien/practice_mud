@@ -188,7 +188,7 @@
   {
     "id": "bronze_sword",
     "name": "鏽蝕青銅古劍",
-    "aliases": ["bronze sword", "sword", "古劍"],
+    "aliases": ["bronze sword", "sword", "blade", "古劍", "青銅古劍"],
     "description": "自古墓殉葬坑中發掘之古劍，劍身雖有斑駁綠鏽，刃口卻透出逼人寒芒。",
     "type": "WEAPON",
     "subType": "SWORD",

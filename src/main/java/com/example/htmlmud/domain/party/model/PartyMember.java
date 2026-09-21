@@ -4,6 +4,8 @@ import java.util.EnumMap;
 import java.util.Map;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
+import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.domain.service.TemplateCatalog;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
@@ -84,6 +86,13 @@ public class PartyMember {
   // 戰術方針規則清單 (Tactics / Gambit Rules)
   @Builder.Default
   private java.util.List<TacticsRule> tactics = new java.util.ArrayList<>();
+
+  @JsonIgnore
+  private transient TemplateReader templateReader;
+
+  public void setTemplateReader(TemplateReader templateReader) {
+    this.templateReader = templateReader;
+  }
 
   @JsonIgnore
   public int getEffectiveMinDamage() {
@@ -410,7 +419,7 @@ public class PartyMember {
 
   public com.example.htmlmud.domain.model.template.SkillTemplate getEnabledBasicSkill() {
     String skillId = getEffectiveBasicSkillId();
-    return com.example.htmlmud.infra.persistence.repository.TemplateRepository.findSkill(skillId).orElse(null);
+    return getTemplateReader().findSkill(skillId).orElse(null);
   }
 
   public void enableSkill(com.example.htmlmud.domain.model.enums.SkillCategory category, String skillId) {
@@ -508,7 +517,14 @@ public class PartyMember {
     if (this.classId == null || this.classId.isBlank()) {
       return java.util.Optional.empty();
     }
-    return com.example.htmlmud.infra.persistence.repository.TemplateRepository.findClass(this.classId);
+    return getTemplateReader().findClass(this.classId);
+  }
+
+  private TemplateReader getTemplateReader() {
+    if (templateReader == null) {
+      templateReader = new TemplateCatalog();
+    }
+    return templateReader;
   }
 
   @JsonIgnore

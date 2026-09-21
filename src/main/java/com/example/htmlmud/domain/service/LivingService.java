@@ -16,7 +16,7 @@ import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.domain.model.template.ItemTemplate;
 import com.example.htmlmud.domain.model.template.RaceTemplate;
-import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
+import com.example.htmlmud.domain.repository.TemplateReader;
 import com.example.htmlmud.protocol.MudMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
@@ -34,6 +34,8 @@ public class LivingService {
   private final CombatService combatService;
 
   private final SkillService skillService;
+
+  private final TemplateReader templateReader;
 
   private final WorldFactory worldFactory;
 
@@ -277,14 +279,15 @@ public class LivingService {
       return true;
     }
 
-    // // 1. 放入背包
-    // self.inventory.add(item);
+    // 1. 放入背包
+    self.getInventory().add(item);
 
-    // // 2. 從裝備欄移除
-    // state.equipment.remove(slot);
+    // 2. 從裝備欄移除
+    self.getStats().equipment.remove(slot);
 
-    // "你將 " + slot.getDisplayName() + " 放入背包";
-    // return true;
+    if (self instanceof Player player) {
+      player.reply("你將 " + slot.getDisplayName() + " 的 " + item.getDisplayName() + " 放入背包");
+    }
 
     // 重新計算數值
     recalculateStats(self);
@@ -297,7 +300,7 @@ public class LivingService {
   }
 
   public int getAttacksPerRound(Living self) {
-    Optional<RaceTemplate> opt = TemplateRepository.findRace(self.getStats().getRace());
+    Optional<RaceTemplate> opt = templateReader.findRace(self.getStats().getRace());
     if (opt.isPresent()) {
       RaceTemplate race = opt.get();
       if (race.combat() != null && race.combat().naturalAttacks() != null) {

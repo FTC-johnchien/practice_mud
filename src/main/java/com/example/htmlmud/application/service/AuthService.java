@@ -2,7 +2,6 @@ package com.example.htmlmud.application.service;
 
 import java.time.LocalDateTime;
 import java.util.Set;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,8 +24,7 @@ public class AuthService {
   private static final Set<String> RESERVED_WORDS =
       Set.of("new", "quit", "exit", "wizard", "admin", "system", "root", "guest", "player");
 
-  // 使用 BCrypt，Spring Security 內建，或者自己 new 一個
-  private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+  private final PasswordEncoder passwordEncoder;
 
   private final PlayerMapper mapper; // 注入 MapStruct
 
@@ -47,6 +45,16 @@ public class AuthService {
    */
   @Transactional
   public CharacterEntity register(String username, String rawPassword) {
+    String usernameError = validateUsername(username);
+    if (usernameError != null) {
+      throw new IllegalArgumentException(usernameError);
+    }
+
+    String passwordError = validatePassword(rawPassword);
+    if (passwordError != null) {
+      throw new IllegalArgumentException(passwordError);
+    }
+
     if (userRepository.existsByUsername(username)) {
       throw new IllegalArgumentException("帳號已存在");
     }

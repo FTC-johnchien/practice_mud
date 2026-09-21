@@ -1,0 +1,31 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:20}
+      minimum-idle: ${DB_MIN_IDLE:10}
+      pool-name: MudHikariPool
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    show-sql: false
+
+  h2:
+    console:
+      enabled: false
+
+server:
+  error:
+    include-stacktrace: never
+
+app:
+  websocket:
+    allowed-origins: ${APP_WEBSOCKET_ALLOWED_ORIGINS}

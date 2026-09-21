@@ -14,7 +14,7 @@ import com.example.htmlmud.domain.model.template.ShopTemplate.ShopItemTemplate;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.service.PartyService;
 import com.example.htmlmud.domain.service.GameStateBroadcastService;
-import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
+import com.example.htmlmud.domain.repository.TemplateReader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,6 +26,7 @@ public class ShopCommand implements PlayerCommand {
 
   private final PartyService partyService;
   private final GameStateBroadcastService broadcastService;
+  private final TemplateReader templateReader;
 
   private final Map<String, Integer> shopStockTracker = new ConcurrentHashMap<>();
 
@@ -74,11 +75,11 @@ public class ShopCommand implements PlayerCommand {
     Player self = MudContext.currentPlayer();
     String roomId = self.getCurrentRoomId();
 
-    // 動態自 TemplateRepository 解析當前房間的商店，若無則嘗試新手村客棧作為保底
-    Optional<ShopTemplate> shopOpt = TemplateRepository.findShopByRoomId(roomId);
+    // 解析當前房間的商店，若無則嘗試新手村客棧作為保底
+    Optional<ShopTemplate> shopOpt = templateReader.findShopByRoomId(roomId);
     if (shopOpt.isEmpty()) {
       if (roomId != null && roomId.contains("inn")) {
-        shopOpt = TemplateRepository.findShop("newbie_village:inn_shop");
+        shopOpt = templateReader.findShop("newbie_village:inn_shop");
       }
     }
 
@@ -125,7 +126,7 @@ public class ShopCommand implements PlayerCommand {
       String nameOrId = itemKeyword.toLowerCase();
       selected = goods.stream().filter(i -> (i.id() != null && i.id().equalsIgnoreCase(nameOrId))
           || (i.templateId() != null && i.templateId().equalsIgnoreCase(nameOrId))
-          || i.getEffectiveName().toLowerCase().contains(nameOrId)).findFirst().orElse(null);
+          || i.getEffectiveName(templateReader).toLowerCase().contains(nameOrId)).findFirst().orElse(null);
     }
 
     if (selected == null) {
@@ -137,16 +138,16 @@ public class ShopCommand implements PlayerCommand {
     // 檢核限量庫存
     int availableStock = getStock(shop.id(), selected);
     if (availableStock == 0) {
-      self.reply("掌櫃福伯抱歉地躬身道：「客官來得不巧，小店的【" + selected.getEffectiveName() + "】已全數售罄，尚在等待進貨呢！」");
+      self.reply("掌櫃福伯抱歉地躬身道：「客官來得不巧，小店的【" + selected.getEffectiveName(templateReader) + "】已全數售罄，尚在等待進貨呢！」");
       return;
     }
     if (availableStock > 0 && availableStock < count) {
-      self.reply("掌櫃福伯抱歉地笑道：「客官，小店【" + selected.getEffectiveName() + "】庫存吃緊，當前僅剩 "
+      self.reply("掌櫃福伯抱歉地笑道：「客官，小店【" + selected.getEffectiveName(templateReader) + "】庫存吃緊，當前僅剩 "
           + availableStock + " 件，無法滿足 " + count + " 件之需！」");
       return;
     }
 
-    int effectivePrice = selected.getEffectivePrice();
+    int effectivePrice = selected.getEffectivePrice(templateReader);
     int currentCoin = self.getStats().getCoin();
     int totalPrice = effectivePrice * count;
     if (currentCoin < totalPrice) {
@@ -170,7 +171,7 @@ public class ShopCommand implements PlayerCommand {
     int remainingStock = getStock(shop.id(), selected);
     String stockNotice = remainingStock >= 0 ? "（小店剩餘庫存: " + remainingStock + "）" : "（供應充足）";
 
-    self.reply("💰【購買成功】你花費了 " + totalPrice + " 靈石購入了 " + count + " 件【" + selected.getEffectiveName() + "】！\n"
+    self.reply("💰【購買成功】你花費了 " + totalPrice + " 靈石購入了 " + count + " 件【" + selected.getEffectiveName(templateReader) + "】！\n"
         + "物品已安全收納入【隊伍行囊】。" + stockNotice + "（剩餘靈石/盤纏: " + self.getStats().getCoin() + " 靈石）");
 
     broadcastService.broadcastState(self);
@@ -192,7 +193,7 @@ public class ShopCommand implements PlayerCommand {
       int s = getStock(shop.id(), item);
       String stockLabel = s >= 0 ? ("庫存: " + s) : "充足";
       sb.append(String.format(" [%d] %-10s - %-14s 價格: %2d 靈石 [%s] (%s)\n",
-          item.index(), item.id(), item.getEffectiveName(), item.getEffectivePrice(), stockLabel, item.getEffectiveDescription()));
+          item.index(), item.id(), item.getEffectiveName(templateReader), item.getEffectivePrice(templateReader), stockLabel, item.getEffectiveDescription(templateReader)));
     }
     sb.append("----------------------------------------------------------------------\n");
     sb.append("💰 您當前持有靈石/盤纏: ").append(self.getStats().getCoin()).append(" 靈石\n");
@@ -207,10 +208,10 @@ public class ShopCommand implements PlayerCommand {
             g.index(),
             g.id(),
             g.templateId() != null ? g.templateId() : g.id(),
-            g.getEffectiveName(),
-            g.getEffectivePrice(),
+            g.getEffectiveName(templateReader),
+            g.getEffectivePrice(templateReader),
             getStock(shop.id(), g),
-            g.getEffectiveDescription()))
+            g.getEffectiveDescription(templateReader)))
         .toList();
     ShopCatalogDto catalogDto = new ShopCatalogDto("SHOP_CATALOG", shop.id(), shop.name(), self.getStats().getCoin(), dtos);
     self.getOutput().sendJson(catalogDto);

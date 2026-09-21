@@ -32,6 +32,7 @@ try {
     }
 
     $env:JAVA_TOOL_OPTIONS = "-Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8"
+    $env:SPRING_PROFILES_ACTIVE = "test"
     chcp 65001 | Out-Null
 
     if ($args.Count -eq 0) {

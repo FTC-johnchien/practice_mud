@@ -10,6 +10,9 @@ public class MudContext {
   // 2. 當前的 Trace ID (除錯用)
   public static final ScopedValue<String> TRACE_ID = ScopedValue.newInstance();
 
+  // 3. 原始輸入字串 (用於判斷指令是透過哪個別名觸發的)
+  public static final ScopedValue<String> RAW_INPUT = ScopedValue.newInstance();
+
   // 輔助方法：取得當前玩家，如果沒設定(例如系統背景作業)則拋出異常
   public static Player currentPlayer() {
     return CURRENT_PLAYER
@@ -19,6 +22,11 @@ public class MudContext {
   // 輔助方法：取得當前 TraceId，沒綁定就回傳 "SYSTEM"
   public static String traceId() {
     return TRACE_ID.orElse("UNKNOWN");
+  }
+
+  // 輔助方法：取得原始輸入字串
+  public static String rawInput() {
+    return RAW_INPUT.orElse("");
   }
 
 }

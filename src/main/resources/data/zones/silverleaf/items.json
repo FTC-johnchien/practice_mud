@@ -1,114 +1,5 @@
 [
   {
-    "id": "copper_coin",
-    "name": "銅幣",
-    "type": "CURRENCY",
-    "description": "普通的流通貨幣。",
-    "isStackable": true,
-    "maxStack": 9999
-  },
-  {
-    "id": "rat_tail",
-    "name": "老鼠尾巴",
-    "type": "MATERIAL",
-    "description": "從下水道老鼠身上割下來的尾巴，可作為鍊金材料或完成懸賞任務。",
-    "value": 5,
-    "isStackable": true
-  },
-  {
-    "id": "wolf_pelt",
-    "name": "野狼毛皮",
-    "type": "MATERIAL",
-    "description": "一張厚實的灰色野狼毛皮，可用於裁縫防具。",
-    "value": 25,
-    "isStackable": true
-  },
-  {
-    "id": "silver_medallion",
-    "name": "銀葉徽章",
-    "type": "KEY_ITEM",
-    "description": "一枚雕刻著銀葉圖案的精緻銀質徽章，似乎是老村長遺失的信物。",
-    "value": 100
-  },
-  {
-    "id": "rusty_sword",
-    "name": "生鏽鐵劍",
-    "type": "WEAPON",
-    "subType": "SWORD",
-    "quality": "POOR",
-    "price": 10,
-    "weight": 3.0,
-    "equipment": {
-      "slot": "MAIN_HAND",
-      "minDamage": 3,
-      "maxDamage": 6,
-      "attackSpeed": 2000
-    },
-    "requirements": {
-      "minLevel": 1
-    }
-  },
-  {
-    "id": "iron_sword",
-    "name": "精鋼劍",
-    "type": "WEAPON",
-    "subType": "SWORD",
-    "quality": "COMMON",
-    "price": 100,
-    "weight": 4.0,
-    "equipment": {
-      "slot": "MAIN_HAND",
-      "minDamage": 8,
-      "maxDamage": 15,
-      "attackSpeed": 1800
-    },
-    "requirements": {
-      "minLevel": 5
-    }
-  },
-  {
-    "id": "wooden_staff",
-    "name": "新手法杖",
-    "type": "WEAPON",
-    "subType": "STAFF",
-    "quality": "COMMON",
-    "price": 50,
-    "weight": 2.0,
-    "equipment": {
-      "slot": "MAIN_HAND",
-      "minDamage": 2,
-      "maxDamage": 4,
-      "attackSpeed": 2500
-    },
-    "stats": {
-      "INT": 2
-    },
-    "requirements": {
-      "minLevel": 1
-    }
-  },
-  {
-    "id": "goblin_club",
-    "name": "哥布林狼牙棒",
-    "type": "WEAPON",
-    "subType": "MACE",
-    "quality": "UNCOMMON",
-    "price": 0,
-    "weight": 5.0,
-    "equipment": {
-      "slot": "MAIN_HAND",
-      "minDamage": 10,
-      "maxDamage": 20,
-      "attackSpeed": 3000
-    },
-    "requirements": {
-      "minLevel": 3
-    },
-    "flags": [
-      "NO_SELL"
-    ]
-  },
-  {
     "id": "boss_dagger",
     "name": "淬毒之牙",
     "type": "WEAPON",
@@ -257,33 +148,11 @@
     ]
   },
   {
-    "id": "rat_tail",
-    "name": "老鼠尾巴",
-    "type": "TRASH",
-    "price": 1,
-    "isStackable": true
-  },
-  {
-    "id": "wolf_pelt",
-    "name": "狼皮",
-    "type": "MATERIAL",
-    "price": 15,
-    "isStackable": true
-  },
-  {
     "id": "goblin_ear",
     "name": "哥布林耳朵",
     "type": "QUEST",
     "price": 5,
     "isStackable": true
-  },
-  {
-    "id": "silver_medallion",
-    "name": "銀葉徽章",
-    "type": "TRASH",
-    "quality": "RARE",
-    "price": 200,
-    "description": "曾經是村長的信物，現在被哥布林搶走了。"
   },
   {
     "id": "training_sword",

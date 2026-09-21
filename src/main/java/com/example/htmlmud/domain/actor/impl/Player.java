@@ -94,18 +94,29 @@ public final class Player extends Living {
     return actor;
   }
 
+  public com.example.htmlmud.domain.model.vo.CharacterId getCharacterId() {
+    return com.example.htmlmud.domain.model.vo.CharacterId.fromPlayer(this);
+  }
+
   // 單機模式工廠方法：直接以正式玩家身份進入遊戲，跳過任何帳密流程
   public static Player createSinglePlayer(MessageOutput output, WorldManager worldManager,
       PlayerService playerService, String playerName) {
+    return createSinglePlayer(output, worldManager, playerService, playerName, null);
+  }
+
+  public static Player createSinglePlayer(MessageOutput output, WorldManager worldManager,
+      PlayerService playerService, String playerName, String playerId) {
     String name = (playerName != null && !playerName.isBlank()) ? playerName : "道友";
-    String playerId = "p-single";
+    String pid = (playerId != null && !playerId.isBlank() && !playerId.equals("p-single"))
+        ? playerId
+        : name;
     LivingStats stats = new LivingStats();
     stats.setHp(200);
     stats.setMaxHp(200);
     stats.setMp(100);
     stats.setMaxMp(100);
     stats.setCoin(100);
-    Player actor = new Player(output, playerId, name, stats, worldManager, playerService);
+    Player actor = new Player(output, pid, name, stats, worldManager, playerService);
     actor.setConnectionState(ConnectionState.IN_GAME);
     actor.setCurrentRoomId("newbie_village:inn");
     playerService.become(actor, new InGameBehavior());
@@ -429,7 +440,7 @@ public final class Player extends Living {
   }
 
   public MudMessage<?> lookAtMe(Player player) {
-    if (player.getId() == id) {
+    if (player.getId().equals(id)) {
       return performLookAtMe();
     }
 

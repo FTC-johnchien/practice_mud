@@ -12,6 +12,7 @@ import com.example.htmlmud.domain.actor.behavior.MobBehavior;
 import com.example.htmlmud.domain.actor.behavior.PassiveBehavior;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.template.MobTemplate;
+import com.example.htmlmud.domain.repository.TemplateReader;
 import com.example.htmlmud.domain.model.vo.DamageSource;
 import com.example.htmlmud.domain.service.MobService;
 import com.example.htmlmud.protocol.ActorMessage;
@@ -33,6 +34,8 @@ public final class Mob extends Living {
   private final MobTemplate template;
 
   private MobBehavior behavior; // AI 行為 (策略模式)
+
+  private TemplateReader templateReader;
 
   // mob的戶籍地 ID
   private String homeRoomId;
@@ -61,6 +64,14 @@ public final class Mob extends Living {
     log.info("Mob created: {} (ID: {})", template.name(), this.getId());
 
     // 【重要】這裡移除了 this.start()，請在外部 (MobFactory) 建立實體後呼叫 mob.start()
+  }
+
+  public void setTemplateReader(TemplateReader templateReader) {
+    this.templateReader = templateReader;
+  }
+
+  public TemplateReader getTemplateReader() {
+    return templateReader;
   }
 
   // 處理初期裝備
@@ -231,7 +242,7 @@ public final class Mob extends Living {
 
   @Override
   protected MudMessage<?> performLookAtMe() {
-    return MessageFactory.mobDetail(this);
+    return MessageFactory.mobDetail(this, templateReader);
   }
 
 

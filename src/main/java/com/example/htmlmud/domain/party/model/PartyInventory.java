@@ -6,7 +6,9 @@ import java.util.UUID;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.domain.model.template.ItemTemplate;
-import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
+import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.domain.service.TemplateCatalog;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 @Data
@@ -16,12 +18,20 @@ public class PartyInventory {
   private int capacity = DEFAULT_CAPACITY;
   private List<PartyItemSlot> slots = new ArrayList<>();
 
+  @JsonIgnore
+  private transient TemplateReader templateReader;
+
   public PartyInventory() {
-    this(DEFAULT_CAPACITY);
+    this(DEFAULT_CAPACITY, new TemplateCatalog());
   }
 
   public PartyInventory(int capacity) {
+    this(capacity, new TemplateCatalog());
+  }
+
+  public PartyInventory(int capacity, TemplateReader templateReader) {
     this.capacity = capacity;
+    this.templateReader = templateReader;
     // 初始預設攜帶一些應急靈藥與可供切換測試的精良兵刃
     addItem("taiyin_pill", 3);
     addItem("purify_talisman", 2);
@@ -57,7 +67,7 @@ public class PartyInventory {
       return false;
     }
 
-    PartyItemSlot newSlot = createFromTemplate(templateId, count);
+    PartyItemSlot newSlot = createFromTemplate(templateId, count, getTemplateReader());
     if (newSlot != null) {
       slots.add(newSlot);
       return true;
@@ -91,119 +101,27 @@ public class PartyInventory {
     return true;
   }
 
+  public synchronized boolean addGameItem(com.example.htmlmud.domain.model.entity.GameItem item) {
+    if (item == null) return false;
+    if (item.getTemplate() != null && item.getTemplate().id() != null) {
+      boolean added = addItem(item.getTemplate().id(), item.getAmount() > 0 ? item.getAmount() : 1);
+      if (added) return true;
+    }
+    PartyItemSlot slot = PartyItemSlot.fromGameItem(item);
+    return addSlot(slot);
+  }
+
   public static PartyItemSlot createFromTemplate(String templateId, int count) {
+    return createFromTemplate(templateId, count, new TemplateCatalog());
+  }
+
+  public static PartyItemSlot createFromTemplate(String templateId, int count,
+      TemplateReader templateReader) {
     String slotId = "slot-" + UUID.randomUUID().toString().substring(0, 8);
-    var opt = TemplateRepository.findItem(templateId);
+    var opt = templateReader.findItem(templateId);
 
     if (opt.isPresent()) {
-      ItemTemplate t = opt.get();
-      String icon = "📦";
-      String effectType = null;
-      int effectValue = 0;
-      int minDmg = 0;
-      int maxDmg = 0;
-      int def = 0;
-      int hp = 0;
-      int san = 0;
-
-      EquipmentSlot equipSlot = null;
-      if (t.equipmentProp() != null && t.equipmentProp().slot() != null) {
-        equipSlot = t.equipmentProp().slot();
-      } else if (t.type() == ItemType.WEAPON) {
-        equipSlot = EquipmentSlot.MAIN_HAND;
-      } else if (t.type() == ItemType.SHIELD) {
-        equipSlot = EquipmentSlot.OFF_HAND;
-      } else if (t.type() == ItemType.ACCESSORY) {
-        equipSlot = EquipmentSlot.ACCESSORY_1;
-      } else if (t.type() == ItemType.ARMOR) {
-        equipSlot = EquipmentSlot.fromString(t.subType());
-      }
-
-      if (t.type() == ItemType.CONSUMABLE) {
-        if ("POTION".equals(t.subType())) {
-          icon = "🧪";
-          effectType = "HEAL_HP";
-          effectValue = 50;
-        } else if ("TALISMAN".equals(t.subType())) {
-          icon = "📜";
-          effectType = "RESTORE_SAN";
-          effectValue = 25;
-        } else if ("FOOD".equals(t.subType())) {
-          icon = "🍞";
-          effectType = "HEAL_HP";
-          effectValue = 20;
-        } else {
-          icon = "💊";
-          effectType = "HEAL_HP";
-          effectValue = 30;
-        }
-
-        if (t.consumableProp() != null) {
-          if (t.consumableProp().effect() != null) {
-            String effStr = t.consumableProp().effect().toUpperCase();
-            if (effStr.contains("SAN")) {
-              effectType = "RESTORE_SAN";
-            } else if (effStr.contains("HEAL") || effStr.contains("HP")) {
-              effectType = "HEAL_HP";
-            } else if (effStr.contains("MP")) {
-              effectType = "RESTORE_MP";
-            }
-          }
-          if (t.consumableProp().value() > 0) {
-            effectValue = t.consumableProp().value();
-          }
-        }
-      } else if (equipSlot != null) {
-        icon = switch (equipSlot) {
-          case MAIN_HAND -> "🗡️";
-          case OFF_HAND -> "🛡️";
-          case HEAD -> "👑";
-          case BODY -> "🥋";
-          case FEET -> "👢";
-          case ACCESSORY_1, ACCESSORY_2 -> "💍";
-        };
-
-        if (t.equipmentProp() != null) {
-          minDmg = t.equipmentProp().minDamage();
-          maxDmg = t.equipmentProp().maxDamage();
-          def = t.equipmentProp().defense();
-        } else if (t.type() == ItemType.WEAPON) {
-          minDmg = 12;
-          maxDmg = 20;
-        } else if (t.type() == ItemType.ARMOR) {
-          def = 6;
-        }
-
-        if (t.bonusStats() != null) {
-          hp += t.bonusStats().getOrDefault("MAX_HP", t.bonusStats().getOrDefault("hp", 0));
-          san += t.bonusStats().getOrDefault("MAX_SAN", t.bonusStats().getOrDefault("san", 0));
-          def += t.bonusStats().getOrDefault("DEFENSE", t.bonusStats().getOrDefault("def", 0));
-          minDmg += t.bonusStats().getOrDefault("MIN_DAMAGE", 0);
-          maxDmg += t.bonusStats().getOrDefault("MAX_DAMAGE", 0);
-        }
-      } else if (t.type() == ItemType.KEY_ITEM) {
-        icon = "🗝️";
-      }
-
-      return PartyItemSlot.builder()
-          .slotId(slotId)
-          .itemId(t.id())
-          .name(t.name())
-          .icon(icon)
-          .itemType(t.type())
-          .subType(t.subType())
-          .equipSlot(equipSlot)
-          .count(count)
-          .description(t.description())
-          .quality(t.quality() != null ? t.quality() : "COMMON")
-          .effectType(effectType)
-          .effectValue(effectValue)
-          .bonusMinDamage(minDmg)
-          .bonusMaxDamage(maxDmg)
-          .bonusDefense(def)
-          .bonusHp(hp)
-          .bonusSan(san)
-          .build();
+      return PartyItemSlot.fromItemTemplate(opt.get(), count, slotId);
     }
 
     // 內建 fallback 物品
@@ -218,5 +136,12 @@ public class PartyInventory {
     } else {
       return PartyItemSlot.builder().slotId(slotId).itemId(templateId).name("古仙法物").icon("🔮").itemType(ItemType.MISC).count(count).description("古塚中掘出之神秘法物。").quality("COMMON").build();
     }
+  }
+
+  private TemplateReader getTemplateReader() {
+    if (templateReader == null) {
+      templateReader = new TemplateCatalog();
+    }
+    return templateReader;
   }
 }

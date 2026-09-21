@@ -19,12 +19,12 @@ import com.example.htmlmud.domain.party.model.TacticsCondition;
 import com.example.htmlmud.domain.party.model.TacticsRule;
 import com.example.htmlmud.domain.party.model.TacticsTarget;
 import com.example.htmlmud.domain.party.service.PartyService;
-import lombok.RequiredArgsConstructor;
+import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.domain.service.TemplateCatalog;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 @CommandAlias({"team", "coven"})
 public class PartyCommand implements PlayerCommand {
 
@@ -33,6 +33,29 @@ public class PartyCommand implements PlayerCommand {
   private final DungeonNavigator dungeonNavigator;
   private final com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService;
   private final com.example.htmlmud.domain.service.GameStateBroadcastService broadcastService;
+  private final TemplateReader templateReader;
+
+  @org.springframework.beans.factory.annotation.Autowired
+  public PartyCommand(PartyService partyService, DungeonManager dungeonManager,
+      DungeonNavigator dungeonNavigator,
+      com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService,
+      com.example.htmlmud.domain.service.GameStateBroadcastService broadcastService,
+      TemplateReader templateReader) {
+    this.partyService = partyService;
+    this.dungeonManager = dungeonManager;
+    this.dungeonNavigator = dungeonNavigator;
+    this.battleService = battleService;
+    this.broadcastService = broadcastService;
+    this.templateReader = templateReader;
+  }
+
+  public PartyCommand(PartyService partyService, DungeonManager dungeonManager,
+      DungeonNavigator dungeonNavigator,
+      com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService,
+      com.example.htmlmud.domain.service.GameStateBroadcastService broadcastService) {
+    this(partyService, dungeonManager, dungeonNavigator, battleService, broadcastService,
+        new TemplateCatalog());
+  }
 
   @org.springframework.beans.factory.annotation.Autowired(required = false)
   private com.example.htmlmud.domain.service.XpProgressionService xpProgressionService;
@@ -148,7 +171,7 @@ public class PartyCommand implements PlayerCommand {
           }
           String skillId = parts[2].trim();
           PartyMember m = party.getMembers().get(mIdx);
-          var skillOpt = com.example.htmlmud.infra.persistence.repository.TemplateRepository.findSkill(skillId);
+          var skillOpt = templateReader.findSkill(skillId);
           if (skillOpt.isEmpty()) {
             self.reply("找不到指定的武學或道術: " + skillId);
             return;
@@ -283,7 +306,7 @@ public class PartyCommand implements PlayerCommand {
       sb.append("📋【戰術方針設定】隊員「").append(m.getName()).append("」(").append(m.getEffectiveClassName()).append(") 的戰術規則鏈：\n");
       for (TacticsRule rule : m.getTactics()) {
         String skillName = rule.getSkillId();
-        var skOpt = com.example.htmlmud.infra.persistence.repository.TemplateRepository.findSkill(rule.getSkillId());
+        var skOpt = templateReader.findSkill(rule.getSkillId());
         if (skOpt.isPresent()) {
           skillName = skOpt.get().getName();
         } else if (m.getSkills() != null) {
@@ -326,7 +349,7 @@ public class PartyCommand implements PlayerCommand {
           String skillId = parts[7].trim();
 
           String skillName = skillId;
-          var skOpt = com.example.htmlmud.infra.persistence.repository.TemplateRepository.findSkill(skillId);
+          var skOpt = templateReader.findSkill(skillId);
           if (skOpt.isPresent()) {
             skillName = skOpt.get().getName();
           } else if (m.getSkills() != null) {

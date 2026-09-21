@@ -9,6 +9,8 @@ import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
 import com.example.htmlmud.domain.dungeon.model.DungeonTile;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
+import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.domain.service.TemplateCatalog;
 
 public record DrpgStateDto(
     String type,
@@ -24,10 +26,15 @@ public record DrpgStateDto(
   }
 
   public static DrpgStateDto of(DungeonFloor floor, DungeonPosition pos, String forwardInspection, Party party) {
-    return of(floor, pos, forwardInspection, party, null);
+    return of(floor, pos, forwardInspection, party, null, new TemplateCatalog());
   }
 
   public static DrpgStateDto of(DungeonFloor floor, DungeonPosition pos, String forwardInspection, Party party, BattleViewDto battle) {
+    return of(floor, pos, forwardInspection, party, battle, new TemplateCatalog());
+  }
+
+  public static DrpgStateDto of(DungeonFloor floor, DungeonPosition pos, String forwardInspection,
+      Party party, BattleViewDto battle, TemplateReader templateReader) {
     DungeonViewDto dungeonView = null;
     if (floor != null && pos != null) {
       int w = floor.getWidth();
@@ -69,7 +76,7 @@ public record DrpgStateDto(
       );
     }
 
-    PartyViewDto partyView = toPartyViewDto(party);
+    PartyViewDto partyView = toPartyViewDto(party, templateReader);
     return new DrpgStateDto("DRPG_STATE", "DUNGEON", null, dungeonView, partyView, battle);
   }
 
@@ -85,7 +92,8 @@ public record DrpgStateDto(
       List<TownItemDto> items,
       Party party
   ) {
-    return ofTown(zoneId, zoneName, roomId, roomName, description, safeZone, exits, npcs, items, party, null);
+    return ofTown(zoneId, zoneName, roomId, roomName, description, safeZone, exits, npcs, items, party, null,
+        new TemplateCatalog());
   }
 
   public static DrpgStateDto ofTown(
@@ -101,12 +109,34 @@ public record DrpgStateDto(
       Party party,
       BattleViewDto battle
   ) {
+    return ofTown(zoneId, zoneName, roomId, roomName, description, safeZone, exits, npcs, items, party, battle,
+        new TemplateCatalog());
+  }
+
+  public static DrpgStateDto ofTown(
+      String zoneId,
+      String zoneName,
+      String roomId,
+      String roomName,
+      String description,
+      boolean safeZone,
+      List<TownExitDto> exits,
+      List<TownNpcDto> npcs,
+      List<TownItemDto> items,
+      Party party,
+      BattleViewDto battle,
+      TemplateReader templateReader
+  ) {
     TownViewDto townView = new TownViewDto(zoneId, zoneName, roomId, roomName, description, safeZone, exits, npcs, items);
-    PartyViewDto partyView = toPartyViewDto(party);
+    PartyViewDto partyView = toPartyViewDto(party, templateReader);
     return new DrpgStateDto("DRPG_STATE", "TOWN", townView, null, partyView, battle);
   }
 
   public static PartyViewDto toPartyViewDto(Party party) {
+    return toPartyViewDto(party, new TemplateCatalog());
+  }
+
+  public static PartyViewDto toPartyViewDto(Party party, TemplateReader templateReader) {
     if (party == null) return null;
     List<PartyMemberViewDto> memberViews = new ArrayList<>();
     for (PartyMember m : party.getMembers()) {
@@ -195,7 +225,7 @@ public record DrpgStateDto(
 
       // 1. 預設基礎套路 (如 basic_sword, basic_fist 等)
       String defaultBasicId = m.getBasicSkillId();
-      var defSkillOpt = com.example.htmlmud.infra.persistence.repository.TemplateRepository.findSkill(defaultBasicId);
+      var defSkillOpt = templateReader.findSkill(defaultBasicId);
       String defName = defSkillOpt.map(com.example.htmlmud.domain.model.template.SkillTemplate::getName).orElse(defaultBasicId);
       String defDesc = defSkillOpt.map(com.example.htmlmud.domain.model.template.SkillTemplate::getDescription).orElse("");
       availableStances.add(new PartyStanceSkillDto(defaultBasicId, defName, currentCat.name(), defDesc, defaultBasicId.equals(basicSkillId)));
@@ -204,7 +234,7 @@ public record DrpgStateDto(
       if (m.getLearnedStances() != null) {
         for (String stId : m.getLearnedStances()) {
           if (stId.equals(defaultBasicId)) continue;
-          var skOpt = com.example.htmlmud.infra.persistence.repository.TemplateRepository.findSkill(stId);
+          var skOpt = templateReader.findSkill(stId);
           if (skOpt.isPresent()) {
             var sk = skOpt.get();
             if (PartyMember.resolveSkillCategory(sk) == currentCat) {
@@ -215,7 +245,7 @@ public record DrpgStateDto(
       }
 
       List<TacticsRuleViewDto> tacticsDtos = (m.getTactics() != null)
-          ? m.getTactics().stream().map(r -> TacticsRuleViewDto.of(r, m)).toList()
+          ? m.getTactics().stream().map(r -> TacticsRuleViewDto.of(r, m, templateReader)).toList()
           : List.of();
 
       int memberLevel = (m.getStats() != null) ? m.getStats().getLevel() : 1;
@@ -483,9 +513,14 @@ public record DrpgStateDto(
       String description
   ) {
     public static TacticsRuleViewDto of(com.example.htmlmud.domain.party.model.TacticsRule r, com.example.htmlmud.domain.party.model.PartyMember m) {
+      return of(r, m, new TemplateCatalog());
+    }
+
+    public static TacticsRuleViewDto of(com.example.htmlmud.domain.party.model.TacticsRule r,
+        com.example.htmlmud.domain.party.model.PartyMember m, TemplateReader templateReader) {
       if (r == null) return null;
       String skillName = r.getSkillId();
-      var skOpt = com.example.htmlmud.infra.persistence.repository.TemplateRepository.findSkill(r.getSkillId());
+      var skOpt = templateReader.findSkill(r.getSkillId());
       if (skOpt.isPresent()) {
         skillName = skOpt.get().getName();
       } else if (m.getSkills() != null) {

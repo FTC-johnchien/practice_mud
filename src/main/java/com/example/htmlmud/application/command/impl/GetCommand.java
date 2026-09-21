@@ -55,7 +55,7 @@ public class GetCommand implements PlayerCommand {
       Party party = partyService.getOrCreateParty(player.getName());
 
       // 1. 戰利品容器 (儲物袋 / 寶箱) 或帶有掉落物的容器實體 -> 一鍵搜刮
-      boolean isContainer = pickItem.getType() == ItemType.CONTAINER || 
+      boolean isContainer = pickItem.getType() == ItemType.CONTAINER ||
           (pickItem.getContents() != null && !pickItem.getContents().isEmpty());
 
       if (isContainer) {
@@ -67,23 +67,7 @@ public class GetCommand implements PlayerCommand {
           for (GameItem inner : contents) {
             player.getInventory().add(inner);
             if (party != null && party.getInventory() != null) {
-              boolean added = false;
-              if (inner.getTemplate() != null && inner.getTemplate().id() != null) {
-                added = party.getInventory().addItem(inner.getTemplate().id(), inner.getAmount() > 0 ? inner.getAmount() : 1);
-              }
-              if (!added) {
-                PartyItemSlot dynamicSlot = PartyItemSlot.builder()
-                    .slotId("slot-" + UUID.randomUUID().toString().substring(0, 8))
-                    .itemId(inner.getId() != null ? inner.getId() : (inner.getTemplate() != null ? inner.getTemplate().id() : "item"))
-                    .name(inner.getDisplayName())
-                    .icon("📦")
-                    .itemType(inner.getType() != null ? inner.getType() : ItemType.MISC)
-                    .description(inner.getDescription() != null ? inner.getDescription() : inner.getDisplayName())
-                    .count(inner.getAmount() > 0 ? inner.getAmount() : 1)
-                    .maxStack(99)
-                    .build();
-                party.getInventory().addSlot(dynamicSlot);
-              }
+              party.getInventory().addGameItem(inner);
             }
             lootedNames.add(inner.getDisplayName() + (inner.getAmount() > 1 ? " x" + inner.getAmount() : ""));
           }
@@ -101,23 +85,7 @@ public class GetCommand implements PlayerCommand {
         // 2. 一般實體物品拾取 (武器、防具、靈石、消耗品、任務道具)
         player.getInventory().add(pickItem);
         if (party != null && party.getInventory() != null) {
-          boolean added = false;
-          if (pickItem.getTemplate() != null && pickItem.getTemplate().id() != null) {
-            added = party.getInventory().addItem(pickItem.getTemplate().id(), pickItem.getAmount() > 0 ? pickItem.getAmount() : 1);
-          }
-          if (!added) {
-            PartyItemSlot dynamicSlot = PartyItemSlot.builder()
-                .slotId("slot-" + UUID.randomUUID().toString().substring(0, 8))
-                .itemId(pickItem.getId() != null ? pickItem.getId() : "item")
-                .name(pickItem.getDisplayName())
-                .icon("📦")
-                .itemType(pickItem.getType() != null ? pickItem.getType() : ItemType.MISC)
-                .description(pickItem.getDescription() != null ? pickItem.getDescription() : pickItem.getDisplayName())
-                .count(pickItem.getAmount() > 0 ? pickItem.getAmount() : 1)
-                .maxStack(99)
-                .build();
-            party.getInventory().addSlot(dynamicSlot);
-          }
+          party.getInventory().addGameItem(pickItem);
         }
         player.reply("📦 你撿起了 " + pickItem.getDisplayName() + "，已妥善收入隊伍行囊！");
         room.broadcastToOthers(player.getId(),

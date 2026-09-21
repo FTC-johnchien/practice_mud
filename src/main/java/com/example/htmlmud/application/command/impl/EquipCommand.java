@@ -29,15 +29,24 @@ public class EquipCommand implements PlayerCommand {
     String input = args != null ? args.trim() : "";
     DungeonPosition pos = dungeonManager.getPlayerPosition(self.getName());
 
-    if (input.startsWith("unequip ") || input.startsWith("卸下 ")) {
-      String sub = input.replaceFirst("^(unequip|卸下)\\s+", "");
-      String[] parts = sub.split("\\s+");
+    // 判斷是否透過 unequip/卸下 別名觸發
+    // dispatcher 會剝掉指令關鍵字，所以 args 不包含 "unequip"
+    // 需要從 MudContext 取得原始指令來判斷
+    String rawInput = MudContext.rawInput();
+    boolean isUnequip = rawInput != null
+        && (rawInput.trim().startsWith("unequip") || rawInput.trim().startsWith("卸下"));
+
+    if (isUnequip) {
+      String[] parts = input.split("\\s+");
       if (parts.length >= 2) {
         try {
           int memberIdx = Integer.parseInt(parts[1]);
           battleService.unequipItem(self, parts[0], memberIdx, pos);
           return;
         } catch (NumberFormatException ignored) {}
+      } else if (parts.length == 1 && !parts[0].isEmpty()) {
+        battleService.unequipItem(self, parts[0], 0, pos);
+        return;
       }
       self.reply("用法: unequip <部位> <隊員編號0-5> (支援 weapon, shield, armor, head, feet, acc1, acc2)");
       return;

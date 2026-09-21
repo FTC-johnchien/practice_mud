@@ -19,7 +19,9 @@ import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.domain.model.template.CompanionTemplate;
 import com.example.htmlmud.domain.model.template.ItemTemplate;
 import com.example.htmlmud.domain.party.model.PartyItemSlot;
-import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
+import com.example.htmlmud.domain.party.model.PartyInventory;
+import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.domain.service.TemplateCatalog;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,16 +29,49 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class PartyService {
 
+  private final TemplateReader templateReader;
+
   private final Map<String, FormationTemplate> formationRegistry = new HashMap<>();
+
   private final Map<String, Party> partyCache = new java.util.concurrent.ConcurrentHashMap<>();
 
+  public PartyService(TemplateReader templateReader) {
+    this.templateReader = templateReader;
+  }
+
+  public PartyService() {
+    this(new TemplateCatalog());
+  }
+
+  public Party getOrCreateParty(com.example.htmlmud.domain.model.vo.CharacterId characterId) {
+    if (characterId == null) return getOrCreateParty("default");
+    return getOrCreateParty(characterId.value());
+  }
+
+  public Party getOrCreateParty(com.example.htmlmud.domain.actor.impl.Player player) {
+    if (player == null) return getOrCreateParty("default");
+    Party party = partyCache.get(player.getId());
+    if (party == null && player.getName() != null) {
+      party = partyCache.get(player.getName());
+    }
+    if (party != null) {
+      return party;
+    }
+    return getOrCreateParty(player.getCharacterId());
+  }
+
   public Party getOrCreateParty(String playerName) {
+    if (playerName == null || playerName.isBlank()) return createSoloParty("道友");
     return partyCache.computeIfAbsent(playerName, this::createInitialParty);
   }
 
   public void setParty(String playerName, Party party) {
     if (playerName != null && party != null) {
       partyCache.put(playerName, party);
+      if (party.getLeader() != null && party.getLeader().getName() != null
+          && !party.getLeader().getName().equals(playerName)) {
+        partyCache.put(party.getLeader().getName(), party);
+      }
     }
   }
 
@@ -44,27 +79,27 @@ public class PartyService {
     String pName = (protagonistName != null && !protagonistName.isBlank()) ? protagonistName : playerName;
     Party party = createSoloParty(pName);
     partyCache.put(playerName, party);
+    if (!playerName.equals(pName)) {
+      partyCache.put(pName, party);
+    }
     return party;
   }
 
   @PostConstruct
   public void initDefaultFormations() {
-    TemplateRepository.initDataDrivenDefaults();
-    Map<String, FormationTemplate> repoFormations = TemplateRepository.getAllFormations();
+    Map<String, FormationTemplate> repoFormations = templateReader.getAllFormations();
     if (repoFormations != null && !repoFormations.isEmpty()) {
       formationRegistry.putAll(repoFormations);
-      log.info("Loaded {} formations from TemplateRepository", formationRegistry.size());
     } else {
-      log.warn("No formations found in TemplateRepository!");
+      log.warn("No formations found in template reader!");
     }
   }
-
   public FormationTemplate getFormation(String id) {
-    TemplateRepository.initDataDrivenDefaults();
     FormationTemplate ft = formationRegistry.get(id);
     if (ft == null) {
-      ft = TemplateRepository.findFormation(id).orElse(null);
+      ft = templateReader.findFormation(id).orElse(null);
     }
+
     return ft;
   }
 
@@ -73,13 +108,13 @@ public class PartyService {
   }
 
   public Party createSoloParty(String leaderName) {
-    TemplateRepository.initDataDrivenDefaults();
     FormationTemplate form = getFormation("formation_four_symbols");
     Party party = Party.builder()
         .id("party-" + leaderName)
         .partyName(leaderName + "的問道旅團")
         .equippedFormation(form)
         .formationEnergy(50)
+        .inventory(new PartyInventory(PartyInventory.DEFAULT_CAPACITY, templateReader))
         .build();
 
     PartyMember leader = createCompanion("leader");
@@ -106,13 +141,12 @@ public class PartyService {
 
   public PartyMember createCompanion(String key) {
     if (key == null) return null;
-    TemplateRepository.initDataDrivenDefaults();
     String k = key.toLowerCase();
 
-    // 1. 優先直接向 TemplateRepository 查詢 (支持標準 ID 與 aliases)
-    var tplOpt = TemplateRepository.findCompanion(key);
+    // 1. 優先透過 template reader 查詢 (支持標準 ID 與 aliases)
+    var tplOpt = templateReader.findCompanion(key);
     if (tplOpt.isEmpty()) {
-      tplOpt = TemplateRepository.findCompanion(k);
+      tplOpt = templateReader.findCompanion(k);
     }
 
     // 2. 若傳入包含前綴或中文別名 (模糊比對)
@@ -125,7 +159,7 @@ public class PartyService {
       else if (k.contains("zhi_ruo") || k.equals("zi") || k.contains("芷若")) companionId = "zhi_ruo";
       else if (k.contains("leader") || k.contains("主角") || k.contains("天劍")) companionId = "leader";
       if (companionId != null) {
-        tplOpt = TemplateRepository.findCompanion(companionId);
+        tplOpt = templateReader.findCompanion(companionId);
       }
     }
 
@@ -143,7 +177,7 @@ public class PartyService {
 
       List<PartyMemberSkill> memberSkills = new java.util.ArrayList<>();
       for (String sId : tpl.skills()) {
-        TemplateRepository.findPartySkill(sId).ifPresent(memberSkills::add);
+        templateReader.findPartySkill(sId).ifPresent(memberSkills::add);
       }
 
       PartyMember member = PartyMember.builder()
@@ -161,11 +195,12 @@ public class PartyService {
           .resourceType(tpl.resourceType())
           .skills(memberSkills)
           .build();
+          member.setTemplateReader(templateReader);
 
       // 裝配初始裝備
       if (tpl.initialEquipment() != null) {
         for (var entry : tpl.initialEquipment().entrySet()) {
-          var itemOpt = TemplateRepository.findItem(entry.getValue());
+          var itemOpt = templateReader.findItem(entry.getValue());
           if (itemOpt.isPresent()) {
             ItemTemplate it = itemOpt.get();
             int minD = (it.equipmentProp() != null) ? it.equipmentProp().minDamage() : 0;

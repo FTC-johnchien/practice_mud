@@ -22,7 +22,7 @@ import com.example.htmlmud.domain.model.template.RoomExit;
 import com.example.htmlmud.domain.model.template.RoomTemplate;
 import com.example.htmlmud.domain.model.template.SpawnRule;
 import com.example.htmlmud.domain.model.template.ZoneTemplate;
-import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
+import com.example.htmlmud.domain.repository.TemplateReader;
 import com.example.htmlmud.protocol.MudMessage;
 import com.example.htmlmud.protocol.util.AnsiColor;
 import com.example.htmlmud.protocol.util.ColorText;
@@ -40,14 +40,16 @@ public class RoomService {
 
   private final WorldManager manager;
 
+  private final TemplateReader templateReader;
+
 
 
   public ZoneTemplate getZoneTemplate(String zoneId) {
-    return TemplateRepository.findZone(zoneId).orElse(null);
+    return templateReader.findZone(zoneId).orElse(null);
   }
 
   public RoomTemplate getRoomTemplate(String roomId) {
-    return TemplateRepository.findRoom(roomId).orElse(null);
+    return templateReader.findRoom(roomId).orElse(null);
   }
 
   public void enter(Room room, List<Player> players, List<Mob> mobs, Living actor,
@@ -194,7 +196,11 @@ public class RoomService {
     }
   }
 
-  public void broadcastJson(List<Player> players, MudMessage<Object> message) {}
+  public void broadcastJson(List<Player> players, MudMessage<Object> message) {
+    for (Player player : players) {
+      player.sendJson(message);
+    }
+  }
 
   public void broadcastToOthers(List<Player> players, String actorId, String message) {
     Living actor = manager.findLivingActor(actorId).orElse(null);

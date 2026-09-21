@@ -53,10 +53,20 @@ public class DungeonManager {
     return new ArrayList<>(floorRegistry.keySet());
   }
 
+  public void setPlayerPosition(com.example.htmlmud.domain.model.vo.CharacterId characterId, DungeonPosition pos) {
+    if (characterId != null) {
+      setPlayerPosition(characterId.value(), pos);
+    }
+  }
+
   public void setPlayerPosition(String playerId, DungeonPosition pos) {
     if (playerId != null && pos != null) {
       playerPositions.put(playerId, pos);
     }
+  }
+
+  public DungeonPosition getOrCreatePosition(com.example.htmlmud.domain.model.vo.CharacterId characterId, String floorId) {
+    return characterId != null ? getOrCreatePosition(characterId.value(), floorId) : getOrCreatePosition("default", floorId);
   }
 
   public DungeonPosition getOrCreatePosition(String playerId, String floorId) {
@@ -67,8 +77,28 @@ public class DungeonManager {
     return playerPositions.computeIfAbsent(playerId, id -> createInitialPosition(floorId));
   }
 
+  public DungeonPosition getPlayerPosition(com.example.htmlmud.domain.model.vo.CharacterId characterId) {
+    return characterId != null ? getPlayerPosition(characterId.value()) : getPlayerPosition("default");
+  }
+
+  public DungeonPosition getPlayerPosition(com.example.htmlmud.domain.actor.impl.Player player) {
+    if (player == null) return getPlayerPosition("default");
+    DungeonPosition pos = playerPositions.get(player.getId());
+    if (pos == null && player.getName() != null) {
+      pos = playerPositions.get(player.getName());
+    }
+    if (pos == null) {
+      pos = getOrCreatePosition(player.getCharacterId().value(), null);
+    }
+    return pos;
+  }
+
   public DungeonPosition getPlayerPosition(String playerId) {
     return getOrCreatePosition(playerId, null);
+  }
+
+  public DungeonPosition switchFloor(com.example.htmlmud.domain.model.vo.CharacterId characterId, String targetFloorId) {
+    return characterId != null ? switchFloor(characterId.value(), targetFloorId) : switchFloor("default", targetFloorId);
   }
 
   public DungeonPosition switchFloor(String playerId, String targetFloorId) {

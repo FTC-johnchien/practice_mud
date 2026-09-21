@@ -21,7 +21,7 @@ import com.example.htmlmud.domain.model.template.MobTemplate;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.service.PartyService;
-import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
+import com.example.htmlmud.domain.repository.TemplateReader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,6 +53,7 @@ public class DungeonCommand implements PlayerCommand {
   private final com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService;
   private final MoveCommand moveCommand;
   private final com.example.htmlmud.domain.service.GameStateBroadcastService broadcastService;
+  private final TemplateReader templateReader;
 
   @Override
   public String getKey() {
@@ -265,7 +266,7 @@ public class DungeonCommand implements PlayerCommand {
               ? tile.getDrops()
               : TOMB_ITEMS;
           String itemId = dropPool.get(ThreadLocalRandom.current().nextInt(dropPool.size()));
-          var opt = TemplateRepository.findItem(itemId);
+          var opt = templateReader.findItem(itemId);
           String itemName = opt.map(ItemTemplate::name).orElse("古仙秘寶");
           String itemDesc = opt.map(ItemTemplate::description).orElse("");
           Party party = partyService.getOrCreateParty(self.getName());

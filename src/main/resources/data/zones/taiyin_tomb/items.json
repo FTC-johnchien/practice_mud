@@ -1,79 +1,12 @@
 [
   {
-    "id": "taiyin_pill",
-    "name": "太陰培元丹",
-    "aliases": ["pill", "taiyin pill", "dan"],
-    "description": "太陰古修所煉之靈丹，服之可調和體內陰陽，迅速恢復元氣。",
-    "type": "CONSUMABLE",
-    "subType": "POTION",
-    "behavior": {
-      "effect": "HEAL_HP",
-      "value": 50
-    },
-    "value": 30,
-    "quality": "UNCOMMON",
-    "level": 1,
-    "isStackable": true
-  },
-  {
-    "id": "purify_talisman",
-    "name": "辟邪清心符",
-    "aliases": ["talisman", "purify talisman", "fu"],
-    "description": "朱砂混合太華清氣所畫之靈符，點燃可平復翻湧之雜念與道心紊亂。",
-    "type": "CONSUMABLE",
-    "subType": "TALISMAN",
-    "behavior": {
-      "effect": "RESTORE_SAN",
-      "value": 25
-    },
-    "value": 50,
-    "quality": "RARE",
-    "level": 1,
-    "isStackable": true
-  },
-  {
-    "id": "bronze_sword",
-    "name": "鏽蝕青銅古劍",
-    "aliases": ["bronze sword", "sword", "blade"],
-    "description": "自古墓殉葬坑中發掘之古劍，劍身雖有斑駁綠鏽，刃口卻透出逼人寒芒。",
-    "type": "WEAPON",
-    "subType": "SWORD",
-    "stats": {
-      "slot": "MAIN_HAND",
-      "attackVerb": "斬向",
-      "minDamage": 14,
-      "maxDamage": 22,
-      "attackSpeed": 2000,
-      "maxDurability": 80
-    },
-    "value": 60,
-    "quality": "UNCOMMON",
-    "level": 2
-  },
-  {
-    "id": "yin_robe",
-    "name": "陰煞道袍",
-    "aliases": ["robe", "yin robe", "armor"],
-    "description": "以深海玄絲混雜陰煞之氣編織之道袍，能護持周身，抵禦暗蝕。",
-    "type": "ARMOR",
-    "subType": "CHEST",
-    "stats": {
-      "slot": "CHEST",
-      "defense": 6,
-      "maxDurability": 100
-    },
-    "bonusStats": {
-      "MAX_HP": 30,
-      "MAX_SAN": 10
-    },
-    "value": 80,
-    "quality": "RARE",
-    "level": 3
-  },
-  {
     "id": "ancient_relic",
     "name": "古仙殘印",
-    "aliases": ["relic", "ancient relic", "seal"],
+    "aliases": [
+      "relic",
+      "ancient relic",
+      "seal"
+    ],
     "description": "殘破的古仙法印，其上刻有扭曲難辨的古篆符文，隱隱散發不可名狀之威壓。",
     "type": "MISC",
     "subType": "TREASURE",
@@ -84,7 +17,11 @@
   {
     "id": "tomb_key",
     "name": "墓塚石匙",
-    "aliases": ["key", "tomb key", "stone key"],
+    "aliases": [
+      "key",
+      "tomb key",
+      "stone key"
+    ],
     "description": "一柄雕刻著冥蛇圖騰的墨玉石匙，可用於開啟地宮深處的玄冥石門。",
     "type": "KEY_ITEM",
     "subType": "KEY",

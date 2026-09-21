@@ -25,6 +25,7 @@ import com.example.htmlmud.domain.model.template.NpcCapability.NpcCapabilityType
 import com.example.htmlmud.domain.model.template.RoomTemplate;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.service.PartyService;
+import com.example.htmlmud.domain.repository.TemplateReader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,6 +42,7 @@ public class GameStateBroadcastService {
   private final PartyService partyService;
   private final DrpgBattleService battleService;
   private final WorldManager worldManager;
+  private final TemplateReader templateReader;
 
   @jakarta.annotation.PostConstruct
   public void init() {
@@ -64,7 +66,7 @@ public class GameStateBroadcastService {
     DungeonFloor floor = dungeonManager.getFloor(floorId);
     String inspect = (floor != null && pos != null) ? dungeonNavigator.inspectForward(floor, pos) : "";
     var battleView = battleService.createBattleView(player.getName());
-    player.sendJson(DrpgStateDto.of(floor, pos, inspect, party, battleView));
+    player.sendJson(DrpgStateDto.of(floor, pos, inspect, party, battleView, templateReader));
   }
 
   public void broadcastTownState(Player player, Party party) {
@@ -177,7 +179,8 @@ public class GameStateBroadcastService {
 
     var battleView = battleService.createBattleView(player.getName());
     DrpgStateDto dto = DrpgStateDto.ofTown(
-        zoneId, zoneName, tmpl.id(), tmpl.name(), tmpl.description(), safe, exits, npcs, items, party, battleView
+        zoneId, zoneName, tmpl.id(), tmpl.name(), tmpl.description(), safe, exits, npcs, items, party, battleView,
+        templateReader
     );
     player.sendJson(dto);
   }

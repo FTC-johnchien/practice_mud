@@ -20,11 +20,11 @@ import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.domain.model.template.ItemTemplate;
 import com.example.htmlmud.domain.model.template.MobTemplate;
 import com.example.htmlmud.domain.model.template.RaceTemplate;
+import com.example.htmlmud.domain.repository.TemplateReader;
 import com.example.htmlmud.domain.service.MobService;
 import com.example.htmlmud.domain.service.RoomService;
 import com.example.htmlmud.infra.mapper.ItemTemplateMapper;
 import com.example.htmlmud.infra.mapper.MobMapper;
-import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,6 +39,8 @@ public class WorldFactory {
 
 
   private final MobService mobService;
+
+  private final TemplateReader templateReader;
 
   private final ObjectProvider<RoomService> roomServiceProvider;
 
@@ -60,7 +62,7 @@ public class WorldFactory {
   public Mob createMob(String templateId) {
     // 1. 查 Template (Record)
     // log.info("createMob templateId: {}", templateId);
-    MobTemplate tpl = TemplateRepository.findMob(templateId).orElse(null);
+    MobTemplate tpl = templateReader.findMob(templateId).orElse(null);
     if (tpl == null) {
       log.error("createMob failed: MobTemplate ID not found: " + templateId);
       throw new MudException("找不到這個怪物模板 MobTemplate ID: " + templateId);
@@ -69,6 +71,7 @@ public class WorldFactory {
     // 2. new Actor
     LivingStats stats = mobMapper.toLivingStats(tpl);
     Mob mob = new Mob(tpl, stats, mobService);
+    mob.setTemplateReader(templateReader);
     mob.start();
 
     // log.info("{}", tpl.equipment());
@@ -98,7 +101,7 @@ public class WorldFactory {
     // 依據種族自動補齊天然防禦 (DODGE, PARRY) 與攻擊技能 (Race Natural Skills Binding)
     String raceId = tpl.race() != null ? tpl.race() : stats.getRace();
     if (raceId != null) {
-      TemplateRepository.findRace(raceId).ifPresent(raceTpl -> {
+      templateReader.findRace(raceId).ifPresent(raceTpl -> {
         if (raceTpl.combat() != null) {
           // 1. 天然身法閃避 (Dodge)
           if (!mob.getEnabledSkills().containsKey(SkillCategory.DODGE) && raceTpl.combat().naturalDodge() != null) {
@@ -137,7 +140,7 @@ public class WorldFactory {
    */
   public GameItem createItem(String templateId) {
     log.info("Item templateId:{}", templateId);
-    ItemTemplate tpl = TemplateRepository.findItem(templateId).orElse(null);
+    ItemTemplate tpl = templateReader.findItem(templateId).orElse(null);
     if (tpl == null) {
       log.error("Create Item failed: Template not found {}", templateId);
       return null;
@@ -231,11 +234,11 @@ public class WorldFactory {
     pouch.setId(UUID.randomUUID().toString());
     pouch.setType(ItemType.CONTAINER);
 
-    boolean isBossOrElite = mob != null && mob.getTemplate() != null && 
-        (mob.getTemplate().id().contains("boss") || 
-         mob.getTemplate().id().contains("elite") || 
-         mob.getName().contains("頭領") || 
-         mob.getName().contains("長老") || 
+    boolean isBossOrElite = mob != null && mob.getTemplate() != null &&
+        (mob.getTemplate().id().contains("boss") ||
+         mob.getTemplate().id().contains("elite") ||
+         mob.getName().contains("頭領") ||
+         mob.getName().contains("長老") ||
          mob.getName().contains("大師兄"));
 
     if (isBossOrElite) {

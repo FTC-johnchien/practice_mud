@@ -8,8 +8,9 @@ import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.MobRank;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.domain.model.template.MobTemplate;
+import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.domain.service.TemplateCatalog;
 import com.example.htmlmud.domain.party.model.RowPosition;
-import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -61,7 +62,8 @@ public class BattleEnemy {
   private String dodgeSkillId;
   private String parrySkillId;
 
-  public static BattleEnemy fromTemplate(String id, MobTemplate tpl, RowPosition row, String dropId) {
+  public static BattleEnemy fromTemplate(String id, MobTemplate tpl, RowPosition row, String dropId,
+      TemplateReader templateReader) {
     if (tpl == null) return null;
     int hp = tpl.maxHp() > 0 ? tpl.maxHp() : 100;
     int minD = tpl.minDamage() > 0 ? tpl.minDamage() : 10;
@@ -76,7 +78,7 @@ public class BattleEnemy {
         try {
           EquipmentSlot slot = EquipmentSlot.valueOf(entry.getKey().toUpperCase());
           equipMap.put(slot, entry.getValue());
-          var itOpt = TemplateRepository.findItem(entry.getValue());
+          var itOpt = templateReader.findItem(entry.getValue());
           if (itOpt.isPresent()) {
             var it = itOpt.get();
             if (it.equipmentProp() != null) {
@@ -102,7 +104,7 @@ public class BattleEnemy {
     // 依據種族自動補齊天然防禦技能 (Dodge, Parry)
     String raceId = tpl.race();
     if (raceId != null) {
-      var raceOpt = TemplateRepository.findRace(raceId);
+      var raceOpt = templateReader.findRace(raceId);
       if (raceOpt.isPresent() && raceOpt.get().combat() != null) {
         var raceCombat = raceOpt.get().combat();
         if (dodgeSkill == null && raceCombat.naturalDodge() != null) {
@@ -143,6 +145,10 @@ public class BattleEnemy {
         .alive(true)
         .xp(tpl.expReward() > 0 ? tpl.expReward() : 30)
         .build();
+  }
+
+  public static BattleEnemy fromTemplate(String id, MobTemplate tpl, RowPosition row, String dropId) {
+    return fromTemplate(id, tpl, row, dropId, new TemplateCatalog());
   }
 
   public void takeDamage(int dmg) {

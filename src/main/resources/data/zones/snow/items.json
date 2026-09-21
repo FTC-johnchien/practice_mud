@@ -2,7 +2,11 @@
   {
     "id": "snow_spear",
     "name": "霜紋長槍",
-    "aliases": ["spear", "snow spear", "weapon"],
+    "aliases": [
+      "spear",
+      "snow spear",
+      "weapon"
+    ],
     "description": "一把制式的長槍，是衛兵的標準裝備。",
     "type": "WEAPON",
     "subType": "SPEAR",
@@ -21,7 +25,10 @@
   {
     "id": "snow_armor",
     "name": "厚皮甲",
-    "aliases": ["armor", "leather armor"],
+    "aliases": [
+      "armor",
+      "leather armor"
+    ],
     "description": "一件用厚實的皮革縫製的護甲。",
     "type": "ARMOR",
     "subType": "CHEST",
@@ -37,7 +44,10 @@
   {
     "id": "snow_sword",
     "name": "鋼刀",
-    "aliases": ["blade", "saber"],
+    "aliases": [
+      "blade",
+      "saber"
+    ],
     "description": "一把剛打造好的鋼刀，刀鋒銳利。",
     "type": "WEAPON",
     "subType": "BLADE",
@@ -56,7 +66,10 @@
   {
     "id": "snow_blade",
     "name": "霜雪長劍",
-    "aliases": ["sword", "snow sword"],
+    "aliases": [
+      "sword",
+      "snow sword"
+    ],
     "description": "一把修長的鐵劍，散發著微弱的寒氣。",
     "type": "WEAPON",
     "subType": "SWORD",
@@ -75,7 +88,10 @@
   {
     "id": "snow_meat",
     "name": "烤山豬肉",
-    "aliases": ["meat", "pork"],
+    "aliases": [
+      "meat",
+      "pork"
+    ],
     "description": "一塊香噴噴的烤山豬肉，令人垂涎三尺。",
     "type": "CONSUMABLE",
     "behavior": {
@@ -88,7 +104,10 @@
   {
     "id": "snow_wineskin",
     "name": "寒那酒袋",
-    "aliases": ["wine", "wineskin"],
+    "aliases": [
+      "wine",
+      "wineskin"
+    ],
     "description": "一個裝滿烈酒「寒那」的皮袋，喝一口身子就暖了起來。",
     "type": "CONSUMABLE",
     "behavior": {
@@ -101,7 +120,10 @@
   {
     "id": "heavy_hammer",
     "name": "鍛造鐵鎚",
-    "aliases": ["hammer", "heavy hammer"],
+    "aliases": [
+      "hammer",
+      "heavy hammer"
+    ],
     "description": "一把沉重的鐵鎚，上面沾滿了煤灰。",
     "type": "WEAPON",
     "subType": "BLUNT",
@@ -120,7 +142,10 @@
   {
     "id": "cloth",
     "name": "粗布衣",
-    "aliases": ["cloth", "clothes"],
+    "aliases": [
+      "cloth",
+      "clothes"
+    ],
     "description": "普通的粗布衣服。",
     "type": "ARMOR",
     "subType": "CHEST",
@@ -136,7 +161,10 @@
   {
     "id": "fire_starter",
     "name": "火摺子",
-    "aliases": ["starter", "fire starter"],
+    "aliases": [
+      "starter",
+      "fire starter"
+    ],
     "description": "便於攜帶的點火工具，可在漆黑環境點燃火把。",
     "type": "MISC",
     "value": 20,
@@ -145,7 +173,9 @@
   {
     "id": "torch",
     "name": "火把",
-    "aliases": ["torch"],
+    "aliases": [
+      "torch"
+    ],
     "description": "浸過油脂的松木火把，能在黑暗中提供照明。",
     "type": "MISC",
     "value": 15,
@@ -154,7 +184,11 @@
   {
     "id": "heavy_hammer",
     "name": "沉重鐵鎚",
-    "aliases": ["hammer", "heavy hammer", "weapon"],
+    "aliases": [
+      "hammer",
+      "heavy hammer",
+      "weapon"
+    ],
     "description": "一把鍛造用的重鐵鎚，沉重而堅固。",
     "type": "WEAPON",
     "subType": "HAMMER",

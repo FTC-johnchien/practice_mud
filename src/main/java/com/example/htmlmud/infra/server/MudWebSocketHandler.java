@@ -43,9 +43,10 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
         }
       } catch (Exception ignored) {}
 
-      // 單機模式：直接建立單機玩家 Actor，無需任何帳密驗證
+      // 單機/Web模式：建立玩家 Actor，為每個 WebSocket session 分配唯一穩定的 playerId
+      String playerId = "p-" + session.getId();
       Player self = Player.createSinglePlayer(new WebSocketOutput(session, objectMapper), worldManager,
-          playerService, initialName);
+          playerService, initialName, playerId);
 
       // 啟動 Actor 的虛擬執行緒 (Virtual Thread)
       self.start();

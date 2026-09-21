@@ -33,6 +33,7 @@ import com.example.htmlmud.domain.model.template.ClassTemplate;
 import com.example.htmlmud.domain.model.template.ShopTemplate;
 import com.example.htmlmud.domain.party.model.FormationTemplate;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
+import com.example.htmlmud.domain.repository.TemplateReader;
 import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
 import com.example.htmlmud.infra.util.IdUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -52,6 +53,8 @@ public class WorldManager {
   private final ObjectMapper objectMapper;
 
   private final WorldFactory worldFactory; // 注入 Factory
+
+  private final TemplateReader templateReader;
 
   // 2. Runtime Actors: 存放正在運作的 RoomActor
   // 使用 ConcurrentHashMap 確保並發存取安全
@@ -425,7 +428,7 @@ public class WorldManager {
   }
 
   public MobTemplate getMobTemplate(String mobId) {
-    return TemplateRepository.findMob(mobId).orElseThrow(() -> {
+    return templateReader.findMob(mobId).orElseThrow(() -> {
       log.error("MobTemplate ID not found: " + mobId);
       // return new IllegalArgumentException("MobTemplate ID not found: " + mobId);
       return null;
