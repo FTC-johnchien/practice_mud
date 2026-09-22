@@ -23,8 +23,8 @@
     "maxDamage": 15,
     "defense": 5,
     "equipment": {
-      "MAIN_HAND": "snow_spear",
-      "BODY": "snow_armor"
+      "MAIN_HAND": "snow:snow_spear",
+      "BODY": "snow:snow_armor"
     },
     "behavior": "GUARD",
     "dialogues": [
@@ -49,7 +49,7 @@
     "con": 10,
     "intelligence": 10,
     "equipment": {
-      "BODY": "cloth"
+      "BODY": "snow:cloth"
     },
     "behavior": "VENDOR",
     "dialogues": [
@@ -74,7 +74,7 @@
     "con": 22,
     "intelligence": 10,
     "equipment": {
-      "MAIN_HAND": "heavy_hammer"
+      "MAIN_HAND": "snow:heavy_hammer"
     },
     "behavior": "VENDOR",
     "dialogues": [

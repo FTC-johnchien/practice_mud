@@ -18,4 +18,22 @@ public class IdUtils {
     }
     return currentZoneId + ":" + rawId;
   }
+
+  /**
+   * Resolves an item reference from zone-authored data.
+   *
+   * <p>Global item definitions are stored without a runtime prefix, while zone-local definitions
+   * are registered as {@code zoneId:itemId}. Source JSON must therefore explicitly use either
+   * {@code global:itemId} or {@code zoneId:itemId}; unqualified IDs remain supported here only for
+   * the zone-local fields which predate that convention.</p>
+   */
+  public static String resolveItemReference(String currentZoneId, String rawId) {
+    if (rawId == null || rawId.isBlank()) {
+      return null;
+    }
+    if (rawId.startsWith("global:")) {
+      return rawId.substring("global:".length());
+    }
+    return resolveId(currentZoneId, rawId);
+  }
 }

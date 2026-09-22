@@ -156,7 +156,7 @@
         "doorName": "厚重的鐵門",
         "isLocked": true,
         "isHidden": false,
-        "keyId": "village_elder_key",
+        "keyId": "global:village_elder_house_key",
         "pickProof": true
       },
       "west": "square",

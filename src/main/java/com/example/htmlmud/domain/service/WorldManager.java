@@ -312,11 +312,17 @@ public class WorldManager {
             : mob.equipment().entrySet().stream()
                 .collect(Collectors.toMap(
                     Map.Entry::getKey,
-                    e -> IdUtils.resolveId(zoneId, e.getValue())
+                    e -> IdUtils.resolveItemReference(zoneId, e.getValue())
                 ));
+        List<com.example.htmlmud.domain.model.config.LootEntry> updatedLoot = mob.loot().stream()
+            .map(entry -> new com.example.htmlmud.domain.model.config.LootEntry(
+                IdUtils.resolveItemReference(zoneId, entry.itemId()), entry.chance(),
+                entry.minAmount(), entry.maxAmount()))
+            .toList();
         MobTemplate newMob = mob.toBuilder()
             .id(newMobId)
             .equipment(updatedEquipment)
+            .loot(updatedLoot)
             .build();
         // log.info("log:{}", objectMapper.writeValueAsString(newMob));
         TemplateRepository.registerMob(newMob);
@@ -361,7 +367,8 @@ public class WorldManager {
         Map<String, RoomExit> updatedExits = room.exits() == null ? null
             : room.exits().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toBuilder()
-                    .targetRoomId(IdUtils.resolveId(zoneId, e.getValue().targetRoomId())).build()));
+                    .targetRoomId(IdUtils.resolveId(zoneId, e.getValue().targetRoomId()))
+                    .keyId(IdUtils.resolveItemReference(zoneId, e.getValue().keyId())).build()));
 
         // 更新 room.id
         String newRoomId = IdUtils.resolveId(zoneId, room.id());
@@ -386,7 +393,7 @@ public class WorldManager {
             String npcId = shop.npcId() != null ? IdUtils.resolveId(zoneId, shop.npcId()) : null;
             List<ShopTemplate.ShopItemTemplate> updatedGoods = shop.goods().stream()
                 .map(g -> g.toBuilder()
-                    .templateId(IdUtils.resolveId(zoneId, g.templateId()))
+                    .templateId(IdUtils.resolveItemReference(zoneId, g.templateId()))
                     .build())
                 .toList();
             ShopTemplate newShop = shop.toBuilder()

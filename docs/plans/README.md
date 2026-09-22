@@ -18,6 +18,7 @@
 | 日期 | 計畫檔案 | 核心主題與涵蓋範圍 | 狀態 |
 | :--- | :--- | :--- | :--- |
 | **常駐基準** | [`FUTURE_IMPROVEMENTS.md`](./FUTURE_IMPROVEMENTS.md) | **全專案後續架構改善與演化藍圖**（涵蓋安全防護、領域解耦、Actor 併發安全、Canonical 數據驅動、前端模組化與測試加固，含 P0~P3 優先序總表） | 📌 長期架構藍圖 |
+| **2026-09-22** | [`2026-09-22_shared_canonical_model_execution_plan.md`](./2026-09-22_shared_canonical_model_execution_plan.md) | Canonical Item / Skill model、TemplateReader DI migration、BattleOutcome 同步的分階段可執行計畫 | 📋 待實施 |
 | **2026-09-18** | [`2026-09-18_loot_pouch_and_entity_cleanup.md`](./2026-09-18_loot_pouch_and_entity_cleanup.md) | 怪物死亡去屍體化、戰利品儲物袋 (Loot Pouch) 生成、同場自動合併 (方案 B)、一鍵搜刮全拿與 Room Actor 併發時序修復 | ✅ 已完工並驗證 |
 | **2026-09-18** | [`2026-09-18_weapon_stances_and_race_attacks.md`](./2026-09-18_weapon_stances_and_race_attacks.md) | 多武器普攻動態綁定、高級劍法專修切換（太極/太陰/天劍）、非人種族天生攻擊池系統 | ✅ 已完工並驗證 |
 | **2026-09-18** | [`2026-09-18_wow_spellbook_and_ui_optimization.md`](./2026-09-18_wow_spellbook_and_ui_optimization.md) | WoW 經典三 Tab 法術書典籍、戰鬥技能抽屜 In-place DOM 防閃爍、敵群 1~7 體陣列與集火鎖定 | ✅ 已完工並驗證 |

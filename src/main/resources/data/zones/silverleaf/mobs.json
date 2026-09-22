@@ -56,7 +56,7 @@
     "con": 22,
     "intelligence": 10,
     "equipment": {
-      "MAIN_HAND": "rusty_sword"
+      "MAIN_HAND": "global:rusty_sword"
     },
     "dialogues": [
       "想要一把趁手的兵刃？來看看我的手藝吧！"
@@ -165,7 +165,7 @@
     "maxDamage": 4,
     "isAggressive": false,
     "loot": [
-      { "itemId": "rat_tail", "rate": 0.5, "minCount": 1, "maxCount": 1 }
+      { "itemId": "global:rat_tail", "rate": 0.5, "minCount": 1, "maxCount": 1 }
     ],
     "aliases": ["rat", "sewer rat"]
   },
@@ -190,7 +190,7 @@
     "maxDamage": 12,
     "isAggressive": true,
     "loot": [
-      { "itemId": "wolf_pelt", "rate": 0.4, "minCount": 1, "maxCount": 1 }
+      { "itemId": "global:wolf_pelt", "rate": 0.4, "minCount": 1, "maxCount": 1 }
     ],
     "aliases": ["wolf", "forest wolf"]
   },
@@ -215,7 +215,7 @@
     "maxDamage": 10,
     "isAggressive": true,
     "loot": [
-      { "itemId": "copper_coin", "rate": 0.8, "minCount": 2, "maxCount": 6 }
+      { "itemId": "global:copper_coin", "rate": 0.8, "minCount": 2, "maxCount": 6 }
     ],
     "aliases": ["goblin", "scout", "goblin scout"]
   },
@@ -240,7 +240,7 @@
     "maxDamage": 16,
     "isAggressive": true,
     "loot": [
-      { "itemId": "copper_coin", "rate": 1.0, "minCount": 5, "maxCount": 15 }
+      { "itemId": "global:copper_coin", "rate": 1.0, "minCount": 5, "maxCount": 15 }
     ],
     "aliases": ["warrior", "goblin warrior"]
   },
@@ -267,8 +267,8 @@
     "maxDamage": 30,
     "isAggressive": true,
     "loot": [
-      { "itemId": "copper_coin", "rate": 1.0, "minCount": 30, "maxCount": 80 },
-      { "itemId": "silver_medallion", "rate": 0.5, "minCount": 1, "maxCount": 1 }
+      { "itemId": "global:copper_coin", "rate": 1.0, "minCount": 30, "maxCount": 80 },
+      { "itemId": "global:silver_medallion", "rate": 0.5, "minCount": 1, "maxCount": 1 }
     ],
     "aliases": ["king", "goblin king"]
   },
@@ -292,7 +292,7 @@
     "minDamage": 12,
     "maxDamage": 22,
     "equipment": {
-      "MAIN_HAND": "iron_sword"
+      "MAIN_HAND": "global:iron_sword"
     },
     "isAggressive": false,
     "dialogues": [

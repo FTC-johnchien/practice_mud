@@ -8,7 +8,7 @@
       {
         "index": 1,
         "id": "bread",
-        "templateId": "village_bread",
+        "templateId": "global:village_bread",
         "name": "村莊烤麵包",
         "price": 2,
         "stock": -1,
@@ -17,7 +17,7 @@
       {
         "index": 2,
         "id": "tea",
-        "templateId": "purify_tea",
+        "templateId": "global:purify_tea",
         "name": "辟邪清心靈茶",
         "price": 5,
         "stock": -1,
@@ -26,7 +26,7 @@
       {
         "index": 3,
         "id": "salve",
-        "templateId": "healing_salve",
+        "templateId": "global:healing_salve",
         "name": "百草金創藥膏",
         "price": 8,
         "stock": 10,
@@ -35,7 +35,7 @@
       {
         "index": 4,
         "id": "pickaxe",
-        "templateId": "miner_pickaxe",
+        "templateId": "global:miner_pickaxe",
         "name": "雜役採礦鐵鎬",
         "price": 25,
         "stock": 5,
@@ -44,7 +44,7 @@
       {
         "index": 5,
         "id": "blade",
-        "templateId": "steel_blade",
+        "templateId": "global:steel_blade",
         "name": "百辟精鋼刀",
         "price": 15,
         "stock": 3,
@@ -53,7 +53,7 @@
       {
         "index": 6,
         "id": "spear",
-        "templateId": "standard_spear",
+        "templateId": "global:standard_spear",
         "name": "制式長槍",
         "price": 20,
         "stock": 3,
@@ -62,7 +62,7 @@
       {
         "index": 7,
         "id": "axe",
-        "templateId": "iron_axe",
+        "templateId": "global:iron_axe",
         "name": "開山大斧",
         "price": 18,
         "stock": 2,
@@ -71,7 +71,7 @@
       {
         "index": 8,
         "id": "staff",
-        "templateId": "copper_staff",
+        "templateId": "global:copper_staff",
         "name": "齊眉熟銅棍",
         "price": 15,
         "stock": 2,
@@ -80,7 +80,7 @@
       {
         "index": 9,
         "id": "hammer",
-        "templateId": "iron_hammer",
+        "templateId": "global:iron_hammer",
         "name": "八棱玄鐵錘",
         "price": 20,
         "stock": 2,
@@ -89,7 +89,7 @@
       {
         "index": 10,
         "id": "dagger",
-        "templateId": "shadow_dagger",
+        "templateId": "global:shadow_dagger",
         "name": "無影短匕",
         "price": 12,
         "stock": 3,
@@ -98,7 +98,7 @@
       {
         "index": 11,
         "id": "bow",
-        "templateId": "hunter_bow",
+        "templateId": "global:hunter_bow",
         "name": "穿雲桑木弓",
         "price": 16,
         "stock": 2,

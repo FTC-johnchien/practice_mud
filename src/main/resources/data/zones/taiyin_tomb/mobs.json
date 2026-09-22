@@ -22,7 +22,7 @@
     "expReward": 25,
     "loot": [
       {
-        "itemId": "taiyin_tomb:taiyin_pill",
+        "itemId": "global:taiyin_pill",
         "chance": 0.4
       }
     ]
@@ -50,7 +50,7 @@
     "expReward": 40,
     "loot": [
       {
-        "itemId": "taiyin_tomb:purify_talisman",
+        "itemId": "global:purify_talisman",
         "chance": 0.35
       }
     ]
@@ -77,19 +77,19 @@
     "description": "昔年殉葬的古宗護法道奴，身軀與玄鐵甲冑早已因血肉畸變融為一體，散發恐怖的道威殘息。",
     "expReward": 85,
     "equipment": {
-      "MAIN_HAND": "taiyin_tomb:bronze_sword",
-      "BODY": "taiyin_tomb:yin_robe"
+      "MAIN_HAND": "global:bronze_sword",
+      "BODY": "global:yin_robe"
     },
     "enabledSkills": {
       "SWORD": "basic_blade"
     },
     "loot": [
       {
-        "itemId": "taiyin_tomb:bronze_sword",
+        "itemId": "global:bronze_sword",
         "chance": 0.25
       },
       {
-        "itemId": "taiyin_tomb:yin_robe",
+        "itemId": "global:yin_robe",
         "chance": 0.15
       },
       {
@@ -121,7 +121,7 @@
     "expReward": 15,
     "loot": [
       {
-        "itemId": "taiyin_tomb:taiyin_pill",
+        "itemId": "global:taiyin_pill",
         "chance": 0.2
       }
     ]

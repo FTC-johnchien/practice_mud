@@ -22,7 +22,7 @@
     "description": "一位少林武僧。",
     "lookDescription": "他看起來就像是少林武僧。",
     "equipment": {
-      "CHEST": "newbie_village:rusty_armor"
+      "CHEST": "global:rusty_armor"
     },
     "enabledSkills": {
       "UNARMED": "lion_roar"
@@ -33,7 +33,7 @@
     ],
     "loot": [
       {
-        "itemId": "newbie_village:standard_spear",
+        "itemId": "global:standard_spear",
         "chance": 0.5
       }
     ]
@@ -63,8 +63,8 @@
     "description": "一位穿著制服的警衛正警惕地看著四周。",
     "lookDescription": "他看起來受過嚴格訓練，身上的盔甲擦得發亮。",
     "equipment": {
-      "MAIN_HAND": "newbie_village:rusty_sword",
-      "CHEST": "newbie_village:rusty_armor"
+      "MAIN_HAND": "global:rusty_sword",
+      "CHEST": "global:rusty_armor"
     },
     "enabledSkills": {
       "SWORD": "basic_sword"
@@ -75,11 +75,11 @@
     ],
     "loot": [
       {
-        "itemId": "newbie_village:rusty_sword",
+        "itemId": "global:rusty_sword",
         "chance": 1
       },
       {
-        "itemId": "newbie_village:rusty_armor",
+        "itemId": "global:rusty_armor",
         "chance": 1
       }
     ]
@@ -107,7 +107,7 @@
     "lookDescription": "它的眼睛發紅，似乎感染了某種疾病。",
     "loot": [
       {
-        "itemId": "newbie_village:village_bread",
+        "itemId": "global:village_bread",
         "chance": 0.5,
         "minAmount": 1,
         "maxAmount": 3
@@ -136,11 +136,11 @@
     "lookDescription": "它的眼睛在陰影中發亮，似乎一直在盯著你。",
     "loot": [
       {
-        "itemId": "newbie_village:village_bread",
+        "itemId": "global:village_bread",
         "chance": 0.3
       },
       {
-        "itemId": "newbie_village:village_elder_house_key",
+        "itemId": "global:village_elder_house_key",
         "chance": 0.5
       }
     ]

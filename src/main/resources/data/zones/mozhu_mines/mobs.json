@@ -25,11 +25,11 @@
     ],
     "loot": [
       {
-        "itemId": "mozhu_mines:corrupted_spirit_stone",
+        "itemId": "global:corrupted_spirit_stone",
         "chance": 0.8
       },
       {
-        "itemId": "mozhu_mines:miner_pickaxe",
+        "itemId": "global:miner_pickaxe",
         "chance": 0.25
       }
     ]
@@ -56,7 +56,7 @@
     "lookDescription": "它的體內流動著宛如水銀般的暗光，每一次呼吸都會在空氣中引起微弱的靈壓震顫。",
     "loot": [
       {
-        "itemId": "mozhu_mines:corrupted_spirit_stone",
+        "itemId": "global:corrupted_spirit_stone",
         "chance": 1.0
       }
     ]
@@ -90,11 +90,11 @@
     ],
     "loot": [
       {
-        "itemId": "mozhu_mines:black_obsidian_scythe",
+        "itemId": "global:black_obsidian_scythe",
         "chance": 1.0
       },
       {
-        "itemId": "mozhu_mines:elder_token",
+        "itemId": "global:elder_token",
         "chance": 1.0
       }
     ]

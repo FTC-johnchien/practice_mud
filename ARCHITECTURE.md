@@ -56,6 +56,14 @@ src/main/resources/
 
 ## 3. 地圖資料雙層體系規範 (Hub & Dungeon Model)
 
+### 資源 ID 與 namespace 規範
+
+- `data/global/items/` 的物品定義 ID 不加前綴，例如 `taiyin_pill`。
+- `data/zones/<zone>/items.json` 的物品定義 ID 同樣不加前綴；載入後才正規化為 `<zone>:<id>`。
+- **區域資料中的物品參照必須明確標示 scope**：全域物品使用 `global:<id>`，區域物品使用 `<zone>:<id>`。適用於怪物掉落／裝備、商店商品與房間門鎖鑰匙。
+- 載入器會將 `global:<id>` 正規化為全域模板 ID；不得依賴「移除 namespace 後猜測全域物品」的 fallback。
+- `DataNamespaceIntegrityTest` 是此契約的防線；新增或修改區域資料時，必須先讓該測試通過。
+
 為了最大化發揮專案實力並確保遊玩節奏順暢，地圖採用「**雙層設計模式**」：
 
 ### A. 城鎮樞紐區 (`data/zones/`)
