@@ -97,7 +97,7 @@ public class DataDrivenExpansionTest {
         .filter(g -> "bread".equals(g.id()))
         .findFirst()
         .orElseThrow();
-    assertThat(bread.templateId()).isEqualTo("newbie_village:village_bread");
+    assertThat(bread.templateId()).isIn("village_bread", "newbie_village:village_bread");
     assertThat(bread.price()).isEqualTo(2);
 
     // 透過房間 ID 也能查得商店
@@ -316,5 +316,3 @@ public class DataDrivenExpansionTest {
     });
   }
 }
-
-

@@ -37,13 +37,26 @@ public abstract class VirtualActor<T> {
     mailbox.offer(message);
   }
 
+  /**
+   * 檢查當前執行緒是否為該 Actor 專屬的虛擬執行緒
+   * 用於杜絕自身發起同步請求並 wait 自身的死鎖
+   */
+  public boolean isActorThread() {
+    Thread thread = this.actorThread;
+    return thread != null && Thread.currentThread() == thread;
+  }
+
+  public boolean isRunning() {
+    return running.get();
+  }
+
   // 核心迴圈
   private void runLoop() {
     log.info("[{}] started on thread: {}", actorId, Thread.currentThread());
 
     List<T> batch = new ArrayList<>(128);
-    try {
-      while (running.get()) {
+    while (running.get()) {
+      try {
         // 1. 阻塞等待第一條訊息 (讓出 CPU)
         T firstMsg = mailbox.take();
         batch.add(firstMsg);
@@ -51,21 +64,25 @@ public abstract class VirtualActor<T> {
         // 2. 盡可能抓取剩餘訊息 (Batching)
         mailbox.drainTo(batch, 127); // 1 (take) + 127 = 128, 剛好填滿 ArrayList 不擴容
 
-        // 3. 處理訊息
+        // 3. 逐條處理訊息 (單一訊息異常不殺死 Actor 虛擬執行緒)
         for (T msg : batch) {
-          handleMessage(msg);
+          try {
+            handleMessage(msg);
+          } catch (Throwable t) {
+            log.error("Actor [{}] error handling message: {}", actorId, msg, t);
+          }
         }
         batch.clear();
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        log.warn("Actor [{}] interrupted.", actorId);
+        break;
+      } catch (Throwable t) {
+        log.error("Actor [{}] unexpected error in runLoop", actorId, t);
       }
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      log.warn("Actor [{}] interrupted.", actorId);
-    } catch (Exception e) {
-      log.error("Actor [{}] encountered unexpected error", actorId, e);
-    } finally {
-      running.set(false);
-      log.info("[{}] has terminated permanently.", actorId);
     }
+    running.set(false);
+    log.info("[{}] has terminated.", actorId);
   }
 
   public void stop() {

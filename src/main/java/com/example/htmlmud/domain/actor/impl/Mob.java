@@ -291,6 +291,9 @@ public final class Mob extends Living {
 
   // 取得當前仇恨最高目標 ID
   public Optional<Living> getHighestAggroTarget() {
+    if (isActorThread()) {
+      return service.getHighestAggroTarget(this);
+    }
     CompletableFuture<Optional<Living>> future = new CompletableFuture<>();
     this.send(new ActorMessage.GetHighestAggroTarget(future));
     try {

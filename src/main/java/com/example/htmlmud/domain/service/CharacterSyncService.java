@@ -69,10 +69,10 @@ public class CharacterSyncService {
     target.setLevel(source.getLevel());
     target.setExp(source.getExp());
     target.setNextLevelExp(source.getNextLevelExp());
-    target.setHp(source.getHp());
     target.setMaxHp(source.getMaxHp());
-    target.setMp(source.getMp());
+    target.setHp(source.getHp());
     target.setMaxMp(source.getMaxMp());
+    target.setMp(source.getMp());
     target.setStr(source.getStr());
     target.setCon(source.getCon());
     target.setDex(source.getDex());

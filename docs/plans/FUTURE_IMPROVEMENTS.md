@@ -16,6 +16,7 @@
 | **Phase 1: 物品與屬性單一真相源** | 1. 廢棄 `data/global/items.json`，改以 `data/global/items/**/*.json` 分類目錄唯一收斂<br>2. `PartyItemSlot` 與 `GameItem` / `ItemTemplate` 實現雙向無損轉換<br>3. `CharacterSyncService` 維護世界主體 `Player` 與小隊隊長 `PartyMember` 雙向同步 | ✅ 已完成 |
 | **Phase 2: 穩定角色識別與生命週期** | 1. 導入 `CharacterId` 強型別值物件，徹底廢除單機寫死 `"p-single"`<br>2. `PartyService` 與 `DungeonManager` 實作 Dual-Index Alias 雙向容錯索引（ID/Name）<br>3. `TemplateRepository` 轉型為 Spring Bean 託管元件 | ✅ 已完成 |
 | **Phase 3: 技能語意橋接與戰鬥解耦** | 1. `SkillBridgeService` 建立 MUD 熟練度與 DRPG 戰術招式之執行期語意映射與動態等級縮放<br>2. `DrpgBattleService` 解耦為輕量 Facade，拆分 `DrpgCombatLoop`、`DrpgEnemyTacticsService`、`DrpgRewardService` | ✅ 已完成 |
+| **Phase 4: 併發安全與 Actor 隱形地雷加固** | 1. `VirtualActor` 引入 `isActorThread()` 判定與內外分流，消除自身 `join()` 永久死鎖<br>2. `VirtualActor.runLoop()` 實作單訊息例外隔離防護，免疫 RuntimeException 中毒停止<br>3. `RoomMessageBuffer` 廢除 per-room 執行緒池，改以共用 Daemon 排程器統一處理碎片 Flush<br>4. `LivingStats` 強化非負邊界防禦與 `clampToMax()` 數值夾緊，消除序列化順序覆蓋問題 | ✅ 已完成 |
 
 ---
 
@@ -100,7 +101,9 @@
 
 ---
 
-## ⚡ 3. 併發安全與 Actor 執行緒健全度 (Concurrency & Actor Integrity) - Priority: P1
+## ⚡ 3. 併發安全與 Actor 執行緒健全度 (Concurrency & Actor Integrity) - Priority: P1 【✅ 已完成】
+
+> **完成狀態**：已全數實作防禦機制，並建立 `ConcurrencyAndActorSafetyTest` 驗證套件，全數通過 141 項測試。
 
 ### 3.1 VirtualActor 自死鎖防禦 (Self-Deadlock Prevention)
 - **現狀問題**：`Living.equip()`、`Living.unequip()`、`Living.lookAtMe()` 中調用 `future.join()` 等待郵箱執行結果。若呼叫者恰好就在該 Actor 自身的虛擬執行緒內，將導致自身等待自身完成任務的永久死鎖。

@@ -51,7 +51,8 @@ public class MessageFactory {
                 + (item.getAliases().isEmpty() ? "" : "(" + item.getAliases().get(0) + ")"))
             .toList();
 
-    Map<String, Object> data = Map.of("id", player.getName(), "name", player.getNickname(),
+    Map<String, Object> data = Map.of("id", player.getName(), "name",
+        player.getNickname() != null ? player.getNickname() : player.getName(),
         "gender", player.getStats().getGender(), "race", player.getStats().getRace(), "description",
         lookDesc, "hpPercent", pct, "healthStatus", healthStatus, "items", itemNames);
 

@@ -134,16 +134,28 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
       case ActorMessage.BuffEffect(var buff) -> {
       }
       case ActorMessage.Equip(var item, var future) -> {
-        future.complete(handleEquip(item));
+        try {
+          future.complete(handleEquip(item));
+        } catch (Throwable t) {
+          future.completeExceptionally(t);
+        }
       }
       case ActorMessage.Unequip(var slot, var future) -> {
-        future.complete(handleUnequip(slot));
+        try {
+          future.complete(handleUnequip(slot));
+        } catch (Throwable t) {
+          future.completeExceptionally(t);
+        }
       }
       case ActorMessage.OnMessage(var self, var actorMessage) -> {
         // command(traceId, cmd);
       }
       case ActorMessage.LookAtMe(var future) -> {
-        future.complete(performLookAtMe());
+        try {
+          future.complete(performLookAtMe());
+        } catch (Throwable t) {
+          future.completeExceptionally(t);
+        }
       }
 
       default -> log.warn("handleLivingMessage 收到無法處理的訊息: {} {}", this.id, msg);
@@ -250,6 +262,9 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
   }
 
   public boolean equip(GameItem item) {
+    if (isActorThread()) {
+      return handleEquip(item);
+    }
     CompletableFuture<Boolean> future = new CompletableFuture<>();
     this.send(new ActorMessage.Equip(item, future));
     try {
@@ -263,6 +278,9 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
   }
 
   public boolean unequip(EquipmentSlot slot) {
+    if (isActorThread()) {
+      return handleUnequip(slot);
+    }
     CompletableFuture<Boolean> future = new CompletableFuture<>();
     this.send(new ActorMessage.Unequip(slot, future));
     try {
@@ -276,6 +294,9 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
   }
 
   public MudMessage<?> lookAtMe() {
+    if (isActorThread()) {
+      return performLookAtMe();
+    }
     CompletableFuture<MudMessage<?>> future = new CompletableFuture<>();
     this.send(new ActorMessage.LookAtMe(future));
     try {

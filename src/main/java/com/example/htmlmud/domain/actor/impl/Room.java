@@ -167,6 +167,10 @@ public class Room extends VirtualActor<RoomMessage> {
 
 
   public void enter(Living actor, Direction direction) {
+    if (isActorThread()) {
+      roomService.enter(this, players, mobs, actor, direction);
+      return;
+    }
     CompletableFuture<Void> future = new CompletableFuture<>();
     this.send(new RoomMessage.Enter(actor, direction, future));
     try {
@@ -192,6 +196,9 @@ public class Room extends VirtualActor<RoomMessage> {
   }
 
   public Optional<GameItem> tryPickItem(String args, Player picker) {
+    if (isActorThread()) {
+      return Optional.ofNullable(roomService.tryPickItem(items, args, picker));
+    }
     CompletableFuture<GameItem> future = new CompletableFuture<>();
     this.send(new RoomMessage.TryPickItem(args, picker, future));
     try {
@@ -276,6 +283,9 @@ public class Room extends VirtualActor<RoomMessage> {
   }
 
   public String lookAtRoom(Player player) {
+    if (isActorThread()) {
+      return roomService.lookAtRoom(this, players, mobs, items, player.getId());
+    }
     CompletableFuture<String> future = new CompletableFuture<>();
     this.send(new RoomMessage.LookAtRoom(player.getId(), future));
     try {
@@ -287,6 +297,9 @@ public class Room extends VirtualActor<RoomMessage> {
   }
 
   public String lookDirection(Player player, Direction dir) {
+    if (isActorThread()) {
+      return roomService.lookDirection(this, player, dir);
+    }
     CompletableFuture<String> future = new CompletableFuture<>();
     this.send(new RoomMessage.LookDirection(player, dir, future));
     try {

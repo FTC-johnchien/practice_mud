@@ -125,7 +125,6 @@ public class LivingStats {
     }
     return res;
   }
-
   // --- 用於 ResourceType.CHARGE 的方法 ---
   public int getCombatResource(String key) {
     return combatResources.getOrDefault(key, 0);
@@ -136,6 +135,31 @@ public class LivingStats {
     // 如果減到 0 或以下，移除該 key 以節省空間 (可選)
     if (combatResources.get(key) <= 0) {
       combatResources.remove(key);
+    }
+  }
+
+  public void setHp(int hp) {
+    this.hp = Math.max(0, hp);
+  }
+
+  public void setMp(int mp) {
+    this.mp = Math.max(0, mp);
+  }
+
+  public void setMaxHp(int maxHp) {
+    this.maxHp = Math.max(1, maxHp);
+  }
+
+  public void setMaxMp(int maxMp) {
+    this.maxMp = Math.max(0, maxMp);
+  }
+
+  public void clampToMax() {
+    if (this.hp > this.maxHp) {
+      this.hp = this.maxHp;
+    }
+    if (this.mp > this.maxMp) {
+      this.mp = this.maxMp;
     }
   }
 

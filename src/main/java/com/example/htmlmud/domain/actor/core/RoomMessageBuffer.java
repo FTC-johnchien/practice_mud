@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import com.example.htmlmud.domain.actor.impl.Room;
@@ -15,10 +16,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class RoomMessageBuffer {
+  // 全域共用排程執行緒池，避免每個房間建立獨立執行緒造成 OS 資源洩漏
+  private static final ScheduledExecutorService SHARED_SCHEDULER =
+      Executors.newScheduledThreadPool(2, Thread.ofPlatform().daemon().name("room-buffer-", 0).factory());
+
   // 存放一段時間內的碎片訊息
   private final List<MessageFragment> fragments = Collections.synchronizedList(new ArrayList<>());
-  private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
   private final AtomicBoolean isScheduled = new AtomicBoolean(false);
+  private volatile ScheduledFuture<?> currentTask;
   private final Room room; // 引用所屬的 Room Actor
 
   private static final long BATCH_WINDOW_MS = 100; // 100ms 的收集窗口
@@ -35,17 +40,19 @@ public class RoomMessageBuffer {
 
     // 如果還沒排程 Flush 任務，則啟動一個
     if (isScheduled.compareAndSet(false, true)) {
-      scheduler.schedule(this::flush, BATCH_WINDOW_MS, TimeUnit.MILLISECONDS);
+      currentTask = SHARED_SCHEDULER.schedule(this::flush, BATCH_WINDOW_MS, TimeUnit.MILLISECONDS);
     }
   }
 
   /**
    * 合併並發送訊息
    */
-  private void flush() {
+  public void flush() {
     try {
-      if (fragments.isEmpty())
+      if (fragments.isEmpty()) {
+        isScheduled.set(false);
         return;
+      }
 
       List<MessageFragment> snapshot;
       synchronized (fragments) {
@@ -64,6 +71,19 @@ public class RoomMessageBuffer {
     } catch (Exception e) {
       log.error("Room Message Flush 失敗", e);
     }
+  }
+
+  public void cancel() {
+    ScheduledFuture<?> task = currentTask;
+    if (task != null && !task.isDone()) {
+      task.cancel(false);
+    }
+    isScheduled.set(false);
+    fragments.clear();
+  }
+
+  public static void shutdownGlobalScheduler() {
+    SHARED_SCHEDULER.shutdown();
   }
 
   private Map<String, Object> mergeMessages(List<MessageFragment> snapshot) {
