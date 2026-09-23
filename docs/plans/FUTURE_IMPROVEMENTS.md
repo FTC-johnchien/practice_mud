@@ -20,6 +20,21 @@
 | **Phase 5: 前端組件模組化重構** | 1. 拆解 3,120 行巨石 `drpg-view.js` 為原生 ES6 Modules (`core/`, `panels/`, `modals/`)<br>2. 對齊畫面佈局 6 大區塊（主舞台、方位、戰鬥、隊伍HUD、功能抽屜、訊息日誌）<br>3. 支援全域快捷鍵與彈窗 In-place 更新防閃爍 | ✅ 已完成 |
 | **Phase 6: 三層技能架構與小隊合擊系統** | 1. 規範單一真相源：武器技能與職業特性技能統整為標準 `SkillTemplate`（`data/global/skills/**`）<br>2. 職業技能不限武器（`allowedWeapons: []`），如戰士嘲諷/鐵壁、牧師治療/驅散、盜賊潛伏/煙霧<br>3. `party_skills.json` 轉型為多角色小隊合擊技能（Party Combo/Synergy），支援職業組合、人數、陣法與複合能量要求<br>4. 引擎動態適配器、夥伴職業技能自動掛載與 146 項全域測試通過 | ✅ 已完成 |
 | **Phase 7: 全域統一技能與戰鬥動能系統** | 1. 數值資源大收斂為 HP/MP/SP 三槽模型，戰鬥中動態獲取戰氣勢能（普通命中+15、受擊+10）<br>2. 多人合擊解算器（`ComboResolver`）解算組合條件、排除異常失控成員並原子化扣除複合資源<br>3. 前端小隊 HUD 三色條規範化，`skill-drawer.js` 實現 WoW 常用列 + DQ/FF 5 大分類 Tab 抽屜<br>4. 白皮書載入，全專案 151 項自動化測試 100% 通過 | ✅ 已完成 |
+| **Phase 8: 清潔架構與指令解耦 (c 第一階段)** | 1. 消除 Enum 碰撞：DRPG 網格方向轉為 `GridDirection`，小隊戰鬥資源轉為 `CombatResourceType`<br>2. 消除指令重複實作：招募/離隊邏輯統一收斂至 `PartyService`，清理行囊重複封印分支<br>3. 指令間完全解耦 (Zero Inter-Command Coupling)：新增 `RoomMovementService` 解耦移動/觀察，擴充 `SaveGameService` 解耦存讀檔<br>4. 新增 `CleanArchitectureDecouplingTest`，全專案 156 項測試 100% 通過 (Commit: `e3f9896`) | ✅ 已完成 |
+
+---
+
+## 🧭 當前進行中與下一次喚醒執行步驟 (Next Steps Checklist)
+
+依據使用者指定之推進路線 **`c -> a -> c`**：
+- [x] **步驟 1: 第一個 `c` (Phase 8 - 清潔架構與指令解耦)**：已 100% 完成並 commit (`e3f9896`)。
+- [ ] **步驟 2: `a` (Phase 9 - 被動技能 Enable 裝配與戰鬥檢定系統)**：**👈 下次繼續時直接從此處開始！**
+  - **任務 1 (資料與模板)**：在 `default_companions.json` 與 `PartyService` 中補齊主角與夥伴被動武學（`basic_dodge`, `basic_parry`, `basic_breathing`, `cloud_step`, `iron_cloth`, `violet_mist_force` 等）。
+  - **任務 2 (模型與 DTO)**：`PartyMember` 擴充 `resolveSkillCategory` 支援被動標籤判定，`DrpgStateDto` 暴露 `passiveSlots` (DODGE, PARRY, FORCE) 與候選清單。
+  - **任務 3 (戰鬥迴圈檢定)**：在 `DrpgEnemyTacticsService` 與 `DrpgCombatLoop` 注入身法閃避（受擊免傷 + SP）、招架格擋（大幅減傷 + 金鐵脆響日誌）、內功真元護體（傷害吸收與轉化）。
+  - **任務 4 (前端 WoW 武學典籍)**：在 `party-modal.js` 的 Spellbook 中實裝第 3 個子頁籤 **【🧘 被動心法】**，支援點擊一鍵裝配 `party enable <idx> <skillId>`。
+  - **任務 5 (自動化測試)**：新增 `PassiveSkillsAndCombatCheckTest`，保持全專案 156+ 個測試全綠。
+- [ ] **步驟 3: 第二個 `c` (Phase 10 - 領域邊界深化與反向依賴反轉)**：重構 Domain 層 Output Ports，解除外層 Application/Infra 反向 import。
 
 
 ---
