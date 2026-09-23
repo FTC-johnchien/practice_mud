@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.Gender;
-import com.example.htmlmud.domain.party.model.ResourceType;
+import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.model.RowPosition;
 import lombok.Builder;
 
@@ -16,7 +16,7 @@ public record CompanionTemplate(
     String classId,
     Gender gender,
     RowPosition defaultRow,
-    ResourceType resourceType,
+    CombatResourceType resourceType,
     int maxHp,
     int maxMp,
     int maxSan,
@@ -41,7 +41,7 @@ public record CompanionTemplate(
   public CompanionTemplate {
     if (gender == null) gender = Gender.MALE;
     if (defaultRow == null) defaultRow = RowPosition.FRONT;
-    if (resourceType == null) resourceType = ResourceType.MP;
+    if (resourceType == null) resourceType = CombatResourceType.MP;
     if (initialEquipment == null) initialEquipment = Map.of();
     if (skills == null) skills = List.of();
     if (aliases == null) aliases = List.of();

@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.domain.dungeon.model.Direction;
+import com.example.htmlmud.domain.dungeon.model.GridDirection;
 import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
 import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
 import com.example.htmlmud.domain.dungeon.model.DungeonTile;
@@ -196,7 +196,7 @@ public class DungeonManager {
         .height(h)
         .tiles(tiles)
         .startCoord(new GridCoord(1, 8)) // 從 (1, 8) 出發
-        .startFacing(Direction.NORTH)    // 面向北方
+        .startFacing(GridDirection.NORTH)    // 面向北方
         .build();
   }
 }

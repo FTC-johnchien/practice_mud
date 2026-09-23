@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.domain.dungeon.model.Direction;
+import com.example.htmlmud.domain.dungeon.model.GridDirection;
 import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
 import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
 import com.example.htmlmud.domain.dungeon.model.GridCoord;
@@ -36,6 +36,9 @@ public class SaveGameService {
   private final ObjectMapper objectMapper;
   private final PartyService partyService;
   private final DungeonManager dungeonManager;
+
+  @org.springframework.beans.factory.annotation.Autowired(required = false)
+  private com.example.htmlmud.domain.service.GameStateBroadcastService broadcastService;
 
   private File savesDir;
 
@@ -198,10 +201,10 @@ public class SaveGameService {
       int w = (floor != null) ? floor.getWidth() : 10;
       int h = (floor != null) ? floor.getHeight() : 10;
 
-      Direction facing = Direction.NORTH;
+      GridDirection facing = GridDirection.NORTH;
       if (data.getFloorFacing() != null) {
         try {
-          facing = Direction.valueOf(data.getFloorFacing().toUpperCase());
+          facing = GridDirection.valueOf(data.getFloorFacing().toUpperCase());
         } catch (Exception ignored) {}
       }
 
@@ -251,7 +254,7 @@ public class SaveGameService {
     }
     int startX = (floor != null && floor.getStartCoord() != null) ? floor.getStartCoord().x() : 1;
     int startY = (floor != null && floor.getStartCoord() != null) ? floor.getStartCoord().y() : 1;
-    Direction facing = (floor != null && floor.getStartFacing() != null) ? floor.getStartFacing() : Direction.NORTH;
+    GridDirection facing = (floor != null && floor.getStartFacing() != null) ? floor.getStartFacing() : GridDirection.NORTH;
     int w = (floor != null) ? floor.getWidth() : 10;
     int h = (floor != null) ? floor.getHeight() : 10;
 
@@ -275,5 +278,107 @@ public class SaveGameService {
       return deleted;
     }
     return false;
+  }
+
+  public void handleLoad(com.example.htmlmud.domain.actor.impl.Player player, String slotStr) {
+    if (player == null) return;
+    try {
+      int slotId = Integer.parseInt(slotStr.trim());
+      var data = loadGame(player.getName(), slotId);
+      if (data.getProtagonistName() != null && !data.getProtagonistName().isBlank()) {
+        player.setName(data.getProtagonistName());
+      }
+      player.reply("\n\u001B[1;36m📂【道途重臨】已成功讀取【存檔槽位 " + slotId + "】！\n進度標題: "
+          + data.getTitle() + " | 主角: " + data.getProtagonistName() + "\u001B[0m\n");
+
+      player.setInDungeon(data.isInDungeon());
+      if (data.getCurrentRoomId() != null && !data.getCurrentRoomId().isBlank()) {
+        player.setCurrentRoomId(data.getCurrentRoomId());
+      }
+      if (broadcastService != null) {
+        broadcastService.broadcastState(player);
+      }
+      broadcastSaveSlots(player);
+    } catch (NumberFormatException e) {
+      player.reply("⚠️ 存檔槽位必須為數字 (0~5)！");
+    } catch (Exception e) {
+      player.reply("❌ 讀檔失敗: " + e.getMessage());
+    }
+  }
+
+  public void handleNew(com.example.htmlmud.domain.actor.impl.Player player, String args) {
+    if (player == null) return;
+    try {
+      String protagonistName = "玄靈子";
+      String formationId = "formation_four_symbols";
+      if (args != null && !args.isBlank()) {
+        String[] tokens = args.trim().split("\\s+");
+        if (tokens.length > 0 && !tokens[0].isBlank()) {
+          protagonistName = tokens[0];
+        }
+        if (tokens.length > 1 && !tokens[1].isBlank()) {
+          formationId = tokens[1];
+        }
+      }
+      player.setName(protagonistName);
+      createNewGame(player.getName(), protagonistName, formationId);
+      player.reply("\n\u001B[1;33m✨【新途啟程】道心初定！主角【" + protagonistName + "】踏入【新手村客棧】！\u001B[0m\n");
+
+      player.setInDungeon(false);
+      player.setCurrentRoomId("newbie_village:inn");
+      if (broadcastService != null) {
+        broadcastService.broadcastState(player);
+      }
+      broadcastSaveSlots(player);
+    } catch (Exception e) {
+      player.reply("❌ 開闢新遊戲失敗: " + e.getMessage());
+    }
+  }
+
+  public void handleDelete(com.example.htmlmud.domain.actor.impl.Player player, String slotStr) {
+    if (player == null) return;
+    try {
+      int slotId = Integer.parseInt(slotStr.trim());
+      boolean deleted = deleteSave(slotId);
+      if (deleted) {
+        player.reply("🗑️ 已成功刪除【存檔槽位 " + slotId + "】。");
+      } else {
+        player.reply("⚠️ 槽位 " + slotId + " 本就是空槽位或無法刪除。");
+      }
+      broadcastSaveSlots(player);
+    } catch (Exception e) {
+      player.reply("❌ 刪除存檔失敗: " + e.getMessage());
+    }
+  }
+
+  public void listSaveSlots(com.example.htmlmud.domain.actor.impl.Player player) {
+    if (player == null) return;
+    List<SaveSlotDto> slots = listSaveSlots();
+    StringBuilder sb = new StringBuilder();
+    sb.append("=== 📜【仙道命冊・單機存檔槽位】===\n");
+    for (SaveSlotDto s : slots) {
+      String slotName = (s.getSlotId() == 0) ? "[自動存檔]" : "[槽位 " + s.getSlotId() + "]";
+      if (s.isEmpty()) {
+        sb.append(String.format(" %-10s -- (空無道痕) --\n", slotName));
+      } else {
+        sb.append(String.format(" %-10s %-20s | 主角: %-6s | %s | %s\n",
+            slotName,
+            s.getTitle(),
+            s.getProtagonistName(),
+            s.getFloorName(),
+            s.getSavedAt() != null ? s.getSavedAt() : ""));
+      }
+    }
+    sb.append("------------------------------------------\n");
+    sb.append("提示: 輸入 'save <1-5>' 儲存，'load <0-5>' 讀檔，'new [姓名]' 新開局\n");
+    player.reply(sb.toString());
+
+    broadcastSaveSlots(player);
+  }
+
+  public void broadcastSaveSlots(com.example.htmlmud.domain.actor.impl.Player player) {
+    if (player == null) return;
+    List<SaveSlotDto> slots = listSaveSlots();
+    player.sendJson(java.util.Map.of("type", "SAVE_SLOTS", "slots", slots));
   }
 }

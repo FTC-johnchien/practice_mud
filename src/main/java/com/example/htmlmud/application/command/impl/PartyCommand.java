@@ -233,35 +233,11 @@ public class PartyCommand implements PlayerCommand {
   }
 
   private void handleRecruit(Player self, Party party, String target) {
-    if (party.size() >= Party.MAX_PARTY_SIZE) {
-      self.reply("【旅團滿編】問道旅團已達上限 " + Party.MAX_PARTY_SIZE + " 人，無法再結納更多隊友！");
-      return;
-    }
-
-    boolean success = partyService.recruitCompanion(party, target);
-    if (success) {
-      PartyMember added = party.getMembers().get(party.getMembers().size() - 1);
-      self.reply("\u001B[1;32m🤝【結識同道】「" + added.getName() + "」爽朗抱拳應允，正式加入【" + party.getPartyName() + "】！\u001B[0m\n"
-          + "【" + added.getName() + "】(" + added.getRoleTitle() + ") 當前站位: " + (added.getRow() == com.example.htmlmud.domain.party.model.RowPosition.FRONT ? "前衛" : "後衛"));
-    } else {
-      boolean alreadyIn = party.getMembers().stream().anyMatch(m -> m.getName().equalsIgnoreCase(target) || m.getId().equalsIgnoreCase(target));
-      if (alreadyIn) {
-        self.reply("【同道同行】「" + target + "」已身處隊伍之中，與你生死與共。");
-      } else {
-        self.reply("此地並未見到能結納為同道的「" + target + "」。(可招募夥伴：鐵牛 tie_niu、凌霜 ling_shuang)");
-      }
-    }
-    broadcastDrpgState(self);
+    partyService.recruitCompanionForPlayer(self, target);
   }
 
   private void handleDismiss(Player self, Party party, String target) {
-    boolean success = partyService.dismissCompanion(party, target);
-    if (success) {
-      self.reply("\u001B[1;33m👋【道別】已將隊員「" + target + "」請離隊伍，其已抱拳告辭返回客棧安歇。\u001B[0m");
-    } else {
-      self.reply("無法請離「" + target + "」（隊長不可離隊，或隊伍中查無此人）。");
-    }
-    broadcastDrpgState(self);
+    partyService.dismissCompanionForPlayer(self, target);
   }
 
   private void handleTactics(Player self, Party party, String[] parts) {

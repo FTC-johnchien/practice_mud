@@ -28,7 +28,7 @@ import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.ResourceType;
+import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.model.RowPosition;
 import com.example.htmlmud.domain.party.model.TacticsCondition;
 import com.example.htmlmud.domain.party.model.TacticsRule;
@@ -107,7 +107,7 @@ class CustomCompanionTacticsTest {
         .name("春風化雨")
         .heal(true)
         .healAmount(30)
-        .costType(ResourceType.MP)
+        .costType(CombatResourceType.MP)
         .costValue(15)
         .cooldownMs(3000)
         .build();
@@ -130,7 +130,7 @@ class CustomCompanionTacticsTest {
         .name("起死回生")
         .heal(true)
         .healAmount(100)
-        .costType(ResourceType.MP)
+        .costType(CombatResourceType.MP)
         .costValue(40)
         .cooldownMs(8000)
         .build();
@@ -196,7 +196,7 @@ class CustomCompanionTacticsTest {
         .stats(tankStats)
         .currentRage(50)
         .maxRage(100)
-        .resourceType(ResourceType.RAGE)
+        .resourceType(CombatResourceType.RAGE)
         .skills(new ArrayList<>())
         .tactics(new ArrayList<>())
         .build();
@@ -206,7 +206,7 @@ class CustomCompanionTacticsTest {
         .id("group_taunt")
         .name("獅子吼")
         .taunt(true)
-        .costType(ResourceType.RAGE)
+        .costType(CombatResourceType.RAGE)
         .costValue(10)
         .cooldownMs(5000)
         .build();
@@ -227,7 +227,7 @@ class CustomCompanionTacticsTest {
         .id("boss_taunt")
         .name("鎮岳斷喝")
         .taunt(true)
-        .costType(ResourceType.RAGE)
+        .costType(CombatResourceType.RAGE)
         .costValue(20)
         .cooldownMs(6000)
         .build();

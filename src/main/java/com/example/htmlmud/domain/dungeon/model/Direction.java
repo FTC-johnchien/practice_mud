@@ -2,6 +2,10 @@ package com.example.htmlmud.domain.dungeon.model;
 
 import lombok.Getter;
 
+/**
+ * @deprecated 請改用 {@link GridDirection} 以避免與 MUD 拓撲 {@link com.example.htmlmud.domain.model.enums.Direction} 命名衝突。
+ */
+@Deprecated
 @Getter
 public enum Direction {
   NORTH(0, -1, "^", "北"),
@@ -55,5 +59,14 @@ public enum Direction {
       case SOUTH -> "▼";
       case WEST -> "◀";
     };
+  }
+
+  public GridDirection toGridDirection() {
+    return GridDirection.valueOf(this.name());
+  }
+
+  public static Direction fromGridDirection(GridDirection gd) {
+    if (gd == null) return null;
+    return Direction.valueOf(gd.name());
   }
 }

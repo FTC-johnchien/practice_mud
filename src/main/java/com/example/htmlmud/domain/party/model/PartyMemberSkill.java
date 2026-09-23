@@ -17,7 +17,17 @@ public class PartyMemberSkill {
   private String name;
   private String icon;
   private String description;
-  private ResourceType costType;
+  private CombatResourceType costType;
+
+  @Deprecated
+  public ResourceType getLegacyCostType() {
+    return ResourceType.fromCombatResourceType(costType);
+  }
+
+  @Deprecated
+  public void setLegacyCostType(ResourceType legacyType) {
+    this.costType = legacyType != null ? legacyType.toCombatResourceType() : null;
+  }
   private int costValue;
   @Builder.Default
   private int spCost = 0;
@@ -69,7 +79,7 @@ public class PartyMemberSkill {
   public static PartyMemberSkill fromSkillTemplate(com.example.htmlmud.domain.model.template.SkillTemplate tpl) {
     if (tpl == null) return null;
 
-    ResourceType costType = ResourceType.MP;
+    CombatResourceType costType = CombatResourceType.MP;
     int costValue = 0;
     int sp = 0;
     int mp = 0;
@@ -81,28 +91,28 @@ public class PartyMemberSkill {
       hp = tpl.getCosts().hp();
 
       if (mp > 0) {
-        costType = ResourceType.MP;
+        costType = CombatResourceType.MP;
         costValue = mp;
       } else if (sp > 0) {
-        costType = ResourceType.SP;
+        costType = CombatResourceType.SP;
         costValue = sp;
       } else if (hp > 0) {
-        costType = ResourceType.HP;
+        costType = CombatResourceType.HP;
         costValue = hp;
       }
     }
     if (tpl.getTags() != null) {
       if (tpl.getTags().contains("SP")) {
-        costType = ResourceType.SP;
+        costType = CombatResourceType.SP;
         costValue = sp;
       } else if (tpl.getTags().contains("COMBO")) {
-        costType = ResourceType.COMBO;
+        costType = CombatResourceType.COMBO;
         costValue = (tpl.getCosts() != null && tpl.getCosts().charge() > 0) ? tpl.getCosts().charge() : 2;
       } else if (tpl.getTags().contains("RAGE")) {
-        costType = ResourceType.RAGE;
+        costType = CombatResourceType.RAGE;
         costValue = (tpl.getCosts() != null && tpl.getCosts().stamina() > 0) ? tpl.getCosts().stamina() : sp;
       } else if (tpl.getTags().contains("FORCE")) {
-        costType = ResourceType.FORCE;
+        costType = CombatResourceType.FORCE;
       }
     }
 
@@ -132,7 +142,7 @@ public class PartyMemberSkill {
       category = "FORMATION";
     } else if (!weapons.isEmpty()) {
       category = "WEAPON";
-    } else if (costType == ResourceType.MP || (tpl.getTags() != null && tpl.getTags().contains("MAGIC"))) {
+    } else if (costType == CombatResourceType.MP || (tpl.getTags() != null && tpl.getTags().contains("MAGIC"))) {
       category = "SPELL";
     }
 

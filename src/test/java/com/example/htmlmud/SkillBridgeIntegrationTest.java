@@ -14,7 +14,7 @@ import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.entity.SkillEntry;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.ResourceType;
+import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.model.RowPosition;
 import com.example.htmlmud.domain.repository.TemplateReader;
 import com.example.htmlmud.domain.service.CharacterSyncService;
@@ -110,7 +110,7 @@ class SkillBridgeIntegrationTest {
         .id("m-leader")
         .name("劍狂")
         .stats(new LivingStats())
-        .resourceType(ResourceType.COMBO)
+        .resourceType(CombatResourceType.COMBO)
         .row(RowPosition.FRONT)
         .build();
 

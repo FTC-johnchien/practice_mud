@@ -20,7 +20,7 @@ import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyItemSlot;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.ResourceType;
+import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.service.PartyService;
 
 class PartyInventoryAndMadnessTest {
@@ -184,7 +184,7 @@ class PartyInventoryAndMadnessTest {
         .findFirst().orElse(null);
     assertThat(learned).isNotNull();
     assertThat(learned.getName()).isEqualTo("青元貫日劍");
-    assertThat(learned.getCostType()).isEqualTo(ResourceType.RAGE); // 自動適配為力士怒氣資源
+    assertThat(learned.getCostType()).isEqualTo(CombatResourceType.RAGE); // 自動適配為力士怒氣資源
   }
 
   @Test

@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.ResourceType;
+import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.model.RowPosition;
 import com.example.htmlmud.domain.party.model.TacticsRule;
 import com.example.htmlmud.domain.repository.TemplateReader;
@@ -161,13 +161,13 @@ public class DrpgEnemyTacticsService {
           && (e.getHp() > 400 || (e.getTemplateId() != null && e.getTemplateId().contains("boss"))));
 
       case RESOURCE_GTE -> {
-        if (member.getResourceType() == ResourceType.SP) {
+        if (member.getResourceType() == CombatResourceType.SP) {
           yield member.getCurrentSp() >= rule.getConditionValue();
-        } else if (member.getResourceType() == ResourceType.RAGE) {
+        } else if (member.getResourceType() == CombatResourceType.RAGE) {
           yield member.getCurrentRage() >= rule.getConditionValue();
-        } else if (member.getResourceType() == ResourceType.COMBO) {
+        } else if (member.getResourceType() == CombatResourceType.COMBO) {
           yield member.getCurrentCombo() >= rule.getConditionValue();
-        } else if (member.getResourceType() == ResourceType.MP && member.getStats() != null) {
+        } else if (member.getResourceType() == CombatResourceType.MP && member.getStats() != null) {
           yield member.getStats().getMp() >= rule.getConditionValue();
         }
         yield true;
@@ -184,15 +184,15 @@ public class DrpgEnemyTacticsService {
     if (member == null || skill == null) return false;
     if (!member.isSkillUsable(skill)) return false;
     if (member.isOnCooldown(skill.getId())) return false;
-    if (skill.getCostType() == ResourceType.MP) {
+    if (skill.getCostType() == CombatResourceType.MP) {
       return member.getStats() != null && member.getStats().getMp() >= skill.getCostValue();
-    } else if (skill.getCostType() == ResourceType.SP) {
+    } else if (skill.getCostType() == CombatResourceType.SP) {
       return member.getCurrentSp() >= skill.getCostValue();
-    } else if (skill.getCostType() == ResourceType.RAGE) {
+    } else if (skill.getCostType() == CombatResourceType.RAGE) {
       return member.getCurrentRage() >= skill.getCostValue();
-    } else if (skill.getCostType() == ResourceType.COMBO) {
+    } else if (skill.getCostType() == CombatResourceType.COMBO) {
       return member.getCurrentCombo() >= skill.getCostValue();
-    } else if (skill.getCostType() == ResourceType.HP) {
+    } else if (skill.getCostType() == CombatResourceType.HP) {
       return member.getStats() != null && member.getStats().getHp() > skill.getCostValue();
     }
     return true;
@@ -202,15 +202,15 @@ public class DrpgEnemyTacticsService {
    * 扣除隊員施法資源
    */
   public boolean consumeSkillResource(PartyMember member, PartyMemberSkill skill) {
-    if (skill.getCostType() == ResourceType.MP) {
+    if (skill.getCostType() == CombatResourceType.MP) {
       return member.consumeMp(skill.getCostValue());
-    } else if (skill.getCostType() == ResourceType.SP) {
+    } else if (skill.getCostType() == CombatResourceType.SP) {
       return member.consumeSp(skill.getCostValue());
-    } else if (skill.getCostType() == ResourceType.RAGE) {
+    } else if (skill.getCostType() == CombatResourceType.RAGE) {
       return member.consumeRage(skill.getCostValue());
-    } else if (skill.getCostType() == ResourceType.COMBO) {
+    } else if (skill.getCostType() == CombatResourceType.COMBO) {
       return member.consumeCombo(skill.getCostValue());
-    } else if (skill.getCostType() == ResourceType.HP) {
+    } else if (skill.getCostType() == CombatResourceType.HP) {
       if (member.getStats() != null && member.getStats().getHp() > skill.getCostValue()) {
         member.takeDamage(skill.getCostValue());
         return true;

@@ -8,7 +8,7 @@ import java.io.InputStream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import com.example.htmlmud.domain.dungeon.model.Direction;
+import com.example.htmlmud.domain.dungeon.model.GridDirection;
 import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
 import com.example.htmlmud.domain.dungeon.model.DungeonTile;
 import com.example.htmlmud.domain.dungeon.service.DungeonFloorLoader;
@@ -33,7 +33,7 @@ class DataDrivenDungeonTest {
       assertThat(floor.getHeight()).isEqualTo(10);
       assertThat(floor.getStartCoord().x()).isEqualTo(1);
       assertThat(floor.getStartCoord().y()).isEqualTo(8);
-      assertThat(floor.getStartFacing()).isEqualTo(Direction.NORTH);
+      assertThat(floor.getStartFacing()).isEqualTo(GridDirection.NORTH);
 
       // (1, 8) 應為回地表石階 STAIRS_UP
       DungeonTile stairsUp = floor.getTile(1, 8);

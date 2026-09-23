@@ -23,7 +23,7 @@ import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyItemSlot;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.ResourceType;
+import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.model.RowPosition;
 import com.example.htmlmud.domain.party.service.PartyService;
 import com.example.htmlmud.domain.repository.TemplateReader;
@@ -463,12 +463,14 @@ public class DrpgBattleService {
 
     // 資源扣除檢驗
     if (!tacticsService.consumeSkillResource(member, skill)) {
-      if (skill.getCostType() == ResourceType.MP) {
+      if (skill.getCostType() == CombatResourceType.MP) {
         player.reply("真元不足！需要 " + skill.getCostValue() + " MP！");
-      } else if (skill.getCostType() == ResourceType.RAGE) {
+      } else if (skill.getCostType() == CombatResourceType.RAGE) {
         player.reply("怒氣未滿！需要 " + skill.getCostValue() + " 點怒氣！");
-      } else if (skill.getCostType() == ResourceType.COMBO) {
+      } else if (skill.getCostType() == CombatResourceType.COMBO) {
         player.reply("連擊點不足！需要 " + skill.getCostValue() + " 層連擊！");
+      } else if (skill.getCostType() == CombatResourceType.SP) {
+        player.reply("戰氣不足！需要 " + skill.getCostValue() + " 點戰氣！");
       } else {
         player.reply("資源不足，無法施展招式！");
       }

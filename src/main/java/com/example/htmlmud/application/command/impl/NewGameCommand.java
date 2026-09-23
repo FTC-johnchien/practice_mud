@@ -5,6 +5,7 @@ import com.example.htmlmud.application.command.CommandAlias;
 import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.context.MudContext;
+import com.example.htmlmud.domain.save.service.SaveGameService;
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -12,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 @CommandAlias({"newgame"})
 public class NewGameCommand implements PlayerCommand {
 
-  private final SaveCommand saveCommand;
+  private final SaveGameService saveGameService;
 
   @Override
   public String getKey() {
@@ -22,7 +23,7 @@ public class NewGameCommand implements PlayerCommand {
   @Override
   public void execute(String args) {
     Player player = MudContext.currentPlayer();
-    saveCommand.handleNew(player, args);
+    saveGameService.handleNew(player, args);
   }
 
   @Override

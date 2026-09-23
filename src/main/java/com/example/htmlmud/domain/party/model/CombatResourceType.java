@@ -3,10 +3,10 @@ package com.example.htmlmud.domain.party.model;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
- * @deprecated 請改用 {@link CombatResourceType} 以避免與生靈屬性 {@link com.example.htmlmud.domain.model.enums.ResourceType} 命名衝突。
+ * 小隊成員戰鬥放招資源類型 (Combat Resource Type)
+ * 區隔於生靈屬性 Enum (domain.model.enums.ResourceType)
  */
-@Deprecated
-public enum ResourceType {
+public enum CombatResourceType {
   MP("真元", "點"),
   SP("戰氣", "點"),
   HP("氣血", "點"),
@@ -18,7 +18,7 @@ public enum ResourceType {
   private final String displayName;
   private final String unit;
 
-  ResourceType(String displayName, String unit) {
+  CombatResourceType(String displayName, String unit) {
     this.displayName = displayName;
     this.unit = unit;
   }
@@ -31,17 +31,8 @@ public enum ResourceType {
     return unit;
   }
 
-  public CombatResourceType toCombatResourceType() {
-    return CombatResourceType.valueOf(this.name());
-  }
-
-  public static ResourceType fromCombatResourceType(CombatResourceType crt) {
-    if (crt == null) return null;
-    return ResourceType.valueOf(crt.name());
-  }
-
   @JsonCreator
-  public static ResourceType fromString(String value) {
+  public static CombatResourceType fromString(String value) {
     if (value == null || value.isBlank()) return MP;
     String upper = value.trim().toUpperCase();
     return switch (upper) {

@@ -57,7 +57,7 @@ public class Party {
           .icon("🧬")
           .description("自異變隊友道核中領悟之殘篇秘法")
           .costType(target.getResourceType())
-          .costValue(target.getResourceType() == ResourceType.COMBO ? 2 : (target.getResourceType() == ResourceType.RAGE ? 30 : 35))
+          .costValue(target.getResourceType() == CombatResourceType.COMBO ? 2 : (target.getResourceType() == CombatResourceType.RAGE ? 30 : 35))
           .cooldownMs(6000)
           .damageMultiplier(1.8)
           .build();

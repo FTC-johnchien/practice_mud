@@ -51,7 +51,7 @@ public class DungeonCommand implements PlayerCommand {
   private final DungeonNavigator dungeonNavigator;
   private final PartyService partyService;
   private final com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService;
-  private final MoveCommand moveCommand;
+  private final com.example.htmlmud.domain.service.RoomMovementService roomMovementService;
   private final com.example.htmlmud.domain.service.GameStateBroadcastService broadcastService;
   private final TemplateReader templateReader;
 
@@ -103,10 +103,10 @@ public class DungeonCommand implements PlayerCommand {
     // 若玩家處於城鎮模式中 (未進入地牢)：
     if (!self.isInDungeon()) {
       switch (input) {
-        case "w", "step w" -> moveCommand.execute("north");
-        case "s", "step s" -> moveCommand.execute("south");
-        case "a", "step a" -> moveCommand.execute("west");
-        case "d", "step d" -> moveCommand.execute("east");
+        case "w", "step w" -> roomMovementService.move(self, com.example.htmlmud.domain.model.enums.Direction.NORTH);
+        case "s", "step s" -> roomMovementService.move(self, com.example.htmlmud.domain.model.enums.Direction.SOUTH);
+        case "a", "step a" -> roomMovementService.move(self, com.example.htmlmud.domain.model.enums.Direction.WEST);
+        case "d", "step d" -> roomMovementService.move(self, com.example.htmlmud.domain.model.enums.Direction.EAST);
         default -> {
           self.reply("【城鎮導航】使用 W/A/S/D 或點擊羅盤在城鎮中穿梭。");
           broadcastService.broadcastState(self);

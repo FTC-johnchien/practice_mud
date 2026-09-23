@@ -78,18 +78,6 @@ public class InventoryCommand implements PlayerCommand {
       return;
     }
 
-    if (input.startsWith("seal ")) {
-      String sub = input.substring(5).trim();
-      try {
-        int idx = Integer.parseInt(sub);
-        battleService.sealTarget(self, idx, pos);
-        return;
-      } catch (NumberFormatException e) {
-        self.reply("用法: seal <隊員編號0-5 或 敵方畸變體編號>");
-        return;
-      }
-    }
-
     // 預設列出行囊內容
     StringBuilder sb = new StringBuilder();
     sb.append("\n\u001B[1;36m═══════════════════【隊伍公共行囊】═══════════════════\u001B[0m\n");
@@ -121,7 +109,6 @@ public class InventoryCommand implements PlayerCommand {
     sb.append("   item use <序號> <隊員0-5>   - 對隊員使用丹藥/符咒/道種\n");
     sb.append("   item equip <序號> <隊員0-5> - 為隊員穿戴武器或防具\n");
     sb.append("   item unequip <weapon/armor> <隊員0-5> - 卸下裝備放回行囊\n");
-    sb.append("   seal <隊員0-5/敵怪>         - 施展太上鎮魔咒封印\n");
     sb.append("\u001B[1;36m══════════════════════════════════════════════════\u001B[0m\n");
 
     self.reply(sb.toString());
@@ -130,6 +117,6 @@ public class InventoryCommand implements PlayerCommand {
 
   @Override
   public String getDescription() {
-    return "隊伍公共行囊與法寶丹藥管理 (支援 bag/inv/use/equip/unequip/seal)";
+    return "隊伍公共行囊與法寶丹藥管理 (支援 bag/inv/use/equip/unequip)";
   }
 }

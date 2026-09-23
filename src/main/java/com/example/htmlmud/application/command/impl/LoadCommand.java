@@ -4,13 +4,14 @@ import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.context.MudContext;
+import com.example.htmlmud.domain.save.service.SaveGameService;
 import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
 public class LoadCommand implements PlayerCommand {
 
-  private final SaveCommand saveCommand;
+  private final SaveGameService saveGameService;
 
   @Override
   public String getKey() {
@@ -21,10 +22,10 @@ public class LoadCommand implements PlayerCommand {
   public void execute(String args) {
     Player player = MudContext.currentPlayer();
     if (args == null || args.isBlank()) {
-      saveCommand.execute("list");
+      saveGameService.listSaveSlots(player);
       return;
     }
-    saveCommand.handleLoad(player, args.trim());
+    saveGameService.handleLoad(player, args.trim());
   }
 
   @Override

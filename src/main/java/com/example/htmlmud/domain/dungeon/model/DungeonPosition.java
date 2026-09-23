@@ -6,22 +6,36 @@ import lombok.Data;
 public class DungeonPosition {
   private String floorId;
   private GridCoord coord;
-  private Direction facing;
+  private GridDirection facing;
   private boolean[][] visited;
   private int width;
   private int height;
   private int dangerLevel = 0;
   private final java.util.Set<GridCoord> openedChests = new java.util.HashSet<>();
 
-  public DungeonPosition(String floorId, int startX, int startY, Direction facing, int width, int height) {
+  public DungeonPosition(String floorId, int startX, int startY, GridDirection facing, int width, int height) {
     this.floorId = floorId;
     this.coord = new GridCoord(startX, startY);
-    this.facing = facing != null ? facing : Direction.NORTH;
+    this.facing = facing != null ? facing : GridDirection.NORTH;
     this.width = width;
     this.height = height;
     this.visited = new boolean[height][width];
     this.dangerLevel = 0;
     revealAround(startX, startY, 1);
+  }
+
+  @Deprecated
+  public DungeonPosition(String floorId, int startX, int startY, Direction facing, int width, int height) {
+    this(floorId, startX, startY, facing != null ? facing.toGridDirection() : GridDirection.NORTH, width, height);
+  }
+
+  @Deprecated
+  public void setFacing(Direction facing) {
+    this.facing = facing != null ? facing.toGridDirection() : null;
+  }
+
+  public void setFacing(GridDirection facing) {
+    this.facing = facing;
   }
 
   public int addDanger(int delta) {

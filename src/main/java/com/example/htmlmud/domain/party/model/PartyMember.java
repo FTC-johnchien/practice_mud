@@ -38,7 +38,21 @@ public class PartyMember {
   @Builder.Default
   private boolean alive = true;
   @Builder.Default
-  private ResourceType resourceType = ResourceType.MP;
+  private CombatResourceType resourceType = CombatResourceType.MP;
+
+  @Deprecated
+  public ResourceType getLegacyResourceType() {
+    return ResourceType.fromCombatResourceType(resourceType);
+  }
+
+  @Deprecated
+  public void setLegacyResourceType(ResourceType type) {
+    this.resourceType = type != null ? type.toCombatResourceType() : null;
+  }
+
+  public void setResourceType(CombatResourceType type) {
+    this.resourceType = type;
+  }
   @Builder.Default
   private int currentSp = 0;
   @Builder.Default
@@ -390,7 +404,7 @@ public class PartyMember {
       }
     }
     // 力士受傷增加怒氣
-    if (this.resourceType == ResourceType.RAGE) {
+    if (this.resourceType == CombatResourceType.RAGE) {
       gainRage(15);
     }
   }
@@ -637,11 +651,11 @@ public class PartyMember {
     // 3. 輸出招式預設規則
     for (PartyMemberSkill s : skills) {
       if (!s.isHeal() && !s.isTaunt()) {
-        TacticsCondition cond = (s.getCostType() == ResourceType.SP || s.getCostType() == ResourceType.RAGE || s.getCostType() == ResourceType.COMBO)
+        TacticsCondition cond = (s.getCostType() == CombatResourceType.SP || s.getCostType() == CombatResourceType.RAGE || s.getCostType() == CombatResourceType.COMBO)
             ? TacticsCondition.RESOURCE_GTE
             : TacticsCondition.ALWAYS;
-        int val = (s.getCostType() == ResourceType.SP || s.getCostType() == ResourceType.RAGE) ? Math.max(30, s.getCostValue())
-            : (s.getCostType() == ResourceType.COMBO) ? Math.max(3, s.getCostValue()) : 0;
+        int val = (s.getCostType() == CombatResourceType.SP || s.getCostType() == CombatResourceType.RAGE) ? Math.max(30, s.getCostValue())
+            : (s.getCostType() == CombatResourceType.COMBO) ? Math.max(3, s.getCostValue()) : 0;
 
         addTacticsRule(TacticsRule.builder()
             .priority(p++)

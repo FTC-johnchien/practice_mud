@@ -9,6 +9,7 @@ import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
 import com.example.htmlmud.domain.dungeon.model.DungeonTile;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
+import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.repository.TemplateReader;
 import com.example.htmlmud.domain.service.TemplateCatalog;
 
@@ -159,10 +160,10 @@ public record DrpgStateDto(
       String resType = m.getResourceType() != null ? m.getResourceType().name() : "MP";
       int curRes = mp;
       int maxRes = maxMp;
-      if (m.getResourceType() == com.example.htmlmud.domain.party.model.ResourceType.RAGE) {
+      if (m.getResourceType() == CombatResourceType.RAGE) {
         curRes = m.getCurrentRage();
         maxRes = m.getMaxRage();
-      } else if (m.getResourceType() == com.example.htmlmud.domain.party.model.ResourceType.COMBO) {
+      } else if (m.getResourceType() == CombatResourceType.COMBO) {
         curRes = m.getCurrentCombo();
         maxRes = m.getMaxCombo();
       }
@@ -172,11 +173,11 @@ public record DrpgStateDto(
         for (var s : m.getSkills()) {
           boolean avail = true;
           if (m.isOnCooldown(s.getId())) avail = false;
-          if (s.getCostType() == com.example.htmlmud.domain.party.model.ResourceType.MP && mp < s.getCostValue()) avail = false;
-          if (s.getCostType() == com.example.htmlmud.domain.party.model.ResourceType.SP && m.getCurrentSp() < s.getCostValue()) avail = false;
-          if (s.getCostType() == com.example.htmlmud.domain.party.model.ResourceType.RAGE && m.getCurrentRage() < s.getCostValue()) avail = false;
-          if (s.getCostType() == com.example.htmlmud.domain.party.model.ResourceType.COMBO && m.getCurrentCombo() < s.getCostValue()) avail = false;
-          if (s.getCostType() == com.example.htmlmud.domain.party.model.ResourceType.HP && hp <= s.getCostValue()) avail = false;
+          if (s.getCostType() == CombatResourceType.MP && mp < s.getCostValue()) avail = false;
+          if (s.getCostType() == CombatResourceType.SP && m.getCurrentSp() < s.getCostValue()) avail = false;
+          if (s.getCostType() == CombatResourceType.RAGE && m.getCurrentRage() < s.getCostValue()) avail = false;
+          if (s.getCostType() == CombatResourceType.COMBO && m.getCurrentCombo() < s.getCostValue()) avail = false;
+          if (s.getCostType() == CombatResourceType.HP && hp <= s.getCostValue()) avail = false;
           if (!m.isSkillUsable(s)) avail = false;
 
           String costDesc = "無消耗";

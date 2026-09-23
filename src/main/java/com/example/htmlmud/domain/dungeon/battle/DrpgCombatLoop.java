@@ -11,7 +11,7 @@ import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.ResourceType;
+import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.model.RowPosition;
 import com.example.htmlmud.domain.party.model.TacticsRule;
 import lombok.extern.slf4j.Slf4j;
@@ -182,10 +182,10 @@ public class DrpgCombatLoop {
               member.gainSp(15);
 
               // 相容舊資源計數
-              if (member.getResourceType() == ResourceType.COMBO) {
+              if (member.getResourceType() == CombatResourceType.COMBO) {
                 member.gainCombo(1);
               }
-              if (member.getResourceType() == ResourceType.RAGE) {
+              if (member.getResourceType() == CombatResourceType.RAGE) {
                 member.gainRage(15);
               }
               // 陣法靈威積累
@@ -241,7 +241,7 @@ public class DrpgCombatLoop {
               targetMember.gainSp(10);
 
               // 力士受傷相容怒氣
-              if (targetMember.getResourceType() == ResourceType.RAGE) {
+              if (targetMember.getResourceType() == CombatResourceType.RAGE) {
                 targetMember.gainRage(15);
               }
 

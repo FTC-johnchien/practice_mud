@@ -9,7 +9,7 @@ import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.ResourceType;
+import com.example.htmlmud.domain.party.model.CombatResourceType;
 
 /**
  * 小隊多人合擊技能解算器 (Party Combo / Synergy Resolver)
@@ -48,8 +48,8 @@ public class ComboResolver {
     if (participants == null) return false;
 
     // 5. 參與者資源檢定
-    int spCost = skill.getSpCost() > 0 ? skill.getSpCost() : (skill.getCostType() == ResourceType.SP || skill.getCostType() == ResourceType.RAGE ? skill.getCostValue() : 0);
-    int mpCost = skill.getMpCost() > 0 ? skill.getMpCost() : (skill.getCostType() == ResourceType.MP ? skill.getCostValue() : 0);
+    int spCost = skill.getSpCost() > 0 ? skill.getSpCost() : (skill.getCostType() == CombatResourceType.SP || skill.getCostType() == CombatResourceType.RAGE ? skill.getCostValue() : 0);
+    int mpCost = skill.getMpCost() > 0 ? skill.getMpCost() : (skill.getCostType() == CombatResourceType.MP ? skill.getCostValue() : 0);
 
     for (PartyMember p : participants) {
       if (spCost > 0 && p.getCurrentSp() < spCost) return false;
@@ -125,8 +125,8 @@ public class ComboResolver {
     }
 
     // 2. 扣除全體參與者資源
-    int spCost = skill.getSpCost() > 0 ? skill.getSpCost() : (skill.getCostType() == ResourceType.SP || skill.getCostType() == ResourceType.RAGE ? skill.getCostValue() : 0);
-    int mpCost = skill.getMpCost() > 0 ? skill.getMpCost() : (skill.getCostType() == ResourceType.MP ? skill.getCostValue() : 0);
+    int spCost = skill.getSpCost() > 0 ? skill.getSpCost() : (skill.getCostType() == CombatResourceType.SP || skill.getCostType() == CombatResourceType.RAGE ? skill.getCostValue() : 0);
+    int mpCost = skill.getMpCost() > 0 ? skill.getMpCost() : (skill.getCostType() == CombatResourceType.MP ? skill.getCostValue() : 0);
 
     for (PartyMember p : participants) {
       if (spCost > 0) p.consumeSp(spCost);

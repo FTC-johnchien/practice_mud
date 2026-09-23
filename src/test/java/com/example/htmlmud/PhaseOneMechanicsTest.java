@@ -21,7 +21,7 @@ import com.example.htmlmud.domain.dungeon.service.DungeonNavigator;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.ResourceType;
+import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.service.PartyService;
 import com.example.htmlmud.domain.service.GameStateBroadcastService;
 
@@ -124,7 +124,7 @@ class PhaseOneMechanicsTest {
           .name("神聖治癒")
           .heal(true)
           .healAmount(60)
-          .costType(ResourceType.MP)
+          .costType(CombatResourceType.MP)
           .costValue(20)
           .cooldownMs(5000)
           .build();
@@ -163,7 +163,7 @@ class PhaseOneMechanicsTest {
           .id("lion_roar")
           .name("獅子吼")
           .taunt(true)
-          .costType(ResourceType.RAGE)
+          .costType(CombatResourceType.RAGE)
           .costValue(10)
           .cooldownMs(6000)
           .build();

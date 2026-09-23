@@ -19,11 +19,20 @@ public class DungeonFloor {
   private int height;
   private DungeonTile[][] tiles;
   private GridCoord startCoord;
-  private Direction startFacing;
+  private GridDirection startFacing;
   @Builder.Default
   private int dangerRate = 15;
   @Builder.Default
   private List<String> mobPool = new ArrayList<>();
+
+  @Deprecated
+  public void setStartFacing(Direction dir) {
+    this.startFacing = (dir != null) ? dir.toGridDirection() : null;
+  }
+
+  public void setStartFacing(GridDirection dir) {
+    this.startFacing = dir;
+  }
 
   public boolean isInBounds(int x, int y) {
     return x >= 0 && x < width && y >= 0 && y < height;

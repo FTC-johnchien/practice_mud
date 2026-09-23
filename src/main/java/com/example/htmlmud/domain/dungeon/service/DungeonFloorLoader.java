@@ -9,7 +9,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Component;
-import com.example.htmlmud.domain.dungeon.model.Direction;
+import com.example.htmlmud.domain.dungeon.model.GridDirection;
 import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
 import com.example.htmlmud.domain.dungeon.model.DungeonTile;
 import com.example.htmlmud.domain.dungeon.model.GridCoord;
@@ -175,10 +175,10 @@ public class DungeonFloorLoader {
       }
     }
 
-    Direction facing = Direction.NORTH;
+    GridDirection facing = GridDirection.NORTH;
     if (json.getStartFacing() != null) {
       try {
-        facing = Direction.valueOf(json.getStartFacing().toUpperCase());
+        facing = GridDirection.valueOf(json.getStartFacing().toUpperCase());
       } catch (Exception ignored) {}
     }
 

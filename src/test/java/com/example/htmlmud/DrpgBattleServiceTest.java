@@ -15,7 +15,7 @@ import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
 import com.example.htmlmud.domain.dungeon.service.DungeonManager;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.model.ResourceType;
+import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.service.PartyService;
 
 class DrpgBattleServiceTest {
@@ -57,14 +57,14 @@ class DrpgBattleServiceTest {
 
     // 驗證主角為 COMBO 資源，鐵牛為 RAGE 資源，凌霜為 MP 資源
     PartyMember leader = ctx.getParty().getMembers().get(0);
-    assertThat(leader.getResourceType()).isEqualTo(ResourceType.COMBO);
+    assertThat(leader.getResourceType()).isEqualTo(CombatResourceType.COMBO);
     assertThat(leader.getSkills()).isNotEmpty();
 
     PartyMember iron = ctx.getParty().getMembers().get(1);
-    assertThat(iron.getResourceType()).isEqualTo(ResourceType.RAGE);
+    assertThat(iron.getResourceType()).isEqualTo(CombatResourceType.RAGE);
 
     PartyMember ling = ctx.getParty().getMembers().get(3);
-    assertThat(ling.getResourceType()).isEqualTo(ResourceType.MP);
+    assertThat(ling.getResourceType()).isEqualTo(CombatResourceType.MP);
   }
 
   @Test

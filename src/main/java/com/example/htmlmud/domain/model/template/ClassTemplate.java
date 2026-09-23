@@ -2,7 +2,7 @@ package com.example.htmlmud.domain.model.template;
 
 import java.util.List;
 import java.util.Map;
-import com.example.htmlmud.domain.party.model.ResourceType;
+import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 
@@ -12,7 +12,7 @@ public record ClassTemplate(
     String id,
     String name,
     String description,
-    ResourceType resourceType,
+    CombatResourceType resourceType,
     Map<String, Integer> baseStats,
     ClassGrowth growth,
     ClassProficiencies proficiencies,

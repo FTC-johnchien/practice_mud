@@ -22,7 +22,7 @@ import com.example.htmlmud.domain.model.enums.SkillType;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.ResourceType;
+import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.service.PartyService;
 import com.example.htmlmud.domain.service.PlayerService;
 import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
@@ -143,13 +143,13 @@ public class UnifiedSkillAndSpCombatTest {
 
     PartyMemberSkill cheapSkill = PartyMemberSkill.builder()
         .id("skill-cheap")
-        .costType(ResourceType.SP)
+        .costType(CombatResourceType.SP)
         .costValue(20)
         .build();
 
     PartyMemberSkill expensiveSkill = PartyMemberSkill.builder()
         .id("skill-expensive")
-        .costType(ResourceType.SP)
+        .costType(CombatResourceType.SP)
         .costValue(50)
         .build();
 

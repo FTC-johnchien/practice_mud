@@ -16,7 +16,7 @@ import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.dungeon.battle.BattleContext;
 import com.example.htmlmud.domain.dungeon.battle.DrpgBattleService;
-import com.example.htmlmud.domain.dungeon.model.Direction;
+import com.example.htmlmud.domain.dungeon.model.GridDirection;
 import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
 import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
 import com.example.htmlmud.domain.dungeon.model.DungeonTile;
@@ -117,7 +117,7 @@ class MozhuMinesDungeonIntegrationTest {
 
     assertThat(pos.getX()).isEqualTo(1);
     assertThat(pos.getY()).isEqualTo(8);
-    assertThat(pos.getFacing()).isEqualTo(Direction.NORTH);
+    assertThat(pos.getFacing()).isEqualTo(GridDirection.NORTH);
 
     // 往前踏步 (1, 8) -> (1, 7)
     var stepResult = dungeonNavigator.moveForward(floor, pos);
@@ -126,7 +126,7 @@ class MozhuMinesDungeonIntegrationTest {
 
     // 向右轉 (NORTH -> EAST)
     dungeonNavigator.turnRight(pos);
-    assertThat(pos.getFacing()).isEqualTo(Direction.EAST);
+    assertThat(pos.getFacing()).isEqualTo(GridDirection.EAST);
 
     // 前方應為 (2, 7) 泥沼陷阱
     String inspect = dungeonNavigator.inspectForward(floor, pos);

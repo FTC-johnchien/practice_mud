@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import com.example.htmlmud.domain.dungeon.model.Direction;
+import com.example.htmlmud.domain.dungeon.model.GridDirection;
 import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
 import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
 import com.example.htmlmud.domain.dungeon.model.GridCoord;
@@ -35,7 +35,7 @@ class DungeonNavigatorTest {
     assertEquals(10, floor.getWidth());
     assertEquals(10, floor.getHeight());
     assertEquals(new GridCoord(1, 8), position.getCoord());
-    assertEquals(Direction.NORTH, position.getFacing());
+    assertEquals(GridDirection.NORTH, position.getFacing());
     assertTrue(position.isVisited(1, 8), "起始位置應已探勘解鎖迷霧");
   }
 
@@ -46,7 +46,7 @@ class DungeonNavigatorTest {
     StepResult result = navigator.moveForward(floor, position);
     assertTrue(result.success());
     assertEquals(new GridCoord(1, 7), position.getCoord());
-    assertEquals(Direction.NORTH, position.getFacing());
+    assertEquals(GridDirection.NORTH, position.getFacing());
     assertTrue(position.isVisited(1, 7), "新抵達坐標應已解鎖");
   }
 
@@ -55,7 +55,7 @@ class DungeonNavigatorTest {
   void testCollisionWithWall() {
     // 從 (1, 8) 轉向 WEST 面向牆壁 (x=0 為青岡石壁)
     navigator.turnLeft(position);
-    assertEquals(Direction.WEST, position.getFacing());
+    assertEquals(GridDirection.WEST, position.getFacing());
 
     StepResult result = navigator.moveForward(floor, position);
     assertFalse(result.success(), "面向牆壁應不可通行");
@@ -66,19 +66,19 @@ class DungeonNavigatorTest {
   @Test
   @DisplayName("測試 360 度左轉與右轉朝向變更")
   void testRotation() {
-    assertEquals(Direction.NORTH, position.getFacing());
+    assertEquals(GridDirection.NORTH, position.getFacing());
 
     // 左轉順序: NORTH -> WEST -> SOUTH -> EAST -> NORTH
-    assertEquals(Direction.WEST, navigator.turnLeft(position).facing());
-    assertEquals(Direction.SOUTH, navigator.turnLeft(position).facing());
-    assertEquals(Direction.EAST, navigator.turnLeft(position).facing());
-    assertEquals(Direction.NORTH, navigator.turnLeft(position).facing());
+    assertEquals(GridDirection.WEST, navigator.turnLeft(position).facing());
+    assertEquals(GridDirection.SOUTH, navigator.turnLeft(position).facing());
+    assertEquals(GridDirection.EAST, navigator.turnLeft(position).facing());
+    assertEquals(GridDirection.NORTH, navigator.turnLeft(position).facing());
 
     // 右轉順序: NORTH -> EAST -> SOUTH -> WEST -> NORTH
-    assertEquals(Direction.EAST, navigator.turnRight(position).facing());
-    assertEquals(Direction.SOUTH, navigator.turnRight(position).facing());
-    assertEquals(Direction.WEST, navigator.turnRight(position).facing());
-    assertEquals(Direction.NORTH, navigator.turnRight(position).facing());
+    assertEquals(GridDirection.EAST, navigator.turnRight(position).facing());
+    assertEquals(GridDirection.SOUTH, navigator.turnRight(position).facing());
+    assertEquals(GridDirection.WEST, navigator.turnRight(position).facing());
+    assertEquals(GridDirection.NORTH, navigator.turnRight(position).facing());
   }
 
   @Test
