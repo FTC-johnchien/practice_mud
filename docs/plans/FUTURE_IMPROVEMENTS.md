@@ -17,6 +17,10 @@
 | **Phase 2: 穩定角色識別與生命週期** | 1. 導入 `CharacterId` 強型別值物件，徹底廢除單機寫死 `"p-single"`<br>2. `PartyService` 與 `DungeonManager` 實作 Dual-Index Alias 雙向容錯索引（ID/Name）<br>3. `TemplateRepository` 轉型為 Spring Bean 託管元件 | ✅ 已完成 |
 | **Phase 3: 技能語意橋接與戰鬥解耦** | 1. `SkillBridgeService` 建立 MUD 熟練度與 DRPG 戰術招式之執行期語意映射與動態等級縮放<br>2. `DrpgBattleService` 解耦為輕量 Facade，拆分 `DrpgCombatLoop`、`DrpgEnemyTacticsService`、`DrpgRewardService` | ✅ 已完成 |
 | **Phase 4: 併發安全與 Actor 隱形地雷加固** | 1. `VirtualActor` 引入 `isActorThread()` 判定與內外分流，消除自身 `join()` 永久死鎖<br>2. `VirtualActor.runLoop()` 實作單訊息例外隔離防護，免疫 RuntimeException 中毒停止<br>3. `RoomMessageBuffer` 廢除 per-room 執行緒池，改以共用 Daemon 排程器統一處理碎片 Flush<br>4. `LivingStats` 強化非負邊界防禦與 `clampToMax()` 數值夾緊，消除序列化順序覆蓋問題 | ✅ 已完成 |
+| **Phase 5: 前端組件模組化重構** | 1. 拆解 3,120 行巨石 `drpg-view.js` 為原生 ES6 Modules (`core/`, `panels/`, `modals/`)<br>2. 對齊畫面佈局 6 大區塊（主舞台、方位、戰鬥、隊伍HUD、功能抽屜、訊息日誌）<br>3. 支援全域快捷鍵與彈窗 In-place 更新防閃爍 | ✅ 已完成 |
+| **Phase 6: 三層技能架構與小隊合擊系統** | 1. 規範單一真相源：武器技能與職業特性技能統整為標準 `SkillTemplate`（`data/global/skills/**`）<br>2. 職業技能不限武器（`allowedWeapons: []`），如戰士嘲諷/鐵壁、牧師治療/驅散、盜賊潛伏/煙霧<br>3. `party_skills.json` 轉型為多角色小隊合擊技能（Party Combo/Synergy），支援職業組合、人數、陣法與複合能量要求<br>4. 引擎動態適配器、夥伴職業技能自動掛載與 146 項全域測試通過 | ✅ 已完成 |
+| **Phase 7: 全域統一技能與戰鬥動能系統** | 1. 數值資源大收斂為 HP/MP/SP 三槽模型，戰鬥中動態獲取戰氣勢能（普通命中+15、受擊+10）<br>2. 多人合擊解算器（`ComboResolver`）解算組合條件、排除異常失控成員並原子化扣除複合資源<br>3. 前端小隊 HUD 三色條規範化，`skill-drawer.js` 實現 WoW 常用列 + DQ/FF 5 大分類 Tab 抽屜<br>4. 白皮書載入，全專案 151 項自動化測試 100% 通過 | ✅ 已完成 |
+
 
 ---
 
@@ -167,19 +171,24 @@
 
 ## 🎨 5. 前端現代化與組件模組化 (Frontend Architecture) - Priority: P2
 
-### 5.1 巨石 JS / CSS 檔案模組化拆分
+### 5.1 巨石 JS / CSS 檔案模組化拆分 【JS 部分 ✅ 已完成】
 - **現狀問題**：
-  - `drpg-view.js` 單檔超過 3,100 行。
+  - `drpg-view.js` 原單檔超過 3,120 行。
   - `style.css` 單檔超過 4,180 行。
   - 造成維護困難與修改時的高回歸風險。
-- **改善方案**：
-  - 改用原生 ES6 Modules 拆分：
-    - `js/core/ws-client.js`：WebSocket 通訊、指令發送、重連。
-    - `js/views/town-stage.js`：城鎮主舞台、方位羅盤、生靈清單。
-    - `js/views/battle-arena.js`：戰鬥主舞台、集火鎖定、技能抽屜、敵群陣列。
-    - `js/views/party-modal.js`：小隊狀態面板、5+2 裝備卡、境界修為條與配點。
-    - `js/views/spellbook.js`：WoW 風格武學法術書組件。
-  - CSS 按元件拆分（`base.css`, `town.css`, `battle.css`, `modal.css`）。
+- **改善方案與落地成果**：
+  - 改用原生 ES6 Modules 拆分（已完成落地並建立 10 個核心模組）：
+    - `js/core/event-bus.js`：輕量事件總線。
+    - `js/core/state-store.js`：全域狀態快照儲存中樞。
+    - `js/core/cmd-dispatcher.js`：步進防抖與方向路由派發器。
+    - `js/panels/town-panel.js`：城鎮主舞台、方位羅盤、生靈清單與物品拾取。
+    - `js/panels/dungeon-panel.js`：10x10 地牢雷達迷霧、視口切換與前方探查。
+    - `js/panels/party-hud-panel.js`：6 人小隊狀態 HUD 與陣法靈威。
+    - `js/panels/battle-panel.js`：戰鬥主舞台、敵怪雙排陣列、集火鎖定與戰鬥控制列。
+    - `js/panels/message-log-panel.js`：文字日誌終端滾動。
+    - `js/modals/`：技能抽屜、公共行囊、裝備法術書、貨棧交易與 5+1 存檔管理。
+    - `js/app.js`：應用主入口整合與全域快捷鍵。
+  - CSS 按元件拆分（`base.css`, `town.css`, `battle.css`, `modal.css`，待後續跟進）。
 
 ### 5.2 前端異常防禦與無障礙優化
 - **DOM ID 存取保護**：`mud-core.js` 中 `updateStats()` 避免無條件存取 `#hp-val`、`#mp-val`，加入 optional chaining 或 null 檢查防範 `TypeError`。

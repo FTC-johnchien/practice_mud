@@ -1,0 +1,31 @@
+{
+  "id": "class_rogue_stealth",
+  "name": "斂息匿形",
+  "description": "收斂周身生靈氣機遁入陰影，清除所有怪物仇恨，4 秒內無法被任何單體敵意招式選中。",
+  "type": "ACTIVE",
+  "school": "ROGUE",
+  "tags": [
+    "CLASS",
+    "STEALTH",
+    "COMBO"
+  ],
+  "isHidden": false,
+  "usage": {
+    "allowedWeapons": []
+  },
+  "costs": {
+    "hp": 0,
+    "mp": 0,
+    "stamina": 10,
+    "charge": 1,
+    "ammo": 0
+  },
+  "mechanics": {
+    "damage": 0,
+    "critRate": 0.2,
+    "hitRate": 1.0,
+    "scaleFactor": 1.0,
+    "scaleStat": "DEX",
+    "maxLevel": 100
+  }
+}

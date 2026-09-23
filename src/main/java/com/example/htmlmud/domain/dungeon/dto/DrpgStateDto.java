@@ -173,13 +173,17 @@ public record DrpgStateDto(
           boolean avail = true;
           if (m.isOnCooldown(s.getId())) avail = false;
           if (s.getCostType() == com.example.htmlmud.domain.party.model.ResourceType.MP && mp < s.getCostValue()) avail = false;
+          if (s.getCostType() == com.example.htmlmud.domain.party.model.ResourceType.SP && m.getCurrentSp() < s.getCostValue()) avail = false;
           if (s.getCostType() == com.example.htmlmud.domain.party.model.ResourceType.RAGE && m.getCurrentRage() < s.getCostValue()) avail = false;
           if (s.getCostType() == com.example.htmlmud.domain.party.model.ResourceType.COMBO && m.getCurrentCombo() < s.getCostValue()) avail = false;
+          if (s.getCostType() == com.example.htmlmud.domain.party.model.ResourceType.HP && hp <= s.getCostValue()) avail = false;
           if (!m.isSkillUsable(s)) avail = false;
 
           String costDesc = "無消耗";
           if (s.getCostType() != null && s.getCostValue() > 0) {
             costDesc = switch (s.getCostType()) {
+              case SP -> s.getCostValue() + " 戰氣";
+              case HP -> s.getCostValue() + " 氣血";
               case RAGE -> s.getCostValue() + " 怒氣";
               case COMBO -> s.getCostValue() + " 連擊";
               case MP -> s.getCostValue() + " 真元";
@@ -201,7 +205,9 @@ public record DrpgStateDto(
               costDesc,
               s.getCooldownMs(),
               m.getRemainingCooldownMs(s.getId()),
-              avail
+              avail,
+              s.getCategory() != null ? s.getCategory() : "CLASS",
+              s.isSynergy()
           ));
         }
       }

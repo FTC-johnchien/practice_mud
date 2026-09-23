@@ -552,6 +552,7 @@ body, html {
 .mp-fill { background: #3b82f6; }
 .rage-fill { background: #f97316; }
 .combo-fill { background: #eab308; }
+.sp-fill { background: linear-gradient(90deg, #f59e0b, #eab308); }
 
 .party-card {
   cursor: pointer;
@@ -4181,4 +4182,43 @@ body, html {
   font-size: 11px;
   color: #64748b;
   text-align: right;
-}
+}
+
+/* 技能抽屜分類分頁 (Drawer Tabs) 與合擊光效 */
+.drawer-category-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #111827;
+  border-bottom: 1px solid #374151;
+  overflow-x: auto;
+}
+
+.drawer-tab {
+  background: #1f2937;
+  color: #9ca3af;
+  border: 1px solid #374151;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.drawer-tab:hover {
+  background: #374151;
+  color: #f3f4f6;
+}
+
+.drawer-tab.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #60a5fa;
+  font-weight: bold;
+}
+
+.skill-btn.synergy-glow {
+  border-color: #f59e0b;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+}

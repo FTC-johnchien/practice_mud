@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
  */
 public enum ResourceType {
   MP("真元", "點"),
+  SP("戰氣", "點"),
+  HP("氣血", "點"),
   RAGE("怒氣", "點"),
   COMBO("連擊點", "層"),
   ENERGY("精力", "點"),
@@ -33,6 +35,8 @@ public enum ResourceType {
     if (value == null || value.isBlank()) return MP;
     String upper = value.trim().toUpperCase();
     return switch (upper) {
+      case "SP", "STAMINA", "SKILL" -> SP;
+      case "HP", "HEALTH", "LIFE" -> HP;
       case "MANA", "MP" -> MP;
       case "RAGE" -> RAGE;
       case "COMBO" -> COMBO;

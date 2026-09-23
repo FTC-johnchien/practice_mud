@@ -178,11 +178,13 @@ public class DrpgCombatLoop {
               target.takeDamage(dmg);
               member.addThreat(dmg);
 
-              // 連擊點累積
+              // 戰氣 SP 動態累積 (普通攻擊命中 +15 SP)
+              member.gainSp(15);
+
+              // 相容舊資源計數
               if (member.getResourceType() == ResourceType.COMBO) {
                 member.gainCombo(1);
               }
-              // 怒氣累積 (力士每次普通攻擊命中獲得 15 點怒氣)
               if (member.getResourceType() == ResourceType.RAGE) {
                 member.gainRage(15);
               }
@@ -235,7 +237,10 @@ public class DrpgCombatLoop {
               int finalDmg = tacticsService.calculateEnemyDamage(enemy, targetMember);
               targetMember.takeDamage(finalDmg);
 
-              // 力士受傷累積怒氣 (+15)
+              // 受傷累積戰氣 SP (+10)
+              targetMember.gainSp(10);
+
+              // 力士受傷相容怒氣
               if (targetMember.getResourceType() == ResourceType.RAGE) {
                 targetMember.gainRage(15);
               }

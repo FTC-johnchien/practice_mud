@@ -50,6 +50,7 @@ public class DrpgBattleService {
   private final DrpgEnemyTacticsService tacticsService;
   private final DrpgRewardService rewardService;
   private final SkillBridgeService skillBridgeService;
+  private final ComboResolver comboResolver;
 
   private final Map<String, BattleContext> activeBattles = new ConcurrentHashMap<>();
   private Consumer<Player> stateBroadcaster;
@@ -62,7 +63,8 @@ public class DrpgBattleService {
   public DrpgBattleService(PartyService partyService, DungeonManager dungeonManager,
       DungeonNavigator dungeonNavigator, TemplateReader templateReader,
       DrpgCombatLoop combatLoop, DrpgEnemyTacticsService tacticsService,
-      DrpgRewardService rewardService, SkillBridgeService skillBridgeService) {
+      DrpgRewardService rewardService, SkillBridgeService skillBridgeService,
+      ComboResolver comboResolver) {
     this.partyService = partyService;
     this.dungeonManager = dungeonManager;
     this.dungeonNavigator = dungeonNavigator != null ? dungeonNavigator : new DungeonNavigator();
@@ -71,11 +73,19 @@ public class DrpgBattleService {
     this.rewardService = rewardService != null ? rewardService : new DrpgRewardService(this.templateReader, this.dungeonManager);
     this.combatLoop = combatLoop != null ? combatLoop : new DrpgCombatLoop(this.tacticsService, this.rewardService);
     this.skillBridgeService = skillBridgeService != null ? skillBridgeService : new SkillBridgeService(this.templateReader);
+    this.comboResolver = comboResolver != null ? comboResolver : new ComboResolver();
+  }
+
+  public DrpgBattleService(PartyService partyService, DungeonManager dungeonManager,
+      DungeonNavigator dungeonNavigator, TemplateReader templateReader,
+      DrpgCombatLoop combatLoop, DrpgEnemyTacticsService tacticsService,
+      DrpgRewardService rewardService, SkillBridgeService skillBridgeService) {
+    this(partyService, dungeonManager, dungeonNavigator, templateReader, combatLoop, tacticsService, rewardService, skillBridgeService, null);
   }
 
   public DrpgBattleService(PartyService partyService, DungeonManager dungeonManager,
       DungeonNavigator dungeonNavigator, TemplateReader templateReader) {
-    this(partyService, dungeonManager, dungeonNavigator, templateReader, null, null, null, null);
+    this(partyService, dungeonManager, dungeonNavigator, templateReader, null, null, null, null, null);
   }
 
   public DrpgBattleService(PartyService partyService, DungeonManager dungeonManager) {
@@ -512,6 +522,27 @@ public class DrpgBattleService {
     if (ctx.isAllEnemiesDead()) {
       ctx.setState(BattleState.VICTORY);
     }
+    pushDrpgState(player, pos, ctx);
+  }
+
+  public void castComboSkill(Player player, String comboSkillId, DungeonPosition pos) {
+    BattleContext ctx = activeBattles.get(player.getName());
+    if (ctx == null || ctx.isOver()) {
+      player.reply("當前未在戰鬥中！");
+      return;
+    }
+    PartyMemberSkill comboSkill = templateReader.findPartySkill(comboSkillId).orElse(null);
+    if (comboSkill == null) {
+      player.reply("找不到指定的合擊絕技：【" + comboSkillId + "】！");
+      return;
+    }
+
+    boolean success = comboResolver.executeCombo(player, ctx, comboSkill, (p, msg) -> broadcastLog(p, ctx, msg));
+    if (!success) {
+      player.reply("【小隊合擊】當前條件不滿足（需特定職業全員存活、無失控且具備足夠戰氣/法力/陣法靈威）！");
+      return;
+    }
+
     pushDrpgState(player, pos, ctx);
   }
 

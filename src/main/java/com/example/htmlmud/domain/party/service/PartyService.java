@@ -180,6 +180,27 @@ public class PartyService {
         templateReader.findPartySkill(sId).ifPresent(memberSkills::add);
       }
 
+      // 自動掛載職業特徵技能 (不限武器別)
+      if (tpl.classId() != null) {
+        String cId = tpl.classId().toUpperCase();
+        List<String> defaultClassSkills = switch (cId) {
+          case "WARRIOR" -> List.of("class_warrior_taunt", "class_warrior_iron_wall", "class_warrior_berserk");
+          case "CLERIC" -> List.of("class_cleric_heal", "class_cleric_purify", "class_cleric_bless");
+          case "ROGUE" -> List.of("class_rogue_stealth", "class_rogue_smoke");
+          case "MAGE" -> List.of("class_taoist_seal");
+          case "SWORDSMAN" -> List.of("class_swordsman_mind_eye");
+          case "MONK" -> List.of("class_monk_iron_body");
+          default -> List.of();
+        };
+        for (String csId : defaultClassSkills) {
+          templateReader.findPartySkill(csId).ifPresent(s -> {
+            if (memberSkills.stream().noneMatch(existing -> existing.getId().equalsIgnoreCase(s.getId()))) {
+              memberSkills.add(s);
+            }
+          });
+        }
+      }
+
       PartyMember member = PartyMember.builder()
           .id("m-" + tpl.id())
           .name(tpl.name())

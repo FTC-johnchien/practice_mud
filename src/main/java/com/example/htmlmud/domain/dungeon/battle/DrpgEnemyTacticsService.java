@@ -161,7 +161,9 @@ public class DrpgEnemyTacticsService {
           && (e.getHp() > 400 || (e.getTemplateId() != null && e.getTemplateId().contains("boss"))));
 
       case RESOURCE_GTE -> {
-        if (member.getResourceType() == ResourceType.RAGE) {
+        if (member.getResourceType() == ResourceType.SP) {
+          yield member.getCurrentSp() >= rule.getConditionValue();
+        } else if (member.getResourceType() == ResourceType.RAGE) {
           yield member.getCurrentRage() >= rule.getConditionValue();
         } else if (member.getResourceType() == ResourceType.COMBO) {
           yield member.getCurrentCombo() >= rule.getConditionValue();
@@ -184,10 +186,14 @@ public class DrpgEnemyTacticsService {
     if (member.isOnCooldown(skill.getId())) return false;
     if (skill.getCostType() == ResourceType.MP) {
       return member.getStats() != null && member.getStats().getMp() >= skill.getCostValue();
+    } else if (skill.getCostType() == ResourceType.SP) {
+      return member.getCurrentSp() >= skill.getCostValue();
     } else if (skill.getCostType() == ResourceType.RAGE) {
       return member.getCurrentRage() >= skill.getCostValue();
     } else if (skill.getCostType() == ResourceType.COMBO) {
       return member.getCurrentCombo() >= skill.getCostValue();
+    } else if (skill.getCostType() == ResourceType.HP) {
+      return member.getStats() != null && member.getStats().getHp() > skill.getCostValue();
     }
     return true;
   }
@@ -198,10 +204,18 @@ public class DrpgEnemyTacticsService {
   public boolean consumeSkillResource(PartyMember member, PartyMemberSkill skill) {
     if (skill.getCostType() == ResourceType.MP) {
       return member.consumeMp(skill.getCostValue());
+    } else if (skill.getCostType() == ResourceType.SP) {
+      return member.consumeSp(skill.getCostValue());
     } else if (skill.getCostType() == ResourceType.RAGE) {
       return member.consumeRage(skill.getCostValue());
     } else if (skill.getCostType() == ResourceType.COMBO) {
       return member.consumeCombo(skill.getCostValue());
+    } else if (skill.getCostType() == ResourceType.HP) {
+      if (member.getStats() != null && member.getStats().getHp() > skill.getCostValue()) {
+        member.takeDamage(skill.getCostValue());
+        return true;
+      }
+      return false;
     }
     return true;
   }

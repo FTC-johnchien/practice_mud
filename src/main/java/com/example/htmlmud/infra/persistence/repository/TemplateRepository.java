@@ -330,7 +330,31 @@ public class TemplateRepository {
   }
   public Optional<PartyMemberSkill> getPartySkill(String id) {
     if (id == null) return Optional.empty();
-    return Optional.ofNullable(partySkillTemplates.get(id));
+    PartyMemberSkill pSkill = partySkillTemplates.get(id);
+    if (pSkill != null) return Optional.of(pSkill);
+
+    // 統一 Data-Driven 唯一真相源：降級查詢 SkillTemplate 並動態適配為 PartyMemberSkill
+    SkillTemplate sTpl = skillTemplates.get(id);
+    if (sTpl != null) {
+      return Optional.of(PartyMemberSkill.fromSkillTemplate(sTpl));
+    }
+    // 支援舊名稱與新職業技能別名映射
+    String alias = switch (id.toLowerCase()) {
+      case "tank_taunt" -> "class_warrior_taunt";
+      case "heal_single" -> "class_cleric_heal";
+      case "heal_all_purify" -> "class_cleric_purify";
+      case "taoist_seal" -> "class_taoist_seal";
+      default -> null;
+    };
+    if (alias != null) {
+      SkillTemplate aliasTpl = skillTemplates.get(alias);
+      if (aliasTpl != null) {
+        PartyMemberSkill adapted = PartyMemberSkill.fromSkillTemplate(aliasTpl);
+        adapted.setId(id);
+        return Optional.of(adapted);
+      }
+    }
+    return Optional.empty();
   }
   public Map<String, PartyMemberSkill> getAllPartySkillMap() { return Collections.unmodifiableMap(partySkillTemplates); }
   public static void registerPartySkill(PartyMemberSkill skill) { INSTANCE.addPartySkill(skill); }

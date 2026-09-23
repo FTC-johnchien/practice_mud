@@ -1,0 +1,36 @@
+{
+  "id": "tank_smash",
+  "name": "裂地崩山",
+  "description": "揮舞玄重鎚重砸前排，造成 200% 鈍擊傷害並震懾暈眩 2 秒。",
+  "type": "ACTIVE",
+  "school": "STAFF",
+  "tags": [
+    "WEAPON",
+    "BLUNT",
+    "STUN",
+    "RAGE"
+  ],
+  "isHidden": false,
+  "usage": {
+    "allowedWeapons": [
+      "STAFF",
+      "HAMMER",
+      "AXE"
+    ]
+  },
+  "costs": {
+    "hp": 0,
+    "mp": 0,
+    "stamina": 60,
+    "charge": 0,
+    "ammo": 0
+  },
+  "mechanics": {
+    "damage": 40,
+    "critRate": 0.1,
+    "hitRate": 0.9,
+    "scaleFactor": 2.0,
+    "scaleStat": "STR",
+    "maxLevel": 100
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "id": "class_taoist_seal",
+  "name": "太陰定身符",
+  "description": "祭出黃綾鎮煞符，定身敵方單體 4 秒無法行動與吟唱。",
+  "type": "ACTIVE",
+  "school": "MAGE",
+  "tags": [
+    "CLASS",
+    "STUN",
+    "SEAL",
+    "MANA"
+  ],
+  "isHidden": false,
+  "usage": {
+    "allowedWeapons": []
+  },
+  "costs": {
+    "hp": 0,
+    "mp": 35,
+    "stamina": 0,
+    "charge": 0,
+    "ammo": 0
+  },
+  "mechanics": {
+    "damage": 15,
+    "critRate": 0.05,
+    "hitRate": 0.95,
+    "scaleFactor": 1.0,
+    "scaleStat": "INT",
+    "maxLevel": 100
+  }
+}

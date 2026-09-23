@@ -14,7 +14,11 @@ public enum SkillType {
 
   REACTIVE("反應技能"),
 
-  CHANNEL("導引技能");
+  CHANNEL("導引技能"),
+
+  COMBO("多人合擊"),
+
+  FORMATION("陣法絕技");
 
 
   private final String description;

@@ -1,0 +1,32 @@
+{
+  "id": "class_cleric_heal",
+  "name": "九轉回春",
+  "description": "催動素問真氣，為我方氣血百分比最低的成員瞬間回復 40 點氣血。",
+  "type": "ACTIVE",
+  "school": "CLERIC",
+  "tags": [
+    "CLASS",
+    "HEAL",
+    "SUPPORT",
+    "MANA"
+  ],
+  "isHidden": false,
+  "usage": {
+    "allowedWeapons": []
+  },
+  "costs": {
+    "hp": 0,
+    "mp": 30,
+    "stamina": 0,
+    "charge": 0,
+    "ammo": 0
+  },
+  "mechanics": {
+    "damage": 40,
+    "critRate": 0.05,
+    "hitRate": 1.0,
+    "scaleFactor": 1.5,
+    "scaleStat": "INT",
+    "maxLevel": 100
+  }
+}

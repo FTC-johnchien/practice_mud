@@ -40,6 +40,10 @@ public class PartyMember {
   @Builder.Default
   private ResourceType resourceType = ResourceType.MP;
   @Builder.Default
+  private int currentSp = 0;
+  @Builder.Default
+  private int maxSp = 100;
+  @Builder.Default
   private int currentRage = 0;
   @Builder.Default
   private int maxRage = 100;
@@ -47,6 +51,8 @@ public class PartyMember {
   private int currentCombo = 0;
   @Builder.Default
   private int maxCombo = 5;
+  @Builder.Default
+  private java.util.List<String> quickSkillIds = new java.util.ArrayList<>();
   @Builder.Default
   private long attackIntervalMs = 2000;
   @Builder.Default
@@ -226,13 +232,51 @@ public class PartyMember {
     this.currentSan = Math.min(this.maxSan, this.currentSan + amount);
   }
 
+  public void setCurrentSp(int currentSp) {
+    this.currentSp = Math.min(this.maxSp, Math.max(0, currentSp));
+    this.currentRage = this.currentSp;
+    this.currentCombo = Math.min(this.maxCombo, this.currentSp / 20);
+  }
+
+  public void setCurrentRage(int currentRage) {
+    this.currentRage = Math.min(this.maxRage, Math.max(0, currentRage));
+    this.currentSp = this.currentRage;
+    this.currentCombo = Math.min(this.maxCombo, this.currentSp / 20);
+  }
+
+  public void setCurrentCombo(int currentCombo) {
+    this.currentCombo = Math.min(this.maxCombo, Math.max(0, currentCombo));
+    this.currentSp = Math.min(this.maxSp, this.currentCombo * 20);
+    this.currentRage = this.currentSp;
+  }
+
+  public void gainSp(int amount) {
+    this.currentSp = Math.min(this.maxSp, Math.max(0, this.currentSp + amount));
+    this.currentRage = this.currentSp;
+    this.currentCombo = Math.min(this.maxCombo, this.currentSp / 20);
+  }
+
+  public boolean consumeSp(int amount) {
+    if (this.currentSp >= amount) {
+      this.currentSp -= amount;
+      this.currentRage = this.currentSp;
+      this.currentCombo = Math.min(this.maxCombo, this.currentSp / 20);
+      return true;
+    }
+    return false;
+  }
+
   public void gainRage(int amount) {
     this.currentRage = Math.min(this.maxRage, this.currentRage + amount);
+    this.currentSp = this.currentRage;
+    this.currentCombo = Math.min(this.maxCombo, this.currentSp / 20);
   }
 
   public boolean consumeRage(int amount) {
     if (this.currentRage >= amount) {
       this.currentRage -= amount;
+      this.currentSp = this.currentRage;
+      this.currentCombo = Math.min(this.maxCombo, this.currentSp / 20);
       return true;
     }
     return false;
@@ -240,11 +284,15 @@ public class PartyMember {
 
   public void gainCombo(int amount) {
     this.currentCombo = Math.min(this.maxCombo, this.currentCombo + amount);
+    this.currentSp = Math.min(this.maxSp, this.currentCombo * 20);
+    this.currentRage = this.currentSp;
   }
 
   public boolean consumeCombo(int amount) {
     if (this.currentCombo >= amount) {
       this.currentCombo -= amount;
+      this.currentSp = Math.min(this.maxSp, this.currentCombo * 20);
+      this.currentRage = this.currentSp;
       return true;
     }
     return false;
@@ -589,10 +637,10 @@ public class PartyMember {
     // 3. 輸出招式預設規則
     for (PartyMemberSkill s : skills) {
       if (!s.isHeal() && !s.isTaunt()) {
-        TacticsCondition cond = (s.getCostType() == ResourceType.RAGE || s.getCostType() == ResourceType.COMBO)
+        TacticsCondition cond = (s.getCostType() == ResourceType.SP || s.getCostType() == ResourceType.RAGE || s.getCostType() == ResourceType.COMBO)
             ? TacticsCondition.RESOURCE_GTE
             : TacticsCondition.ALWAYS;
-        int val = (s.getCostType() == ResourceType.RAGE) ? Math.max(40, s.getCostValue())
+        int val = (s.getCostType() == ResourceType.SP || s.getCostType() == ResourceType.RAGE) ? Math.max(30, s.getCostValue())
             : (s.getCostType() == ResourceType.COMBO) ? Math.max(3, s.getCostValue()) : 0;
 
         addTacticsRule(TacticsRule.builder()

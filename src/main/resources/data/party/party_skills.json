@@ -1,5 +1,80 @@
 [
   {
+    "id": "combo_water_fire_taichi",
+    "name": "三才混元・陰陽濟世",
+    "icon": "🔥🌊",
+    "description": "法師引玄冰真火，醫者融素問靈露，戰士橫刀護法，全隊受擊減免 50% 且全體回復 50 氣血！",
+    "costType": "MP",
+    "costValue": 50,
+    "cooldownMs": 20000,
+    "damageMultiplier": 2.0,
+    "aoe": true,
+    "heal": true,
+    "taunt": false,
+    "stun": false,
+    "healAmount": 50,
+    "sanRestore": 15,
+    "allowedWeapons": [],
+    "synergy": true,
+    "requiredClasses": [
+      "MAGE",
+      "CLERIC",
+      "WARRIOR"
+    ],
+    "minPartyAlive": 3,
+    "requiredFormation": null,
+    "formationEnergyCost": 50
+  },
+  {
+    "id": "combo_four_symbols_seal",
+    "name": "四象降魔大陣",
+    "icon": "☯️🌌",
+    "description": "小隊藉《四象辟邪陣》四角靈位共鳴，全員合力鎮壓古神，全體敵人定身 5 秒並回復全員 20 點 SAN！",
+    "costType": "MP",
+    "costValue": 40,
+    "cooldownMs": 25000,
+    "damageMultiplier": 3.5,
+    "aoe": true,
+    "heal": true,
+    "taunt": false,
+    "stun": true,
+    "stunDurationSeconds": 5,
+    "healAmount": 30,
+    "sanRestore": 20,
+    "allowedWeapons": [],
+    "synergy": true,
+    "requiredClasses": [],
+    "minPartyAlive": 4,
+    "requiredFormation": "formation_four_symbols",
+    "formationEnergyCost": 100
+  },
+  {
+    "id": "combo_blade_and_shadow",
+    "name": "刀劍合璧・斷空破",
+    "icon": "⚔️⚡",
+    "description": "戰士吸引敵方注意力，刺客瞬間踏影背刺，對單體首領造成 600% 毀滅性合擊暴擊！",
+    "costType": "RAGE",
+    "costValue": 30,
+    "cooldownMs": 15000,
+    "damageMultiplier": 6.0,
+    "aoe": false,
+    "heal": false,
+    "taunt": false,
+    "stun": true,
+    "stunDurationSeconds": 3,
+    "healAmount": 0,
+    "sanRestore": 0,
+    "allowedWeapons": [],
+    "synergy": true,
+    "requiredClasses": [
+      "WARRIOR",
+      "ROGUE"
+    ],
+    "minPartyAlive": 2,
+    "requiredFormation": null,
+    "formationEnergyCost": 30
+  },
+  {
     "id": "sword_pierce",
     "name": "破空劍氣",
     "icon": "🗡️",
@@ -12,7 +87,9 @@
     "heal": false,
     "taunt": false,
     "stun": false,
-    "allowedWeapons": ["SWORD"]
+    "allowedWeapons": [
+      "SWORD"
+    ]
   },
   {
     "id": "sword_storm",
@@ -27,7 +104,9 @@
     "heal": false,
     "taunt": false,
     "stun": false,
-    "allowedWeapons": ["SWORD"]
+    "allowedWeapons": [
+      "SWORD"
+    ]
   },
   {
     "id": "tank_taunt",
@@ -58,7 +137,11 @@
     "taunt": false,
     "stun": true,
     "stunDurationSeconds": 2,
-    "allowedWeapons": ["BLUNT", "HAMMER", "AXE"]
+    "allowedWeapons": [
+      "BLUNT",
+      "HAMMER",
+      "AXE"
+    ]
   },
   {
     "id": "heal_single",
@@ -74,7 +157,11 @@
     "healAmount": 40,
     "taunt": false,
     "stun": false,
-    "allowedWeapons": ["STAFF", "WAND", "UNARMED"]
+    "allowedWeapons": [
+      "STAFF",
+      "WAND",
+      "UNARMED"
+    ]
   },
   {
     "id": "heal_all_purify",
@@ -91,7 +178,11 @@
     "sanRestore": 10,
     "taunt": false,
     "stun": false,
-    "allowedWeapons": ["STAFF", "WAND", "UNARMED"]
+    "allowedWeapons": [
+      "STAFF",
+      "WAND",
+      "UNARMED"
+    ]
   },
   {
     "id": "rogue_shadow_strike",
@@ -106,7 +197,9 @@
     "heal": false,
     "taunt": false,
     "stun": false,
-    "allowedWeapons": ["DAGGER"]
+    "allowedWeapons": [
+      "DAGGER"
+    ]
   },
   {
     "id": "rogue_seven_star",
@@ -121,7 +214,9 @@
     "heal": false,
     "taunt": false,
     "stun": false,
-    "allowedWeapons": ["DAGGER"]
+    "allowedWeapons": [
+      "DAGGER"
+    ]
   },
   {
     "id": "taoist_seal",
@@ -167,7 +262,10 @@
     "heal": false,
     "taunt": false,
     "stun": false,
-    "allowedWeapons": ["STAFF", "WAND"]
+    "allowedWeapons": [
+      "STAFF",
+      "WAND"
+    ]
   },
   {
     "id": "star_meteor",
@@ -182,6 +280,9 @@
     "heal": false,
     "taunt": false,
     "stun": false,
-    "allowedWeapons": ["STAFF", "WAND"]
+    "allowedWeapons": [
+      "STAFF",
+      "WAND"
+    ]
   }
 ]

@@ -1,0 +1,32 @@
+{
+  "id": "class_rogue_smoke",
+  "name": "避煞黑霧",
+  "description": "擲出特製避煞煙幕，敵方全體命中率下降 35%，我方全隊閃避率提高 20%，持續 5 秒。",
+  "type": "ACTIVE",
+  "school": "ROGUE",
+  "tags": [
+    "CLASS",
+    "DEBUFF",
+    "AOE",
+    "COMBO"
+  ],
+  "isHidden": false,
+  "usage": {
+    "allowedWeapons": []
+  },
+  "costs": {
+    "hp": 0,
+    "mp": 0,
+    "stamina": 20,
+    "charge": 2,
+    "ammo": 0
+  },
+  "mechanics": {
+    "damage": 0,
+    "critRate": 0.0,
+    "hitRate": 1.0,
+    "scaleFactor": 1.0,
+    "scaleStat": "DEX",
+    "maxLevel": 100
+  }
+}

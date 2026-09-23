@@ -53,6 +53,9 @@ public class BattleCommand implements PlayerCommand {
       battleService.flee(self, pos);
     } else if (input.equals("ult") || input.equals("cast") || input.equals("奧義")) {
       battleService.castPartyUltimate(self, pos);
+    } else if (input.startsWith("combo ") || input.startsWith("合擊 ")) {
+      String comboId = input.replaceFirst("^(combo|合擊)\\s+", "").trim();
+      battleService.castComboSkill(self, comboId, pos);
     } else if (input.equals("test") || input.equals("dummy") || input.equals("木樁")) {
       battleService.startTrainingBattle(self, pos);
     } else if (input.equals("charge") || input.equals("充能")) {

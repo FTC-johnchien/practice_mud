@@ -1,0 +1,31 @@
+{
+  "id": "class_monk_iron_body",
+  "name": "不滅金身",
+  "description": "運轉羅漢橫練玄功，4 秒內自身處於絕對霸體狀態，免疫昏迷、定身、混亂與走火入魔背刺。",
+  "type": "ACTIVE",
+  "school": "MONK",
+  "tags": [
+    "CLASS",
+    "IMMUNITY",
+    "FORCE"
+  ],
+  "isHidden": false,
+  "usage": {
+    "allowedWeapons": []
+  },
+  "costs": {
+    "hp": 0,
+    "mp": 0,
+    "stamina": 35,
+    "charge": 0,
+    "ammo": 0
+  },
+  "mechanics": {
+    "damage": 0,
+    "critRate": 0.0,
+    "hitRate": 1.0,
+    "scaleFactor": 1.0,
+    "scaleStat": "CON",
+    "maxLevel": 100
+  }
+}
