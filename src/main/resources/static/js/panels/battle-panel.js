@@ -89,6 +89,7 @@ export function renderBattleArena(battle) {
 
     const hpPct = Math.min(100, Math.max(0, (e.hp / e.maxHp) * 100));
     const rowBadge = e.row === 'FRONT' ? '前衛' : '後衛';
+    const buffsHtml = renderBuffBadges(e.activeBuffs);
 
     card.innerHTML = `
       <div class="enemy-name-row">
@@ -101,6 +102,7 @@ export function renderBattleArena(battle) {
       </div>
       <div class="enemy-status-row">
         ${e.isStunned ? '<span class="enemy-stun-badge">💫 眩暈中</span>' : ''}
+        ${buffsHtml}
       </div>
     `;
     enemiesBox.appendChild(card);
@@ -110,6 +112,34 @@ export function renderBattleArena(battle) {
   if (lastParty) {
     renderBattlePartyQuickBar(lastParty);
   }
+}
+
+/**
+ * 輔助函式：渲染 WoW 風格狀態效果膠囊列
+ */
+function renderBuffBadges(activeBuffs) {
+  if (!activeBuffs || !Array.isArray(activeBuffs) || activeBuffs.length === 0) return '';
+  return `
+    <div class="buff-badges-row">
+      ${activeBuffs.map(b => {
+        const cat = (b.category || 'SHIELD').toLowerCase();
+        let valText = '';
+        if (cat === 'shield' && b.value > 0) valText = ` ${b.value}`;
+        else if (cat === 'hot' && b.value > 0) valText = ` +${b.value}`;
+        else if (cat === 'dot' && b.value > 0) valText = ` -${b.value}`;
+        else if (b.stacks > 1) valText = ` x${b.stacks}`;
+
+        const secText = b.remainingSeconds !== undefined ? `(${b.remainingSeconds}s)` : '';
+        const title = `${b.name} [${b.category}]: ${valText || ''} 剩餘 ${b.remainingSeconds || 0}秒`;
+
+        return `
+          <span class="buff-badge buff-${cat}" title="${title}">
+            ${b.icon || '✨'}${valText} ${secText}
+          </span>
+        `;
+      }).join('')}
+    </div>
+  `;
 }
 
 /**
@@ -144,6 +174,7 @@ export function renderBattlePartyQuickBar(party) {
             <span class="bpmc-hp-text">HP ${m.hp}/${m.maxHp}</span>
             <span style="color:#38bdf8; font-weight:bold;">⚡ 招式盤</span>
           </div>
+          ${renderBuffBadges(m.activeBuffs)}
         </div>
       `;
     }).join('');

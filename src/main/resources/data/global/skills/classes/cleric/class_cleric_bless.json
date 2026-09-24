@@ -28,5 +28,17 @@
     "scaleFactor": 1.2,
     "scaleStat": "INT",
     "maxLevel": 100
+  },
+  "buff": {
+    "id": "buff_gold_shield",
+    "name": "金光辟邪護體",
+    "icon": "🛡️",
+    "type": "BUFF",
+    "category": "SHIELD",
+    "effectType": "SHIELD",
+    "durationSeconds": 20,
+    "percentOfTargetHp": 0.25,
+    "baseShield": 35,
+    "maxStacks": 1
   }
 }

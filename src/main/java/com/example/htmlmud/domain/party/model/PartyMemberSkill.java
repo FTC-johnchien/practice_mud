@@ -60,6 +60,7 @@ public class PartyMemberSkill {
   private boolean buff = false;
   @Builder.Default
   private boolean defense = false;
+  private com.example.htmlmud.domain.model.config.BuffConfig buffConfig;
   @Builder.Default
   private java.util.List<String> tags = java.util.List.of();
   @Builder.Default
@@ -198,6 +199,7 @@ public class PartyMemberSkill {
         .shield(isShield)
         .buff(isBuff)
         .defense(isDefense)
+        .buffConfig(tpl.getBuff())
         .tags(rawTags)
         .stun(isStun)
         .stunDurationSeconds(isStun ? 4 : 0)

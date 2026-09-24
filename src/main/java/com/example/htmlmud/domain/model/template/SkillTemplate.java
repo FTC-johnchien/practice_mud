@@ -58,4 +58,6 @@ public class SkillTemplate {
 
   java.util.Map<String, Object> messages;
 
+  com.example.htmlmud.domain.model.config.BuffConfig buff;
+
 }

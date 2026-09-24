@@ -165,6 +165,19 @@ export function renderPartyHud(party) {
           <div class="mini-bar san-fill ${sanClass}" style="width: ${sanPct}%"></div>
           <span class="mini-val ${sanClass}">SAN ${m.san}/${m.maxSan}</span>
         </div>
+        ${m.activeBuffs && Array.isArray(m.activeBuffs) && m.activeBuffs.length > 0 ? `
+          <div class="buff-badges-row" style="margin-top:2px;">
+            ${m.activeBuffs.map(b => {
+              const cat = (b.category || 'SHIELD').toLowerCase();
+              let valText = '';
+              if (cat === 'shield' && b.value > 0) valText = ` ${b.value}`;
+              else if (cat === 'hot' && b.value > 0) valText = ` +${b.value}`;
+              else if (cat === 'dot' && b.value > 0) valText = ` -${b.value}`;
+              else if (b.stacks > 1) valText = ` x${b.stacks}`;
+              return `<span class="buff-badge buff-${cat}" title="${b.name} (${b.category}): ${valText} 剩餘 ${b.remainingSeconds || 0}s">${b.icon || '✨'}${valText} (${b.remainingSeconds || 0}s)</span>`;
+            }).join('')}
+          </div>
+        ` : ''}
         ${madnessExtraHtml}
       </div>
     `;

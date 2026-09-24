@@ -28,5 +28,17 @@
     "scaleFactor": 1.0,
     "scaleStat": "CON",
     "maxLevel": 100
+  },
+  "buff": {
+    "id": "buff_fudo_myoo",
+    "name": "不動明王",
+    "icon": "⚡",
+    "type": "BUFF",
+    "category": "SHIELD",
+    "effectType": "SHIELD",
+    "durationSeconds": 10,
+    "percentOfTargetHp": 0.30,
+    "baseShield": 30,
+    "maxStacks": 1
   }
 }

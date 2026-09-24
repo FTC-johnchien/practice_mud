@@ -4222,3 +4222,63 @@ body, html {
   border-color: #f59e0b;
   box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
 }
+
+/* WoW 風格狀態效果徽章列與懸浮提示 (Buff/Debuff Pills & Tooltip) */
+.buff-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+  align-items: center;
+}
+
+.buff-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.1s ease;
+  line-height: 1.2;
+}
+
+.buff-badge:hover {
+  transform: scale(1.05);
+  filter: brightness(1.15);
+}
+
+.buff-badge.buff-shield {
+  background: rgba(14, 165, 233, 0.2);
+  border-color: #0284c7;
+  color: #7dd3fc;
+}
+
+.buff-badge.buff-hot {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #059669;
+  color: #6ee7b7;
+}
+
+.buff-badge.buff-dot {
+  background: rgba(168, 85, 247, 0.25);
+  border-color: #9333ea;
+  color: #d8b4fe;
+}
+
+.buff-badge.buff-stat {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: #d97706;
+  color: #fcd34d;
+}
+
+.buff-badge.buff-control {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #dc2626;
+  color: #fca5a5;
+}
+

@@ -31,6 +31,9 @@ public class TacticsRule {
       case ENEMY_COUNT_GTE -> "敵方存活 >= " + conditionValue + " 體";
       case ENEMY_IS_BOSS -> "遭遇煞氣首領";
       case RESOURCE_GTE -> "自身戰意資源 >= " + conditionValue;
+      case TARGET_LACKS_BUFF -> "目標缺少狀態";
+      case TARGET_HAS_BUFF -> "目標已擁有狀態";
+      case BUFF_TIME_LESS_THAN -> "目標狀態剩餘時間 < " + conditionValue + "秒";
       case ALWAYS -> "總是施展";
     };
     return String.format("#%d [%s] 當【%s】對【%s】施展【%s】",

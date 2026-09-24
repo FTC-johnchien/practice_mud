@@ -15,6 +15,8 @@ import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.model.RowPosition;
 import com.example.htmlmud.domain.party.model.TacticsRule;
 import com.example.htmlmud.domain.party.model.TacticsTarget;
+import com.example.htmlmud.domain.model.enums.BuffCategory;
+import com.example.htmlmud.domain.model.enums.BuffType;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -27,20 +29,31 @@ public class DrpgCombatLoop {
   private final DrpgEnemyTacticsService tacticsService;
   private final DrpgRewardService rewardService;
   private final DefenseResolver defenseResolver;
+  private final BuffSettlementService buffSettlementService;
 
   @Autowired
-  public DrpgCombatLoop(DrpgEnemyTacticsService tacticsService, DrpgRewardService rewardService, DefenseResolver defenseResolver) {
+  public DrpgCombatLoop(DrpgEnemyTacticsService tacticsService, DrpgRewardService rewardService,
+      DefenseResolver defenseResolver, BuffSettlementService buffSettlementService) {
     this.tacticsService = tacticsService != null ? tacticsService : new DrpgEnemyTacticsService();
     this.rewardService = rewardService != null ? rewardService : new DrpgRewardService();
     this.defenseResolver = defenseResolver != null ? defenseResolver : new DefenseResolver();
+    this.buffSettlementService = buffSettlementService != null ? buffSettlementService : new BuffSettlementService();
+  }
+
+  public DrpgCombatLoop(DrpgEnemyTacticsService tacticsService, DrpgRewardService rewardService, DefenseResolver defenseResolver) {
+    this(tacticsService, rewardService, defenseResolver, new BuffSettlementService());
   }
 
   public DrpgCombatLoop(DrpgEnemyTacticsService tacticsService, DrpgRewardService rewardService) {
-    this(tacticsService, rewardService, new DefenseResolver());
+    this(tacticsService, rewardService, new DefenseResolver(), new BuffSettlementService());
   }
 
   public DrpgCombatLoop() {
-    this(new DrpgEnemyTacticsService(), new DrpgRewardService(), new DefenseResolver());
+    this(new DrpgEnemyTacticsService(), new DrpgRewardService(), new DefenseResolver(), new BuffSettlementService());
+  }
+
+  public BuffSettlementService getBuffSettlementService() {
+    return buffSettlementService;
   }
 
   public DrpgEnemyTacticsService getTacticsService() {
@@ -74,6 +87,28 @@ public class DrpgCombatLoop {
     try {
       while (!ctx.isOver() && (player == null || player.isValid())) {
         long now = System.currentTimeMillis();
+
+        // 0. 狀態生命週期結算 (1 Heartbeat = 1 Tick, 結算持續時間、HoT 跳血、DoT 扣血與過期移除)
+        for (PartyMember member : ctx.getParty().getMembers()) {
+          if (member.isAlive()) {
+            List<String> logs = buffSettlementService.processTicks(member);
+            logs.forEach(l -> broadcastLog(player, ctx, l));
+          }
+        }
+        for (BattleEnemy enemy : ctx.getEnemies()) {
+          if (enemy.isAlive()) {
+            List<String> logs = buffSettlementService.processTicks(enemy);
+            logs.forEach(l -> broadcastLog(player, ctx, l));
+          }
+        }
+        if (ctx.isAllEnemiesDead()) {
+          ctx.setState(BattleState.VICTORY);
+          break;
+        }
+        if (ctx.isAllPartyDead()) {
+          ctx.setState(BattleState.DEFEAT);
+          break;
+        }
 
         // 1. 我方隊員行動 (包含走火入魔自殘/背刺/異變判定)
         for (PartyMember member : ctx.getParty().getMembers()) {
@@ -334,6 +369,19 @@ public class DrpgCombatLoop {
         continue;
       }
 
+      // WoW 戰術方針 AI 防呆：若招式附帶 Buff/護盾，且目標隊員身上已存在同 ID 且未過期之狀態，略過該規則防止無效重複連放
+      if (skill.getBuffConfig() != null || skill.isShield() || skill.isBuff()) {
+        PartyMember targetAlly = tacticsService.resolveAllyTarget(ctx, member,
+            (rule.getTarget() != null ? rule.getTarget() : (skill.isShield() ? TacticsTarget.FRONT_ROW_ALLY : TacticsTarget.SELF)), -1);
+        String targetBuffId = (skill.getBuffConfig() != null && skill.getBuffConfig().id() != null)
+            ? skill.getBuffConfig().id()
+            : ("buff_" + skill.getId());
+        if (targetAlly != null && targetAlly.hasActiveBuff(targetBuffId)) {
+          // 目標已有同名未過期 Buff，跳過此規則執行下一優先級
+          continue;
+        }
+      }
+
       tacticsService.consumeSkillResource(member, skill);
       applySkillEffects(player, ctx, member, skill, -1, rule.getTarget(), "【戰術方針】");
       return true;
@@ -379,12 +427,32 @@ public class DrpgCombatLoop {
       // 護盾防護技能 (如 金光辟邪護體)
       PartyMember targetAlly = tacticsService.resolveAllyTarget(ctx, member,
           (tacticsTarget != null ? tacticsTarget : TacticsTarget.FRONT_ROW_ALLY), targetIdx);
-      int targetMaxHp = (targetAlly.getStats() != null) ? targetAlly.getStats().getMaxHp() : 100;
-      int baseAmount = (skill.getHealAmount() > 0) ? skill.getHealAmount() : 35;
-      int shieldAmount = Math.max((int) (targetMaxHp * 0.25), baseAmount);
-      targetAlly.addShield(shieldAmount);
-      member.addThreat(shieldAmount / 2);
-      broadcastLog(player, ctx, "\u001B[1;36m" + tag + "🛡️ " + member.getName() + " 施展【" + skill.getName() + "】，為 " + targetAlly.getName() + " 加持辟邪護盾，凝聚 " + shieldAmount + " 點玄罡金光！\u001B[0m");
+
+      ActiveBuff activeBuff = null;
+      if (skill.getBuffConfig() != null) {
+        activeBuff = buffSettlementService.createActiveBuffFromConfig(skill.getBuffConfig(), targetAlly, member.getId(), skill.getId());
+      } else {
+        // 資料驅動 fallback
+        int targetMaxHp = (targetAlly.getStats() != null) ? targetAlly.getStats().getMaxHp() : 100;
+        int baseAmount = (skill.getHealAmount() > 0) ? skill.getHealAmount() : 35;
+        int shieldAmount = Math.max((int) (targetMaxHp * 0.25), baseAmount);
+        activeBuff = ActiveBuff.builder()
+            .id("buff_" + skill.getId())
+            .name(skill.getName())
+            .icon(skill.getIcon() != null ? skill.getIcon() : "🛡️")
+            .type(BuffType.BUFF)
+            .category(BuffCategory.SHIELD)
+            .durationTicks(40) // 20s
+            .remainingTicks(40)
+            .value(shieldAmount)
+            .build();
+      }
+
+      buffSettlementService.applyBuff(targetAlly, activeBuff);
+      member.addThreat(activeBuff.getValue() / 2);
+      broadcastLog(player, ctx, "\u001B[1;36m" + tag + "🛡️ " + member.getName() + " 施展【" + skill.getName() + "】，為 "
+          + targetAlly.getName() + " 加持辟邪護盾，凝聚 " + activeBuff.getValue() + " 點玄罡金光！（持續 " + activeBuff.getRemainingSeconds() + " 秒）\u001B[0m");
+
     } else if (skill.isTaunt()) {
       ctx.setTaunt(member.getId(), 5000);
       member.addThreat(600);
@@ -394,11 +462,29 @@ public class DrpgCombatLoop {
       PartyMember targetAlly = (tacticsTarget == TacticsTarget.SELF || tacticsTarget == null)
           ? member
           : tacticsService.resolveAllyTarget(ctx, member, tacticsTarget, targetIdx);
-      int maxHp = (targetAlly.getStats() != null) ? targetAlly.getStats().getMaxHp() : 100;
-      int barrier = Math.max(30, (int) (maxHp * 0.30));
-      targetAlly.addShield(barrier);
-      member.addThreat(300);
-      broadcastLog(player, ctx, "\u001B[1;33m" + tag + "⚡ " + member.getName() + " 施展【" + skill.getName() + "】，運起不動明王暗金罡氣，周身金芒流轉，生成 " + barrier + " 點不滅金身護體！\u001B[0m");
+
+      ActiveBuff activeBuff = null;
+      if (skill.getBuffConfig() != null) {
+        activeBuff = buffSettlementService.createActiveBuffFromConfig(skill.getBuffConfig(), targetAlly, member.getId(), skill.getId());
+      } else {
+        int maxHp = (targetAlly.getStats() != null) ? targetAlly.getStats().getMaxHp() : 100;
+        int barrier = Math.max(30, (int) (maxHp * 0.30));
+        activeBuff = ActiveBuff.builder()
+            .id("buff_" + skill.getId())
+            .name(skill.getName())
+            .icon(skill.getIcon() != null ? skill.getIcon() : "⚡")
+            .type(BuffType.BUFF)
+            .category(BuffCategory.SHIELD)
+            .durationTicks(20) // 10s
+            .remainingTicks(20)
+            .value(barrier)
+            .build();
+      }
+
+      buffSettlementService.applyBuff(targetAlly, activeBuff);
+      member.addThreat(activeBuff.getValue() / 2);
+      broadcastLog(player, ctx, "\u001B[1;33m" + tag + "⚡ " + member.getName() + " 施展【" + skill.getName() + "】，運起不動明王暗金罡氣，周身金芒流轉，生成 "
+          + activeBuff.getValue() + " 點不滅金身護體！（持續 " + activeBuff.getRemainingSeconds() + " 秒）\u001B[0m");
     } else {
       // 傷害技能
       if (skill.isAoe()) {

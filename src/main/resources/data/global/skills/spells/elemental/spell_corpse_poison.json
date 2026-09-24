@@ -1,0 +1,44 @@
+{
+  "id": "spell_corpse_poison",
+  "name": "玄陰屍毒",
+  "description": "凝聚陰煞古屍之毒，侵蝕敵怪軀體，每 2 秒造成暗蝕劇毒傷害，持續 12 秒，最多可疊加 5 層。",
+  "type": "ACTIVE",
+  "school": "TAOIST",
+  "tags": [
+    "SPELL",
+    "DEBUFF",
+    "DOT",
+    "MANA"
+  ],
+  "isHidden": false,
+  "usage": {
+    "allowedWeapons": []
+  },
+  "costs": {
+    "hp": 0,
+    "mp": 20,
+    "stamina": 0,
+    "charge": 0,
+    "ammo": 0
+  },
+  "mechanics": {
+    "damage": 10,
+    "critRate": 0.0,
+    "hitRate": 1.0,
+    "scaleFactor": 1.0,
+    "scaleStat": "INT",
+    "maxLevel": 100
+  },
+  "buff": {
+    "id": "debuff_corpse_poison",
+    "name": "玄陰屍毒",
+    "icon": "🧪",
+    "type": "DEBUFF",
+    "category": "DOT",
+    "effectType": "POISON",
+    "durationSeconds": 12,
+    "tickIntervalSeconds": 2,
+    "damagePerTick": 14,
+    "maxStacks": 5
+  }
+}

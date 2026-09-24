@@ -24,27 +24,27 @@
 | **Phase 8.5: 關鍵缺陷修復與機制純化衝刺** | 1. `CombatService` 戰鬥 Miss Sentinel `-1` 傷害加乘穿透修復（未命中立即短路免傷）<br>2. `PartyInventory` 行囊 `maxStack` 分槽堆疊防禦，且**徹底拔除建構子寫死道具**，容器回歸純粹機制<br>3. `PartyService` **徹底拔除職業技能 `switch (cId)` 與中文別名 hardcode**，改由 JSON 模板完全資料驅動<br>4. `LivingService` 房間戰利品袋 (`Loot Pouch`) 增加 `synchronized (room)` 消除併發競態<br>5. `SaveGameService` 實作 `.tmp` 暫存檔原子化替換 (`ATOMIC_MOVE`) 與 `0..5` 槽位邊界防禦<br>6. `pom.xml` 統一 Lombok 依賴與註解處理器版本為 `1.18.48`<br>7. 新增 `MechanismPurityAndBugfixTest`，全專案 160 項測試 100% 全綠通過 | ✅ 已完成 |
 | **Phase 9: 被動心法裝配與戰鬥檢定 (a 階段)** | 1. 資料模板配置：主角與同伴初始被動心法（`basic_dodge`, `basic_parry`, `basic_breathing`, `cloud_step`, `iron_cloth`, `violet_mist_force` 等）<br>2. 戰鬥被動心法動態檢定：`DefenseResolver` 實裝身法閃避（受擊免傷 + SP）、招架格擋（大幅減傷 + 金鐵交鳴日誌）、護體罡氣（傷害吸收與轉化）<br>3. 前端 WoW 心法典籍：`party-modal.js` 實裝第 3 子頁籤 **【🧘 被動心法】** 與啟用裝配切換<br>4. 新增 `PassiveSkillsAndCombatCheckTest`，164 項測試 100% 全綠通過 (Commit: `dfd4646`) | ✅ 已完成 |
 | **Phase 9.1: 戰術護盾、目標指定與技能去重修復** | 1. 戰術方針目標庫擴充：`TacticsTarget` 新增 `FRONT_ROW_ALLY`（前衛肉盾 Tank）、`LEADER`（小隊隊長）、`MEMBER_1..5`（指定隊員）<br>2. 護盾與防禦招式機制化：【金光辟邪護體】（25% 最大生命護盾）與【不動明王】（30% 最大生命金身護體）不再誤擊怪物，`takeDamage` 實裝護盾吸收<br>3. 同伴技能去重：修正 `PartyService` 載入邏輯，依 ID 與名稱同時去重，消除重複技能<br>4. 前端 ANSI 訊息日誌修復：增強 `AnsiUp` 建構子偵測與內建正則解析回退，杜絕 `[1;36m` 亂碼<br>5. 新增 `CompanionShieldAndTacticsTargetTest`，全專案 165 項測試 100% 全綠通過 (Commit: `cbfdc88`) | ✅ 已完成 |
+| **Phase 9.5: WoW 風格 Buff / Debuff 體系與戰術防呆** | 1. 基準心跳計數時間模型 (1 Tick = 500ms)，數值可預測、可存檔、純粹可測<br>2. 提取 `Buffable` 介面，`PartyMember` 與 `BattleEnemy` 統一具備狀態容器與吸收機制<br>3. 獨立 `BuffSettlementService`：相同技能刷新時間（護盾取 max）、不同技能共存（Shortest Duration First 依序抵扣）、HoT 週期治療與 DoT 週期傷害跳算<br>4. 戰術方針 AI 防呆：目標已擁有同 ID 未過期 Buff 時自動略過，根除重複施放<br>5. 招式模板全面資料驅動 (`buff` 節點)，新增 `BuffDebuffSystemTest`，全專案 169 項測試 100% 全綠通過 | ✅ 已完成 |
 
 ---
 
 ## 🧭 當前進行中與下一次喚醒執行步驟 (Next Steps Checklist)
 
-依據使用者最新反饋與規劃，下一步聚焦於推進 **WoW 風格 Buff / Debuff（狀態效果）體系**（詳見專屬計畫 [2026-09-24_wow_style_buff_debuff_system_design.md](file:///c:/Workspace/my_practice/practice_mud/docs/plans/2026-09-24_wow_style_buff_debuff_system_design.md)）：
+依據使用者最新反饋與規劃，下一步聚焦於推進 **Phase 10 - 第二個 `c`（清潔架構深化與反向依賴反轉）**：
 
 - [x] **步驟 1: 第一個 `c` (Phase 8 - 清潔架構與指令解耦)**：已 100% 完成並 commit (`e3f9896`)。
 - [x] **步驟 1.5: 關鍵缺陷修復與機制純化衝刺 (Phase 8.5 Bugfix Sprint)**：已 100% 完成 (160 項測試全數通過！)。
 - [x] **步驟 2: `a` (Phase 9 - 被動心法 Enable 裝配與戰鬥檢定系統)**：已 100% 完成 (164 項測試全數通過，commit `dfd4646`)。
 - [x] **步驟 2.1: 戰術護盾、目標指定、同伴技能去重與 ANSI 顯示修復 (Phase 9.1)**：已 100% 完成 (165 項測試全數通過，commit `cbfdc88`)。
-- [ ] **步驟 2.5: (Phase 9.5 - WoW 風格 Buff / Debuff 體系與戰術防呆)**：**👈 下次繼續時直接從此處開始！**
-  - **任務 1 (領域模型與容器)**：建立 `ActiveBuff`、`BuffType`、`BuffCategory`，並在 `PartyMember` 與 `BattleEnemy` 實裝 `activeBuffs` 狀態列表。
-  - **任務 2 (WoW 堆疊與刷新規則)**：
-    * **相同技能**：刷新持續時間（`remainingDurationMs = durationMs`），護盾取最大值不無限加厚。
-    * **不同技能**：完全共存疊加，受擊時依隊列依序吸收消耗護盾；多重屬性增益共存疊加。
-    * **戰術方針 AI 防呆**：若目標已擁有同 ID 狀態且未過期，Gambit AI 自動跳過該規則，防止重複連放。
-  - **任務 3 (心跳 Tick 與 HoT / DoT 結算)**：在 `DrpgCombatLoop` 週期性結算持續治療（回春跳綠字）與持續傷害（煞毒跳紫字），到期自動移除。
-  - **任務 4 (前端 UI 狀態膠囊與 Tooltip)**：在隊員頭像與怪物血條下方渲染動態狀態列 `[🛡️ 45 (18s)]`，支援滑鼠懸浮呈現詳細數值。
-  - **任務 5 (全量自動化測試)**：新增 `BuffDebuffSystemTest`，驗證相同技能刷新、不同技能多重護盾吸收、HoT/DoT 跳算與戰術防重複施放。
-- [ ] **步驟 3: 第二個 `c` (Phase 10 - 領域邊界深化與反向依賴反轉)**：重構 Domain 層 Output Ports，解除外層 Application/Infra 反向 import。
+- [x] **步驟 2.5: (Phase 9.5 - WoW 風格 Buff / Debuff 體系與戰術防呆)**：已 100% 完成 (169 項測試全數通過！)。
+  - [x] 任務 1 (領域模型與 Buffable 介面)：`BuffCategory`、`BuffType`、`ActiveBuff`、`Buffable`。
+  - [x] 任務 2 (獨立結算服務 BuffSettlementService 與 WoW 規則)：同技能刷新、多重護盾短時間優先、戰術 AI 防呆。
+  - [x] 任務 3 (心跳 Tick 與 HoT / DoT 結算)：HoT 跳綠字、DoT 扣血、到期與破碎自動清理。
+  - [x] 任務 4 (資料驅動招式模板)：`buff` 節點配置，0 特例代碼。
+  - [x] 任務 5 (全量純機制測試)：`BuffDebuffSystemTest` 4 項機制測試全數通過。
+  - [x] 任務 6 (前端 UI 狀態膠囊與 Tooltip)：戰鬥卡片與 HUD 渲染動態狀態列與秒數提示。
+- [ ] **步驟 3: 第二個 `c` (Phase 10 - 領域邊界深化與反向依賴反轉)**：**👈 下次繼續時直接從此處開始！**
+  - 重構 Domain 層 Output Ports，解除 `LivingService`、`PlayerService`、`GuestBehavior` 等對外層 Application/Infra 的反向 import。
 
 ---
 

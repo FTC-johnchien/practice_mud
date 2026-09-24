@@ -9,6 +9,9 @@ public enum TacticsCondition {
   ENEMY_COUNT_GTE("敵方存活數量 >=", "體"),
   ENEMY_IS_BOSS("敵方存在首領", ""),
   RESOURCE_GTE("自身資源 >=", "點"),
+  TARGET_LACKS_BUFF("目標缺少狀態", ""),
+  TARGET_HAS_BUFF("目標擁有狀態", ""),
+  BUFF_TIME_LESS_THAN("狀態剩餘時間低於", "秒"),
   ALWAYS("無條件施展", "");
 
   private final String label;

@@ -16,11 +16,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.example.htmlmud.domain.model.enums.BuffCategory;
+import java.util.Comparator;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BattleEnemy {
+public class BattleEnemy implements Buffable {
   private String id;
   private String templateId;
   private String race;
@@ -151,11 +154,94 @@ public class BattleEnemy {
     return fromTemplate(id, tpl, row, dropId, new TemplateCatalog());
   }
 
+  @Builder.Default
+  private List<ActiveBuff> activeBuffs = new ArrayList<>();
+
   public void takeDamage(int dmg) {
-    this.hp = Math.max(0, this.hp - dmg);
+    int remainingDmg = absorbShieldDamage(dmg);
+    this.hp = Math.max(0, this.hp - remainingDmg);
     if (this.hp <= 0) {
       this.alive = false;
     }
+  }
+
+  @Override
+  public int absorbShieldDamage(int incomingDmg) {
+    int remaining = incomingDmg;
+    if (activeBuffs != null && !activeBuffs.isEmpty()) {
+      var shields = activeBuffs.stream()
+          .filter(b -> b.getCategory() == BuffCategory.SHIELD && b.getValue() > 0 && !b.isExpired())
+          .sorted(Comparator.comparingInt(ActiveBuff::getRemainingTicks))
+          .toList();
+
+      for (ActiveBuff shield : shields) {
+        if (remaining <= 0) break;
+        int absorb = Math.min(remaining, shield.getValue());
+        shield.setValue(shield.getValue() - absorb);
+        remaining -= absorb;
+      }
+      activeBuffs.removeIf(ActiveBuff::isExpired);
+    }
+    return remaining;
+  }
+
+  @Override
+  public int getTotalShield() {
+    return (activeBuffs != null)
+        ? activeBuffs.stream()
+            .filter(b -> b.getCategory() == BuffCategory.SHIELD && !b.isExpired())
+            .mapToInt(ActiveBuff::getValue)
+            .sum()
+        : 0;
+  }
+
+  @Override
+  public List<ActiveBuff> getActiveBuffs() {
+    if (activeBuffs == null) {
+      activeBuffs = new ArrayList<>();
+    }
+    return activeBuffs;
+  }
+
+  @Override
+  public boolean hasActiveBuff(String buffId) {
+    if (buffId == null || activeBuffs == null || activeBuffs.isEmpty()) return false;
+    return activeBuffs.stream().anyMatch(b -> b.getId().equalsIgnoreCase(buffId) && !b.isExpired());
+  }
+
+  @Override
+  public ActiveBuff getActiveBuff(String buffId) {
+    if (buffId == null || activeBuffs == null) return null;
+    return activeBuffs.stream()
+        .filter(b -> b.getId().equalsIgnoreCase(buffId) && !b.isExpired())
+        .findFirst()
+        .orElse(null);
+  }
+
+  @Override
+  public void addBuff(ActiveBuff newBuff) {
+    if (newBuff == null) return;
+    if (activeBuffs == null) {
+      activeBuffs = new ArrayList<>();
+    }
+    ActiveBuff existing = getActiveBuff(newBuff.getId());
+    if (existing != null) {
+      existing.setDurationTicks(newBuff.getDurationTicks());
+      existing.setRemainingTicks(newBuff.getDurationTicks());
+      if (newBuff.getCategory() == BuffCategory.SHIELD) {
+        existing.setValue(Math.max(existing.getValue(), newBuff.getValue()));
+      } else if (newBuff.getMaxStacks() > 1) {
+        existing.setStacks(Math.min(existing.getMaxStacks(), existing.getStacks() + 1));
+      }
+    } else {
+      activeBuffs.add(newBuff);
+    }
+  }
+
+  @Override
+  public void removeBuff(String buffId) {
+    if (buffId == null || activeBuffs == null) return;
+    activeBuffs.removeIf(b -> b.getId().equalsIgnoreCase(buffId));
   }
 
   public boolean isStunned() {

@@ -13,12 +13,19 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.example.htmlmud.domain.dungeon.battle.ActiveBuff;
+import com.example.htmlmud.domain.dungeon.battle.Buffable;
+import com.example.htmlmud.domain.model.enums.BuffCategory;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class PartyMember {
+public class PartyMember implements Buffable {
   private String id;
   private String name;
   private String roleTitle;
@@ -103,9 +110,13 @@ public class PartyMember {
   @Builder.Default
   private int threat = 0;
 
-  // 護盾值 (Shield Absorption)
+  // 護盾值 (Legacy Shield Absorption - 相容保留)
   @Builder.Default
   private int currentShield = 0;
+
+  // 作用中狀態清單 (Active Buffs / Debuffs / Shields)
+  @Builder.Default
+  private List<ActiveBuff> activeBuffs = new ArrayList<>();
 
   // 戰術方針規則清單 (Tactics / Gambit Rules)
   @Builder.Default
@@ -430,16 +441,7 @@ public class PartyMember {
   }
 
   public void takeDamage(int damage) {
-    int remainingDmg = damage;
-    if (currentShield > 0) {
-      if (currentShield >= remainingDmg) {
-        currentShield -= remainingDmg;
-        remainingDmg = 0;
-      } else {
-        remainingDmg -= currentShield;
-        currentShield = 0;
-      }
-    }
+    int remainingDmg = absorbShieldDamage(damage);
     if (remainingDmg > 0 && stats != null) {
       stats.setHp(Math.max(0, stats.getHp() - remainingDmg));
       if (stats.getHp() <= 0) {
@@ -452,6 +454,48 @@ public class PartyMember {
     }
   }
 
+  @Override
+  public int absorbShieldDamage(int incomingDmg) {
+    int remaining = incomingDmg;
+
+    // 1. 先由 activeBuffs 裡的護盾吸收 (短時間優先 Shortest Duration First)
+    if (activeBuffs != null && !activeBuffs.isEmpty()) {
+      var shields = activeBuffs.stream()
+          .filter(b -> b.getCategory() == BuffCategory.SHIELD && b.getValue() > 0 && !b.isExpired())
+          .sorted(Comparator.comparingInt(ActiveBuff::getRemainingTicks))
+          .toList();
+
+      for (ActiveBuff shield : shields) {
+        if (remaining <= 0) break;
+        int absorb = Math.min(remaining, shield.getValue());
+        shield.setValue(shield.getValue() - absorb);
+        remaining -= absorb;
+      }
+      // 清除破碎的護盾
+      activeBuffs.removeIf(ActiveBuff::isExpired);
+    }
+
+    // 2. 若還有向後相容的 legacy currentShield，接續吸收
+    if (remaining > 0 && currentShield > 0) {
+      int absorb = Math.min(remaining, currentShield);
+      currentShield -= absorb;
+      remaining -= absorb;
+    }
+
+    return remaining;
+  }
+
+  @Override
+  public int getTotalShield() {
+    int buffShields = (activeBuffs != null)
+        ? activeBuffs.stream()
+            .filter(b -> b.getCategory() == BuffCategory.SHIELD && !b.isExpired())
+            .mapToInt(ActiveBuff::getValue)
+            .sum()
+        : 0;
+    return buffShields + currentShield;
+  }
+
   public void addShield(int amount) {
     if (amount > 0) {
       this.currentShield += amount;
@@ -459,11 +503,82 @@ public class PartyMember {
   }
 
   public int getCurrentShield() {
-    return currentShield;
+    return getTotalShield();
   }
 
   public void setCurrentShield(int currentShield) {
     this.currentShield = Math.max(0, currentShield);
+  }
+
+  @Override
+  public int getHp() {
+    return stats != null ? stats.getHp() : 0;
+  }
+
+  @Override
+  public int getMaxHp() {
+    return stats != null ? stats.getMaxHp() : 100;
+  }
+
+  @Override
+  public void setHp(int hp) {
+    if (stats != null) {
+      stats.setHp(hp);
+      if (hp <= 0) {
+        this.alive = false;
+      }
+    }
+  }
+
+  @Override
+  public List<ActiveBuff> getActiveBuffs() {
+    if (activeBuffs == null) {
+      activeBuffs = new ArrayList<>();
+    }
+    return activeBuffs;
+  }
+
+  @Override
+  public boolean hasActiveBuff(String buffId) {
+    if (buffId == null || activeBuffs == null || activeBuffs.isEmpty()) return false;
+    return activeBuffs.stream().anyMatch(b -> b.getId().equalsIgnoreCase(buffId) && !b.isExpired());
+  }
+
+  @Override
+  public ActiveBuff getActiveBuff(String buffId) {
+    if (buffId == null || activeBuffs == null) return null;
+    return activeBuffs.stream()
+        .filter(b -> b.getId().equalsIgnoreCase(buffId) && !b.isExpired())
+        .findFirst()
+        .orElse(null);
+  }
+
+  @Override
+  public void addBuff(ActiveBuff newBuff) {
+    if (newBuff == null) return;
+    if (activeBuffs == null) {
+      activeBuffs = new ArrayList<>();
+    }
+    ActiveBuff existing = getActiveBuff(newBuff.getId());
+    if (existing != null) {
+      // 相同技能/同名狀態：WoW 規則刷新時間
+      existing.setDurationTicks(newBuff.getDurationTicks());
+      existing.setRemainingTicks(newBuff.getDurationTicks());
+      if (newBuff.getCategory() == BuffCategory.SHIELD) {
+        // 護盾取較大值，不無限加厚
+        existing.setValue(Math.max(existing.getValue(), newBuff.getValue()));
+      } else if (newBuff.getMaxStacks() > 1) {
+        existing.setStacks(Math.min(existing.getMaxStacks(), existing.getStacks() + 1));
+      }
+    } else {
+      activeBuffs.add(newBuff);
+    }
+  }
+
+  @Override
+  public void removeBuff(String buffId) {
+    if (buffId == null || activeBuffs == null) return;
+    activeBuffs.removeIf(b -> b.getId().equalsIgnoreCase(buffId));
   }
 
   public void heal(int amount) {

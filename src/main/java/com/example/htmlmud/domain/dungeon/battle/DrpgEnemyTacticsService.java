@@ -173,6 +173,25 @@ public class DrpgEnemyTacticsService {
         yield true;
       }
 
+      case TARGET_LACKS_BUFF -> {
+        PartyMember targetAlly = resolveAllyTarget(ctx, member, rule.getTarget(), -1);
+        String bId = rule.getSkillId();
+        yield targetAlly != null && !targetAlly.hasActiveBuff(bId);
+      }
+
+      case TARGET_HAS_BUFF -> {
+        PartyMember targetAlly = resolveAllyTarget(ctx, member, rule.getTarget(), -1);
+        String bId = rule.getSkillId();
+        yield targetAlly != null && targetAlly.hasActiveBuff(bId);
+      }
+
+      case BUFF_TIME_LESS_THAN -> {
+        PartyMember targetAlly = resolveAllyTarget(ctx, member, rule.getTarget(), -1);
+        String bId = rule.getSkillId();
+        ActiveBuff ab = (targetAlly != null) ? targetAlly.getActiveBuff(bId) : null;
+        yield ab != null && ab.getRemainingSeconds() <= rule.getConditionValue();
+      }
+
       case ALWAYS -> true;
     };
   }
