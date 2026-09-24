@@ -388,11 +388,16 @@ export function initKeyboardControls() {
       return;
     }
 
-    // 5. 數字鍵 1~6 快捷選取隊員展開技能盤
+    // 5. 數字鍵 1~6 快捷選取隊員 (戰鬥中切換戰備指揮台，非戰鬥中切換技能盤)
     if (['1', '2', '3', '4', '5', '6'].includes(key)) {
       e.preventDefault();
       const idx = parseInt(key) - 1;
-      selectPartyMember(idx);
+      const lastBattle = store.get('lastBattle');
+      if (lastBattle && lastBattle.inBattle) {
+        if (window.selectCombatMember) window.selectCombatMember(idx);
+      } else {
+        selectPartyMember(idx);
+      }
       return;
     }
 

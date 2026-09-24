@@ -209,6 +209,14 @@ export function renderPartyHud(party) {
  * @param {number} idx 成員索引 (0~5)
  */
 export function selectPartyMember(idx) {
+  const lastBattle = store.get('lastBattle');
+  if (lastBattle && lastBattle.inBattle) {
+    if (typeof window.selectCombatMember === 'function') {
+      window.selectCombatMember(idx);
+    }
+    return;
+  }
+
   const currentIdx = store.get('selectedMemberIdx');
   const isDrawerOpen = store.get('isSkillDrawerOpen');
   if (currentIdx === idx && isDrawerOpen) {

@@ -13,6 +13,11 @@ import { renderBattleArena } from '../panels/battle-panel.js';
  */
 export function renderSkillDrawer() {
   const drawer = document.getElementById('skill-drawer');
+  const lastBattle = store.get('lastBattle');
+  if (lastBattle && lastBattle.inBattle) {
+    if (drawer) drawer.classList.add('hidden');
+    return;
+  }
   const lastParty = store.get('lastParty');
   if (!drawer || !lastParty || !lastParty.members) return;
 
@@ -248,6 +253,8 @@ export function castPartySkill(memberIdx, skillId, isSynergy) {
 
 // 註冊 EventBus 事件監聽
 eventBus.on('ui:openSkillDrawer', (idx) => {
+  const lastBattle = store.get('lastBattle');
+  if (lastBattle && lastBattle.inBattle) return;
   store.setState({ selectedMemberIdx: idx, isSkillDrawerOpen: true });
   renderSkillDrawer();
 });
@@ -257,6 +264,8 @@ eventBus.on('ui:closeSkillDrawer', () => {
 });
 
 eventBus.on('ui:refreshSkillDrawer', () => {
+  const lastBattle = store.get('lastBattle');
+  if (lastBattle && lastBattle.inBattle) return;
   renderSkillDrawer();
 });
 

@@ -125,6 +125,7 @@ export function renderBattleArena(battle) {
     enemiesBox.appendChild(tierFront);
   }
 
+  // 渲染戰場我方隊伍陣列與底部暗黑地牢戰備指揮台
   const lastParty = store.get('lastParty');
   if (lastParty) {
     renderBattlePartyQuickBar(lastParty);
@@ -132,7 +133,7 @@ export function renderBattleArena(battle) {
 }
 
 /**
- * 輔助函式：渲染 WoW 風格狀態效果膠囊列
+ * 輔助函式：渲染狀態效果膠囊列
  */
 function renderBuffBadges(activeBuffs) {
   if (!activeBuffs || !Array.isArray(activeBuffs) || activeBuffs.length === 0) return '';
@@ -160,18 +161,24 @@ function renderBuffBadges(activeBuffs) {
 }
 
 /**
- * 渲染戰場我方隊員快速資訊列 (雙層前後排、居中、陣法孔位與換位按鈕)
+ * 渲染戰場我方隊員快速資訊列 (雙層前後排、居中、陣法孔位與換位按鈕，支援 In-place 更新防閃爍)
  * @param {Object} party 小隊狀態
  */
 export function renderBattlePartyQuickBar(party) {
   const bar = document.getElementById('battle-party-quick-bar');
   if (!bar || !party || !party.members) return;
 
-  const selectedMemberIdx = store.get('selectedMemberIdx');
-  bar.innerHTML = '';
+  let selectedMemberIdx = store.get('selectedMemberIdx');
+  if (selectedMemberIdx === undefined || selectedMemberIdx === null || selectedMemberIdx < 0 || selectedMemberIdx >= party.members.length) {
+    selectedMemberIdx = 0;
+    store.setState({ selectedMemberIdx: 0 });
+  }
 
   const frontMembers = party.members.map((m, idx) => ({ m, idx })).filter(item => item.m.row === 'FRONT');
   const backMembers = party.members.map((m, idx) => ({ m, idx })).filter(item => item.m.row !== 'FRONT');
+
+  const structureKey = party.members.map(m => `${m.id || m.name}_${m.row}`).join('|');
+  const needFullRebuild = (bar.dataset.structureKey !== structureKey);
 
   function createPartyCard(m, idx) {
     const isSelected = (selectedMemberIdx === idx);
@@ -180,9 +187,10 @@ export function renderBattlePartyQuickBar(party) {
     const rowBadge = m.row === 'FRONT' ? '前衛' : '後衛';
 
     const card = document.createElement('div');
+    card.dataset.memberIdx = String(idx);
     card.className = `battle-party-mini-card row-${(m.row || 'FRONT').toLowerCase()} ${isSelected ? 'active-selected' : ''}`;
-    card.onclick = () => window.selectPartyMemberForSkill ? window.selectPartyMemberForSkill(idx) : window.selectPartyMember(idx);
-    card.title = `點擊展開 #${idx + 1} ${m.name} 的專屬技能盤`;
+    card.onclick = () => selectCombatMember(idx);
+    card.title = `點選 #${idx + 1} ${m.name} 切換戰備指揮台`;
 
     card.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -200,38 +208,434 @@ export function renderBattlePartyQuickBar(party) {
       </div>
       <div style="font-size:9px; color:#94a3b8; display:flex; justify-content:space-between; align-items:center;">
         <span class="bpmc-hp-text">HP ${m.hp}/${m.maxHp}</span>
-        <span style="color:#38bdf8; font-weight:bold;">⚡ 招式盤</span>
+        <span class="bpmc-select-indicator" style="color:#38bdf8; font-weight:bold;">${isSelected ? '▶ 當前選中' : '點選切換'}</span>
       </div>
       ${m.formationSlotName ? `
-        <div style="font-size:9px; margin-top:2px; padding:1px 4px; border-radius:3px; display:flex; justify-content:space-between; align-items:center; ${m.formationSlotActive ? 'background:rgba(16,185,129,0.12); color:#6ee7b7; border:1px solid rgba(16,185,129,0.3);' : 'background:rgba(239,68,68,0.12); color:#fca5a5; border:1px solid rgba(239,68,68,0.3);'}"
+        <div class="bpmc-slot-badge" style="font-size:9px; margin-top:2px; padding:1px 4px; border-radius:3px; display:flex; justify-content:space-between; align-items:center; ${m.formationSlotActive ? 'background:rgba(16,185,129,0.12); color:#6ee7b7; border:1px solid rgba(16,185,129,0.3);' : 'background:rgba(239,68,68,0.12); color:#fca5a5; border:1px solid rgba(239,68,68,0.3);'}"
              title="陣法孔位：${m.formationSlotName} - ${m.formationSlotBonus || ''}">
           <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">💠 ${m.formationSlotName}</span>
           ${m.formationSlotActive ? '<span style="font-size:8px; flex-shrink:0;">✓生效</span>' : '<span style="font-size:8px; color:#ef4444; flex-shrink:0;">✗站位不符</span>'}
         </div>
       ` : ''}
-      ${renderBuffBadges(m.activeBuffs)}
+      <div class="bpmc-buffs-wrap">
+        ${renderBuffBadges(m.activeBuffs)}
+      </div>
     `;
     return card;
   }
 
-  // 1. 我方前衛 (緊鄰交鋒線)
-  if (frontMembers.length > 0) {
-    const tierFront = document.createElement('div');
-    tierFront.className = 'battle-tier-wrapper tier-party-front';
-    tierFront.innerHTML = `<div class="battle-tier-label">〈 我方前衛陣線 〉</div><div class="battle-tier-cards"></div>`;
-    const cardsBox = tierFront.querySelector('.battle-tier-cards');
-    frontMembers.forEach(item => cardsBox.appendChild(createPartyCard(item.m, item.idx)));
-    bar.appendChild(tierFront);
+  if (needFullRebuild) {
+    bar.dataset.structureKey = structureKey;
+    bar.innerHTML = '';
+
+    // 1. 我方前衛 (緊鄰交鋒線)
+    if (frontMembers.length > 0) {
+      const tierFront = document.createElement('div');
+      tierFront.className = 'battle-tier-wrapper tier-party-front';
+      tierFront.innerHTML = `<div class="battle-tier-label">〈 我方前衛陣線 〉</div><div class="battle-tier-cards"></div>`;
+      const cardsBox = tierFront.querySelector('.battle-tier-cards');
+      frontMembers.forEach(item => cardsBox.appendChild(createPartyCard(item.m, item.idx)));
+      bar.appendChild(tierFront);
+    }
+
+    // 2. 我方後衛 (位於下方)
+    if (backMembers.length > 0) {
+      const tierBack = document.createElement('div');
+      tierBack.className = 'battle-tier-wrapper tier-party-back';
+      tierBack.innerHTML = `<div class="battle-tier-label">〈 我方後衛陣線 〉</div><div class="battle-tier-cards"></div>`;
+      const cardsBox = tierBack.querySelector('.battle-tier-cards');
+      backMembers.forEach(item => cardsBox.appendChild(createPartyCard(item.m, item.idx)));
+      bar.appendChild(tierBack);
+    }
+  } else {
+    // In-place 更新隊員卡片數值與選取狀態，絕不重構 DOM (防閃爍)
+    const cardNodes = bar.querySelectorAll('.battle-party-mini-card');
+    cardNodes.forEach(card => {
+      const idx = parseInt(card.dataset.memberIdx, 10);
+      const m = party.members[idx];
+      if (!m) return;
+
+      const isSelected = (selectedMemberIdx === idx);
+      const isAlive = (m.alive !== undefined) ? m.alive : (m.hp > 0);
+      const hpPct = Math.min(100, Math.max(0, (m.hp / m.maxHp) * 100));
+
+      card.classList.toggle('active-selected', isSelected);
+
+      const hpBar = card.querySelector('.hp-bar');
+      if (hpBar) {
+        hpBar.style.width = `${hpPct}%`;
+        hpBar.style.background = isAlive ? '#10b981' : '#6b7280';
+      }
+
+      const hpText = card.querySelector('.bpmc-hp-text');
+      if (hpText) hpText.textContent = `HP ${m.hp}/${m.maxHp}`;
+
+      const selInd = card.querySelector('.bpmc-select-indicator');
+      if (selInd) selInd.textContent = isSelected ? '▶ 當前選中' : '點選切換';
+    });
   }
 
-  // 2. 我方後衛 (位於下方)
-  if (backMembers.length > 0) {
-    const tierBack = document.createElement('div');
-    tierBack.className = 'battle-tier-wrapper tier-party-back';
-    tierBack.innerHTML = `<div class="battle-tier-label">〈 我方後衛陣線 〉</div><div class="battle-tier-cards"></div>`;
-    const cardsBox = tierBack.querySelector('.battle-tier-cards');
-    backMembers.forEach(item => cardsBox.appendChild(createPartyCard(item.m, item.idx)));
-    bar.appendChild(tierBack);
+  // 渲染 Darkest Dungeon 戰備指揮台 (固定高度，無跳動)
+  renderCombatCommandDock(party, selectedMemberIdx);
+}
+
+/**
+ * 選取戰鬥中操作之隊員 (原地更新指揮台，零畫面跳動)
+ * @param {number} idx 隊員索引
+ */
+export function selectCombatMember(idx) {
+  store.setState({ selectedMemberIdx: idx });
+  const lastParty = store.get('lastParty');
+  if (lastParty) {
+    renderBattlePartyQuickBar(lastParty);
+  }
+}
+
+/**
+ * 渲染暗黑地牢式固定戰備指揮台 (Combat Command Dock，支援全 In-place 更新防閃爍)
+ * @param {Object} party 隊伍快照
+ * @param {number} selectedMemberIdx 當前選中隊員索引
+ */
+export function renderCombatCommandDock(party, selectedMemberIdx) {
+  const dock = document.getElementById('combat-command-dock');
+  if (!dock || !party || !party.members) return;
+
+  if (selectedMemberIdx === undefined || selectedMemberIdx === null || selectedMemberIdx < 0 || selectedMemberIdx >= party.members.length) {
+    selectedMemberIdx = 0;
+  }
+
+  const m = party.members[selectedMemberIdx];
+  if (!m) return;
+
+  const heroProfileEl = document.getElementById('dock-hero-profile');
+  const skillDeckEl = document.getElementById('dock-skill-deck');
+  const tacticsDeckEl = document.getElementById('dock-tactics-deck');
+
+  const curMemberIdxStr = String(selectedMemberIdx);
+
+  // 1. 左側英雄面板 (In-place 更新數值，漏斗 GCD 置於頂部標題右側絕不推擠版面)
+  if (heroProfileEl) {
+    const hpPct = Math.min(100, Math.max(0, (m.hp / m.maxHp) * 100));
+    const sanPct = Math.min(100, Math.max(0, (m.san / m.maxSan) * 100));
+    const sanClass = `san-${(m.sanLevel || 'NORMAL').toLowerCase()}`;
+    const rowBadge = m.row === 'FRONT' ? '前衛' : '後衛';
+
+    const resType = m.resourceType || 'MP';
+    const curRes = m.currentResource !== undefined ? m.currentResource : m.mp;
+    const maxRes = m.maxResource !== undefined ? m.maxResource : m.maxMp;
+    const resPct = Math.min(100, Math.max(0, maxRes > 0 ? (curRes / maxRes) * 100 : 0));
+    let resLabel = (resType === 'MP') ? `MP ${curRes}/${maxRes}` : `戰氣 ${curRes}/${maxRes}`;
+    let resFillClass = (resType === 'MP') ? 'mp-fill' : 'sp-fill';
+
+    const needHeroRebuild = (heroProfileEl.dataset.memberIdx !== curMemberIdxStr);
+
+    if (needHeroRebuild) {
+      heroProfileEl.dataset.memberIdx = curMemberIdxStr;
+      heroProfileEl.innerHTML = `
+        <div class="dock-hero-header">
+          <div class="dock-hero-header-left">
+            <span class="dock-hero-name" title="${m.name}">#${selectedMemberIdx + 1} ${m.name}</span>
+            <span class="dock-hero-lvl">Lv.${m.level || 1}</span>
+            <span class="dock-hero-row ${m.row === 'FRONT' ? 'row-front-badge' : 'row-back-badge'}">[${rowBadge}]</span>
+            ${m.className ? `<span class="dock-hero-class">${m.className}</span>` : ''}
+          </div>
+          <div class="dock-hero-header-right">
+            <span id="dock-hero-gcd" class="dock-hero-gcd-badge hidden">⏳ 0.0s</span>
+          </div>
+        </div>
+        <div class="dock-hero-bars">
+          <div class="mini-bar-wrap" title="氣血 HP">
+            <div class="mini-bar hp-fill" style="width: ${hpPct}%"></div>
+            <span class="mini-val hp-val">HP ${m.hp}/${m.maxHp}</span>
+          </div>
+          <div class="mini-bar-wrap" title="${resLabel}">
+            <div class="mini-bar res-fill ${resFillClass}" style="width: ${resPct}%"></div>
+            <span class="mini-val res-val">${resLabel}</span>
+          </div>
+          <div class="mini-bar-wrap san-bar-wrap" title="道心 SAN">
+            <div class="mini-bar san-fill ${sanClass}" style="width: ${sanPct}%"></div>
+            <span class="mini-val san-val ${sanClass}">SAN ${m.san}/${m.maxSan}</span>
+          </div>
+        </div>
+        ${m.formationSlotName ? `
+          <div id="dock-hero-slot" class="dock-formation-slot ${m.formationSlotActive ? 'active' : 'inactive'}"
+               title="陣法孔位：${m.formationSlotName} - ${m.formationSlotBonus || ''}">
+            <span class="slot-text" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">💠 ${m.formationSlotName} <small>${m.formationSlotBonus || ''}</small></span>
+            <span class="slot-status">${m.formationSlotActive ? '✓生效' : '✗站位不符'}</span>
+          </div>` : '<div id="dock-hero-slot"></div>'}
+        <div id="dock-hero-buffs" class="dock-buffs-wrap">
+          ${renderBuffBadges(m.activeBuffs)}
+        </div>
+      `;
+    } else {
+      // In-place 更新血量、能量、SAN 與頂部 GCD 徽章 (零 DOM 銷毀、零高度跳動)
+      const hpFill = heroProfileEl.querySelector('.hp-fill');
+      const hpVal = heroProfileEl.querySelector('.hp-val');
+      if (hpFill) hpFill.style.width = `${hpPct}%`;
+      if (hpVal) hpVal.textContent = `HP ${m.hp}/${m.maxHp}`;
+
+      const resFill = heroProfileEl.querySelector('.res-fill');
+      const resVal = heroProfileEl.querySelector('.res-val');
+      if (resFill) {
+        resFill.style.width = `${resPct}%`;
+        resFill.className = `mini-bar res-fill ${resFillClass}`;
+      }
+      if (resVal) resVal.textContent = resLabel;
+
+      const sanFill = heroProfileEl.querySelector('.san-fill');
+      const sanVal = heroProfileEl.querySelector('.san-val');
+      if (sanFill) {
+        sanFill.style.width = `${sanPct}%`;
+        sanFill.className = `mini-bar san-fill ${sanClass}`;
+      }
+      if (sanVal) sanVal.textContent = `SAN ${m.san}/${m.maxSan}`;
+
+      const slotEl = document.getElementById('dock-hero-slot');
+      if (slotEl && m.formationSlotName) {
+        slotEl.className = `dock-formation-slot ${m.formationSlotActive ? 'active' : 'inactive'}`;
+        const slotStatus = slotEl.querySelector('.slot-status');
+        if (slotStatus) slotStatus.textContent = m.formationSlotActive ? '✓生效' : '✗站位不符';
+      }
+    }
+
+    // 頂部固定位置 GCD / 施法指示器更新 (位於標題右側，絕不推擠下層屬性條)
+    const gcdBadge = document.getElementById('dock-hero-gcd');
+    if (gcdBadge) {
+      if (m.isCasting) {
+        gcdBadge.classList.remove('hidden');
+        gcdBadge.className = 'dock-hero-gcd-badge casting';
+        gcdBadge.textContent = `🌀 吟唱 ${(m.castingRemainingMs / 1000).toFixed(1)}s`;
+        gcdBadge.title = `正在施法【${m.castingSkillName}】，剩餘 ${(m.castingRemainingMs / 1000).toFixed(1)} 秒`;
+      } else if (m.isOnGcd) {
+        gcdBadge.classList.remove('hidden');
+        gcdBadge.className = 'dock-hero-gcd-badge';
+        gcdBadge.textContent = `⏳ 調息 ${(m.remainingGcdMs / 1000).toFixed(1)}s`;
+        gcdBadge.title = `全域招式調息中 (GCD)，剩餘 ${(m.remainingGcdMs / 1000).toFixed(1)} 秒`;
+      } else {
+        gcdBadge.classList.add('hidden');
+      }
+    }
+  }
+
+  // 2. 中央技能動作欄 (採用 In-place 更新，按鈕節點永久保留，徹底消滅閃爍與點不到問題)
+  if (skillDeckEl) {
+    const activeTab = store.get('dockSkillTab') || 'ALL';
+    const skills = m.skills || [];
+    const isAlive = (m.alive !== undefined) ? m.alive : (m.hp > 0);
+
+    const resType = m.resourceType || 'MP';
+    const curRes = m.currentResource !== undefined ? m.currentResource : m.mp;
+    const maxRes = m.maxResource !== undefined ? m.maxResource : m.maxMp;
+    const resBadgeLabel = (resType === 'MP') ? `🔮 真元 ${curRes}/${maxRes}` : `⚡ 戰氣 ${curRes}/${maxRes}`;
+
+    const needSkillRebuild = (skillDeckEl.dataset.memberIdx !== curMemberIdxStr) ||
+                             (skillDeckEl.dataset.tab !== activeTab) ||
+                             (skillDeckEl.dataset.skillCount !== String(skills.length));
+
+    if (needSkillRebuild) {
+      skillDeckEl.dataset.memberIdx = curMemberIdxStr;
+      skillDeckEl.dataset.tab = activeTab;
+      skillDeckEl.dataset.skillCount = String(skills.length);
+
+      let filteredSkills = skills.filter(s => {
+        const cat = (s.category || 'CLASS').toUpperCase();
+        if (activeTab === 'ALL') return true;
+        if (activeTab === 'WEAPON') return cat === 'WEAPON';
+        if (activeTab === 'CLASS') return cat === 'CLASS';
+        if (activeTab === 'SPELL') return cat === 'SPELL';
+        if (activeTab === 'COMBO') return (cat === 'COMBO' || s.synergy);
+        return true;
+      });
+
+      let skillsGridHtml = '';
+      if (filteredSkills.length === 0) {
+        skillsGridHtml = `<div class="dock-empty-skills">當前分類暫無可用招式</div>`;
+      } else {
+        skillsGridHtml = filteredSkills.map((s, sIdx) => {
+          return `
+            <button class="dock-skill-card" data-skill-idx="${sIdx}" data-skill-id="${s.id}">
+              <div class="dock-skill-title-row">
+                <span class="dock-skill-icon">${s.icon || '⚡'}</span>
+                <span class="dock-skill-name">${s.name}</span>
+              </div>
+              <div class="dock-skill-meta">
+                <span class="dock-skill-cost ${s.costType === 'MP' ? 'cost-mp' : 'cost-sp'}"></span>
+                <span class="dock-skill-cd hidden"></span>
+              </div>
+            </button>
+          `;
+        }).join('');
+      }
+
+      skillDeckEl.innerHTML = `
+        <div class="dock-skill-top-bar">
+          <div class="dock-skill-tabs">
+            <button class="dock-tab ${activeTab === 'ALL' ? 'active' : ''}" onclick="window.setDockSkillTab('ALL')">全部</button>
+            <button class="dock-tab ${activeTab === 'WEAPON' ? 'active' : ''}" onclick="window.setDockSkillTab('WEAPON')">⚔️ 武學</button>
+            <button class="dock-tab ${activeTab === 'CLASS' ? 'active' : ''}" onclick="window.setDockSkillTab('CLASS')">🛡️ 職業</button>
+            <button class="dock-tab ${activeTab === 'SPELL' ? 'active' : ''}" onclick="window.setDockSkillTab('SPELL')">🔮 法術</button>
+            <button class="dock-tab ${activeTab === 'COMBO' ? 'active' : ''}" onclick="window.setDockSkillTab('COMBO')">🌟 合擊</button>
+          </div>
+          <div class="dock-res-badge">${resBadgeLabel}</div>
+        </div>
+        <div class="dock-skills-grid">
+          ${skillsGridHtml}
+        </div>
+      `;
+    }
+
+    // 更新能量徽章文字
+    const resBadgeEl = skillDeckEl.querySelector('.dock-res-badge');
+    if (resBadgeEl) resBadgeEl.textContent = resBadgeLabel;
+
+    // In-place 更新各技能卡狀態 (冷卻、可用性、點擊事件，絕不重建節點)
+    let filteredSkills = skills.filter(s => {
+      const cat = (s.category || 'CLASS').toUpperCase();
+      if (activeTab === 'ALL') return true;
+      if (activeTab === 'WEAPON') return cat === 'WEAPON';
+      if (activeTab === 'CLASS') return cat === 'CLASS';
+      if (activeTab === 'SPELL') return cat === 'SPELL';
+      if (activeTab === 'COMBO') return (cat === 'COMBO' || s.synergy);
+      return true;
+    });
+
+    const cardNodes = skillDeckEl.querySelectorAll('.dock-skills-grid .dock-skill-card');
+    filteredSkills.forEach((s, sIdx) => {
+      const cardBtn = cardNodes[sIdx];
+      if (!cardBtn) return;
+
+      const onCd = s.remainingCooldownMs > 0;
+      let resOk = s.available;
+      if (resOk === undefined) {
+        resOk = (curRes >= (s.costValue || 0));
+      }
+      const canCast = Boolean(resOk && !onCd && isAlive);
+      const cdSec = onCd ? (s.remainingCooldownMs / 1000).toFixed(1) : 0;
+
+      let costLabel = s.costDescription;
+      if (!costLabel || costLabel === 'undefined') {
+        if (!s.costValue || s.costValue <= 0) {
+          costLabel = '無消耗';
+        } else if (s.costType === 'SP' || s.costType === 'RAGE' || s.costType === 'COMBO') {
+          costLabel = `${s.costValue} 戰氣`;
+        } else {
+          costLabel = `${s.costValue} 真元`;
+        }
+      }
+
+      // 更新樣式與提示 (防閃爍)
+      cardBtn.className = `dock-skill-card ${canCast ? '' : 'cant-cast'}${s.synergy && canCast ? ' synergy-glow' : ''}`;
+      cardBtn.title = `${s.name} - ${s.description}`;
+
+      const costSpan = cardBtn.querySelector('.dock-skill-cost');
+      if (costSpan) {
+        costSpan.className = `dock-skill-cost ${s.costType === 'MP' ? 'cost-mp' : 'cost-sp'}`;
+        costSpan.textContent = costLabel;
+      }
+
+      const cdSpan = cardBtn.querySelector('.dock-skill-cd');
+      if (cdSpan) {
+        if (onCd) {
+          cdSpan.classList.remove('hidden');
+          cdSpan.textContent = `⌛ ${cdSec}s`;
+        } else {
+          cdSpan.classList.add('hidden');
+        }
+      }
+
+      cardBtn.onclick = () => {
+        handleDockSkillCast(selectedMemberIdx, s.id, canCast, s.name, costLabel, onCd, cdSec, s.costDescription || '', Boolean(s.synergy));
+      };
+    });
+  }
+
+  // 3. 右側戰術指令欄 (In-place 更新按鈕狀態，絕不重構 DOM)
+  if (tacticsDeckEl) {
+    const isFirst = (selectedMemberIdx === 0);
+    const isLast = (selectedMemberIdx === party.members.length - 1);
+
+    if (tacticsDeckEl.dataset.initialized !== 'true') {
+      tacticsDeckEl.dataset.initialized = 'true';
+      tacticsDeckEl.innerHTML = `
+        <div class="dock-tactics-title">戰術調度</div>
+        <div class="dock-swap-row">
+          <button id="dock-btn-swap-prev" class="dock-swap-btn" title="與前一位隊員換位">
+            ◀ 前調
+          </button>
+          <button id="dock-btn-swap-next" class="dock-swap-btn" title="與後一位隊員換位">
+            後調 ▶
+          </button>
+        </div>
+        <div class="dock-tactic-actions-row">
+          <button class="dock-tactic-sub-btn" onclick="window.toggleBagDrawer ? window.toggleBagDrawer() : null" title="開啟公共行囊使用丹藥 (B)">
+            🎒 行囊
+          </button>
+          <button class="dock-tactic-sub-btn btn-tactic-flee" onclick="window.send('battle flee')" title="遁地撤退 (-5 SAN) (Esc)">
+            🏃 遁地
+          </button>
+        </div>
+      `;
+    }
+
+    // In-place 更新換位按鈕啟用/禁用
+    const swapPrevBtn = document.getElementById('dock-btn-swap-prev');
+    if (swapPrevBtn) {
+      swapPrevBtn.disabled = isFirst;
+      swapPrevBtn.onclick = isFirst ? null : () => window.send(`party swap ${selectedMemberIdx} ${selectedMemberIdx - 1}`);
+    }
+
+    const swapNextBtn = document.getElementById('dock-btn-swap-next');
+    if (swapNextBtn) {
+      swapNextBtn.disabled = isLast;
+      swapNextBtn.onclick = isLast ? null : () => window.send(`party swap ${selectedMemberIdx} ${selectedMemberIdx + 1}`);
+    }
+  }
+}
+
+/**
+ * 處理戰備指揮台技能施放
+ */
+export function handleDockSkillCast(memberIdx, skillId, canCast, skillName, costLabel, onCd, cdSec, costDesc, isSynergy) {
+  if (!canCast) {
+    let warnMsg = '';
+    if (onCd) {
+      warnMsg = `⏳【調息中】「${skillName}」正在調息冷卻中，尚需 ${cdSec} 秒！`;
+    } else if (costDesc && costDesc.includes('需')) {
+      warnMsg = `⚠️【兵刃未備】「${skillName}」${costDesc}！請在小隊面板 (P) 佩戴對應兵刃。`;
+    } else {
+      warnMsg = `⚠️【元氣未備】「${skillName}」釋放條件不足（需 ${costLabel}）！`;
+    }
+    if (typeof window.appendHtml === 'function') {
+      window.appendHtml(warnMsg, '#f59e0b');
+    }
+    const focusHint = document.getElementById('battle-focus-hint');
+    if (focusHint) {
+      focusHint.innerHTML = `<span style="color:#f59e0b; font-weight:bold;">${warnMsg}</span>`;
+      setTimeout(() => {
+        const lastBattle = store.get('lastBattle');
+        if (focusHint && lastBattle) {
+          renderBattleArena(lastBattle);
+        }
+      }, 3500);
+    }
+    return;
+  }
+  if (isSynergy) {
+    sendCmd(`battle combo ${skillId}`);
+  } else {
+    sendCmd(`skill cast ${memberIdx} ${skillId}`);
+  }
+}
+
+/**
+ * 切換戰備指揮台技能分類標籤
+ */
+export function setDockSkillTab(tab) {
+  store.setState({ dockSkillTab: tab });
+  const lastParty = store.get('lastParty');
+  const selectedMemberIdx = store.get('selectedMemberIdx') || 0;
+  if (lastParty) {
+    renderCombatCommandDock(lastParty, selectedMemberIdx);
   }
 }
 
@@ -267,47 +671,70 @@ export function selectBattleTarget(idx) {
 }
 
 /**
- * 切換戰鬥模式按鈕與探索模式按鈕
+ * 切換戰鬥模式與探索模式佈局 (嚴格遵守模組職責分離)
  * @param {boolean} inBattle 是否處於戰鬥中
  */
 export function toggleBattleMode(inBattle) {
   const actGroup = document.getElementById('action-buttons-group');
-  const btlGroup = document.getElementById('battle-buttons-group');
+  const battleStatusDock = document.getElementById('battle-status-dock');
+  const dpadGrid = document.getElementById('dpad-grid') || document.querySelector('.dpad-grid');
+  const partyHud = document.querySelector('.party-hud-panel');
+  const skillDrawer = document.getElementById('skill-drawer');
+  const bottomControlPanel = document.querySelector('.bottom-control-panel');
   const modeBadge = document.getElementById('control-mode-badge');
 
-  if (actGroup && btlGroup) {
-    if (inBattle) {
-      actGroup.classList.add('hidden');
-      btlGroup.classList.remove('hidden');
-      if (modeBadge && !store.get('isInputFocused')) {
-        modeBadge.className = 'mode-badge mode-typing';
-        modeBadge.style.background = 'rgba(239, 68, 68, 0.2)';
-        modeBadge.style.borderColor = '#ef4444';
-        modeBadge.style.color = '#fca5a5';
-        modeBadge.innerText = '⚔️ 戰鬥交鋒';
-      }
-    } else {
-      btlGroup.classList.add('hidden');
-      actGroup.classList.remove('hidden');
-      if (modeBadge && !store.get('isInputFocused')) {
-        modeBadge.className = 'mode-badge mode-stepping';
-        modeBadge.style.background = 'rgba(16, 185, 129, 0.2)';
-        modeBadge.style.borderColor = '#10b981';
-        modeBadge.style.color = '#6ee7b7';
-        modeBadge.innerText = '🧭 靈境步進';
-      }
+  if (inBattle) {
+    // 戰鬥模式：隱藏外層隊伍 HUD、隱藏十字方向鍵、隱藏探索按鍵、關閉舊抽屜、完全隱藏底部控制列(避免功能重複佔用高度)
+    if (actGroup) actGroup.classList.add('hidden');
+    if (battleStatusDock) battleStatusDock.classList.remove('hidden');
+    if (dpadGrid) dpadGrid.classList.add('hidden');
+    if (partyHud) partyHud.classList.add('hidden');
+    if (skillDrawer) skillDrawer.classList.add('hidden');
+    if (bottomControlPanel) bottomControlPanel.classList.add('hidden');
+    store.setState({ isSkillDrawerOpen: false });
+
+    if (modeBadge && !store.get('isInputFocused')) {
+      modeBadge.className = 'mode-badge mode-typing';
+      modeBadge.style.background = 'rgba(239, 68, 68, 0.2)';
+      modeBadge.style.borderColor = '#ef4444';
+      modeBadge.style.color = '#fca5a5';
+      modeBadge.innerText = '⚔️ 戰鬥交鋒中';
+    }
+  } else {
+    // 探索模式：恢復外層隊伍 HUD、恢復十字方向鍵、恢復探索按鍵、恢復底部控制列
+    if (bottomControlPanel) bottomControlPanel.classList.remove('hidden');
+    if (battleStatusDock) battleStatusDock.classList.add('hidden');
+    if (actGroup) actGroup.classList.remove('hidden');
+    if (dpadGrid) dpadGrid.classList.remove('hidden');
+    if (partyHud) partyHud.classList.remove('hidden');
+
+    if (modeBadge && !store.get('isInputFocused')) {
+      modeBadge.className = 'mode-badge mode-stepping';
+      modeBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+      modeBadge.style.borderColor = '#10b981';
+      modeBadge.style.color = '#6ee7b7';
+      modeBadge.innerText = '🧭 靈境步進';
     }
   }
 }
 
 export function selectPartyMemberForSkill(idx) {
-  selectPartyMember(idx);
+  const lastBattle = store.get('lastBattle');
+  if (lastBattle && lastBattle.inBattle) {
+    selectCombatMember(idx);
+  } else {
+    selectPartyMember(idx);
+  }
 }
 
 // 相容掛載至 window
 if (typeof window !== 'undefined') {
   window.renderBattleArena = renderBattleArena;
   window.renderBattlePartyQuickBar = renderBattlePartyQuickBar;
+  window.renderCombatCommandDock = renderCombatCommandDock;
+  window.selectCombatMember = selectCombatMember;
+  window.handleDockSkillCast = handleDockSkillCast;
+  window.setDockSkillTab = setDockSkillTab;
   window.hideBattleArena = hideBattleArena;
   window.selectBattleTarget = selectBattleTarget;
   window.toggleBattleMode = toggleBattleMode;
