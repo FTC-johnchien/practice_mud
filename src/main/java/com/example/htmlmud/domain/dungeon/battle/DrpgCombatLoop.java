@@ -25,15 +25,21 @@ public class DrpgCombatLoop {
 
   private final DrpgEnemyTacticsService tacticsService;
   private final DrpgRewardService rewardService;
+  private final DefenseResolver defenseResolver;
 
   @Autowired
-  public DrpgCombatLoop(DrpgEnemyTacticsService tacticsService, DrpgRewardService rewardService) {
+  public DrpgCombatLoop(DrpgEnemyTacticsService tacticsService, DrpgRewardService rewardService, DefenseResolver defenseResolver) {
     this.tacticsService = tacticsService != null ? tacticsService : new DrpgEnemyTacticsService();
     this.rewardService = rewardService != null ? rewardService : new DrpgRewardService();
+    this.defenseResolver = defenseResolver != null ? defenseResolver : new DefenseResolver();
+  }
+
+  public DrpgCombatLoop(DrpgEnemyTacticsService tacticsService, DrpgRewardService rewardService) {
+    this(tacticsService, rewardService, new DefenseResolver());
   }
 
   public DrpgCombatLoop() {
-    this(new DrpgEnemyTacticsService(), new DrpgRewardService());
+    this(new DrpgEnemyTacticsService(), new DrpgRewardService(), new DefenseResolver());
   }
 
   public DrpgEnemyTacticsService getTacticsService() {
@@ -42,6 +48,10 @@ public class DrpgCombatLoop {
 
   public DrpgRewardService getRewardService() {
     return rewardService;
+  }
+
+  public DefenseResolver getDefenseResolver() {
+    return defenseResolver;
   }
 
   /**
@@ -234,26 +244,24 @@ public class DrpgCombatLoop {
 
             PartyMember targetMember = tacticsService.selectPartyTarget(ctx);
             if (targetMember != null && targetMember.isAlive()) {
-              int finalDmg = tacticsService.calculateEnemyDamage(enemy, targetMember);
-              targetMember.takeDamage(finalDmg);
+              int rawDmg = tacticsService.calculateEnemyDamage(enemy, targetMember);
+              String moveName = tacticsService.selectEnemyMove(enemy);
 
-              // 受傷累積戰氣 SP (+10)
-              targetMember.gainSp(10);
+              // 透過 DefenseResolver 執行被動心法檢定 (DODGE / PARRY / FORCE)
+              var defenseRes = defenseResolver.resolveEnemyAttack(enemy, targetMember, rawDmg, moveName);
+              targetMember.takeDamage(defenseRes.finalDamage());
 
-              // 力士受傷相容怒氣
-              if (targetMember.getResourceType() == CombatResourceType.RAGE) {
-                targetMember.gainRage(15);
+              if (defenseRes.spGained() > 0) {
+                targetMember.gainSp(defenseRes.spGained());
+              }
+              if (defenseRes.rageGained() > 0) {
+                targetMember.gainRage(defenseRes.rageGained());
               }
 
               if (enemy.getId().startsWith("aberration-")) {
-                broadcastLog(player, ctx, "\u001B[1;35m🐙【" + enemy.getName() + "】深淵血肉肉瘤劇烈痙攣，爆發不可名狀凝視，重創 " + targetMember.getName() + " 造成 " + finalDmg + " 點暗蝕傷害！\u001B[0m");
+                broadcastLog(player, ctx, "\u001B[1;35m🐙【" + enemy.getName() + "】深淵血肉肉瘤劇烈痙攣，爆發不可名狀凝視，重創 " + targetMember.getName() + " 造成 " + defenseRes.finalDamage() + " 點暗蝕傷害！\u001B[0m");
               } else {
-                String moveName = tacticsService.selectEnemyMove(enemy);
-                if (moveName != null) {
-                  broadcastLog(player, ctx, "\u001B[1;31m⚡【" + enemy.getName() + "】施展【" + moveName + "】，重創 " + targetMember.getName() + " 造成 " + finalDmg + " 點傷害！\u001B[0m");
-                } else {
-                  broadcastLog(player, ctx, "\u001B[1;31m⚡【" + enemy.getName() + "】發起猛烈撲擊，重創 " + targetMember.getName() + " 造成 " + finalDmg + " 點傷害！\u001B[0m");
-                }
+                broadcastLog(player, ctx, defenseRes.combatLog());
               }
 
               if (!targetMember.isAlive()) {

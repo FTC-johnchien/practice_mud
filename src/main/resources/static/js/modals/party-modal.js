@@ -772,19 +772,21 @@ function renderMemberSpellbook(m, memberIdx) {
     drpgState.spellbookState[memberIdx] = { tab: 'STANCES', page: 1 };
   }
   const curState = drpgState.spellbookState[memberIdx];
-  if (curState.tab !== 'STANCES' && curState.tab !== 'SKILLS') {
+  if (curState.tab !== 'STANCES' && curState.tab !== 'SKILLS' && curState.tab !== 'PASSIVES') {
     curState.tab = 'STANCES';
   }
   const curTab = curState.tab || 'STANCES';
   let curPage = curState.page || 1;
 
-  // 1. 整理各 Tab 項目 (兵刃套路與門派絕技)
+  // 1. 整理各 Tab 項目 (兵刃套路、門派絕技、被動心法)
   const stances = m.availableStances || [];
   const skills = m.skills || [];
+  const passives = m.availablePassives || [];
 
   const tabs = [
     { key: 'STANCES', label: '🗡️ 兵刃套路', count: stances.length > 0 ? stances.length : 1 },
-    { key: 'SKILLS', label: '⚡ 門派絕技', count: skills.length }
+    { key: 'SKILLS', label: '⚡ 門派絕技', count: skills.length },
+    { key: 'PASSIVES', label: '🧘 被動心法', count: passives.length }
   ];
 
   let items = [];
@@ -844,6 +846,36 @@ function renderMemberSpellbook(m, memberIdx) {
         canSwitch: false
       });
     }
+  } else if (curTab === 'PASSIVES') {
+    if (passives.length > 0) {
+      items = passives.map(p => {
+        let icon = '🧘';
+        if (p.category === 'DODGE') icon = '💨';
+        else if (p.category === 'PARRY') icon = '🛡️';
+        else if (p.category === 'FORCE') icon = '🟣';
+
+        return {
+          id: p.skillId,
+          name: p.skillName,
+          icon: icon,
+          cost: p.categoryName || '心法',
+          desc: p.description || '常駐運轉之防禦或內功心法。',
+          isCurrent: !!p.isCurrentEnabled,
+          canSwitch: !p.isCurrentEnabled,
+          category: p.category
+        };
+      });
+    } else {
+      items.push({
+        id: 'none',
+        name: '暫無被動心法',
+        icon: '📜',
+        cost: '無心法',
+        desc: '該角色尚未領悟輕功、招架或內功心法。',
+        isCurrent: false,
+        canSwitch: false
+      });
+    }
   }
 
   // 分頁計算 (每頁 4 個條目，2x2 雙欄卡片佈局)
@@ -862,7 +894,9 @@ function renderMemberSpellbook(m, memberIdx) {
     if (it.isCurrent) {
       actBtnHtml = '<span class="spell-active-badge">✔ 參悟運轉中</span>';
     } else if (it.canSwitch) {
-      actBtnHtml = `<button class="spell-switch-btn" onclick="send('party enable ${memberIdx} ${it.id}')" title="啟用為當前主力普攻套路">⚡ 啟用套路</button>`;
+      const switchLabel = (curTab === 'PASSIVES') ? '⚡ 裝配心法' : '⚡ 啟用套路';
+      const switchTitle = (curTab === 'PASSIVES') ? '裝配至常駐被動心法槽位' : '啟用為當前主力普攻套路';
+      actBtnHtml = `<button class="spell-switch-btn" onclick="send('party enable ${memberIdx} ${it.id}')" title="${switchTitle}">${switchLabel}</button>`;
     } else if (curTab === 'SKILLS') {
       actBtnHtml = '<span style="font-size:9px;color:#60a5fa;">戰鬥快捷施展</span>';
     }
@@ -895,6 +929,21 @@ function renderMemberSpellbook(m, memberIdx) {
     `;
   }).join('');
 
+  let passiveSlotsBanner = '';
+  if (curTab === 'PASSIVES') {
+    const dodgeName = passives.find(p => p.category === 'DODGE' && p.isCurrentEnabled)?.skillName || m.passiveSlots?.DODGE || '未裝配';
+    const parryName = passives.find(p => p.category === 'PARRY' && p.isCurrentEnabled)?.skillName || m.passiveSlots?.PARRY || '未裝配';
+    const forceName = passives.find(p => p.category === 'FORCE' && p.isCurrentEnabled)?.skillName || m.passiveSlots?.FORCE || '未裝配';
+
+    passiveSlotsBanner = `
+      <div style="margin-bottom:10px;padding:8px 12px;background:rgba(15,23,42,0.7);border:1px solid rgba(148,163,184,0.25);border-radius:6px;display:flex;gap:12px;font-size:11px;justify-content:space-around;">
+        <span style="color:#38bdf8;">💨 <strong>輕功身法</strong>：${dodgeName}</span>
+        <span style="color:#fbbf24;">🛡️ <strong>招架護體</strong>：${parryName}</span>
+        <span style="color:#c084fc;">🟣 <strong>內功真元</strong>：${forceName}</span>
+      </div>
+    `;
+  }
+
   return `
     <div class="wow-spellbook-container">
       <div class="wow-spellbook-header">
@@ -903,6 +952,7 @@ function renderMemberSpellbook(m, memberIdx) {
       </div>
       <div class="wow-spellbook-layout">
         <div class="wow-spellbook-page">
+          ${passiveSlotsBanner}
           <div class="spell-grid">
             ${spellsGridHtml}
           </div>

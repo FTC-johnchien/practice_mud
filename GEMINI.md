@@ -391,14 +391,25 @@
     - **存檔原子化寫入與槽位防禦**：`SaveGameService` 導入 `.tmp` 暫存檔原子替換 (`ATOMIC_MOVE`) 與 `0..5` 槽位邊界防禦。
     - **構建版本統一**：`pom.xml` 中 Lombok 依賴與 annotationProcessor 版本一致化為 `1.18.48`。
     - **機制驗證測試**：新增 `MechanismPurityAndBugfixTest`，全專案自動化測試全綠通過。
+  * **Phase 9: 被動技能 Enable 裝配與戰鬥檢定系統 (Passive Skills Enable & Combat Check System) [100% 完成]**：
+    - **資料驅動被動心法分類與標籤**：`SkillTemplate` 與 `Mechanics` 全面擴充被動防禦屬性（`dodgeMod`, `parryRate`, `parryMod`, `damageReduce`, `defenseMod` 等），依據 `DODGE`、`PARRY`、`FORCE` 標籤完全動態歸納 `SkillCategory`，所有同伴資料檔配置對應武學。
+    - **通用戰鬥防禦解算器 (`DefenseResolver`)**：
+      - 解算守方遭受攻擊時的身法閃避（`DODGE`，敏捷 DEX 加成，閃避成功傷害歸零並獎勵 +15 戰氣 SP）。
+      - 解算招架格擋（`PARRY`，力量體質 STR/CON 加成，格擋成功減免 50%~70% 傷害並獎勵 +5 SP）。
+      - 解算內功護體減免（`FORCE`，吸收衝擊傷害）。
+      - 動態抽取 JSON 範本中的招式描述文本（`messages` / `moves`），支援 `$N`、`$n`、`$w`、`$W` 佔位符替換，產生生動彩色戰鬥日誌。
+    - **DTO 與前端 WoW 法術書整合**：
+      - `DrpgStateDto` 與 `PartyMemberViewDto` 擴充 `passiveSlots` 與 `availablePassives`。
+      - 前端 `party-modal.js` 在法術書中新增 Tab 3【🧘 被動心法】，頂部清晰呈現身法、招架、內功三大核心槽位運轉狀態，並支援一鍵 `⚡ 裝配心法`（呼叫 `party enable <idx> <skillId>`）。
+    - **機制驗證測試**：新增 `PassiveSkillsAndCombatCheckTest`（4 項全通過），全專案 164 個測試全綠通過。
 
 ---
 
 ## 6. 最新測試與健康狀況 (Latest Test Results)
 * **測試時間**：2026-09-24
 * **測試指令**：`.\test.ps1`（或 `mvnw test`）
-* **測試項目**：涵蓋既有 156 項測試，以及 Phase 8.5 機制純化與缺陷修復套件（`MechanismPurityAndBugfixTest` 共 4 項新測試）。
-* **結果**：`Tests run: 160, Failures: 0, Errors: 0, Skipped: 0` -> **BUILD SUCCESS (160 項測試全數綠燈通過，0 失敗、0 錯誤)**
+* **測試項目**：涵蓋既有 160 項測試，以及 Phase 9 被動心法與戰鬥檢定套件（`PassiveSkillsAndCombatCheckTest` 共 4 項新測試）。
+* **結果**：`Tests run: 164, Failures: 0, Errors: 0, Skipped: 0` -> **BUILD SUCCESS (164 項測試全數綠燈通過，0 失敗、0 錯誤)**
 
 ---
 

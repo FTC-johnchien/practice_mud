@@ -11,9 +11,11 @@ import com.example.htmlmud.domain.model.config.ScalingConfig;
 import com.example.htmlmud.domain.model.config.SynergiesConfig;
 import com.example.htmlmud.domain.model.config.UsageConfig;
 import com.example.htmlmud.domain.model.enums.SkillType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SkillTemplate {
 
   // 基礎資訊
@@ -53,5 +55,7 @@ public class SkillTemplate {
   DefaultConfig counterDefaults;
 
   List<MoveAction> counter;
+
+  java.util.Map<String, Object> messages;
 
 }

@@ -251,6 +251,45 @@ public record DrpgStateDto(
         }
       }
 
+      // 3. 收集被動心法槽位與可用被動技能 (DODGE, PARRY, FORCE)
+      Map<String, String> passiveSlots = new HashMap<>();
+      String curDodgeId = m.getEnabledPassiveSkillId(com.example.htmlmud.domain.model.enums.SkillCategory.DODGE);
+      String curParryId = m.getEnabledPassiveSkillId(com.example.htmlmud.domain.model.enums.SkillCategory.PARRY);
+      String curForceId = m.getEnabledPassiveSkillId(com.example.htmlmud.domain.model.enums.SkillCategory.FORCE);
+      if (curDodgeId != null) passiveSlots.put("DODGE", curDodgeId);
+      if (curParryId != null) passiveSlots.put("PARRY", curParryId);
+      if (curForceId != null) passiveSlots.put("FORCE", curForceId);
+
+      List<PartyPassiveSkillDto> availablePassives = new ArrayList<>();
+      if (m.getLearnedStances() != null) {
+        for (String stId : m.getLearnedStances()) {
+          var skOpt = templateReader.findSkill(stId);
+          if (skOpt.isPresent()) {
+            var sk = skOpt.get();
+            var cat = PartyMember.resolveSkillCategory(sk);
+            if (cat == com.example.htmlmud.domain.model.enums.SkillCategory.DODGE ||
+                cat == com.example.htmlmud.domain.model.enums.SkillCategory.PARRY ||
+                cat == com.example.htmlmud.domain.model.enums.SkillCategory.FORCE) {
+              String catName = switch (cat) {
+                case DODGE -> "身法心法";
+                case PARRY -> "招架護體";
+                case FORCE -> "內功真元";
+                default -> "輔助心法";
+              };
+              boolean isCurrent = stId.equals(m.getEnabledPassiveSkillId(cat));
+              availablePassives.add(new PartyPassiveSkillDto(
+                  stId,
+                  sk.getName(),
+                  cat.name(),
+                  catName,
+                  sk.getDescription() != null ? sk.getDescription() : "",
+                  isCurrent
+              ));
+            }
+          }
+        }
+      }
+
       List<TacticsRuleViewDto> tacticsDtos = (m.getTactics() != null)
           ? m.getTactics().stream().map(r -> TacticsRuleViewDto.of(r, m, templateReader)).toList()
           : List.of();
@@ -291,6 +330,8 @@ public record DrpgStateDto(
           basicSkillId,
           basicSkillName,
           availableStances,
+          passiveSlots,
+          availablePassives,
           m.getClassId(),
           m.getEffectiveClassName(),
           m.getClassTemplate().map(com.example.htmlmud.domain.model.template.ClassTemplate::description).orElse(""),
@@ -492,6 +533,8 @@ public record DrpgStateDto(
       String basicSkillId,
       String basicSkillName,
       List<PartyStanceSkillDto> availableStances,
+      Map<String, String> passiveSlots,
+      List<PartyPassiveSkillDto> availablePassives,
       String classId,
       String className,
       String classDescription,
@@ -556,6 +599,15 @@ public record DrpgStateDto(
       String skillId,
       String skillName,
       String category,
+      String description,
+      boolean isCurrentEnabled
+  ) {}
+
+  public record PartyPassiveSkillDto(
+      String skillId,
+      String skillName,
+      String category,
+      String categoryName,
       String description,
       boolean isCurrentEnabled
   ) {}

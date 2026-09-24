@@ -3,7 +3,9 @@ package com.example.htmlmud.domain.model.config;
 import java.util.Map;
 import com.example.htmlmud.domain.model.enums.DamageType;
 import com.example.htmlmud.domain.model.enums.ResourceType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record Mechanics(
 
     double chargeRegen,
@@ -17,6 +19,26 @@ public record Mechanics(
     DamageType damageType,
 
     double dodgeRate,
+
+    double dodgeMod,
+
+    double parryRate,
+
+    double parryMod,
+
+    double damageReduce,
+
+    int defenseMod,
+
+    int hpRegen,
+
+    int mpRegen,
+
+    int maxHpMod,
+
+    int maxMpMod,
+
+    double damageBoost,
 
     double hitRate,
 

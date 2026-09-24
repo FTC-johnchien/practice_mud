@@ -532,11 +532,25 @@ public class PartyMember {
 
   public static com.example.htmlmud.domain.model.enums.SkillCategory resolveSkillCategory(com.example.htmlmud.domain.model.template.SkillTemplate template) {
     if (template == null) return com.example.htmlmud.domain.model.enums.SkillCategory.UNARMED;
-    if (template.getType() == com.example.htmlmud.domain.model.enums.SkillType.REACTIVE) {
-      if (template.getTags() != null && template.getTags().contains("DODGE")) {
+
+    // 1. 優先依據標籤判定被動心法 (DODGE, PARRY, FORCE)
+    if (template.getTags() != null) {
+      if (template.getTags().contains("DODGE") || template.getTags().contains("EVASION")) {
         return com.example.htmlmud.domain.model.enums.SkillCategory.DODGE;
       }
-      if (template.getTags() != null && template.getTags().contains("PARRY")) {
+      if (template.getTags().contains("PARRY")) {
+        return com.example.htmlmud.domain.model.enums.SkillCategory.PARRY;
+      }
+      if (template.getTags().contains("FORCE")) {
+        return com.example.htmlmud.domain.model.enums.SkillCategory.FORCE;
+      }
+    }
+
+    if (template.getType() == com.example.htmlmud.domain.model.enums.SkillType.REACTIVE) {
+      if (template.getId() != null && template.getId().contains("dodge")) {
+        return com.example.htmlmud.domain.model.enums.SkillCategory.DODGE;
+      }
+      if (template.getId() != null && template.getId().contains("parry")) {
         return com.example.htmlmud.domain.model.enums.SkillCategory.PARRY;
       }
     }
@@ -554,6 +568,15 @@ public class PartyMember {
       return com.example.htmlmud.domain.model.enums.SkillCategory.UNARMED;
     }
     return com.example.htmlmud.domain.model.enums.SkillCategory.FORCE;
+  }
+
+  public String getEnabledPassiveSkillId(com.example.htmlmud.domain.model.enums.SkillCategory category) {
+    return enabledSkills != null ? enabledSkills.get(category) : null;
+  }
+
+  public com.example.htmlmud.domain.model.template.SkillTemplate getEnabledPassive(com.example.htmlmud.domain.model.enums.SkillCategory category) {
+    String id = getEnabledPassiveSkillId(category);
+    return (id != null && getTemplateReader() != null) ? getTemplateReader().findSkill(id).orElse(null) : null;
   }
 
   public com.example.htmlmud.domain.model.config.MoveAction getRandomBasicMove() {

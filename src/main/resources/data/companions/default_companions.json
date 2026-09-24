@@ -29,7 +29,7 @@
       "MAIN_HAND": "taiyin_tomb:bronze_sword"
     },
     "skills": ["sword_pierce", "sword_storm"],
-    "learnedStances": ["basic_sword", "taiji_sword", "taiyin_sword", "tianjian_sword", "basic_fist"]
+    "learnedStances": ["basic_sword", "taiji_sword", "taiyin_sword", "tianjian_sword", "basic_fist", "basic_dodge", "basic_parry", "basic_breathing", "cloud_step", "violet_mist_force"]
   },
   {
     "id": "tie_niu",
@@ -64,7 +64,7 @@
       "OFF_HAND": "taiyin_tomb:bronze_shield"
     },
     "skills": ["tank_taunt", "tank_smash"],
-    "learnedStances": ["basic_blunt", "mad_demon_staff", "basic_axe", "mountain_split_axe", "basic_fist", "iron_cloth"],
+    "learnedStances": ["basic_blunt", "mad_demon_staff", "basic_axe", "mountain_split_axe", "basic_fist", "iron_cloth", "basic_parry", "basic_breathing", "basic_dodge"],
     "capabilities": [
       { "type": "TALK", "label": "交談", "command": "talk tie_niu", "icon": "💬" },
       { "type": "RECRUIT", "label": "招募入隊", "command": "party recruit tie_niu", "icon": "🤝" }
@@ -101,7 +101,7 @@
       "BODY": "taiyin_tomb:leather_vest"
     },
     "skills": ["rogue_shadow_strike", "rogue_seven_star"],
-    "learnedStances": ["basic_dagger", "shadow_strike", "basic_polearm", "dragon_spear", "basic_fist", "cloud_step"],
+    "learnedStances": ["basic_dagger", "shadow_strike", "basic_polearm", "dragon_spear", "basic_fist", "cloud_step", "basic_dodge", "basic_parry", "basic_breathing"],
     "capabilities": [
       { "type": "TALK", "label": "交談", "command": "talk yan_qing", "icon": "💬" },
       { "type": "RECRUIT", "label": "招募入隊", "command": "party recruit yan_qing", "icon": "🤝" }
@@ -139,7 +139,7 @@
       "BODY": "taiyin_tomb:linen_robe"
     },
     "skills": ["heal_single", "heal_all_purify"],
-    "learnedStances": ["basic_dagger", "basic_magic_staff", "basic_fist"],
+    "learnedStances": ["basic_dagger", "basic_magic_staff", "basic_fist", "basic_breathing", "basic_dodge", "basic_parry"],
     "capabilities": [
       { "type": "TALK", "label": "交談", "command": "talk ling_shuang", "icon": "💬" },
       { "type": "RECRUIT", "label": "招募入隊", "command": "party recruit ling_shuang", "icon": "🤝" }
@@ -176,7 +176,7 @@
       "BODY": "taiyin_tomb:yin_robe"
     },
     "skills": ["taoist_seal", "taoist_thunder"],
-    "learnedStances": ["basic_blade", "storm_blade", "basic_magic", "thunder_strike", "basic_fist"],
+    "learnedStances": ["basic_blade", "storm_blade", "basic_magic", "thunder_strike", "basic_fist", "violet_mist_force", "basic_breathing", "basic_dodge", "basic_parry"],
     "capabilities": [
       { "type": "TALK", "label": "交談", "command": "talk mo_yan", "icon": "💬" },
       { "type": "RECRUIT", "label": "招募入隊", "command": "party recruit mo_yan", "icon": "🤝" }

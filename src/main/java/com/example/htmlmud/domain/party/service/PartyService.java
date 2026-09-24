@@ -272,8 +272,39 @@ public class PartyService {
       } else {
         member.learnStance("basic_fist");
       }
-      member.enableSkill(SkillCategory.DODGE, "basic_dodge");
-      member.enableSkill(SkillCategory.PARRY, "basic_parry");
+      // 自動裝配初始被動心法 (完全資料驅動：優先裝配含 BASIC 標籤之基礎心法，其餘心法填補未裝配槽位)
+      List<String> initStances = tpl.learnedStances() != null ? tpl.learnedStances() : List.copyOf(member.getLearnedStances());
+      for (String stanceId : initStances) {
+        templateReader.findSkill(stanceId).ifPresent(sk -> {
+          if (sk.getTags() != null && sk.getTags().contains("BASIC")) {
+            var cat = PartyMember.resolveSkillCategory(sk);
+            if (cat == SkillCategory.DODGE || cat == SkillCategory.PARRY || cat == SkillCategory.FORCE) {
+              if (!member.getEnabledSkills().containsKey(cat)) {
+                member.enableSkill(cat, stanceId);
+              }
+            }
+          }
+        });
+      }
+      for (String stanceId : initStances) {
+        templateReader.findSkill(stanceId).ifPresent(sk -> {
+          var cat = PartyMember.resolveSkillCategory(sk);
+          if (cat == SkillCategory.DODGE || cat == SkillCategory.PARRY || cat == SkillCategory.FORCE) {
+            if (!member.getEnabledSkills().containsKey(cat)) {
+              member.enableSkill(cat, stanceId);
+            }
+          }
+        });
+      }
+      if (!member.getEnabledSkills().containsKey(SkillCategory.DODGE)) {
+        member.enableSkill(SkillCategory.DODGE, "basic_dodge");
+      }
+      if (!member.getEnabledSkills().containsKey(SkillCategory.PARRY)) {
+        member.enableSkill(SkillCategory.PARRY, "basic_parry");
+      }
+      if (!member.getEnabledSkills().containsKey(SkillCategory.FORCE)) {
+        member.enableSkill(SkillCategory.FORCE, "basic_breathing");
+      }
 
       return member;
     }

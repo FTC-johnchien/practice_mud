@@ -1,5 +1,8 @@
 package com.example.htmlmud.domain.model.config;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record MoveMessage(
 
     String cast,
@@ -8,7 +11,9 @@ public record MoveMessage(
 
     String crit,
 
-    String miss
+    String miss,
+
+    String success
 
 ) {
   public MoveMessage {
@@ -23,6 +28,9 @@ public record MoveMessage(
     }
     if (miss == null) {
       miss = "";
+    }
+    if (success == null) {
+      success = "";
     }
   }
 }
