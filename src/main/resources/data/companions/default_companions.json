@@ -63,7 +63,7 @@
       "BODY": "taiyin_tomb:black_iron_armor",
       "OFF_HAND": "taiyin_tomb:bronze_shield"
     },
-    "skills": ["tank_taunt", "tank_smash"],
+    "skills": ["tank_smash"],
     "learnedStances": ["basic_blunt", "mad_demon_staff", "basic_axe", "mountain_split_axe", "basic_fist", "iron_cloth", "basic_parry", "basic_breathing", "basic_dodge"],
     "capabilities": [
       { "type": "TALK", "label": "交談", "command": "talk tie_niu", "icon": "💬" },
@@ -138,7 +138,7 @@
       "MAIN_HAND": "taiyin_tomb:herbal_staff",
       "BODY": "taiyin_tomb:linen_robe"
     },
-    "skills": ["heal_single", "heal_all_purify"],
+    "skills": [],
     "learnedStances": ["basic_dagger", "basic_magic_staff", "basic_fist", "basic_breathing", "basic_dodge", "basic_parry"],
     "capabilities": [
       { "type": "TALK", "label": "交談", "command": "talk ling_shuang", "icon": "💬" },

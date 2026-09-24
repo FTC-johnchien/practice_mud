@@ -198,7 +198,12 @@ public class PartyService {
 
       List<PartyMemberSkill> memberSkills = new java.util.ArrayList<>();
       for (String sId : tpl.skills()) {
-        templateReader.findPartySkill(sId).ifPresent(memberSkills::add);
+        templateReader.findPartySkill(sId).ifPresent(s -> {
+          if (memberSkills.stream().noneMatch(existing -> existing.getId().equalsIgnoreCase(s.getId())
+              || (existing.getName() != null && s.getName() != null && existing.getName().equalsIgnoreCase(s.getName())))) {
+            memberSkills.add(s);
+          }
+        });
       }
 
       // 自動掛載職業特徵技能 (完全資料驅動：查詢所有 tags 包含 CLASS 且 school 符合該職業的技能，不限武器別)
@@ -210,7 +215,8 @@ public class PartyService {
             if (st.getSchool() != null && st.getSchool().equalsIgnoreCase(cId)
                 && st.getTags() != null && st.getTags().contains("CLASS")) {
               templateReader.findPartySkill(st.getId()).ifPresent(s -> {
-                if (memberSkills.stream().noneMatch(existing -> existing.getId().equalsIgnoreCase(s.getId()))) {
+                if (memberSkills.stream().noneMatch(existing -> existing.getId().equalsIgnoreCase(s.getId())
+                    || (existing.getName() != null && s.getName() != null && existing.getName().equalsIgnoreCase(s.getName())))) {
                   memberSkills.add(s);
                 }
               });

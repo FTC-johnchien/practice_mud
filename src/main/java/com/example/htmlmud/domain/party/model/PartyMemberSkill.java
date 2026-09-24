@@ -55,7 +55,27 @@ public class PartyMemberSkill {
   @Builder.Default
   private int sanRestore = 0;
   @Builder.Default
+  private boolean shield = false;
+  @Builder.Default
+  private boolean buff = false;
+  @Builder.Default
+  private boolean defense = false;
+  @Builder.Default
+  private java.util.List<String> tags = java.util.List.of();
+  @Builder.Default
   private java.util.List<String> allowedWeapons = java.util.List.of();
+
+  public boolean isShield() {
+    return shield || (tags != null && tags.contains("SHIELD"));
+  }
+
+  public boolean isBuff() {
+    return buff || (tags != null && tags.contains("BUFF"));
+  }
+
+  public boolean isDefense() {
+    return defense || (tags != null && tags.contains("DEFENSE"));
+  }
 
   @Builder.Default
   private boolean synergy = false;
@@ -124,9 +144,13 @@ public class PartyMemberSkill {
     boolean isAoe = tpl.getTags() != null && tpl.getTags().contains("AOE");
     boolean isHeal = tpl.getTags() != null && tpl.getTags().contains("HEAL");
     boolean isTaunt = tpl.getTags() != null && tpl.getTags().contains("TAUNT");
+    boolean isShield = tpl.getTags() != null && tpl.getTags().contains("SHIELD");
+    boolean isBuff = tpl.getTags() != null && tpl.getTags().contains("BUFF");
+    boolean isDefense = tpl.getTags() != null && tpl.getTags().contains("DEFENSE");
     boolean isStun = tpl.getTags() != null && (tpl.getTags().contains("STUN") || tpl.getTags().contains("SEAL"));
     int healAmt = (isHeal && tpl.getMechanics() != null) ? tpl.getMechanics().damage() : 0;
     int sanVal = (tpl.getTags() != null && tpl.getTags().contains("SAN")) ? 15 : 0;
+    java.util.List<String> rawTags = tpl.getTags() != null ? new java.util.ArrayList<>(tpl.getTags()) : java.util.List.of();
 
     java.util.List<String> weapons = java.util.List.of();
     if (tpl.getUsage() != null && tpl.getUsage().allowedWeapons() != null) {
@@ -148,7 +172,8 @@ public class PartyMemberSkill {
 
     String icon = "⚡";
     if (isHeal) icon = "🌿";
-    else if (isTaunt) icon = "🛡️";
+    else if (isTaunt || isShield || isDefense) icon = "🛡️";
+    else if (isBuff) icon = "✨";
     else if (isStun) icon = "📜";
     else if (tpl.getSchool() != null && tpl.getSchool().equalsIgnoreCase("SWORD")) icon = "🗡️";
     else if (tpl.getSchool() != null && tpl.getSchool().equalsIgnoreCase("DAGGER")) icon = "⚡";
@@ -170,6 +195,10 @@ public class PartyMemberSkill {
         .aoe(isAoe)
         .heal(isHeal)
         .taunt(isTaunt)
+        .shield(isShield)
+        .buff(isBuff)
+        .defense(isDefense)
+        .tags(rawTags)
         .stun(isStun)
         .stunDurationSeconds(isStun ? 4 : 0)
         .healAmount(healAmt)

@@ -103,6 +103,10 @@ public class PartyMember {
   @Builder.Default
   private int threat = 0;
 
+  // 護盾值 (Shield Absorption)
+  @Builder.Default
+  private int currentShield = 0;
+
   // 戰術方針規則清單 (Tactics / Gambit Rules)
   @Builder.Default
   private java.util.List<TacticsRule> tactics = new java.util.ArrayList<>();
@@ -208,7 +212,8 @@ public class PartyMember {
       skills = new java.util.ArrayList<>(skills);
     }
     for (PartyMemberSkill s : skills) {
-      if (s.getId().equalsIgnoreCase(newSkill.getId())) {
+      if (s.getId().equalsIgnoreCase(newSkill.getId())
+          || (s.getName() != null && newSkill.getName() != null && s.getName().equalsIgnoreCase(newSkill.getName()))) {
         return false; // 已掌握
       }
     }
@@ -378,16 +383,44 @@ public class PartyMember {
     }
   }
 
+  private String resolveSkillAlias(String skillId) {
+    if (skillId == null) return null;
+    return switch (skillId.toLowerCase()) {
+      case "tank_taunt" -> "class_warrior_taunt";
+      case "class_warrior_taunt" -> "tank_taunt";
+      case "heal_single" -> "class_cleric_heal";
+      case "class_cleric_heal" -> "heal_single";
+      case "heal_all_purify" -> "class_cleric_purify";
+      case "class_cleric_purify" -> "heal_all_purify";
+      default -> null;
+    };
+  }
+
   public boolean isOnCooldown(String skillId) {
-    return cooldownUntil.getOrDefault(skillId, 0L) > System.currentTimeMillis();
+    if (skillId == null) return false;
+    long now = System.currentTimeMillis();
+    if (cooldownUntil.getOrDefault(skillId, 0L) > now) return true;
+    String alias = resolveSkillAlias(skillId);
+    return alias != null && cooldownUntil.getOrDefault(alias, 0L) > now;
   }
 
   public long getRemainingCooldownMs(String skillId) {
-    return Math.max(0, cooldownUntil.getOrDefault(skillId, 0L) - System.currentTimeMillis());
+    long cd = cooldownUntil.getOrDefault(skillId, 0L);
+    String alias = resolveSkillAlias(skillId);
+    if (alias != null) {
+      cd = Math.max(cd, cooldownUntil.getOrDefault(alias, 0L));
+    }
+    return Math.max(0, cd - System.currentTimeMillis());
   }
 
   public void setCooldown(String skillId, long cdMs) {
-    cooldownUntil.put(skillId, System.currentTimeMillis() + cdMs);
+    if (skillId == null) return;
+    long expire = System.currentTimeMillis() + cdMs;
+    cooldownUntil.put(skillId, expire);
+    String alias = resolveSkillAlias(skillId);
+    if (alias != null) {
+      cooldownUntil.put(alias, expire);
+    }
   }
 
   public void resetCooldowns() {
@@ -397,8 +430,18 @@ public class PartyMember {
   }
 
   public void takeDamage(int damage) {
-    if (stats != null) {
-      stats.setHp(Math.max(0, stats.getHp() - damage));
+    int remainingDmg = damage;
+    if (currentShield > 0) {
+      if (currentShield >= remainingDmg) {
+        currentShield -= remainingDmg;
+        remainingDmg = 0;
+      } else {
+        remainingDmg -= currentShield;
+        currentShield = 0;
+      }
+    }
+    if (remainingDmg > 0 && stats != null) {
+      stats.setHp(Math.max(0, stats.getHp() - remainingDmg));
       if (stats.getHp() <= 0) {
         this.alive = false;
       }
@@ -407,6 +450,20 @@ public class PartyMember {
     if (this.resourceType == CombatResourceType.RAGE) {
       gainRage(15);
     }
+  }
+
+  public void addShield(int amount) {
+    if (amount > 0) {
+      this.currentShield += amount;
+    }
+  }
+
+  public int getCurrentShield() {
+    return currentShield;
+  }
+
+  public void setCurrentShield(int currentShield) {
+    this.currentShield = Math.max(0, currentShield);
   }
 
   public void heal(int amount) {
@@ -657,7 +714,38 @@ public class PartyMember {
       }
     }
 
-    // 2. 嘲諷招式預設規則
+    // 2. 護盾/防禦招式預設規則 (如金光辟邪護體、不動明王)
+    for (PartyMemberSkill s : skills) {
+      if (s.isShield()) {
+        addTacticsRule(TacticsRule.builder()
+            .priority(p++)
+            .condition(TacticsCondition.ENEMY_IS_BOSS)
+            .conditionValue(0)
+            .target(TacticsTarget.FRONT_ROW_ALLY)
+            .skillId(s.getId())
+            .enabled(true)
+            .build());
+        addTacticsRule(TacticsRule.builder()
+            .priority(p++)
+            .condition(TacticsCondition.ENEMY_COUNT_GTE)
+            .conditionValue(2)
+            .target(TacticsTarget.FRONT_ROW_ALLY)
+            .skillId(s.getId())
+            .enabled(true)
+            .build());
+      } else if (s.isBuff() || s.isDefense()) {
+        addTacticsRule(TacticsRule.builder()
+            .priority(p++)
+            .condition(TacticsCondition.SELF_HP_LESS_THAN)
+            .conditionValue(75)
+            .target(TacticsTarget.SELF)
+            .skillId(s.getId())
+            .enabled(true)
+            .build());
+      }
+    }
+
+    // 3. 嘲諷招式預設規則
     for (PartyMemberSkill s : skills) {
       if (s.isTaunt()) {
         addTacticsRule(TacticsRule.builder()
@@ -671,9 +759,9 @@ public class PartyMember {
       }
     }
 
-    // 3. 輸出招式預設規則
+    // 4. 輸出傷害招式預設規則
     for (PartyMemberSkill s : skills) {
-      if (!s.isHeal() && !s.isTaunt()) {
+      if (!s.isHeal() && !s.isTaunt() && !s.isShield() && !s.isBuff() && !s.isDefense()) {
         TacticsCondition cond = (s.getCostType() == CombatResourceType.SP || s.getCostType() == CombatResourceType.RAGE || s.getCostType() == CombatResourceType.COMBO)
             ? TacticsCondition.RESOURCE_GTE
             : TacticsCondition.ALWAYS;

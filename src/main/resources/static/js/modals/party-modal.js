@@ -159,6 +159,15 @@ function renderMemberTactics(m, idx) {
       });
     }
 
+    const partyMembers = (window.currentPartyData && window.currentPartyData.members) ? window.currentPartyData.members : [];
+    let memberOptionsHtml = '';
+    if (partyMembers && partyMembers.length > 0) {
+      partyMembers.forEach((pm, pidx) => {
+        const role = pidx === 0 ? '👑 隊長' : (pm.row === 'FRONT' ? '🛡️ 前衛' : '🏹 後衛');
+        memberOptionsHtml += `<option value="MEMBER_${pidx + 1}">指定 #${pidx + 1} ${pm.name} (${role})</option>`;
+      });
+    }
+
     builderHtml = `
       <div class="tactics-builder-card">
         <div class="tactics-builder-title">➕ 新增戰術方針規則 (Gambit Rule)</div>
@@ -182,8 +191,12 @@ function renderMemberTactics(m, idx) {
         <div class="tactics-builder-row">
           <label style="font-size:12px;color:#94a3b8;">目標：</label>
           <select id="t-builder-target">
+            <option value="FRONT_ROW_ALLY">前衛肉盾 (Tank)</option>
             <option value="LOWEST_HP_ALLY">氣血最低隊友</option>
+            <option value="LEADER">小隊隊長</option>
             <option value="SELF">自身</option>
+            ${memberOptionsHtml}
+            <option value="BACK_ROW_ALLY">後衛隊友</option>
             <option value="CURRENT_ENEMY">當前集火目標</option>
             <option value="ALL_ENEMIES">全體敵怪</option>
             <option value="ALL_ALLIES">全體隊友</option>

@@ -14,6 +14,7 @@ import com.example.htmlmud.domain.party.model.PartyMemberSkill;
 import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.model.RowPosition;
 import com.example.htmlmud.domain.party.model.TacticsRule;
+import com.example.htmlmud.domain.party.model.TacticsTarget;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -334,7 +335,7 @@ public class DrpgCombatLoop {
       }
 
       tacticsService.consumeSkillResource(member, skill);
-      applySkillEffects(player, ctx, member, skill, -1, "【戰術方針】");
+      applySkillEffects(player, ctx, member, skill, -1, rule.getTarget(), "【戰術方針】");
       return true;
     }
 
@@ -342,10 +343,15 @@ public class DrpgCombatLoop {
   }
 
   /**
-   * 執行主動技能效果 (支援單體/AOE、治療、嘲諷、暈眩及傷害加成)
+   * 執行主動技能效果 (支援單體/AOE、治療、護盾、Buff、嘲諷、暈眩及傷害加成)
    */
   public void applySkillEffects(Player player, BattleContext ctx, PartyMember member,
       PartyMemberSkill skill, int targetIdx, String prefixTag) {
+    applySkillEffects(player, ctx, member, skill, targetIdx, null, prefixTag);
+  }
+
+  public void applySkillEffects(Player player, BattleContext ctx, PartyMember member,
+      PartyMemberSkill skill, int targetIdx, TacticsTarget tacticsTarget, String prefixTag) {
     member.setCooldown(skill.getId(), skill.getCooldownMs());
     ctx.getParty().addFormationEnergy(8);
 
@@ -362,20 +368,37 @@ public class DrpgCombatLoop {
         member.addThreat(skill.getHealAmount());
         broadcastLog(player, ctx, "\u001B[1;32m" + tag + "✨ " + member.getName() + " 施展【" + skill.getName() + "】，甘露靈泉籠罩全隊！氣血恢復，道心安穩！\u001B[0m");
       } else {
-        PartyMember lowest = ctx.getParty().getMembers().stream()
-            .filter(PartyMember::isAlive)
-            .min((a, b) -> Double.compare(
-                (double) a.getStats().getHp() / Math.max(1, a.getStats().getMaxHp()),
-                (double) b.getStats().getHp() / Math.max(1, b.getStats().getMaxHp())))
-            .orElse(member);
-        lowest.heal(skill.getHealAmount());
+        PartyMember targetAlly = tacticsService.resolveAllyTarget(ctx, member,
+            (tacticsTarget != null ? tacticsTarget : TacticsTarget.LOWEST_HP_ALLY), targetIdx);
+        targetAlly.heal(skill.getHealAmount());
+        if (skill.getSanRestore() > 0) targetAlly.restoreSan(skill.getSanRestore());
         member.addThreat(skill.getHealAmount() / 2);
-        broadcastLog(player, ctx, "\u001B[1;32m" + tag + "🌿 " + member.getName() + " 運轉【" + skill.getName() + "】，一道春生靈氣注入 " + lowest.getName() + "，恢復 " + skill.getHealAmount() + " 點氣血！\u001B[0m");
+        broadcastLog(player, ctx, "\u001B[1;32m" + tag + "🌿 " + member.getName() + " 運轉【" + skill.getName() + "】，一道春生靈氣注入 " + targetAlly.getName() + "，恢復 " + skill.getHealAmount() + " 點氣血！\u001B[0m");
       }
+    } else if (skill.isShield()) {
+      // 護盾防護技能 (如 金光辟邪護體)
+      PartyMember targetAlly = tacticsService.resolveAllyTarget(ctx, member,
+          (tacticsTarget != null ? tacticsTarget : TacticsTarget.FRONT_ROW_ALLY), targetIdx);
+      int targetMaxHp = (targetAlly.getStats() != null) ? targetAlly.getStats().getMaxHp() : 100;
+      int baseAmount = (skill.getHealAmount() > 0) ? skill.getHealAmount() : 35;
+      int shieldAmount = Math.max((int) (targetMaxHp * 0.25), baseAmount);
+      targetAlly.addShield(shieldAmount);
+      member.addThreat(shieldAmount / 2);
+      broadcastLog(player, ctx, "\u001B[1;36m" + tag + "🛡️ " + member.getName() + " 施展【" + skill.getName() + "】，為 " + targetAlly.getName() + " 加持辟邪護盾，凝聚 " + shieldAmount + " 點玄罡金光！\u001B[0m");
     } else if (skill.isTaunt()) {
       ctx.setTaunt(member.getId(), 5000);
       member.addThreat(600);
       broadcastLog(player, ctx, "\u001B[1;33m" + tag + "🛡️ " + member.getName() + " 爆發【" + skill.getName() + "】，金剛威儀震懾全場！所有怪物仇恨被強行吸引！\u001B[0m");
+    } else if (skill.isBuff() || skill.isDefense()) {
+      // 自身減傷或防禦 Buff (如 不動明王)
+      PartyMember targetAlly = (tacticsTarget == TacticsTarget.SELF || tacticsTarget == null)
+          ? member
+          : tacticsService.resolveAllyTarget(ctx, member, tacticsTarget, targetIdx);
+      int maxHp = (targetAlly.getStats() != null) ? targetAlly.getStats().getMaxHp() : 100;
+      int barrier = Math.max(30, (int) (maxHp * 0.30));
+      targetAlly.addShield(barrier);
+      member.addThreat(300);
+      broadcastLog(player, ctx, "\u001B[1;33m" + tag + "⚡ " + member.getName() + " 施展【" + skill.getName() + "】，運起不動明王暗金罡氣，周身金芒流轉，生成 " + barrier + " 點不滅金身護體！\u001B[0m");
     } else {
       // 傷害技能
       if (skill.isAoe()) {

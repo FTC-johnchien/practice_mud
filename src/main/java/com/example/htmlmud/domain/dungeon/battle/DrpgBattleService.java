@@ -442,7 +442,10 @@ public class DrpgBattleService {
     }
 
     PartyMemberSkill skill = member.getSkills().stream()
-        .filter(s -> s.getId().equalsIgnoreCase(skillId))
+        .filter(s -> s.getId().equalsIgnoreCase(skillId)
+            || (skillId.equalsIgnoreCase("tank_taunt") && s.getId().equalsIgnoreCase("class_warrior_taunt"))
+            || (skillId.equalsIgnoreCase("heal_single") && s.getId().equalsIgnoreCase("class_cleric_heal"))
+            || (skillId.equalsIgnoreCase("heal_all_purify") && s.getId().equalsIgnoreCase("class_cleric_purify")))
         .findFirst().orElse(null);
 
     if (skill == null) {

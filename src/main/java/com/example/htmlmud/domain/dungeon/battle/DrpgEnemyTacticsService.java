@@ -219,4 +219,67 @@ public class DrpgEnemyTacticsService {
     }
     return true;
   }
+
+  /**
+   * 根據戰術方針或手動指定，解析小隊中的友方目標 (支援 Tank、隊長、指定成員、血量最低隊友、自身等)
+   */
+  public PartyMember resolveAllyTarget(BattleContext ctx, PartyMember caster, com.example.htmlmud.domain.party.model.TacticsTarget target, int manualTargetIdx) {
+    if (ctx == null || ctx.getParty() == null || ctx.getParty().getMembers() == null) {
+      return caster;
+    }
+    List<PartyMember> members = ctx.getParty().getMembers();
+
+    // 1. 若手動提供了有效的隊員下標
+    if (manualTargetIdx >= 0 && manualTargetIdx < members.size() && members.get(manualTargetIdx).isAlive()) {
+      return members.get(manualTargetIdx);
+    }
+
+    if (target == null) {
+      target = com.example.htmlmud.domain.party.model.TacticsTarget.LOWEST_HP_ALLY;
+    }
+
+    return switch (target) {
+      case SELF -> caster;
+
+      case LEADER -> (!members.isEmpty() && members.get(0).isAlive()) ? members.get(0) : caster;
+
+      case FRONT_ROW_ALLY -> {
+        // 優先挑選存活的前衛肉盾隊友 (以血量上限與有效防禦最高者為肉盾)
+        var frontTank = members.stream()
+            .filter(PartyMember::isAlive)
+            .filter(m -> m.getRow() == RowPosition.FRONT)
+            .max(java.util.Comparator.comparingInt((PartyMember m) -> m.getStats() != null ? m.getStats().getMaxHp() : 0)
+                .thenComparingInt(PartyMember::getEffectiveDefense));
+        if (frontTank.isPresent()) {
+          yield frontTank.get();
+        }
+        // 若無前衛，退化至全隊血量/防禦最高者
+        yield members.stream()
+            .filter(PartyMember::isAlive)
+            .max(java.util.Comparator.comparingInt((PartyMember m) -> m.getStats() != null ? m.getStats().getMaxHp() : 0))
+            .orElse(caster);
+      }
+
+      case BACK_ROW_ALLY -> members.stream()
+          .filter(PartyMember::isAlive)
+          .filter(m -> m.getRow() == RowPosition.BACK)
+          .findFirst()
+          .orElse(caster);
+
+      case MEMBER_1 -> (members.size() > 0 && members.get(0).isAlive()) ? members.get(0) : caster;
+      case MEMBER_2 -> (members.size() > 1 && members.get(1).isAlive()) ? members.get(1) : caster;
+      case MEMBER_3 -> (members.size() > 2 && members.get(2).isAlive()) ? members.get(2) : caster;
+      case MEMBER_4 -> (members.size() > 3 && members.get(3).isAlive()) ? members.get(3) : caster;
+      case MEMBER_5 -> (members.size() > 4 && members.get(4).isAlive()) ? members.get(4) : caster;
+
+      case LOWEST_HP_ALLY, ALL_ALLIES -> members.stream()
+          .filter(PartyMember::isAlive)
+          .min((a, b) -> Double.compare(
+              (double) a.getStats().getHp() / Math.max(1, a.getStats().getMaxHp()),
+              (double) b.getStats().getHp() / Math.max(1, b.getStats().getMaxHp())))
+          .orElse(caster);
+
+      default -> caster;
+    };
+  }
 }

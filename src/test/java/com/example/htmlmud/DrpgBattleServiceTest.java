@@ -104,7 +104,7 @@ class DrpgBattleServiceTest {
 
     iron.setCurrentRage(50);
     battleService.castSkill(dummyPlayer, 1, "tank_taunt", 0, dungeonPos);
-    assertThat(iron.getCurrentRage()).isEqualTo(20); // 扣 30
+    assertThat(iron.getCurrentRage()).isEqualTo(25); // 依 class_warrior_taunt.json 定義扣 25 怒氣
     assertThat(iron.isOnCooldown("tank_taunt")).isTrue();
     assertThat(ctx.isTaunted()).isTrue();
 
