@@ -55,13 +55,13 @@ class DrpgBattleServiceTest {
     assertThat(ctx.getEnemies()).hasSize(2);
     assertThat(ctx.getParty().getMembers()).hasSize(5);
 
-    // 驗證主角為 COMBO 資源，鐵牛為 RAGE 資源，凌霜為 MP 資源
+    // 驗證主角與鐵牛為 SP 戰氣資源，凌霜為 MP 真元資源
     PartyMember leader = ctx.getParty().getMembers().get(0);
-    assertThat(leader.getResourceType()).isEqualTo(CombatResourceType.COMBO);
+    assertThat(leader.getResourceType()).isEqualTo(CombatResourceType.SP);
     assertThat(leader.getSkills()).isNotEmpty();
 
     PartyMember iron = ctx.getParty().getMembers().get(1);
-    assertThat(iron.getResourceType()).isEqualTo(CombatResourceType.RAGE);
+    assertThat(iron.getResourceType()).isEqualTo(CombatResourceType.SP);
 
     PartyMember ling = ctx.getParty().getMembers().get(3);
     assertThat(ling.getResourceType()).isEqualTo(CombatResourceType.MP);

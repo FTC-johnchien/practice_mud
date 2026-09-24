@@ -581,8 +581,9 @@ function renderPartyModal() {
   const curRes = m.currentResource !== undefined ? m.currentResource : m.mp;
   const maxRes = m.maxResource !== undefined ? m.maxResource : m.maxMp;
   let resLabel = `MP: ${curRes}/${maxRes}`;
-  if (resType === 'RAGE') resLabel = `怒氣: ${curRes}/${maxRes}`;
-  else if (resType === 'COMBO') resLabel = `連擊: ${curRes}/${maxRes}`;
+  if (resType === 'SP' || resType === 'RAGE' || resType === 'COMBO' || resType === 'STAMINA' || resType === 'FORCE' || resType === 'ENERGY') {
+    resLabel = `戰氣: ${curRes}/${maxRes}`;
+  }
 
   let equipSlotsHtml = '';
   for (const slot of allSlots) {

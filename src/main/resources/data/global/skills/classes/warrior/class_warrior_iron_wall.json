@@ -1,7 +1,7 @@
 {
   "id": "class_warrior_iron_wall",
   "name": "不動明王",
-  "description": "運起不動明王暗金罡氣，自身所受傷害降低 40%，且免疫所有擊退與硬直，持續 5 秒。",
+  "description": "運起不動明王暗金罡氣，自身所受傷害降低 40%，且免疫所有擊退與硬直，持續 30 秒。",
   "type": "ACTIVE",
   "school": "WARRIOR",
   "tags": [
@@ -36,7 +36,7 @@
     "type": "BUFF",
     "category": "SHIELD",
     "effectType": "SHIELD",
-    "durationSeconds": 10,
+    "durationSeconds": 30,
     "percentOfTargetHp": 0.30,
     "baseShield": 30,
     "maxStacks": 1

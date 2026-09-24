@@ -184,7 +184,7 @@ class PartyInventoryAndMadnessTest {
         .findFirst().orElse(null);
     assertThat(learned).isNotNull();
     assertThat(learned.getName()).isEqualTo("青元貫日劍");
-    assertThat(learned.getCostType()).isEqualTo(CombatResourceType.RAGE); // 自動適配為力士怒氣資源
+    assertThat(learned.getCostType()).isEqualTo(CombatResourceType.SP); // 自動適配為力士戰氣資源
   }
 
   @Test

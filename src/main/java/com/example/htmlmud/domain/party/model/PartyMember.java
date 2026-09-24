@@ -523,9 +523,9 @@ public class PartyMember implements Buffable {
         }
       }
     }
-    // 力士受傷增加怒氣
-    if (this.resourceType == CombatResourceType.RAGE) {
-      gainRage(15);
+    // 受到傷害增加戰氣勢能
+    if (this.resourceType == CombatResourceType.SP || this.resourceType == CombatResourceType.RAGE || this.resourceType == CombatResourceType.COMBO) {
+      gainSp(10);
     }
   }
 

@@ -28,15 +28,9 @@ export function renderSkillDrawer() {
 
   let badgeCls = 'res-badge-mp';
   let badgeIcon = '🔮 真元';
-  if (resType === 'SP') {
+  if (resType === 'SP' || resType === 'RAGE' || resType === 'COMBO' || resType === 'STAMINA' || resType === 'FORCE' || resType === 'ENERGY') {
     badgeCls = 'res-badge-sp';
-    badgeIcon = '🟡 戰氣';
-  } else if (resType === 'RAGE') {
-    badgeCls = 'res-badge-rage';
-    badgeIcon = '🩸 怒氣';
-  } else if (resType === 'COMBO') {
-    badgeCls = 'res-badge-combo';
-    badgeIcon = '⚔️ 連擊點';
+    badgeIcon = '⚡ 戰氣';
   }
 
   const skills = m.skills || [];

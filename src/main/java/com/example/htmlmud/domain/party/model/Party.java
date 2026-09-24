@@ -287,6 +287,16 @@ public class Party {
     return members.stream().noneMatch(PartyMember::isAlive);
   }
 
+  public boolean swapMembers(int idx1, int idx2) {
+    if (members == null || idx1 < 0 || idx1 >= members.size() || idx2 < 0 || idx2 >= members.size() || idx1 == idx2) {
+      return false;
+    }
+    PartyMember temp = members.get(idx1);
+    members.set(idx1, members.get(idx2));
+    members.set(idx2, temp);
+    return true;
+  }
+
   @JsonIgnore
   public EffectiveCombatStats calculateEffectiveStats(int memberIndex) {
     PartyMember member = getMember(memberIndex);

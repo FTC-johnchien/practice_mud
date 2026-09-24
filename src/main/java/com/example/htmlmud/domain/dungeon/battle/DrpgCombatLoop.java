@@ -547,17 +547,18 @@ public class DrpgCombatLoop {
     } else {
       // 傷害技能
       if (skill.isAoe()) {
+        broadcastLog(player, ctx, "\u001B[1;36m" + tag + "🌩️ " + member.getName() + " 祭出【" + skill.getName() + "】，排山倒海的威能橫掃敵方全體！\u001B[0m");
         for (BattleEnemy e : ctx.getEnemies()) {
           if (e.isAlive()) {
             int dmg = (int) (tacticsService.calculatePlayerDamage(member, e) * skill.getDamageMultiplier());
             e.takeDamage(dmg);
             member.addThreat(dmg);
             e.addThreat(member.getId(), dmg + skill.getThreatBonus());
+            broadcastLog(player, ctx, "\u001B[1;36m   ↳ 擊中【" + e.getName() + "】造成 " + dmg + " 點傷害！\u001B[0m");
             if (skill.isStun()) e.applyStun(skill.getStunDurationSeconds() * 1000L);
             if (!e.isAlive()) broadcastLog(player, ctx, "\u001B[1;32m💥【" + e.getName() + "】在靈力轟擊下灰飛煙滅！\u001B[0m");
           }
         }
-        broadcastLog(player, ctx, "\u001B[1;36m" + tag + "🌩️ " + member.getName() + " 祭出【" + skill.getName() + "】，排山倒海的威能橫掃敵方全體！\u001B[0m");
         if (ctx.isAllEnemiesDead()) ctx.setState(BattleState.VICTORY);
       } else {
         BattleEnemy target = null;

@@ -1009,12 +1009,52 @@ body, html {
   border-radius: 10px;
 }
 
-/* 敵方陣營容器 (固定 5 欄網格，每隻怪預設佔 1/5，Boss/巨怪可自訂佔 2 格或多格) */
+/* 敵方陣營容器 (雙層前後排、水平完全居中) */
 .battle-enemies-container {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.battle-tier-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.battle-tier-label {
+  font-size: 10px;
+  letter-spacing: 1px;
+  font-weight: bold;
+  color: #64748b;
+}
+
+.tier-enemy-back .battle-tier-label {
+  color: #94a3b8;
+}
+
+.tier-enemy-front .battle-tier-label {
+  color: #f87171;
+}
+
+.tier-party-front .battle-tier-label {
+  color: #38bdf8;
+}
+
+.tier-party-back .battle-tier-label {
+  color: #818cf8;
+}
+
+.battle-tier-cards {
+  display: flex;
+  justify-content: center;
   align-items: stretch;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
 }
 
 /* 敵方卡片 */
@@ -1030,6 +1070,9 @@ body, html {
   gap: 5px;
   position: relative;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  min-width: 160px;
+  max-width: 250px;
+  flex: 1 1 auto;
 }
 
 .enemy-card:hover {
@@ -1099,11 +1142,12 @@ body, html {
   gap: 8px;
 }
 
-/* 我方戰隊在戰場主舞台的快速狀態列 (固定 5 欄網格，每位隊員佔 1/5) */
+/* 我方戰隊在戰場主舞台的快速狀態列 (雙層前後排、居中) */
 .battle-party-quick-bar {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 8px;
+  width: 100%;
 }
 
 .battle-party-mini-card {
@@ -1117,6 +1161,9 @@ body, html {
   gap: 3px;
   cursor: pointer;
   transition: all 0.2s ease;
+  min-width: 160px;
+  max-width: 230px;
+  flex: 1 1 auto;
 }
 
 .battle-party-mini-card:hover {

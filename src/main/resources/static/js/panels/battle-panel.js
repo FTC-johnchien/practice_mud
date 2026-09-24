@@ -66,18 +66,14 @@ export function renderBattleArena(battle) {
   }
 
   enemiesBox.innerHTML = '';
-  enemies.forEach(e => {
+  const backEnemies = enemies.filter(e => (e.row || 'FRONT').toUpperCase() === 'BACK');
+  const frontEnemies = enemies.filter(e => (e.row || 'FRONT').toUpperCase() !== 'BACK');
+
+  function createEnemyCard(e) {
     const card = document.createElement('div');
     const isTarget = (selectedEnemy && selectedEnemy.index === e.index) || e.isTarget || (battle.selectedTargetIndex === e.index);
     const isAlive = e.alive;
     const rowClass = (e.row || 'FRONT').toLowerCase();
-
-    // 支援敵人體型自訂網格跨欄跨行 (預設 1/5 格，Boss/巨獸可自訂佔 2 欄或多行)
-    const colSpan = e.colSpan || (e.rank === 'BOSS' ? 2 : 1);
-    card.style.gridColumn = `span ${colSpan}`;
-    if (e.rowSpan && e.rowSpan > 1) {
-      card.style.gridRow = `span ${e.rowSpan}`;
-    }
 
     card.className = `enemy-card row-${rowClass}${isTarget && isAlive ? ' selected-target' : ''}${!isAlive ? ' dead' : ''}`;
     card.title = isAlive ? `點擊鎖定【${e.name}】為集火目標` : '已伏誅';
@@ -106,8 +102,28 @@ export function renderBattleArena(battle) {
         ${buffsHtml}
       </div>
     `;
-    enemiesBox.appendChild(card);
-  });
+    return card;
+  }
+
+  // 1. 敵方後排 (位於最上方)
+  if (backEnemies.length > 0) {
+    const tierBack = document.createElement('div');
+    tierBack.className = 'battle-tier-wrapper tier-enemy-back';
+    tierBack.innerHTML = `<div class="battle-tier-label">〈 敵方後衛陣線 〉</div><div class="battle-tier-cards"></div>`;
+    const cardsBox = tierBack.querySelector('.battle-tier-cards');
+    backEnemies.forEach(e => cardsBox.appendChild(createEnemyCard(e)));
+    enemiesBox.appendChild(tierBack);
+  }
+
+  // 2. 敵方前排 (緊鄰交鋒線)
+  if (frontEnemies.length > 0) {
+    const tierFront = document.createElement('div');
+    tierFront.className = 'battle-tier-wrapper tier-enemy-front';
+    tierFront.innerHTML = `<div class="battle-tier-label">〈 敵方前衛陣線 〉</div><div class="battle-tier-cards"></div>`;
+    const cardsBox = tierFront.querySelector('.battle-tier-cards');
+    frontEnemies.forEach(e => cardsBox.appendChild(createEnemyCard(e)));
+    enemiesBox.appendChild(tierFront);
+  }
 
   const lastParty = store.get('lastParty');
   if (lastParty) {
@@ -144,66 +160,78 @@ function renderBuffBadges(activeBuffs) {
 }
 
 /**
- * 渲染戰場我方隊員快速資訊列
+ * 渲染戰場我方隊員快速資訊列 (雙層前後排、居中、陣法孔位與換位按鈕)
  * @param {Object} party 小隊狀態
  */
 export function renderBattlePartyQuickBar(party) {
   const bar = document.getElementById('battle-party-quick-bar');
   if (!bar || !party || !party.members) return;
 
-  const cards = bar.querySelectorAll('.battle-party-mini-card');
   const selectedMemberIdx = store.get('selectedMemberIdx');
+  bar.innerHTML = '';
 
-  if (cards.length !== party.members.length) {
-    bar.innerHTML = party.members.map((m, idx) => {
-      const isSelected = (selectedMemberIdx === idx);
-      const isAlive = (m.alive !== undefined) ? m.alive : (m.hp > 0);
-      const hpPct = Math.min(100, Math.max(0, (m.hp / m.maxHp) * 100));
-      const rowBadge = m.row === 'FRONT' ? '前衛' : '後衛';
+  const frontMembers = party.members.map((m, idx) => ({ m, idx })).filter(item => item.m.row === 'FRONT');
+  const backMembers = party.members.map((m, idx) => ({ m, idx })).filter(item => item.m.row !== 'FRONT');
 
-      return `
-        <div class="battle-party-mini-card ${isSelected ? 'active-selected' : ''}" data-idx="${idx}"
-          onclick="window.selectPartyMemberForSkill ? window.selectPartyMemberForSkill(${idx}) : window.selectPartyMember(${idx})" title="點擊展開 #${idx + 1} ${m.name} 的專屬技能盤">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span class="bpmc-name" style="font-weight:bold; color:#e2e8f0; font-size:12px;">#${idx + 1} ${m.name}</span>
-            <span class="bpmc-badge" style="font-size:9px; color:${m.row === 'FRONT' ? '#f87171' : '#60a5fa'};">[${rowBadge}]</span>
+  function createPartyCard(m, idx) {
+    const isSelected = (selectedMemberIdx === idx);
+    const isAlive = (m.alive !== undefined) ? m.alive : (m.hp > 0);
+    const hpPct = Math.min(100, Math.max(0, (m.hp / m.maxHp) * 100));
+    const rowBadge = m.row === 'FRONT' ? '前衛' : '後衛';
+
+    const card = document.createElement('div');
+    card.className = `battle-party-mini-card row-${(m.row || 'FRONT').toLowerCase()} ${isSelected ? 'active-selected' : ''}`;
+    card.onclick = () => window.selectPartyMemberForSkill ? window.selectPartyMemberForSkill(idx) : window.selectPartyMember(idx);
+    card.title = `點擊展開 #${idx + 1} ${m.name} 的專屬技能盤`;
+
+    card.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span class="bpmc-name" style="font-weight:bold; color:#e2e8f0; font-size:12px;">#${idx + 1} ${m.name}</span>
+        <div style="display:flex; align-items:center; gap:4px;">
+          <span class="bpmc-badge" style="font-size:9px; color:${m.row === 'FRONT' ? '#f87171' : '#60a5fa'};">[${rowBadge}]</span>
+          <div class="bpmc-swap-btns" style="display:inline-flex; gap:1px;">
+            ${idx > 0 ? `<button onclick="event.stopPropagation(); window.send('party swap ${idx} ${idx - 1}')" title="與前一位隊員換位" style="background:#1e293b; border:1px solid #475569; color:#94a3b8; border-radius:2px; padding:0 3px; font-size:9px; cursor:pointer;">◀</button>` : ''}
+            ${idx < party.members.length - 1 ? `<button onclick="event.stopPropagation(); window.send('party swap ${idx} ${idx + 1}')" title="與後一位隊員換位" style="background:#1e293b; border:1px solid #475569; color:#94a3b8; border-radius:2px; padding:0 3px; font-size:9px; cursor:pointer;">▶</button>` : ''}
           </div>
-          <div class="enemy-hp-wrap" style="height:10px; margin:2px 0;">
-            <div class="hp-bar" style="width:${hpPct}%; background:${isAlive ? '#10b981' : '#6b7280'}; height:100%;"></div>
-          </div>
-          <div style="font-size:9px; color:#94a3b8; display:flex; justify-content:space-between;">
-            <span class="bpmc-hp-text">HP ${m.hp}/${m.maxHp}</span>
-            <span style="color:#38bdf8; font-weight:bold;">⚡ 招式盤</span>
-          </div>
-          ${renderBuffBadges(m.activeBuffs)}
         </div>
-      `;
-    }).join('');
-  } else {
-    party.members.forEach((m, idx) => {
-      const card = cards[idx];
-      if (!card) return;
-      const isSelected = (selectedMemberIdx === idx);
-      const isAlive = (m.alive !== undefined) ? m.alive : (m.hp > 0);
-      const hpPct = Math.min(100, Math.max(0, (m.hp / m.maxHp) * 100));
-      const rowBadge = m.row === 'FRONT' ? '前衛' : '後衛';
+      </div>
+      <div class="enemy-hp-wrap" style="height:10px; margin:2px 0;">
+        <div class="hp-bar" style="width:${hpPct}%; background:${isAlive ? '#10b981' : '#6b7280'}; height:100%;"></div>
+      </div>
+      <div style="font-size:9px; color:#94a3b8; display:flex; justify-content:space-between; align-items:center;">
+        <span class="bpmc-hp-text">HP ${m.hp}/${m.maxHp}</span>
+        <span style="color:#38bdf8; font-weight:bold;">⚡ 招式盤</span>
+      </div>
+      ${m.formationSlotName ? `
+        <div style="font-size:9px; margin-top:2px; padding:1px 4px; border-radius:3px; display:flex; justify-content:space-between; align-items:center; ${m.formationSlotActive ? 'background:rgba(16,185,129,0.12); color:#6ee7b7; border:1px solid rgba(16,185,129,0.3);' : 'background:rgba(239,68,68,0.12); color:#fca5a5; border:1px solid rgba(239,68,68,0.3);'}"
+             title="陣法孔位：${m.formationSlotName} - ${m.formationSlotBonus || ''}">
+          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">💠 ${m.formationSlotName}</span>
+          ${m.formationSlotActive ? '<span style="font-size:8px; flex-shrink:0;">✓生效</span>' : '<span style="font-size:8px; color:#ef4444; flex-shrink:0;">✗站位不符</span>'}
+        </div>
+      ` : ''}
+      ${renderBuffBadges(m.activeBuffs)}
+    `;
+    return card;
+  }
 
-      card.className = `battle-party-mini-card ${isSelected ? 'active-selected' : ''}`;
-      const nameEl = card.querySelector('.bpmc-name');
-      if (nameEl) nameEl.textContent = `#${idx + 1} ${m.name}`;
-      const badgeEl = card.querySelector('.bpmc-badge');
-      if (badgeEl) {
-        badgeEl.textContent = `[${rowBadge}]`;
-        badgeEl.style.color = (m.row === 'FRONT' ? '#f87171' : '#60a5fa');
-      }
-      const hpBar = card.querySelector('.hp-bar');
-      if (hpBar) {
-        hpBar.style.width = `${hpPct}%`;
-        hpBar.style.background = isAlive ? '#10b981' : '#6b7280';
-      }
-      const hpText = card.querySelector('.bpmc-hp-text');
-      if (hpText) hpText.textContent = `HP ${m.hp}/${m.maxHp}`;
-    });
+  // 1. 我方前衛 (緊鄰交鋒線)
+  if (frontMembers.length > 0) {
+    const tierFront = document.createElement('div');
+    tierFront.className = 'battle-tier-wrapper tier-party-front';
+    tierFront.innerHTML = `<div class="battle-tier-label">〈 我方前衛陣線 〉</div><div class="battle-tier-cards"></div>`;
+    const cardsBox = tierFront.querySelector('.battle-tier-cards');
+    frontMembers.forEach(item => cardsBox.appendChild(createPartyCard(item.m, item.idx)));
+    bar.appendChild(tierFront);
+  }
+
+  // 2. 我方後衛 (位於下方)
+  if (backMembers.length > 0) {
+    const tierBack = document.createElement('div');
+    tierBack.className = 'battle-tier-wrapper tier-party-back';
+    tierBack.innerHTML = `<div class="battle-tier-label">〈 我方後衛陣線 〉</div><div class="battle-tier-cards"></div>`;
+    const cardsBox = tierBack.querySelector('.battle-tier-cards');
+    backMembers.forEach(item => cardsBox.appendChild(createPartyCard(item.m, item.idx)));
+    bar.appendChild(tierBack);
   }
 }
 

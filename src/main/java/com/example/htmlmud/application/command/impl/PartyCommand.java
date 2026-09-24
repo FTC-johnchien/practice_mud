@@ -212,6 +212,36 @@ public class PartyCommand implements PlayerCommand {
           self.reply("隊員編號格式錯誤，請輸入數字 (0~4)。");
         }
       }
+      case "swap", "換位", "調位" -> {
+        if (parts.length < 3) {
+          self.reply("用法: party swap <隊員編號1> <隊員編號2> (例如: party swap 1 2)");
+          return;
+        }
+        try {
+          int idx1 = Integer.parseInt(parts[1]);
+          int idx2 = Integer.parseInt(parts[2]);
+          int size = party.getMembers().size();
+          if (idx1 < 0 || idx1 >= size || idx2 < 0 || idx2 >= size) {
+            self.reply("隊員編號超出範圍 (0 ~ " + (size - 1) + ")！");
+            return;
+          }
+          if (idx1 == idx2) {
+            self.reply("目標位置相同，無須換位。");
+            return;
+          }
+          PartyMember m1 = party.getMembers().get(idx1);
+          PartyMember m2 = party.getMembers().get(idx2);
+          boolean ok = party.swapMembers(idx1, idx2);
+          if (ok) {
+            self.reply("【陣位調換】已將 #" + (idx1 + 1) + "【" + m1.getName() + "】與 #" + (idx2 + 1) + "【" + m2.getName() + "】的陣型順序對調！");
+            broadcastDrpgState(self);
+          } else {
+            self.reply("換位失敗！");
+          }
+        } catch (NumberFormatException e) {
+          self.reply("隊員編號格式錯誤，請輸入數字 (例如: party swap 1 2)。");
+        }
+      }
       case "tactics", "gambit", "ai", "戰術" -> {
         handleTactics(self, party, parts);
       }
@@ -224,6 +254,7 @@ public class PartyCommand implements PlayerCommand {
             + "  party recruit <名/ID>    - 邀請同道知己加入問道旅團 (上限 " + Party.MAX_PARTY_SIZE + " 人)\n"
             + "  party dismiss <名/ID>    - 請離隊員返回客棧安歇\n"
             + "  party switch <idx>       - 切換隊員前後排站位\n"
+            + "  party swap <idx1> <idx2> - 交換兩位隊員的陣容順序與陣法槽位\n"
             + "  party stat [add <屬性>]  - 檢視主角修為等級與自由加點 (str/con/dex/int/wis)\n"
             + "  party enable <idx> <武學> - 設定隊員主修武學套路\n"
             + "  party tactics <idx>      - 檢視與自訂隊員戰術方針規則鏈 (Gambit)\n"

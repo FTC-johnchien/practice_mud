@@ -101,15 +101,9 @@ export function renderPartyHud(party) {
 
     let resFillClass = 'mp-fill';
     let resLabel = `MP ${curRes}/${maxRes}`;
-    if (resType === 'SP') {
+    if (resType === 'SP' || resType === 'RAGE' || resType === 'COMBO' || resType === 'STAMINA' || resType === 'FORCE' || resType === 'ENERGY') {
       resFillClass = 'sp-fill';
       resLabel = `戰氣 ${curRes}/${maxRes}`;
-    } else if (resType === 'RAGE') {
-      resFillClass = 'rage-fill';
-      resLabel = `怒氣 ${curRes}/${maxRes}`;
-    } else if (resType === 'COMBO') {
-      resFillClass = 'combo-fill';
-      resLabel = `連擊 ${curRes}/${maxRes}`;
     }
 
     // 7 大部位裝備槽位 (5 基礎 + 2 飾品)
@@ -146,8 +140,19 @@ export function renderPartyHud(party) {
           <span class="member-row badge-${m.row.toLowerCase()}">${rowBadge}</span>
           ${m.className ? `<span class="member-class-badge" title="${m.classDescription || ''}" style="font-size:9px;color:#7dd3fc;background:#0f172a;border:1px solid #0284c7;border-radius:3px;padding:0 3px;">${m.className}</span>` : ''}
           ${(idx === 0 && m.freeStatPoints > 0) ? `<span class="hud-free-points-pill" title="尚有 ${m.freeStatPoints} 點未分配自由點數！點擊開啟配點" onclick="event.stopPropagation(); if(window.openPartyModal) window.openPartyModal(0);">+${m.freeStatPoints}點</span>` : ''}
+          <div class="member-swap-tools" style="display:inline-flex; gap:2px; margin-left:auto;">
+            ${idx > 0 ? `<button class="hud-swap-btn" onclick="event.stopPropagation(); window.send('party swap ${idx} ${idx - 1}')" title="與前一位隊員換位" style="background:#1e293b; border:1px solid #475569; color:#94a3b8; border-radius:3px; padding:0 4px; font-size:10px; cursor:pointer;">◀</button>` : ''}
+            ${idx < party.members.length - 1 ? `<button class="hud-swap-btn" onclick="event.stopPropagation(); window.send('party swap ${idx} ${idx + 1}')" title="與後一位隊員換位" style="background:#1e293b; border:1px solid #475569; color:#94a3b8; border-radius:3px; padding:0 4px; font-size:10px; cursor:pointer;">▶</button>` : ''}
+          </div>
         </div>
         <div class="member-title" title="${m.roleTitle}">${m.roleTitle}</div>
+        ${m.formationSlotName ? `
+          <div class="member-formation-slot" style="font-size:10px; margin:2px 0; display:inline-flex; align-items:center; gap:4px; padding:1px 6px; border-radius:4px; ${m.formationSlotActive ? 'background:rgba(16,185,129,0.15); border:1px solid #10b981; color:#6ee7b7;' : 'background:rgba(239,68,68,0.15); border:1px solid #ef4444; color:#fca5a5;'}"
+               title="陣法孔位：${m.formationSlotName} (要求: ${m.formationSlotRequiredRow === 'FRONT' ? '前衛' : (m.formationSlotRequiredRow === 'BACK' ? '後衛' : '任意')}) - ${m.formationSlotBonus || ''} ${m.formationSlotActive ? '【加成生效中】' : '【站位不符，無法獲得加成】'}">
+            <span>💠 ${m.formationSlotName}</span>
+            <span style="font-size:9px; opacity:0.85;">${m.formationSlotBonus ? m.formationSlotBonus : ''}</span>
+            ${!m.formationSlotActive ? '<span style="font-weight:bold; color:#ef4444;">⚠️需' + (m.formationSlotRequiredRow === 'FRONT' ? '前衛' : '後衛') + '</span>' : ''}
+          </div>` : ''}
         <div class="member-equip-row">
           ${equipHtml}
         </div>

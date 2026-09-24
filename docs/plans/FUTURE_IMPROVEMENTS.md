@@ -258,4 +258,3 @@
 | **P2** | 代碼與架構 | 1. 收斂 `PartyInventory` 模糊前綴比對<br>2. 清理 `PartyInventory` 無參建構子副作用（✅ 已完成）<br>3. 清理 `CombatService` dead code 與命名大小寫<br>4. 領域層依賴反轉 (Phase 10 Output Ports) | 提升架構整潔度與可維護性 |
 | **P2** | 前端工程 | 1. `style.css` 巨石 CSS 元件模組化拆分<br>2. 前端 DOM 防禦與 CDN 資源 SRI 驗證<br>3. **WoW Spellbook Tab 3 被動心法面板實裝**（✅ 已完成） | 降低樣式維護難度，提升用戶體驗 |
 | **P2** | 測試工程 | 1. 補齊 Miss、Stack、Loot 併發與原子存檔測試（✅ 已完成）<br>2. 補齊被動技能與戰鬥檢定純機制測試（✅ 已完成）<br>3. 修正測試間靜態上下文隔離 | 健全自動化回歸防護網 (164/164 全綠) |
-

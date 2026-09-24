@@ -1,7 +1,7 @@
 {
   "id": "class_cleric_spring_rain",
   "name": "春風化雨",
-  "description": "引導草木生發之氣，為目標隊友施加持續滋養，每 2 秒恢復氣血，持續 10 秒。",
+  "description": "引導草木生發之氣，為目標隊友施加持續滋養，每 2 秒恢復氣血，持續 30 秒。",
   "type": "ACTIVE",
   "school": "CLERIC",
   "tags": [
@@ -36,7 +36,7 @@
     "type": "BUFF",
     "category": "HOT",
     "effectType": "HEALING",
-    "durationSeconds": 10,
+    "durationSeconds": 30,
     "tickIntervalSeconds": 2,
     "healPerTick": 18,
     "healPercentPerTick": 0.05,

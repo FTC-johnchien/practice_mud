@@ -36,7 +36,7 @@
     "type": "BUFF",
     "category": "SHIELD",
     "effectType": "SHIELD",
-    "durationSeconds": 20,
+    "durationSeconds": 60,
     "percentOfTargetHp": 0.25,
     "baseShield": 35,
     "maxStacks": 1

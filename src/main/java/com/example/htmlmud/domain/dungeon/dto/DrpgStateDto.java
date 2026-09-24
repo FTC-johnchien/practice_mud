@@ -138,9 +138,10 @@ public record DrpgStateDto(
   }
 
   public static PartyViewDto toPartyViewDto(Party party, TemplateReader templateReader) {
-    if (party == null) return null;
+    if (party == null || party.getMembers() == null) return null;
     List<PartyMemberViewDto> memberViews = new ArrayList<>();
-    for (PartyMember m : party.getMembers()) {
+    for (int memberIdx = 0; memberIdx < party.getMembers().size(); memberIdx++) {
+      PartyMember m = party.getMembers().get(memberIdx);
       int hp = m.getStats() != null ? m.getStats().getHp() : 100;
       int maxHp = m.getStats() != null ? m.getStats().getMaxHp() : 100;
       int mp = m.getStats() != null ? m.getStats().getMp() : 50;
@@ -158,14 +159,16 @@ public record DrpgStateDto(
       }
 
       String resType = m.getResourceType() != null ? m.getResourceType().name() : "MP";
+      if (m.getResourceType() == CombatResourceType.RAGE || m.getResourceType() == CombatResourceType.COMBO ||
+          m.getResourceType() == CombatResourceType.FORCE || m.getResourceType() == CombatResourceType.ENERGY ||
+          m.getResourceType() == CombatResourceType.STAMINA || m.getResourceType() == CombatResourceType.SP) {
+        resType = "SP";
+      }
       int curRes = mp;
       int maxRes = maxMp;
-      if (m.getResourceType() == CombatResourceType.RAGE) {
-        curRes = m.getCurrentRage();
-        maxRes = m.getMaxRage();
-      } else if (m.getResourceType() == CombatResourceType.COMBO) {
-        curRes = m.getCurrentCombo();
-        maxRes = m.getMaxCombo();
+      if ("SP".equals(resType)) {
+        curRes = m.getCurrentSp();
+        maxRes = m.getMaxSp();
       }
 
       List<PartySkillViewDto> skillDtos = new ArrayList<>();
@@ -175,22 +178,18 @@ public record DrpgStateDto(
           if (m.isOnCooldown(s.getId())) avail = false;
           if (s.getCostType() == CombatResourceType.MP && mp < s.getCostValue()) avail = false;
           if (s.getCostType() == CombatResourceType.SP && m.getCurrentSp() < s.getCostValue()) avail = false;
-          if (s.getCostType() == CombatResourceType.RAGE && m.getCurrentRage() < s.getCostValue()) avail = false;
-          if (s.getCostType() == CombatResourceType.COMBO && m.getCurrentCombo() < s.getCostValue()) avail = false;
+          if (s.getCostType() == CombatResourceType.RAGE && m.getCurrentSp() < s.getCostValue()) avail = false;
+          if (s.getCostType() == CombatResourceType.COMBO && m.getCurrentSp() < (s.getCostValue() * 20) && m.getCurrentCombo() < s.getCostValue()) avail = false;
           if (s.getCostType() == CombatResourceType.HP && hp <= s.getCostValue()) avail = false;
           if (!m.isSkillUsable(s)) avail = false;
 
           String costDesc = "無消耗";
           if (s.getCostType() != null && s.getCostValue() > 0) {
             costDesc = switch (s.getCostType()) {
-              case SP -> s.getCostValue() + " 戰氣";
-              case STAMINA -> s.getCostValue() + " 體力";
-              case HP -> s.getCostValue() + " 氣血";
-              case RAGE -> s.getCostValue() + " 怒氣";
-              case COMBO -> s.getCostValue() + " 連擊";
+              case SP, RAGE, STAMINA, FORCE, ENERGY -> s.getCostValue() + " 戰氣";
+              case COMBO -> (s.getCostValue() * 20) + " 戰氣";
               case MP -> s.getCostValue() + " 真元";
-              case ENERGY -> s.getCostValue() + " 精力";
-              case FORCE -> s.getCostValue() + " 內力";
+              case HP -> s.getCostValue() + " 氣血";
               default -> s.getCostValue() + " " + (s.getCostType() != null ? s.getCostType().getDisplayName() : "點");
             };
           }
@@ -352,7 +351,17 @@ public record DrpgStateDto(
           m.isCasting(),
           (m.getCurrentCastingSkill() != null ? m.getCurrentCastingSkill().getName() : null),
           m.getCastingDurationMs(),
-          m.getCastingRemainingMs()
+          m.getCastingRemainingMs(),
+          (party.getEquippedFormation() != null && party.getEquippedFormation().getSlot(memberIdx) != null
+              ? party.getEquippedFormation().getSlot(memberIdx).getSlotName() : null),
+          (party.getEquippedFormation() != null && party.getEquippedFormation().getSlot(memberIdx) != null
+              && party.getEquippedFormation().getSlot(memberIdx).getRequiredRow() != null
+              ? party.getEquippedFormation().getSlot(memberIdx).getRequiredRow().name() : "ANY"),
+          (party.getEquippedFormation() != null && party.getEquippedFormation().getSlot(memberIdx) != null
+              ? party.getEquippedFormation().getSlot(memberIdx).getSpecialBonusDesc() : null),
+          (party.getEquippedFormation() != null && party.getEquippedFormation().getSlot(memberIdx) != null
+              && (party.getEquippedFormation().getSlot(memberIdx).getRequiredRow() == com.example.htmlmud.domain.party.model.RowPosition.ANY
+                  || party.getEquippedFormation().getSlot(memberIdx).getRequiredRow() == m.getRow()))
       ));
     }
 
@@ -561,7 +570,11 @@ public record DrpgStateDto(
       boolean isCasting,
       String castingSkillName,
       long castingDurationMs,
-      long castingRemainingMs
+      long castingRemainingMs,
+      String formationSlotName,
+      String formationSlotRequiredRow,
+      String formationSlotBonus,
+      boolean formationSlotActive
   ) {}
 
   public record TacticsRuleViewDto(
