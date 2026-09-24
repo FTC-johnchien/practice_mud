@@ -58,6 +58,15 @@ public class BattleEnemy implements Buffable {
   private String droppedDaoSkillName;
   private String droppedDaoMemberName;
 
+  // Phase 11: 獨立威脅表 (Threat Table) 與當前鎖定目標
+  @Builder.Default
+  private Map<String, Integer> threatTable = new java.util.concurrent.ConcurrentHashMap<>();
+  private String targetMemberId;
+  private String targetMemberName;
+  private String tauntedByMemberId;
+  @Builder.Default
+  private long tauntedUntil = 0;
+
   @Builder.Default
   private Map<EquipmentSlot, String> equipment = new HashMap<>();
   @Builder.Default
@@ -250,5 +259,40 @@ public class BattleEnemy implements Buffable {
 
   public void applyStun(long durationMs) {
     this.stunnedUntil = Math.max(this.stunnedUntil, System.currentTimeMillis() + durationMs);
+  }
+
+  public boolean isTaunted() {
+    return tauntedByMemberId != null && tauntedUntil > System.currentTimeMillis();
+  }
+
+  public void setTaunt(String memberId, long durationMs) {
+    this.tauntedByMemberId = memberId;
+    this.tauntedUntil = System.currentTimeMillis() + durationMs;
+    this.targetMemberId = memberId;
+    // 仇恨同步：將嘲諷者的仇恨拉至當前最高仇恨 + 100，鞏固仇恨
+    int top = getTopThreat();
+    int current = getThreat(memberId);
+    threatTable.put(memberId, Math.max(top + 100, current + 100));
+  }
+
+  public void addThreat(String memberId, int amount) {
+    if (memberId == null || amount <= 0) return;
+    threatTable.merge(memberId, amount, Integer::sum);
+  }
+
+  public int getThreat(String memberId) {
+    return memberId != null ? threatTable.getOrDefault(memberId, 0) : 0;
+  }
+
+  public int getTopThreat() {
+    return threatTable.values().stream().mapToInt(Integer::intValue).max().orElse(0);
+  }
+
+  public void resetThreat(String memberId) {
+    if (memberId != null) threatTable.remove(memberId);
+  }
+
+  public void clearThreat() {
+    threatTable.clear();
   }
 }

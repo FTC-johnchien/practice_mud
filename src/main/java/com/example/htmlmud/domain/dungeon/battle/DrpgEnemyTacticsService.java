@@ -36,14 +36,33 @@ public class DrpgEnemyTacticsService {
    * 根據嘲諷、有效仇恨 (前排 1.3 倍加成) 及站位，智慧選取怪物攻擊目標
    */
   public PartyMember selectPartyTarget(BattleContext ctx) {
+    return selectPartyTarget(ctx, null);
+  }
+
+  /**
+   * 根據個別敵人的獨立威脅表 (Threat Table)、嘲諷狀態與前排權重，選取並同步當前攻擊目標
+   */
+  public PartyMember selectPartyTarget(BattleContext ctx, BattleEnemy enemy) {
     if (ctx == null || ctx.getParty() == null || ctx.getParty().getMembers() == null) {
       return null;
     }
 
-    // 1. 若有嘲諷目標且活著，強制打嘲諷者
-    if (ctx.isTaunted()) {
+    // 1. 若該敵人被嘲諷，或戰場全局被嘲諷且嘲諷者存活，強制打嘲諷者
+    if (enemy != null && enemy.isTaunted()) {
+      for (PartyMember m : ctx.getParty().getMembers()) {
+        if (m.getId().equals(enemy.getTauntedByMemberId()) && m.isAlive()) {
+          enemy.setTargetMemberId(m.getId());
+          enemy.setTargetMemberName(m.getName());
+          return m;
+        }
+      }
+    } else if (ctx.isTaunted()) {
       for (PartyMember m : ctx.getParty().getMembers()) {
         if (m.getId().equals(ctx.getTauntedByMemberId()) && m.isAlive()) {
+          if (enemy != null) {
+            enemy.setTargetMemberId(m.getId());
+            enemy.setTargetMemberName(m.getName());
+          }
           return m;
         }
       }
@@ -61,28 +80,43 @@ public class DrpgEnemyTacticsService {
     PartyMember highestThreatMember = null;
     double maxEffectiveThreat = -1;
     for (PartyMember m : aliveMembers) {
-      double effectiveThreat = m.getThreat() * (m.getRow() == RowPosition.FRONT ? 1.3 : 1.0);
+      int baseThreat = (enemy != null && enemy.getThreatTable().containsKey(m.getId()))
+          ? enemy.getThreat(m.getId())
+          : m.getThreat();
+
+      double effectiveThreat = baseThreat * (m.getRow() == RowPosition.FRONT ? 1.3 : 1.0);
       if (effectiveThreat > maxEffectiveThreat) {
         maxEffectiveThreat = effectiveThreat;
         highestThreatMember = m;
       }
     }
 
+    PartyMember chosen = null;
     // 若已有建立仇恨 (maxEffectiveThreat > 0)，直接鎖定最高仇恨者
     if (maxEffectiveThreat > 0 && highestThreatMember != null) {
-      return highestThreatMember;
+      chosen = highestThreatMember;
+    } else {
+      // 3. 初始無仇恨狀態，優先挑選前排活著的隊員
+      List<PartyMember> frontAlive = aliveMembers.stream()
+          .filter(m -> m.getRow() == RowPosition.FRONT)
+          .toList();
+      if (!frontAlive.isEmpty()) {
+        chosen = frontAlive.get(ThreadLocalRandom.current().nextInt(frontAlive.size()));
+      } else {
+        chosen = aliveMembers.get(ThreadLocalRandom.current().nextInt(aliveMembers.size()));
+      }
     }
 
-    // 3. 初始無仇恨狀態，優先挑選前排活著的隊員
-    List<PartyMember> frontAlive = aliveMembers.stream()
-        .filter(m -> m.getRow() == RowPosition.FRONT)
-        .toList();
-    if (!frontAlive.isEmpty()) {
-      return frontAlive.get(ThreadLocalRandom.current().nextInt(frontAlive.size()));
+    if (enemy != null && chosen != null) {
+      enemy.setTargetMemberId(chosen.getId());
+      enemy.setTargetMemberName(chosen.getName());
+      // 建立基礎交戰仇恨，避免目標完全無仇恨記錄
+      if (enemy.getThreat(chosen.getId()) == 0) {
+        enemy.addThreat(chosen.getId(), 1);
+      }
     }
 
-    // 前排無人，打後排
-    return aliveMembers.get(ThreadLocalRandom.current().nextInt(aliveMembers.size()));
+    return chosen;
   }
 
   /**

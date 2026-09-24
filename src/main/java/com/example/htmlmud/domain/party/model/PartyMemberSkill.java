@@ -66,6 +66,22 @@ public class PartyMemberSkill {
   @Builder.Default
   private java.util.List<String> allowedWeapons = java.util.List.of();
 
+  // Phase 11: 戰鬥狀態機、GCD 與施法唱條屬性
+  @Builder.Default
+  private long gcdMs = 1200L;
+  @Builder.Default
+  private boolean triggersGcd = true;
+  @Builder.Default
+  private long castTimeMs = 0L;
+  @Builder.Default
+  private boolean interruptible = true;
+  @Builder.Default
+  private int threatBonus = 0;
+
+  public boolean isInstant() {
+    return castTimeMs <= 0;
+  }
+
   public boolean isShield() {
     return shield || (tags != null && tags.contains("SHIELD"));
   }
@@ -179,6 +195,26 @@ public class PartyMemberSkill {
     else if (tpl.getSchool() != null && tpl.getSchool().equalsIgnoreCase("SWORD")) icon = "🗡️";
     else if (tpl.getSchool() != null && tpl.getSchool().equalsIgnoreCase("DAGGER")) icon = "⚡";
 
+    long gcdTime = 1200L;
+    boolean trigGcd = true;
+    if (rawTags.contains("OFF_GCD") || rawTags.contains("INSTANT_DEFENSE")) {
+      trigGcd = false;
+      gcdTime = 0L;
+    }
+
+    long castTime = 0L;
+    if (rawTags.contains("CAST_1S")) {
+      castTime = 1000L;
+    } else if (rawTags.contains("CAST_1_5S")) {
+      castTime = 1500L;
+    } else if (rawTags.contains("CAST_2S")) {
+      castTime = 2000L;
+    } else if (rawTags.contains("CAST_3S")) {
+      castTime = 3000L;
+    }
+
+    int threatVal = isTaunt ? 600 : (rawTags.contains("HIGH_THREAT") ? 300 : 0);
+
     return PartyMemberSkill.builder()
         .id(tpl.getId())
         .name(tpl.getName())
@@ -206,6 +242,11 @@ public class PartyMemberSkill {
         .healAmount(healAmt)
         .sanRestore(sanVal)
         .allowedWeapons(weapons)
+        .gcdMs(gcdTime)
+        .triggersGcd(trigGcd)
+        .castTimeMs(castTime)
+        .interruptible(!rawTags.contains("UNINTERRUPTIBLE"))
+        .threatBonus(threatVal)
         .build();
   }
 }

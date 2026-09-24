@@ -165,6 +165,15 @@ export function renderPartyHud(party) {
           <div class="mini-bar san-fill ${sanClass}" style="width: ${sanPct}%"></div>
           <span class="mini-val ${sanClass}">SAN ${m.san}/${m.maxSan}</span>
         </div>
+        ${m.isCasting ? `
+        <div class="mini-bar-wrap casting-bar-wrap" style="border-color:#38bdf8; background:rgba(14,165,233,0.15);" title="正在施法: ${m.castingSkillName || '凝氣運轉'} (剩餘 ${(m.castingRemainingMs / 1000).toFixed(1)} 秒)">
+          <div class="mini-bar casting-fill" style="width: ${Math.min(100, Math.max(0, (1 - (m.castingRemainingMs / Math.max(1, m.castingDurationMs))) * 100))}%; background: linear-gradient(90deg, #38bdf8, #818cf8);"></div>
+          <span class="mini-val" style="color:#e0f2fe; text-shadow:0 0 3px #0284c7; font-weight:bold;">🌀 吟唱: ${m.castingSkillName || '施法'} ${(m.castingRemainingMs / 1000).toFixed(1)}s</span>
+        </div>` : ''}
+        ${m.isOnGcd && !m.isCasting ? `
+        <div style="font-size:9px; color:#94a3b8; text-align:right; padding-right:2px;" title="全域招式調息中 (GCD)">
+          ⏳ 調息 ${(m.remainingGcdMs / 1000).toFixed(1)}s
+        </div>` : ''}
         ${m.activeBuffs && Array.isArray(m.activeBuffs) && m.activeBuffs.length > 0 ? `
           <div class="buff-badges-row" style="margin-top:2px;">
             ${m.activeBuffs.map(b => {

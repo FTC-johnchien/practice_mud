@@ -101,6 +101,7 @@ export function renderBattleArena(battle) {
         <span class="enemy-hp-text">${isAlive ? `${e.hp}/${e.maxHp}` : '已伏誅'}</span>
       </div>
       <div class="enemy-status-row">
+        ${e.targetMemberName ? `<span class="enemy-aggro-badge" style="font-size:10px; color:#fca5a5; background:#450a0a; border:1px solid #ef4444; border-radius:3px; padding:0 4px; display:inline-flex; align-items:center; gap:2px;" title="怪物當前仇恨鎖定目標">🎯 盯上: ${e.targetMemberName}</span>` : ''}
         ${e.isStunned ? '<span class="enemy-stun-badge">💫 眩暈中</span>' : ''}
         ${buffsHtml}
       </div>

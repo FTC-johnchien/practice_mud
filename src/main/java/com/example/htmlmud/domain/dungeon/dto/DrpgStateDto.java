@@ -346,7 +346,13 @@ public record DrpgStateDto(
           con,
           dex,
           intStat,
-          wis
+          wis,
+          m.isOnGcd(),
+          m.getRemainingGcdMs(),
+          m.isCasting(),
+          (m.getCurrentCastingSkill() != null ? m.getCurrentCastingSkill().getName() : null),
+          m.getCastingDurationMs(),
+          m.getCastingRemainingMs()
       ));
     }
 
@@ -549,7 +555,13 @@ public record DrpgStateDto(
       int con,
       int dex,
       int intStat,
-      int wis
+      int wis,
+      boolean isOnGcd,
+      long remainingGcdMs,
+      boolean isCasting,
+      String castingSkillName,
+      long castingDurationMs,
+      long castingRemainingMs
   ) {}
 
   public record TacticsRuleViewDto(

@@ -110,9 +110,33 @@ public class DrpgCombatLoop {
           break;
         }
 
-        // 1. 我方隊員行動 (包含走火入魔自殘/背刺/異變判定)
+        // 1. 我方隊員行動 (包含走火入魔自殘/背刺/異變判定與施法推進)
         for (PartyMember member : ctx.getParty().getMembers()) {
           if (!member.isAlive() || ctx.isOver()) continue;
+
+          // Phase 11: 施法唱條推進 (Casting FSM)
+          if (member.isCasting()) {
+            String interruptReason = member.popLastInterruptReason();
+            if (interruptReason != null) {
+              broadcastLog(player, ctx, "\u001B[1;31m💥【施法被打斷】" + member.getName() + " 靈力被震散（" + interruptReason + "），法術中途潰散！\u001B[0m");
+            } else if (now >= member.getCastEndTime()) {
+              PartyMemberSkill castingSkill = member.getCurrentCastingSkill();
+              int targetIdx = member.getCastTargetIdx();
+              member.finishCasting();
+              broadcastLog(player, ctx, "\u001B[1;36m✨【吟唱完成】" + member.getName() + " 法印締結完畢，真元沛然爆發！\u001B[0m");
+              applySkillEffects(player, ctx, member, castingSkill, targetIdx, null, "⚡");
+              if (castingSkill.isTriggersGcd()) {
+                member.triggerGcd(castingSkill.getGcdMs());
+              }
+              if (ctx.isOver()) break;
+            }
+            continue; // 施法中不執行普通攻擊
+          } else {
+            String interruptReason = member.popLastInterruptReason();
+            if (interruptReason != null) {
+              broadcastLog(player, ctx, "\u001B[1;31m💥【施法被打斷】" + member.getName() + " 靈力被震散（" + interruptReason + "），法術中途潰散！\u001B[0m");
+            }
+          }
 
           if (now >= member.getNextAttackTime()) {
             member.setNextAttackTime(now + member.getAttackIntervalMs());
@@ -223,6 +247,7 @@ public class DrpgCombatLoop {
               int dmg = tacticsService.calculatePlayerDamage(member, target);
               target.takeDamage(dmg);
               member.addThreat(dmg);
+              target.addThreat(member.getId(), dmg);
 
               // 戰氣 SP 動態累積 (普通攻擊命中 +15 SP)
               member.gainSp(15);
@@ -278,7 +303,7 @@ public class DrpgCombatLoop {
           if (now >= enemy.getNextAttackTime()) {
             enemy.setNextAttackTime(now + enemy.getAttackIntervalMs());
 
-            PartyMember targetMember = tacticsService.selectPartyTarget(ctx);
+            PartyMember targetMember = tacticsService.selectPartyTarget(ctx, enemy);
             if (targetMember != null && targetMember.isAlive()) {
               int rawDmg = tacticsService.calculateEnemyDamage(enemy, targetMember);
               String moveName = tacticsService.selectEnemyMove(enemy);
@@ -286,6 +311,11 @@ public class DrpgCombatLoop {
               // 透過 DefenseResolver 執行被動心法檢定 (DODGE / PARRY / FORCE)
               var defenseRes = defenseResolver.resolveEnemyAttack(enemy, targetMember, rawDmg, moveName);
               targetMember.takeDamage(defenseRes.finalDamage());
+
+              String intReason = targetMember.popLastInterruptReason();
+              if (intReason != null) {
+                broadcastLog(player, ctx, "\u001B[1;31m💥【施法被打斷】" + targetMember.getName() + " 遭受猛烈打擊（" + intReason + "），法術被迫中斷！\u001B[0m");
+              }
 
               if (defenseRes.spGained() > 0) {
                 targetMember.gainSp(defenseRes.spGained());
@@ -348,6 +378,11 @@ public class DrpgCombatLoop {
       return false;
     }
 
+    // 若隊員處於全域冷卻 (GCD) 或正在引導施法中，暫不觸發戰術方針
+    if (member.isOnGcd() || member.isCasting()) {
+      return false;
+    }
+
     if (member.getTactics() == null || member.getTactics().isEmpty()) {
       member.initDefaultTactics();
     }
@@ -383,7 +418,22 @@ public class DrpgCombatLoop {
       }
 
       tacticsService.consumeSkillResource(member, skill);
+
+      // 若為長吟唱法術，進入施法狀態機
+      if (skill.getCastTimeMs() > 0) {
+        member.startCasting(skill, -1, skill.getCastTimeMs());
+        broadcastLog(player, ctx, "\u001B[1;36m🌀【戰術方針】" + member.getName() + " 開始凝氣運轉【" + skill.getName() + "】... (需 "
+            + String.format("%.1f", skill.getCastTimeMs() / 1000.0) + " 秒)\u001B[0m");
+        if (skill.isTriggersGcd()) {
+          member.triggerGcd(skill.getGcdMs());
+        }
+        return true;
+      }
+
       applySkillEffects(player, ctx, member, skill, -1, rule.getTarget(), "【戰術方針】");
+      if (skill.isTriggersGcd()) {
+        member.triggerGcd(skill.getGcdMs());
+      }
       return true;
     }
 
@@ -414,6 +464,7 @@ public class DrpgCombatLoop {
           }
         }
         member.addThreat(skill.getHealAmount());
+        distributeHealingThreatToAllEnemies(ctx, member.getId(), skill.getHealAmount());
         broadcastLog(player, ctx, "\u001B[1;32m" + tag + "✨ " + member.getName() + " 施展【" + skill.getName() + "】，甘露靈泉籠罩全隊！氣血恢復，道心安穩！\u001B[0m");
       } else {
         PartyMember targetAlly = tacticsService.resolveAllyTarget(ctx, member,
@@ -421,6 +472,7 @@ public class DrpgCombatLoop {
         targetAlly.heal(skill.getHealAmount());
         if (skill.getSanRestore() > 0) targetAlly.restoreSan(skill.getSanRestore());
         member.addThreat(skill.getHealAmount() / 2);
+        distributeHealingThreatToAllEnemies(ctx, member.getId(), skill.getHealAmount() / 2);
         broadcastLog(player, ctx, "\u001B[1;32m" + tag + "🌿 " + member.getName() + " 運轉【" + skill.getName() + "】，一道春生靈氣注入 " + targetAlly.getName() + "，恢復 " + skill.getHealAmount() + " 點氣血！\u001B[0m");
       }
     } else if (skill.isShield()) {
@@ -450,12 +502,18 @@ public class DrpgCombatLoop {
 
       buffSettlementService.applyBuff(targetAlly, activeBuff);
       member.addThreat(activeBuff.getValue() / 2);
+      distributeHealingThreatToAllEnemies(ctx, member.getId(), activeBuff.getValue() / 3);
       broadcastLog(player, ctx, "\u001B[1;36m" + tag + "🛡️ " + member.getName() + " 施展【" + skill.getName() + "】，為 "
           + targetAlly.getName() + " 加持辟邪護盾，凝聚 " + activeBuff.getValue() + " 點玄罡金光！（持續 " + activeBuff.getRemainingSeconds() + " 秒）\u001B[0m");
 
     } else if (skill.isTaunt()) {
       ctx.setTaunt(member.getId(), 5000);
       member.addThreat(600);
+      for (BattleEnemy e : ctx.getEnemies()) {
+        if (e.isAlive()) {
+          e.setTaunt(member.getId(), 5000);
+        }
+      }
       broadcastLog(player, ctx, "\u001B[1;33m" + tag + "🛡️ " + member.getName() + " 爆發【" + skill.getName() + "】，金剛威儀震懾全場！所有怪物仇恨被強行吸引！\u001B[0m");
     } else if (skill.isBuff() || skill.isDefense()) {
       // 自身減傷或防禦 Buff (如 不動明王)
@@ -483,6 +541,7 @@ public class DrpgCombatLoop {
 
       buffSettlementService.applyBuff(targetAlly, activeBuff);
       member.addThreat(activeBuff.getValue() / 2);
+      distributeHealingThreatToAllEnemies(ctx, member.getId(), activeBuff.getValue() / 3);
       broadcastLog(player, ctx, "\u001B[1;33m" + tag + "⚡ " + member.getName() + " 施展【" + skill.getName() + "】，運起不動明王暗金罡氣，周身金芒流轉，生成 "
           + activeBuff.getValue() + " 點不滅金身護體！（持續 " + activeBuff.getRemainingSeconds() + " 秒）\u001B[0m");
     } else {
@@ -493,6 +552,7 @@ public class DrpgCombatLoop {
             int dmg = (int) (tacticsService.calculatePlayerDamage(member, e) * skill.getDamageMultiplier());
             e.takeDamage(dmg);
             member.addThreat(dmg);
+            e.addThreat(member.getId(), dmg + skill.getThreatBonus());
             if (skill.isStun()) e.applyStun(skill.getStunDurationSeconds() * 1000L);
             if (!e.isAlive()) broadcastLog(player, ctx, "\u001B[1;32m💥【" + e.getName() + "】在靈力轟擊下灰飛煙滅！\u001B[0m");
           }
@@ -510,6 +570,7 @@ public class DrpgCombatLoop {
           int dmg = (int) (tacticsService.calculatePlayerDamage(member, target) * skill.getDamageMultiplier());
           target.takeDamage(dmg);
           member.addThreat(dmg);
+          target.addThreat(member.getId(), dmg + skill.getThreatBonus());
           if (skill.isStun()) target.applyStun(skill.getStunDurationSeconds() * 1000L);
           broadcastLog(player, ctx, "\u001B[1;33m" + tag + "🔥 " + member.getName() + " 施展【" + skill.getName() + "】，直取【" + target.getName() + "】要害，造成 " + dmg + " 點毀滅打擊！\u001B[0m");
           if (!target.isAlive()) {
@@ -517,6 +578,18 @@ public class DrpgCombatLoop {
             if (ctx.isAllEnemiesDead()) ctx.setState(BattleState.VICTORY);
           }
         }
+      }
+    }
+  }
+
+  private void distributeHealingThreatToAllEnemies(BattleContext ctx, String memberId, int amount) {
+    if (ctx == null || ctx.getEnemies() == null || memberId == null || amount <= 0) return;
+    long livingCount = ctx.getEnemies().stream().filter(BattleEnemy::isAlive).count();
+    if (livingCount <= 0) return;
+    int threatPerEnemy = Math.max(1, (int) (amount / livingCount));
+    for (BattleEnemy e : ctx.getEnemies()) {
+      if (e.isAlive()) {
+        e.addThreat(memberId, threatPerEnemy);
       }
     }
   }

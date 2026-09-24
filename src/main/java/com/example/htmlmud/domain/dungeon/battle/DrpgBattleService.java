@@ -464,6 +464,17 @@ public class DrpgBattleService {
       return;
     }
 
+    if (member.isCasting()) {
+      player.reply("【施法專注】" + member.getName() + " 正在引導法術中，無法施展其他技能！");
+      return;
+    }
+
+    if (skill.isTriggersGcd() && member.isOnGcd()) {
+      long gcdRemain = Math.max(100, member.getRemainingGcdMs());
+      player.reply("招式調息中 (GCD)，尚需 " + String.format("%.1f", gcdRemain / 1000.0) + " 秒！");
+      return;
+    }
+
     // 資源扣除檢驗
     if (!tacticsService.consumeSkillResource(member, skill)) {
       if (skill.getCostType() == CombatResourceType.MP) {
@@ -480,7 +491,19 @@ public class DrpgBattleService {
       return;
     }
 
-    combatLoop.applySkillEffects(player, ctx, member, skill, targetIdx, "");
+    if (skill.getCastTimeMs() > 0) {
+      member.startCasting(skill, targetIdx, skill.getCastTimeMs());
+      if (skill.isTriggersGcd()) {
+        member.triggerGcd(skill.getGcdMs());
+      }
+      broadcastLog(player, ctx, "\u001B[1;36m🌀 " + member.getName() + " 開始凝氣運轉【" + skill.getName() + "】... (吟唱 "
+          + String.format("%.1f", skill.getCastTimeMs() / 1000.0) + " 秒)\u001B[0m");
+    } else {
+      combatLoop.applySkillEffects(player, ctx, member, skill, targetIdx, "");
+      if (skill.isTriggersGcd()) {
+        member.triggerGcd(skill.getGcdMs());
+      }
+    }
     pushDrpgState(player, pos, ctx);
   }
 
@@ -726,7 +749,10 @@ public class DrpgBattleService {
           e.getRow().name(),
           e.isAlive(),
           i == battleCtx.getSelectedTargetIndex(),
-          e.isStunned()
+          e.isStunned(),
+          e.getTargetMemberId(),
+          e.getTargetMemberName(),
+          e.getTopThreat()
       ));
     }
     return new BattleViewDto(

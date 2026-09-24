@@ -122,6 +122,74 @@ public class PartyMember implements Buffable {
   @Builder.Default
   private java.util.List<TacticsRule> tactics = new java.util.ArrayList<>();
 
+  // Phase 11: 全域冷卻 (GCD) 與施法狀態機 (Casting FSM)
+  @Builder.Default
+  private long gcdUntil = 0L;
+  private PartyMemberSkill currentCastingSkill;
+  @Builder.Default
+  private long castStartTime = 0L;
+  @Builder.Default
+  private long castEndTime = 0L;
+  @Builder.Default
+  private int castTargetIdx = -1;
+  @Builder.Default
+  private volatile String lastInterruptReason = null;
+
+  public boolean isOnGcd() {
+    return System.currentTimeMillis() < gcdUntil;
+  }
+
+  public long getRemainingGcdMs() {
+    return Math.max(0, gcdUntil - System.currentTimeMillis());
+  }
+
+  public void triggerGcd(long ms) {
+    if (ms > 0) {
+      this.gcdUntil = Math.max(this.gcdUntil, System.currentTimeMillis() + ms);
+    }
+  }
+
+  public boolean isCasting() {
+    return currentCastingSkill != null && System.currentTimeMillis() < castEndTime;
+  }
+
+  public void startCasting(PartyMemberSkill skill, int targetIdx, long durationMs) {
+    this.currentCastingSkill = skill;
+    this.castTargetIdx = targetIdx;
+    long now = System.currentTimeMillis();
+    this.castStartTime = now;
+    this.castEndTime = now + durationMs;
+    this.lastInterruptReason = null;
+  }
+
+  public void finishCasting() {
+    this.currentCastingSkill = null;
+    this.castStartTime = 0L;
+    this.castEndTime = 0L;
+    this.castTargetIdx = -1;
+  }
+
+  public void cancelCast(String reason) {
+    if (this.currentCastingSkill != null) {
+      this.lastInterruptReason = (reason != null && !reason.isEmpty()) ? reason : "施法中斷";
+    }
+    finishCasting();
+  }
+
+  public String popLastInterruptReason() {
+    String r = this.lastInterruptReason;
+    this.lastInterruptReason = null;
+    return r;
+  }
+
+  public long getCastingRemainingMs() {
+    return isCasting() ? Math.max(0, castEndTime - System.currentTimeMillis()) : 0;
+  }
+
+  public long getCastingDurationMs() {
+    return (currentCastingSkill != null) ? Math.max(0, castEndTime - castStartTime) : 0;
+  }
+
   @JsonIgnore
   private transient TemplateReader templateReader;
 
@@ -446,6 +514,13 @@ public class PartyMember implements Buffable {
       stats.setHp(Math.max(0, stats.getHp() - remainingDmg));
       if (stats.getHp() <= 0) {
         this.alive = false;
+        cancelCast("重傷倒地");
+      } else if (isCasting() && currentCastingSkill != null && currentCastingSkill.isInterruptible()) {
+        // 若單次受傷超過當前最大氣血的 15%，或大於等於 25 點傷害，體內靈力紊亂打斷施法
+        int maxHp = stats.getMaxHp();
+        if (remainingDmg >= Math.max(20, (int) (maxHp * 0.15))) {
+          cancelCast("受創打斷");
+        }
       }
     }
     // 力士受傷增加怒氣

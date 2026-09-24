@@ -406,14 +406,27 @@
       - `DrpgStateDto` 與 `PartyMemberViewDto` 擴充 `passiveSlots` 與 `availablePassives`。
       - 前端 `party-modal.js` 在法術書中新增 Tab 3【🧘 被動心法】，頂部清晰呈現身法、招架、內功三大核心槽位運轉狀態，並支援一鍵 `⚡ 裝配心法`（呼叫 `party enable <idx> <skillId>`）。
     - **機制驗證測試**：新增 `PassiveSkillsAndCombatCheckTest`（4 項全通過），全專案 164 個測試全綠通過。
+  * **Phase 9.1 & 9.5: 戰術護盾、目標指定與 WoW 風格 Buff/Debuff 體系 [100% 完成]**：
+    - 戰術方針目標庫擴充（`FRONT_ROW_ALLY`, `LEADER` 等）、護盾吸收傷害、夥伴技能去重與 ANSI 顯示修復。
+    - WoW 風格 Buff/Debuff 體系（1 Tick = 500ms、`Buffable` 統一介面、`BuffSettlementService`、護盾短時間優先抵扣、HoT/DoT 週期跳算、戰術 AI 防重複施放）。
+  * **Phase 10: 清潔架構與領域邊界反向依賴反轉 [100% 完成]**：
+    - 重構 Domain 層 Output Ports（`CommandDispatcherPort`、`ClientSessionManagerPort`、`AuthenticationPort`、`WorldEntityFactoryPort`），解除 Domain 對外層的反向 import。
+    - 方向 Enum 與戰鬥資源 Enum 統一整合收斂。
+  * **Phase 11: 戰鬥狀態機 (FSM)、全域冷卻 (GCD)、施法唱條 (Casting) 與仇恨威脅度 (Threat/Aggro) [100% 完成]**：
+    - **全域冷卻 (GCD)**：技能支援 `gcdMs`（預設 1200ms）與 `triggersGcd` 開關，施法後進入 GCD 調息，阻擋連點無腦連發；支援 Off-GCD 瞬發應急招式。
+    - **施法狀態機 (Casting FSM)**：技能支援 `castTimeMs`（如九天應元雷訣 1500ms 吟唱），隊員進入 `CASTING` 狀態暫停普攻，戰鬥心跳推進至吟唱完畢轟出大招；遭受巨額傷害 (>15% 最大 HP) 或陣亡時觸發 `cancelCast("受創打斷")`。
+    - **獨立敵方威脅表 (Per-Enemy Threat Table)**：每個 `BattleEnemy` 具備獨立的 `threatTable`，傷害累積 1:1 仇恨，治療按 50% 均攤全場敵怪；前排享有 1.3 倍有效仇恨加成，後排醫仙若大額治療將引發怪物 OT 轉火突襲！
+    - **嘲諷鞏固仇恨 (Taunt Lock)**：力士嘲諷強行鎖定怪物 5 秒，並將自身仇恨提升至 `max(top + 100, current + 100)`，杜絕嘲諷一過立刻失控。
+    - **UI/UX 可視化**：怪物卡片即時顯示當前盯上目標（`🎯 盯上: 鐵牛`），隊員 HUD 卡片顯示施法青藍色吟唱條與 GCD 調息標籤。
+    - **機制驗證測試**：新增 `CombatFsmGcdAndThreatTest`（5 項全通過），全專案 179 個測試全綠通過。
 
 ---
 
 ## 6. 最新測試與健康狀況 (Latest Test Results)
 * **測試時間**：2026-09-24
 * **測試指令**：`.\test.ps1`（或 `mvnw test`）
-* **測試項目**：涵蓋既有 160 項測試，以及 Phase 9 被動心法與戰鬥檢定套件（`PassiveSkillsAndCombatCheckTest` 共 4 項新測試）。
-* **結果**：`Tests run: 164, Failures: 0, Errors: 0, Skipped: 0` -> **BUILD SUCCESS (164 項測試全數綠燈通過，0 失敗、0 錯誤)**
+* **測試項目**：涵蓋既有 174 項測試，以及 Phase 11 戰鬥狀態機、GCD 與威脅度套件（`CombatFsmGcdAndThreatTest` 共 5 項新測試）。
+* **結果**：`Tests run: 179, Failures: 0, Errors: 0, Skipped: 0` -> **BUILD SUCCESS (179 項測試全數綠燈通過，0 失敗、0 錯誤)**
 
 ---
 
@@ -427,12 +440,12 @@
   - 城鎮正交四向羅盤 + NPC/設施互動標籤（交談/購買/安歇/招募）；地牢 2D ASCII 即時雷達與步進探索。
 - [x] **單人開局與隊伍/傭兵招募雏形**：
   - 新手村客棧招募力士·鐵牛（坦克）與醫修·凌霜（治療），支援單人開局組隊。
-- [ ] **戰鬥狀態機 (FSM) 與 GCD 機制**：
-  - 導入全域冷卻時間 (GCD)、施法前搖/唱條與後搖。
-  - 加入初步仇恨（Threat/Aggro）基礎結構，坦克嘲諷與補師治療仇恨機制。
+- [x] **戰鬥狀態機 (FSM) 與 GCD 機制 (Phase 11 完成)**：
+  - 導入全域冷卻時間 (GCD)、施法前搖唱條與受創打斷機制。
+  - 實裝獨立怪物威脅表（Threat Table），坦克嘲諷與補師治療仇恨、OT 轉火機制。
 
 ### 階段二：戰鬥深度與動態機制 (Combat Depth & Scripting)
-- [ ] **精力/氣力條 (Stamina) 與破防處決**：
+- [ ] **精力/氣力條 (Stamina) 與破防處決 (Phase 12)**：
   - 攻擊與閃避消耗精力，精力枯竭時受到暴擊增傷。
 - [ ] **動態腳本 (Lua / GraalVM JS) 與怪物行為樹 (Behavior Tree)**：
   - NPC 對話、陷阱解謎腳本化。
