@@ -164,19 +164,23 @@ public class LivingService {
         messageTemplate = "\u001B[1;30m💀 $N 倒地身亡，化作一縷青煙消散於天地之間...\u001B[0m";
       } else {
         GameItem lootPouch = worldFactory.createLootPouch(mob, drops);
-        // 普通怪的儲物袋（非首領寶箱）：檢查地面是否已有【散落的儲物袋】，若有則自動合併
+        // 普通怪的儲物袋（非首領寶箱）：檢查地面是否已有【散落的儲物袋】，若有則自動合併 (增加房間同步鎖消除併發競態)
         boolean isNormalPouch = "【散落的儲物袋】".equals(lootPouch.getName());
-        Optional<GameItem> existingPouch = isNormalPouch ? room.getItems().stream()
-            .filter(it -> it != null && it.getType() == ItemType.CONTAINER && "【散落的儲物袋】".equals(it.getName()))
-            .findFirst() : Optional.empty();
+        synchronized (room) {
+          Optional<GameItem> existingPouch = isNormalPouch ? room.getItems().stream()
+              .filter(it -> it != null && it.getType() == ItemType.CONTAINER && "【散落的儲物袋】".equals(it.getName()))
+              .findFirst() : Optional.empty();
 
-        if (existingPouch.isPresent()) {
-          GameItem targetPouch = existingPouch.get();
-          targetPouch.getContents().addAll(drops);
-          messageTemplate = "\u001B[1;32m💥 $N 被擊敗倒地，戰利品歸攏入地面的 " + targetPouch.getName() + "！\u001B[0m";
-        } else {
-          room.dropItem(lootPouch);
-          messageTemplate = "\u001B[1;32m💥 $N 被擊敗倒地，戰利品散落在地，化為 " + lootPouch.getName() + "！\u001B[0m";
+          if (existingPouch.isPresent()) {
+            GameItem targetPouch = existingPouch.get();
+            synchronized (targetPouch) {
+              targetPouch.getContents().addAll(drops);
+            }
+            messageTemplate = "\u001B[1;32m💥 $N 被擊敗倒地，戰利品歸攏入地面的 " + targetPouch.getName() + "！\u001B[0m";
+          } else {
+            room.dropItem(lootPouch);
+            messageTemplate = "\u001B[1;32m💥 $N 被擊敗倒地，戰利品散落在地，化為 " + lootPouch.getName() + "！\u001B[0m";
+          }
         }
       }
     } else {

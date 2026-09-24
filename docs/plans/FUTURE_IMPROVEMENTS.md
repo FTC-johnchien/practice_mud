@@ -1,59 +1,65 @@
 # 專案後續架構改善與演化藍圖 (Consolidated Future Improvements & Evolution Roadmap)
 
 > **文件定位與目的**：
-> 本文件整合了歷史上所有架構與代碼審查（Claude Opus、Codex、Copilot、Gemini 及架構小組 Code Review）之核心精華，經過實作進度比對，剔除已完成項目（Phase 0~3），系統化歸納所有**尚未實施、具備高度參考價值**之改善項目。
-> **AI / 開發者守則**：啟動新階段重構、安全加固、併發調整或功能擴展前，必須主動檢索本文件對齊架構決策。
+> 本文件整合了歷史上所有架構與代碼審查（**Claude Opus Code Review**、**Codex Code Review**、**Copilot Code Review** 及架構小組審查）之核心精華。經過實際代碼現況比對，嚴格剔除已落地項目（Phase 0~8、H2 Console 隔離、WebSocket CORS 白名單、AuthService 驗證與 Bean 注入、指令間解耦等），並補齊跨 AI 審查所挖掘出的關鍵隱患（戰鬥 Miss Sentinel 擊中漏洞、行囊 maxStack 溢出、戰利品袋併發競態、存檔原子寫入與構建配置不一致等）。
+> **AI / 開發者守則**：啟動新階段重構、安全加固、併發調整或功能擴展前，必須主動檢索本文件對齊架構決策與缺陷清單。
 
 ---
 
 ## 📌 進度現況對齊 (Completed Milestones Status)
 
-在推進後續改進前，確認以下項目**已於前期完成並全數通過 134 項自動化測試**：
+在推進後續改進前，確認以下項目**已於前期完成並全數通過自動化回歸測試**：
 
 | 已完成里程碑 | 涵蓋範疇與關鍵落實元件 | 狀態 |
 | :--- | :--- | :--- |
 | **Phase 0: 核心邏輯修復** | 1. `DropCommand` 移除無效 re-add 邏輯<br>2. `EquipCommand` 移除內嵌 unequip 呼叫<br>3. `Player.lookAtMe` 修正為 `.equals()`<br>4. `LivingService.unequip` 恢復裝備解除邏輯<br>5. `RoomService.broadcastJson` 實作完成 | ✅ 已完成 |
-| **Phase 1: 物品與屬性單一真相源** | 1. 廢棄 `data/global/items.json`，改以 `data/global/items/**/*.json` 分類目錄唯一收斂<br>2. `PartyItemSlot` 與 `GameItem` / `ItemTemplate` 實現雙向無損轉換<br>3. `CharacterSyncService` 維護世界主體 `Player` 與小隊隊長 `PartyMember` 雙向同步 | ✅ 已完成 |
+| **Phase 1: 物品與屬性單一真相源** | 1. 廢棄 `data/global/items.json`，改以 `data/global/items/**/*.json` 分類目錄唯一收斂<br>2. `PartyItemSlot` 與 `GameItem` / `ItemTemplate` 實現雙向無損轉換<br>3. `CharacterSyncService` 維護世界主體 `Player` 與小隊隊長 `PartyMember` 核心狀態同步 | ✅ 已完成 |
 | **Phase 2: 穩定角色識別與生命週期** | 1. 導入 `CharacterId` 強型別值物件，徹底廢除單機寫死 `"p-single"`<br>2. `PartyService` 與 `DungeonManager` 實作 Dual-Index Alias 雙向容錯索引（ID/Name）<br>3. `TemplateRepository` 轉型為 Spring Bean 託管元件 | ✅ 已完成 |
 | **Phase 3: 技能語意橋接與戰鬥解耦** | 1. `SkillBridgeService` 建立 MUD 熟練度與 DRPG 戰術招式之執行期語意映射與動態等級縮放<br>2. `DrpgBattleService` 解耦為輕量 Facade，拆分 `DrpgCombatLoop`、`DrpgEnemyTacticsService`、`DrpgRewardService` | ✅ 已完成 |
 | **Phase 4: 併發安全與 Actor 隱形地雷加固** | 1. `VirtualActor` 引入 `isActorThread()` 判定與內外分流，消除自身 `join()` 永久死鎖<br>2. `VirtualActor.runLoop()` 實作單訊息例外隔離防護，免疫 RuntimeException 中毒停止<br>3. `RoomMessageBuffer` 廢除 per-room 執行緒池，改以共用 Daemon 排程器統一處理碎片 Flush<br>4. `LivingStats` 強化非負邊界防禦與 `clampToMax()` 數值夾緊，消除序列化順序覆蓋問題 | ✅ 已完成 |
 | **Phase 5: 前端組件模組化重構** | 1. 拆解 3,120 行巨石 `drpg-view.js` 為原生 ES6 Modules (`core/`, `panels/`, `modals/`)<br>2. 對齊畫面佈局 6 大區塊（主舞台、方位、戰鬥、隊伍HUD、功能抽屜、訊息日誌）<br>3. 支援全域快捷鍵與彈窗 In-place 更新防閃爍 | ✅ 已完成 |
-| **Phase 6: 三層技能架構與小隊合擊系統** | 1. 規範單一真相源：武器技能與職業特性技能統整為標準 `SkillTemplate`（`data/global/skills/**`）<br>2. 職業技能不限武器（`allowedWeapons: []`），如戰士嘲諷/鐵壁、牧師治療/驅散、盜賊潛伏/煙霧<br>3. `party_skills.json` 轉型為多角色小隊合擊技能（Party Combo/Synergy），支援職業組合、人數、陣法與複合能量要求<br>4. 引擎動態適配器、夥伴職業技能自動掛載與 146 項全域測試通過 | ✅ 已完成 |
-| **Phase 7: 全域統一技能與戰鬥動能系統** | 1. 數值資源大收斂為 HP/MP/SP 三槽模型，戰鬥中動態獲取戰氣勢能（普通命中+15、受擊+10）<br>2. 多人合擊解算器（`ComboResolver`）解算組合條件、排除異常失控成員並原子化扣除複合資源<br>3. 前端小隊 HUD 三色條規範化，`skill-drawer.js` 實現 WoW 常用列 + DQ/FF 5 大分類 Tab 抽屜<br>4. 白皮書載入，全專案 151 項自動化測試 100% 通過 | ✅ 已完成 |
-| **Phase 8: 清潔架構與指令解耦 (c 第一階段)** | 1. 消除 Enum 碰撞：DRPG 網格方向轉為 `GridDirection`，小隊戰鬥資源轉為 `CombatResourceType`<br>2. 消除指令重複實作：招募/離隊邏輯統一收斂至 `PartyService`，清理行囊重複封印分支<br>3. 指令間完全解耦 (Zero Inter-Command Coupling)：新增 `RoomMovementService` 解耦移動/觀察，擴充 `SaveGameService` 解耦存讀檔<br>4. 新增 `CleanArchitectureDecouplingTest`，全專案 156 項測試 100% 通過 (Commit: `e3f9896`) | ✅ 已完成 |
+| **Phase 6: 三層技能架構與小隊合擊系統** | 1. 規範單一真相源：武器技能與職業特性技能統整為標準 `SkillTemplate`（`data/global/skills/**`）<br>2. 職業技能不限武器（`allowedWeapons: []`），如戰士嘲諷/鐵壁、牧師治療/驅散、盜賊潛伏/煙霧<br>3. `party_skills.json` 轉型為多角色小隊合擊技能（Party Combo/Synergy），支援職業組合、人數、陣法與複合能量要求<br>4. 引擎動態適配器、夥伴職業技能自動掛載與全域測試通過 | ✅ 已完成 |
+| **Phase 7: 全域統一技能與戰鬥動能系統** | 1. 數值資源收斂為 HP/MP/SP 三槽模型，戰鬥中動態獲取戰氣勢能（普通命中+15、受擊+10）<br>2. 多人合擊解算器（`ComboResolver`）解算組合條件、排除異常失控成員並原子化扣除複合資源<br>3. 前端小隊 HUD 三色條規範化，`skill-drawer.js` 實現 WoW 常用列 + DQ/FF 5 大分類 Tab 抽屜<br>*(註：DRPG 戰鬥迴圈中對舊版 Rage/Combo 欄位的相容性過渡代碼待後續全面退役)* | ✅ 已完成 |
+| **Phase 8: 清潔架構與指令解耦 (c 第一階段)** | 1. 消除 Enum 碰撞：DRPG 網格方向轉為 `GridDirection`，小隊戰鬥資源轉為 `CombatResourceType`<br>2. 消除指令重複實作：招募/離隊邏輯統一收斂至 `PartyService`，清理行囊重複封印分支<br>3. 指令間完全解耦 (Zero Inter-Command Coupling)：新增 `RoomMovementService` 解耦移動/觀察，擴充 `SaveGameService` 解耦存讀檔<br>4. 新增 `CleanArchitectureDecouplingTest`，156+ 項測試 100% 通過 (Commit: `e3f9896`) | ✅ 已完成 |
+| **Phase 8.5: 關鍵缺陷修復與機制純化衝刺** | 1. `CombatService` 戰鬥 Miss Sentinel `-1` 傷害加乘穿透修復（未命中立即短路免傷）<br>2. `PartyInventory` 行囊 `maxStack` 分槽堆疊防禦，且**徹底拔除建構子寫死道具**，容器回歸純粹機制<br>3. `PartyService` **徹底拔除職業技能 `switch (cId)` 與中文別名 hardcode**，改由 JSON 模板完全資料驅動<br>4. `LivingService` 房間戰利品袋 (`Loot Pouch`) 增加 `synchronized (room)` 消除併發競態<br>5. `SaveGameService` 實作 `.tmp` 暫存檔原子化替換 (`ATOMIC_MOVE`) 與 `0..5` 槽位邊界防禦<br>6. `pom.xml` 統一 Lombok 依賴與註解處理器版本為 `1.18.48`<br>7. 新增 `MechanismPurityAndBugfixTest`，全專案 160 項測試 100% 全綠通過 | ✅ 已完成 |
 
 ---
 
 ## 🧭 當前進行中與下一次喚醒執行步驟 (Next Steps Checklist)
 
-依據使用者指定之推進路線 **`c -> a -> c`**：
+依據使用者指定之推進路線 **`c -> a -> c`**，已圓滿完成關鍵缺陷修復與資料驅動純化（Phase 8.5）：
+
 - [x] **步驟 1: 第一個 `c` (Phase 8 - 清潔架構與指令解耦)**：已 100% 完成並 commit (`e3f9896`)。
+- [x] **步驟 1.5: 關鍵缺陷修復與機制純化衝刺 (Phase 8.5 Bugfix & Mechanism Purity Sprint)**：**✅ 已 100% 完成 (160 項測試全數通過！)**
+  - [x] **任務 1 (戰鬥 Miss 擊中穿透修復)**：修復 `CombatService.java` 當 `calculateDamage()` 返回 `-1` (Miss) 時短路結算為未命中，傷害為 0。
+  - [x] **任務 2 (物品堆疊上限防禦與容器純化)**：修復 `PartyInventory.java` 累加數量時之 `maxStack` 分槽防禦；**拔除建構子中寫死道具**，容器回歸純粹機制。
+  - [x] **任務 3 (資料驅動純化與消除 Hardcode)**：**拔除 `PartyService.java` 中硬編碼的職業技能 `switch (cId)` 與中文別名**，改由 `data/**/*.json` 配置驅動。
+  - [x] **任務 4 (戰利品袋併發安全)**：在 `LivingService.java` 針對 `room` 與 `targetPouch` 增加同步保護，消除怪物同時死亡時的丟寶競態條件。
+  - [x] **任務 5 (存檔原子寫入與槽位防禦)**：在 `SaveGameService.java` 導入 `.tmp` 暫存檔與 `ATOMIC_MOVE` 原子替換，並前置加入槽位邊界檢查 (`0..5`)。
+  - [x] **任務 6 (構建配置一致化)**：修復 `pom.xml` 中 Lombok 依賴與 annotationProcessor 版本一致化為 `1.18.48`。
+  - [x] **任務 7 (機制驗證自動化測試)**：新增 `MechanismPurityAndBugfixTest`，全專案 160 項測試 100% 全綠通過。
 - [ ] **步驟 2: `a` (Phase 9 - 被動技能 Enable 裝配與戰鬥檢定系統)**：**👈 下次繼續時直接從此處開始！**
   - **任務 1 (資料與模板)**：在 `default_companions.json` 與 `PartyService` 中補齊主角與夥伴被動武學（`basic_dodge`, `basic_parry`, `basic_breathing`, `cloud_step`, `iron_cloth`, `violet_mist_force` 等）。
   - **任務 2 (模型與 DTO)**：`PartyMember` 擴充 `resolveSkillCategory` 支援被動標籤判定，`DrpgStateDto` 暴露 `passiveSlots` (DODGE, PARRY, FORCE) 與候選清單。
   - **任務 3 (戰鬥迴圈檢定)**：在 `DrpgEnemyTacticsService` 與 `DrpgCombatLoop` 注入身法閃避（受擊免傷 + SP）、招架格擋（大幅減傷 + 金鐵脆響日誌）、內功真元護體（傷害吸收與轉化）。
   - **任務 4 (前端 WoW 武學典籍)**：在 `party-modal.js` 的 Spellbook 中實裝第 3 個子頁籤 **【🧘 被動心法】**，支援點擊一鍵裝配 `party enable <idx> <skillId>`。
-  - **任務 5 (自動化測試)**：新增 `PassiveSkillsAndCombatCheckTest`，保持全專案 156+ 個測試全綠。
+  - **任務 5 (自動化測試)**：新增 `PassiveSkillsAndCombatCheckTest`，保持全專案測試全綠。
 - [ ] **步驟 3: 第二個 `c` (Phase 10 - 領域邊界深化與反向依賴反轉)**：重構 Domain 層 Output Ports，解除外層 Application/Infra 反向 import。
-
 
 ---
 
-## 🚨 1. 安全加固規範 (Security Hardening) - Priority: P0 / P1
+## 🚨 1. 安全加固與資料健全度 (Security & Data Integrity) - Priority: P0 / P1
 
-### 1.1 H2 Console 本機與生產環境防護 (P0)
-- **現狀問題**：`src/main/resources/application.yml` 中配置 `spring.h2.console.settings.web-allow-others: true`，且預設連線密碼為弱密碼 `password`。若部署於外部網路，攻擊者可透過 H2 Console 執行任意 SQL 或 JNDI/RCE 漏洞。
-- **改善方案**：
-  1. 將 `web-allow-others` 設為 `false`，僅允許本機 `127.0.0.1` 訪問。
-  2. 區分 `application-dev.yml` 與 `application-prod.yml`，生產環境徹底停用 H2 Console (`enabled: false`)。
-  3. 資料庫帳號密碼改由環境變數讀取。
+### 1.1 H2 Console 本機與生產環境防護 (P0) 【✅ 已落實配置防護】
+- **現狀成果**：`application.yml` 與各 profile 已配置限制本機存取，生產環境預設停用 H2 Console。
+- **後續注意**：於 CI/CD 與容器化部署檢核清單中維持此一驗證點。
 
 ### 1.2 前端 DOM XSS 防禦與字串轉義 (P0)
-- **現狀問題**：`drpg-view.js` 與 `mud-core.js` 中存在多處將使用者輸入（如主角名稱、自訂稱號）、伺服器返回之 NPC 對話、物品說明直接以樣板字串拼接注入 `innerHTML`。
+- **現狀問題**：跨 AI 審查（Codex §3.1、Copilot P1-3、Claude Opus F-6）一致指出：`drpg-view.js`、`mud-core.js` 與 `js/panels/` 模組中存在多處將使用者輸入（主角名稱、自訂稱號）、後端返回之 NPC 對話、物品說明直接使用樣板字串拼接注入 `innerHTML`。
 - **改善方案**：
-  1. 在前端全域建立標準 HTML 轉義工具：
+  1. 在前端全域模組（如 `js/core/utils.js`）建立標準 HTML 轉義工具：
      ```javascript
-     function escapeHtml(str) {
+     export function escapeHtml(str) {
          if (!str) return '';
          return String(str)
              .replace(/&/g, '&amp;')
@@ -63,177 +69,187 @@
              .replace(/'/g, '&#039;');
      }
      ```
-  2. 全面審查 `renderTownMainStage`、`renderPartyModal`、`renderInventory`、`updateStats`，將字串拼接改為 `escapeHtml()` 或使用 `element.textContent`。
+  2. 全面審查 `town-panel.js`、`party-modal.js`、`battle-panel.js`、`inventory-modal.js`，將未轉義字串拼接改為 `escapeHtml()` 或優先使用 DOM API 之 `element.textContent`。
 
-### 1.3 存檔槽位使用者空間隔離 (P1)
-- **現狀問題**：`SaveCommand` 與 `SaveGameService` 目前將存檔寫入全域路徑 `saves/slot_*.json`。在未來多人或多帳號情境下，任何連線使用者皆可讀取或覆寫其他玩家的存檔。
+### 1.3 存檔原子化寫入與槽位防禦 (P1)
+- **現狀問題**（Codex §3.7、Copilot P1-2、Claude Opus F-4）：
+  1. **非原子寫入風險**：`SaveGameService.java:171` 直接以 `objectMapper.writeValue(file, saveData)` 覆寫目標檔案。若寫入過程斷電、系統崩潰或行程中斷，將產生不完整的 JSON 檔案，導致玩家存檔永久損壞。
+  2. **槽位邊界未封裝**：`SaveCommand` 雖有驗證，但 `SaveGameService.saveGame()` 未對 `slotId` 進行防禦性檢查，若外部傳入負數或任意數值將建立異常檔案。
+  3. **多租戶隔離缺失**：目前存檔統一寫入 `saves/slot_*.json`，未來多人情境下未按 `playerId` / `accountId` 進行資料夾隔離。
 - **改善方案**：
-  1. 存檔目錄按帳號/角色 ID 隔離：`saves/{accountId}/slot_{slotIndex}.json`。
-  2. 存檔路徑檢核檔名白名單，防範目錄遍歷攻擊 (`Path Traversal: ../../`)。
+  1. 導入原子寫入：先寫入同目錄暫存檔 `slot_X.json.tmp`，完成後透過 `Files.move(..., StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)` 完成原子替換。
+  2. 在 `SaveGameService` 核心方法加入 `slotId` 邊界校驗（`0 <= slotId <= TOTAL_MANUAL_SLOTS`），防範 Path Traversal。
+  3. 存檔路徑設計改為 `saves/{playerId}/slot_{slotId}.json`，強化用戶空間隔離。
 
-### 1.4 WebSocket CORS 來源限制 (P1)
-- **現狀問題**：`WebSocketConfig.java` 採用 `.setAllowedOrigins("*")`，任何第三方惡意站點皆可在使用者瀏覽器中建立跨站 WebSocket 連線劫持遊戲會話 (CSWSH)。
-- **改善方案**：改為讀取配置之白名單域名，本機開發限定 `http://localhost:8080`、`http://127.0.0.1:8080`。
+### 1.4 WebSocket CORS 來源限制 (P1) 【✅ 已完成白名單限制】
+- **現狀成果**：`WebSocketConfig.java` 已改為自配置檔讀取允許之 Origin 清單，消除 CSWSH 跨站劫持風險。
 
-### 1.5 身份驗證防禦與密碼加密 Bean 注入 (P1)
-- **現狀問題**：
-  1. `AuthService.register()` 存在驗證方法 `validateUsername()` 與 `validatePassword()` 但未在註冊流程中呼叫。
-  2. `AuthService` 自行 `new BCryptPasswordEncoder()`，未依循 Spring IoC 注入 `PasswordEncoder` Bean。
+### 1.5 身份驗證防禦與密碼加密 Bean 注入 (P1) 【✅ 已完成校驗與 Bean 注入】
+- **現狀成果**：`AuthService` 已導入 `@Bean PasswordEncoder` 依賴注入，並在註冊流程落實使用者名稱與密碼長度格式校驗。
+
+### 1.6 房間戰利品袋 (Loot Pouch) 併發競爭修復 (P1)
+- **現狀問題**（Copilot P1-5、Claude Opus F-5）：
+  `LivingService.java:166-179` 中，怪物死亡產生戰利品時，先透過 `room.getItems().stream()` 查詢是否存在現有的 `【散落的儲物袋】`，若存在則直接呼叫 `targetPouch.getContents().addAll(drops)`。在多怪同時被 AOE 擊殺（各在獨立的虛擬執行緒執行）情境下：
+  - 兩個執行緒可能同時判定「不存在儲物袋」而各自建立新的儲物袋丟入房間。
+  - 兩個執行緒同時取得同一儲物袋並同時對非執行緒安全的 `ArrayList` 執行 `addAll()`，造成併發修改異常 (`ConcurrentModificationException`) 或物品遺失。
 - **改善方案**：
-  1. 於註冊流程前置調用校驗邏輯，限制帳號密碼長度與合法字元。
-  2. 在 `SecurityConfig` 宣告 `@Bean public PasswordEncoder passwordEncoder()`，並於 `AuthService` 建構子注入。
+  - 將戰利品收納操作移交至 `Room` / Actor 內部同步執行，或針對 `targetPouch` 進行鎖定/使用執行緒安全集合。
 
 ---
 
-## 🏛️ 2. 清潔架構與領域邊界 (Clean Architecture & Decoupling) - Priority: P1
+## ⚔️ 2. 核心戰鬥與物品規則防禦 (Combat & Inventory Integrity) - Priority: P1
 
-### 2.1 領域層反向依賴反轉 (Domain Dependency Inversion)
-- **現狀問題**：
-  - `LivingService`、`PlayerService`、`GuestBehavior`、`RoomService` 等 Domain 層類別，直接 `import` 了 Application / Infrastructure 層的元件（如 `AuthService`、`CommandDispatcher`、`WebSocketSession`、`MudWebSocketHandler`）。
-- **改善方案**：
-  - 依循 DDD 原則，Domain 層不可依賴外層。
-  - 提取 Output Ports（輸出介面）：例如 `SessionMessageSender`、`SessionContext`、`GameEventPublisher`，由 Infrastructure 層實作這些介面並注入 Domain 服務。
-
-### 2.2 命名衝突 Enum 拆分與語意收斂
-- **現狀問題**：
-  1. **方向衝突**：`net.mud.world.Direction`（MUD 拓撲 10 方向：北、南、東、西、上、下、東北、西北、東南、西南）與 `net.mud.dungeon.Direction`（DRPG 2D 矩陣 4 方向：NORTH, SOUTH, EAST, WEST）同名。
-  2. **資源類型衝突**：存在兩套 `ResourceType` 定義。
-- **改善方案**：
-  - 將 MUD 方向更名為 `WorldDirection` 或 `MudDirection`。
-  - 將 DRPG 方向更名為 `GridDirection`。
-  - 於共用層提供 `DirectionAdapter` 處理正交方向轉換 (`WorldDirection.NORTH ↔ GridDirection.NORTH`)。
-
-### 2.3 指令冗餘消除與責任收斂
-- **現狀問題**：部分玩家指令存在重複實作：
-  - `dismiss`：同時散落於 `DismissCommand` 與 `PartyCommand.handleDismiss`。
-  - `use`：同時存在於 `UseCommand` 與 `InventoryCommand`。
-  - `seal`：同時存在於 `SealCommand`、`BattleCommand` 與 `InventoryCommand`。
-- **改善方案**：
-  - 統一以 Facade/Service 處理核心業務（如 `PartyService.dismissMember`、`ItemUsageService.useItem`）。
-  - 單一指令類別專職解析語法，多別名映射至同一個 Command Bean，杜絕複製貼上程式碼。
-
-### 2.4 指令間直接耦合解構 (Decouple Inter-Command Invocations)
-- **現狀問題**：`LoadCommand` 直接注入並呼叫 `SaveCommand`，`MoveCommand` 直接注入並呼叫 `LookCommand`。
-- **改善方案**：
-  - 指令不應依賴其他指令。
-  - 將共同邏輯（如存檔查詢、房間視角渲染）抽入 `PlayerPresentationService` 或 `SaveGameService`，指令各自調用底層服務。
-
----
-
-## ⚡ 3. 併發安全與 Actor 執行緒健全度 (Concurrency & Actor Integrity) - Priority: P1 【✅ 已完成】
-
-> **完成狀態**：已全數實作防禦機制，並建立 `ConcurrencyAndActorSafetyTest` 驗證套件，全數通過 141 項測試。
-
-### 3.1 VirtualActor 自死鎖防禦 (Self-Deadlock Prevention)
-- **現狀問題**：`Living.equip()`、`Living.unequip()`、`Living.lookAtMe()` 中調用 `future.join()` 等待郵箱執行結果。若呼叫者恰好就在該 Actor 自身的虛擬執行緒內，將導致自身等待自身完成任務的永久死鎖。
-- **改善方案**：
+### 2.1 MUD Miss Sentinel `-1` 傷害穿透修復 (P1)
+- **現狀問題**（Copilot P1-4、Claude Opus F-1）：
+  在 `CombatService.java:273-282`：
   ```java
-  public CompletableFuture<Void> runInActorThread(Runnable task) {
-      if (Thread.currentThread() == this.actorThread) {
-          task.run();
-          return CompletableFuture.completedFuture(null);
-      }
-      // 否則投遞至郵箱隊列
-      ...
+  int rawDmg = calculateDamage(self, target);
+  double skillDmg = skill.template().getMechanics().damage() + ...;
+  rawDmg += skillDmg; // 💥 若 calculateDamage 返回 -1 代表 Miss，此處直接加乘技能傷害！
+  int dmgAmount = (int) (rawDmg * action.damageMod());
+  ```
+  `calculateDamage` 判定未命中時以 `-1` 表示 Miss。但後續代碼未檢查 `-1`，直接累加正數的 `skillDmg`，若招式倍率 `action.damageMod()` 大於 0，將使本應未命中的攻擊轉為正數傷害直接扣減目標 HP！
+- **改善方案**：
+  在 `calculateDamage()` 返回後立即判定：
+  ```java
+  int rawDmg = calculateDamage(self, target);
+  if (rawDmg < 0) {
+      // 確定為未命中，格式化 Miss 戰鬥日誌並直接 return，不得累加傷害
+      broadcastMissMessage(self, target, action);
+      return;
   }
   ```
 
-### 3.2 RoomMessageBuffer 執行緒池洩漏修復
-- **現狀問題**：`RoomMessageBuffer` 為每個房間建立 `ScheduledExecutorService`，房間生命週期結束或系統重啟時未統一釋放，造成虛擬/平臺執行緒資源洩漏。
+### 2.2 物品堆疊上限 `maxStack` 溢出防禦 (P1)
+- **現狀問題**（Copilot P2-2、Claude Opus F-3）：
+  `PartyInventory.java:58-63` 與 `LivingService.addItem()` 在將物品放入行囊時：
+  ```java
+  if (isSameItemId(templateId, slot.getItemId()) && slot.isStackable()) {
+      slot.setCount(slot.getCount() + count); // 💥 未檢查 slot.getMaxStack()
+      return true;
+  }
+  ```
+  完全忽略了物品模板定義之 `maxStack`（例如藥品上限 99、特殊符籙上限 10），可被無限累加至數千甚至數萬，嚴重破壞背包空間平衡。
 - **改善方案**：
-  1. 改由 Spring 管理的全域排程執行緒池統一派發定時 Flush。
-  2. 或實作 `@PreDestroy` / `AutoCloseable`，在容器關閉時遍歷關閉所有緩衝區排程器。
+  累加時計算可容納差額 `available = slot.getMaxStack() - slot.getCount()`：
+  1. 若 `count <= available`，直接累加。
+  2. 若 `count > available`，填滿當前槽位至 `maxStack`，剩餘數量在行囊未滿時尋找下一個同類未滿槽位或開闢新槽位；若行囊已滿則拒絕放入或掉落地面。
 
-### 3.3 VirtualActor 例外中毒防護 (Poisoning / Failure Recovery)
-- **現狀問題**：`VirtualActor.runLoop()` 中若發生未捕捉的 `RuntimeException` 或 `Error`，虛擬執行緒將直接死亡，Actor 永遠失去回應能力（Mailbox 阻塞）。
-- **改善方案**：在事件處理迴圈外圍加上 `try-catch(Throwable t)`，記錄錯誤日誌並觸發失敗恢復機制（Supervisor Strategy），維持郵箱迴圈運轉。
+### 2.3 `PartyInventory` 模糊前綴匹配 (Substring Fallback) 收斂 (P1)
+- **現狀問題**（Codex §3.3、Copilot P2-3、Claude Opus F-2）：
+  `PartyInventory.isSameItemId()` 會自動將 `:` 冒號之後的子字串提出來做 `equalsIgnoreCase` 比較。這導致 `DataNamespaceIntegrityTest` 所建立的命名空間防護網在運行期被完全繞過（例如 `mud:sword` 與 `drpg:sword` 被混為一談），且隱蔽了錯誤的資料配置 ID。
+- **改善方案**：
+  移除或大幅限縮模糊子字串比對，全面改用精確的 Canonical Item ID。若有向後相容需求，僅允許在特定遷移適配器中進行明確映射，不可在底層容器中靜默模糊匹配。
 
-### 3.4 LivingStats 欄位封裝與執行緒邊界
-- **現狀問題**：`LivingStats` 部分數值欄位為 `public`，允許外部直接修改，破壞了狀態變更必須通過 Actor 訊息的約束。
-- **改善方案**：所有屬性改為 `private`，提供具備邊界防禦（Clamped: 0 ~ Max）的修改方法，狀態變更統一由 `Living` / Actor 驅動。
-
----
-
-## 📦 4. 資料驅動架構演進與死代碼清理 (Data-Driven & Code Health) - Priority: P2
-
-### 4.1 Canonical Data Model 與雙模式適配器深化
-- **架構原則**：
-  1. **資料層唯一 (Canonical Schema)**：地圖、物品、技能、種族、職業維持單一 JSON 定義。
-  2. **角色職責分層 (Role Separation)**：
-     - `Living` = 世界實體 (World Entity/Actor，負責房間存在、移動、世界對話與生命週期)。
-     - `PartyMember` / `BattleUnit` = 戰鬥投影 (Combat Projection/Card，負責陣型、SAN、怒氣、連擊與 DRPG 戰術)。
-     - **嚴禁使用繼承將兩者強行綁死**（即嚴禁 `PartyMember extends Living`），兩者透過 `CharacterSyncService` 與共用屬性保持同步。
-  3. **適配器工廠 (Adapters)**：以 `MudTemplateAdapter` 與 `DrpgTemplateAdapter` 分別將共用模板轉化為 MUD 實體與 DRPG 戰鬥單位。
-
-### 4.2 資料檔鍵值不一致修正
-- **現狀問題**：`newbie_village/rooms.json` 中的暗道開門鑰匙 ID 為 `village_elder_key`，但物品庫或關聯標註曾出現 `village_elder_house_key`。
-- **改善方案**：統一使用 `village_elder_house_key`，並在 `WorldDataIntegrityTest` 新增房間鎖定鑰匙關聯校驗。
-
-### 4.3 歷史死代碼與未調用方法清理
-- **清理標的**：
-  1. 註解掉的 `PlayerLoginListener`
-  2. `LivingStateService.processLevelUp`（已由 `XpProgressionService` 取代）
-  3. `TaichiHitPerform`
-  4. `WorldManager.startPersistenceWorker()` 未被調用之死方法
-  5. `singleplayer_v2.html` 殘留之 `alert('CORPSE_DETAIL')` 測試碼
-
-### 4.4 構建與環境配置補強
-- **Git 忽略**：`.gitignore` 目前僅忽略 `autosave.json`，需補齊 `/saves/*.json`。
-- **腳本路徑相容性**：`run.bat` / `test.bat` 若存在寫死路徑，應對齊 `run.ps1` / `test.ps1` 之動態目錄偵測機制。
-- **日誌檔案輸出**：檢視 `logback-spring.xml`，重啟輪轉日誌檔案輸出（RollingFileAppender）。
+### 2.4 `CharacterSyncService` 雙向同步欄位邊界與責任清單 (P2)
+- **現狀問題**（Codex §3.5、Copilot P2-1、Claude Opus F-7）：
+  設計文件標註 `CharacterSyncService` 提供「Player 與 PartyMember 之完整雙向同步」，但實際代碼僅同步 HP、MP 等少數欄位，裝備、進階屬性、狀態標籤並未真正全量聯動，容易引發其他開發者對資料同步完整性的誤判。
+- **改善方案**：
+  1. 在 `CharacterSyncService` 類別頭部明確標註其負責之同步邊界（如：僅同步即時戰鬥核心計量，裝備與背包以 `PartyInventory` 為唯一真相源）。
+  2. 補齊主角與隊長之間遺漏的即時狀態聯動（如：死亡狀態、等級突破同步）。
 
 ---
 
-## 🎨 5. 前端現代化與組件模組化 (Frontend Architecture) - Priority: P2
+## 🏛️ 3. 清潔架構與領域邊界 (Clean Architecture & Decoupling) - Priority: P1 / P2
 
-### 5.1 巨石 JS / CSS 檔案模組化拆分 【JS 部分 ✅ 已完成】
+### 3.1 領域層反向依賴反轉 (Domain Dependency Inversion) - Priority: P1 (Phase 10 重點)
 - **現狀問題**：
-  - `drpg-view.js` 原單檔超過 3,120 行。
-  - `style.css` 單檔超過 4,180 行。
-  - 造成維護困難與修改時的高回歸風險。
-- **改善方案與落地成果**：
-  - 改用原生 ES6 Modules 拆分（已完成落地並建立 10 個核心模組）：
-    - `js/core/event-bus.js`：輕量事件總線。
-    - `js/core/state-store.js`：全域狀態快照儲存中樞。
-    - `js/core/cmd-dispatcher.js`：步進防抖與方向路由派發器。
-    - `js/panels/town-panel.js`：城鎮主舞台、方位羅盤、生靈清單與物品拾取。
-    - `js/panels/dungeon-panel.js`：10x10 地牢雷達迷霧、視口切換與前方探查。
-    - `js/panels/party-hud-panel.js`：6 人小隊狀態 HUD 與陣法靈威。
-    - `js/panels/battle-panel.js`：戰鬥主舞台、敵怪雙排陣列、集火鎖定與戰鬥控制列。
-    - `js/panels/message-log-panel.js`：文字日誌終端滾動。
-    - `js/modals/`：技能抽屜、公共行囊、裝備法術書、貨棧交易與 5+1 存檔管理。
-    - `js/app.js`：應用主入口整合與全域快捷鍵。
-  - CSS 按元件拆分（`base.css`, `town.css`, `battle.css`, `modal.css`，待後續跟進）。
+  `LivingService`、`PlayerService`、`GuestBehavior`、`RoomService` 等 Domain 層類別，仍直接 `import` 了 Application / Infrastructure 層的元件（如 `WebSocketSession`、`MudWebSocketHandler`、`AuthService`）。
+- **改善方案**：
+  依循 DDD 原則，Domain 層不可依賴外層。提取 Output Ports（輸出介面）：例如 `SessionMessageSender`、`SessionContext`、`GameEventPublisher`，由 Infrastructure 層實作這些介面並注入 Domain 服務。
 
-### 5.2 前端異常防禦與無障礙優化
-- **DOM ID 存取保護**：`mud-core.js` 中 `updateStats()` 避免無條件存取 `#hp-val`、`#mp-val`，加入 optional chaining 或 null 檢查防範 `TypeError`。
+### 3.2 命名衝突 Enum 拆分與語意收斂 - Priority: P2
+- **現狀進度**：
+  - `GridDirection`（DRPG 4 向）與 `CombatResourceType`（小隊戰鬥資源）已於 Phase 8 完成引入並消除衝突。
+- **後續收尾**：
+  - 將殘留之 MUD 10 方向 `net.mud.world.Direction` 正式更名為 `WorldDirection`。
+  - 在共用層提供 `DirectionAdapter` 處理正交方向轉換 (`WorldDirection.NORTH ↔ GridDirection.NORTH`)。
+
+### 3.3 指令冗餘消除與責任收斂 - Priority: P2
+- **現狀進度**：
+  - 招募/離隊邏輯已於 Phase 8 收斂至 `PartyService.dismissMember`。
+  - 存讀檔邏輯已於 Phase 8 收斂至 `SaveGameService`。
+- **後續收尾**：
+  - 清理 `use` 指令在 `UseCommand` 與 `InventoryCommand` 的雙重入口，統一由 `ItemUsageService` 處理。
+
+---
+
+## ⚡ 4. 併發安全與 Actor 執行緒健全度 (Concurrency & Actor Integrity) - Priority: P1 【✅ 已完成】
+
+> **完成狀態**：已全數實作防禦機制，並建立 `ConcurrencyAndActorSafetyTest` 驗證套件，全數通過自動化回歸測試。
+
+- **4.1 VirtualActor 自死鎖防禦**：`isActorThread()` 判定與內外分流已落地。
+- **4.2 RoomMessageBuffer 執行緒池洩漏修復**：改由全域 Daemon 排程器統一派發 Flush。
+- **4.3 VirtualActor 例外中毒防護**：事件處理迴圈加上 `try-catch(Throwable t)` 保持 Mailbox 運轉。
+- **4.4 LivingStats 欄位封裝與執行緒邊界**：數值欄位私有化並加入 `clampToMax()` 邊界防禦。
+
+---
+
+## 📦 5. 資料驅動架構演進與代碼健康 (Data-Driven & Code Health) - Priority: P2
+
+### 5.1 Canonical Data Model 與 TemplateCatalog 容錯行為修正 (P2)
+- **現狀問題**（Codex §3.2、Copilot P2-5、Claude Opus F-8）：
+  `TemplateCatalog` 與 `TemplateRepository` 在查無模板時，部分路徑會 fallback 到無參空建構子或回傳預設空白物件。這會讓 JSON 拼寫錯誤（Typo）在運行期被靜默忽略，造成難以追蹤的怪異行為。
+- **改善方案**：
+  在模板查無項目時明確拋出 `TemplateNotFoundException` 或回傳 `Optional.empty()`，並在啟動期（如 `TemplateIntegrityTest`）實行嚴格的啟動驗證。
+
+### 5.2 `PartyInventory` 無參建構子副作用防護 (P2)
+- **現狀問題**（Claude Opus 專有發現）：
+  `PartyInventory.java:24-40` 之預設建構子中直接呼叫 `addItem("taiyin_pill", 3); ...`。當 Jackson 進行反序列化（例如讀取存檔）時，若先使用預設建構子初始化物件，會預先塞入 4 種測試道具，隨後反序列化的真實存檔資料又被追加進去，造成玩家存檔中憑空多出初始物品。
+- **改善方案**：
+  預設建構子必須保持乾淨（不帶業務副作用）。初始贈送物品之邏輯應明確移至 `NewGameCommand` 或角色創建工廠（`CharacterCreationService`）。
+
+### 5.3 歷史死代碼與命名規範清理 (P2)
+- **清理標的**（Claude Opus 專有發現）：
+  1. `CombatService` 中完全無外部與內部調用之 private 死方法：`startRound()`、`afterAttack()`、`processSkillExperience()`。
+  2. `LivingStateService.calculateNextLevelXp()`：目前為硬編碼固定返回 `10` 之 placeholder，需對齊經驗值公式。
+  3. `CombatService.java:317`：方法命名拼寫錯誤 `CombineString`（大寫 C），應修正為標準駝峰 `combineString`。
+  4. 註解掉的 `PlayerLoginListener` 與 `singleplayer_v2.html` 殘留之 `alert('CORPSE_DETAIL')` 測試代碼。
+
+### 5.4 構建與環境配置補強 (P2)
+- **pom.xml Lombok 版本不一致**（Claude Opus 專有發現）：
+  `pom.xml` 中宣告之 Lombok dependency 版本為 `1.18.48`，但 `maven-compiler-plugin` 之 `annotationProcessorPaths` 中的 Lombok 版本卻為 `1.18.42`。此版本落差在 Java 25 環境下可能導致編譯器與註解處理器行為不一致或警告，應統一版本。
+- **Git 忽略**：`.gitignore` 目前僅忽略 `autosave.json`，需補齊 `/saves/*.json`。
+
+---
+
+## 🎨 6. 前端現代化與組件模組化 (Frontend Architecture) - Priority: P2
+
+### 6.1 巨石 JS / CSS 檔案模組化拆分 【JS 部分 ✅ 已完成】
+- **現狀成果**：巨石 `drpg-view.js` 已成功拆分為 10 個核心 ES6 Modules。
+- **待跟進項目**：超過 4,180 行之 `style.css` 待後續依模組拆分為 `base.css`、`town.css`、`battle.css`、`modal.css`。
+
+### 6.2 前端異常防禦與無障礙優化 (P2)
+- **DOM ID 存取保護**：`mud-core.js` 中 `updateStats()` 加入 optional chaining 或 null 檢查防範 `TypeError`。
 - **無障礙 (ARIA)**：所有彈窗補全 `role="dialog"`、`aria-modal="true"` 與 ESC 鍵關閉支援。
 - **外部 CDN 資源安全**：靜態引用的 CDN 資源（如 `ansi_up`）補上 Subresource Integrity (`integrity`) 驗證碼。
 
 ---
 
-## 🧪 6. 測試覆蓋率與品質提升 (Test Coverage & Quality) - Priority: P2 / P3
+## 🧪 7. 測試覆蓋率與文檔一致性 (Test Coverage & Doc Sync) - Priority: P2 / P3
 
-### 6.1 補全關鍵元件測試缺口
-- **指令層**：針對目前尚未獨立測試之 11 個指令（如 `DropCommand`、`EquipCommand`、`UnequipCommand`、`LookCommand` 等）與 `CommandDispatcher` 補齊測試。
-- **通訊與安全層**：補齊 `MudWebSocketHandler`、`AuthService`、`SecurityConfig` 測試。
-- **併發與 Actor**：建立 `VirtualActorTest` 針對 Mailbox 循序性、高併發訊息吞吐與死鎖防禦進行壓力測試。
+### 7.1 關鍵元件測試補完 (P2)
+- 新增 `CombatMissAndScalingTest`：驗證 Miss 情況下傷害必定為 0，且不觸發目標受傷事件。
+- 新增 `ItemStackLimitTest`：驗證 `PartyInventory.addItem` 在超過 `maxStack` 時正確分槽與滿載拒絕。
+- 新增 `LootPouchConcurrencyTest`：模擬多線程怪物同時死亡，驗證房間儲物袋不遺失物品且無例外。
+- 新增 `AtomicSaveIntegrityTest`：驗證存檔以臨時檔原子替換，並拒絕非法槽位 index。
 
-### 6.2 測試品質重構
-- **杜絕假測試與無斷言測試**：審查並修正 `ItemPickupAndEntitySyncTest` 與 `DataDrivenExpansionTest` 中未調用真實服務或缺乏有效 `assert` 的測試方法。
-- **移除硬編碼等待**：消除測試代碼中的 `Thread.sleep()`，改用 `Awaitility` 輪詢條件或虛擬時鐘 mock。
-- **輕量化測試 context**：針對純邏輯測試，將 `@SpringBootTest` 降級為純單元測試（POJO Unit Test），加速 Maven 測試建置時間。
-- **靜態測試隔離**：在動態修改 `TemplateRepository` 的測試類別加上 `@AfterEach` 清理靜態註冊表，防止測試間相互污染。
+### 7.2 文檔數值與代碼真實性同步 (P3)
+- **隊伍人數上限對齊**（Copilot P3-2）：
+  `Party.java:20-21` 定義之隊伍上限為 **5 人**（隊長 + 4 名夥伴），部分歷史文檔（如舊版 README）曾誤寫為「6 人隊伍」。後續所有新撰寫與修訂之文檔一律嚴格對齊代碼上限 5 人。
+- **動態測試數量表記**：
+  文檔中不再寫死固定測試數字，統一改以「全專案自動化測試全綠通過」或以 Maven 測試輸出為準，避免代碼擴充後文檔數字迅速過期。
 
 ---
 
 ## 📋 改善項目實施優先序總表 (Execution Priority Matrix)
 
-| 優先序 | 項目類別 | 改善任務簡述 | 預期效益 |
+| 優先序 | 項目類別 | 改善任務簡述 | 狀態 / 影響 |
 | :---: | :--- | :--- | :--- |
-| **P0** | 安全加固 | 1. 關閉 H2 Console 外部存取<br>2. 建立全域 `escapeHtml()` 杜絕前端 XSS | 消除嚴重安全漏洞與 RCE/XSS 風險 |
-| **P1** | 安全與架構 | 1. 存檔槽位使用者空間隔離<br>2. 限制 WebSocket 來源<br>3. 補齊 AuthService 註冊校驗與密碼加密 Bean<br>4. VirtualActor 自死鎖防禦<br>5. 依賴反轉（Domain 不直接 import Web/Auth） | 提升多端健全度、架構分層嚴謹度與執行緒安全 |
-| **P1** | 領域模型 | 1. 消除 Direction/ResourceType 命名衝突<br>2. 消除指令重複實作與指令間直接耦合 | 提升代碼清晰度，避免語意混淆 |
-| **P2** | 代碼與資料健康 | 1. 修復 `rooms.json` 鑰匙 ID 殘留問題<br>2. 清理歷史 dead code（註解 Listener、舊升級方法）<br>3. 修正 `.gitignore` 與執行腳本路徑相容性 | 保持專案整潔度與可持續維護性 |
-| **P2** | 前端工程 | 1. `drpg-view.js` 與 `style.css` 元件模組化拆分<br>2. DOM 存取防禦與 CDN 資源 SRI | 降低單檔複雜度，提升前端修改穩定性 |
-| **P2** | 測試工程 | 1. 補齊 CommandDispatcher 與未覆蓋指令測試<br>2. 以 Awaitility 取代 Thread.sleep<br>3. 修正假測試與增加靜態表清理 | 確保回歸防護網百分之百可信 |
+| **P0** | 安全防禦 | 1. 建立全域 `escapeHtml()` 杜絕前端 XSS<br>2. H2 Console 外部存取防禦（✅ 已完成） | 消除重大安全漏洞與注入風險 |
+| **P1** | 核心戰鬥 | 1. **修復 Miss Sentinel `-1` 傷害加乘穿透 Bug**<br>2. **修復物品行囊忽略 `maxStack` 無限堆疊 Bug** | 消除戰鬥數值與背包核心邏輯致命錯誤 |
+| **P1** | 併發與資料 | 1. **修復房間戰利品袋 (`Loot Pouch`) 多怪併發掉落競態**<br>2. **實作存檔 `.tmp` 原子化寫入與槽位範圍校驗**<br>3. VirtualActor 自死鎖防禦（✅ 已完成） | 杜絕資料損壞、丟寶與伺服器執行緒卡死 |
+| **P1** | 構建一致 | 1. **對齊 `pom.xml` 中 Lombok 依賴與註解處理器版本** | 確保 Java 25 編譯環境穩定性 |
+| **P2** | 代碼與架構 | 1. 收斂 `PartyInventory` 模糊前綴比對<br>2. 清理 `PartyInventory` 無參建構子副作用<br>3. 清理 `CombatService` dead code 與命名大小寫<br>4. 領域層依賴反轉 (Phase 10 Output Ports) | 提升架構整潔度與可維護性 |
+| **P2** | 前端工程 | 1. `style.css` 巨石 CSS 元件模組化拆分<br>2. 前端 DOM 防禦與 CDN 資源 SRI 驗證 | 降低樣式維護難度，提升用戶體驗 |
+| **P2** | 測試工程 | 1. 補齊 Miss、Stack、Loot 併發與原子存檔測試<br>2. 修正測試間靜態上下文隔離 | 健全自動化回歸防護網 |

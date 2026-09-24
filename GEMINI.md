@@ -19,6 +19,10 @@
      - 完成重要開發後，同步在 `docs/plans/` 歸檔新的 Implementation Plan。
   5. **隊伍人數規範 (Party Size Rule)**：小隊編制上限嚴格定調為 **5 人 (`Party.MAX_PARTY_SIZE = 5`)**（對齊 Git commit `989f0debfc50ad008480af4d15953be531920b81`）。嚴格杜絕殘留「6人小隊」之表述與數值硬編碼。
   6. **雙端 Git 同步鐵律 (Cross-Platform Git Sync)**：Git 倉庫根目錄為 `practice_mud`。`GEMINI.md` 與 `docs/` 目錄必須永久納入 `practice_mud` 的 Git 追蹤與同步，杜絕公司與家中狀態脫節。
+  7. **核心架構鐵律：機制運行 + 資料驅動 + 純粹測試 (Mechanism, Data-Driven & Pure Testing Pillars)**：
+     - **機制由引擎通用實作 (Mechanism-Driven)**：戰鬥檢定（命中/閃避/招架）、背包格位（堆疊/上限/容量）、裝配規則（技能槽/防護判定）等，由 Java 引擎提供純粹、通用的業務機制。**嚴禁在 Java 代碼中硬編碼特定實體、職業、技能名稱或字串特例**（例如嚴禁 `switch (classId) { case "WARRIOR" -> ... }`、嚴禁 `if (k.contains("鐵牛"))`、嚴禁在容器建構子寫死塞入特定測試道具）。
+     - **資料完全交由配置驅動 (Data-Driven)**：實體數值、職業技能、掉落表、別名、被動心法效果等，一律定義在 `data/**/*.json`。擴充新職業、新技能或新夥伴時，必須只需新增或修改 JSON 配置，絕不允許修改 Java 代碼分支！
+     - **測試驗證機制而非特例 (Pure Mechanism Testing)**：單元與整合測試的核心目的在於驗證「遊戲機制的運行邏輯與邊界防禦（如堆疊超限、閃避率計算、未命中傷害為零、併發安全）」，測試資料是為了驗證機制而注入的，**嚴禁撰寫僅依賴寫死字串或固定特例的假測試**。
 
 ---
 
@@ -375,14 +379,26 @@
     - **Phase 1 (單一真相源 Single Source of Truth)**：全面廢棄舊全域 `items.json`，改以 `data/global/items/**/*.json` 分類目錄唯一收斂；實作 `PartyItemSlot` 與 `GameItem` / `ItemTemplate` 雙向無損轉換；建立 `CharacterSyncService` 維護世界主體 `Player` 與小隊隊長 `PartyMember` 雙向屬性同步。
     - **Phase 2 (穩定角色識別與生命週期)**：導入強型別值物件 `CharacterId` 徹底淘汰寫死 `"p-single"`；`PartyService` 與 `DungeonManager` 實作 Dual-Index Alias 雙向容錯索引；`TemplateRepository` 轉型為 Spring Bean 託管元件。
     - **Phase 3 (技能語意橋接與戰鬥服務解耦)**：建立 `SkillBridgeService` 實現 MUD 熟練度與 DRPG 戰術技能之動態等級縮放與解鎖；`DrpgBattleService` 解構為輕量 Facade，拆解出 `DrpgCombatLoop`、`DrpgEnemyTacticsService` 與 `DrpgRewardService`。
+  * **2026-09-23（Phase 8 - 清潔架構與指令解耦完工，Commit: `e3f9896`）**：
+    - **Enum 碰撞消除**：DRPG 網格方向轉為 `GridDirection`，小隊戰鬥資源轉為 `CombatResourceType`。
+    - **指令責任收斂**：招募/離隊邏輯統一收斂至 `PartyService`。
+    - **指令間完全解耦**：新增 `RoomMovementService` 解耦移動/觀察，擴充 `SaveGameService` 解耦存讀檔。
+  * **2026-09-24（Phase 8.5 - 關鍵缺陷修復與機制純化衝刺完工）**：
+    - **戰鬥 Miss Sentinel 短路免傷**：修復 `CombatService` 當 `calculateDamage()` 返回 `-1` (Miss) 時仍累加技能傷害的嚴重穿透漏洞，未命中立即短路免傷。
+    - **背包堆疊上限與容器純化**：`PartyInventory` 實作 `maxStack` 分槽堆疊防禦；**徹底拔除建構子中寫死塞入的測試道具**，容器回歸純粹機制。
+    - **資料驅動純化與消除 Hardcode**：**徹底拔除 `PartyService` 中硬編碼的職業技能 `switch (cId)` 與中文別名**，改由 `data/**/*.json` 配置完全驅動。
+    - **房間戰利品袋併發安全**：`LivingService` 針對 `room` 與 `targetPouch` 導入同步保護，杜絕多怪同時死亡掉寶時的競態條件與異常。
+    - **存檔原子化寫入與槽位防禦**：`SaveGameService` 導入 `.tmp` 暫存檔原子替換 (`ATOMIC_MOVE`) 與 `0..5` 槽位邊界防禦。
+    - **構建版本統一**：`pom.xml` 中 Lombok 依賴與 annotationProcessor 版本一致化為 `1.18.48`。
+    - **機制驗證測試**：新增 `MechanismPurityAndBugfixTest`，全專案自動化測試全綠通過。
 
 ---
 
 ## 6. 最新測試與健康狀況 (Latest Test Results)
-* **測試時間**：2026-09-22
+* **測試時間**：2026-09-24
 * **測試指令**：`.\test.ps1`（或 `mvnw test`）
-* **測試項目**：涵蓋既有 106 項整合/單元測試，以及 MUD & DRPG 深度架構整合 Phase 0~3 升級之全套測試（`PhaseZeroBugFixTest`、`PhaseOneSingleSourceOfTruthTest`、`PhaseTwoCharacterIdTest`、`PhaseThreeSkillBridgeAndBattleRefactorTest`、`CharacterSyncServiceTest` 等共 28 項新測試）。
-* **結果**：`Tests run: 134, Failures: 0, Errors: 0, Skipped: 0` -> **BUILD SUCCESS (134 項測試全數綠燈通過，0 失敗、0 錯誤)**
+* **測試項目**：涵蓋既有 156 項測試，以及 Phase 8.5 機制純化與缺陷修復套件（`MechanismPurityAndBugfixTest` 共 4 項新測試）。
+* **結果**：`Tests run: 160, Failures: 0, Errors: 0, Skipped: 0` -> **BUILD SUCCESS (160 項測試全數綠燈通過，0 失敗、0 錯誤)**
 
 ---
 

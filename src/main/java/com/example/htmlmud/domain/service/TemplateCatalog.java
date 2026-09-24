@@ -124,6 +124,16 @@ public class TemplateCatalog implements TemplateReader {
     return templateRepository.getAllFormationMap();
   }
 
+  @Override
+  public Map<String, SkillTemplate> getAllSkills() {
+    return templateRepository.getAllSkillMap();
+  }
+
+  @Override
+  public Map<String, CompanionTemplate> getAllCompanions() {
+    return templateRepository.getAllCompanionMap();
+  }
+
   private Optional<String> normalize(String rawId) {
     if (rawId == null) {
       return Optional.empty();

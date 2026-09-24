@@ -32,11 +32,7 @@ public class PartyInventory {
   public PartyInventory(int capacity, TemplateReader templateReader) {
     this.capacity = capacity;
     this.templateReader = templateReader;
-    // 初始預設攜帶一些應急靈藥與可供切換測試的精良兵刃
-    addItem("taiyin_pill", 3);
-    addItem("purify_talisman", 2);
-    addItem("steel_blade", 1);
-    addItem("standard_spear", 1);
+    // 容器本身只負責格位與堆疊機制，不帶入任何硬編碼資料；初始物品由 PartyService/開局工廠統一派發
   }
 
   public static boolean isSameItemId(String id1, String id2) {
@@ -54,25 +50,46 @@ public class PartyInventory {
   public synchronized boolean addItem(String templateId, int count) {
     if (templateId == null || count <= 0) return false;
 
-    // 1. 若可堆疊，嘗試尋找現有槽位 (支援 ID 跨前綴比對)
+    int remaining = count;
+
+    // 1. 若可堆疊，嘗試尋找現有未達上限的槽位 (支援 ID 跨前綴比對)
     for (PartyItemSlot slot : slots) {
       if (isSameItemId(templateId, slot.getItemId()) && slot.isStackable()) {
-        slot.setCount(slot.getCount() + count);
-        return true;
+        int max = slot.getMaxStack() > 0 ? slot.getMaxStack() : 99;
+        int space = max - slot.getCount();
+        if (space > 0) {
+          int toAdd = Math.min(space, remaining);
+          slot.setCount(slot.getCount() + toAdd);
+          remaining -= toAdd;
+          if (remaining <= 0) {
+            return true;
+          }
+        }
       }
     }
 
-    // 2. 新增槽位，檢查容量
-    if (slots.size() >= capacity) {
-      return false;
+    // 2. 剩餘數量需要開闢新槽位，檢查容量
+    while (remaining > 0) {
+      if (slots.size() >= capacity) {
+        return false;
+      }
+      PartyItemSlot newSlot = createFromTemplate(templateId, remaining, getTemplateReader());
+      if (newSlot == null) {
+        return false;
+      }
+      int max = newSlot.getMaxStack() > 0 ? newSlot.getMaxStack() : 99;
+      if (!newSlot.isStackable() || remaining <= max) {
+        newSlot.setCount(remaining);
+        slots.add(newSlot);
+        remaining = 0;
+      } else {
+        newSlot.setCount(max);
+        slots.add(newSlot);
+        remaining -= max;
+      }
     }
 
-    PartyItemSlot newSlot = createFromTemplate(templateId, count, getTemplateReader());
-    if (newSlot != null) {
-      slots.add(newSlot);
-      return true;
-    }
-    return false;
+    return true;
   }
 
   public synchronized boolean addSlot(PartyItemSlot slot) {

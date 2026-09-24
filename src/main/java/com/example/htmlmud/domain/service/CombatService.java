@@ -246,45 +246,6 @@ public class CombatService {
 
   private void performAttack(Living self, Living target, ActiveSkillResult skill,
       MoveAction action) {
-    // long now = System.currentTimeMillis();
-
-
-
-    // TODO
-    // 施展招式
-
-
-
-    // 招式 miss 判定
-
-
-
-    // target 閃避判定
-
-
-
-    // target 招架判定
-
-
-
-    // 攻擊擊中
-    // TODO 計算傷害公式 (敵我雙方差距，技能等級，招式倍率，武器的攻擊力，防具的防禦力，職業加成，抗性倍率)
-    // ---------------------------------------------------------------------------------------------
-    int rawDmg = calculateDamage(self, target);
-
-    // 套用 skill 倍率 (基礎傷害 + 等級 * 升級加級)
-    double skillDmg = skill.template().getMechanics().damage()
-        + (skill.getLevel() * skill.template().getScaling().damagePerLevel());
-    // log.info("skillDmg:{}", skillDmg);
-    rawDmg += skillDmg;
-    // log.info("rawDmg:{}", rawDmg);
-
-    int dmgAmout = (int) (rawDmg * action.damageMod());
-    // ---------------------------------------------------------------------------------------------
-
-
-
-    // 5. 格式化戰鬥訊息
     String sWeapon = "";
     String tWeapon = "";
     if (self instanceof Player player && partyServiceProvider != null) {
@@ -307,8 +268,26 @@ public class CombatService {
     }
     String part = BodyPartSelector.getRandomBodyPart();
     String msg = action.msg().cast();
-
     List<Player> audiences = self.getCurrentRoom().getPlayers();
+
+    // ---------------------------------------------------------------------------------------------
+    int rawDmg = calculateDamage(self, target);
+    if (rawDmg < 0) {
+      // 未命中 (Miss Sentinel -1 短路處理，杜絕累加技能傷害)
+      msg += "\r\n" + action.msg().miss();
+      for (Player receiver : audiences) {
+        MessageUtil.send(CombineString(msg, sWeapon, tWeapon, part), self, target, receiver);
+      }
+      return;
+    }
+
+    // 套用 skill 倍率 (基礎傷害 + 等級 * 升級加級)
+    double skillDmg = skill.template().getMechanics().damage()
+        + (skill.getLevel() * skill.template().getScaling().damagePerLevel());
+    rawDmg += (int) skillDmg;
+
+    int dmgAmout = (int) (rawDmg * action.damageMod());
+    // ---------------------------------------------------------------------------------------------
 
     // 招架 parry
     if (dmgAmout <= 0) {

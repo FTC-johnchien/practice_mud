@@ -3,8 +3,10 @@ package com.example.htmlmud.domain.party.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.model.entity.LivingStats;
+import com.example.htmlmud.domain.model.template.SkillTemplate;
 import com.example.htmlmud.domain.party.model.EffectiveCombatStats;
 import com.example.htmlmud.domain.party.model.FormationSkill;
 import com.example.htmlmud.domain.party.model.FormationSlot;
@@ -113,12 +115,19 @@ public class PartyService {
 
   public Party createSoloParty(String leaderName) {
     FormationTemplate form = getFormation("formation_four_symbols");
+    PartyInventory inv = new PartyInventory(PartyInventory.DEFAULT_CAPACITY, templateReader);
+    // 開局初始配置應急物資
+    inv.addItem("taiyin_pill", 3);
+    inv.addItem("purify_talisman", 2);
+    inv.addItem("steel_blade", 1);
+    inv.addItem("standard_spear", 1);
+
     Party party = Party.builder()
         .id("party-" + leaderName)
         .partyName(leaderName + "的問道旅團")
         .equippedFormation(form)
         .formationEnergy(50)
-        .inventory(new PartyInventory(PartyInventory.DEFAULT_CAPACITY, templateReader))
+        .inventory(inv)
         .build();
 
     PartyMember leader = createCompanion("leader");
@@ -153,17 +162,25 @@ public class PartyService {
       tplOpt = templateReader.findCompanion(k);
     }
 
-    // 2. 若傳入包含前綴或中文別名 (模糊比對)
+    // 2. 若傳入包含前綴或中文別名 (資料驅動：遍歷所有伴侶模板之 name 與 aliases 比對，絕不硬編碼)
     if (tplOpt.isEmpty()) {
-      String companionId = null;
-      if (k.contains("tie_niu") || k.contains("iron") || k.contains("鐵牛")) companionId = "tie_niu";
-      else if (k.contains("ling_shuang") || k.contains("ling") || k.contains("凌霜")) companionId = "ling_shuang";
-      else if (k.contains("mo_yan") || k.contains("mo") || k.contains("墨衍") || k.contains("墨道人")) companionId = "mo_yan";
-      else if (k.contains("yan_qing") || k.equals("yan") || k.contains("燕青")) companionId = "yan_qing";
-      else if (k.contains("zhi_ruo") || k.equals("zi") || k.contains("芷若")) companionId = "zhi_ruo";
-      else if (k.contains("leader") || k.contains("主角") || k.contains("天劍")) companionId = "leader";
-      if (companionId != null) {
-        tplOpt = templateReader.findCompanion(companionId);
+      Map<String, CompanionTemplate> allCompanions = templateReader.getAllCompanions();
+      if (allCompanions != null) {
+        for (CompanionTemplate c : allCompanions.values()) {
+          if (c.name() != null && (k.contains(c.name().toLowerCase()) || c.name().toLowerCase().contains(k))) {
+            tplOpt = Optional.of(c);
+            break;
+          }
+          if (c.aliases() != null) {
+            for (String alias : c.aliases()) {
+              if (alias != null && (k.contains(alias.toLowerCase()) || alias.toLowerCase().contains(k))) {
+                tplOpt = Optional.of(c);
+                break;
+              }
+            }
+          }
+          if (tplOpt.isPresent()) break;
+        }
       }
     }
 
@@ -184,24 +201,21 @@ public class PartyService {
         templateReader.findPartySkill(sId).ifPresent(memberSkills::add);
       }
 
-      // 自動掛載職業特徵技能 (不限武器別)
+      // 自動掛載職業特徵技能 (完全資料驅動：查詢所有 tags 包含 CLASS 且 school 符合該職業的技能，不限武器別)
       if (tpl.classId() != null) {
         String cId = tpl.classId().toUpperCase();
-        List<String> defaultClassSkills = switch (cId) {
-          case "WARRIOR" -> List.of("class_warrior_taunt", "class_warrior_iron_wall", "class_warrior_berserk");
-          case "CLERIC" -> List.of("class_cleric_heal", "class_cleric_purify", "class_cleric_bless");
-          case "ROGUE" -> List.of("class_rogue_stealth", "class_rogue_smoke");
-          case "MAGE" -> List.of("class_taoist_seal");
-          case "SWORDSMAN" -> List.of("class_swordsman_mind_eye");
-          case "MONK" -> List.of("class_monk_iron_body");
-          default -> List.of();
-        };
-        for (String csId : defaultClassSkills) {
-          templateReader.findPartySkill(csId).ifPresent(s -> {
-            if (memberSkills.stream().noneMatch(existing -> existing.getId().equalsIgnoreCase(s.getId()))) {
-              memberSkills.add(s);
+        Map<String, SkillTemplate> allSkills = templateReader.getAllSkills();
+        if (allSkills != null) {
+          for (SkillTemplate st : allSkills.values()) {
+            if (st.getSchool() != null && st.getSchool().equalsIgnoreCase(cId)
+                && st.getTags() != null && st.getTags().contains("CLASS")) {
+              templateReader.findPartySkill(st.getId()).ifPresent(s -> {
+                if (memberSkills.stream().noneMatch(existing -> existing.getId().equalsIgnoreCase(s.getId()))) {
+                  memberSkills.add(s);
+                }
+              });
             }
-          });
+          }
         }
       }
 

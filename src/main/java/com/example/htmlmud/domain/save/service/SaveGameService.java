@@ -52,6 +52,9 @@ public class SaveGameService {
   }
 
   private File getSaveFile(int slotId) {
+    if (slotId < 0 || slotId > TOTAL_MANUAL_SLOTS) {
+      throw new IllegalArgumentException("無效的存檔槽位: " + slotId + " (合法範圍: 0.." + TOTAL_MANUAL_SLOTS + ")");
+    }
     String filename = (slotId == 0) ? "autosave.json" : "slot_" + slotId + ".json";
     return new File(savesDir, filename);
   }
@@ -166,12 +169,24 @@ public class SaveGameService {
         .savedAt(LocalDateTime.now().format(DATE_FORMATTER))
         .build();
 
+    File file = getSaveFile(slotId);
+    File tempFile = new File(file.getParentFile(), file.getName() + ".tmp");
     try {
-      File file = getSaveFile(slotId);
-      objectMapper.writerWithDefaultPrettyPrinter().writeValue(file, saveData);
-      log.info("Successfully saved game to slot {} [{}]: {}", slotId, file.getAbsolutePath(), title);
+      objectMapper.writerWithDefaultPrettyPrinter().writeValue(tempFile, saveData);
+      try {
+        java.nio.file.Files.move(tempFile.toPath(), file.toPath(),
+            java.nio.file.StandardCopyOption.ATOMIC_MOVE,
+            java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+      } catch (java.nio.file.AtomicMoveNotSupportedException e) {
+        java.nio.file.Files.move(tempFile.toPath(), file.toPath(),
+            java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+      }
+      log.info("Successfully atomically saved game to slot {} [{}]: {}", slotId, file.getAbsolutePath(), title);
       return saveData;
     } catch (Exception e) {
+      if (tempFile.exists()) {
+        tempFile.delete();
+      }
       log.error("Failed to save game to slot {}: {}", slotId, e.getMessage(), e);
       throw new RuntimeException("存檔失敗: " + e.getMessage(), e);
     }

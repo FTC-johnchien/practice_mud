@@ -49,4 +49,8 @@ public interface TemplateReader {
   Optional<ClassTemplate> findClass(String classId);
 
   Map<String, FormationTemplate> getAllFormations();
+
+  Map<String, SkillTemplate> getAllSkills();
+
+  Map<String, CompanionTemplate> getAllCompanions();
 }
