@@ -11,11 +11,12 @@ import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.enums.Direction;
+import com.example.htmlmud.domain.port.CommandDispatcherPort;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-public class CommandDispatcher {
+public class CommandDispatcher implements CommandDispatcherPort {
 
   // 指令註冊表: "look" -> LookCommand Object
   private final Map<String, PlayerCommand> commandMap = new HashMap<>();

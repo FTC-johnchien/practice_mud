@@ -1,15 +1,10 @@
 package com.example.htmlmud.domain.service;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
-import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketSession;
-import com.example.htmlmud.application.command.CommandDispatcher;
-import com.example.htmlmud.application.service.AuthService;
 import com.example.htmlmud.config.GuiBridge;
 import com.example.htmlmud.domain.actor.behavior.PlayerBehavior;
 import com.example.htmlmud.domain.actor.core.MessageOutput;
@@ -17,11 +12,11 @@ import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.model.enums.Direction;
+import com.example.htmlmud.domain.port.ClientSessionManagerPort;
+import com.example.htmlmud.domain.port.CommandDispatcherPort;
 import com.example.htmlmud.infra.persistence.service.PlayerPersistenceService;
-import com.example.htmlmud.infra.server.MudWebSocketHandler;
 import com.example.htmlmud.protocol.ConnectionState;
 import com.example.htmlmud.protocol.GameCommand;
-import com.example.htmlmud.protocol.MudMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -37,9 +32,9 @@ public class PlayerService {
 
   private final ObjectMapper objectMapper;
 
-  private final CommandDispatcher commandDispatcher;
+  private final CommandDispatcherPort commandDispatcher;
 
-  private final AuthService authService;
+  private final com.example.htmlmud.domain.port.AuthenticationPort authenticationPort;
 
   private final PlayerPersistenceService playerPersistenceService;
 
@@ -47,16 +42,17 @@ public class PlayerService {
 
   private final ObjectProvider<WorldManager> worldManagerProvider;
 
-  private final ObjectProvider<MudWebSocketHandler> mudWebSocketHandlerProvider;
+  private final ObjectProvider<ClientSessionManagerPort> clientSessionManagerProvider;
 
   private final GuiBridge guiBridge;
 
-
+  public com.example.htmlmud.domain.port.AuthenticationPort getAuthService() {
+    return authenticationPort;
+  }
 
   public void handleInput(Player player, String traceId, GameCommand cmd) {
     // A. 設定 MDC (給 Log 看)
     MDC.put("traceId", traceId);
-    // MDC.put("actorName", this.name);
 
     try {
       // B. 設定 ScopedValue (給 Service 邏輯看)
@@ -83,35 +79,6 @@ public class PlayerService {
       nextBehavior.onEnter(); // 觸發進場事件
     });
     log.info("{} 切換行為模式至 {}", self.getName(), nextBehavior.getClass().getSimpleName());
-
-
-    // 1. 設定為 GUI 專用的輸出管道
-    // self.setOutput(new JavaFXOutput());
-
-    // 2. 將玩家存入 Spring 管理的 GuiBridge
-    // guiBridge.setPlayer(self);
-
-    // 3. 初始顯示
-    // self.reply("歡迎進入單機模式，" + self.getName());
-
-  }
-
-  public void handleSendText(Player player, WebSocketSession session, String msg) {
-    if (session != null && session.isOpen()) {
-
-      // 處理 $N 代名詞
-      msg = MessageUtil.format(msg, player);
-
-      try {
-        String json = objectMapper.writeValueAsString(Map.of("type", "TEXT", "content", msg));
-
-        // 這裡才是真正寫入 WebSocket 的地方
-        // 因為是在 handleMessage 內執行，保證了 Thread-Safe
-        session.sendMessage(new TextMessage(json));
-      } catch (IOException e) {
-        log.error("Failed to send message to player {}", player.getId(), e);
-      }
-    }
   }
 
   public void handleSendText(Player self, String msg) {
@@ -137,8 +104,7 @@ public class PlayerService {
       guiBridge.setPlayer(player);
       guestPlayer.stop();
     } else {
-      mudWebSocketHandlerProvider.getObject().promoteToPlayer(guestPlayer.getOutput().getSession(),
-          player);
+      clientSessionManagerProvider.getObject().promoteToPlayer(guestPlayer.getOutput().getSession(), player);
     }
 
     // 3. 重發當前環境資訊
@@ -188,7 +154,6 @@ public class PlayerService {
     }
 
     // 取出 currentRoom 區域的重生點/安全點 或是固定地點墳場 (如果有的話)
-    // setCurrentRoomId("newbie_village:cemetery");
     player.setCurrentRoomId("newbie_village:cemetery");
 
     Room room = player.getCurrentRoom();
@@ -202,7 +167,7 @@ public class PlayerService {
     // 更新玩家 stats
     player.sendStatUpdate();
 
-    room.enter(player, Direction.UP);
+    room.enter(player, null);
 
     // 自動 Look 直接調用 LookCommand 執行邏輯 (讓玩家看到新環境)
     ScopedValue.where(MudContext.CURRENT_PLAYER, player).run(() -> {
@@ -210,30 +175,14 @@ public class PlayerService {
     });
   }
 
-
-
-  // ---------------------------------------------------------------------------------------------
-
-
-
-  // ---------------------------------------------------------------------------------------------
-
-
-
-  // ---------------------------------------------------------------------------------------------
-
-
-
   private void startDeathTimer(Player player, long disconnectTimestamp) {
     // 啟動一個虛擬執行緒，成本極低
     Thread.ofVirtual().name("Reaper-" + player.getName()).start(() -> {
       try {
         // 設定緩衝時間：例如 10 分鐘 (600,000 ms)
-        // 這裡直接 sleep，不會佔用系統資源
         Thread.sleep(10 * 60 * 1000);
 
         // --- 10 分鐘後醒來 ---
-
         // 檢查 1: 玩家是否還在斷線狀態？
         // 檢查 2: 這是當初那次斷線嗎？(防止玩家重連後又斷線，舊的計時器殺錯)
         if (player.getConnectionState() == ConnectionState.LINK_DEAD
@@ -249,5 +198,4 @@ public class PlayerService {
       }
     });
   }
-
 }

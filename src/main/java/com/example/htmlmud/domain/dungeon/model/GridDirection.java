@@ -4,8 +4,10 @@ import lombok.Getter;
 
 /**
  * 2D 地牢網格專用之 4 方向 Enum
- * (區隔於 MUD 拓撲 10 方向 WorldDirection / Direction)
+ * @deprecated 專案已全面統一收斂為 4 方向 {@link com.example.htmlmud.domain.model.enums.Direction}。
+ * 此處保留以維持平滑相容性。
  */
+@Deprecated
 @Getter
 public enum GridDirection {
   NORTH(0, -1, "^", "北"),
@@ -62,28 +64,17 @@ public enum GridDirection {
   }
 
   /**
-   * 轉向 MUD 10 方向 Enum (正交映射)
+   * 轉向 MUD 統一 4 方向 Direction
    */
   public com.example.htmlmud.domain.model.enums.Direction toMudDirection() {
-    return switch (this) {
-      case NORTH -> com.example.htmlmud.domain.model.enums.Direction.NORTH;
-      case EAST -> com.example.htmlmud.domain.model.enums.Direction.EAST;
-      case SOUTH -> com.example.htmlmud.domain.model.enums.Direction.SOUTH;
-      case WEST -> com.example.htmlmud.domain.model.enums.Direction.WEST;
-    };
+    return com.example.htmlmud.domain.model.enums.Direction.valueOf(this.name());
   }
 
   /**
-   * 由 MUD 10 方向 Enum 轉向 GridDirection (僅支援正交 4 向)
+   * 由統一 Direction 轉向 GridDirection
    */
   public static GridDirection fromMudDirection(com.example.htmlmud.domain.model.enums.Direction dir) {
     if (dir == null) return null;
-    return switch (dir) {
-      case NORTH -> NORTH;
-      case EAST -> EAST;
-      case SOUTH -> SOUTH;
-      case WEST -> WEST;
-      default -> null;
-    };
+    return GridDirection.valueOf(dir.name());
   }
 }

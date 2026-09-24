@@ -4,9 +4,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketSession;
-import com.example.htmlmud.application.service.AuthService;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.context.MudKeys;
@@ -15,6 +12,7 @@ import com.example.htmlmud.domain.model.enums.Direction;
 import com.example.htmlmud.domain.service.WorldManager;
 import com.example.htmlmud.protocol.ConnectionState;
 import com.example.htmlmud.protocol.GameCommand;
+import com.example.htmlmud.domain.port.AuthenticationPort;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,7 +22,7 @@ public class GuestBehavior implements PlayerBehavior {
 
   private static final int MAX_AUTH_RETRIES = 5;
 
-  private final AuthService authService;
+  private final AuthenticationPort authService;
 
   private final WorldManager worldManager;
 
@@ -35,7 +33,7 @@ public class GuestBehavior implements PlayerBehavior {
   @Setter
   private String tempPassword; // 暫存正在處理的密碼
 
-  public GuestBehavior(AuthService authService, WorldManager worldManager) {
+  public GuestBehavior(AuthenticationPort authService, WorldManager worldManager) {
     this.authService = authService;
     this.worldManager = worldManager;
   }
@@ -370,7 +368,7 @@ public class GuestBehavior implements PlayerBehavior {
 
     // 讓玩家進入 currentRoomId 的房間
     // log.info("玩家 enter CurrentRoom");
-    self.getCurrentRoom().enter(self, Direction.UP);
+    self.getCurrentRoom().enter(self, null);
 
     self.sendStatUpdate();
     return new InGameBehavior();

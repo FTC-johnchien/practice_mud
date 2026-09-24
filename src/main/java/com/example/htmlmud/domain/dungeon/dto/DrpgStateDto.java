@@ -184,12 +184,14 @@ public record DrpgStateDto(
           if (s.getCostType() != null && s.getCostValue() > 0) {
             costDesc = switch (s.getCostType()) {
               case SP -> s.getCostValue() + " 戰氣";
+              case STAMINA -> s.getCostValue() + " 體力";
               case HP -> s.getCostValue() + " 氣血";
               case RAGE -> s.getCostValue() + " 怒氣";
               case COMBO -> s.getCostValue() + " 連擊";
               case MP -> s.getCostValue() + " 真元";
               case ENERGY -> s.getCostValue() + " 精力";
               case FORCE -> s.getCostValue() + " 內力";
+              default -> s.getCostValue() + " " + (s.getCostType() != null ? s.getCostType().getDisplayName() : "點");
             };
           }
           if (!m.isSkillUsable(s) && s.getAllowedWeapons() != null && !s.getAllowedWeapons().isEmpty()) {

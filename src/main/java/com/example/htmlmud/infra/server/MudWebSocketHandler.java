@@ -11,6 +11,7 @@ import com.example.htmlmud.application.service.GameCommandService;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.service.PlayerService;
 import com.example.htmlmud.domain.service.WorldManager;
+import com.example.htmlmud.domain.port.ClientSessionManagerPort;
 import com.example.htmlmud.infra.monitor.GameMetrics;
 import com.example.htmlmud.protocol.WebSocketOutput;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class MudWebSocketHandler extends TextWebSocketHandler {
+public class MudWebSocketHandler extends TextWebSocketHandler implements ClientSessionManagerPort {
   private final PlayerService playerService;
   private final WorldManager worldManager;
   private final SessionRegistry sessionRegistry;
@@ -119,5 +120,12 @@ public class MudWebSocketHandler extends TextWebSocketHandler {
     oldGuest.stop(); // 停止 Guest 的 VT，釋放資源
 
     log.info("Session 權限已移交給玩家: {}", player.getName());
+  }
+
+  @Override
+  public void promoteToPlayer(Object rawSession, Player player) {
+    if (rawSession instanceof WebSocketSession session) {
+      promoteToPlayer(session, player);
+    }
   }
 }

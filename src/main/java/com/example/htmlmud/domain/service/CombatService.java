@@ -5,7 +5,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.application.command.parser.BodyPartSelector;
+import com.example.htmlmud.domain.service.BodyPartSelector;
 import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;

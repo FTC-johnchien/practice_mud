@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.application.factory.WorldFactory;
+import com.example.htmlmud.domain.port.WorldEntityFactoryPort;
 import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
@@ -52,7 +52,7 @@ public class WorldManager {
 
   private final ObjectMapper objectMapper;
 
-  private final WorldFactory worldFactory; // 注入 Factory
+  private final WorldEntityFactoryPort worldFactory; // 注入 Factory (Output Port)
 
   private final TemplateReader templateReader;
 

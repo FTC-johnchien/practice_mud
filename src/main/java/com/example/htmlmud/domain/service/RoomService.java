@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.application.factory.WorldFactory;
+import com.example.htmlmud.domain.port.WorldEntityFactoryPort;
 import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
@@ -36,7 +36,7 @@ public class RoomService {
 
   private final TargetSelector targetSelector;
 
-  private final WorldFactory worldFactory;
+  private final WorldEntityFactoryPort worldFactory;
 
   private final WorldManager manager;
 
@@ -77,8 +77,9 @@ public class RoomService {
     actor.setCurrentRoomId(room.getId());
 
     // 房間廣播訊息
-    String arriveMsg =
-        ColorText.wrap(AnsiColor.YELLOW, livingName + " 從 " + direction.getDisplayName() + " 過來了。");
+    String arriveMsg = direction != null
+        ? ColorText.wrap(AnsiColor.YELLOW, livingName + " 從 " + direction.getDisplayName() + " 過來了。")
+        : ColorText.wrap(AnsiColor.YELLOW, livingName + " 出現在此處。");
     broadcastToOthers(players, actor.getId(), arriveMsg);
   }
 

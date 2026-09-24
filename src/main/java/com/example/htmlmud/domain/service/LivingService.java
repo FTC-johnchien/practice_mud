@@ -5,8 +5,7 @@ import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.application.command.impl.LookCommand;
-import com.example.htmlmud.application.factory.WorldFactory;
+import com.example.htmlmud.domain.port.WorldEntityFactoryPort;
 import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
@@ -37,13 +36,11 @@ public class LivingService {
 
   private final TemplateReader templateReader;
 
-  private final WorldFactory worldFactory;
+  private final WorldEntityFactoryPort worldFactory;
 
   private final ObjectProvider<WorldManager> worldManagerProvider;
 
   private final ObjectProvider<GameStateBroadcastService> broadcastServiceProvider;
-
-  private final LookCommand lookCommand;
 
 
 

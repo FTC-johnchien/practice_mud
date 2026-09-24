@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.entity.PlayerRecord;
+import com.example.htmlmud.domain.port.AuthenticationPort;
 import com.example.htmlmud.infra.mapper.PlayerMapper;
 import com.example.htmlmud.infra.persistence.entity.CharacterEntity;
 import com.example.htmlmud.infra.persistence.entity.UserEntity;
@@ -18,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AuthService {
+public class AuthService implements AuthenticationPort {
 
   // 基礎保留字（非指令類的關鍵字）
   private static final Set<String> RESERVED_WORDS =
