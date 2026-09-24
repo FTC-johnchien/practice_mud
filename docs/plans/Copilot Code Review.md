@@ -1,201 +1,152 @@
-# Copilot 專案 Review：現況、風險與建議實作順序
+# Copilot 專案 Review：2026-09-24 現況
 
-> Review 日期：2026-09-23
->
-> 本文件是對目前工作區程式碼、測試、`Codex Code Review.md`、`FUTURE_IMPROVEMENTS.md`、`README.md` 及既有實施計畫的獨立核對。它不是要求一次完成所有重構的需求單。判斷分為「已證實問題」、「條件式風險」與「架構改善方向」，避免把設計偏好誤列為現存漏洞。
+> 本次 review 重新核對 `src/main`、`src/test`、`docs/plans`、`docs/references`、`ARCHITECTURE.md`、`GEMINI.md` 與 `WALKTHROUGH.md`。判斷以目前程式碼為準；文件中的願景、歷史快照與測試數字不視為已實作證據。
 
-## 1. 結論摘要
+## 結論摘要
 
-目前專案的核心玩法與資料驅動方向已相當完整，Actor 併發防護也有實作及測試支持。`Codex Code Review.md` 對大型 Canonical Model 重構的成本判斷大致正確；但本次核對發現一個更根本的邊界問題：系統目前同時存在帳號登入模型與匿名單機 WebSocket 模型，且 WebSocket 建立連線時直接建立 `IN_GAME` 玩家。這讓 Auth 並不是實際的身份邊界，也使固定全域存檔槽位在多連線部署下成為真實的資料隔離風險。
+最新提交已完成技能／戰鬥模組拆分、SP 與 Combo 初步整合、前端 ES6 模組化，以及多項 Actor、origin 與資料 namespace 防護。這些改善有效降低了舊 review 的部分風險，但沒有解決核心身份邊界：WebSocket 仍以匿名 session 直接建立遊戲 Actor，存檔仍是所有連線共用的固定槽位。
 
-最應先處理的不是全面改名或移除 static API，而是：
+目前最重要的工作順序是：
 
-1. 明確決定產品是「單機匿名」還是「帳號式多人／多工作階段」。
-2. 在決定前先封住存檔 service 的槽位、擁有者與輸入邊界。
-3. 修補明確可達的前端動態 HTML 注入點，尤其是玩家名稱、存檔資料與 NPC／物品名稱。
-4. 讓登入流程真正接入 WebSocket，或明確移除未使用的 Auth 路徑；不要讓兩套身份模型並存。
-5. 之後才以小批次方式收斂物品 fallback、TemplateReader DI 和角色戰鬥結算同步。
+1. 固定 session、`CharacterId`、owner 與顯示名稱的責任，並封住存檔隔離。
+2. 修補動態 HTML 輸出與存檔原子寫入。
+3. 修正會直接改變玩法結果的 miss、loot merge、堆疊上限與未知物品 fallback。
+4. 定義 Player／PartyMember／Battle state 的欄位 ownership，再處理完整同步。
+5. 最後收斂 Dodge／Parry 與 SP、Rage、Combo 的重疊模型，並同步文件。
 
-## 2. 已證實的高優先問題
+## Findings
 
-### P1-1：WebSocket 目前繞過 Auth，身份不是安全邊界
+### P1-1：WebSocket 身份仍繞過 Auth，且初始化會讀取全域第一份存檔名稱
 
-**證據：** [MudWebSocketHandler.java](../../src/main/java/com/example/htmlmud/infra/server/MudWebSocketHandler.java) 在 `afterConnectionEstablished` 直接呼叫 `Player.createSinglePlayer(...)`，並將玩家視為可進入遊戲的 Actor。它沒有要求登入，也沒有把已驗證的 account／character identity 放入 session。`promoteToPlayer` 雖然存在，但目前不是連線入口的必要流程。
+**證據：** [MudWebSocketHandler.java](../../src/main/java/com/example/htmlmud/infra/server/MudWebSocketHandler.java#L27-L58) 在連線建立時直接呼叫 `Player.createSinglePlayer`，沒有 authenticated session 或 character identity；建立前還會呼叫 `saveGameService.listSaveSlots()`，取第一個有名稱的全域存檔。`promoteToPlayer` 存在，但不是連線入口的必要流程。
 
-**影響：** `AuthService` 和資料庫帳號存在，但 WebSocket 使用者仍可直接進入遊戲；`player.getName()` 不能當作可靠的使用者身份。若同一個服務接受多個連線，這會直接影響存檔授權、角色擁有權與後續交易／社交功能。
+**影響：**多個 WebSocket session 會各自建立 Actor，卻可能共用同一主角顯示名稱；後續 Party、Dungeon、Battle 仍有以名稱作 key 的路徑。這使 Auth 不是安全邊界，也使改名／讀檔可能造成狀態 key 分裂。
 
-**建議：**先做產品決策：
+**建議：**若產品仍是單機匿名，明確限制單一有效 session 並移除誤導性的多人／Auth 假設；若要支援帳號，先把已驗證的 account／`CharacterId` 放入 handshake/session，再由該 identity 建立 Player。所有 Party、Dungeon、Battle、Save API 都應使用不可變 identity，不應使用顯示名稱。
 
-- 若目前就是單機匿名模式，刪除或隔離未接通的登入流程，並在文件與部署設定中明確標示單機邊界。
-- 若目標是帳號模式，先建立 authenticated session／WebSocket handshake identity，再由 identity 建立 Player；不要用玩家顯示名稱作為 account key。
+### P1-2：存檔槽位全域共享，沒有 owner 驗證、slot 邊界或原子寫入
 
-**原因與取捨：**這是所有存檔隔離設計的前置條件。直接先搬存檔路徑只能改善檔名，不會自動產生授權。完整接入認證會涉及前端登入、session 綁定、重連與測試，成本高於單純修設定，但不應以「未來才多人」掩蓋目前模型互相矛盾的事實。
+**證據：** [SaveGameService.java](../../src/main/java/com/example/htmlmud/domain/save/service/SaveGameService.java#L42-L75) 固定使用 `saves/autosave.json` 與 `saves/slot_N.json`；`listSaveSlots`、`readSlotSummary` 與 `deleteSave` 不接收 owner，`loadGame` 也不核對 `SaveData.playerId`。`saveGame` 在 [SaveGameService.java](../../src/main/java/com/example/htmlmud/domain/save/service/SaveGameService.java#L159-L176) 直接寫正式 JSON 檔，沒有 temporary file、atomic move 或 per-slot lock。
 
-### P1-2：存檔是全域共享，service 層沒有擁有者檢查
+**影響：**多連線時可讀取、覆寫或刪除他人槽位；並行存檔或程序中斷可能留下截斷 JSON。`slotId` 也由 public service API 直接接受，不能只依賴 command 的輸入提示。
 
-**證據：** [SaveGameService.java](../../src/main/java/com/example/htmlmud/domain/save/service/SaveGameService.java) 固定使用 `saves/autosave.json` 與 `saves/slot_N.json`。`playerId` 只寫入 JSON；`loadGame`、`listSaveSlots`、`readSlotSummary`、`deleteSave` 沒有核對檔案內的 `playerId`，刪除甚至不接收 player identity。命令層的 [SaveCommand.java](../../src/main/java/com/example/htmlmud/application/command/impl/SaveCommand.java) 也以 `player.getName()` 作為存檔 ID。
+**建議：**所有 save/load/list/summary/delete API 接收 owner identity；集中驗證 `0..5`、核對存檔內 owner，採 `saves/{ownerId}/slot_N.json` 並保留舊檔 migration；以 `Path.normalize`／root containment 防止路徑越界；先寫暫存檔再 atomic move，並以 owner+slot lock 保護並行操作。補兩個 owner 的跨存檔測試與損壞／中斷寫入測試。
 
-**影響：**在多連線部署下，玩家可能讀取、覆寫或刪除其他連線的槽位。即使目前產品宣稱單機，service API 仍沒有把這個邊界寫成可驗證的契約。
+### P1-3：多個前端模組仍將伺服器或玩家資料直接插入 `innerHTML`
 
-**建議：**
+**證據：** [save-modal.js](../../src/main/resources/static/js/modals/save-modal.js#L100-L108) 將主角、樓層、陣法與時間放入模板；[town-panel.js](../../src/main/resources/static/js/panels/town-panel.js#L105-L212) 將 NPC、出口與物品名稱放入 `innerHTML`；[party-modal.js](../../src/main/resources/static/js/modals/party-modal.js#L467-L500) 將角色／職業／陣法資料放入 HTML。`mud-core.js` 也把 ANSI 轉換結果交給 HTML。
 
-1. 在 `SaveGameService` 內集中驗證 `slotId`：autosave 為 0，手動槽位為 1 到 5；所有 public API 都必須檢查，不只依賴 command。
-2. 以已驗證的 account／character ID 建立 `saves/{ownerId}/slot_N.json`，並保留舊路徑讀取一次的 migration fallback。
-3. save、load、list、summary、delete 全部接收 owner identity；讀取後再次核對 `SaveData.playerId`。
-4. 用 `Path.resolve`、`normalize` 與 root containment 檢查建立路徑，即使目前槽位是整數也把檔案邊界固定在 service。
-5. 補兩個 owner 的測試：A 不能讀、列出、覆寫或刪除 B 的存檔；舊單機存檔仍可遷移。
+**影響：**主角名稱、存檔標題、資料檔的 NPC／物品文字或伺服器訊息若含 HTML，可形成 DOM XSS。固定 markup 的 `innerHTML` 不等於動態值已安全。
 
-**優點：**把授權集中在 domain service，避免未來新增 HTTP／WebSocket／CLI 呼叫點時繞過保護。**代價：**需要處理舊存檔搬遷與匿名模式的 owner policy；若仍是單機，應先採用固定 local owner，而不是假裝已有帳號。
+**建議：**純文字改用 `textContent` 或建立 DOM node；保留 markup 時只組固定結構，動態值逐一作文字節點；class、style、URL 使用白名單；用惡意名稱、引號、事件屬性與 ANSI payload 補瀏覽器／單元回歸測試。另在 server 端限制主角名稱長度、控制字元與空白。
 
-### P1-3：前端動態 HTML 有可達的未轉義資料
+### P1-4：MUD miss 的 `-1` sentinel 會在技能加成後變成正傷害
 
-**證據：** [drpg-view.js](../../src/main/resources/static/js/drpg-view.js) 的 NPC header、特殊出口、地面物品、地牢樓層資訊、存檔資料等區塊把資料插入 `innerHTML`。`SaveCommand.handleNew` 可直接設定主角名稱，該名稱會進入存檔與 `renderSaveSlots`。`mud-core.js` 也把 ANSI 轉換結果交給 `innerHTML`。
+**證據：** [CombatService.java](../../src/main/java/com/example/htmlmud/domain/service/CombatService.java#L130-L145) 的 `calculateDamage` 以 `-1` 表示 miss；[CombatService.java](../../src/main/java/com/example/htmlmud/domain/service/CombatService.java#L271-L306) 接著仍加上技能傷害並乘以招式倍率，最後把正值送進 `target.onDamage`。
 
-**影響：**這不是「所有 innerHTML 都一定可利用」，但玩家名稱、存檔欄位及可由資料檔／伺服器控制的 NPC、物品、敵人文字，已具備需要修補的輸出路徑。`ansi_up` 的轉換結果也應由測試確認是否會 escape 原始文字，不能只假設安全。
+**影響：**未命中仍可能造成傷害，命中率、戰鬥訊息與技能數值都會失真。
 
-**建議：**按 HTML context 逐點修補：
+**建議：**以 `CombatResolution`／明確 `MISS` 結果取代 sentinel；miss 應在技能倍率前直接結束。補可控制隨機來源的 deterministic miss test。
 
-- 純文字節點使用 `textContent`／`innerText`，不要以模板字串建 HTML。
-- 必須保留 markup 的地方，只讓固定 markup 由程式建立，動態值以 text node 填入。
-- 不要把動態值放入 `style`、URL、HTML attribute 或 class；必要時採白名單映射。
-- ANSI 顯示先確認 library 的 escape 行為，再以惡意 `<img ...>`、引號與事件屬性建立回歸測試。
-- `SaveCommand.handleNew` 與其他玩家輸入仍要做 server-side 長度及控制字元限制；輸入驗證不能取代輸出 escaping。
+### P1-5：怪物死亡時的 loot pouch 合併跨出 Room actor，非原子
 
-**優點：**可以從高風險輸入點逐步交付，回歸面小。**缺點：**不能只新增一個全域 `escapeHtml()` 就宣稱所有 context 安全；錯誤使用在 attribute／URL 仍可能有問題。
+**證據：** [LivingService.java](../../src/main/java/com/example/htmlmud/domain/service/LivingService.java#L161-L181) 在 Room actor 外先讀取 `room.getItems()`、尋找 pouch，再直接修改既有 pouch contents 或呼叫 `room.dropItem`。多個戰鬥 loop／CombatRound 可同時進入此段。
 
-## 3. 已存在但應收斂的風險
+**影響：**同時死亡可能各自建立袋子，或在同一 pouch 上交錯修改，造成地面實體與內容不一致。現有 [ItemPickupAndEntitySyncTest.java](../../src/test/java/com/example/htmlmud/ItemPickupAndEntitySyncTest.java#L164-L232) 主要手動重演合併，未驗證並行流程。
 
-### P2-1：登入流程缺少有效的重試限制與枚舉防護
+**建議：**把「尋找／建立／合併 pouch」封裝成 Room actor 的單一訊息操作；補並行擊殺、重複死亡通知與搜刮競態測試。
 
-[GuestBehavior.java](../../src/main/java/com/example/htmlmud/domain/actor/behavior/GuestBehavior.java) 中註冊與登入的 username/password validation、`MAX_AUTH_RETRIES` 和 session retry counter 大多是註解；登入錯誤會區分「帳號不存在」與「密碼錯誤」。`AuthService.register()` 本身已正確呼叫驗證方法並注入 `PasswordEncoder`，不應重做 Codex 已確認完成的部分。
+## P2：功能完整性與架構風險
 
-若 Auth 要對外使用，應加入以 account／IP／session 為維度的 rate limit 或 backoff、有限重試、統一登入錯誤訊息與 audit log。若仍是單機匿名模式，則先移除這條未接通流程，避免維護兩個互相矛盾的狀態機。
+### P2-1：角色同步不是無損同步
 
-### P2-2：`PartyInventory` 找不到模板時會猜測物品
+[CharacterSyncService.java](../../src/main/java/com/example/htmlmud/domain/service/CharacterSyncService.java#L33-L75) 只複製等級、XP、HP/MP、五維與自由點數，雖另外呼叫技能 bridge，仍沒有在此契約中處理裝備、金幣、SAN、SP、cooldown、陣型或完整技能配置。`GEMINI.md` 與資料驅動計畫則以「單一真相源／雙向同步」描述它。
 
-[PartyInventory.java](../../src/main/java/com/example/htmlmud/domain/party/model/PartyInventory.java) 的 `createFromTemplate` 會依 ID 是否包含 `pill`、`talisman`、`sword`、`robe` 建立 fallback，否則建立通用「古仙法物」。
+這會讓進出 DRPG、戰鬥結算與存檔的 ownership 不清。先建立欄位 ownership 表與 immutable `BattleOutcome`，再逐條測試 HP/MP、XP、技能進度、裝備與掉落的套用及 idempotency，不要再擴大整份 mutable stats copy。
 
-這會把資料 ID 錯誤轉成看似成功的錯誤物品，掩蓋 JSON／掉落／商店關聯問題。建議先改成可觀測的 unknown-item 或明確 domain failure，補未知 ID 的負面測試，再把轉換責任集中到 factory／mapper。完整 `ItemDefinition + ItemInstance + ItemView` 仍應依 [2026-09-22_shared_canonical_model_execution_plan.md](./2026-09-22_shared_canonical_model_execution_plan.md) 分階段做，不宜一次替換所有背包與存檔類別。
+### P2-2：行囊堆疊忽略 `maxStack`，可超過 99
 
-### P2-3：角色同步名稱容易造成「完整同步」的誤解
+[PartyInventory.java](../../src/main/java/com/example/htmlmud/domain/party/model/PartyInventory.java#L47-L68) 對既有堆疊物品直接加總，未讀取 `maxStack`、拆槽或處理剩餘數量。批量購買與 loot merge 因而可能產生非法堆疊。
 
-[CharacterSyncService.java](../../src/main/java/com/example/htmlmud/domain/service/CharacterSyncService.java) 只複製 level、XP、HP/MP、五維與 free stat points，沒有同步 coin、stamina、equipment、learned/enabled skills 等狀態。這不一定是 bug，因為其中一些可能是模式專屬狀態；但文件將它描述為雙向單一真相源，容易讓後續開發者錯誤假設所有角色狀態都已同步。
+應依模板的 max stack 分批填入既有槽位，剩餘數量建立新槽位；補 `98+2`、`99+1`、批量購買與掉落合併測試。
 
-建議先建立欄位 ownership 表：世界位置與持久角色由 Player 擁有；陣型、SAN、怒氣、cooldown 由 DRPG battle projection 擁有；戰鬥結果由明確 `BattleOutcome` 套用。對 HP/MP、XP、掉落物、技能進度各做一條 outcome 垂直切片，確認 idempotency 後再刪除整份 stats copy。
+### P2-3：未知物品 ID 仍被 substring fallback 靜默猜測
 
-### P2-4：模板讀取仍有 static singleton、static maps 與 no-arg fallback
+[PartyInventory.java](../../src/main/java/com/example/htmlmud/domain/party/model/PartyInventory.java#L108-L140) 找不到模板時，依 `pill`、`talisman`、`sword`、`robe` 建立假物品，其他 ID 則建立「古仙法物」。這會掩蓋掉落、商店、存檔或 namespace 參照錯誤。
 
-[TemplateRepository.java](../../src/main/java/com/example/htmlmud/infra/persistence/repository/TemplateRepository.java) 同時是 Spring component、static singleton 與 static API；[TemplateCatalog.java](../../src/main/java/com/example/htmlmud/domain/service/TemplateCatalog.java) 支援無參數建構；[PartyInventory.java](../../src/main/java/com/example/htmlmud/domain/party/model/PartyInventory.java) 等類別仍自行建立 `TemplateCatalog`。
+應改為帶 ID 的 `UnknownItem`／可觀測 domain failure；舊存檔 migration 可另行處理，但 production 不應默認猜測。`DataNamespaceIntegrityTest` 已提供資料完整性方向，不應再用 fallback 掩蓋失敗。
 
-這是測試隔離、初始化順序與資料來源追蹤的架構債，不是立即功能漏洞。建議遵循既有 execution plan：先用 `TemplateReader` 注入 production service，再建 `InMemoryTemplateReader` 純單元測試，逐批移除 `TemplateRepository` static call，最後才刪相容 facade。不要先刪 static API 或 no-arg constructor，否則會同時碰到 Jackson、舊存檔、fixture 與 Spring wiring。
+### P2-4：Dodge／Parry／Block 目前是資料綁定，不是實際防禦判定
 
-## 4. 併發、資料與工程品質核對
+[BattleEnemy.java](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/BattleEnemy.java#L88-L132) 與 [PartyService.java](../../src/main/java/com/example/htmlmud/domain/party/service/PartyService.java#L245-L250) 會掛載防禦技能，但 [DrpgCombatLoop.java](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java#L210-L245) 仍直接計算並扣血；[CombatService.java](../../src/main/java/com/example/htmlmud/domain/service/CombatService.java#L250-L264) 的 dodge/parry 仍是 TODO。
 
-### 4.1 Actor 防護目前可視為已完成，但測試仍可改善
+文件已描述精力消耗、招架與破防，現行戰鬥卻沒有同等契約。先用單一 resolver 補 deterministic miss/dodge/parry tests，再接入 stamina／poise；在完成前不要把防禦技能宣稱為已實裝。
 
-[VirtualActor.java](../../src/main/java/com/example/htmlmud/domain/actor/core/VirtualActor.java) 已有 actor thread 判定與單訊息 `catch (Throwable)`；[RoomMessageBuffer.java](../../src/main/java/com/example/htmlmud/domain/actor/core/RoomMessageBuffer.java) 使用共享 daemon scheduler；[ConcurrencyAndActorSafetyTest.java](../../src/test/java/com/example/htmlmud/ConcurrencyAndActorSafetyTest.java) 也覆蓋相關行為。這些不應再列為原始 P1 待修。
+### P2-5：TemplateReader DI 仍有 static／no-arg fallback
 
-但測試仍用 `Thread.sleep(150)` 等待 flush。建議改用可觀測的 future、latch 或 Awaitility；同時補 actor stop、scheduler shutdown、mailbox backlog 與重複 disconnect 的測試。這是提升可信度，不是重做已完成的修復。
+[PartyInventory.java](../../src/main/java/com/example/htmlmud/domain/party/model/PartyInventory.java#L21-L33) 與 `TemplateCatalog` 的無參數建立會讓 production 物件自行選擇資料來源；Template repository 仍保留 static 相容入口。這是初始化順序、測試污染與資料追蹤風險，不是本次最急迫的安全漏洞。
 
-### 4.2 測試數量不是品質指標，部分測試需要更接近 production path
+依 [2026-09-22_shared_canonical_model_execution_plan.md](./2026-09-22_shared_canonical_model_execution_plan.md) 先注入 `TemplateReader`，建立 in-memory reader，再逐批移除 static caller；不要一次刪除相容 API。
 
-`ItemPickupAndEntitySyncTest` 有一段直接手動把第二份掉落物加入 pouch，驗證的是資料結構而非實際 LivingService merge 流程；`DataDrivenExpansionTest.testTalkCommandExecution()` 主要執行 command，缺少回覆或狀態 assertion；大量 `@SpringBootTest` 讓純邏輯測試依賴完整 context。
+## P3：文件與測試治理
 
-建議：
+### P3-1：SP、Rage、Combo 的現行程式與白皮書不一致
 
-- 為每個高風險 command/service 測試寫出可失敗的行為 assertion。
-- 將純 mapper、公式、value object、parser 測試降級為 POJO unit test。
-- 保留少量真正的 Spring integration test，測 session、repository、template loading 與完整遊戲流程。
-- 對 dynamic `TemplateRepository` 測試建立獨立 reader 或明確 `@AfterEach` 清理。
-- 文件不要固定宣稱 134 或 141 項測試；以 Maven／CI 實際報告為準。
+最新提交的白皮書宣稱統一 HP/MP/SP，但 [DrpgCombatLoop.java](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java#L181-L195) 仍累積 SP，並依 `ResourceType` 同時累積 Rage 或 Combo；`PartyMember`、`CombatResourceType` 與前端也仍保留舊資源。這是 migration 未完成，不應在文件中寫成已完成的三槽模型。
 
-### 4.3 建置腳本與日誌設定是低成本工程改善
+請明確標註現行相容層與目標模型，定義存檔版本、讀寫轉換與單一成本來源，再移除舊資源。
 
-[run.bat](../../run.bat) 與 [test.bat](../../test.bat) 仍含固定 `C:\Workspace\DevTools` 路徑，雖然有 Maven wrapper fallback；PowerShell 腳本則同時支援系統工具與 wrapper。建議讓 `.bat` 與 `.ps1` 共用一致的偵測順序，並在啟動時檢查 Java major version。
+### P3-2：`docs/plans` 與 `docs/references` 有過時數字和 6 人描述
 
-[logback-spring.xml](../../src/main/resources/logback-spring.xml) 已定義 RollingFileAppender，但 root 的 FILE appender 被註解，因此實際只輸出 console。若 production 需要故障追蹤，應依 profile 啟用檔案輸出、設定合理的 history 與敏感資料遮罩；若刻意不寫檔，應刪除未啟用的設定以免造成錯誤期待。
+目前程式的 [Party.java](../../src/main/java/com/example/htmlmud/domain/party/model/Party.java#L20-L21) 上限是 5，但 `2026-09-18_data_driven_architecture_and_entity_relations.md`、`FUTURE_IMPROVEMENTS.md` 與部分前端註解仍寫 6 人；`docs/references/README.md`、`GEMINI.md`、`WALKTHROUGH.md` 也固定寫不同的測試／技能數字。這些數字會誤導後續實作與 review。
 
-`application-dev.yml` 已將 H2 console 限制為本機，`application-prod.yml` 已停用 H2；WebSocket origin 也已改為白名單設定。這些不是目前應再次實作的 P0，但 production 啟動時應對缺少 `APP_WEBSOCKET_ALLOWED_ORIGINS`、`DB_PASSWORD` 等必要環境變數做明確 fail-fast／部署檢查。
+應改成「以 CI 報告與資料掃描為準」，或明確標註歷史快照；移除 6 人規格殘留。文件中的設計草案也應標記 `current`、`target` 或 `historical`。
 
-## 5. 不建議現在直接做的工作
+### P3-3：本次測試無法執行，不能宣稱基準通過
 
-1. **全面改名 Direction／ResourceType：**除非已有實際誤用或 API 混淆，否則會牽涉 JSON、存檔與前端序列化，收益低於相容成本。
-2. **一次完成 Canonical Item／Skill Model：**物品、技能、戰鬥、存檔與 DTO 同時變動，回歸面過大；先用未知 item failure、mapper 與一個消耗品／技能做垂直試點。
-3. **全面 ports-and-adapters 化：**先處理真正阻礙測試、產生循環依賴或造成身份邊界不清的依賴；形式上的介面數量不是目標。
-4. **只按檔案行數拆分前端：**先修輸出安全與 DOM 建構，再按穩定責任邊界抽出 WebSocket client、town view、battle view；每次拆分都要跑瀏覽器 smoke test。
-5. **以 Thread.sleep 全面替換為新套件：**先改造成 flaky 或拖慢 suite 的等待；遊戲節奏本身的延遲不應與測試等待混為一談。
+已執行 `mvnw.cmd test`，Maven 在 compile 階段因目前環境是 Temurin Java 8，而 `pom.xml` 要求 `release 25`，以 `invalid target release: 25` 結束。這是環境阻塞，不是測試通過；安裝並選用 JDK 25 後應重新執行完整 suite，再保存實際 Surefire 統計。
 
-## 6. 建議實作順序
+## 已確認不應重列為現行 P1
 
-### Phase 0：定義執行模型與建立基準
+- H2 console 遠端存取已由 `application-dev.yml`／production profile 限制。
+- WebSocket origin 已改為設定白名單，不再是 `*`。
+- `AuthService.register()` 已使用驗證與注入的 `PasswordEncoder`。
+- `VirtualActor` 的 self-deadlock、例外隔離與 Room shared scheduler 已有修復及測試。
+- 物品 namespace 完整性已有 `DataNamespaceIntegrityTest` 防線。
+- Party 執行時上限已是 5；目前剩餘的是文件與註解漂移。
+- 前端巨石已拆成 ES6 模組；後續 review 應針對各模組的輸出 context，不應再以「尚未拆分」列缺陷。
 
-**目標：**決定匿名單機或 authenticated account 模式，並保存目前可回歸的基準。
+## 建議實作順序
 
-- 固定 JDK 25、Maven wrapper 與 profile 的 CI 建置。
-- 執行完整 `mvnw test`，保存測試數與失敗報告，不把數字硬編進文件。
-- 為 WebSocket 建立一個連線 smoke test，確認連線後的 state、identity 與可用 command。
-- 寫下 session identity、player ID、display name 的責任與生命週期。
+### Phase 0：建立身份與可重現基準
 
-**完成條件：**身份模型有一個明確入口；匿名模式若保留，文件寫明它不是多人安全模型。
+- 決定匿名單機或 authenticated account 模式，並記錄 session、`CharacterId`、player ID、display name 的生命週期。
+- 使用 JDK 25 執行完整 `mvnw test`，以 Surefire 實際結果作基準。
+- 建立 WebSocket smoke test，驗證連線 identity、重連、讀檔與 disconnect。
 
-### Phase 1：封住身份、存檔與前端輸出邊界
+### Phase 1：封住存檔與輸出邊界
 
-**目標：**先處理實際可造成資料越權或 DOM 注入的問題。
+- 實作 owner-scoped save API、slot validation、migration、atomic write 與跨 owner 測試。
+- 將 save、town、party、bag 與 ANSI rendering 的動態值改為安全 DOM 建構。
+- 對名稱、標題、描述加入 server-side input constraints 與回歸 payload。
 
-- 在 SaveGameService 集中檢查 slot 範圍、owner、舊檔 migration 與 root containment。
-- 依 Phase 0 的 identity 決定是否分 owner directory；補跨 owner save/load/list/delete 測試。
-- 逐點修補 drpg view 的動態文字，優先主角名稱、存檔資料、NPC、物品、敵人與樓層名稱。
-- 確認 ANSI 轉 HTML 的 escaping 行為，補輸入型回歸測試。
-- 若啟用帳號，恢復有效重試限制、統一登入錯誤訊息與 rate limit；若不啟用，移除未接通的 Auth flow。
+### Phase 2：修正可觀察的玩法與資料錯誤
 
-**完成條件：**未驗證 caller 無法操作其他 owner 的存檔；明確不可信文字不再直接進入 HTML 結構；WebSocket smoke test 使用正確 identity。
+- 修正 miss sentinel、loot pouch actor 原子性與 99/maxStack 堆疊。
+- 移除未知物品的 substring fallback，讓錯誤 ID 帶出明確診斷。
+- 將整合測試接到真實 command/service path，不以手動修改資料結構代替行為測試。
 
-### Phase 2：資料完整性與 fallback 收斂
+### Phase 3：收斂戰鬥與同步契約
 
-**目標：**讓錯誤資料立即可見，不再靜默產生假物品。
+- 建立 Player／PartyMember／Battle state ownership 表與 `BattleOutcome`。
+- 以 deterministic tests 完成 Dodge／Parry／Block／Stamina，再整理 SP、Rage、Combo migration。
+- 確認勝利、失敗、逃跑、死亡、掉落、技能 XP 與重複結算的 idempotency。
 
-- 為 template ID、房間出口、鎖匙、掉落、商店商品與技能 mapping 建立跨檔完整性測試。
-- 將 `PartyInventory.createFromTemplate` 的 substring fallback 改成 unknown-item 或可診斷的 domain failure。
-- 把 PartyItemSlot／GameItem 的轉換集中到 mapper，保留舊存檔讀取相容性。
-- 把 loot pouch integration test 改為呼叫實際掉落合併服務，而非手動重演 merge。
+### Phase 4：漸進式解耦與文件同步
 
-**完成條件：**未知 ID 會明確失敗並帶出 ID；資料完整性測試能指出檔案與關聯名稱；舊存檔仍能載入。
+- 逐批把 production template lookup 改為注入 `TemplateReader`，最後才移除 static facade。
+- 更新 `docs/plans`、`docs/references`、`GEMINI.md` 與 `WALKTHROUGH.md` 的 current/target 狀態；不再硬編測試數字。
 
-### Phase 3：漸進式 TemplateReader DI
+## 最終判斷
 
-**目標：**改善測試隔離與資料來源可追蹤性。
-
-- 盤點 `TemplateRepository.`、`getInstance()`、`new TemplateCatalog()` 的 production 呼叫點。
-- 先遷移 factory、service、adapter，再處理 DTO assembler。
-- 建立 test-only `InMemoryTemplateReader`，讓純邏輯測試不依賴 static registry 或完整 Spring context。
-- 最後才移除 static compatibility API，並用架構檢查禁止新增 static caller。
-
-**完成條件：**production code 只透過 `TemplateReader` 取得模板；測試可獨立建立資料；兩次不同順序的測試執行不互相污染。
-
-### Phase 4：明確角色 ownership 與 BattleOutcome
-
-**目標：**避免雙向整份 stats 複製造成狀態覆寫。
-
-- 先列出 Player、PartyMember、battle state 的欄位 owner。
-- 建立 immutable battle snapshot 與 outcome，先改 XP 或 HP/MP 一條路徑。
-- 在 actor thread 套用 outcome，加入 battle ID／idempotency key，防止重送重複發獎。
-- 逐條補勝利、失敗、逃跑、死亡、掉落與技能進度的 integration test。
-
-**完成條件：**每個同步欄位都有明確 owner 和測試；戰鬥服務不再直接任意修改 Player；完成全部路徑後才刪除舊 copy API。
-
-### Phase 5：依實際摩擦決定大型重構
-
-只有當前面階段顯示收益足夠時，才評估：Canonical Item／Skill Model、Domain output ports、enum rename、前端 ES modules 與 CSS 拆分。每一項都應有單獨 plan、相容策略、回退界線與 focused test，不要合併成一次大改。
-
-## 7. 文件與架構紀錄建議
-
-- `FUTURE_IMPROVEMENTS.md` 應移除或標示已完成的 H2、Origin、Auth、Actor、Room scheduler 與新手村鑰匙項目；目前它們仍以「現狀問題」描述，會誘導後續 AI 重做。
-- 將 WebSocket identity／匿名單機邊界新增為明確 ADR，因為它控制存檔、Auth、session 與未來多人化的所有決策。
-- 將「已證實缺陷」「條件式風險」「架構偏好」分欄記錄，並為每個待辦增加觸發條件、完成條件、相容風險與測試名稱。
-- `README.md` 的規則可以保留，但計畫索引應補上本 review，並在重大實作完成後同步更新狀態，不只更新測試數字。
-
-## 8. 最終判斷
-
-Codex review 對「不要一次做大型模型重構」的主張是合理的；本次 review 的主要補充是把身份／存檔邊界提升到第一順位，因為目前 WebSocket 入口尚未真正使用 Auth。Actor 防護與 H2／Origin 基本設定不需重做；前端 XSS、存檔 owner、登入狀態機、物品 fallback 與測試真實性則應依上述 Phase 0 到 Phase 2 優先處理。
-
-最重要的工程原則是：先讓身份、資料 owner、輸出 context 和失敗行為可觀測，再進行 Canonical Model 或 Clean Architecture 的大型整理。這樣每個後續重構都有可驗證的邊界，也保留舊存檔與既有玩法的回退空間。
+專案的資料驅動與模組化方向已比 2026-09-23 明顯前進，舊 review 中的 H2、origin、Actor scheduler、namespace 與前端巨石問題不應重做。現在真正需要先處理的是 identity／save ownership 與輸出安全；同時修掉 miss、loot merge、stack cap 和 unknown-item fallback 這些可直接影響遊戲結果的缺陷。大型 Canonical Model 或 Clean Architecture 重構應延後，直到上述契約有測試保護且文件已區分現行與目標模型。
