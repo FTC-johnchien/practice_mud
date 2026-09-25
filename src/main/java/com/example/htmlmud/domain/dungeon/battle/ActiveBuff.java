@@ -27,6 +27,7 @@ public class ActiveBuff {
   private String sourceSkillId;         // 來源招式 ID (如: class_cleric_bless)
   private String sourceCasterId;        // 施法者 ID (如: m-ling_shuang)
   private String name;                  // 狀態名稱 (如: 金光辟邪護體)
+  private String description;           // 狀態說明描述
   @Builder.Default
   private String icon = "✨";           // 前端小圖標 (如: 🛡️, 🌿, 🧪, ⚡)
   @Builder.Default

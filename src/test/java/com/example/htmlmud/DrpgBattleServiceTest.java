@@ -18,24 +18,23 @@ import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.service.PartyService;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
 class DrpgBattleServiceTest {
 
+  @Autowired
   private PartyService partyService;
+  @Autowired
   private DungeonManager dungeonManager;
+  @Autowired
   private DrpgBattleService battleService;
   private Player dummyPlayer;
   private DungeonPosition dungeonPos;
 
   @BeforeEach
   void setUp() {
-    dungeonManager = new DungeonManager();
-    dungeonManager.init();
-
-    partyService = new PartyService();
-    partyService.initDefaultFormations();
-
-    battleService = new DrpgBattleService(partyService, dungeonManager);
-
     dummyPlayer = mock(Player.class);
     when(dummyPlayer.getName()).thenReturn("tester");
     when(dummyPlayer.isValid()).thenReturn(true);

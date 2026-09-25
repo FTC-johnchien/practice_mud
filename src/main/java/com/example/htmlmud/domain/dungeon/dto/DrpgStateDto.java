@@ -10,6 +10,7 @@ import com.example.htmlmud.domain.dungeon.model.DungeonTile;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.CombatResourceType;
+import com.example.htmlmud.domain.party.model.FormationTemplate;
 import com.example.htmlmud.domain.repository.TemplateReader;
 import com.example.htmlmud.domain.service.TemplateCatalog;
 
@@ -369,6 +370,36 @@ public record DrpgStateDto(
     String ultName = (party.getEquippedFormation() != null && party.getEquippedFormation().getUltimateSkill() != null)
         ? party.getEquippedFormation().getUltimateSkill().getName() : "";
 
+    List<PartyFormationOptionDto> availableFormations = new ArrayList<>();
+    if (templateReader != null && templateReader.getAllFormations() != null) {
+      int partySize = party.getMembers().size();
+      for (FormationTemplate ft : templateReader.getAllFormations().values()) {
+        if (ft.getRequiredPartySize() == partySize) {
+          boolean current = party.getEquippedFormation() != null && ft.getId().equals(party.getEquippedFormation().getId());
+          List<String> missing = ft.checkClassRequirements(party);
+          boolean selectable = missing.isEmpty();
+          String lockReason = selectable ? null : "缺少職業: " + String.join(", ", missing);
+          String fUlt = ft.getUltimateSkill() != null ? ft.getUltimateSkill().getName() : "";
+          availableFormations.add(new PartyFormationOptionDto(
+              ft.getId(),
+              ft.getName(),
+              ft.getDescription(),
+              ft.getRequiredPartySize(),
+              ft.isBasic(),
+              ft.getRequiredClasses() != null ? ft.getRequiredClasses() : List.of(),
+              current,
+              selectable,
+              lockReason,
+              fUlt
+          ));
+        }
+      }
+      availableFormations.sort((a, b) -> {
+        if (a.basic() != b.basic()) return a.basic() ? -1 : 1;
+        return a.id().compareTo(b.id());
+      });
+    }
+
     PartyInventoryViewDto invView = PartyInventoryViewDto.of(party.getInventory());
 
     return new PartyViewDto(
@@ -378,7 +409,8 @@ public record DrpgStateDto(
         ultName,
         party.canCastUltimate(),
         memberViews,
-        invView
+        invView,
+        availableFormations
     );
   }
 
@@ -514,6 +546,19 @@ public record DrpgStateDto(
     }
   }
 
+  public record PartyFormationOptionDto(
+      String id,
+      String name,
+      String description,
+      int requiredPartySize,
+      boolean basic,
+      List<String> requiredClasses,
+      boolean current,
+      boolean selectable,
+      String lockReason,
+      String ultimateSkillName
+  ) {}
+
   public record PartyViewDto(
       String name,
       String formationName,
@@ -521,8 +566,21 @@ public record DrpgStateDto(
       String ultimateSkillName,
       boolean canCastUltimate,
       List<PartyMemberViewDto> members,
-      PartyInventoryViewDto inventory
-  ) {}
+      PartyInventoryViewDto inventory,
+      List<PartyFormationOptionDto> availableFormations
+  ) {
+    public PartyViewDto(
+        String name,
+        String formationName,
+        int formationEnergy,
+        String ultimateSkillName,
+        boolean canCastUltimate,
+        List<PartyMemberViewDto> members,
+        PartyInventoryViewDto inventory
+    ) {
+      this(name, formationName, formationEnergy, ultimateSkillName, canCastUltimate, members, inventory, List.of());
+    }
+  }
 
   public record PartyMemberViewDto(
       String id,

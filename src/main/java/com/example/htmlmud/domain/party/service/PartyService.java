@@ -105,8 +105,31 @@ public class PartyService {
     if (ft == null) {
       ft = templateReader.findFormation(id).orElse(null);
     }
-
     return ft;
+  }
+
+  public List<FormationTemplate> getFormationsForPartySize(int partySize) {
+    if (formationRegistry.isEmpty()) {
+      initDefaultFormations();
+    }
+    return formationRegistry.values().stream()
+        .filter(f -> f.getRequiredPartySize() == partySize)
+        .toList();
+  }
+
+  public FormationTemplate getBasicFormationForPartySize(int partySize) {
+    if (formationRegistry.isEmpty()) {
+      initDefaultFormations();
+    }
+    return formationRegistry.values().stream()
+        .filter(f -> f.getRequiredPartySize() == partySize && f.isBasic())
+        .findFirst()
+        .orElseGet(() -> switch (partySize) {
+          case 2 -> getFormation("formation_liang_yi");
+          case 3 -> getFormation("formation_san_cai");
+          case 4 -> getFormation("formation_four_symbols");
+          default -> getFormation("formation_five_elements");
+        });
   }
 
   public Party createInitialParty(String leaderName) {
@@ -114,7 +137,7 @@ public class PartyService {
   }
 
   public Party createSoloParty(String leaderName) {
-    FormationTemplate form = getFormation("formation_four_symbols");
+    FormationTemplate form = getBasicFormationForPartySize(5);
     PartyInventory inv = new PartyInventory(PartyInventory.DEFAULT_CAPACITY, templateReader);
     // 開局初始配置應急物資
     inv.addItem("taiyin_pill", 3);
@@ -149,6 +172,7 @@ public class PartyService {
     recruitCompanion(party, "yan_qing");
     recruitCompanion(party, "ling_shuang");
     recruitCompanion(party, "mo_yan");
+    party.validateAndAlignFormation(this);
     return party;
   }
 
@@ -332,6 +356,7 @@ public class PartyService {
     if (alreadyInParty) return false;
 
     party.addMember(companion);
+    party.validateAndAlignFormation(this);
     return true;
   }
 
@@ -354,6 +379,7 @@ public class PartyService {
     }
 
     party.removeMember(target.getId());
+    party.validateAndAlignFormation(this);
     return true;
   }
 
@@ -437,6 +463,16 @@ public class PartyService {
       }
       sb.append("\n   威能: 基礎威力 ").append(ult.getBasePower()).append("，").append(ult.getDescription()).append("\n");
     }
+    sb.append("編制規格: ").append(formation.getRequiredPartySize()).append(" 人隊伍");
+    if (formation.isBasic()) {
+      sb.append(" (基本陣法)\n");
+    } else {
+      sb.append(" (進階陣法");
+      if (formation.getRequiredClasses() != null && !formation.getRequiredClasses().isEmpty()) {
+        sb.append(" - 需求職業: ").append(formation.getRequiredClasses().stream().map(FormationTemplate::formatClassName).collect(java.util.stream.Collectors.joining("、")));
+      }
+      sb.append(")\n");
+    }
     sb.append("--- 陣位孔位加成 ---\n");
     for (FormationSlot s : formation.getSlots()) {
       sb.append(String.format("  [%d號位] %-12s (站位需求:%-2s) 攻:x%.2f 防:x%.2f 抗SAN:%+d | %s\n",
@@ -459,13 +495,17 @@ public class PartyService {
     if (success) {
       PartyMember added = party.getMembers().get(party.getMembers().size() - 1);
       self.reply("\u001B[1;32m🤝【結識同道】「" + added.getName() + "」爽朗抱拳應允，正式加入【" + party.getPartyName() + "】！\u001B[0m\n"
-          + "【" + added.getName() + "】(" + added.getRoleTitle() + ") 當前站位: " + (added.getRow() == RowPosition.FRONT ? "前衛" : "後衛"));
+          + "【" + added.getName() + "】(" + added.getRoleTitle() + ") 當前站位: " + (added.getRow() != null ? added.getRow().getChineseName() : "前衛"));
+      String notice = party.validateAndAlignFormation(this);
+      if (notice != null) {
+        self.reply(notice);
+      }
     } else {
       boolean alreadyIn = party.getMembers().stream().anyMatch(m -> m.getName().equalsIgnoreCase(target) || m.getId().equalsIgnoreCase(target));
       if (alreadyIn) {
         self.reply("【同道同行】「" + target + "」已身處隊伍之中，與你生死與共。");
       } else {
-        self.reply("此地並未見到能結納為同道的「" + target + "」。(可招募夥伴：鐵牛 tie_niu、凌霜 ling_shuang)");
+        self.reply("此地並未見到能結納為同道的「" + target + "」。(可招募夥伴：鐵牛 tie_niu、凌霜 ling_shuang、燕青 yan_qing、墨衍 mo_yan)");
       }
     }
     if (broadcastService != null) {
@@ -480,6 +520,10 @@ public class PartyService {
     boolean success = dismissCompanion(party, target);
     if (success) {
       self.reply("\u001B[1;33m👋【道別】已將隊員「" + target + "」請離隊伍，其已抱拳告辭返回客棧安歇。\u001B[0m");
+      String notice = party.validateAndAlignFormation(this);
+      if (notice != null) {
+        self.reply(notice);
+      }
     } else {
       self.reply("無法請離「" + target + "」（隊長不可離隊，或隊伍中查無此人）。");
     }

@@ -80,28 +80,56 @@ public class FormationCommand implements PlayerCommand {
         broadcastDrpgState(self);
       }
       case "list" -> {
+        int partySize = party.size();
+        var formations = partyService.getFormationsForPartySize(partySize);
+        if (formations.isEmpty()) {
+          self.reply("目前隊伍人數（" + partySize + "人）無對應的陣法。");
+          return;
+        }
         StringBuilder sb = new StringBuilder();
-        sb.append("=== 可用道門陣法列表 ===\n");
-        sb.append("1. formation_four_symbols  - 《四象辟邪陣》（正統道門防禦鎮魔大陣）\n");
-        sb.append("2. formation_xuan_yin       - 《玄陰噬魂陣》（不可名狀域外星煞禁忌邪陣）\n");
+        sb.append("=== 【").append(partySize).append("人隊伍】可用道門陣法列表 ===\n");
+        int idx = 1;
+        for (var ft : formations) {
+          boolean isCurrent = party.getEquippedFormation() != null && ft.getId().equals(party.getEquippedFormation().getId());
+          var missing = ft.checkClassRequirements(party);
+          String status;
+          if (isCurrent) {
+            status = " [✔ 運轉中]";
+          } else if (missing.isEmpty()) {
+            status = " [可結成]";
+          } else {
+            status = " [不可選 - 缺少職業: " + String.join(", ", missing) + "]";
+          }
+          sb.append(idx++).append(". ").append(ft.getId()).append(" - 《").append(ft.getName()).append("》").append(status).append("\n");
+          sb.append("   說明: ").append(ft.getDescription()).append("\n");
+        }
         sb.append("切換陣法語法: formation equip <陣法ID>\n");
         self.reply(sb.toString());
       }
       case "equip" -> {
         if (parts.length < 2) {
-          self.reply("用法: formation equip <formation_four_symbols | formation_xuan_yin>");
+          self.reply("用法: formation equip <陣法ID>");
           return;
         }
         String formId = parts[1];
         FormationTemplate ft = partyService.getFormation(formId);
-        if (ft != null) {
-          party.setEquippedFormation(ft);
-          self.reply("【變換陣法】小隊已成功結成【" + ft.getName() + "】！\n"
-              + partyService.formatFormationDetails(ft));
-          broadcastDrpgState(self);
-        } else {
+        if (ft == null) {
           self.reply("查無此陣法 ID，請使用 formation list 查看。");
+          return;
         }
+        if (ft.getRequiredPartySize() != party.size()) {
+          self.reply("【人數不符】無法結成【" + ft.getName() + "】！此陣法需要 " + ft.getRequiredPartySize() + " 人，當前隊伍人數為 " + party.size() + " 人。");
+          return;
+        }
+        var missing = ft.checkClassRequirements(party);
+        if (!missing.isEmpty()) {
+          self.reply("【隊伍組成不符】無法結成【" + ft.getName() + "】！缺少必要職業: " + String.join(", ", missing) + "。");
+          return;
+        }
+        party.setEquippedFormation(ft);
+        self.reply("【變換陣法】小隊已成功結成【" + ft.getName() + "】！\n"
+            + partyService.formatFormationDetails(ft));
+        broadcastDrpgState(self);
       }
       case "cast", "ult" -> {
         if (battleService.isInBattle(self.getName())) {
@@ -131,26 +159,42 @@ public class FormationCommand implements PlayerCommand {
       default -> {
         self.reply("【道門陣法指令】\n"
             + "  formation               - 檢視當前陣法孔位倍率與專屬大招\n"
-            + "  formation list          - 列出所有已掌握的陣法\n"
-            + "  formation equip <ID>    - 切換結成指定陣法 (四象辟邪陣 / 玄陰噬魂陣)\n"
+            + "  formation list          - 列出符合當前隊伍人數的所有陣法\n"
+            + "  formation equip <ID>    - 切換結成指定陣法 (如 formation_five_elements)\n"
             + "  formation cast          - 釋放小隊陣法專屬奧義大招 (需 100 靈威)");
       }
     }
   }
 
   private void toggleFormation(Player self, Party party) {
-    FormationTemplate current = party.getEquippedFormation();
-    String targetId = (current != null && "formation_four_symbols".equals(current.getId()))
-        ? "formation_xuan_yin"
-        : "formation_four_symbols";
-    FormationTemplate next = partyService.getFormation(targetId);
-    if (next != null) {
-      party.setEquippedFormation(next);
-      self.reply("【變換道門陣法】小隊結成【" + next.getName() + "】！\n"
-          + partyService.formatFormationDetails(next));
-    } else if (current != null) {
-      self.reply(partyService.formatFormationDetails(current));
+    int partySize = party.size();
+    var eligible = partyService.getFormationsForPartySize(partySize).stream()
+        .filter(f -> f.isEligibleForParty(party))
+        .toList();
+    if (eligible.isEmpty()) {
+      if (party.getEquippedFormation() != null) {
+        self.reply(partyService.formatFormationDetails(party.getEquippedFormation()));
+      } else {
+        self.reply("目前隊伍人數無可用陣法。");
+      }
+      broadcastDrpgState(self);
+      return;
     }
+    FormationTemplate current = party.getEquippedFormation();
+    int curIdx = -1;
+    if (current != null) {
+      for (int i = 0; i < eligible.size(); i++) {
+        if (eligible.get(i).getId().equals(current.getId())) {
+          curIdx = i;
+          break;
+        }
+      }
+    }
+    int nextIdx = (curIdx + 1) % eligible.size();
+    FormationTemplate next = eligible.get(nextIdx);
+    party.setEquippedFormation(next);
+    self.reply("【變換道門陣法】小隊結成【" + next.getName() + "】！\n"
+        + partyService.formatFormationDetails(next));
     broadcastDrpgState(self);
   }
 

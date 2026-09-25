@@ -411,35 +411,85 @@ function renderTeamFormationView(party) {
 
       <!-- 3. 道門可用陣法典籍庫 -->
       <div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:16px;">
-        <div style="font-size:15px;font-weight:bold;color:#e2e8f0;margin-bottom:10px;">📜 道門陣法典籍庫</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:15px;font-weight:bold;color:#e2e8f0;">📜 道門陣法典籍庫 (${(party.members || []).length}人陣)</div>
+          <div style="font-size:11px;color:#94a3b8;">人數變更時自動篩選匹配陣法，未達職業限制則退回該人數基本陣法</div>
+        </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:12px;">
-          <!-- 四象辟邪陣 -->
-          <div style="background:#0f172a;border:1px solid ${isSymbols ? '#38bdf8' : '#334155'};border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-weight:bold;color:#38bdf8;font-size:14px;">☯️ 《四象辟邪陣》</span>
-              ${isSymbols
-                ? '<span style="font-size:11px;color:#34d399;font-weight:bold;">✔ 當前運轉中</span>'
-                : '<button class="act-btn btn-sm" onclick="send(\'formation equip formation_four_symbols\')" style="padding:3px 10px;font-size:11px;background:#0284c7;color:#fff;">結成此陣</button>'}
-            </div>
-            <div style="font-size:11px;color:#cbd5e1;">正統道門防禦大陣。四相真靈護體，隊伍受到物理與法術傷害減免 15%，道心守護，步步為營。</div>
-            <div style="font-size:11px;color:#facc15;">專屬奧義：【四象封魔印】（群體靈能重創 + 敵方全體弱化）</div>
-          </div>
-
-          <!-- 玄陰噬魂陣 -->
-          <div style="background:#0f172a;border:1px solid ${!isSymbols ? '#a855f7' : '#334155'};border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-weight:bold;color:#c084fc;font-size:14px;">💀 《玄陰噬魂陣》</span>
-              ${!isSymbols
-                ? '<span style="font-size:11px;color:#34d399;font-weight:bold;">✔ 當前運轉中</span>'
-                : '<button class="act-btn btn-sm" onclick="send(\'formation equip formation_xuan_yin\')" style="padding:3px 10px;font-size:11px;background:#7e22ce;color:#fff;">結成此陣</button>'}
-            </div>
-            <div style="font-size:11px;color:#cbd5e1;">太陰古墓禁忌凶陣。引動九幽星煞，隊伍暴擊率 +20%，敵弱我強，斬殺強敵反哺靈威。</div>
-            <div style="font-size:11px;color:#facc15;">專屬奧義：【百鬼噬心】（幽冥群體穿甲撕裂 + 流血重創）</div>
-          </div>
+          ${renderFormationCards(party)}
         </div>
       </div>
     </div>
   `;
+}
+
+function formatFormationClassName(c) {
+  if (!c) return '';
+  switch (c) {
+    case 'WARRIOR': return '體修(戰)';
+    case 'MAGE': return '符修(法)';
+    case 'CLERIC': return '丹修(牧)';
+    case 'ROGUE': return '遊俠(刺)';
+    case 'SWORDSMAN': return '劍修';
+    default: return c;
+  }
+}
+
+function renderFormationCards(party) {
+  const list = party.availableFormations || [];
+  if (list.length === 0) {
+    return `
+      <div style="color:#94a3b8;font-size:12px;padding:12px;grid-column:1/-1;">
+        當前人數（${(party.members || []).length}人）無可用陣法或載入中...
+      </div>
+    `;
+  }
+
+  return list.map(f => {
+    const isCurrent = Boolean(f.current);
+    const isSelectable = Boolean(f.selectable);
+    const borderColor = isCurrent ? '#38bdf8' : (f.basic ? '#334155' : '#475569');
+    const titleColor = isCurrent ? '#38bdf8' : (f.basic ? '#7dd3fc' : '#c084fc');
+
+    let actionBtn = '';
+    if (isCurrent) {
+      actionBtn = '<span style="font-size:11px;color:#34d399;font-weight:bold;background:rgba(52,211,153,0.15);padding:2px 8px;border-radius:4px;border:1px solid #34d399;">✔ 當前運轉中</span>';
+    } else if (isSelectable) {
+      actionBtn = `<button class="act-btn btn-sm" onclick="send('formation equip ${f.id}')" style="padding:3px 10px;font-size:11px;background:#0284c7;color:#fff;">結成此陣</button>`;
+    } else {
+      actionBtn = `<span style="font-size:11px;color:#ef4444;background:rgba(239,68,68,0.15);border:1px solid #ef4444;padding:2px 8px;border-radius:4px;" title="${f.lockReason || '隊伍條件不符'}">🔒 不可選 (${f.lockReason || '條件不符'})</span>`;
+    }
+
+    const typeBadge = f.basic
+      ? '<span style="font-size:10px;background:#059669;color:#ecfdf5;padding:1px 6px;border-radius:3px;">基本陣法</span>'
+      : '<span style="font-size:10px;background:#7c3aed;color:#ede9fe;padding:1px 6px;border-radius:3px;">進階陣法</span>';
+
+    const reqClassesHtml = (f.requiredClasses && f.requiredClasses.length > 0)
+      ? `<div style="font-size:11px;color:#fbbf24;display:flex;align-items:center;gap:4px;">
+           <span>⚠️ 需職業：</span>
+           <span>${f.requiredClasses.map(formatFormationClassName).join('、')}</span>
+         </div>`
+      : '';
+
+    const ultHtml = f.ultimateSkillName
+      ? `<div style="font-size:11px;color:#facc15;">專屬奧義：【${f.ultimateSkillName}】</div>`
+      : '';
+
+    return `
+      <div style="background:#0f172a;border:1px solid ${borderColor};border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-weight:bold;color:${titleColor};font-size:14px;">☯️ 《${f.name}》</span>
+            ${typeBadge}
+          </div>
+          ${actionBtn}
+        </div>
+        ${reqClassesHtml}
+        <div style="font-size:11px;color:#cbd5e1;line-height:1.4;">${f.description || ''}</div>
+        ${ultHtml}
+      </div>
+    `;
+  }).join('');
 }
 
 function renderPartyModal() {

@@ -15,6 +15,8 @@ public class FormationSlot {
   @Builder.Default
   private RowPosition requiredRow = RowPosition.ANY;
   @Builder.Default
+  private RowPosition assignedRow = RowPosition.ANY;
+  @Builder.Default
   private double attackMultiplier = 1.0;
   @Builder.Default
   private double defenseMultiplier = 1.0;
@@ -23,4 +25,10 @@ public class FormationSlot {
   @Builder.Default
   private int sanResistanceBonus = 0;
   private String specialBonusDesc;
+
+  public RowPosition getAssignedRow() {
+    if (assignedRow != null && assignedRow != RowPosition.ANY) return assignedRow;
+    if (requiredRow != null && requiredRow != RowPosition.ANY) return requiredRow;
+    return assignedRow != null ? assignedRow : (requiredRow != null ? requiredRow : RowPosition.ANY);
+  }
 }

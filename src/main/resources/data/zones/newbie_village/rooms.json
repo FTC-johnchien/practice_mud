@@ -263,6 +263,24 @@
         "time": 60,
         "rate": 1,
         "isHidden": false
+      },
+      {
+        "type": "MOB",
+        "id": "yan_qing",
+        "count": 1,
+        "maxCount": 1,
+        "time": 60,
+        "rate": 1,
+        "isHidden": false
+      },
+      {
+        "type": "MOB",
+        "id": "mo_yan",
+        "count": 1,
+        "maxCount": 1,
+        "time": 60,
+        "rate": 1,
+        "isHidden": false
       }
     ]
   }

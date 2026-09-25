@@ -2,8 +2,11 @@ package com.example.htmlmud.domain.party.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.example.htmlmud.domain.dungeon.battle.ActiveBuff;
 import com.example.htmlmud.domain.model.entity.LivingStats;
+import com.example.htmlmud.domain.model.enums.BuffCategory;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
+import com.example.htmlmud.domain.party.service.PartyService;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
@@ -202,6 +205,93 @@ public class Party {
     return target.getName() + " 的【" + targetSlot.getDisplayName() + "】部位未穿戴任何裝備！";
   }
 
+  public void setEquippedFormation(FormationTemplate equippedFormation) {
+    this.equippedFormation = equippedFormation;
+    alignFormationRows();
+    refreshFormation();
+  }
+
+  public void alignFormationRows() {
+    if (members == null || members.isEmpty() || equippedFormation == null) return;
+    for (int i = 0; i < members.size(); i++) {
+      PartyMember m = members.get(i);
+      if (m == null) continue;
+      FormationSlot slot = equippedFormation.getSlot(i);
+      if (slot != null && slot.getAssignedRow() != null && slot.getAssignedRow() != RowPosition.ANY) {
+        m.setRow(slot.getAssignedRow());
+      }
+    }
+  }
+
+  public void refreshFormation() {
+    if (members == null || members.isEmpty()) return;
+    if (equippedFormation != null) {
+      for (int i = 0; i < members.size(); i++) {
+        PartyMember m = members.get(i);
+        if (m == null) continue;
+        FormationSlot slot = equippedFormation.getSlot(i);
+        if (slot != null) {
+          // 更新陣法常駐 Buff (先清除既有陣法 Buff，再掛載當前孔位之陣法常駐加成)
+          for (int j = 0; j < MAX_PARTY_SIZE; j++) {
+            m.removeBuff("buff_formation_slot_" + j);
+          }
+          ActiveBuff formBuff = ActiveBuff.builder()
+              .id("buff_formation_slot_" + i)
+              .name(slot.getSlotName())
+              .category(BuffCategory.STAT_MODIFIER)
+              .durationTicks(-1)
+              .remainingTicks(-1)
+              .description(slot.getSpecialBonusDesc())
+              .build();
+          m.addBuff(formBuff);
+        }
+      }
+    } else {
+      for (PartyMember m : members) {
+        if (m != null) {
+          for (int j = 0; j < MAX_PARTY_SIZE; j++) {
+            m.removeBuff("buff_formation_slot_" + j);
+          }
+        }
+      }
+    }
+  }
+
+  public String validateAndAlignFormation(PartyService partyService) {
+    if (members == null || members.isEmpty()) return null;
+    int currentSize = members.size();
+    boolean needsFallback = false;
+    String reason = null;
+
+    if (equippedFormation == null) {
+      needsFallback = true;
+    } else if (equippedFormation.getRequiredPartySize() > 0 && equippedFormation.getRequiredPartySize() != currentSize) {
+      needsFallback = true;
+      reason = "隊伍人數變更為 " + currentSize + " 人（原陣法為 " + equippedFormation.getRequiredPartySize() + " 人陣）";
+    } else {
+      List<String> missing = equippedFormation.checkClassRequirements(this);
+      if (!missing.isEmpty()) {
+        needsFallback = true;
+        reason = "隊伍成員調整後缺少必要職業: " + String.join("、", missing);
+      }
+    }
+
+    if (needsFallback) {
+      FormationTemplate fallback = (partyService != null) ? partyService.getBasicFormationForPartySize(currentSize) : null;
+      if (fallback != null) {
+        this.equippedFormation = fallback;
+        alignFormationRows();
+        refreshFormation();
+        return reason != null
+            ? "⚠️【陣法自動退回】因" + reason + "，陣法自動退回為 " + currentSize + " 人基本陣法【" + fallback.getName() + "】！"
+            : "【陣法適配】隊伍已自動結成 " + currentSize + " 人基本陣法【" + fallback.getName() + "】！";
+      }
+    } else {
+      refreshFormation();
+    }
+    return null;
+  }
+
   public boolean addMember(PartyMember member) {
     if (member == null || members.size() >= MAX_PARTY_SIZE) {
       return false;
@@ -210,8 +300,8 @@ public class Party {
     if (member.getRow() == null) {
       if (equippedFormation != null) {
         FormationSlot slot = equippedFormation.getSlot(members.size());
-        if (slot != null && slot.getRequiredRow() != RowPosition.ANY) {
-          member.setRow(slot.getRequiredRow());
+        if (slot != null && slot.getAssignedRow() != RowPosition.ANY) {
+          member.setRow(slot.getAssignedRow());
         }
       }
       if (member.getRow() == null) {
@@ -219,6 +309,7 @@ public class Party {
       }
     }
     members.add(member);
+    refreshFormation();
     return true;
   }
 
@@ -269,6 +360,11 @@ public class Party {
   }
 
   @JsonIgnore
+  public List<PartyMember> getMiddleRow() {
+    return members.stream().filter(m -> m.getRow() == RowPosition.MIDDLE && m.isAlive()).toList();
+  }
+
+  @JsonIgnore
   public List<PartyMember> getBackRow() {
     return members.stream().filter(m -> m.getRow() == RowPosition.BACK && m.isAlive()).toList();
   }
@@ -294,6 +390,7 @@ public class Party {
     PartyMember temp = members.get(idx1);
     members.set(idx1, members.get(idx2));
     members.set(idx2, temp);
+    refreshFormation();
     return true;
   }
 

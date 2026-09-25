@@ -1,9 +1,97 @@
 [
   {
+    "id": "formation_liang_yi",
+    "name": "兩儀微塵陣",
+    "description": "太陰初判，分立陰陽兩儀。一人前鋒定陽位，一人後方秉陰生，陰陽相濟，二人同心。",
+    "passiveAura": "【陰陽相生】全隊攻擊力提高 10%，受擊閃避機率提高 10%。",
+    "requiredPartySize": 2,
+    "basic": true,
+    "requiredClasses": [],
+    "ultimateSkill": {
+      "id": "skill_liang_yi_burst",
+      "name": "兩儀微塵破",
+      "description": "引陰陽雙生極光，合擊震退敵方先鋒並造成重創！",
+      "energyCost": 100,
+      "sanCost": 0,
+      "effectType": "AOE_DAMAGE",
+      "basePower": 140
+    },
+    "slots": [
+      {
+        "slotIndex": 0,
+        "slotName": "陽極【純陽破障】",
+        "assignedRow": "FRONT",
+        "attackMultiplier": 1.15,
+        "defenseMultiplier": 1.10,
+        "sanResistanceBonus": 5,
+        "specialBonusDesc": "前衛陽鋒：近戰威力+15%，承擔主要交鋒"
+      },
+      {
+        "slotIndex": 1,
+        "slotName": "陰極【素陰生息】",
+        "assignedRow": "BACK",
+        "attackMultiplier": 1.10,
+        "defenseMultiplier": 1.05,
+        "sanResistanceBonus": 10,
+        "specialBonusDesc": "後衛陰華：道術傷害與治療效果+10%"
+      }
+    ]
+  },
+  {
+    "id": "formation_san_cai",
+    "name": "三才聚靈陣",
+    "description": "取天、地、人三才相成之妙。天位主生殺破軍，地位承濁煞地載，人位引天地靈氣調和。",
+    "passiveAura": "【三才合一】全隊暴擊率提高 10%，道心動搖機率下降 15%。",
+    "requiredPartySize": 3,
+    "basic": true,
+    "requiredClasses": [],
+    "ultimateSkill": {
+      "id": "skill_san_cai_aura",
+      "name": "三才太極印",
+      "description": "聚三才之精氣，以太極大印鎮壓全體敵方，並淨化小隊異常！",
+      "energyCost": 100,
+      "sanCost": 0,
+      "effectType": "AOE_DAMAGE",
+      "basePower": 160
+    },
+    "slots": [
+      {
+        "slotIndex": 0,
+        "slotName": "天位【浩然天樞】",
+        "assignedRow": "FRONT",
+        "attackMultiplier": 1.20,
+        "defenseMultiplier": 1.05,
+        "sanResistanceBonus": 5,
+        "specialBonusDesc": "前衛天鋒：招式威力+20%"
+      },
+      {
+        "slotIndex": 1,
+        "slotName": "地位【厚土坤載】",
+        "assignedRow": "FRONT",
+        "attackMultiplier": 0.90,
+        "defenseMultiplier": 1.30,
+        "sanResistanceBonus": 10,
+        "specialBonusDesc": "前衛厚土：免傷+30%，承受主要打擊"
+      },
+      {
+        "slotIndex": 2,
+        "slotName": "人位【和光生靈】",
+        "assignedRow": "BACK",
+        "attackMultiplier": 1.15,
+        "defenseMultiplier": 1.00,
+        "sanResistanceBonus": 15,
+        "specialBonusDesc": "後衛人合：全隊道心穩固，治療與道法+15%"
+      }
+    ]
+  },
+  {
     "id": "formation_four_symbols",
     "name": "四象辟邪陣",
     "description": "正統道家護法大陣，依青龍、白虎、朱雀、玄武四象而列，鎮守心神，破除污濁煞氣。",
     "passiveAura": "【辟邪靈言】全隊受擊傷害減少 10%，道心動搖機率下降 25%。",
+    "requiredPartySize": 4,
+    "basic": true,
+    "requiredClasses": [],
     "ultimateSkill": {
       "id": "skill_four_symbols_flame",
       "name": "四象純陽真火",
@@ -11,61 +99,250 @@
       "energyCost": 100,
       "sanCost": 0,
       "effectType": "AOE_DAMAGE",
-      "basePower": 120
+      "basePower": 180
     },
     "slots": [
       {
         "slotIndex": 0,
-        "slotName": "天樞【陣眼主位】",
-        "requiredRow": "FRONT",
-        "attackMultiplier": 1.15,
-        "defenseMultiplier": 1.10,
-        "sanResistanceBonus": 10,
-        "specialBonusDesc": "全招式威力+15%"
-      },
-      {
-        "slotIndex": 1,
-        "slotName": "天璇【玄武巨盾】",
-        "requiredRow": "FRONT",
+        "slotName": "玄武位【巨甲堅壁】",
+        "assignedRow": "FRONT",
         "attackMultiplier": 0.90,
         "defenseMultiplier": 1.35,
         "sanResistanceBonus": 15,
-        "specialBonusDesc": "免傷+35%，受擊率大幅提升"
+        "specialBonusDesc": "前衛主坦：免傷+35%，受擊率大幅提升"
       },
       {
-        "slotIndex": 2,
-        "slotName": "天璣【白虎先鋒】",
-        "requiredRow": "FRONT",
+        "slotIndex": 1,
+        "slotName": "白虎位【庚金裂風】",
+        "assignedRow": "FRONT",
         "attackMultiplier": 1.25,
         "defenseMultiplier": 1.05,
         "sanResistanceBonus": 0,
-        "specialBonusDesc": "近戰暴擊率提升"
+        "specialBonusDesc": "前衛先鋒：近戰暴擊率提升"
       },
       {
-        "slotIndex": 3,
-        "slotName": "天權【朱雀靈符】",
-        "requiredRow": "BACK",
+        "slotIndex": 2,
+        "slotName": "朱雀位【赤焰明炎】",
+        "assignedRow": "BACK",
         "attackMultiplier": 1.20,
         "defenseMultiplier": 0.95,
         "sanResistanceBonus": 5,
-        "specialBonusDesc": "道術傷害+20%"
+        "specialBonusDesc": "後衛法核：道術傷害+20%，受掩護"
       },
       {
-        "slotIndex": 4,
-        "slotName": "玉衡【青龍生息】",
-        "requiredRow": "BACK",
+        "slotIndex": 3,
+        "slotName": "青龍位【回春玉露】",
+        "assignedRow": "BACK",
         "attackMultiplier": 0.85,
         "defenseMultiplier": 1.00,
         "sanResistanceBonus": 20,
-        "specialBonusDesc": "治療效果+30%"
+        "specialBonusDesc": "後衛生息：治療效果+30%，仇恨極低"
+      }
+    ]
+  },
+  {
+    "id": "formation_five_elements",
+    "name": "五行混元陣",
+    "description": "道門五行五方正統大陣，金、木、水、火、土五元相生相剋，攻守皆備，混元無漏。",
+    "passiveAura": "【五行相生】全隊受擊傷害減免 10%，全招式威力提升 10%。",
+    "requiredPartySize": 5,
+    "basic": true,
+    "requiredClasses": [],
+    "ultimateSkill": {
+      "id": "skill_five_elements_blast",
+      "name": "五行朝元混沌破",
+      "description": "運轉五方靈華化作混沌劍氣，對敵方全體造成大範圍五行混元傷害！",
+      "energyCost": 100,
+      "sanCost": 0,
+      "effectType": "AOE_DAMAGE",
+      "basePower": 200
+    },
+    "slots": [
+      {
+        "slotIndex": 0,
+        "slotName": "金位【庚金天樞】",
+        "assignedRow": "FRONT",
+        "attackMultiplier": 1.15,
+        "defenseMultiplier": 1.10,
+        "sanResistanceBonus": 10,
+        "specialBonusDesc": "前衛金鋒：全招式威力+15%"
+      },
+      {
+        "slotIndex": 1,
+        "slotName": "土位【厚德坤盾】",
+        "assignedRow": "FRONT",
+        "attackMultiplier": 0.90,
+        "defenseMultiplier": 1.35,
+        "sanResistanceBonus": 15,
+        "specialBonusDesc": "前衛主坦：免傷+35%，受擊率大幅提升"
+      },
+      {
+        "slotIndex": 2,
+        "slotName": "木位【生生先鋒】",
+        "assignedRow": "FRONT",
+        "attackMultiplier": 1.25,
+        "defenseMultiplier": 1.05,
+        "sanResistanceBonus": 0,
+        "specialBonusDesc": "前衛先鋒：近戰招式威力+25%"
+      },
+      {
+        "slotIndex": 3,
+        "slotName": "火位【離火炎符】",
+        "assignedRow": "BACK",
+        "attackMultiplier": 1.20,
+        "defenseMultiplier": 0.95,
+        "sanResistanceBonus": 5,
+        "specialBonusDesc": "後衛法核：道術傷害+20%，受掩護"
+      },
+      {
+        "slotIndex": 4,
+        "slotName": "水位【潤下清泉】",
+        "assignedRow": "BACK",
+        "attackMultiplier": 0.85,
+        "defenseMultiplier": 1.00,
+        "sanResistanceBonus": 20,
+        "specialBonusDesc": "後衛生息：治療效果+30%，仇恨極低"
+      }
+    ]
+  },
+  {
+    "id": "formation_cross",
+    "name": "十字陣",
+    "description": "傳承自古典沙加傳奇的十字戰陣。前衛一人突前承接絕大部分近戰火力，中衛三人策應指揮，後衛一人專職施法救治。",
+    "passiveAura": "【十字先鋒】突前先鋒吸引全隊 65% 受擊率，全隊反擊暴擊率提高 15%。",
+    "requiredPartySize": 5,
+    "basic": false,
+    "requiredClasses": ["WARRIOR"],
+    "ultimateSkill": {
+      "id": "skill_cross_rush",
+      "name": "十字星輝衝擊",
+      "description": "全隊結成十字星芒向前突刺衝鋒，撕裂敵陣防禦並造成巨大破甲衝擊！",
+      "energyCost": 100,
+      "sanCost": 0,
+      "effectType": "AOE_DAMAGE",
+      "basePower": 240
+    },
+    "slots": [
+      {
+        "slotIndex": 0,
+        "slotName": "先鋒【十字尖兵】",
+        "assignedRow": "FRONT",
+        "attackMultiplier": 0.85,
+        "defenseMultiplier": 1.50,
+        "sanResistanceBonus": 15,
+        "specialBonusDesc": "突前大盾：免傷+50%，吸引絕大部分單體打擊"
+      },
+      {
+        "slotIndex": 1,
+        "slotName": "左翼【遊擊協同】",
+        "assignedRow": "MIDDLE",
+        "attackMultiplier": 1.15,
+        "defenseMultiplier": 1.10,
+        "sanResistanceBonus": 5,
+        "specialBonusDesc": "中衛左翼：攻守兼備+15%"
+      },
+      {
+        "slotIndex": 2,
+        "slotName": "陣心【中軍統御】",
+        "assignedRow": "MIDDLE",
+        "attackMultiplier": 1.20,
+        "defenseMultiplier": 1.10,
+        "sanResistanceBonus": 10,
+        "specialBonusDesc": "中軍陣眼：指揮策應，全隊傷害增幅"
+      },
+      {
+        "slotIndex": 3,
+        "slotName": "右翼【奇襲側應】",
+        "assignedRow": "MIDDLE",
+        "attackMultiplier": 1.15,
+        "defenseMultiplier": 1.10,
+        "sanResistanceBonus": 5,
+        "specialBonusDesc": "中衛右翼：攻守兼備+15%"
+      },
+      {
+        "slotIndex": 4,
+        "slotName": "殿後【後衛靈犀】",
+        "assignedRow": "BACK",
+        "attackMultiplier": 1.30,
+        "defenseMultiplier": 0.85,
+        "sanResistanceBonus": 10,
+        "specialBonusDesc": "殿後術修：道法與遠程+30%，極低受擊率"
+      }
+    ]
+  },
+  {
+    "id": "formation_phoenix",
+    "name": "鳳凰陣",
+    "description": "浴火神鳥展翼之陣。陣眼居中涅槃聚怪反擊，兩翼前鋒包抄撕裂，後衛神官與法修提供強大支援。（需戰/法/牧鐵三角編制）",
+    "passiveAura": "【浴火涅槃】全隊道術傷害提高 20%，隊友倒地時有 15% 機率涅槃復生（回復 20% 氣血）。",
+    "requiredPartySize": 5,
+    "basic": false,
+    "requiredClasses": ["WARRIOR", "MAGE", "CLERIC"],
+    "ultimateSkill": {
+      "id": "skill_phoenix_rebirth",
+      "name": "鳳凰涅槃天火",
+      "description": "喚引九天鳳凰焚世烈焰降臨，灼燒敵方全體並賦予小隊全員一層【涅槃再生】狀態！",
+      "energyCost": 100,
+      "sanCost": 0,
+      "effectType": "AOE_DAMAGE",
+      "basePower": 260
+    },
+    "slots": [
+      {
+        "slotIndex": 0,
+        "slotName": "鳳首【烈焰銳刃】",
+        "assignedRow": "FRONT",
+        "attackMultiplier": 1.30,
+        "defenseMultiplier": 1.00,
+        "sanResistanceBonus": 0,
+        "specialBonusDesc": "前衛烈刃：近戰招式傷害+30%"
+      },
+      {
+        "slotIndex": 1,
+        "slotName": "左翼【赤翎突進】",
+        "assignedRow": "FRONT",
+        "attackMultiplier": 1.25,
+        "defenseMultiplier": 1.05,
+        "sanResistanceBonus": 0,
+        "specialBonusDesc": "前衛突擊：近戰暴擊率提升"
+      },
+      {
+        "slotIndex": 2,
+        "slotName": "鳳心【涅槃陣眼】",
+        "assignedRow": "MIDDLE",
+        "attackMultiplier": 1.05,
+        "defenseMultiplier": 1.35,
+        "sanResistanceBonus": 10,
+        "specialBonusDesc": "核心陣眼：免傷+35%，受擊率大幅提升"
+      },
+      {
+        "slotIndex": 3,
+        "slotName": "右翼【天火焚寂】",
+        "assignedRow": "BACK",
+        "attackMultiplier": 1.40,
+        "defenseMultiplier": 0.85,
+        "sanResistanceBonus": -5,
+        "specialBonusDesc": "後衛火核：道術傷害+40%"
+      },
+      {
+        "slotIndex": 4,
+        "slotName": "鳳尾【百鳥歸巢】",
+        "assignedRow": "BACK",
+        "attackMultiplier": 0.85,
+        "defenseMultiplier": 1.05,
+        "sanResistanceBonus": 20,
+        "specialBonusDesc": "後衛神療：治療增幅+35%"
       }
     ]
   },
   {
     "id": "formation_xuan_yin",
     "name": "玄陰噬魂陣",
-    "description": "參照域外不可名狀星屑所創的凶煞魔陣，以瘋狂與道心為代價，換取撕裂虛空的毀滅威能。",
+    "description": "參照域外不可名狀星屑所創的凶煞魔陣，以瘋狂與道心為代價，換取撕裂虛空的毀滅威能。（需法師編制）",
     "passiveAura": "【深淵共鳴】全隊道術傷害提高 25%，但每場戰鬥開始全員損失 3 點道心 SAN。",
+    "requiredPartySize": 5,
+    "basic": false,
+    "requiredClasses": ["MAGE"],
     "ultimateSkill": {
       "id": "skill_abyss_eclipse",
       "name": "不可名狀星蝕",
@@ -73,53 +350,53 @@
       "energyCost": 100,
       "sanCost": 8,
       "effectType": "AOE_DAMAGE",
-      "basePower": 250
+      "basePower": 280
     },
     "slots": [
       {
         "slotIndex": 0,
-        "slotName": "歸墟【古神祭眼】",
-        "requiredRow": "BACK",
-        "attackMultiplier": 1.40,
-        "defenseMultiplier": 0.80,
-        "sanResistanceBonus": -10,
-        "specialBonusDesc": "道術傷害+40%，SAN衰減加劇"
+        "slotName": "冥煞【死肉魔傀】",
+        "assignedRow": "FRONT",
+        "attackMultiplier": 1.05,
+        "defenseMultiplier": 1.30,
+        "sanResistanceBonus": 0,
+        "specialBonusDesc": "前衛魔盾：承受主要打擊"
       },
       {
         "slotIndex": 1,
-        "slotName": "冥煞【死肉魔傀】",
-        "requiredRow": "FRONT",
-        "attackMultiplier": 1.10,
-        "defenseMultiplier": 1.30,
-        "sanResistanceBonus": 0,
-        "specialBonusDesc": "承受主要打擊"
-      },
-      {
-        "slotIndex": 2,
         "slotName": "血刃【弒生狂劍】",
-        "requiredRow": "FRONT",
+        "assignedRow": "FRONT",
         "attackMultiplier": 1.35,
         "defenseMultiplier": 0.90,
         "sanResistanceBonus": -5,
-        "specialBonusDesc": "物理傷害+35%"
+        "specialBonusDesc": "前衛狂刃：物理傷害+35%"
+      },
+      {
+        "slotIndex": 2,
+        "slotName": "歸墟【古神祭眼】",
+        "assignedRow": "BACK",
+        "attackMultiplier": 1.40,
+        "defenseMultiplier": 0.80,
+        "sanResistanceBonus": -10,
+        "specialBonusDesc": "後衛祭眼：道術傷害+40%，SAN衰減加劇"
       },
       {
         "slotIndex": 3,
-        "slotName": "幽蠱【百足噬靈】",
-        "requiredRow": "FRONT",
-        "attackMultiplier": 1.15,
-        "defenseMultiplier": 1.10,
-        "sanResistanceBonus": 0,
-        "specialBonusDesc": "附加劇毒與詛咒"
-      },
-      {
-        "slotIndex": 4,
         "slotName": "濁魂【引渡巫使】",
-        "requiredRow": "BACK",
+        "assignedRow": "BACK",
         "attackMultiplier": 1.20,
         "defenseMultiplier": 0.90,
         "sanResistanceBonus": 0,
-        "specialBonusDesc": "吸取敵方生命反哺隊伍"
+        "specialBonusDesc": "後衛引渡：汲取敵方生命反哺隊伍"
+      },
+      {
+        "slotIndex": 4,
+        "slotName": "幽蠱【百足噬靈】",
+        "assignedRow": "MIDDLE",
+        "attackMultiplier": 1.15,
+        "defenseMultiplier": 1.10,
+        "sanResistanceBonus": 0,
+        "specialBonusDesc": "中衛巫蠱：附帶劇毒詛咒，受擊均衡"
       }
     ]
   }
