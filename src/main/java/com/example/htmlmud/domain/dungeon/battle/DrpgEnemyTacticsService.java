@@ -1,5 +1,6 @@
 package com.example.htmlmud.domain.dungeon.battle;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,25 +23,31 @@ import lombok.extern.slf4j.Slf4j;
 public class DrpgEnemyTacticsService {
 
   private final TemplateReader templateReader;
+  private final com.example.htmlmud.domain.party.service.FormationEngine formationEngine;
 
   @Autowired
-  public DrpgEnemyTacticsService(TemplateReader templateReader) {
+  public DrpgEnemyTacticsService(TemplateReader templateReader, com.example.htmlmud.domain.party.service.FormationEngine formationEngine) {
     this.templateReader = templateReader != null ? templateReader : new TemplateCatalog();
+    this.formationEngine = formationEngine != null ? formationEngine : new com.example.htmlmud.domain.party.service.FormationEngine();
+  }
+
+  public DrpgEnemyTacticsService(TemplateReader templateReader) {
+    this(templateReader, new com.example.htmlmud.domain.party.service.FormationEngine());
   }
 
   public DrpgEnemyTacticsService() {
-    this(new TemplateCatalog());
+    this(new TemplateCatalog(), new com.example.htmlmud.domain.party.service.FormationEngine());
   }
 
   /**
-   * 根據嘲諷、有效仇恨 (前排 1.3 倍加成) 及站位，智慧選取怪物攻擊目標
+   * 根據嘲諷、有效仇恨 (前排加成與陣法仇恨倍率) 及站位，智慧選取怪物攻擊目標
    */
   public PartyMember selectPartyTarget(BattleContext ctx) {
     return selectPartyTarget(ctx, null);
   }
 
   /**
-   * 根據個別敵人的獨立威脅表 (Threat Table)、嘲諷狀態與前排權重，選取並同步當前攻擊目標
+   * 根據個別敵人的獨立威脅表 (Threat Table)、嘲諷狀態、陣法孔位倍率與站位權重，選取並同步當前攻擊目標
    */
   public PartyMember selectPartyTarget(BattleContext ctx, BattleEnemy enemy) {
     if (ctx == null || ctx.getParty() == null || ctx.getParty().getMembers() == null) {
@@ -76,7 +83,7 @@ public class DrpgEnemyTacticsService {
       return null;
     }
 
-    // 依據有效仇恨 (Effective Threat = Threat * (FRONT ? 1.3 : 1.0)) 評估最高仇恨者
+    // 依據有效仇恨 (Effective Threat = Threat * RowBonus * FormationThreatMult) 評估最高仇恨者
     PartyMember highestThreatMember = null;
     double maxEffectiveThreat = -1;
     for (PartyMember m : aliveMembers) {
@@ -84,7 +91,9 @@ public class DrpgEnemyTacticsService {
           ? enemy.getThreat(m.getId())
           : m.getThreat();
 
-      double effectiveThreat = baseThreat * (m.getRow() == RowPosition.FRONT ? 1.3 : 1.0);
+      double rowMult = (m.getRow() == RowPosition.FRONT ? 1.3 : (m.getRow() == RowPosition.MIDDLE ? 1.0 : 0.8));
+      double formThreatMult = formationEngine.getThreatMultiplier(ctx.getParty(), m);
+      double effectiveThreat = baseThreat * rowMult * formThreatMult;
       if (effectiveThreat > maxEffectiveThreat) {
         maxEffectiveThreat = effectiveThreat;
         highestThreatMember = m;
@@ -96,14 +105,37 @@ public class DrpgEnemyTacticsService {
     if (maxEffectiveThreat > 0 && highestThreatMember != null) {
       chosen = highestThreatMember;
     } else {
-      // 3. 初始無仇恨狀態，優先挑選前排活著的隊員
-      List<PartyMember> frontAlive = aliveMembers.stream()
+      // 3. 初始無仇恨狀態，前排掩護中後排：優先挑選前排活著的隊員 (若前排無人則退守中衛，次選後衛)
+      List<PartyMember> candidates = aliveMembers.stream()
           .filter(m -> m.getRow() == RowPosition.FRONT)
           .toList();
-      if (!frontAlive.isEmpty()) {
-        chosen = frontAlive.get(ThreadLocalRandom.current().nextInt(frontAlive.size()));
-      } else {
-        chosen = aliveMembers.get(ThreadLocalRandom.current().nextInt(aliveMembers.size()));
+      if (candidates.isEmpty()) {
+        candidates = aliveMembers.stream()
+            .filter(m -> m.getRow() == RowPosition.MIDDLE)
+            .toList();
+      }
+      if (candidates.isEmpty()) {
+        candidates = aliveMembers;
+      }
+
+      double totalWeight = 0;
+      List<Double> weights = new ArrayList<>();
+      for (PartyMember m : candidates) {
+        double w = 1.0 * formationEngine.getThreatMultiplier(ctx.getParty(), m);
+        weights.add(w);
+        totalWeight += w;
+      }
+      double roll = ThreadLocalRandom.current().nextDouble() * totalWeight;
+      double accum = 0;
+      for (int i = 0; i < candidates.size(); i++) {
+        accum += weights.get(i);
+        if (roll <= accum) {
+          chosen = candidates.get(i);
+          break;
+        }
+      }
+      if (chosen == null) {
+        chosen = candidates.get(0);
       }
     }
 

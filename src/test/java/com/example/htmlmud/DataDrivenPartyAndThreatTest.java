@@ -71,7 +71,7 @@ class DataDrivenPartyAndThreatTest {
     assertEquals(RowPosition.FRONT, tank.getRow(), "玄甲體修站前衛 (坦克)");
 
     assertEquals("燕青", dps.getName());
-    assertEquals(RowPosition.FRONT, dps.getRow(), "追魂遊俠站前衛");
+    assertEquals(RowPosition.MIDDLE, dps.getRow(), "追魂遊俠居中衛策應");
 
     assertEquals("凌霜", healer.getName());
     assertEquals(RowPosition.BACK, healer.getRow(), "百草丹修站後衛 (治療)");

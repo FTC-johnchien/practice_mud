@@ -174,29 +174,39 @@ export function renderBattlePartyQuickBar(party) {
     store.setState({ selectedMemberIdx: 0 });
   }
 
-  const frontMembers = party.members.map((m, idx) => ({ m, idx })).filter(item => item.m.row === 'FRONT');
-  const backMembers = party.members.map((m, idx) => ({ m, idx })).filter(item => item.m.row !== 'FRONT');
+  const allMembers = party.members.map((m, idx) => ({ m, idx }));
+  const aliveMembers = allMembers.filter(item => (item.m.alive !== undefined ? item.m.alive : item.m.hp > 0));
+  const deadMembers = allMembers.filter(item => !(item.m.alive !== undefined ? item.m.alive : item.m.hp > 0));
 
-  const structureKey = party.members.map(m => `${m.id || m.name}_${m.row}`).join('|');
+  const frontMembers = aliveMembers.filter(item => item.m.row === 'FRONT');
+  const middleMembers = aliveMembers.filter(item => item.m.row === 'MIDDLE');
+  const backMembers = aliveMembers.filter(item => item.m.row === 'BACK');
+
+  const structureKey = party.members.map(m => `${m.id || m.name}_${m.row}_${(m.alive !== undefined ? m.alive : m.hp > 0)}`).join('|');
   const needFullRebuild = (bar.dataset.structureKey !== structureKey);
 
   function createPartyCard(m, idx) {
     const isSelected = (selectedMemberIdx === idx);
     const isAlive = (m.alive !== undefined) ? m.alive : (m.hp > 0);
     const hpPct = Math.min(100, Math.max(0, (m.hp / m.maxHp) * 100));
-    const rowBadge = m.row === 'FRONT' ? '前衛' : '後衛';
+    const rowBadge = m.row === 'FRONT' ? '前衛' : (m.row === 'MIDDLE' ? '中衛' : '後衛');
+    const rowColor = m.row === 'FRONT' ? '#f87171' : (m.row === 'MIDDLE' ? '#c084fc' : '#60a5fa');
 
     const card = document.createElement('div');
     card.dataset.memberIdx = String(idx);
-    card.className = `battle-party-mini-card row-${(m.row || 'FRONT').toLowerCase()} ${isSelected ? 'active-selected' : ''}`;
+    card.className = `battle-party-mini-card row-${(m.row || 'FRONT').toLowerCase()} ${isSelected ? 'active-selected' : ''} ${!isAlive ? 'is-dead' : ''}`;
     card.onclick = () => selectCombatMember(idx);
     card.title = `點選 #${idx + 1} ${m.name} 切換戰備指揮台`;
+    if (!isAlive) {
+      card.style.opacity = '0.7';
+      card.style.borderColor = '#ef4444';
+    }
 
     card.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span class="bpmc-name" style="font-weight:bold; color:#e2e8f0; font-size:12px;">#${idx + 1} ${m.name}</span>
+        <span class="bpmc-name" style="font-weight:bold; color:${isAlive ? '#e2e8f0' : '#94a3b8'}; font-size:12px;">#${idx + 1} ${m.name}</span>
         <div style="display:flex; align-items:center; gap:4px;">
-          <span class="bpmc-badge" style="font-size:9px; color:${m.row === 'FRONT' ? '#f87171' : '#60a5fa'};">[${rowBadge}]</span>
+          ${!isAlive ? '<span style="font-size:9px; color:#ef4444; background:rgba(239,68,68,0.2); border:1px solid #ef4444; border-radius:3px; padding:0 3px;">💀陣亡</span>' : `<span class="bpmc-badge" style="font-size:9px; color:${rowColor};">[${rowBadge}]</span>`}
           <div class="bpmc-swap-btns" style="display:inline-flex; gap:1px;">
             ${idx > 0 ? `<button onclick="event.stopPropagation(); window.send('party swap ${idx} ${idx - 1}')" title="與前一位隊員換位" style="background:#1e293b; border:1px solid #475569; color:#94a3b8; border-radius:2px; padding:0 3px; font-size:9px; cursor:pointer;">◀</button>` : ''}
             ${idx < party.members.length - 1 ? `<button onclick="event.stopPropagation(); window.send('party swap ${idx} ${idx + 1}')" title="與後一位隊員換位" style="background:#1e293b; border:1px solid #475569; color:#94a3b8; border-radius:2px; padding:0 3px; font-size:9px; cursor:pointer;">▶</button>` : ''}
@@ -208,13 +218,13 @@ export function renderBattlePartyQuickBar(party) {
       </div>
       <div style="font-size:9px; color:#94a3b8; display:flex; justify-content:space-between; align-items:center;">
         <span class="bpmc-hp-text">HP ${m.hp}/${m.maxHp}</span>
-        <span class="bpmc-select-indicator" style="color:#38bdf8; font-weight:bold;">${isSelected ? '▶ 當前選中' : '點選切換'}</span>
+        <span class="bpmc-select-indicator" style="color:${isAlive ? '#38bdf8' : '#ef4444'}; font-weight:bold;">${isSelected ? '▶ 當前選中' : (isAlive ? '點選切換' : '點選施救')}</span>
       </div>
       ${m.formationSlotName ? `
-        <div class="bpmc-slot-badge" style="font-size:9px; margin-top:2px; padding:1px 4px; border-radius:3px; display:flex; justify-content:space-between; align-items:center; ${m.formationSlotActive ? 'background:rgba(16,185,129,0.12); color:#6ee7b7; border:1px solid rgba(16,185,129,0.3);' : 'background:rgba(239,68,68,0.12); color:#fca5a5; border:1px solid rgba(239,68,68,0.3);'}"
+        <div class="bpmc-slot-badge" style="font-size:9px; margin-top:2px; padding:1px 4px; border-radius:3px; display:flex; justify-content:space-between; align-items:center; ${isAlive && m.formationSlotActive ? 'background:rgba(16,185,129,0.12); color:#6ee7b7; border:1px solid rgba(16,185,129,0.3);' : 'background:rgba(239,68,68,0.12); color:#fca5a5; border:1px solid rgba(239,68,68,0.3);'}"
              title="陣法孔位：${m.formationSlotName} - ${m.formationSlotBonus || ''}">
           <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">💠 ${m.formationSlotName}</span>
-          ${m.formationSlotActive ? '<span style="font-size:8px; flex-shrink:0;">✓生效</span>' : '<span style="font-size:8px; color:#ef4444; flex-shrink:0;">✗站位不符</span>'}
+          ${isAlive && m.formationSlotActive ? '<span style="font-size:8px; flex-shrink:0;">✓生效</span>' : '<span style="font-size:8px; color:#ef4444; flex-shrink:0;">' + (!isAlive ? '✗離陣' : '✗不符') + '</span>'}
         </div>
       ` : ''}
       <div class="bpmc-buffs-wrap">
@@ -232,20 +242,40 @@ export function renderBattlePartyQuickBar(party) {
     if (frontMembers.length > 0) {
       const tierFront = document.createElement('div');
       tierFront.className = 'battle-tier-wrapper tier-party-front';
-      tierFront.innerHTML = `<div class="battle-tier-label">〈 我方前衛陣線 〉</div><div class="battle-tier-cards"></div>`;
+      tierFront.innerHTML = `<div class="battle-tier-label" style="color:#f87171;">〈 我方前衛陣線 〉</div><div class="battle-tier-cards" style="display:flex; justify-content:center; gap:8px;"></div>`;
       const cardsBox = tierFront.querySelector('.battle-tier-cards');
       frontMembers.forEach(item => cardsBox.appendChild(createPartyCard(item.m, item.idx)));
       bar.appendChild(tierFront);
     }
 
-    // 2. 我方後衛 (位於下方)
+    // 2. 我方中衛 (若陣法有中衛則展開)
+    if (middleMembers.length > 0) {
+      const tierMiddle = document.createElement('div');
+      tierMiddle.className = 'battle-tier-wrapper tier-party-middle';
+      tierMiddle.innerHTML = `<div class="battle-tier-label" style="color:#c084fc;">〈 我方中衛陣線 〉</div><div class="battle-tier-cards" style="display:flex; justify-content:center; gap:8px;"></div>`;
+      const cardsBox = tierMiddle.querySelector('.battle-tier-cards');
+      middleMembers.forEach(item => cardsBox.appendChild(createPartyCard(item.m, item.idx)));
+      bar.appendChild(tierMiddle);
+    }
+
+    // 3. 我方後衛 (位於下方)
     if (backMembers.length > 0) {
       const tierBack = document.createElement('div');
       tierBack.className = 'battle-tier-wrapper tier-party-back';
-      tierBack.innerHTML = `<div class="battle-tier-label">〈 我方後衛陣線 〉</div><div class="battle-tier-cards"></div>`;
+      tierBack.innerHTML = `<div class="battle-tier-label" style="color:#60a5fa;">〈 我方後衛陣線 〉</div><div class="battle-tier-cards" style="display:flex; justify-content:center; gap:8px;"></div>`;
       const cardsBox = tierBack.querySelector('.battle-tier-cards');
       backMembers.forEach(item => cardsBox.appendChild(createPartyCard(item.m, item.idx)));
       bar.appendChild(tierBack);
+    }
+
+    // 4. 陣亡重傷待援區 (若有隊員陣亡)
+    if (deadMembers.length > 0) {
+      const tierDead = document.createElement('div');
+      tierDead.className = 'battle-tier-wrapper tier-party-dead';
+      tierDead.innerHTML = `<div class="battle-tier-label" style="color:#ef4444; font-size:10px;">〈 💀 陣亡重傷待援 〉</div><div class="battle-tier-cards" style="display:flex; justify-content:center; gap:8px;"></div>`;
+      const cardsBox = tierDead.querySelector('.battle-tier-cards');
+      deadMembers.forEach(item => cardsBox.appendChild(createPartyCard(item.m, item.idx)));
+      bar.appendChild(tierDead);
     }
   } else {
     // In-place 更新隊員卡片數值與選取狀態，絕不重構 DOM (防閃爍)

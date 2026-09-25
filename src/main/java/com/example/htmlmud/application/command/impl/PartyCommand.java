@@ -199,13 +199,30 @@ public class PartyCommand implements PlayerCommand {
           PartyMember m = party.getMembers().get(mIdx);
           RowPosition next;
           if (parts.length > 2) {
-            next = parts[2].equalsIgnoreCase("front") || parts[2].equals("前衛") || parts[2].equals("前")
-                ? RowPosition.FRONT : RowPosition.BACK;
+            String arg = parts[2].toLowerCase();
+            if (arg.equals("front") || arg.equals("前衛") || arg.equals("前")) {
+              next = RowPosition.FRONT;
+            } else if (arg.equals("middle") || arg.equals("mid") || arg.equals("中衛") || arg.equals("中")) {
+              next = RowPosition.MIDDLE;
+            } else {
+              next = RowPosition.BACK;
+            }
           } else {
-            next = (m.getRow() == RowPosition.FRONT) ? RowPosition.BACK : RowPosition.FRONT;
+            RowPosition cur = m.getRow() != null ? m.getRow() : RowPosition.FRONT;
+            next = switch (cur) {
+              case FRONT -> RowPosition.MIDDLE;
+              case MIDDLE -> RowPosition.BACK;
+              case BACK -> RowPosition.FRONT;
+              default -> RowPosition.FRONT;
+            };
           }
           m.setRow(next);
-          String rowName = (next == RowPosition.FRONT) ? "前衛" : "後衛";
+          String rowName = switch (next) {
+            case FRONT -> "前衛";
+            case MIDDLE -> "中衛";
+            case BACK -> "後衛";
+            default -> "前衛";
+          };
           self.reply("【站位變更】已將隊員「" + m.getName() + "」的戰鬥站位切換為【" + rowName + "】！");
           broadcastDrpgState(self);
         } catch (NumberFormatException e) {

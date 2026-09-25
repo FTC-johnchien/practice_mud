@@ -353,48 +353,74 @@ public record DrpgStateDto(
           (m.getCurrentCastingSkill() != null ? m.getCurrentCastingSkill().getName() : null),
           m.getCastingDurationMs(),
           m.getCastingRemainingMs(),
-          (party.getEquippedFormation() != null && party.getEquippedFormation().getSlot(memberIdx) != null
-              ? party.getEquippedFormation().getSlot(memberIdx).getSlotName() : null),
-          (party.getEquippedFormation() != null && party.getEquippedFormation().getSlot(memberIdx) != null
-              && party.getEquippedFormation().getSlot(memberIdx).getRequiredRow() != null
-              ? party.getEquippedFormation().getSlot(memberIdx).getRequiredRow().name() : "ANY"),
-          (party.getEquippedFormation() != null && party.getEquippedFormation().getSlot(memberIdx) != null
-              ? party.getEquippedFormation().getSlot(memberIdx).getSpecialBonusDesc() : null),
-          (party.getEquippedFormation() != null && party.getEquippedFormation().getSlot(memberIdx) != null
-              && (party.getEquippedFormation().getSlot(memberIdx).getRequiredRow() == com.example.htmlmud.domain.party.model.RowPosition.ANY
-                  || party.getEquippedFormation().getSlot(memberIdx).getRequiredRow() == m.getRow()))
+          (party.getSlotForMember(memberIdx) != null
+              ? party.getSlotForMember(memberIdx).getSlotName() : (!m.isAlive() ? "【陣亡離陣】" : null)),
+          (party.getSlotForMember(memberIdx) != null && party.getSlotForMember(memberIdx).getRequiredRow() != null
+              ? party.getSlotForMember(memberIdx).getRequiredRow().name() : "ANY"),
+          (party.getSlotForMember(memberIdx) != null
+              ? party.getSlotForMember(memberIdx).getSpecialBonusDesc() : null),
+          (party.getSlotForMember(memberIdx) != null
+              && (party.getSlotForMember(memberIdx).getRequiredRow() == com.example.htmlmud.domain.party.model.RowPosition.ANY
+                  || party.getSlotForMember(memberIdx).getRequiredRow() == m.getRow())),
+          (party.getSlotForMember(memberIdx) != null
+              ? party.getSlotForMember(memberIdx).getGridX() : Math.min(memberIdx, 4)),
+          (party.getSlotForMember(memberIdx) != null
+              ? party.getSlotForMember(memberIdx).getGridY() : (m.getRow() == com.example.htmlmud.domain.party.model.RowPosition.FRONT ? 0 : (m.getRow() == com.example.htmlmud.domain.party.model.RowPosition.MIDDLE ? 1 : 2)))
       ));
     }
 
-    String formName = party.getEquippedFormation() != null ? party.getEquippedFormation().getName() : "無";
-    String ultName = (party.getEquippedFormation() != null && party.getEquippedFormation().getUltimateSkill() != null)
+    String formName = party.getEquippedFormation() != null
+        ? (party.isFormationBroken() ? party.getEquippedFormation().getName() + " (已崩解)" : party.getEquippedFormation().getName())
+        : "無";
+    String ultName = (party.getEquippedFormation() != null && party.getEquippedFormation().getUltimateSkill() != null && !party.isFormationBroken())
         ? party.getEquippedFormation().getUltimateSkill().getName() : "";
 
     List<PartyFormationOptionDto> availableFormations = new ArrayList<>();
     if (templateReader != null && templateReader.getAllFormations() != null) {
-      int partySize = party.getMembers().size();
+      int effectiveSize = (party.getAliveCount() > 0 && party.getAliveCount() < party.getMembers().size())
+          ? party.getAliveCount() : party.getMembers().size();
       for (FormationTemplate ft : templateReader.getAllFormations().values()) {
-        if (ft.getRequiredPartySize() == partySize) {
-          boolean current = party.getEquippedFormation() != null && ft.getId().equals(party.getEquippedFormation().getId());
-          List<String> missing = ft.checkClassRequirements(party);
-          boolean selectable = missing.isEmpty();
-          String lockReason = selectable ? null : "缺少職業: " + String.join(", ", missing);
-          String fUlt = ft.getUltimateSkill() != null ? ft.getUltimateSkill().getName() : "";
-          availableFormations.add(new PartyFormationOptionDto(
-              ft.getId(),
-              ft.getName(),
-              ft.getDescription(),
-              ft.getRequiredPartySize(),
-              ft.isBasic(),
-              ft.getRequiredClasses() != null ? ft.getRequiredClasses() : List.of(),
-              current,
-              selectable,
-              lockReason,
-              fUlt
-          ));
+        boolean current = party.getEquippedFormation() != null && ft.getId().equals(party.getEquippedFormation().getId());
+        boolean sizeMatch = (ft.getRequiredPartySize() == effectiveSize);
+        List<String> missing = ft.checkClassRequirements(party);
+        boolean selectable = sizeMatch && missing.isEmpty();
+        String lockReason = null;
+        if (!sizeMatch) {
+          lockReason = "人數不符 (需 " + ft.getRequiredPartySize() + " 人，當前存活 " + effectiveSize + " 人)";
+        } else if (!missing.isEmpty()) {
+          lockReason = "缺少職業: " + String.join(", ", missing);
         }
+        String fUlt = ft.getUltimateSkill() != null ? ft.getUltimateSkill().getName() : "";
+        List<FormationSlotViewDto> slotViews = (ft.getSlots() != null)
+            ? ft.getSlots().stream().map(s -> new FormationSlotViewDto(
+                s.getSlotIndex(),
+                s.getSlotName(),
+                s.getAssignedRow() != null ? s.getAssignedRow().name() : "FRONT",
+                s.getGridX(),
+                s.getGridY(),
+                s.getSpecialBonusDesc()
+            )).toList()
+            : List.of();
+
+        availableFormations.add(new PartyFormationOptionDto(
+            ft.getId(),
+            ft.getName(),
+            ft.getDescription(),
+            ft.getRequiredPartySize(),
+            ft.isBasic(),
+            ft.getRequiredClasses() != null ? ft.getRequiredClasses() : List.of(),
+            current,
+            selectable,
+            lockReason,
+            fUlt,
+            ft.getPassiveAura(),
+            slotViews
+        ));
       }
       availableFormations.sort((a, b) -> {
+        if (a.requiredPartySize() != b.requiredPartySize()) {
+          return Integer.compare(b.requiredPartySize(), a.requiredPartySize());
+        }
         if (a.basic() != b.basic()) return a.basic() ? -1 : 1;
         return a.id().compareTo(b.id());
       });
@@ -546,6 +572,15 @@ public record DrpgStateDto(
     }
   }
 
+  public record FormationSlotViewDto(
+      int slotIndex,
+      String slotName,
+      String assignedRow,
+      int gridX,
+      int gridY,
+      String specialBonusDesc
+  ) {}
+
   public record PartyFormationOptionDto(
       String id,
       String name,
@@ -556,7 +591,9 @@ public record DrpgStateDto(
       boolean current,
       boolean selectable,
       String lockReason,
-      String ultimateSkillName
+      String ultimateSkillName,
+      String passiveAura,
+      List<FormationSlotViewDto> slots
   ) {}
 
   public record PartyViewDto(
@@ -632,7 +669,9 @@ public record DrpgStateDto(
       String formationSlotName,
       String formationSlotRequiredRow,
       String formationSlotBonus,
-      boolean formationSlotActive
+      boolean formationSlotActive,
+      int gridX,
+      int gridY
   ) {}
 
   public record TacticsRuleViewDto(

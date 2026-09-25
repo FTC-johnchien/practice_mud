@@ -290,7 +290,8 @@ export function initKeyboardControls() {
       store.get('isPrologueModalOpen') ||
       store.get('isGuideModalOpen') ||
       store.get('isPartyModalOpen') ||
-      store.get('isShopModalOpen');
+      store.get('isShopModalOpen') ||
+      store.get('isBagDrawerOpen');
 
     if (isAnyModalOrTitleOpen) {
       if (e.key === 'Escape') {
@@ -299,7 +300,11 @@ export function initKeyboardControls() {
           return;
         }
         if (store.get('isPartyModalOpen')) {
-          closePartyModal();
+          closePartyModal(); // 自動聯動關閉其子抽屜 (如 bag-drawer)
+          return;
+        }
+        if (store.get('isBagDrawerOpen')) {
+          if (window.toggleBagDrawer) window.toggleBagDrawer(false);
           return;
         }
         if (store.get('isPrologueModalOpen')) {

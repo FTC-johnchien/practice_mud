@@ -33,6 +33,8 @@ public class Party {
   @Builder.Default
   private int maxFormationEnergy = 100;
   @Builder.Default
+  private boolean formationBroken = false;
+  @Builder.Default
   private PartyInventory inventory = new PartyInventory();
 
   public PartyInventory getInventory() {
@@ -207,16 +209,33 @@ public class Party {
 
   public void setEquippedFormation(FormationTemplate equippedFormation) {
     this.equippedFormation = equippedFormation;
+    this.formationBroken = false;
     alignFormationRows();
     refreshFormation();
   }
 
+  public FormationSlot getSlotForMember(int memberIndex) {
+    if (equippedFormation == null || formationBroken || members == null || memberIndex < 0 || memberIndex >= members.size()) {
+      return null;
+    }
+    PartyMember target = members.get(memberIndex);
+    if (target == null || !target.isAlive()) return null;
+    int aliveIdx = 0;
+    for (int i = 0; i < memberIndex; i++) {
+      PartyMember prev = members.get(i);
+      if (prev != null && prev.isAlive()) {
+        aliveIdx++;
+      }
+    }
+    return equippedFormation.getSlot(aliveIdx);
+  }
+
   public void alignFormationRows() {
-    if (members == null || members.isEmpty() || equippedFormation == null) return;
+    if (members == null || members.isEmpty() || equippedFormation == null || formationBroken) return;
     for (int i = 0; i < members.size(); i++) {
       PartyMember m = members.get(i);
-      if (m == null) continue;
-      FormationSlot slot = equippedFormation.getSlot(i);
+      if (m == null || !m.isAlive()) continue;
+      FormationSlot slot = getSlotForMember(i);
       if (slot != null && slot.getAssignedRow() != null && slot.getAssignedRow() != RowPosition.ANY) {
         m.setRow(slot.getAssignedRow());
       }
@@ -225,18 +244,17 @@ public class Party {
 
   public void refreshFormation() {
     if (members == null || members.isEmpty()) return;
-    if (equippedFormation != null) {
-      for (int i = 0; i < members.size(); i++) {
-        PartyMember m = members.get(i);
-        if (m == null) continue;
-        FormationSlot slot = equippedFormation.getSlot(i);
+    for (int i = 0; i < members.size(); i++) {
+      PartyMember m = members.get(i);
+      if (m == null) continue;
+      for (int j = 0; j < 10; j++) {
+        m.removeBuff("buff_formation_slot_" + j);
+      }
+      if (equippedFormation != null && !formationBroken && m.isAlive()) {
+        FormationSlot slot = getSlotForMember(i);
         if (slot != null) {
-          // 更新陣法常駐 Buff (先清除既有陣法 Buff，再掛載當前孔位之陣法常駐加成)
-          for (int j = 0; j < MAX_PARTY_SIZE; j++) {
-            m.removeBuff("buff_formation_slot_" + j);
-          }
           ActiveBuff formBuff = ActiveBuff.builder()
-              .id("buff_formation_slot_" + i)
+              .id("buff_formation_slot_" + slot.getSlotIndex())
               .name(slot.getSlotName())
               .category(BuffCategory.STAT_MODIFIER)
               .durationTicks(-1)
@@ -244,14 +262,6 @@ public class Party {
               .description(slot.getSpecialBonusDesc())
               .build();
           m.addBuff(formBuff);
-        }
-      }
-    } else {
-      for (PartyMember m : members) {
-        if (m != null) {
-          for (int j = 0; j < MAX_PARTY_SIZE; j++) {
-            m.removeBuff("buff_formation_slot_" + j);
-          }
         }
       }
     }
@@ -334,8 +344,20 @@ public class Party {
   }
 
   @JsonIgnore
+  public List<PartyMember> getAliveMembers() {
+    if (members == null) return List.of();
+    return members.stream().filter(PartyMember::isAlive).toList();
+  }
+
+  @JsonIgnore
+  public int getAliveCount() {
+    if (members == null) return 0;
+    return (int) members.stream().filter(PartyMember::isAlive).count();
+  }
+
+  @JsonIgnore
   public boolean canCastUltimate() {
-    if (equippedFormation == null || equippedFormation.getUltimateSkill() == null) {
+    if (formationBroken || equippedFormation == null || equippedFormation.getUltimateSkill() == null) {
       return false;
     }
     return formationEnergy >= equippedFormation.getUltimateSkill().getEnergyCost();
@@ -413,8 +435,8 @@ public class Party {
     int def = member.getBaseDefense();
 
     // 套用陣法孔位倍率
-    if (equippedFormation != null) {
-      FormationSlot slot = equippedFormation.getSlot(memberIndex);
+    if (equippedFormation != null && !formationBroken) {
+      FormationSlot slot = getSlotForMember(memberIndex);
       if (slot != null) {
         minDmg = (int) Math.round(minDmg * slot.getAttackMultiplier());
         maxDmg = (int) Math.round(maxDmg * slot.getAttackMultiplier());

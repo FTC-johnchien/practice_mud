@@ -41,6 +41,10 @@ function togglePartyModal(forceOpen) {
     if (document.activeElement) {
       document.activeElement.blur();
     }
+    // 父子視窗生命週期聯動：關閉狀態主視窗時，一併關閉由此開啟的子視窗 (如公共行囊)
+    if (window.toggleBagDrawer && store.get('isBagDrawerOpen')) {
+      window.toggleBagDrawer(false);
+    }
   }
 }
 
@@ -283,141 +287,336 @@ function renderTeamFormationView(party) {
   const inBattle = Boolean(drpgState.lastBattle && drpgState.lastBattle.inBattle);
   const canCast = Boolean(party.canCastUltimate || (energy >= 100 && inBattle));
 
-  // 前排與後排成員劃分
+  // 依存活與站位劃分：前衛、中衛、後衛與陣亡重傷者
   const frontMembers = [];
+  const middleMembers = [];
   const backMembers = [];
+  const deadMembers = [];
+
+  // 判斷當前是「5×3 戰術站位盤」還是「道門陣法典籍庫」
+  const viewMode = drpgState.formationViewMode || 'TACTICAL';
+  if (viewMode === 'LIBRARY') {
+    return renderFormationLibraryView(party);
+  }
+
+  // --- 模式 A: 浪漫沙加式 5×3 戰術陣盤視圖 ---
+  const isBroken = Boolean(party.formationName && party.formationName.includes('已崩解'));
+
+  // 構建 3 列 (Row 0: FRONT, Row 1: MIDDLE, Row 2: BACK) × 5 行 (Col 0..4) 矩陣
+  const gridMatrix = [
+    [null, null, null, null, null], // Row 0: 前衛 FRONT
+    [null, null, null, null, null], // Row 1: 中衛 MIDDLE
+    [null, null, null, null, null]  // Row 2: 後衛 BACK
+  ];
+
   (party.members || []).forEach((mem, idx) => {
-    if (mem.row === 'FRONT') frontMembers.push({ mem, idx });
-    else backMembers.push({ mem, idx });
+    const isAlive = (mem.alive !== undefined) ? mem.alive : (mem.hp > 0);
+    if (!isAlive) {
+      deadMembers.push({ mem, idx });
+    }
+
+    let gy = (typeof mem.gridY === 'number' && mem.gridY >= 0 && mem.gridY < 3)
+      ? mem.gridY
+      : (mem.row === 'FRONT' ? 0 : (mem.row === 'MIDDLE' ? 1 : 2));
+    let gx = (typeof mem.gridX === 'number' && mem.gridX >= 0 && mem.gridX < 5)
+      ? mem.gridX
+      : Math.min(idx, 4);
+
+    // 碰撞保險：若該格已被佔用，找同排最近空位
+    if (gridMatrix[gy][gx]) {
+      let found = false;
+      for (let c = 0; c < 5; c++) {
+        if (!gridMatrix[gy][c]) {
+          gx = c;
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        // 全部排滿則塞到任意空位
+        outer: for (let r = 0; r < 3; r++) {
+          for (let c = 0; c < 5; c++) {
+            if (!gridMatrix[r][c]) {
+              gy = r;
+              gx = c;
+              break outer;
+            }
+          }
+        }
+      }
+    }
+
+    gridMatrix[gy][gx] = { mem, idx, isAlive };
   });
 
-  const renderMemberSlot = (item) => {
-    const { mem, idx } = item;
-    const isAlive = (mem.alive !== undefined) ? mem.alive : (mem.hp > 0);
-    const hpPct = Math.min(100, Math.max(0, (mem.hp / mem.maxHp) * 100));
-    const rowClass = mem.row === 'FRONT' ? 'badge-front' : 'badge-back';
-    const rowBadge = mem.row === 'FRONT' ? '前衛' : '後衛';
-    const nextRow = mem.row === 'FRONT' ? '後衛' : '前衛';
+  const rowMeta = [
+    { label: '⚔️ 前衛線 (Front Row)', color: '#f87171', desc: '承受單體打擊與近戰反擊第一線' },
+    { label: '☯️ 中衛線 (Middle Row)', color: '#c084fc', desc: '核心陣眼樞紐、半攻半守機動策應' },
+    { label: '🏹 後衛線 (Back Row)', color: '#60a5fa', desc: '遠程道術與治癒援護，受前排雙層掩護' }
+  ];
+
+  // 渲染單個精簡孔位卡片 (精簡顯示：僅 #1 姓名 + 陣位效果 + 調位按鈕)
+  const renderSlimCell = (cellData) => {
+    if (!cellData) {
+      return `
+        <div style="border:1px dashed #263346;border-radius:6px;min-height:68px;display:flex;align-items:center;justify-content:center;color:#475569;font-size:11px;background:rgba(15,23,42,0.3);">
+          <span style="opacity:0.4;">(空位)</span>
+        </div>
+      `;
+    }
+
+    const { mem, idx, isAlive } = cellData;
+    const rowLabel = mem.row === 'FRONT' ? '前衛' : (mem.row === 'MIDDLE' ? '中衛' : '後衛');
+    const rowColor = mem.row === 'FRONT' ? '#f87171' : (mem.row === 'MIDDLE' ? '#c084fc' : '#60a5fa');
+    const slotActive = Boolean(isAlive && mem.formationSlotActive);
+    const nextRow = mem.row === 'FRONT' ? '中衛' : (mem.row === 'MIDDLE' ? '後衛' : '前衛');
+
     return `
-      <div class="formation-slot-card" style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px;">
+      <div style="background:#141b27;border:1px solid ${isAlive ? (slotActive ? '#38bdf8' : '#eab308') : '#ef4444'};border-radius:6px;padding:6px 8px;display:flex;flex-direction:column;justify-content:space-between;min-height:68px;box-shadow:0 2px 6px rgba(0,0,0,0.4);position:relative;${!isAlive ? 'opacity:0.75;' : ''}">
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span style="color:#38bdf8;font-weight:bold;font-size:13px;">#${idx + 1} ${mem.name}</span>
-            <span class="member-row ${rowClass}" style="font-size:10px;">[${rowBadge}]</span>
-          </div>
-          ${mem.className ? `<span style="font-size:10px;color:#7dd3fc;background:#1e293b;padding:1px 6px;border-radius:4px;">${mem.className}</span>` : ''}
+          <span style="font-weight:bold;font-size:12px;color:${isAlive ? '#f1f5f9' : '#94a3b8'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="#${idx + 1} ${mem.name} (${mem.className || '道友'})">
+            #${idx + 1} ${mem.name}
+          </span>
+          <span style="font-size:10px;color:${rowColor};font-weight:bold;flex-shrink:0;">[${rowLabel}]</span>
         </div>
-        <div style="font-size:11px;color:#94a3b8;">${mem.roleTitle || '同伴'}</div>
-        <div style="font-size:11px;color:#f87171;display:flex;justify-content:space-between;">
-          <span>❤️ 氣血: ${mem.hp}/${mem.maxHp}</span>
-          <span>🧘 心: ${mem.san}/${mem.maxSan}</span>
+        <div style="font-size:10px;line-height:1.2;margin:3px 0;color:${!isAlive ? '#ef4444' : (slotActive ? '#6ee7b7' : '#facc15')};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${mem.formationSlotBonus || mem.formationSlotName || '自由衛位'}">
+          ${!isAlive ? '💀 陣亡離陣' : (mem.formationSlotBonus ? `💠 ${mem.formationSlotBonus}` : (mem.formationSlotName || '自由策應'))}
         </div>
-        <div style="width:100%;height:4px;background:#334155;border-radius:2px;overflow:hidden;">
-          <div style="width:${hpPct}%;height:100%;background:${isAlive ? '#10b981' : '#ef4444'};"></div>
-        </div>
-        <div style="margin-top:4px;display:flex;gap:6px;">
-          <button class="act-btn btn-sm" onclick="send('party switch ${idx}')" style="flex:1;padding:4px;font-size:11px;background:#1e293b;border:1px solid #475569;color:#cbd5e1;" title="將 #${idx + 1} ${mem.name} 切換至${nextRow}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px;">
+          <button class="act-btn btn-sm" onclick="send('formation switch ${idx}')" title="循環切換至${nextRow}" style="padding:1px 6px;font-size:10px;background:#1e293b;color:#cbd5e1;border:1px solid #475569;border-radius:3px;">
             🔄 調至${nextRow}
           </button>
-          <button class="act-btn btn-sm" onclick="selectPartyModalMember(${idx})" style="padding:4px 8px;font-size:11px;background:#334155;border:1px solid #64748b;color:#f1f5f9;" title="檢視個人裝備與武學">
-            👤 詳情
-          </button>
+          ${!isAlive ? '<span style="font-size:9px;color:#ef4444;font-weight:bold;">離陣</span>' : (slotActive ? '<span style="font-size:9px;color:#34d399;">✓生效</span>' : '<span style="font-size:9px;color:#facc15;">⚠未配</span>')}
         </div>
       </div>
     `;
   };
 
-  const frontHtml = frontMembers.length > 0
-    ? frontMembers.map(renderMemberSlot).join('')
-    : '<div style="color:#64748b;font-size:12px;padding:12px;text-align:center;grid-column:1/-1;">(前衛空缺，後排將直接承受猛烈衝擊！)</div>';
-
-  const backHtml = backMembers.length > 0
-    ? backMembers.map(renderMemberSlot).join('')
-    : '<div style="color:#64748b;font-size:12px;padding:12px;text-align:center;grid-column:1/-1;">(後衛空缺，全體在前線禦敵)</div>';
-
   return `
-    <div class="team-formation-container" style="display:flex;flex-direction:column;gap:16px;">
-      <!-- 1. 當前陣法與靈威奧義展示卡 -->
-      <div style="background:linear-gradient(135deg, rgba(30,27,75,0.8), rgba(15,23,42,0.9));border:1px solid #6366f1;border-radius:8px;padding:16px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
-          <div>
-            <div style="font-size:18px;font-weight:bold;color:#c084fc;display:flex;align-items:center;gap:8px;">
-              <span>☯️ 小隊當前結成陣法：【${party.formationName || '四象辟邪陣'}】</span>
-              <span style="font-size:11px;background:#4338ca;color:#e0e7ff;padding:2px 8px;border-radius:4px;">全隊陣眼常駐加持</span>
-            </div>
-            <div style="font-size:12px;color:#cbd5e1;margin-top:4px;">
-              ${isSymbols ? '🛡️ 光環加成：全隊物理與法術承傷減免 15%，步步為營，道心穩如磐石。' : '💀 光環加成：全隊暴擊率 +20%，敵弱我強，擊殺時引導煞氣回饋全隊靈威。'}
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;">
-            <button class="act-btn" onclick="send('formation toggle')" style="background:#4f46e5;color:#fff;padding:6px 14px;font-size:12px;border:none;border-radius:6px;cursor:pointer;font-weight:bold;">
-              🔄 切換陣法 (F)
-            </button>
-          </div>
+    <div class="team-formation-container" style="display:flex;flex-direction:column;gap:14px;">
+      <!-- 1. 當前陣法光環與典籍庫切換條 -->
+      <div style="background:rgba(30,27,75,0.7);border:1px solid ${isBroken ? '#ef4444' : '#6366f1'};border-radius:6px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+        <div style="display:flex;align-items:center;gap:10px;font-size:12px;">
+          <span style="font-weight:bold;color:${isBroken ? '#f87171' : '#c084fc'};font-size:15px;">☯️ 【${party.formationName || '五行混元陣'}】</span>
+          ${isBroken
+            ? '<span style="font-size:11px;background:#991b1b;color:#fecaca;padding:2px 8px;border-radius:4px;font-weight:bold;">⚠️ 陣法崩解失效</span>'
+            : '<span style="font-size:11px;background:#4338ca;color:#e0e7ff;padding:2px 8px;border-radius:4px;font-weight:bold;">常駐運轉中</span>'}
+          <span style="color:#cbd5e1;font-size:11px;">
+            ${isBroken
+              ? '<span style="color:#f87171;font-weight:bold;">因人員陣亡導致人數不符，請點擊右側「📚 切換陣法」選擇適配存活人數的陣法！</span>'
+              : '全隊受陣形靈威加持，陣眼與孔位契合時可爆發專屬屬性增幅。'}
+          </span>
         </div>
-
-        <!-- 陣法奧義與充能進度條 -->
-        <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(99,102,241,0.3);border-radius:6px;padding:12px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:13px;font-weight:bold;color:#facc15;">⚡ 全隊終極奧義：【${ultName}】</span>
-            <span style="font-size:12px;color:#94a3b8;">小隊靈威充能：<strong style="color:${energy >= 100 ? '#4ade80' : '#38bdf8'};">${energy}</strong> / 100</span>
-          </div>
-          <div style="width:100%;height:8px;background:#1e293b;border-radius:4px;overflow:hidden;margin-bottom:8px;">
-            <div style="width:${energyPct}%;height:100%;background:linear-gradient(90deg, #6366f1, #a855f7, #f59e0b);transition:width 0.3s ease;"></div>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#94a3b8;">
-            <span>${isSymbols ? '效果：引青龍白虎朱雀玄武四相真靈鎮壓敵方全體，造成巨額靈能衝擊並大幅降低敵方攻擊。' : '效果：自九幽深淵引動萬千厲鬼撲殺敵陣，撕裂護甲並附加幽火流血持續重創。'}</span>
-            ${canCast
-              ? `<button class="act-btn btn-ult" onclick="send('formation cast')" style="padding:4px 12px;font-size:11px;font-weight:bold;">⚡ 施展陣法奧義 (U)</button>`
-              : `<span style="color:#64748b;">(靈威滿 100 且戰鬥中方可施展)</span>`}
-          </div>
-        </div>
+        <button class="act-btn" onclick="window.toggleFormationViewMode('LIBRARY')" style="background:#0284c7;color:#fff;padding:6px 14px;font-size:12px;border:none;border-radius:4px;cursor:pointer;font-weight:bold;box-shadow:0 2px 6px rgba(2,132,199,0.4);">
+          📚 切換陣法 (典籍庫)
+        </button>
       </div>
 
-      <!-- 2. 小隊戰鬥站位調配盤 (前衛 vs 後衛) -->
+      <!-- 2. 浪漫沙加式 5×3 戰術站位陣盤 -->
       <div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:16px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
           <div>
-            <div style="font-size:15px;font-weight:bold;color:#e2e8f0;">🛡️ 隊伍戰鬥站位編排 (前後排陣形)</div>
-            <div style="font-size:11px;color:#94a3b8;margin-top:2px;">前衛優先承受近戰普攻與敵方仇恨；後衛受前衛掩護減免 20% 物理傷害。點擊即可自由調動站位。</div>
+            <div style="font-size:15px;font-weight:bold;color:#e2e8f0;">🛡️ 隊伍戰鬥站位編排 (浪漫沙加式 5×3 戰陣盤)</div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:2px;">依陣法 (X, Y) 幾何座標精準排布。點擊「🔄 調位」可循環切換【前衛 ➜ 中衛 ➜ 後衛】。</div>
           </div>
           <div style="font-size:11px;color:#cbd5e1;background:#0f172a;padding:4px 10px;border-radius:4px;">
-            總人數：${(party.members || []).length} / 5
+            總人數：${(party.members || []).length} / 5 人
           </div>
         </div>
 
-        <!-- 前衛排 -->
-        <div style="margin-bottom:14px;">
-          <div style="font-size:12px;font-weight:bold;color:#f87171;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-            <span>⚔️ 前衛戰鬥線 (Front Row)</span>
-            <span style="font-size:10px;color:#94a3b8;font-weight:normal;">- 承傷核心、反擊與拉怪第一線</span>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:10px;">
-            ${frontHtml}
-          </div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          ${rowMeta.map((row, rIdx) => `
+            <div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <span style="font-size:12px;font-weight:bold;color:${row.color};">${row.label}</span>
+                <span style="font-size:10px;color:#94a3b8;">${row.desc}</span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(5, 1fr);gap:8px;">
+                ${gridMatrix[rIdx].map(cell => renderSlimCell(cell)).join('')}
+              </div>
+            </div>
+          `).join('')}
         </div>
 
-        <!-- 後衛排 -->
+        ${deadMembers.length > 0 ? `
+        <!-- 陣亡重傷待援區 -->
+        <div style="border-top:1px dashed #ef4444;margin-top:14px;padding-top:10px;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:12px;font-weight:bold;color:#ef4444;">💀 陣亡重傷待援：</span>
+          <span style="font-size:11px;color:#fca5a5;">
+            ${deadMembers.map(d => `#${d.idx + 1} ${d.mem.name}`).join('、')} (暫離陣法，請丹修施救或切換為 ${party.members.length - deadMembers.length} 人陣法)
+          </span>
+        </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * 模式 B: 道門陣法典籍庫 (專屬切換視窗，支援 2/3/4/5人頁籤與分頁)
+ */
+function renderFormationLibraryView(party) {
+  const allList = party.availableFormations || [];
+  const currentFilter = drpgState.formationFilterSize || 'ALL';
+  const currentPage = drpgState.formationPage || 0;
+  const PAGE_SIZE = 6;
+
+  // 1. 根據人數頁籤篩選
+  const filteredList = allList.filter(f => {
+    if (currentFilter === 'ALL') return true;
+    return f.requiredPartySize === Number(currentFilter);
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filteredList.length / PAGE_SIZE));
+  const safePage = Math.min(Math.max(0, currentPage), totalPages - 1);
+  const pagedList = filteredList.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
+
+  // 統計各人數數量
+  const countAll = allList.length;
+  const count5 = allList.filter(f => f.requiredPartySize === 5).length;
+  const count4 = allList.filter(f => f.requiredPartySize === 4).length;
+  const count3 = allList.filter(f => f.requiredPartySize === 3).length;
+  const count2 = allList.filter(f => f.requiredPartySize === 2).length;
+
+  const isPartyBroken = Boolean(party.formationName && party.formationName.includes('已崩解'));
+
+  // 迷你 5x3 點陣預覽圖產生器
+  const renderMiniGrid = (slots) => {
+    const grid = [
+      [false, false, false, false, false],
+      [false, false, false, false, false],
+      [false, false, false, false, false]
+    ];
+    (slots || []).forEach(s => {
+      const gx = (typeof s.gridX === 'number' && s.gridX >= 0 && s.gridX < 5) ? s.gridX : 2;
+      const gy = (typeof s.gridY === 'number' && s.gridY >= 0 && s.gridY < 3) ? s.gridY : 1;
+      grid[gy][gx] = true;
+    });
+
+    return `
+      <div style="display:grid;grid-template-columns:repeat(5, 12px);gap:3px;background:#0b0f19;padding:4px 6px;border-radius:4px;border:1px solid #1e293b;width:fit-content;" title="浪漫沙加 5×3 孔位分佈圖">
+        ${grid.flatMap(row => row.map(dot => `
+          <div style="width:12px;height:12px;border-radius:2px;background:${dot ? '#38bdf8' : '#1e293b'};box-shadow:${dot ? '0 0 5px #38bdf8' : 'none'};"></div>
+        `)).join('')}
+      </div>
+    `;
+  };
+
+  return `
+    <div class="formation-library-container" style="display:flex;flex-direction:column;gap:14px;">
+      <!-- 典籍庫頂部列：返回戰術盤按鈕與標題 -->
+      <div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;">
         <div>
-          <div style="font-size:12px;font-weight:bold;color:#60a5fa;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-            <span>🏹 後衛支援線 (Back Row)</span>
-            <span style="font-size:10px;color:#94a3b8;font-weight:normal;">- 遠程輸出、術法引導與回血輔佐</span>
+          <div style="font-size:16px;font-weight:bold;color:#e2e8f0;display:flex;align-items:center;gap:8px;">
+            <span>📜 道門陣法典籍庫</span>
+            <span style="font-size:11px;color:#94a3b8;font-weight:normal;">- 典藏太古修仙陣圖與凡世軍道殺陣</span>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:10px;">
-            ${backHtml}
+          <div style="font-size:11px;color:#94a3b8;margin-top:2px;">
+            當前出戰人數：${(party.members || []).length} 人 | 存活人數：${(party.members || []).filter(m => (m.alive !== undefined ? m.alive : m.hp > 0)).length} 人
           </div>
         </div>
+        <button class="act-btn" onclick="window.toggleFormationViewMode('TACTICAL')" style="background:#0284c7;color:#fff;padding:6px 14px;font-size:12px;border:none;border-radius:4px;cursor:pointer;font-weight:bold;">
+          🛡️ 返回 5×3 戰陣盤
+        </button>
       </div>
 
-      <!-- 3. 道門可用陣法典籍庫 -->
-      <div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:16px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-          <div style="font-size:15px;font-weight:bold;color:#e2e8f0;">📜 道門陣法典籍庫 (${(party.members || []).length}人陣)</div>
-          <div style="font-size:11px;color:#94a3b8;">人數變更時自動篩選匹配陣法，未達職業限制則退回該人數基本陣法</div>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:12px;">
-          ${renderFormationCards(party)}
-        </div>
+      <!-- 人數分類頁籤 (2 / 3 / 4 / 5 人分類) -->
+      <div style="display:flex;gap:8px;border-bottom:1px solid #334155;padding-bottom:8px;flex-wrap:wrap;">
+        <button class="act-btn btn-sm ${currentFilter === 'ALL' ? 'active' : ''}" onclick="window.setFormationFilterSize('ALL')" style="padding:4px 12px;font-size:12px;background:${currentFilter === 'ALL' ? '#38bdf8' : '#1e293b'};color:${currentFilter === 'ALL' ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
+          全部 (${countAll})
+        </button>
+        <button class="act-btn btn-sm ${currentFilter === 5 ? 'active' : ''}" onclick="window.setFormationFilterSize(5)" style="padding:4px 12px;font-size:12px;background:${currentFilter === 5 ? '#38bdf8' : '#1e293b'};color:${currentFilter === 5 ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
+          5人陣法 (${count5})
+        </button>
+        <button class="act-btn btn-sm ${currentFilter === 4 ? 'active' : ''}" onclick="window.setFormationFilterSize(4)" style="padding:4px 12px;font-size:12px;background:${currentFilter === 4 ? '#38bdf8' : '#1e293b'};color:${currentFilter === 4 ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
+          4人陣法 (${count4})
+        </button>
+        <button class="act-btn btn-sm ${currentFilter === 3 ? 'active' : ''}" onclick="window.setFormationFilterSize(3)" style="padding:4px 12px;font-size:12px;background:${currentFilter === 3 ? '#38bdf8' : '#1e293b'};color:${currentFilter === 3 ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
+          3人陣法 (${count3})
+        </button>
+        <button class="act-btn btn-sm ${currentFilter === 2 ? 'active' : ''}" onclick="window.setFormationFilterSize(2)" style="padding:4px 12px;font-size:12px;background:${currentFilter === 2 ? '#38bdf8' : '#1e293b'};color:${currentFilter === 2 ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
+          2人陣法 (${count2})
+        </button>
+      </div>
+
+      <!-- 典籍陣法列表 (分頁展示，每頁 6 張卡片，完美承載 20+ 陣法擴充) -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:12px;">
+        ${pagedList.length === 0 ? '<div style="color:#94a3b8;padding:20px;grid-column:1/-1;text-align:center;">此分類下尚無解鎖陣法</div>' : ''}
+        ${pagedList.map(f => {
+          const isCurrent = Boolean(f.current);
+          const isSelectable = Boolean(f.selectable);
+          const borderColor = isCurrent ? (isPartyBroken ? '#ef4444' : '#38bdf8') : (f.basic ? '#334155' : '#475569');
+          const titleColor = isCurrent ? (isPartyBroken ? '#f87171' : '#38bdf8') : (f.basic ? '#7dd3fc' : '#c084fc');
+
+          let actionBtn = '';
+          if (isCurrent && isPartyBroken) {
+            actionBtn = '<span style="font-size:11px;color:#f87171;font-weight:bold;background:rgba(239,68,68,0.2);padding:2px 8px;border-radius:4px;border:1px solid #ef4444;">⚠️ 陣法已崩解</span>';
+          } else if (isCurrent) {
+            actionBtn = '<span style="font-size:11px;color:#34d399;font-weight:bold;background:rgba(52,211,153,0.15);padding:2px 8px;border-radius:4px;border:1px solid #34d399;">✔ 當前運轉中</span>';
+          } else if (isSelectable) {
+            actionBtn = `<button class="act-btn btn-sm" onclick="send('formation equip ${f.id}')" style="padding:4px 12px;font-size:11px;background:#0284c7;color:#fff;font-weight:bold;">結成此陣</button>`;
+          } else {
+            actionBtn = `<span style="font-size:11px;color:#ef4444;background:rgba(239,68,68,0.15);border:1px solid #ef4444;padding:2px 8px;border-radius:4px;" title="${f.lockReason || '隊伍條件不符'}">🔒 ${f.lockReason || '不可選'}</span>`;
+          }
+
+          const typeBadge = f.basic
+            ? '<span style="font-size:10px;background:#059669;color:#ecfdf5;padding:1px 6px;border-radius:3px;">基本陣法</span>'
+            : '<span style="font-size:10px;background:#7c3aed;color:#ede9fe;padding:1px 6px;border-radius:3px;">進階陣法</span>';
+
+          const sizeBadge = `<span style="font-size:10px;background:#334155;color:#cbd5e1;padding:1px 6px;border-radius:3px;">${f.requiredPartySize}人陣</span>`;
+
+          const reqClassesHtml = (f.requiredClasses && f.requiredClasses.length > 0)
+            ? `<div style="font-size:11px;color:#fbbf24;display:flex;align-items:center;gap:4px;">
+                 <span>⚠️ 需職業：</span>
+                 <span>${f.requiredClasses.map(formatFormationClassName).join('、')}</span>
+               </div>`
+            : '';
+
+          const ultHtml = f.ultimateSkillName
+            ? `<div style="font-size:11px;color:#facc15;">⚡ 專屬奧義：【${f.ultimateSkillName}】</div>`
+            : '';
+
+          return `
+            <div style="background:#0f172a;border:1px solid ${borderColor};border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 6px rgba(0,0,0,0.3);">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span style="font-weight:bold;color:${titleColor};font-size:14px;">☯️ 《${f.name}》</span>
+                  ${sizeBadge}
+                  ${typeBadge}
+                </div>
+                ${actionBtn}
+              </div>
+
+              <div style="display:flex;gap:12px;align-items:flex-start;">
+                <!-- 迷你 5x3 站位縮略圖 -->
+                <div style="flex-shrink:0;">
+                  ${renderMiniGrid(f.slots)}
+                </div>
+                <!-- 陣法描述與光環 -->
+                <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;">
+                  <div style="font-size:11px;color:#cbd5e1;line-height:1.4;">${f.description || ''}</div>
+                  ${f.passiveAura ? `<div style="font-size:11px;color:#6ee7b7;line-height:1.3;">${f.passiveAura}</div>` : ''}
+                </div>
+              </div>
+
+              ${reqClassesHtml}
+              ${ultHtml}
+            </div>
+          `;
+        }).join('')}
+      </div>
+
+      <!-- 分頁導航控制列 -->
+      <div style="display:flex;justify-content:center;align-items:center;gap:12px;padding:8px 0;margin-top:6px;">
+        <button class="act-btn btn-sm" onclick="window.changeFormationPage(-1)" ${safePage === 0 ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>
+          ◀ 上一頁
+        </button>
+        <span style="font-size:12px;color:#94a3b8;">
+          第 <span style="color:#e2e8f0;font-weight:bold;">${safePage + 1}</span> / ${totalPages} 頁 (共 ${filteredList.length} 個陣法)
+        </span>
+        <button class="act-btn btn-sm" onclick="window.changeFormationPage(1)" ${safePage >= totalPages - 1 ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>
+          下一頁 ▶
+        </button>
       </div>
     </div>
   `;
@@ -435,61 +634,20 @@ function formatFormationClassName(c) {
   }
 }
 
-function renderFormationCards(party) {
-  const list = party.availableFormations || [];
-  if (list.length === 0) {
-    return `
-      <div style="color:#94a3b8;font-size:12px;padding:12px;grid-column:1/-1;">
-        當前人數（${(party.members || []).length}人）無可用陣法或載入中...
-      </div>
-    `;
-  }
+function toggleFormationViewMode(mode) {
+  drpgState.formationViewMode = mode || (drpgState.formationViewMode === 'TACTICAL' ? 'LIBRARY' : 'TACTICAL');
+  renderPartyModal();
+}
 
-  return list.map(f => {
-    const isCurrent = Boolean(f.current);
-    const isSelectable = Boolean(f.selectable);
-    const borderColor = isCurrent ? '#38bdf8' : (f.basic ? '#334155' : '#475569');
-    const titleColor = isCurrent ? '#38bdf8' : (f.basic ? '#7dd3fc' : '#c084fc');
+function setFormationFilterSize(size) {
+  drpgState.formationFilterSize = size;
+  drpgState.formationPage = 0;
+  renderPartyModal();
+}
 
-    let actionBtn = '';
-    if (isCurrent) {
-      actionBtn = '<span style="font-size:11px;color:#34d399;font-weight:bold;background:rgba(52,211,153,0.15);padding:2px 8px;border-radius:4px;border:1px solid #34d399;">✔ 當前運轉中</span>';
-    } else if (isSelectable) {
-      actionBtn = `<button class="act-btn btn-sm" onclick="send('formation equip ${f.id}')" style="padding:3px 10px;font-size:11px;background:#0284c7;color:#fff;">結成此陣</button>`;
-    } else {
-      actionBtn = `<span style="font-size:11px;color:#ef4444;background:rgba(239,68,68,0.15);border:1px solid #ef4444;padding:2px 8px;border-radius:4px;" title="${f.lockReason || '隊伍條件不符'}">🔒 不可選 (${f.lockReason || '條件不符'})</span>`;
-    }
-
-    const typeBadge = f.basic
-      ? '<span style="font-size:10px;background:#059669;color:#ecfdf5;padding:1px 6px;border-radius:3px;">基本陣法</span>'
-      : '<span style="font-size:10px;background:#7c3aed;color:#ede9fe;padding:1px 6px;border-radius:3px;">進階陣法</span>';
-
-    const reqClassesHtml = (f.requiredClasses && f.requiredClasses.length > 0)
-      ? `<div style="font-size:11px;color:#fbbf24;display:flex;align-items:center;gap:4px;">
-           <span>⚠️ 需職業：</span>
-           <span>${f.requiredClasses.map(formatFormationClassName).join('、')}</span>
-         </div>`
-      : '';
-
-    const ultHtml = f.ultimateSkillName
-      ? `<div style="font-size:11px;color:#facc15;">專屬奧義：【${f.ultimateSkillName}】</div>`
-      : '';
-
-    return `
-      <div style="background:#0f172a;border:1px solid ${borderColor};border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span style="font-weight:bold;color:${titleColor};font-size:14px;">☯️ 《${f.name}》</span>
-            ${typeBadge}
-          </div>
-          ${actionBtn}
-        </div>
-        ${reqClassesHtml}
-        <div style="font-size:11px;color:#cbd5e1;line-height:1.4;">${f.description || ''}</div>
-        ${ultHtml}
-      </div>
-    `;
-  }).join('');
+function changeFormationPage(delta) {
+  drpgState.formationPage = Math.max(0, (drpgState.formationPage || 0) + delta);
+  renderPartyModal();
 }
 
 function renderPartyModal() {
@@ -547,24 +705,16 @@ function renderPartyModal() {
       const rowBadge = mem.row === 'FRONT' ? '前衛' : '後衛';
       const hpPct = Math.min(100, Math.max(0, (mem.hp / mem.maxHp) * 100));
       return `
-        <button class="party-member-tab-btn ${isSel ? 'active' : ''}" type="button" onclick="selectPartyModalMember(${idx})">
+        <button class="party-member-tab-btn ${isSel ? 'active' : ''}" type="button" onclick="selectPartyModalMember(${idx})" title="#${idx + 1} ${mem.name} (${mem.className || '道友'}) - ${mem.row === 'FRONT' ? '前衛' : (mem.row === 'MIDDLE' ? '中衛' : '後衛')}">
           <span style="font-weight:bold;">#${idx + 1} ${mem.name}</span>
-          <span class="member-level-badge" style="font-size:10px;">Lv.${mem.level || 1}</span>
-          <span style="font-size:10px; color:${mem.row === 'FRONT' ? '#f87171' : '#60a5fa'};">[${rowBadge}]</span>
-          ${mem.className ? `<span style="font-size:10px; color:#38bdf8;">${mem.className}</span>` : ''}
-          ${(idx === 0 && mem.freeStatPoints > 0) ? `<span class="hud-free-points-pill" style="margin-left:2px;">+${mem.freeStatPoints}</span>` : ''}
-          <div style="width:40px; height:4px; background:#334155; border-radius:2px; overflow:hidden;">
-            <div style="width:${hpPct}%; height:100%; background:${isAlive ? '#10b981' : '#ef4444'};"></div>
-          </div>
+          ${(idx === 0 && mem.freeStatPoints > 0) ? `<span class="hud-free-points-pill" style="margin-left:2px; font-size:9px; padding:0 3px;">+${mem.freeStatPoints}</span>` : ''}
         </button>
       `;
     }).join('');
 
     const formationBtn = `
-      <button class="party-member-tab-btn ${isFormationMode ? 'active' : ''}" type="button" onclick="selectPartyFormationTab()" style="${isFormationMode ? 'border-color:#a855f7; box-shadow:0 -2px 10px rgba(168,85,247,0.3);' : 'border-left:2px solid #a855f7;'}">
-        <span style="font-weight:bold; color:#c084fc;">☯️ 全隊陣法奧義</span>
-        <span style="font-size:10px; color:#a855f7;">[全隊]</span>
-        <span style="font-size:10px; color:#e9d5ff;">${party.formationName || '四象辟邪陣'}</span>
+      <button class="party-member-tab-btn ${isFormationMode ? 'active' : ''}" type="button" onclick="selectPartyFormationTab()" style="${isFormationMode ? 'border-color:#a855f7; box-shadow:0 -2px 10px rgba(168,85,247,0.3);' : 'border-left:2px solid #a855f7;'}" title="查看與調配全隊陣法站位">
+        <span style="font-weight:bold; color:#c084fc;">☯️ 全隊陣法</span>
       </button>
     `;
 
@@ -1070,6 +1220,9 @@ if (typeof window !== 'undefined') {
   window.renderMemberSpellbook = renderMemberSpellbook;
   window.switchSpellbookTab = switchSpellbookTab;
   window.switchSpellbookPage = switchSpellbookPage;
+  window.toggleFormationViewMode = toggleFormationViewMode;
+  window.setFormationFilterSize = setFormationFilterSize;
+  window.changeFormationPage = changeFormationPage;
 }
 
 export {
@@ -1088,5 +1241,8 @@ export {
   renderPartyModal,
   renderMemberSpellbook,
   switchSpellbookTab,
-  switchSpellbookPage
+  switchSpellbookPage,
+  toggleFormationViewMode,
+  setFormationFilterSize,
+  changeFormationPage
 };

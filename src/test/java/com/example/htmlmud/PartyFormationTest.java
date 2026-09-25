@@ -26,11 +26,11 @@ class PartyFormationTest {
   @Test
   @DisplayName("測試初始小隊建立與前後衛編制")
   void testInitialPartyCreation() {
-    assertEquals(5, party.size(), "初始應有滿編 5 人（3 前衛、2 後衛）");
+    assertEquals(5, party.size(), "初始應有滿編 5 人（2 前衛、1 中衛、2 後衛）");
     assertEquals("李長生", party.getMember(0).getName());
     assertEquals(RowPosition.FRONT, party.getMember(0).getRow(), "主角為前衛");
     assertEquals(RowPosition.FRONT, party.getMember(1).getRow(), "鐵牛為前衛");
-    assertEquals(RowPosition.FRONT, party.getMember(2).getRow(), "燕青為前衛");
+    assertEquals(RowPosition.MIDDLE, party.getMember(2).getRow(), "燕青為中衛");
     assertEquals(RowPosition.BACK, party.getMember(3).getRow(), "凌霜為後衛");
     assertEquals(RowPosition.BACK, party.getMember(4).getRow(), "墨衍為後衛");
     assertNotNull(party.getEquippedFormation(), "應預設裝備《四象辟邪陣》");
@@ -211,5 +211,138 @@ class PartyFormationTest {
       assertTrue(mobIds.contains("yan_qing"), "客棧應可招募燕青");
       assertTrue(mobIds.contains("mo_yan"), "客棧應可招募墨衍");
     }
+  }
+
+  @Test
+  @DisplayName("測試 FormationEngine：隊員陣亡即時觸發破陣、清除 Buff 與靈威")
+  void testFormationEngineBreakOnMemberDeath() {
+    var formationEngine = new com.example.htmlmud.domain.party.service.FormationEngine();
+    var fiveElements = partyService.getFormation("formation_five_elements");
+    assertNotNull(fiveElements);
+
+    formationEngine.applyFormation(party, fiveElements);
+    assertFalse(party.isFormationBroken());
+    party.setFormationEnergy(100);
+    assertTrue(party.canCastUltimate());
+
+    // 隊員 #3 (index 2) 陣亡
+    PartyMember victim = party.getMembers().get(2);
+    victim.setAlive(false);
+
+    // 觸發破陣檢驗
+    String breakMsg = formationEngine.checkAndBreakFormation(party, victim.getName() + " 力竭倒下");
+    assertNotNull(breakMsg, "減員應產生破陣提示");
+    assertTrue(breakMsg.contains("陣法崩解"));
+    assertTrue(party.isFormationBroken(), "隊伍陣法應被標記為崩解");
+    assertEquals(0, party.getFormationEnergy(), "靈威應清零");
+    assertFalse(party.canCastUltimate(), "崩解後無法施展奧義");
+
+    // 全員陣法 Buff 應已被移除
+    for (PartyMember m : party.getMembers()) {
+      for (int i = 0; i < 5; i++) {
+        assertFalse(m.hasActiveBuff("buff_formation_slot_" + i), "破陣後陣法 Buff 應被清除");
+      }
+    }
+  }
+
+  @Test
+  @DisplayName("測試 FormationEngine：存活成員自動排位映射 (Auto-mapping) 與換陣止血")
+  void testFormationEngineAutoMappingOnSwitchToFourPersonFormation() {
+    var formationEngine = new com.example.htmlmud.domain.party.service.FormationEngine();
+    var fourSymbols = partyService.getFormation("formation_four_symbols");
+    assertNotNull(fourSymbols);
+
+    // 5 人隊伍中，第 3 位 (index 2) 陣亡，存活人數為 4
+    party.getMembers().get(2).setAlive(false);
+    assertEquals(4, party.getAliveCount());
+    assertEquals(5, party.size());
+    assertEquals(4, formationEngine.getEffectivePartySize(party));
+
+    // 換成 4 人陣法
+    assertTrue(formationEngine.isFormationEligible(party, fourSymbols));
+    formationEngine.applyFormation(party, fourSymbols);
+    assertFalse(party.isFormationBroken());
+
+    // 驗證 Auto-mapping 映射：
+    // index 0 -> slot 0
+    // index 1 -> slot 1
+    // index 2 (陣亡) -> null
+    // index 3 -> slot 2
+    // index 4 -> slot 3
+    var slot0 = party.getSlotForMember(0);
+    var slot1 = party.getSlotForMember(1);
+    var slot2Dead = party.getSlotForMember(2);
+    var slot3 = party.getSlotForMember(3);
+    var slot4 = party.getSlotForMember(4);
+
+    assertNotNull(slot0);
+    assertEquals(0, slot0.getSlotIndex());
+
+    assertNotNull(slot1);
+    assertEquals(1, slot1.getSlotIndex());
+
+    assertNull(slot2Dead, "陣亡成員不應分派孔位");
+
+    assertNotNull(slot3);
+    assertEquals(2, slot3.getSlotIndex(), "活著的第 3 位成員應自動遞補到孔位 2");
+
+    assertNotNull(slot4);
+    assertEquals(3, slot4.getSlotIndex(), "活著的第 4 位成員應自動遞補到孔位 3");
+
+    // 驗證數值倍率有正確套用
+    var stats3 = party.calculateEffectiveStats(3);
+    assertNotNull(stats3);
+    assertEquals((int) Math.round(party.getMembers().get(3).getBaseMinDamage() * slot3.getAttackMultiplier()), stats3.minDamage());
+  }
+
+  @Test
+  @DisplayName("測試 5 人陣法完整性與 5x3 浪漫沙加座標配置")
+  void testFivePersonFormationsAndGridCoords() {
+    // 1. 驗證鳳天舞之陣 (朱雀)
+    var phoenix = partyService.getFormation("formation_phoenix");
+    assertNotNull(phoenix);
+    assertEquals("鳳天舞之陣", phoenix.getName());
+    assertEquals(5, phoenix.getSlots().size());
+    // 帝王中央陣眼 slot 2: gridX=2, gridY=1
+    assertEquals(2, phoenix.getSlots().get(2).getGridX());
+    assertEquals(1, phoenix.getSlots().get(2).getGridY());
+
+    // 2. 驗證十字陣 (純物攻/純防禦浪漫沙加軍陣)
+    var cross = partyService.getFormation("formation_cross");
+    assertNotNull(cross);
+    assertEquals("十字陣", cross.getName());
+    // 先鋒 (2,0), 左翼 (1,1), 陣心 (2,1), 右翼 (3,1), 殿後 (2,2)
+    assertEquals(2, cross.getSlots().get(0).getGridX());
+    assertEquals(0, cross.getSlots().get(0).getGridY());
+    assertEquals(1, cross.getSlots().get(1).getGridX());
+    assertEquals(1, cross.getSlots().get(1).getGridY());
+    assertEquals(2, cross.getSlots().get(2).getGridX());
+    assertEquals(1, cross.getSlots().get(2).getGridY());
+    assertEquals(3, cross.getSlots().get(3).getGridX());
+    assertEquals(1, cross.getSlots().get(3).getGridY());
+    assertEquals(2, cross.getSlots().get(4).getGridX());
+    assertEquals(2, cross.getSlots().get(4).getGridY());
+
+    // 3. 驗證青龍騰雲陣 (青龍)
+    var qingLong = partyService.getFormation("formation_qing_long");
+    assertNotNull(qingLong);
+    assertEquals("青龍騰雲陣", qingLong.getName());
+    assertTrue(qingLong.getRequiredClasses().contains("ROGUE"));
+
+    // 4. 驗證白虎嘯日陣 (白虎)
+    var baiHu = partyService.getFormation("formation_bai_hu");
+    assertNotNull(baiHu);
+    assertEquals("白虎嘯日陣", baiHu.getName());
+    assertTrue(baiHu.getRequiredClasses().contains("WARRIOR"));
+
+    // 5. 驗證玄武鎮嶽陣 (玄武)
+    var xuanWu = partyService.getFormation("formation_xuan_wu");
+    assertNotNull(xuanWu);
+    assertEquals("玄武鎮嶽陣", xuanWu.getName());
+    assertTrue(xuanWu.getRequiredClasses().contains("WARRIOR"));
+
+    // 6. 總共應有 7 種 5 人陣法
+    var f5List = partyService.getFormationsForPartySize(5);
+    assertEquals(7, f5List.size(), "五行、十字、鳳天舞、青龍、白虎、玄武、玄陰");
   }
 }

@@ -24,6 +24,12 @@ public class FormationSlot {
   private double speedMultiplier = 1.0;
   @Builder.Default
   private int sanResistanceBonus = 0;
+  @Builder.Default
+  private double threatMultiplier = 1.0;
+  @Builder.Default
+  private int gridX = 2;
+  @Builder.Default
+  private int gridY = 1;
   private String specialBonusDesc;
 
   public RowPosition getAssignedRow() {

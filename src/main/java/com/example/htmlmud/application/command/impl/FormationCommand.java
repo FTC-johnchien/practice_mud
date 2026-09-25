@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public class FormationCommand implements PlayerCommand {
 
   private final PartyService partyService;
+  private final com.example.htmlmud.domain.party.service.FormationEngine formationEngine;
   private final DungeonManager dungeonManager;
   private final DungeonNavigator dungeonNavigator;
   private final com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService;
@@ -55,11 +56,21 @@ public class FormationCommand implements PlayerCommand {
             int mIdx = Integer.parseInt(parts[1]);
             if (mIdx >= 0 && mIdx < party.getMembers().size()) {
               var m = party.getMembers().get(mIdx);
-              var next = (m.getRow() == com.example.htmlmud.domain.party.model.RowPosition.FRONT)
-                  ? com.example.htmlmud.domain.party.model.RowPosition.BACK
-                  : com.example.htmlmud.domain.party.model.RowPosition.FRONT;
+              com.example.htmlmud.domain.party.model.RowPosition cur = m.getRow() != null
+                  ? m.getRow() : com.example.htmlmud.domain.party.model.RowPosition.FRONT;
+              var next = switch (cur) {
+                case FRONT -> com.example.htmlmud.domain.party.model.RowPosition.MIDDLE;
+                case MIDDLE -> com.example.htmlmud.domain.party.model.RowPosition.BACK;
+                case BACK -> com.example.htmlmud.domain.party.model.RowPosition.FRONT;
+                default -> com.example.htmlmud.domain.party.model.RowPosition.FRONT;
+              };
               m.setRow(next);
-              String rowName = (next == com.example.htmlmud.domain.party.model.RowPosition.FRONT) ? "前衛" : "後衛";
+              String rowName = switch (next) {
+                case FRONT -> "前衛";
+                case MIDDLE -> "中衛";
+                case BACK -> "後衛";
+                default -> "前衛";
+              };
               self.reply("【站位變更】已將隊員「" + m.getName() + "」的戰鬥站位切換為【" + rowName + "】！");
               broadcastDrpgState(self);
               return;
@@ -73,27 +84,40 @@ public class FormationCommand implements PlayerCommand {
       }
       case "info", "status" -> {
         if (party.getEquippedFormation() != null) {
-          self.reply(partyService.formatFormationDetails(party.getEquippedFormation()));
+          StringBuilder sb = new StringBuilder();
+          if (party.isFormationBroken()) {
+            sb.append("⚠️【陣法狀態：已崩解】\n因隊伍成員減員，原【")
+                .append(party.getEquippedFormation().getName())
+                .append("】已崩散失效！請使用 formation list 查看並切換符合當前存活人數的陣法！\n\n");
+          }
+          sb.append(partyService.formatFormationDetails(party.getEquippedFormation()));
+          self.reply(sb.toString());
         } else {
           self.reply("當前未裝備任何道門陣法。可使用 formation list 查看可用陣法。");
         }
         broadcastDrpgState(self);
       }
       case "list" -> {
-        int partySize = party.size();
-        var formations = partyService.getFormationsForPartySize(partySize);
+        int effSize = formationEngine.getEffectivePartySize(party);
+        var formations = partyService.getFormationsForPartySize(effSize);
         if (formations.isEmpty()) {
-          self.reply("目前隊伍人數（" + partySize + "人）無對應的陣法。");
+          self.reply("目前存活人數（" + effSize + "人）無對應的陣法。");
           return;
         }
         StringBuilder sb = new StringBuilder();
-        sb.append("=== 【").append(partySize).append("人隊伍】可用道門陣法列表 ===\n");
+        if (effSize < party.size()) {
+          sb.append("=== 【").append(party.size()).append("人隊伍 (存活 ").append(effSize).append(" 人)】可用道門陣法列表 ===\n");
+        } else {
+          sb.append("=== 【").append(effSize).append("人隊伍】可用道門陣法列表 ===\n");
+        }
         int idx = 1;
         for (var ft : formations) {
           boolean isCurrent = party.getEquippedFormation() != null && ft.getId().equals(party.getEquippedFormation().getId());
-          var missing = ft.checkClassRequirements(party);
+          var missing = formationEngine.checkClassRequirements(party, ft);
           String status;
-          if (isCurrent) {
+          if (isCurrent && party.isFormationBroken()) {
+            status = " [⚠️ 已崩解 - 需重結]";
+          } else if (isCurrent) {
             status = " [✔ 運轉中]";
           } else if (missing.isEmpty()) {
             status = " [可結成]";
@@ -117,21 +141,26 @@ public class FormationCommand implements PlayerCommand {
           self.reply("查無此陣法 ID，請使用 formation list 查看。");
           return;
         }
-        if (ft.getRequiredPartySize() != party.size()) {
-          self.reply("【人數不符】無法結成【" + ft.getName() + "】！此陣法需要 " + ft.getRequiredPartySize() + " 人，當前隊伍人數為 " + party.size() + " 人。");
+        int effSize = formationEngine.getEffectivePartySize(party);
+        if (ft.getRequiredPartySize() != effSize) {
+          self.reply("【人數不符】無法結成【" + ft.getName() + "】！此陣法需要 " + ft.getRequiredPartySize() + " 人，當前隊伍存活人數為 " + effSize + " 人。");
           return;
         }
-        var missing = ft.checkClassRequirements(party);
+        var missing = formationEngine.checkClassRequirements(party, ft);
         if (!missing.isEmpty()) {
           self.reply("【隊伍組成不符】無法結成【" + ft.getName() + "】！缺少必要職業: " + String.join(", ", missing) + "。");
           return;
         }
-        party.setEquippedFormation(ft);
+        formationEngine.applyFormation(party, ft);
         self.reply("【變換陣法】小隊已成功結成【" + ft.getName() + "】！\n"
             + partyService.formatFormationDetails(ft));
         broadcastDrpgState(self);
       }
       case "cast", "ult" -> {
+        if (party.isFormationBroken()) {
+          self.reply("【陣法已崩解】當前陣法因人員減員已崩散，無法引動奧義！請使用 formation equip 切換符合當前存活人數的陣法。");
+          return;
+        }
         if (battleService.isInBattle(self.getName())) {
           DungeonPosition pos = dungeonManager.getOrCreatePosition(self.getName(), "taiyin_tomb_b1f");
           battleService.castPartyUltimate(self, pos);
@@ -167,22 +196,23 @@ public class FormationCommand implements PlayerCommand {
   }
 
   private void toggleFormation(Player self, Party party) {
-    int partySize = party.size();
-    var eligible = partyService.getFormationsForPartySize(partySize).stream()
-        .filter(f -> f.isEligibleForParty(party))
+    int effSize = formationEngine.getEffectivePartySize(party);
+    var eligible = partyService.getFormationsForPartySize(effSize).stream()
+        .filter(f -> formationEngine.isFormationEligible(party, f))
         .toList();
     if (eligible.isEmpty()) {
       if (party.getEquippedFormation() != null) {
-        self.reply(partyService.formatFormationDetails(party.getEquippedFormation()));
+        String status = party.isFormationBroken() ? "【已崩解】" : "【運轉中】";
+        self.reply("當前陣法" + status + "【" + party.getEquippedFormation().getName() + "】。目前存活人數（" + effSize + "人）無其他可切換的有效陣法。");
       } else {
-        self.reply("目前隊伍人數無可用陣法。");
+        self.reply("目前隊伍組成無法結成任何陣法。");
       }
       broadcastDrpgState(self);
       return;
     }
     FormationTemplate current = party.getEquippedFormation();
     int curIdx = -1;
-    if (current != null) {
+    if (current != null && !party.isFormationBroken()) {
       for (int i = 0; i < eligible.size(); i++) {
         if (eligible.get(i).getId().equals(current.getId())) {
           curIdx = i;
@@ -192,7 +222,7 @@ public class FormationCommand implements PlayerCommand {
     }
     int nextIdx = (curIdx + 1) % eligible.size();
     FormationTemplate next = eligible.get(nextIdx);
-    party.setEquippedFormation(next);
+    formationEngine.applyFormation(party, next);
     self.reply("【變換道門陣法】小隊結成【" + next.getName() + "】！\n"
         + partyService.formatFormationDetails(next));
     broadcastDrpgState(self);

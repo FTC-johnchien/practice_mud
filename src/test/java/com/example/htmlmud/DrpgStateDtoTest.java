@@ -61,10 +61,10 @@ class DrpgStateDtoTest {
     assertThat(iron.name()).isEqualTo("鐵牛");
     assertThat(iron.row()).isEqualTo("FRONT");
 
-    // 驗證成員 3: 燕青 (前衛)
+    // 驗證成員 3: 燕青 (中衛)
     var yan = state.party().members().get(2);
     assertThat(yan.name()).isEqualTo("燕青");
-    assertThat(yan.row()).isEqualTo("FRONT");
+    assertThat(yan.row()).isEqualTo("MIDDLE");
 
     // 驗證成員 4: 凌霜 (後衛)
     var ling = state.party().members().get(3);

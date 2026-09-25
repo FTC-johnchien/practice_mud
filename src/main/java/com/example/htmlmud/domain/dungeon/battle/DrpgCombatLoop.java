@@ -30,26 +30,34 @@ public class DrpgCombatLoop {
   private final DrpgRewardService rewardService;
   private final DefenseResolver defenseResolver;
   private final BuffSettlementService buffSettlementService;
+  private final com.example.htmlmud.domain.party.service.FormationEngine formationEngine;
 
   @Autowired
   public DrpgCombatLoop(DrpgEnemyTacticsService tacticsService, DrpgRewardService rewardService,
-      DefenseResolver defenseResolver, BuffSettlementService buffSettlementService) {
+      DefenseResolver defenseResolver, BuffSettlementService buffSettlementService,
+      com.example.htmlmud.domain.party.service.FormationEngine formationEngine) {
     this.tacticsService = tacticsService != null ? tacticsService : new DrpgEnemyTacticsService();
     this.rewardService = rewardService != null ? rewardService : new DrpgRewardService();
     this.defenseResolver = defenseResolver != null ? defenseResolver : new DefenseResolver();
     this.buffSettlementService = buffSettlementService != null ? buffSettlementService : new BuffSettlementService();
+    this.formationEngine = formationEngine != null ? formationEngine : new com.example.htmlmud.domain.party.service.FormationEngine();
+  }
+
+  public DrpgCombatLoop(DrpgEnemyTacticsService tacticsService, DrpgRewardService rewardService,
+      DefenseResolver defenseResolver, BuffSettlementService buffSettlementService) {
+    this(tacticsService, rewardService, defenseResolver, buffSettlementService, new com.example.htmlmud.domain.party.service.FormationEngine());
   }
 
   public DrpgCombatLoop(DrpgEnemyTacticsService tacticsService, DrpgRewardService rewardService, DefenseResolver defenseResolver) {
-    this(tacticsService, rewardService, defenseResolver, new BuffSettlementService());
+    this(tacticsService, rewardService, defenseResolver, new BuffSettlementService(), new com.example.htmlmud.domain.party.service.FormationEngine());
   }
 
   public DrpgCombatLoop(DrpgEnemyTacticsService tacticsService, DrpgRewardService rewardService) {
-    this(tacticsService, rewardService, new DefenseResolver(), new BuffSettlementService());
+    this(tacticsService, rewardService, new DefenseResolver(), new BuffSettlementService(), new com.example.htmlmud.domain.party.service.FormationEngine());
   }
 
   public DrpgCombatLoop() {
-    this(new DrpgEnemyTacticsService(), new DrpgRewardService(), new DefenseResolver(), new BuffSettlementService());
+    this(new DrpgEnemyTacticsService(), new DrpgRewardService(), new DefenseResolver(), new BuffSettlementService(), new com.example.htmlmud.domain.party.service.FormationEngine());
   }
 
   public BuffSettlementService getBuffSettlementService() {
@@ -93,6 +101,9 @@ public class DrpgCombatLoop {
           if (member.isAlive()) {
             List<String> logs = buffSettlementService.processTicks(member);
             logs.forEach(l -> broadcastLog(player, ctx, l));
+            if (!member.isAlive()) {
+              handlePartyMemberDeath(player, ctx, member);
+            }
           }
         }
         for (BattleEnemy enemy : ctx.getEnemies()) {
@@ -208,7 +219,7 @@ public class DrpgCombatLoop {
                     victim.takeDamage(rawDmg);
                     broadcastLog(player, ctx, "\u001B[1;31m🩸【心魔背刺】" + member.getName() + " 神智癲狂，竟將身旁的 " + victim.getName() + " 視為妖邪，魔焰暴增 100% 狠下殺手，造成 " + rawDmg + " 點重創！\u001B[0m");
                     if (!victim.isAlive()) {
-                      broadcastLog(player, ctx, "\u001B[1;31m💀 " + victim.getName() + " 慘遭失控隊友斬殺倒地！\u001B[0m");
+                      handlePartyMemberDeath(player, ctx, victim);
                     }
                     continue;
                   }
@@ -331,7 +342,7 @@ public class DrpgCombatLoop {
               }
 
               if (!targetMember.isAlive()) {
-                broadcastLog(player, ctx, "\u001B[1;35m💀 " + targetMember.getName() + " 力竭倒下！\u001B[0m");
+                handlePartyMemberDeath(player, ctx, targetMember);
                 if (ctx.isAllPartyDead()) {
                   ctx.setState(BattleState.DEFEAT);
                   break;
@@ -602,6 +613,17 @@ public class DrpgCombatLoop {
         .toList();
     if (candidates.isEmpty()) return null;
     return candidates.get(ThreadLocalRandom.current().nextInt(candidates.size()));
+  }
+
+  private void handlePartyMemberDeath(Player player, BattleContext ctx, PartyMember member) {
+    if (member == null || member.isAlive()) return;
+    broadcastLog(player, ctx, "\u001B[1;35m💀 " + member.getName() + " 力竭倒下！\u001B[0m");
+    if (formationEngine != null && ctx.getParty() != null) {
+      String breakMsg = formationEngine.checkAndBreakFormation(ctx.getParty(), member.getName() + " 力竭倒下");
+      if (breakMsg != null) {
+        broadcastLog(player, ctx, "\u001B[1;31m⚠️ " + breakMsg + "\u001B[0m");
+      }
+    }
   }
 
   private void broadcastLog(Player player, BattleContext ctx, String log) {
