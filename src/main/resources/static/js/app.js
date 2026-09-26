@@ -37,7 +37,15 @@ import {
   changeItemsPage,
   setItemsSecondaryFilter,
   changeSkillsPage,
-  setSkillsTab
+  setSkillsTab,
+  openEquipPicker,
+  closeEquipPicker,
+  selectEquipPickerItem,
+  changeEquipPickerPage,
+  confirmEquipItem,
+  confirmUnequipItem,
+  renderTeamEquipmentOverview,
+  renderEquipmentDiffPickerView
 } from './modals/party-modal.js';
 
 import {
@@ -484,6 +492,14 @@ if (typeof window !== 'undefined') {
   window.setItemsSecondaryFilter = setItemsSecondaryFilter;
   window.changeSkillsPage = changeSkillsPage;
   window.setSkillsTab = setSkillsTab;
+  window.openEquipPicker = openEquipPicker;
+  window.closeEquipPicker = closeEquipPicker;
+  window.selectEquipPickerItem = selectEquipPickerItem;
+  window.changeEquipPickerPage = changeEquipPickerPage;
+  window.confirmEquipItem = confirmEquipItem;
+  window.confirmUnequipItem = confirmUnequipItem;
+  window.renderTeamEquipmentOverview = renderTeamEquipmentOverview;
+  window.renderEquipmentDiffPickerView = renderEquipmentDiffPickerView;
   window.initKeyboardControls = initKeyboardControls;
 }
 

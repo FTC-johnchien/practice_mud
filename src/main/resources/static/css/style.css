@@ -3235,6 +3235,143 @@ body, html {
   box-sizing: border-box;
 }
 
+/* 5 人直排全隊裝備總覽網格 */
+.equip-team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  flex: 1;
+  overflow-x: auto;
+  align-content: stretch;
+}
+
+.equip-member-col {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 240px;
+  max-width: 290px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  font-size: 13px;
+  overflow-y: auto;
+}
+
+.equip-member-header {
+  border-bottom: 1px solid #334155;
+  padding-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.equip-member-stats-box {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.equip-slot-item-row {
+  background: #090e1a;
+  border: 1px solid #1e293b;
+  border-radius: 6px;
+  padding: 6px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 13px;
+}
+
+.equip-slot-item-row:hover {
+  border-color: #38bdf8;
+  background: #111a2e;
+}
+
+.equip-slot-item-row.is-empty {
+  border-style: dashed;
+  border-color: #334155;
+  opacity: 0.85;
+}
+
+/* 裝備挑選與 Diff 比較子視圖 */
+.equip-diff-view {
+  display: flex;
+  gap: 16px;
+  flex: 1;
+  overflow: hidden;
+  height: 100%;
+}
+
+.equip-candidate-list-col {
+  flex: 1;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.equip-candidate-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+  flex: 1;
+  overflow-y: auto;
+  align-content: start;
+  padding-right: 4px;
+}
+
+.equip-candidate-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 13px;
+}
+
+.equip-candidate-card:hover {
+  border-color: #38bdf8;
+  background: #253349;
+}
+
+.equip-candidate-card.is-selected {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+}
+
+.equip-diff-panel-col {
+  width: 450px;
+  min-width: 420px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  font-size: 13px;
+}
+
+
 /* 小隊編制與 5+2 裝備管理模態視窗 */
 .party-modal-card {
   background: #151922;

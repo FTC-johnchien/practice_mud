@@ -38,6 +38,7 @@ function togglePartyModal(forceOpen) {
     renderPartyModal();
   } else {
     modal.classList.add('hidden');
+    drpgState.equipPicker = null;
     if (document.activeElement) {
       document.activeElement.blur();
     }
@@ -886,18 +887,42 @@ function renderPartyModal() {
 
     case 'EQUIP':
     default: {
-      if (subHeaderEl) {
-        subHeaderEl.innerHTML = `
-          <div style="display:flex;align-items:center;gap:8px;overflow-x:auto;">
-            ${renderMemberTabButtons()}
-          </div>
-          <div style="font-size:13px;color:#94a3b8;">
-            🛡️ 點擊裝備槽可卸下或開啟挑選比較面板
-          </div>
-        `;
-      }
-      if (contentEl) {
-        contentEl.innerHTML = renderMemberEquipHtml(m, selIdx, party);
+      if (drpgState.equipPicker) {
+        const pMemIdx = drpgState.equipPicker.memberIdx;
+        const pMem = (party.members && party.members[pMemIdx]) ? party.members[pMemIdx] : m;
+        if (subHeaderEl) {
+          subHeaderEl.innerHTML = `
+            <div style="display:flex;align-items:center;gap:12px;">
+              <button class="act-btn btn-sm" onclick="window.closeEquipPicker()" style="font-size:13px;padding:4px 12px;background:#334155;">
+                ◀ 返回 5人裝備總覽
+              </button>
+              <span style="font-size:15px;font-weight:bold;color:#f1f5f9;">
+                🛡️ 裝備挑選與 Diff 比較 - #${pMemIdx + 1} ${pMem ? pMem.name : ''} 的【${drpgState.equipPicker.slotLabel}】
+              </span>
+            </div>
+            <div style="font-size:13px;color:#94a3b8;">
+              挑選合適法寶，比較攻防加成與武器功法相容性
+            </div>
+          `;
+        }
+        if (contentEl) {
+          contentEl.innerHTML = renderEquipmentDiffPickerView(party);
+        }
+      } else {
+        if (subHeaderEl) {
+          subHeaderEl.innerHTML = `
+            <div style="font-size:15px;font-weight:bold;color:#f1f5f9;display:flex;align-items:center;gap:8px;">
+              <span>🛡️ 全隊裝備與功法一覽 (${(party.members || []).length} / 5 人)</span>
+            </div>
+            <div style="font-size:13px;color:#94a3b8;display:flex;align-items:center;gap:12px;">
+              <span>💡 點擊任一隊員裝備槽位，即可展開裝備挑選與 Diff 比較</span>
+              <button class="act-btn btn-sm" onclick="toggleBagDrawer(true)" style="font-size:12px;padding:3px 10px;background:#1e293b;" title="開啟右側獨立行囊抽屜">🎒 側欄行囊 (B)</button>
+            </div>
+          `;
+        }
+        if (contentEl) {
+          contentEl.innerHTML = renderTeamEquipmentOverview(party);
+        }
       }
       break;
     }
@@ -1685,6 +1710,508 @@ function renderMemberEquipHtml(m, selIdx, party) {
 }
 
 /**
+ * 裝備部位定義 (7 個部位)
+ */
+const EQUIP_SLOT_DEFS = [
+  { key: 'MAIN_HAND', alias: 'weapon', label: '主手武器', icon: '🗡️' },
+  { key: 'OFF_HAND', alias: 'shield', label: '副手防具', icon: '🛡️' },
+  { key: 'HEAD', alias: 'head', label: '頭部盔甲', icon: '👑' },
+  { key: 'BODY', alias: 'armor', label: '身軀道袍', icon: '🥋' },
+  { key: 'FEET', alias: 'feet', label: '靴履護具', icon: '👢' },
+  { key: 'ACCESSORY_1', alias: 'acc1', label: '本命法寶', icon: '💍' },
+  { key: 'ACCESSORY_2', alias: 'acc2', label: '輔佐靈寶', icon: '📿' }
+];
+
+function getMemberSlotItem(m, slotKey) {
+  if (m.equipment && m.equipment[slotKey]) return m.equipment[slotKey];
+  if (slotKey === 'MAIN_HAND' && m.equippedWeapon) return m.equippedWeapon;
+  if (slotKey === 'BODY' && m.equippedArmor) return m.equippedArmor;
+  return null;
+}
+
+function isItemMatchingSlot(item, slotKey) {
+  if (!item) return false;
+  const eqSlot = (item.equipSlot || '').toUpperCase();
+  const itType = (item.itemType || '').toUpperCase();
+  const subType = (item.subType || '').toUpperCase();
+  const name = item.name || '';
+
+  switch (slotKey) {
+    case 'MAIN_HAND':
+      return item.weapon || itType === 'WEAPON' || eqSlot === 'MAIN_HAND' || subType === 'WEAPON';
+    case 'OFF_HAND':
+      return item.shield || itType === 'SHIELD' || eqSlot === 'OFF_HAND' || subType === 'SHIELD';
+    case 'HEAD':
+      return eqSlot === 'HEAD' || itType === 'HEAD' || subType === 'HEAD' || name.includes('冠') || name.includes('盔') || name.includes('帽');
+    case 'BODY':
+      return item.armor || itType === 'ARMOR' || eqSlot === 'BODY' || subType === 'ARMOR' || name.includes('甲') || name.includes('袍') || name.includes('衣');
+    case 'FEET':
+      return eqSlot === 'FEET' || itType === 'FEET' || subType === 'FEET' || name.includes('靴') || name.includes('履');
+    case 'ACCESSORY_1':
+    case 'ACCESSORY_2':
+      return eqSlot === 'ACCESSORY_1' || eqSlot === 'ACCESSORY_2' || itType === 'ACCESSORY' || subType === 'ACCESSORY' || name.includes('戒') || name.includes('佩') || name.includes('鐲') || name.includes('珠');
+    default:
+      return false;
+  }
+}
+
+function openEquipPicker(memberIdx, slotKey, slotAlias, slotLabel) {
+  drpgState.equipPicker = {
+    memberIdx,
+    slotKey,
+    slotAlias,
+    slotLabel,
+    selectedSlotId: null,
+    page: 1
+  };
+  renderPartyModal();
+}
+
+function closeEquipPicker() {
+  drpgState.equipPicker = null;
+  renderPartyModal();
+}
+
+function selectEquipPickerItem(slotId) {
+  if (drpgState.equipPicker) {
+    drpgState.equipPicker.selectedSlotId = slotId;
+    renderPartyModal();
+  }
+}
+
+function changeEquipPickerPage(delta) {
+  if (drpgState.equipPicker) {
+    drpgState.equipPicker.page = Math.max(1, (drpgState.equipPicker.page || 1) + delta);
+    renderPartyModal();
+  }
+}
+
+function confirmEquipItem(slotId, memberIdx) {
+  if (!slotId) return;
+  send(`item equip ${slotId} ${memberIdx}`);
+  drpgState.equipPicker = null;
+}
+
+function confirmUnequipItem(slotAlias, memberIdx) {
+  if (!slotAlias) return;
+  send(`item unequip ${slotAlias} ${memberIdx}`);
+  drpgState.equipPicker = null;
+}
+
+/**
+ * 5 隊員直排全隊裝備總覽 (5-column vertical overview)
+ */
+function renderTeamEquipmentOverview(party) {
+  const members = party.members || [];
+  if (members.length === 0) {
+    return '<div style="color:#94a3b8;padding:30px;text-align:center;font-size:14px;">隊伍中尚無任何成員。</div>';
+  }
+
+  const columnsHtml = members.map((m, idx) => {
+    const isLeader = (idx === 0);
+    const isAlive = (m.alive !== undefined ? m.alive : m.hp > 0);
+    const rowBadge = m.row === 'FRONT' ? '前衛' : (m.row === 'MIDDLE' ? '中衛' : '後衛');
+    const rowColor = m.row === 'FRONT' ? '#f87171' : (m.row === 'MIDDLE' ? '#c084fc' : '#60a5fa');
+
+    // 計算累計加成數值
+    let bonusMin = 0;
+    let bonusMax = 0;
+    let bonusDef = 0;
+    let bonusHp = 0;
+    let bonusSan = 0;
+    const eqMap = m.equipment || {};
+    Object.values(eqMap).forEach(it => {
+      if (it) {
+        bonusMin += (it.bonusMinDamage || 0);
+        bonusMax += (it.bonusMaxDamage || 0);
+        bonusDef += (it.bonusDefense || 0);
+        bonusHp += (it.bonusHp || 0);
+        bonusSan += (it.bonusSan || 0);
+      }
+    });
+    if (bonusMin === 0 && bonusMax === 0 && m.equippedWeapon) {
+      bonusMin += (m.equippedWeapon.bonusMinDamage || 0);
+      bonusMax += (m.equippedWeapon.bonusMaxDamage || 0);
+    }
+    if (bonusDef === 0 && m.equippedArmor) {
+      bonusDef += (m.equippedArmor.bonusDefense || 0);
+    }
+
+    // 7 個裝備槽位
+    const equipRowsHtml = EQUIP_SLOT_DEFS.map(slot => {
+      const item = getMemberSlotItem(m, slot.key);
+      if (item) {
+        let statsParts = [];
+        if (item.bonusMinDamage || item.bonusMaxDamage) statsParts.push(`攻 +${item.bonusMinDamage}~${item.bonusMaxDamage}`);
+        if (item.bonusDefense) statsParts.push(`防 +${item.bonusDefense}`);
+        if (item.bonusHp) statsParts.push(`血 +${item.bonusHp}`);
+        if (item.bonusSan) statsParts.push(`心 +${item.bonusSan}`);
+        const statStr = statsParts.length > 0 ? statsParts.join(' ') : '裝備中';
+
+        return `
+          <div class="equip-slot-item-row" onclick="window.openEquipPicker(${idx}, '${slot.key}', '${slot.alias}', '${slot.label}')" title="點擊挑選更換或比較屬性">
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="font-size:13px;color:#94a3b8;">${slot.icon} ${slot.label}</span>
+                <span style="font-size:13px;font-weight:bold;color:#f1f5f9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.name}</span>
+              </div>
+              <div style="font-size:13px;color:#38bdf8;">${statStr}</div>
+            </div>
+            <button class="act-btn btn-sm" onclick="event.stopPropagation();send('item unequip ${slot.alias} ${idx}');" style="font-size:13px;padding:2px 8px;margin-left:6px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;" title="卸下放回行囊">
+              ✕
+            </button>
+          </div>
+        `;
+      } else {
+        return `
+          <div class="equip-slot-item-row is-empty" onclick="window.openEquipPicker(${idx}, '${slot.key}', '${slot.alias}', '${slot.label}')" title="點擊挑選裝備穿戴">
+            <span style="font-size:13px;color:#64748b;">${slot.icon} ${slot.label}</span>
+            <span style="font-size:13px;color:#94a3b8;">+ 挑選裝備</span>
+          </div>
+        `;
+      }
+    }).join('');
+
+    // 4 個被動功法槽位
+    const passives = [
+      { icon: '⚔️', label: '兵刃套路', val: m.basicSkillName || '基礎套路' },
+      { icon: '🛡️', label: '護身招架', val: (m.passiveSlots && m.passiveSlots.PARRY) || '基本招架' },
+      { icon: '💨', label: '靈動身法', val: (m.passiveSlots && m.passiveSlots.DODGE) || '基本身法' },
+      { icon: '🟣', label: '玄門心法', val: (m.passiveSlots && m.passiveSlots.FORCE) || '吐納內功' }
+    ];
+
+    const passivesHtml = passives.map(p => `
+      <div style="background:#090e1a;border:1px solid #1e293b;border-radius:4px;padding:5px 8px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;color:#94a3b8;">${p.icon} ${p.label}</span>
+        <span style="font-size:13px;color:#38bdf8;font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px;" title="${p.val}">${p.val}</span>
+      </div>
+    `).join('');
+
+    return `
+      <div class="equip-member-col">
+        <!-- 角色標頭 -->
+        <div class="equip-member-header">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:16px;font-weight:bold;color:${isLeader ? '#fde047' : '#38bdf8'};display:flex;align-items:center;gap:4px;">
+              ${isLeader ? '👑' : '👤'} #${idx + 1} ${m.name}
+            </span>
+            <span style="font-size:13px;color:${rowColor};font-weight:bold;background:#1e293b;padding:2px 8px;border-radius:4px;">${rowBadge}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#cbd5e1;">
+            <span>Lv.${m.level || 1}</span>
+            <span>${m.className || '道友'}</span>
+            ${!isAlive ? '<span style="color:#ef4444;font-weight:bold;">(💀 陣亡)</span>' : ''}
+          </div>
+        </div>
+
+        <!-- 屬性面板 (原始點數 + 裝備加成) 與 Buff -->
+        <div class="equip-member-stats-box">
+          <div style="display:flex;justify-content:space-between;font-size:13px;">
+            <span style="color:#f87171;">❤️ 氣血: ${m.hp}/${m.maxHp}</span>
+            <span style="color:#60a5fa;">⚡ 戰氣: ${m.currentResource !== undefined ? m.currentResource : m.mp}/${m.maxResource !== undefined ? m.maxResource : m.maxMp}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;border-top:1px solid #334155;padding-top:4px;font-size:13px;">
+            <span style="color:#fde047;">⚔️ 攻 +${bonusMin}~${bonusMax}</span>
+            <span style="color:#34d399;">🛡️ 防 +${bonusDef}</span>
+          </div>
+          <div style="font-size:13px;color:#94a3b8;border-top:1px solid #334155;padding-top:4px;display:flex;justify-content:space-between;">
+            <span>力${m.str || 5}</span>
+            <span>骨${m.con || 5}</span>
+            <span>巧${m.dex || 5}</span>
+            <span>悟${m.intStat !== undefined ? m.intStat : (m.intelligence || 5)}</span>
+            <span>定${m.wis || 5}</span>
+          </div>
+          ${m.formationSlotBonus ? `
+            <div style="font-size:13px;color:#6ee7b7;background:rgba(16,185,129,0.12);padding:3px 8px;border-radius:4px;margin-top:2px;">
+              ☯️ 陣法: ${m.formationSlotBonus}
+            </div>
+          ` : ''}
+        </div>
+
+        <!-- 7 部位裝備欄 -->
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:13px;font-weight:bold;color:#cbd5e1;display:flex;justify-content:space-between;align-items:center;">
+            <span>🛡️ 裝備部位 (7 槽位)</span>
+            <span style="font-size:13px;color:#64748b;">點擊換裝</span>
+          </div>
+          ${equipRowsHtml}
+        </div>
+
+        <!-- 4 部位被動功法 -->
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:auto;">
+          <div style="font-size:13px;font-weight:bold;color:#cbd5e1;">
+            <span>🧘 主修功法 (4 部位)</span>
+          </div>
+          ${passivesHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="equip-team-grid">
+      ${columnsHtml}
+    </div>
+  `;
+}
+
+/**
+ * 裝備挑選與 Diff 比較子視圖 (Sub-view Overlay)
+ */
+function renderEquipmentDiffPickerView(party) {
+  const picker = drpgState.equipPicker;
+  if (!picker) return '';
+
+  const memberIdx = picker.memberIdx || 0;
+  const m = (party.members && party.members[memberIdx]) ? party.members[memberIdx] : null;
+  if (!m) return '<div style="color:#94a3b8;padding:20px;font-size:14px;">隊員資料異常。</div>';
+
+  const slotKey = picker.slotKey;
+  const slotAlias = picker.slotAlias;
+  const slotLabel = picker.slotLabel;
+  const curItem = getMemberSlotItem(m, slotKey);
+
+  // 1. 從背包過濾出符合此槽位的裝備候選清單
+  const inv = (party && party.inventory) ? party.inventory : null;
+  const allSlots = (inv && inv.slots) ? inv.slots : [];
+  const candidates = allSlots.filter(it => isItemMatchingSlot(it, slotKey));
+
+  // 2. 如果尚未指定選取項，預設選取候選列表第 1 項
+  if (!picker.selectedSlotId && candidates.length > 0) {
+    picker.selectedSlotId = candidates[0].slotId;
+  }
+
+  // 3. 20 筆單頁分頁計算
+  const PAGE_SIZE = 20;
+  const totalPages = Math.max(1, Math.ceil(candidates.length / PAGE_SIZE));
+  const curPage = Math.min(Math.max(1, picker.page || 1), totalPages);
+  picker.page = curPage;
+
+  const startIdx = (curPage - 1) * PAGE_SIZE;
+  const pagedCandidates = candidates.slice(startIdx, startIdx + PAGE_SIZE);
+
+  // 4. 左側候選列表 HTML
+  let candidateListHtml = '';
+  if (pagedCandidates.length === 0) {
+    candidateListHtml = `
+      <div style="padding:40px 20px;text-align:center;color:#94a3b8;display:flex;flex-direction:column;gap:12px;align-items:center;grid-column:1/-1;">
+        <span style="font-size:36px;">🎒</span>
+        <span style="font-size:15px;color:#e2e8f0;font-weight:bold;">行囊中尚無可穿戴的【${slotLabel}】</span>
+        <span style="font-size:13px;color:#64748b;">可至古塚探勘擊殺妖邪獲取裝備戰利品。</span>
+      </div>
+    `;
+  } else {
+    candidateListHtml = pagedCandidates.map(it => {
+      const isSelected = (it.slotId === picker.selectedSlotId);
+      let statsParts = [];
+      if (it.bonusMinDamage || it.bonusMaxDamage) statsParts.push(`攻 +${it.bonusMinDamage}~${it.bonusMaxDamage}`);
+      if (it.bonusDefense) statsParts.push(`防 +${it.bonusDefense}`);
+      if (it.bonusHp) statsParts.push(`血 +${it.bonusHp}`);
+      if (it.bonusSan) statsParts.push(`心 +${it.bonusSan}`);
+      const statsStr = statsParts.length > 0 ? statsParts.join(' ‧ ') : '基礎裝備';
+
+      return `
+        <div class="equip-candidate-card ${isSelected ? 'is-selected' : ''}" onclick="window.selectEquipPickerItem('${it.slotId}')">
+          <div style="font-size:24px;width:40px;height:40px;background:#0b1120;border:1px solid #334155;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            ${it.icon || '📦'}
+          </div>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-size:14px;font-weight:bold;color:#f1f5f9;">${it.name}</span>
+              ${it.count > 1 ? `<span style="font-size:13px;color:#94a3b8;">x${it.count}</span>` : ''}
+              ${isSelected ? '<span style="font-size:13px;color:#38bdf8;background:rgba(56,189,248,0.15);padding:1px 6px;border-radius:3px;">比較中</span>' : ''}
+            </div>
+            <div style="font-size:13px;color:#38bdf8;">${statsStr}</div>
+          </div>
+          <button class="act-btn btn-sm btn-blue" onclick="event.stopPropagation();window.confirmEquipItem('${it.slotId}', ${memberIdx});" style="font-size:13px;padding:4px 12px;flex-shrink:0;">
+            ✨ 穿戴
+          </button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // 5. 右側 Diff 比較面板
+  const selectedCandidate = allSlots.find(s => s.slotId === picker.selectedSlotId);
+
+  const renderDiffMetric = (label, curVal, candVal) => {
+    const cVal = curVal || 0;
+    const nVal = candVal || 0;
+    const diff = nVal - cVal;
+    let diffBadge = '';
+    if (diff > 0) {
+      diffBadge = `<span style="color:#34d399;font-weight:bold;background:rgba(52,211,153,0.15);padding:2px 8px;border-radius:4px;border:1px solid #34d399;font-size:13px;">+${diff} ▲ (提升)</span>`;
+    } else if (diff < 0) {
+      diffBadge = `<span style="color:#f87171;font-weight:bold;background:rgba(239,68,68,0.15);padding:2px 8px;border-radius:4px;border:1px solid #ef4444;font-size:13px;">${diff} ▼ (降低)</span>`;
+    } else {
+      diffBadge = `<span style="color:#94a3b8;background:#1e293b;padding:2px 8px;border-radius:4px;font-size:13px;">持平</span>`;
+    }
+
+    return `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1e293b;font-size:13px;">
+        <span style="color:#cbd5e1;">${label}</span>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="color:#94a3b8;">${cVal} ➔ <strong style="color:#f1f5f9;font-size:14px;">${nVal}</strong></span>
+          ${diffBadge}
+        </div>
+      </div>
+    `;
+  };
+
+  // 武器功法套路相容性分析
+  let stanceCheckHtml = '';
+  if (slotKey === 'MAIN_HAND') {
+    const currentStance = m.basicSkillName || '基礎套路';
+    let isStanceMatch = false;
+    let candWeaponType = '兵刃';
+
+    if (selectedCandidate) {
+      const wName = selectedCandidate.name || '';
+      const wSub = (selectedCandidate.subType || '').toUpperCase();
+      if (wName.includes('劍') || wSub.includes('SWORD')) candWeaponType = '劍類';
+      else if (wName.includes('刀') || wSub.includes('BLADE')) candWeaponType = '刀類';
+      else if (wName.includes('拳') || wName.includes('掌') || wName.includes('爪') || wSub.includes('FIST')) candWeaponType = '拳掌類';
+      else if (wName.includes('槍') || wName.includes('矛') || wSub.includes('SPEAR')) candWeaponType = '長槍類';
+      else if (wName.includes('棍') || wName.includes('杖') || wSub.includes('STAFF')) candWeaponType = '棍杖類';
+
+      // 檢查當前套路是否符合
+      if (candWeaponType === '劍類' && (currentStance.includes('劍') || currentStance.includes('sword'))) isStanceMatch = true;
+      else if (candWeaponType === '刀類' && (currentStance.includes('刀') || currentStance.includes('blade'))) isStanceMatch = true;
+      else if (candWeaponType === '拳掌類' && (currentStance.includes('拳') || currentStance.includes('掌') || currentStance.includes('fist'))) isStanceMatch = true;
+      else if (candWeaponType === '長槍類' && (currentStance.includes('槍') || currentStance.includes('spear'))) isStanceMatch = true;
+      else if (candWeaponType === '棍杖類' && (currentStance.includes('棍') || currentStance.includes('杖') || currentStance.includes('staff'))) isStanceMatch = true;
+      else if (currentStance.includes('基礎') || currentStance.includes('basic')) isStanceMatch = true;
+    }
+
+    if (selectedCandidate) {
+      if (isStanceMatch) {
+        stanceCheckHtml = `
+          <div style="background:rgba(16,185,129,0.12);border:1px solid #10b981;border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;">
+            <div style="font-size:13px;font-weight:bold;color:#34d399;display:flex;align-items:center;gap:6px;">
+              <span>✔ 武器功法契合：【${candWeaponType}】</span>
+            </div>
+            <div style="font-size:13px;color:#a7f3d0;line-height:1.4;">
+              此武器與當前主力套路【${currentStance}】契合，普通攻擊與連攜招式可享全額增幅！
+            </div>
+          </div>
+        `;
+      } else {
+        stanceCheckHtml = `
+          <div style="background:rgba(245,158,11,0.12);border:1px solid #f59e0b;border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;">
+            <div style="font-size:13px;font-weight:bold;color:#fbbf24;display:flex;align-items:center;gap:6px;">
+              <span>⚠️ 武器功法切換提示：【${candWeaponType}】</span>
+            </div>
+            <div style="font-size:13px;color:#fde68a;line-height:1.4;">
+              當前主力套路為【${currentStance}】。裝備此武器後，建議前往「技能&法術」分頁啟用對應兵刃套路，以發揮最大威力。
+            </div>
+          </div>
+        `;
+      }
+    }
+  }
+
+  let diffPanelHtml = '';
+  if (!selectedCandidate) {
+    diffPanelHtml = `
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div style="background:#1e293b;border:1px solid #334155;border-radius:6px;padding:16px;color:#94a3b8;text-align:center;font-size:13px;">
+          請從左側點選一件候選裝備進行屬性比較
+        </div>
+        ${curItem ? `
+          <div style="background:#1e293b;border:1px solid #334155;border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:8px;">
+            <div style="font-size:14px;font-weight:bold;color:#cbd5e1;">當前穿戴中：</div>
+            <div style="font-size:15px;font-weight:bold;color:#f1f5f9;">${curItem.icon || '📦'} ${curItem.name}</div>
+            <button class="act-btn btn-sm btn-red" onclick="window.confirmUnequipItem('${slotAlias}', ${memberIdx})" style="font-size:13px;padding:6px 14px;margin-top:8px;">
+              ✕ 卸下當前裝備
+            </button>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  } else {
+    diffPanelHtml = `
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <!-- 當前 vs 候選頂部卡片對比 -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <!-- 當前 -->
+          <div style="background:#1e293b;border:1px solid #334155;border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;">
+            <span style="font-size:13px;color:#94a3b8;font-weight:bold;">【當前穿戴】</span>
+            <span style="font-size:14px;font-weight:bold;color:${curItem ? '#f1f5f9' : '#64748b'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              ${curItem ? `${curItem.icon || '📦'} ${curItem.name}` : '(未穿戴任何裝備)'}
+            </span>
+          </div>
+          <!-- 候選 -->
+          <div style="background:#1e293b;border:1px solid #38bdf8;border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;">
+            <span style="font-size:13px;color:#38bdf8;font-weight:bold;">【候選更換】</span>
+            <span style="font-size:14px;font-weight:bold;color:#f1f5f9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              ${selectedCandidate.icon || '📦'} ${selectedCandidate.name}
+            </span>
+          </div>
+        </div>
+
+        <!-- 數值 Diff 條列 -->
+        <div style="background:#1e293b;border:1px solid #334155;border-radius:6px;padding:10px 14px;">
+          <div style="font-size:14px;font-weight:bold;color:#cbd5e1;margin-bottom:6px;">📊 屬性變化比較：</div>
+          ${renderDiffMetric('物理攻擊 (最小)', curItem?.bonusMinDamage, selectedCandidate.bonusMinDamage)}
+          ${renderDiffMetric('物理攻擊 (最大)', curItem?.bonusMaxDamage, selectedCandidate.bonusMaxDamage)}
+          ${renderDiffMetric('護甲防禦', curItem?.bonusDefense, selectedCandidate.bonusDefense)}
+          ${renderDiffMetric('氣血加成', curItem?.bonusHp, selectedCandidate.bonusHp)}
+          ${renderDiffMetric('道心增幅', curItem?.bonusSan, selectedCandidate.bonusSan)}
+        </div>
+
+        <!-- 功法契合性提示 -->
+        ${stanceCheckHtml}
+
+        <!-- 物品描述與特殊道韻 -->
+        ${(selectedCandidate.description || selectedCandidate.grantedSkillName) ? `
+          <div style="background:#1e293b;border:1px solid #334155;border-radius:6px;padding:10px 14px;font-size:13px;color:#cbd5e1;line-height:1.4;">
+            <div style="font-weight:bold;color:#94a3b8;margin-bottom:2px;">📜 法寶靈韻：</div>
+            ${selectedCandidate.grantedSkillName ? `<div style="color:#fde047;font-weight:bold;margin-bottom:2px;">⚡ 附帶奧義：【${selectedCandidate.grantedSkillName}】</div>` : ''}
+            <div>${selectedCandidate.description || ''}</div>
+          </div>
+        ` : ''}
+
+        <!-- 操作按鈕列 -->
+        <div style="display:flex;gap:10px;margin-top:6px;">
+          <button class="act-btn btn-blue" onclick="window.confirmEquipItem('${selectedCandidate.slotId}', ${memberIdx})" style="flex:1;font-size:14px;font-weight:bold;padding:10px 16px;">
+            ✨ 即刻確認穿戴
+          </button>
+          ${curItem ? `
+            <button class="act-btn btn-red" onclick="window.confirmUnequipItem('${slotAlias}', ${memberIdx})" style="font-size:13px;padding:10px 14px;">
+              ✕ 卸下當前
+            </button>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="equip-diff-view">
+      <!-- 左側候選列表 -->
+      <div class="equip-candidate-list-col">
+        <div style="font-size:14px;font-weight:bold;color:#e2e8f0;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+          <span>🎒 行囊中可穿戴的【${slotLabel}】(${candidates.length})</span>
+          <span style="font-size:13px;color:#94a3b8;">每頁上限 20 筆</span>
+        </div>
+        <div class="equip-candidate-grid">
+          ${candidateListHtml}
+        </div>
+        ${renderPaginationBar(curPage, totalPages, candidates.length, 'window.changeEquipPickerPage')}
+      </div>
+
+      <!-- 右側 Diff 比較面板 -->
+      <div class="equip-diff-panel-col">
+        <div style="font-size:15px;font-weight:bold;color:#38bdf8;border-bottom:1px solid #334155;padding-bottom:8px;">
+          ⚖️ 法寶數值比較與功法相容性
+        </div>
+        ${diffPanelHtml}
+      </div>
+    </div>
+  `;
+}
+
+/**
  * 渲染單一成員的 WoW 經典修仙武學典籍 (Spellbook)
  * 陣法奧義已抽離至全隊陣法面板，此處專注於兵刃套路與門派絕技
  */
@@ -1940,6 +2467,14 @@ if (typeof window !== 'undefined') {
   window.setItemsSecondaryFilter = setItemsSecondaryFilter;
   window.changeSkillsPage = changeSkillsPage;
   window.setSkillsTab = setSkillsTab;
+  window.openEquipPicker = openEquipPicker;
+  window.closeEquipPicker = closeEquipPicker;
+  window.selectEquipPickerItem = selectEquipPickerItem;
+  window.changeEquipPickerPage = changeEquipPickerPage;
+  window.confirmEquipItem = confirmEquipItem;
+  window.confirmUnequipItem = confirmUnequipItem;
+  window.renderTeamEquipmentOverview = renderTeamEquipmentOverview;
+  window.renderEquipmentDiffPickerView = renderEquipmentDiffPickerView;
 }
 
 export {
@@ -1968,5 +2503,13 @@ export {
   changeItemsPage,
   setItemsSecondaryFilter,
   changeSkillsPage,
-  setSkillsTab
+  setSkillsTab,
+  openEquipPicker,
+  closeEquipPicker,
+  selectEquipPickerItem,
+  changeEquipPickerPage,
+  confirmEquipItem,
+  confirmUnequipItem,
+  renderTeamEquipmentOverview,
+  renderEquipmentDiffPickerView
 };
