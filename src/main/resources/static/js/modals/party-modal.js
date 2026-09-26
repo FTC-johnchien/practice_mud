@@ -650,120 +650,542 @@ function changeFormationPage(delta) {
   renderPartyModal();
 }
 
+function switchMainMenuTab(tab, subOption) {
+  drpgState.mainMenuTab = tab || 'FORMATION';
+  if (subOption) {
+    if (tab === 'SYSTEM') drpgState.mainMenuSystemMode = subOption;
+    if (tab === 'FORMATION') drpgState.formationViewMode = subOption;
+    if (tab === 'ITEMS') drpgState.mainMenuItemsTab = subOption;
+  }
+  if (tab === 'SYSTEM') {
+    send('saves quiet', true);
+  }
+  renderPartyModal();
+}
+
+function openMainMenu(tab, subOption) {
+  if (tab) {
+    drpgState.mainMenuTab = tab;
+  }
+  if (subOption) {
+    if (tab === 'SYSTEM') drpgState.mainMenuSystemMode = subOption;
+    if (tab === 'FORMATION') drpgState.formationViewMode = subOption;
+    if (tab === 'ITEMS') drpgState.mainMenuItemsTab = subOption;
+  }
+  if (tab === 'SYSTEM') {
+    send('saves quiet', true);
+  }
+  togglePartyModal(true);
+}
+
 function renderPartyModal() {
   const modal = document.getElementById('party-modal');
   if (!modal || modal.classList.contains('hidden')) return;
 
   const party = drpgState.lastParty;
-  const formInfoEl = document.getElementById('party-modal-formation-info');
-  const memberTabsEl = document.getElementById('party-modal-member-tabs');
-  const subTabsEl = document.getElementById('party-modal-sub-tabs');
-  const membersListEl = document.getElementById('party-modal-members-list');
+  const subHeaderEl = document.getElementById('main-menu-sub-header');
+  const contentEl = document.getElementById('main-menu-content');
+  const titleTextEl = document.getElementById('main-menu-title-text');
 
   if (!party || !party.members || party.members.length === 0) {
-    if (membersListEl) membersListEl.innerHTML = '<div style="color:#94a3b8;padding:20px;text-align:center;">尚未載入小隊資料，請稍候...</div>';
+    if (contentEl) contentEl.innerHTML = '<div style="color:#94a3b8;padding:40px;text-align:center;font-size:14px;">尚未載入小隊資料，請稍候...</div>';
     return;
   }
 
-  // 1. 確保選中狀態正常
-  const isFormationMode = (drpgState.selectedModalMemberIdx === 'FORMATION');
-  if (!isFormationMode) {
-    if (typeof drpgState.selectedModalMemberIdx !== 'number' || drpgState.selectedModalMemberIdx >= party.members.length || drpgState.selectedModalMemberIdx < 0) {
-      drpgState.selectedModalMemberIdx = 0;
+  // 1. 初始化當前選中的主選單 Tab
+  if (!drpgState.mainMenuTab) {
+    drpgState.mainMenuTab = 'FORMATION';
+  }
+  const currentTab = drpgState.mainMenuTab;
+
+  // 2. 更新左側導覽列按鈕高亮
+  const navBtns = document.querySelectorAll('#main-menu-nav .main-menu-nav-btn');
+  navBtns.forEach(btn => {
+    if (btn.getAttribute('data-menu') === currentTab) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
     }
-  }
-  if (!drpgState.partyModalSubTab) {
-    drpgState.partyModalSubTab = 'EQUIP';
-  }
+  });
 
+  // 3. 確保選中隊員索引有效
+  if (typeof drpgState.selectedModalMemberIdx !== 'number' || drpgState.selectedModalMemberIdx >= party.members.length || drpgState.selectedModalMemberIdx < 0) {
+    drpgState.selectedModalMemberIdx = 0;
+  }
   const selIdx = drpgState.selectedModalMemberIdx;
-  const m = (!isFormationMode && party.members[selIdx]) ? party.members[selIdx] : party.members[0];
+  const m = party.members[selIdx] || party.members[0];
 
-  // 2. 渲染陣法與靈威狀態
-  if (formInfoEl) {
-    const ultBtn = party.canCastUltimate
-      ? `<button class="act-btn btn-ult" onclick="send('formation cast')" style="padding:2px 8px;font-size:11px;">⚡ 施展陣法奧義【${party.ultimateSkillName}】</button>`
-      : `<span style="color:#94a3b8;font-size:11px;">奧義【${party.ultimateSkillName || '無'}】(充能 ${party.formationEnergy || 0}/100)</span>`;
-
-    formInfoEl.innerHTML = `
-      <div style="display:flex;align-items:center;gap:10px;">
-        <span>☯️ 當前道門陣法：<strong style="color:#38bdf8;">${party.formationName || '四象辟邪陣'}</strong></span>
-        <button class="act-btn" onclick="send('formation toggle')" style="padding:2px 8px;font-size:11px;">切換陣法 (F)</button>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <span>⚡ 靈威：${party.formationEnergy || 0}/100</span>
-        ${ultBtn}
-      </div>
-    `;
+  // 4. 更新頂部標題
+  const titleMap = {
+    'ITEMS': '🎒 仙道總覽・公共行囊與道具 (Items)',
+    'EQUIP': '🛡️ 仙道總覽・全隊 5+2 裝備與被動功法 (Equipment)',
+    'SKILLS': '📖 仙道總覽・武學法術典籍 (Skills & Spells)',
+    'CHARACTERS': '👤 仙道總覽・角色詳細道基面板 (Character Status)',
+    'PARTY': '👥 仙道總覽・隊伍名冊編號順序 (Party Roster)',
+    'FORMATION': '☯️ 仙道總覽・道門陣法與 5×3 戰陣盤 (Formations)',
+    'TACTICS': '🎯 仙道總覽・同伴戰術方針 (Gambit AI)',
+    'SYSTEM': '💾 仙道總覽・仙道命冊 (System Save / Load)'
+  };
+  if (titleTextEl) {
+    titleTextEl.innerText = titleMap[currentTab] || '📜 仙道總覽・功能選單';
   }
 
-  // 3. 渲染頂部隊員切換頁籤列
-  if (memberTabsEl) {
-    const memberBtns = party.members.map((mem, idx) => {
-      const isSel = (!isFormationMode && selIdx === idx);
+  // 輔助函式：渲染隊員切換頁籤組 (字體嚴格保持 13~14px)
+  const renderMemberTabButtons = () => {
+    return party.members.map((mem, idx) => {
+      const isSel = (selIdx === idx);
       const isAlive = (mem.alive !== undefined) ? mem.alive : (mem.hp > 0);
-      const rowBadge = mem.row === 'FRONT' ? '前衛' : '後衛';
-      const hpPct = Math.min(100, Math.max(0, (mem.hp / mem.maxHp) * 100));
+      const rowBadge = mem.row === 'FRONT' ? '前衛' : (mem.row === 'MIDDLE' ? '中衛' : '後衛');
       return `
-        <button class="party-member-tab-btn ${isSel ? 'active' : ''}" type="button" onclick="selectPartyModalMember(${idx})" title="#${idx + 1} ${mem.name} (${mem.className || '道友'}) - ${mem.row === 'FRONT' ? '前衛' : (mem.row === 'MIDDLE' ? '中衛' : '後衛')}">
+        <button class="party-member-tab-btn ${isSel ? 'active' : ''}" type="button" onclick="selectPartyModalMember(${idx})"
+          style="font-size:13px;padding:6px 12px;" title="#${idx + 1} ${mem.name} (${mem.className || '道友'}) - ${rowBadge}">
           <span style="font-weight:bold;">#${idx + 1} ${mem.name}</span>
-          ${(idx === 0 && mem.freeStatPoints > 0) ? `<span class="hud-free-points-pill" style="margin-left:2px; font-size:9px; padding:0 3px;">+${mem.freeStatPoints}</span>` : ''}
+          ${(idx === 0 && mem.freeStatPoints > 0) ? `<span class="hud-free-points-pill" style="margin-left:4px; font-size:10px; padding:1px 5px;">+${mem.freeStatPoints}點</span>` : ''}
         </button>
       `;
     }).join('');
+  };
 
-    const formationBtn = `
-      <button class="party-member-tab-btn ${isFormationMode ? 'active' : ''}" type="button" onclick="selectPartyFormationTab()" style="${isFormationMode ? 'border-color:#a855f7; box-shadow:0 -2px 10px rgba(168,85,247,0.3);' : 'border-left:2px solid #a855f7;'}" title="查看與調配全隊陣法站位">
-        <span style="font-weight:bold; color:#c084fc;">☯️ 全隊陣法</span>
-      </button>
-    `;
+  // 5. 依據 currentTab 路由渲染次級頁首與內容視口
+  switch (currentTab) {
+    case 'FORMATION': {
+      const isLibrary = (drpgState.formationViewMode === 'LIBRARY');
+      const ultBtn = party.canCastUltimate
+        ? `<button class="act-btn btn-ult" onclick="send('formation cast')" style="padding:4px 12px;font-size:13px;">⚡ 施展陣法奧義【${party.ultimateSkillName}】</button>`
+        : `<span style="color:#94a3b8;font-size:13px;">奧義【${party.ultimateSkillName || '無'}】(充能 ${party.formationEnergy || 0}/100)</span>`;
 
-    memberTabsEl.innerHTML = memberBtns + formationBtn;
-  }
-
-  // 4. 若為全隊陣法模式，直接渲染陣法奧義視圖
-  if (isFormationMode) {
-    if (subTabsEl) subTabsEl.style.display = 'none';
-    if (membersListEl) {
-      membersListEl.innerHTML = renderTeamFormationView(party);
+      if (subHeaderEl) {
+        subHeaderEl.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button class="act-btn ${!isLibrary ? 'btn-blue' : ''}" onclick="window.toggleFormationViewMode('BOARD')" style="font-size:13px;padding:5px 14px;">☯️ 5×3 戰陣盤</button>
+            <button class="act-btn ${isLibrary ? 'btn-blue' : ''}" onclick="window.toggleFormationViewMode('LIBRARY')" style="font-size:13px;padding:5px 14px;">📚 陣法典籍庫</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;font-size:13px;color:#cbd5e1;">
+            <span>當前道門陣法：<strong style="color:#38bdf8;">${party.formationName || '五行混元陣'}</strong></span>
+            <span>⚡ 靈威：${party.formationEnergy || 0}/100</span>
+            ${ultBtn}
+          </div>
+        `;
+      }
+      if (contentEl) {
+        contentEl.innerHTML = isLibrary ? renderFormationLibraryView(party) : renderTeamFormationView(party);
+      }
+      break;
     }
-    return;
+
+    case 'SYSTEM': {
+      const sysMode = drpgState.mainMenuSystemMode || 'load';
+      if (subHeaderEl) {
+        subHeaderEl.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button class="act-btn ${sysMode === 'load' ? 'btn-blue' : ''}" onclick="window.switchMainMenuTab('SYSTEM', 'load')" style="font-size:13px;padding:5px 14px;">📂 讀取存檔</button>
+            <button class="act-btn ${sysMode === 'save' ? 'btn-blue' : ''}" onclick="window.switchMainMenuTab('SYSTEM', 'save')" style="font-size:13px;padding:5px 14px;">💾 覆蓋存檔</button>
+          </div>
+          <div style="font-size:13px;color:#94a3b8;">
+            💡 支援 1 個即時自動存檔與 5 個手動命冊存檔槽位 (按 F5 快捷存檔)
+          </div>
+        `;
+      }
+      if (contentEl) {
+        contentEl.innerHTML = renderSystemSlotsHtml(sysMode);
+      }
+      break;
+    }
+
+    case 'TACTICS': {
+      if (subHeaderEl) {
+        subHeaderEl.innerHTML = `
+          <div style="display:flex;align-items:center;gap:8px;overflow-x:auto;">
+            ${renderMemberTabButtons()}
+          </div>
+          <div style="font-size:13px;color:#94a3b8;">
+            🎯 FFXII Gambit 規則鏈：自上而下匹配並執行第一條符合條件的技能
+          </div>
+        `;
+      }
+      if (contentEl) {
+        contentEl.innerHTML = renderMemberTactics(m, selIdx);
+      }
+      break;
+    }
+
+    case 'SKILLS': {
+      if (subHeaderEl) {
+        subHeaderEl.innerHTML = `
+          <div style="display:flex;align-items:center;gap:8px;overflow-x:auto;">
+            ${renderMemberTabButtons()}
+          </div>
+          <div style="font-size:13px;color:#94a3b8;">
+            📖 武學套路與道術典籍（被動身法/心法/招架/兵刃自動生效）
+          </div>
+        `;
+      }
+      if (contentEl) {
+        contentEl.innerHTML = renderMemberSpellbook(m, selIdx);
+      }
+      break;
+    }
+
+    case 'CHARACTERS': {
+      if (subHeaderEl) {
+        subHeaderEl.innerHTML = `
+          <div style="display:flex;align-items:center;gap:8px;overflow-x:auto;">
+            ${renderMemberTabButtons()}
+          </div>
+          <div style="font-size:13px;color:#94a3b8;">
+            👤 角色道基天賦、五維六道與實時氣血狀態
+          </div>
+        `;
+      }
+      if (contentEl) {
+        contentEl.innerHTML = renderMemberStatusDetailHtml(m, selIdx, party);
+      }
+      break;
+    }
+
+    case 'PARTY': {
+      if (subHeaderEl) {
+        subHeaderEl.innerHTML = `
+          <div style="font-size:14px;font-weight:bold;color:#f1f5f9;">
+            👥 隊伍出戰名冊順序編號調整
+          </div>
+          <div style="font-size:13px;color:#94a3b8;">
+            💡 提示：調整名冊僅改變出戰順序，與 5×3 戰陣盤上的站位座標完全解耦
+          </div>
+        `;
+      }
+      if (contentEl) {
+        contentEl.innerHTML = renderPartyRosterHtml(party);
+      }
+      break;
+    }
+
+    case 'ITEMS': {
+      const itemTab = drpgState.mainMenuItemsTab || 'USABLE';
+      if (subHeaderEl) {
+        subHeaderEl.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button class="act-btn ${itemTab === 'USABLE' ? 'btn-blue' : ''}" onclick="window.switchMainMenuTab('ITEMS', 'USABLE')" style="font-size:13px;padding:5px 14px;">🧪 可使用 (回復/Buff)</button>
+            <button class="act-btn ${itemTab === 'QUEST' ? 'btn-blue' : ''}" onclick="window.switchMainMenuTab('ITEMS', 'QUEST')" style="font-size:13px;padding:5px 14px;">📜 任務道具</button>
+            <button class="act-btn ${itemTab === 'ALL' ? 'btn-blue' : ''}" onclick="window.switchMainMenuTab('ITEMS', 'ALL')" style="font-size:13px;padding:5px 14px;">📦 全部道具</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button class="act-btn" onclick="toggleBagDrawer(true)" style="font-size:13px;padding:5px 12px;background:#334155;">🎒 開啟公共行囊 (B)</button>
+          </div>
+        `;
+      }
+      if (contentEl) {
+        contentEl.innerHTML = renderItemsListHtml(itemTab);
+      }
+      break;
+    }
+
+    case 'EQUIP':
+    default: {
+      if (subHeaderEl) {
+        subHeaderEl.innerHTML = `
+          <div style="display:flex;align-items:center;gap:8px;overflow-x:auto;">
+            ${renderMemberTabButtons()}
+          </div>
+          <div style="font-size:13px;color:#94a3b8;">
+            🛡️ 點擊裝備槽可卸下或開啟挑選比較面板
+          </div>
+        `;
+      }
+      if (contentEl) {
+        contentEl.innerHTML = renderMemberEquipHtml(m, selIdx, party);
+      }
+      break;
+    }
+  }
+}
+
+/**
+ * 渲染系統存讀檔槽位清單 (System View)
+ */
+function renderSystemSlotsHtml(sysMode) {
+  const slots = drpgState.saveSlots && drpgState.saveSlots.length > 0
+    ? drpgState.saveSlots
+    : [0, 1, 2, 3, 4, 5].map(id => ({ slotId: id, empty: true, title: id === 0 ? '自動存檔' : `存檔槽位 ${id}` }));
+
+  return `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(360px, 1fr));gap:14px;padding:4px 0;">
+      ${slots.map(slot => {
+        const isAuto = (slot.slotId === 0);
+        return `
+          <div class="slot-item-card ${isAuto ? 'is-autosave' : ''} ${slot.empty ? 'is-empty' : 'is-populated'}" style="margin:0;font-size:13px;">
+            <div class="slot-info-col">
+              <div class="slot-badge-row">
+                <span class="slot-id-tag ${isAuto ? 'auto-tag' : ''}">${isAuto ? '⚡ 自動存檔' : `槽位 ${slot.slotId}`}</span>
+                <span class="slot-title-text" style="font-size:14px;font-weight:bold;">${slot.title || (isAuto ? '自動存檔' : `存檔槽位 ${slot.slotId}`)}</span>
+              </div>
+              <div class="slot-meta-row" style="font-size:13px;margin:6px 0;">
+                ${slot.empty
+                  ? '<span style="color:#64748b;">-- 空無道痕 (未存檔) --</span>'
+                  : `<span>👤 主角: <strong>${slot.protagonistName || '無名'}</strong></span>
+                     <span>🏛️ <strong>${slot.floorName || '太陰古塚'}</strong></span>
+                     <span>☯️ <strong>${slot.formationName || '四象辟邪陣'}</strong></span>
+                     <span>🕒 <strong>${slot.savedAt || ''}</strong></span>`}
+              </div>
+              ${(!slot.empty && slot.memberNames && slot.memberNames.length > 0)
+                ? `<div class="slot-members-row" style="font-size:12px;color:#94a3b8;">👥 小隊隊容：${slot.memberNames.join('、')}</div>`
+                : ''}
+            </div>
+            <div class="slot-actions-col">
+              ${slot.empty
+                ? (!isAuto ? `<button class="slot-btn slot-btn-save" onclick="window.triggerSaveSlot(${slot.slotId})" style="font-size:13px;">💾 存檔於此</button>` : '<span style="color:#64748b;font-size:12px;">待觸發</span>')
+                : `
+                  <button class="slot-btn slot-btn-load" onclick="window.triggerLoadSlot(${slot.slotId})" style="font-size:13px;">${isAuto ? '📂 載入自動存檔' : '📂 載入此檔'}</button>
+                  ${!isAuto ? `
+                    <button class="slot-btn slot-btn-save" onclick="window.triggerSaveSlot(${slot.slotId})" style="font-size:13px;">💾 覆蓋存檔</button>
+                    <button class="slot-btn slot-btn-del" onclick="window.triggerDeleteSlot(${slot.slotId})" title="刪除此存檔" style="font-size:13px;">🗑️</button>
+                  ` : ''}
+                `}
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+/**
+ * 渲染隊伍名冊調整畫面 (Party Roster View)
+ */
+function renderPartyRosterHtml(party) {
+  const members = party.members || [];
+  if (members.length === 0) {
+    return '<div style="color:#94a3b8;padding:20px;text-align:center;">小隊尚無任何成員。</div>';
   }
 
-  if (subTabsEl) subTabsEl.style.display = 'flex';
+  return `
+    <div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:16px;">
+      <div style="margin-bottom:14px;font-size:14px;color:#cbd5e1;">
+        當前小隊編制 (${members.length} / 5 人)。點擊【▲ 上移】或【▼ 下移】調整隊員先發順位：
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        ${members.map((mem, idx) => {
+          const isLeader = (idx === 0);
+          const isAlive = (mem.alive !== undefined) ? mem.alive : (mem.hp > 0);
+          const rowBadge = mem.row === 'FRONT' ? '前衛' : (mem.row === 'MIDDLE' ? '中衛' : '後衛');
+          const rowColor = mem.row === 'FRONT' ? '#f87171' : (mem.row === 'MIDDLE' ? '#c084fc' : '#60a5fa');
+          return `
+            <div style="display:flex;justify-content:space-between;align-items:center;background:#0f172a;border:1px solid #334155;border-radius:6px;padding:12px 18px;">
+              <div style="display:flex;align-items:center;gap:16px;">
+                <span style="font-size:18px;font-weight:bold;color:${isLeader ? '#fde047' : '#38bdf8'};width:36px;">#${idx + 1}</span>
+                <div>
+                  <div style="font-size:15px;font-weight:bold;color:#f1f5f9;display:flex;align-items:center;gap:8px;">
+                    ${isLeader ? '👑' : '👤'} ${mem.name}
+                    <span style="font-size:13px;color:#94a3b8;font-weight:normal;">(${mem.roleTitle || '道友'})</span>
+                    <span style="font-size:11px;color:${rowColor};font-weight:bold;background:#1e293b;padding:2px 8px;border-radius:4px;">${rowBadge}</span>
+                    ${!isAlive ? '<span style="font-size:11px;color:#ef4444;font-weight:bold;background:#450a0a;padding:2px 8px;border-radius:4px;">💀 陣亡</span>' : ''}
+                  </div>
+                  <div style="font-size:13px;color:#64748b;margin-top:4px;">
+                    境界 Lv.${mem.level || 1} ‧ 氣血 ${mem.hp}/${mem.maxHp} ‧ 真元/戰氣 ${mem.mp || 0}/${mem.maxMp || 0}
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <button class="act-btn btn-sm" onclick="send('party swap ${idx} ${idx - 1}')" ${idx === 0 ? 'disabled style="opacity:0.35;cursor:not-allowed;"' : ''} style="font-size:13px;padding:5px 12px;">
+                  ▲ 上移
+                </button>
+                <button class="act-btn btn-sm" onclick="send('party swap ${idx} ${idx + 1}')" ${idx === members.length - 1 ? 'disabled style="opacity:0.35;cursor:not-allowed;"' : ''} style="font-size:13px;padding:5px 12px;">
+                  ▼ 下移
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
 
-  // 5. 渲染子分頁切換列 (屬性裝備 / 武學法術 / 戰術方針)
-  if (subTabsEl) {
-    const activeSub = drpgState.partyModalSubTab;
-    const tacticsCount = (m.tactics && m.tactics.length > 0) ? `(${m.tactics.length})` : '';
-    subTabsEl.innerHTML = `
-      <button class="party-sub-tab-btn ${activeSub === 'EQUIP' ? 'active' : ''}" type="button" onclick="switchPartyModalSubTab('EQUIP')">
-        🛡️ 屬性與裝備
-      </button>
-      <button class="party-sub-tab-btn ${activeSub === 'SPELLBOOK' ? 'active' : ''}" type="button" onclick="switchPartyModalSubTab('SPELLBOOK')">
-        📖 武學法術
-      </button>
-      <button class="party-sub-tab-btn ${activeSub === 'TACTICS' ? 'active' : ''}" type="button" onclick="switchPartyModalSubTab('TACTICS')">
-        🎯 戰術方針 (Gambit AI) ${tacticsCount}
-      </button>
+/**
+ * 渲染道具畫面 (Items View)
+ */
+function renderItemsListHtml(itemTab) {
+  return `
+    <div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:16px;flex:1;display:flex;flex-direction:column;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <span style="font-size:14px;color:#cbd5e1;">
+          當前檢視：<strong>${itemTab === 'USABLE' ? '🧪 可使用靈藥與 Buff 符籙' : (itemTab === 'QUEST' ? '📜 重要任務與機緣信物' : '📦 全部隨身物資')}</strong>
+        </span>
+        <button class="act-btn" onclick="toggleBagDrawer(true)" style="font-size:13px;padding:5px 14px;background:#0284c7;color:#fff;">
+          🎒 展開公共行囊
+        </button>
+      </div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:14px;border:1px dashed #334155;border-radius:6px;padding:30px;text-align:center;">
+        <div>
+          <div style="font-size:40px;margin-bottom:12px;">🎒</div>
+          <div style="color:#f1f5f9;font-weight:bold;font-size:16px;margin-bottom:8px;">行囊與道具管理 (Phase 2 分頁模組整合中)</div>
+          <div style="font-size:14px;color:#94a3b8;max-width:520px;line-height:1.6;margin:0 auto;">
+            目前道友可透過右上角「🎒 展開公共行囊」或按鍵盤快捷鍵 <strong style="color:#38bdf8;">B</strong> 即時管理與使用全隊公共丹藥靈物！
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * 渲染角色詳細屬性道基面板 (Characters View)
+ */
+function renderMemberStatusDetailHtml(m, selIdx, party) {
+  const isLeader = (m.id && (m.id === 'm-leader' || m.id.includes('leader'))) || selIdx === 0;
+  const level = m.level || 1;
+  const exp = m.exp || 0;
+  const nextExp = m.nextLevelExp || 180;
+  const expPct = Math.min(100, Math.max(0, Math.floor((exp / nextExp) * 100)));
+  const freePoints = m.freeStatPoints || 0;
+
+  const strVal = m.str || 5;
+  const conVal = m.con || 5;
+  const dexVal = m.dex || 5;
+  const intVal = m.intStat !== undefined ? m.intStat : (m.intelligence || 5);
+  const wisVal = m.wis || 5;
+
+  const resType = m.resourceType || 'MP';
+  const curRes = m.currentResource !== undefined ? m.currentResource : m.mp;
+  const maxRes = m.maxResource !== undefined ? m.maxResource : m.maxMp;
+  let resLabel = `MP: ${curRes}/${maxRes}`;
+  if (resType === 'SP' || resType === 'RAGE' || resType === 'COMBO' || resType === 'STAMINA' || resType === 'FORCE' || resType === 'ENERGY') {
+    resLabel = `戰氣: ${curRes}/${maxRes}`;
+  }
+
+  const renderStatAddBtn = (statKey, label) => {
+    if (!isLeader) return '';
+    if (freePoints > 0) {
+      return `<button class="stat-add-btn" onclick="send('party stat add ${statKey} 1')" title="點擊投入 1 點自由修為點數提升【${label}】">+1</button>`;
+    } else {
+      return `<button class="stat-add-btn disabled" disabled title="無可用自由修為點數">+1</button>`;
+    }
+  };
+
+  let freePointsBannerHtml = '';
+  if (isLeader) {
+    if (freePoints > 0) {
+      freePointsBannerHtml = `
+        <div class="free-points-banner" style="font-size:14px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span>⭐</span>
+            <span><strong>道胎未定・造化充盈</strong>：尚有 <strong style="font-size:16px;color:#fde047;">${freePoints}</strong> 點自由修為點數！</span>
+          </div>
+          <span style="font-size:13px;color:#fef3c7;">(點擊下方屬性右側 [+1] 按鈕即刻分配)</span>
+        </div>
+      `;
+    } else {
+      freePointsBannerHtml = `
+        <div style="font-size:13px;color:#94a3b8;display:flex;justify-content:space-between;padding:4px 6px;">
+          <span>⭐ 自由修為點數：0 點</span>
+          <span style="color:#64748b;">(主角每升一級額外獲贈 2 點自由分配點數)</span>
+        </div>
+      `;
+    }
+  } else {
+    freePointsBannerHtml = `
+      <div style="font-size:13px;color:#94a3b8;display:flex;justify-content:space-between;padding:4px 6px;">
+        <span>🏷️ 成長模式：【職業範本自適應】</span>
+        <span style="color:#64748b;">(同伴升級自動提升五維，無需手動微操)</span>
+      </div>
     `;
   }
 
-  if (!membersListEl) return;
-  membersListEl.innerHTML = '';
+  return `
+    <div class="party-detail-card" style="font-size:14px;">
+      <div class="party-detail-header">
+        <div class="party-detail-name-wrap">
+          <span style="color:#38bdf8;font-weight:bold;font-size:18px;">#${selIdx + 1} ${m.name}</span>
+          <span class="member-level-badge" style="font-size:13px;background:#0f172a;border:1px solid #eab308;padding:2px 8px;border-radius:4px;">Lv.${level}</span>
+          ${m.className ? `<span class="member-class-badge" style="background:#1e293b;border:1px solid #38bdf8;color:#7dd3fc;padding:2px 8px;border-radius:4px;font-size:13px;">🏷️ ${m.className}</span>` : ''}
+          <button class="item-act-mini-btn" onclick="send('party switch ${selIdx}')" title="切換前衛/中衛/後衛站位" style="font-size:13px;padding:3px 8px;">🔄 換位 (${m.row === 'FRONT' ? '前衛' : (m.row === 'MIDDLE' ? '中衛' : '後衛')})</button>
+        </div>
+        <span class="party-detail-role" style="font-size:13px;color:#94a3b8;">${m.roleTitle}</span>
+      </div>
 
-  // 6. 依子頁籤渲染內容
-  if (drpgState.partyModalSubTab === 'SPELLBOOK') {
-    membersListEl.innerHTML = renderMemberSpellbook(m, selIdx);
-    return;
-  }
+      <!-- 1. 修為境界與 EXP 進度條 -->
+      <div class="party-detail-exp-card" style="margin:10px 0;">
+        <div class="party-detail-exp-header">
+          <div class="party-detail-exp-title">
+            <span style="font-size:14px;">✨ 境界修為</span>
+            <strong style="color:#fde047;font-size:14px;">Lv.${level}</strong>
+          </div>
+          <div class="party-detail-exp-val" style="font-size:13px;">EXP: ${exp} / ${nextExp} (${expPct}%)</div>
+        </div>
+        <div class="party-detail-exp-bar" style="height:12px;" title="晉升下一級所需修為：${exp}/${nextExp} (${expPct}%)">
+          <div class="party-detail-exp-fill" style="width:${expPct}%;"></div>
+        </div>
+      </div>
 
-  if (drpgState.partyModalSubTab === 'TACTICS') {
-    membersListEl.innerHTML = renderMemberTactics(m, selIdx);
-    return;
-  }
+      <!-- 2. 自由點數提示橫幅 -->
+      ${freePointsBannerHtml}
 
-  // 預設 'EQUIP' 屬性與裝備
+      <!-- 3. 五維先天道基屬性網格 -->
+      <div style="font-size:14px;color:#cbd5e1;font-weight:bold;margin:10px 0 6px 0;display:flex;justify-content:space-between;align-items:center;">
+        <span>☯️ 五維先天道基：</span>
+        ${isLeader && freePoints > 0 ? `<span style="font-size:13px;color:#facc15;">請點擊右側 [+1] 分配點數</span>` : ''}
+      </div>
+      <div class="party-detail-stats-grid">
+        <div class="stat-item-box">
+          <div class="stat-item-header">
+            <span class="stat-item-label" style="font-size:14px;">💪 力量 STR</span>
+            ${renderStatAddBtn('str', '力量')}
+          </div>
+          <div class="stat-item-val" style="font-size:20px;">${strVal}</div>
+          <div class="stat-item-desc" style="font-size:12px;">物理傷害、負重、招架</div>
+        </div>
+
+        <div class="stat-item-box">
+          <div class="stat-item-header">
+            <span class="stat-item-label" style="font-size:14px;">🫀 根骨 CON</span>
+            ${renderStatAddBtn('con', '根骨')}
+          </div>
+          <div class="stat-item-val" style="font-size:20px;">${conVal}</div>
+          <div class="stat-item-desc" style="font-size:12px;">血量上限 (+10/點)、減傷</div>
+        </div>
+
+        <div class="stat-item-box">
+          <div class="stat-item-header">
+            <span class="stat-item-label" style="font-size:14px;">⚡ 靈巧 DEX</span>
+            ${renderStatAddBtn('dex', '靈巧')}
+          </div>
+          <div class="stat-item-val" style="font-size:20px;">${dexVal}</div>
+          <div class="stat-item-desc" style="font-size:12px;">暴擊率、命中、身法閃避</div>
+        </div>
+
+        <div class="stat-item-box">
+          <div class="stat-item-header">
+            <span class="stat-item-label" style="font-size:14px;">🧠 悟性 INT</span>
+            ${renderStatAddBtn('int', '悟性')}
+          </div>
+          <div class="stat-item-val" style="font-size:20px;">${intVal}</div>
+          <div class="stat-item-desc" style="font-size:12px;">真元上限 (+8/點)、法術</div>
+        </div>
+
+        <div class="stat-item-box">
+          <div class="stat-item-header">
+            <span class="stat-item-label" style="font-size:14px;">🧘 定力 WIS</span>
+            ${renderStatAddBtn('wis', '定力')}
+          </div>
+          <div class="stat-item-val" style="font-size:20px;">${wisVal}</div>
+          <div class="stat-item-desc" style="font-size:12px;">治療增幅、法力恢復、抗性</div>
+        </div>
+      </div>
+
+      <!-- 4. 當前實時動態條 (HP / MP / SAN) -->
+      <div class="party-detail-bars" style="background:rgba(15,23,42,0.6);padding:12px;border-radius:6px;margin-top:12px;">
+        <div style="font-size:14px;color:#f87171;font-weight:bold;margin-bottom:4px;">❤️ 氣血 HP: ${m.hp}/${m.maxHp}</div>
+        <div style="font-size:14px;color:#60a5fa;font-weight:bold;margin-bottom:4px;">⚡ ${resLabel}</div>
+        <div style="font-size:14px;color:#34d399;font-weight:bold;">🧘 道心 SAN: ${m.san}/${m.maxSan} (${m.sanityStatus || '心境平穩'})</div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * 渲染成員裝備與被動功法畫面 (Equipment View)
+ */
+function renderMemberEquipHtml(m, selIdx, party) {
   const allSlots = [
     { key: 'MAIN_HAND', alias: 'weapon', label: '主手武器', icon: '🗡️' },
     { key: 'OFF_HAND', alias: 'shield', label: '副手防具', icon: '🛡️' },
@@ -773,17 +1195,6 @@ function renderPartyModal() {
     { key: 'ACCESSORY_1', alias: 'acc1', label: '本命法寶', icon: '💍' },
     { key: 'ACCESSORY_2', alias: 'acc2', label: '輔佐靈寶', icon: '📿' }
   ];
-
-  const rowBadge = m.row === 'FRONT' ? '前衛' : '後衛';
-  const rowClass = `badge-${m.row.toLowerCase()}`;
-
-  const resType = m.resourceType || 'MP';
-  const curRes = m.currentResource !== undefined ? m.currentResource : m.mp;
-  const maxRes = m.maxResource !== undefined ? m.maxResource : m.maxMp;
-  let resLabel = `MP: ${curRes}/${maxRes}`;
-  if (resType === 'SP' || resType === 'RAGE' || resType === 'COMBO' || resType === 'STAMINA' || resType === 'FORCE' || resType === 'ENERGY') {
-    resLabel = `戰氣: ${curRes}/${maxRes}`;
-  }
 
   let equipSlotsHtml = '';
   for (const slot of allSlots) {
@@ -800,178 +1211,76 @@ function renderPartyModal() {
       const statsStr = statsParts.length > 0 ? statsParts.join(' ') : '基礎裝備';
 
       equipSlotsHtml += `
-        <div class="equip-slot-box has-item" title="${item.description || ''}">
+        <div class="equip-slot-box has-item" title="${item.description || ''}" style="font-size:13px;">
           <div class="equip-slot-title">
-            <span>${slot.icon} ${slot.label}</span>
-            <button class="unequip-mini-btn" onclick="send('item unequip ${slot.alias} ${selIdx}')" title="卸下放回行囊">✕ 卸下</button>
+            <span style="font-size:13px;">${slot.icon} ${slot.label}</span>
+            <button class="unequip-mini-btn" onclick="send('item unequip ${slot.alias} ${selIdx}')" title="卸下放回行囊" style="font-size:12px;">✕ 卸下</button>
           </div>
-          <div class="equip-slot-name">${item.icon || '📦'} ${item.name}</div>
-          <div class="equip-slot-stats">${statsStr}</div>
+          <div class="equip-slot-name" style="font-size:14px;font-weight:bold;">${item.icon || '📦'} ${item.name}</div>
+          <div class="equip-slot-stats" style="font-size:12px;">${statsStr}</div>
         </div>
       `;
     } else {
       equipSlotsHtml += `
-        <div class="equip-slot-box empty">
+        <div class="equip-slot-box empty" style="font-size:13px;">
           <div class="equip-slot-title">
-            <span>${slot.icon} ${slot.label}</span>
+            <span style="font-size:13px;">${slot.icon} ${slot.label}</span>
           </div>
-          <div class="equip-slot-name" style="color:#64748b;font-weight:normal;">(未穿戴)</div>
+          <div class="equip-slot-name" style="color:#64748b;font-weight:normal;font-size:13px;">(未穿戴)</div>
           <div class="equip-slot-act">
-            <button class="item-act-mini-btn" onclick="toggleBagDrawer(true)" title="開啟行囊挑選裝備穿戴">🎒 挑選</button>
+            <button class="item-act-mini-btn" onclick="toggleBagDrawer(true)" title="開啟行囊挑選裝備穿戴" style="font-size:12px;">🎒 挑選</button>
           </div>
         </div>
       `;
     }
   }
 
-  const isLeader = (m.id && (m.id === 'm-leader' || m.id.includes('leader'))) || selIdx === 0;
-  const level = m.level || 1;
-  const exp = m.exp || 0;
-  const nextExp = m.nextLevelExp || 180;
-  const expPct = Math.min(100, Math.max(0, Math.floor((exp / nextExp) * 100)));
-  const freePoints = m.freeStatPoints || 0;
+  // 被動功法欄位 (Weapon, Parry, Dodge, Force)
+  const passiveCategories = [
+    { key: 'WEAPON', label: '兵刃套路', icon: '⚔️', val: m.basicSkillName || '基礎套路' },
+    { key: 'PARRY', label: '護身招架', icon: '🛡️', val: (m.passiveSlots && m.passiveSlots.PARRY) || '基本招架' },
+    { key: 'DODGE', label: '靈動身法', icon: '💨', val: (m.passiveSlots && m.passiveSlots.DODGE) || '基本身法' },
+    { key: 'FORCE', label: '玄門心法', icon: '🧘', val: (m.passiveSlots && m.passiveSlots.FORCE) || '吐納內功' }
+  ];
 
-  const strVal = m.str || 5;
-  const conVal = m.con || 5;
-  const dexVal = m.dex || 5;
-  const intVal = m.intStat !== undefined ? m.intStat : (m.intelligence || 5);
-  const wisVal = m.wis || 5;
-
-  const renderStatAddBtn = (statKey, label) => {
-    if (!isLeader) return '';
-    if (freePoints > 0) {
-      return `<button class="stat-add-btn" onclick="send('party stat add ${statKey} 1')" title="點擊投入 1 點自由修為點數提升【${label}】">+1</button>`;
-    } else {
-      return `<button class="stat-add-btn disabled" disabled title="無可用自由修為點數">+1</button>`;
-    }
-  };
-
-  let freePointsBannerHtml = '';
-  if (isLeader) {
-    if (freePoints > 0) {
-      freePointsBannerHtml = `
-        <div class="free-points-banner">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span>⭐</span>
-            <span><strong>道胎未定・造化充盈</strong>：尚有 <strong style="font-size:15px;color:#fde047;">${freePoints}</strong> 點自由修為點數！</span>
-          </div>
-          <span style="font-size:11px;color:#fef3c7;">(點擊下方屬性右側 [+1] 按鈕即刻分配)</span>
-        </div>
-      `;
-    } else {
-      freePointsBannerHtml = `
-        <div style="font-size:11px;color:#94a3b8;display:flex;justify-content:space-between;padding:2px 4px;">
-          <span>⭐ 自由修為點數：0 點</span>
-          <span style="color:#64748b;">(主角每升一級額外獲贈 2 點自由分配點數)</span>
-        </div>
-      `;
-    }
-  } else {
-    freePointsBannerHtml = `
-      <div style="font-size:11px;color:#94a3b8;display:flex;justify-content:space-between;padding:2px 4px;">
-        <span>🏷️ 成長模式：【職業範本自適應】</span>
-        <span style="color:#64748b;">(同伴升級自動提升五維，無需手動微操)</span>
-      </div>
-    `;
-  }
-
-  const card = document.createElement('div');
-  card.className = 'party-detail-card';
-  card.innerHTML = `
-    <div class="party-detail-header">
-      <div class="party-detail-name-wrap">
-        <span style="color:#38bdf8;font-weight:bold;font-size:16px;">#${selIdx + 1} ${m.name}</span>
-        <span class="member-level-badge" style="font-size:11px;background:#0f172a;border:1px solid #eab308;padding:1px 6px;border-radius:4px;">Lv.${level}</span>
-        <span class="member-row ${rowClass}">[${rowBadge}]</span>
-        ${m.className ? `<span class="member-class-badge" title="${m.classDescription || ''}" style="background:#1e293b;border:1px solid #38bdf8;color:#7dd3fc;padding:2px 8px;border-radius:4px;font-size:11px;">🏷️ ${m.className}</span>` : ''}
-        <button class="item-act-mini-btn" onclick="send('party switch ${selIdx}')" title="切換前排/後排站位" style="font-size:11px;">🔄 站位切換 (${rowBadge})</button>
-      </div>
-      <span class="party-detail-role" style="font-size:12px;color:#94a3b8;">${m.roleTitle}</span>
+  let passivesHtml = passiveCategories.map(p => `
+    <div style="background:#0f172a;border:1px solid #334155;border-radius:6px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:13px;color:#94a3b8;">${p.icon} ${p.label}</span>
+      <span style="font-size:13px;color:#38bdf8;font-weight:bold;">${p.val}</span>
     </div>
+  `).join('');
 
-    <!-- 1. 修為境界與 EXP 進度條 -->
-    <div class="party-detail-exp-card">
-      <div class="party-detail-exp-header">
-        <div class="party-detail-exp-title">
-          <span>✨ 境界修為</span>
-          <strong style="color:#fde047;">Lv.${level}</strong>
+  return `
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <!-- 1. 角色摘要條 -->
+      <div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:12px 18px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="font-size:18px;font-weight:bold;color:#38bdf8;">#${selIdx + 1} ${m.name}</span>
+          <span style="font-size:13px;color:#cbd5e1;background:#0f172a;padding:2px 8px;border-radius:4px;">Lv.${m.level || 1} ${m.className || '道友'}</span>
+          <span style="font-size:13px;color:#94a3b8;">氣血: ${m.hp}/${m.maxHp}</span>
         </div>
-        <div class="party-detail-exp-val">EXP: ${exp} / ${nextExp} (${expPct}%)</div>
+        <button class="act-btn btn-sm" onclick="send('party switch ${selIdx}')" style="font-size:13px;padding:4px 10px;">
+          🔄 站位：${m.row === 'FRONT' ? '前衛' : (m.row === 'MIDDLE' ? '中衛' : '後衛')}
+        </button>
       </div>
-      <div class="party-detail-exp-bar" title="晉升下一級所需修為：${exp}/${nextExp} (${expPct}%)">
-        <div class="party-detail-exp-fill" style="width:${expPct}%;"></div>
-      </div>
-    </div>
 
-    <!-- 2. 自由點數提示橫幅 -->
-    ${freePointsBannerHtml}
-
-    <!-- 3. 五維先天道基屬性網格 -->
-    <div style="font-size:13px;color:#cbd5e1;font-weight:bold;margin-top:2px;display:flex;justify-content:space-between;align-items:center;">
-      <span>☯️ 五維先天道基：</span>
-      ${isLeader && freePoints > 0 ? `<span style="font-size:11px;color:#facc15;">請點擊右側 [+1] 分配點數</span>` : ''}
-    </div>
-    <div class="party-detail-stats-grid">
-      <div class="stat-item-box">
-        <div class="stat-item-header">
-          <span class="stat-item-label">💪 力量 STR</span>
-          ${renderStatAddBtn('str', '力量')}
+      <!-- 2. 7 部位裝備槽位 (5 基礎 + 2 飾品) -->
+      <div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:16px;">
+        <div style="font-size:14px;color:#cbd5e1;font-weight:bold;margin-bottom:10px;">🛡️ 穿戴裝備欄 (7 槽位)：</div>
+        <div class="party-detail-equip-grid">
+          ${equipSlotsHtml}
         </div>
-        <div class="stat-item-val">${strVal}</div>
-        <div class="stat-item-desc">物理傷害、負重、招架</div>
       </div>
 
-      <div class="stat-item-box">
-        <div class="stat-item-header">
-          <span class="stat-item-label">🫀 根骨 CON</span>
-          ${renderStatAddBtn('con', '根骨')}
+      <!-- 3. 被動四槽位功法 -->
+      <div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:16px;">
+        <div style="font-size:14px;color:#cbd5e1;font-weight:bold;margin-bottom:10px;">⚡ 主修與被動套路功法 (4 部位)：</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:10px;">
+          ${passivesHtml}
         </div>
-        <div class="stat-item-val">${conVal}</div>
-        <div class="stat-item-desc">血量上限 (+10/點)、減傷</div>
       </div>
-
-      <div class="stat-item-box">
-        <div class="stat-item-header">
-          <span class="stat-item-label">⚡ 靈巧 DEX</span>
-          ${renderStatAddBtn('dex', '靈巧')}
-        </div>
-        <div class="stat-item-val">${dexVal}</div>
-        <div class="stat-item-desc">暴擊率、命中、身法閃避</div>
-      </div>
-
-      <div class="stat-item-box">
-        <div class="stat-item-header">
-          <span class="stat-item-label">🧠 悟性 INT</span>
-          ${renderStatAddBtn('int', '悟性')}
-        </div>
-        <div class="stat-item-val">${intVal}</div>
-        <div class="stat-item-desc">真元上限 (+8/點)、法術</div>
-      </div>
-
-      <div class="stat-item-box">
-        <div class="stat-item-header">
-          <span class="stat-item-label">🧘 定力 WIS</span>
-          ${renderStatAddBtn('wis', '定力')}
-        </div>
-        <div class="stat-item-val">${wisVal}</div>
-        <div class="stat-item-desc">治療增幅、法力恢復、抗性</div>
-      </div>
-    </div>
-
-    <!-- 4. 當前實時動態條 (HP / MP / SAN) -->
-    <div class="party-detail-bars" style="background:rgba(15,23,42,0.6);padding:10px;border-radius:6px;">
-      <div style="font-size:12px;color:#f87171;font-weight:bold;">❤️ 氣血 HP: ${m.hp}/${m.maxHp}</div>
-      <div style="font-size:12px;color:#60a5fa;font-weight:bold;">⚡ ${resLabel}</div>
-      <div style="font-size:12px;color:#34d399;font-weight:bold;">🧘 道心 SAN: ${m.san}/${m.maxSan} (${m.sanityStatus || '心境平穩'})</div>
-    </div>
-
-    <!-- 5. 裝備槽位 (5 基礎 + 2 飾品) -->
-    <div style="font-size:13px;color:#cbd5e1;font-weight:bold;margin-top:4px;">🛡️ 裝備槽位 (5 基礎 + 2 飾品)：</div>
-    <div class="party-detail-equip-grid">
-      ${equipSlotsHtml}
     </div>
   `;
-  membersListEl.appendChild(card);
 }
 
 /**
@@ -1208,6 +1517,8 @@ if (typeof window !== 'undefined') {
   window.togglePartyModal = togglePartyModal;
   window.openPartyModal = openPartyModal;
   window.closePartyModal = closePartyModal;
+  window.switchMainMenuTab = switchMainMenuTab;
+  window.openMainMenu = openMainMenu;
   window.selectPartyModalMember = selectPartyModalMember;
   window.selectPartyFormationTab = selectPartyFormationTab;
   window.switchPartyModalSubTab = switchPartyModalSubTab;
@@ -1230,6 +1541,8 @@ export {
   togglePartyModal,
   openPartyModal,
   closePartyModal,
+  switchMainMenuTab,
+  openMainMenu,
   selectPartyModalMember,
   selectPartyFormationTab,
   switchPartyModalSubTab,

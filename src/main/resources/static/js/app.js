@@ -20,6 +20,8 @@ import {
   togglePartyModal,
   openPartyModal,
   closePartyModal,
+  switchMainMenuTab,
+  openMainMenu,
   selectPartyModalMember,
   selectPartyFormationTab,
   switchPartyModalSubTab,
@@ -472,6 +474,8 @@ if (typeof window !== 'undefined') {
   window.triggerFormationAction = triggerFormationAction;
   window.triggerInspectAction = triggerInspectAction;
   window.triggerRestAction = triggerRestAction;
+  window.switchMainMenuTab = switchMainMenuTab;
+  window.openMainMenu = openMainMenu;
   window.initKeyboardControls = initKeyboardControls;
 }
 

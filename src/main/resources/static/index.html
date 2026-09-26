@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>道祖是克蘇魯 - DRPG 靈境探索</title>
-  <link rel="stylesheet" href="css/style.css?v=1.6.2">
+  <link rel="stylesheet" href="css/style.css?v=1.7.0">
   <script src="https://cdn.jsdelivr.net/npm/ansi_up@5.1.0/ansi_up.min.js"></script>
 </head>
 <body>
@@ -401,26 +401,49 @@
       </div>
     </div>
 
-    <!-- 小隊編制與 5+2 裝備管理 模態視窗 -->
+    <!-- 功能選單 (Main Menu) 模態視窗 (承接原 party-modal 框架) -->
     <div id="party-modal" class="modal-overlay hidden" onclick="if(event.target===this) togglePartyModal(false);">
-      <div class="party-modal-card">
-        <div class="party-modal-header">
-          <div class="party-modal-title">
-            <span>👤 角色狀態・小隊成員與 5+2 裝備一覽</span>
+      <div class="party-modal-card main-menu-card">
+        <div class="party-modal-header main-menu-header">
+          <div class="party-modal-title main-menu-title">
+            <span id="main-menu-title-text">📜 仙道總覽・功能選單</span>
           </div>
           <button class="drawer-close-btn" onclick="togglePartyModal(false)">✕ 關閉 (C/P/Esc)</button>
         </div>
-        <div id="party-modal-formation-info" class="party-modal-formation-info">
-          <!-- 由 drpg-view.js 動態渲染陣法資訊與奧義 -->
-        </div>
-        <div id="party-modal-member-tabs" class="party-modal-member-tabs">
-          <!-- 由 drpg-view.js 動態渲染隊員切換標籤列 -->
-        </div>
-        <div id="party-modal-sub-tabs" class="party-modal-sub-tabs">
-          <!-- 由 drpg-view.js 動態渲染子分頁切換：屬性裝備 / 武學法術 / 戰術方針 -->
-        </div>
-        <div id="party-modal-members-list" class="party-modal-members-list">
-          <!-- 由 drpg-view.js 動態渲染選中隊員之詳細內容 -->
+        <div class="main-menu-body">
+          <!-- 左側 8 大功能主導覽列 -->
+          <nav class="main-menu-nav" id="main-menu-nav">
+            <button class="main-menu-nav-btn" data-menu="ITEMS" onclick="switchMainMenuTab('ITEMS')">
+              <span class="nav-icon">🎒</span><span class="nav-text">道具 (Items)</span>
+            </button>
+            <button class="main-menu-nav-btn" data-menu="EQUIP" onclick="switchMainMenuTab('EQUIP')">
+              <span class="nav-icon">🛡️</span><span class="nav-text">裝備 (Equip)</span>
+            </button>
+            <button class="main-menu-nav-btn" data-menu="SKILLS" onclick="switchMainMenuTab('SKILLS')">
+              <span class="nav-icon">📖</span><span class="nav-text">技能&法術 (Skills)</span>
+            </button>
+            <button class="main-menu-nav-btn" data-menu="CHARACTERS" onclick="switchMainMenuTab('CHARACTERS')">
+              <span class="nav-icon">👤</span><span class="nav-text">角色 (Status)</span>
+            </button>
+            <button class="main-menu-nav-btn" data-menu="PARTY" onclick="switchMainMenuTab('PARTY')">
+              <span class="nav-icon">👥</span><span class="nav-text">隊伍 (Party)</span>
+            </button>
+            <button class="main-menu-nav-btn" data-menu="FORMATION" onclick="switchMainMenuTab('FORMATION')">
+              <span class="nav-icon">☯️</span><span class="nav-text">陣法 (Formations)</span>
+            </button>
+            <button class="main-menu-nav-btn" data-menu="TACTICS" onclick="switchMainMenuTab('TACTICS')">
+              <span class="nav-icon">🎯</span><span class="nav-text">戰術方針 (Gambit)</span>
+            </button>
+            <button class="main-menu-nav-btn" data-menu="SYSTEM" onclick="switchMainMenuTab('SYSTEM')">
+              <span class="nav-icon">💾</span><span class="nav-text">系統 (System)</span>
+            </button>
+          </nav>
+
+          <!-- 右側主內容視口 -->
+          <div class="main-menu-viewport" id="main-menu-viewport">
+            <div id="main-menu-sub-header" class="main-menu-sub-header"></div>
+            <div id="main-menu-content" class="main-menu-content"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -478,7 +501,7 @@
 
         <!-- 探索模式按鍵組 -->
         <div id="action-buttons-group" class="action-buttons-group">
-          <button class="act-btn" onclick="if(window.triggerPartyAction) triggerPartyAction(); else send('party');" title="檢視角色資訊、武學與裝備 (C / P)">👤 狀態 (C)</button>
+          <button class="act-btn" onclick="if(window.triggerPartyAction) triggerPartyAction(); else send('party');" title="開啟功能選單・道具/裝備/技能/陣法/戰術 (C / P)">📜 選單 (C)</button>
           <button class="act-btn btn-bag" onclick="toggleBagDrawer()" title="開啟隊伍公共行囊 (B)">🎒 行囊 (B)</button>
           <button class="act-btn" onclick="openSaveModal('load')" title="開啟單機存檔/讀檔面板">💾 存讀檔</button>
           <button class="act-btn" onclick="if(window.triggerFormationAction) triggerFormationAction(); else send('formation toggle');" title="切換道門陣法 (F)">☯️ 陣法 (F)</button>
@@ -538,6 +561,6 @@
     window.send = send;
     connect();
   </script>
-  <script type="module" src="js/app.js?v=1.6.2"></script>
+  <script type="module" src="js/app.js?v=1.7.0"></script>
 </body>
 </html>
