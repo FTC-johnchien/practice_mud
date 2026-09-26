@@ -206,7 +206,7 @@ export function renderBattlePartyQuickBar(party) {
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <span class="bpmc-name" style="font-weight:bold; color:${isAlive ? '#e2e8f0' : '#94a3b8'}; font-size:13px;">#${idx + 1} ${m.name}</span>
         <div style="display:flex; align-items:center; gap:4px;">
-          ${!isAlive ? '<span style="font-size:11px; color:#ef4444; background:rgba(239,68,68,0.2); border:1px solid #ef4444; border-radius:3px; padding:1px 4px;">💀陣亡</span>' : `<span class="bpmc-badge" style="font-size:11px; font-weight:bold; color:${rowColor};">[${rowBadge}]</span>`}
+          ${!isAlive ? '<span style="font-size:var(--font-xs); color:#ef4444; background:rgba(239,68,68,0.2); border:1px solid #ef4444; border-radius:3px; padding:1px 4px;">💀陣亡</span>' : ''}
         </div>
       </div>
       <div class="enemy-hp-wrap" style="height:12px; margin:3px 0;">
@@ -362,7 +362,6 @@ export function renderCombatCommandDock(party, selectedMemberIdx) {
           <div class="dock-hero-header-left">
             <span class="dock-hero-name" title="${m.name}">#${selectedMemberIdx + 1} ${m.name}</span>
             <span class="dock-hero-lvl">Lv.${m.level || 1}</span>
-            <span class="dock-hero-row ${m.row === 'FRONT' ? 'row-front-badge' : 'row-back-badge'}">[${rowBadge}]</span>
             ${m.className ? `<span class="dock-hero-class">${m.className}</span>` : ''}
           </div>
           <div class="dock-hero-header-right">
@@ -710,14 +709,15 @@ export function toggleBattleMode(inBattle) {
   const bottomControlPanel = document.querySelector('.bottom-control-panel');
   const modeBadge = document.getElementById('control-mode-badge');
 
+  const footerHintExplore = document.getElementById('footer-hint-explore');
+
   if (inBattle) {
-    // 戰鬥模式：隱藏外層隊伍 HUD、隱藏十字方向鍵、隱藏探索按鍵、關閉舊抽屜、完全隱藏底部控制列(避免功能重複佔用高度)
-    if (actGroup) actGroup.classList.add('hidden');
+    // 戰鬥模式：切換提示文字為戰鬥提示，保持常駐 40px 工具列可用 (選單/行囊/終端)
+    if (footerHintExplore) footerHintExplore.classList.add('hidden');
     if (battleStatusDock) battleStatusDock.classList.remove('hidden');
-    if (dpadGrid) dpadGrid.classList.add('hidden');
     if (partyHud) partyHud.classList.add('hidden');
     if (skillDrawer) skillDrawer.classList.add('hidden');
-    if (bottomControlPanel) bottomControlPanel.classList.add('hidden');
+    if (bottomControlPanel) bottomControlPanel.classList.remove('hidden');
     store.setState({ isSkillDrawerOpen: false });
 
     if (modeBadge && !store.get('isInputFocused')) {
@@ -728,11 +728,10 @@ export function toggleBattleMode(inBattle) {
       modeBadge.innerText = '⚔️ 戰鬥交鋒中';
     }
   } else {
-    // 探索模式：恢復外層隊伍 HUD、恢復十字方向鍵、恢復探索按鍵、恢復底部控制列
+    // 探索模式：切換提示為探索指引，恢復外層隊伍 HUD
     if (bottomControlPanel) bottomControlPanel.classList.remove('hidden');
     if (battleStatusDock) battleStatusDock.classList.add('hidden');
-    if (actGroup) actGroup.classList.remove('hidden');
-    if (dpadGrid) dpadGrid.classList.remove('hidden');
+    if (footerHintExplore) footerHintExplore.classList.remove('hidden');
     if (partyHud) partyHud.classList.remove('hidden');
 
     if (modeBadge && !store.get('isInputFocused')) {

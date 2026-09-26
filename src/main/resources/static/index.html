@@ -197,6 +197,7 @@
 
     <!-- 主畫面視窗：可切換左側/右側停靠的地牢雷達，右側冒險文字日誌 -->
     <main class="main-viewport">
+      <div id="stage-left-container" class="stage-left-container">
       <aside id="dungeon-radar-panel" class="dungeon-radar-panel">
         <div class="radar-top-controls">
           <button id="radar-dock-toggle-btn" class="radar-mini-btn" onclick="toggleRadarPosition()" title="切換地圖左側/右側停靠">⮃ 換邊</button>
@@ -347,18 +348,19 @@
         </div>
       </section>
 
-      <!-- 4. 右側主體：全高戰鬥/冒險情報日誌 (100% 全高貫通，不再被怪物卡片壓扁) -->
+        <!-- 下部：隊伍狀態 HUD (吸附於左舞台底部) -->
+        <section class="party-hud-panel">
+          <div id="party-members-list" class="party-members-list">
+            <!-- 由 party-hud-panel.js 動態渲染小隊成員卡片 -->
+          </div>
+        </section>
+      </div>
+
+      <!-- 右側主體：全高戰鬥/冒險情報日誌 (100% 全高貫通，不再被小隊狀態條截斷) -->
       <div class="log-and-battle-area">
         <section id="log"></section>
       </div>
     </main>
-
-    <!-- 下部：6 人小隊狀態 HUD -->
-    <section class="party-hud-panel">
-      <div id="party-members-list" class="party-members-list">
-        <!-- 由 drpg-view.js 動態渲染 6 名小隊成員卡片 -->
-      </div>
-    </section>
 
     <!-- 隊員專屬技能盤 / 抽屜 (點選隊員卡片滑出) -->
     <section id="skill-drawer" class="skill-drawer hidden">
@@ -486,36 +488,26 @@
           <input type="text" id="dev-cmd-input" class="dev-cmd-input-field" placeholder="輸入除錯或自訂 MUD 指令 (例如: look, saves, party, shop, who)..." autocomplete="off">
           <button class="send-btn" onclick="handleDevEnter()">發送</button>
         </div>
+        <div class="dev-console-quick-actions" style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="act-btn btn-dummy" onclick="send('battle test')" title="召喚玄鐵試道傀儡 (試招用)">🎯 試道木樁</button>
+          <button class="act-btn btn-charge" onclick="send('battle charge')" title="靈威充能 100 點">⚡ 充能滿溢</button>
+          <button class="act-btn" onclick="if(window.triggerInspectAction) triggerInspectAction(); else send('dungeon look');" title="凝神探查正前方地塊">👁️ 探查 (I)</button>
+          <button class="act-btn" onclick="if(window.triggerRestAction) triggerRestAction(); else send('rest');" title="凝神調息回復氣血與真元">🌿 調息 (R)</button>
+        </div>
       </div>
     </div>
 
-    <!-- 底部操作列：十字步進盤、快捷功能按鍵與文字指令輸入 -->
+    <!-- 底部操作列：40px 極簡常駐工具列與操作指引 -->
     <footer class="bottom-control-panel">
-      <div class="quick-dpad-wrap">
-        <div id="dpad-grid" class="dpad-grid">
-          <button class="dpad-btn dpad-forward" onclick="handleDpad('north')" title="北 / 前進 (W)">▲</button>
-          <button class="dpad-btn dpad-left" onclick="handleDpad('west')" title="西 / 左 (A)">◀</button>
-          <button class="dpad-btn dpad-backward" onclick="handleDpad('south')" title="南 / 後退 (S)">▼</button>
-          <button class="dpad-btn dpad-right" onclick="handleDpad('east')" title="東 / 右 (D)">▶</button>
-        </div>
+      <div id="action-buttons-group" class="footer-shortcuts-group">
+        <button class="act-btn footer-btn" onclick="if(window.triggerPartyAction) triggerPartyAction(); else send('party');" title="開啟仙道總覽・功能選單 (C / P)">📜 選單 (C)</button>
+        <button class="act-btn footer-btn btn-bag" onclick="toggleBagDrawer()" title="開啟隊伍公共行囊 (B)">🎒 行囊 (B)</button>
+        <button class="act-btn footer-btn" onclick="toggleDevConsole()" title="打開開發者終端 (~)">⌨️ 終端 (~)</button>
+      </div>
 
-        <!-- 探索模式按鍵組 -->
-        <div id="action-buttons-group" class="action-buttons-group">
-          <button class="act-btn" onclick="if(window.triggerPartyAction) triggerPartyAction(); else send('party');" title="開啟功能選單・道具/裝備/技能/陣法/戰術 (C / P)">📜 選單 (C)</button>
-          <button class="act-btn btn-bag" onclick="toggleBagDrawer()" title="開啟隊伍公共行囊 (B)">🎒 行囊 (B)</button>
-          <button class="act-btn" onclick="openSaveModal('load')" title="開啟單機存檔/讀檔面板">💾 存讀檔</button>
-          <button class="act-btn" onclick="if(window.triggerFormationAction) triggerFormationAction(); else send('formation toggle');" title="切換道門陣法 (F)">☯️ 陣法 (F)</button>
-          <button class="act-btn" onclick="if(window.triggerInspectAction) triggerInspectAction(); else send('dungeon look');" title="凝神探查正前方地塊 (I)">👁️ 探查 (I)</button>
-          <button class="act-btn" onclick="if(window.triggerRestAction) triggerRestAction(); else send('rest');" title="凝神調息回復氣血與真元 (R)">🌿 休息 (R)</button>
-          <button class="act-btn btn-dummy" onclick="send('battle test')" title="召喚玄鐵試道傀儡 (攻極低血極厚，試招用)">🎯 試道木樁</button>
-          <button class="act-btn btn-charge" onclick="send('battle charge')" title="靈威充能 100 點，滿怒氣/連擊點/真元 (試招奧義用)">⚡ 充能</button>
-          <button class="act-btn" onclick="toggleDevConsole()" title="打開開發者終端 (~)">⌨️ 終端 (~)</button>
-        </div>
-
-        <!-- 戰鬥模式提示列 (替代原戰鬥按鍵組，不顯示方向鍵與探索專用按鍵) -->
-        <div id="battle-status-dock" class="battle-status-dock hidden">
-          <span class="battle-dock-hint">⚔️ 生死交鋒中 ‧ 點擊上方角色釋放招式 ‧ 按 Space 全隊集火迎戰 ‧ 按 Esc 遁地撤退</span>
-        </div>
+      <div id="footer-hint-bar" class="footer-hint-bar">
+        <span id="footer-hint-explore" class="footer-hint-text">💡 WASD: 移動 ‧ C: 選單 ‧ B: 行囊 ‧ 數字鍵 1~5: 招式 ‧ R: 吐納調息</span>
+        <span id="battle-status-dock" class="footer-hint-text hidden">⚔️ 生死交鋒中 ‧ 點擊角色切換指揮台 ‧ Space: 全隊集火 ‧ Esc: 遁地撤退</span>
       </div>
 
       <div class="input-container hidden">

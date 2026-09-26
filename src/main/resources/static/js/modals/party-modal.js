@@ -371,7 +371,7 @@ function renderTeamFormationView(party) {
   const renderSlimCell = (cellData) => {
     if (!cellData) {
       return `
-        <div style="border:1px dashed #263346;border-radius:6px;min-height:68px;display:flex;align-items:center;justify-content:center;color:#475569;font-size:11px;background:rgba(15,23,42,0.3);">
+        <div style="border:1px dashed #263346;border-radius:6px;min-height:68px;display:flex;align-items:center;justify-content:center;color:#475569;font-size:var(--font-xs);background:rgba(15,23,42,0.3);">
           <span style="opacity:0.4;">(空位)</span>
         </div>
       `;
@@ -386,19 +386,19 @@ function renderTeamFormationView(party) {
     return `
       <div style="background:#141b27;border:1px solid ${isAlive ? (slotActive ? '#38bdf8' : '#eab308') : '#ef4444'};border-radius:6px;padding:6px 8px;display:flex;flex-direction:column;justify-content:space-between;min-height:68px;box-shadow:0 2px 6px rgba(0,0,0,0.4);position:relative;${!isAlive ? 'opacity:0.75;' : ''}">
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-weight:bold;font-size:12px;color:${isAlive ? '#f1f5f9' : '#94a3b8'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="#${idx + 1} ${mem.name} (${mem.className || '道友'})">
+          <span style="font-weight:bold;font-size:var(--font-xs);color:${isAlive ? '#f1f5f9' : '#94a3b8'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="#${idx + 1} ${mem.name} (${mem.className || '道友'})">
             #${idx + 1} ${mem.name}
           </span>
-          <span style="font-size:10px;color:${rowColor};font-weight:bold;flex-shrink:0;">[${rowLabel}]</span>
+          <span style="font-size:var(--font-xs);color:${rowColor};font-weight:bold;flex-shrink:0;">[${rowLabel}]</span>
         </div>
-        <div style="font-size:10px;line-height:1.2;margin:3px 0;color:${!isAlive ? '#ef4444' : (slotActive ? '#6ee7b7' : '#facc15')};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${mem.formationSlotBonus || mem.formationSlotName || '自由衛位'}">
+        <div style="font-size:var(--font-xs);line-height:1.2;margin:3px 0;color:${!isAlive ? '#ef4444' : (slotActive ? '#6ee7b7' : '#facc15')};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${mem.formationSlotBonus || mem.formationSlotName || '自由衛位'}">
           ${!isAlive ? '💀 陣亡離陣' : (mem.formationSlotBonus ? `💠 ${mem.formationSlotBonus}` : (mem.formationSlotName || '自由策應'))}
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px;">
-          <button class="act-btn btn-sm" onclick="send('formation switch ${idx}')" title="循環切換至${nextRow}" style="padding:1px 6px;font-size:10px;background:#1e293b;color:#cbd5e1;border:1px solid #475569;border-radius:3px;">
+          <button class="act-btn btn-sm" onclick="send('formation switch ${idx}')" title="循環切換至${nextRow}" style="padding:1px 6px;font-size:var(--font-xs);background:#1e293b;color:#cbd5e1;border:1px solid #475569;border-radius:3px;">
             🔄 調至${nextRow}
           </button>
-          ${!isAlive ? '<span style="font-size:9px;color:#ef4444;font-weight:bold;">離陣</span>' : (slotActive ? '<span style="font-size:9px;color:#34d399;">✓生效</span>' : '<span style="font-size:9px;color:#facc15;">⚠未配</span>')}
+          ${!isAlive ? '<span style="font-size:var(--font-xs);color:#ef4444;font-weight:bold;">離陣</span>' : (slotActive ? '<span style="font-size:var(--font-xs);color:#34d399;">✓生效</span>' : '<span style="font-size:var(--font-xs);color:#facc15;">⚠未配</span>')}
         </div>
       </div>
     `;
@@ -408,18 +408,18 @@ function renderTeamFormationView(party) {
     <div class="team-formation-container" style="display:flex;flex-direction:column;gap:14px;">
       <!-- 1. 當前陣法光環與典籍庫切換條 -->
       <div style="background:rgba(30,27,75,0.7);border:1px solid ${isBroken ? '#ef4444' : '#6366f1'};border-radius:6px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-        <div style="display:flex;align-items:center;gap:10px;font-size:12px;">
+        <div style="display:flex;align-items:center;gap:10px;font-size:var(--font-xs);">
           <span style="font-weight:bold;color:${isBroken ? '#f87171' : '#c084fc'};font-size:15px;">☯️ 【${party.formationName || '五行混元陣'}】</span>
           ${isBroken
-            ? '<span style="font-size:11px;background:#991b1b;color:#fecaca;padding:2px 8px;border-radius:4px;font-weight:bold;">⚠️ 陣法崩解失效</span>'
-            : '<span style="font-size:11px;background:#4338ca;color:#e0e7ff;padding:2px 8px;border-radius:4px;font-weight:bold;">常駐運轉中</span>'}
-          <span style="color:#cbd5e1;font-size:11px;">
+            ? '<span style="font-size:var(--font-xs);background:#991b1b;color:#fecaca;padding:2px 8px;border-radius:4px;font-weight:bold;">⚠️ 陣法崩解失效</span>'
+            : '<span style="font-size:var(--font-xs);background:#4338ca;color:#e0e7ff;padding:2px 8px;border-radius:4px;font-weight:bold;">常駐運轉中</span>'}
+          <span style="color:#cbd5e1;font-size:var(--font-xs);">
             ${isBroken
               ? '<span style="color:#f87171;font-weight:bold;">因人員陣亡導致人數不符，請點擊右側「📚 切換陣法」選擇適配存活人數的陣法！</span>'
               : '全隊受陣形靈威加持，陣眼與孔位契合時可爆發專屬屬性增幅。'}
           </span>
         </div>
-        <button class="act-btn" onclick="window.toggleFormationViewMode('LIBRARY')" style="background:#0284c7;color:#fff;padding:6px 14px;font-size:12px;border:none;border-radius:4px;cursor:pointer;font-weight:bold;box-shadow:0 2px 6px rgba(2,132,199,0.4);">
+        <button class="act-btn" onclick="window.toggleFormationViewMode('LIBRARY')" style="background:#0284c7;color:#fff;padding:6px 14px;font-size:var(--font-xs);border:none;border-radius:4px;cursor:pointer;font-weight:bold;box-shadow:0 2px 6px rgba(2,132,199,0.4);">
           📚 切換陣法 (典籍庫)
         </button>
       </div>
@@ -429,9 +429,9 @@ function renderTeamFormationView(party) {
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
           <div>
             <div style="font-size:15px;font-weight:bold;color:#e2e8f0;">🛡️ 隊伍戰鬥站位編排 (浪漫沙加式 5×3 戰陣盤)</div>
-            <div style="font-size:11px;color:#94a3b8;margin-top:2px;">依陣法 (X, Y) 幾何座標精準排布。點擊「🔄 調位」可循環切換【前衛 ➜ 中衛 ➜ 後衛】。</div>
+            <div style="font-size:var(--font-xs);color:#94a3b8;margin-top:2px;">依陣法 (X, Y) 幾何座標精準排布。點擊「🔄 調位」可循環切換【前衛 ➜ 中衛 ➜ 後衛】。</div>
           </div>
-          <div style="font-size:11px;color:#cbd5e1;background:#0f172a;padding:4px 10px;border-radius:4px;">
+          <div style="font-size:var(--font-xs);color:#cbd5e1;background:#0f172a;padding:4px 10px;border-radius:4px;">
             總人數：${(party.members || []).length} / 5 人
           </div>
         </div>
@@ -440,8 +440,8 @@ function renderTeamFormationView(party) {
           ${rowMeta.map((row, rIdx) => `
             <div>
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                <span style="font-size:12px;font-weight:bold;color:${row.color};">${row.label}</span>
-                <span style="font-size:10px;color:#94a3b8;">${row.desc}</span>
+                <span style="font-size:var(--font-xs);font-weight:bold;color:${row.color};">${row.label}</span>
+                <span style="font-size:var(--font-xs);color:#94a3b8;">${row.desc}</span>
               </div>
               <div style="display:grid;grid-template-columns:repeat(5, 1fr);gap:8px;">
                 ${gridMatrix[rIdx].map(cell => renderSlimCell(cell)).join('')}
@@ -453,8 +453,8 @@ function renderTeamFormationView(party) {
         ${deadMembers.length > 0 ? `
         <!-- 陣亡重傷待援區 -->
         <div style="border-top:1px dashed #ef4444;margin-top:14px;padding-top:10px;display:flex;align-items:center;gap:8px;">
-          <span style="font-size:12px;font-weight:bold;color:#ef4444;">💀 陣亡重傷待援：</span>
-          <span style="font-size:11px;color:#fca5a5;">
+          <span style="font-size:var(--font-xs);font-weight:bold;color:#ef4444;">💀 陣亡重傷待援：</span>
+          <span style="font-size:var(--font-xs);color:#fca5a5;">
             ${deadMembers.map(d => `#${d.idx + 1} ${d.mem.name}`).join('、')} (暫離陣法，請丹修施救或切換為 ${party.members.length - deadMembers.length} 人陣法)
           </span>
         </div>
@@ -521,32 +521,32 @@ function renderFormationLibraryView(party) {
         <div>
           <div style="font-size:16px;font-weight:bold;color:#e2e8f0;display:flex;align-items:center;gap:8px;">
             <span>📜 道門陣法典籍庫</span>
-            <span style="font-size:11px;color:#94a3b8;font-weight:normal;">- 典藏太古修仙陣圖與凡世軍道殺陣</span>
+            <span style="font-size:var(--font-xs);color:#94a3b8;font-weight:normal;">- 典藏太古修仙陣圖與凡世軍道殺陣</span>
           </div>
-          <div style="font-size:11px;color:#94a3b8;margin-top:2px;">
+          <div style="font-size:var(--font-xs);color:#94a3b8;margin-top:2px;">
             當前出戰人數：${(party.members || []).length} 人 | 存活人數：${(party.members || []).filter(m => (m.alive !== undefined ? m.alive : m.hp > 0)).length} 人
           </div>
         </div>
-        <button class="act-btn" onclick="window.toggleFormationViewMode('TACTICAL')" style="background:#0284c7;color:#fff;padding:6px 14px;font-size:12px;border:none;border-radius:4px;cursor:pointer;font-weight:bold;">
+        <button class="act-btn" onclick="window.toggleFormationViewMode('TACTICAL')" style="background:#0284c7;color:#fff;padding:6px 14px;font-size:var(--font-xs);border:none;border-radius:4px;cursor:pointer;font-weight:bold;">
           🛡️ 返回 5×3 戰陣盤
         </button>
       </div>
 
       <!-- 人數分類頁籤 (2 / 3 / 4 / 5 人分類) -->
       <div style="display:flex;gap:8px;border-bottom:1px solid #334155;padding-bottom:8px;flex-wrap:wrap;">
-        <button class="act-btn btn-sm ${currentFilter === 'ALL' ? 'active' : ''}" onclick="window.setFormationFilterSize('ALL')" style="padding:4px 12px;font-size:12px;background:${currentFilter === 'ALL' ? '#38bdf8' : '#1e293b'};color:${currentFilter === 'ALL' ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
+        <button class="act-btn btn-sm ${currentFilter === 'ALL' ? 'active' : ''}" onclick="window.setFormationFilterSize('ALL')" style="padding:4px 12px;font-size:var(--font-xs);background:${currentFilter === 'ALL' ? '#38bdf8' : '#1e293b'};color:${currentFilter === 'ALL' ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
           全部 (${countAll})
         </button>
-        <button class="act-btn btn-sm ${currentFilter === 5 ? 'active' : ''}" onclick="window.setFormationFilterSize(5)" style="padding:4px 12px;font-size:12px;background:${currentFilter === 5 ? '#38bdf8' : '#1e293b'};color:${currentFilter === 5 ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
+        <button class="act-btn btn-sm ${currentFilter === 5 ? 'active' : ''}" onclick="window.setFormationFilterSize(5)" style="padding:4px 12px;font-size:var(--font-xs);background:${currentFilter === 5 ? '#38bdf8' : '#1e293b'};color:${currentFilter === 5 ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
           5人陣法 (${count5})
         </button>
-        <button class="act-btn btn-sm ${currentFilter === 4 ? 'active' : ''}" onclick="window.setFormationFilterSize(4)" style="padding:4px 12px;font-size:12px;background:${currentFilter === 4 ? '#38bdf8' : '#1e293b'};color:${currentFilter === 4 ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
+        <button class="act-btn btn-sm ${currentFilter === 4 ? 'active' : ''}" onclick="window.setFormationFilterSize(4)" style="padding:4px 12px;font-size:var(--font-xs);background:${currentFilter === 4 ? '#38bdf8' : '#1e293b'};color:${currentFilter === 4 ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
           4人陣法 (${count4})
         </button>
-        <button class="act-btn btn-sm ${currentFilter === 3 ? 'active' : ''}" onclick="window.setFormationFilterSize(3)" style="padding:4px 12px;font-size:12px;background:${currentFilter === 3 ? '#38bdf8' : '#1e293b'};color:${currentFilter === 3 ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
+        <button class="act-btn btn-sm ${currentFilter === 3 ? 'active' : ''}" onclick="window.setFormationFilterSize(3)" style="padding:4px 12px;font-size:var(--font-xs);background:${currentFilter === 3 ? '#38bdf8' : '#1e293b'};color:${currentFilter === 3 ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
           3人陣法 (${count3})
         </button>
-        <button class="act-btn btn-sm ${currentFilter === 2 ? 'active' : ''}" onclick="window.setFormationFilterSize(2)" style="padding:4px 12px;font-size:12px;background:${currentFilter === 2 ? '#38bdf8' : '#1e293b'};color:${currentFilter === 2 ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
+        <button class="act-btn btn-sm ${currentFilter === 2 ? 'active' : ''}" onclick="window.setFormationFilterSize(2)" style="padding:4px 12px;font-size:var(--font-xs);background:${currentFilter === 2 ? '#38bdf8' : '#1e293b'};color:${currentFilter === 2 ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
           2人陣法 (${count2})
         </button>
       </div>
@@ -562,30 +562,30 @@ function renderFormationLibraryView(party) {
 
           let actionBtn = '';
           if (isCurrent && isPartyBroken) {
-            actionBtn = '<span style="font-size:11px;color:#f87171;font-weight:bold;background:rgba(239,68,68,0.2);padding:2px 8px;border-radius:4px;border:1px solid #ef4444;">⚠️ 陣法已崩解</span>';
+            actionBtn = '<span style="font-size:var(--font-xs);color:#f87171;font-weight:bold;background:rgba(239,68,68,0.2);padding:2px 8px;border-radius:4px;border:1px solid #ef4444;">⚠️ 陣法已崩解</span>';
           } else if (isCurrent) {
-            actionBtn = '<span style="font-size:11px;color:#34d399;font-weight:bold;background:rgba(52,211,153,0.15);padding:2px 8px;border-radius:4px;border:1px solid #34d399;">✔ 當前運轉中</span>';
+            actionBtn = '<span style="font-size:var(--font-xs);color:#34d399;font-weight:bold;background:rgba(52,211,153,0.15);padding:2px 8px;border-radius:4px;border:1px solid #34d399;">✔ 當前運轉中</span>';
           } else if (isSelectable) {
-            actionBtn = `<button class="act-btn btn-sm" onclick="send('formation equip ${f.id}')" style="padding:4px 12px;font-size:11px;background:#0284c7;color:#fff;font-weight:bold;">結成此陣</button>`;
+            actionBtn = `<button class="act-btn btn-sm" onclick="send('formation equip ${f.id}')" style="padding:4px 12px;font-size:var(--font-xs);background:#0284c7;color:#fff;font-weight:bold;">結成此陣</button>`;
           } else {
-            actionBtn = `<span style="font-size:11px;color:#ef4444;background:rgba(239,68,68,0.15);border:1px solid #ef4444;padding:2px 8px;border-radius:4px;" title="${f.lockReason || '隊伍條件不符'}">🔒 ${f.lockReason || '不可選'}</span>`;
+            actionBtn = `<span style="font-size:var(--font-xs);color:#ef4444;background:rgba(239,68,68,0.15);border:1px solid #ef4444;padding:2px 8px;border-radius:4px;" title="${f.lockReason || '隊伍條件不符'}">🔒 ${f.lockReason || '不可選'}</span>`;
           }
 
           const typeBadge = f.basic
-            ? '<span style="font-size:10px;background:#059669;color:#ecfdf5;padding:1px 6px;border-radius:3px;">基本陣法</span>'
-            : '<span style="font-size:10px;background:#7c3aed;color:#ede9fe;padding:1px 6px;border-radius:3px;">進階陣法</span>';
+            ? '<span style="font-size:var(--font-xs);background:#059669;color:#ecfdf5;padding:1px 6px;border-radius:3px;">基本陣法</span>'
+            : '<span style="font-size:var(--font-xs);background:#7c3aed;color:#ede9fe;padding:1px 6px;border-radius:3px;">進階陣法</span>';
 
-          const sizeBadge = `<span style="font-size:10px;background:#334155;color:#cbd5e1;padding:1px 6px;border-radius:3px;">${f.requiredPartySize}人陣</span>`;
+          const sizeBadge = `<span style="font-size:var(--font-xs);background:#334155;color:#cbd5e1;padding:1px 6px;border-radius:3px;">${f.requiredPartySize}人陣</span>`;
 
           const reqClassesHtml = (f.requiredClasses && f.requiredClasses.length > 0)
-            ? `<div style="font-size:11px;color:#fbbf24;display:flex;align-items:center;gap:4px;">
+            ? `<div style="font-size:var(--font-xs);color:#fbbf24;display:flex;align-items:center;gap:4px;">
                  <span>⚠️ 需職業：</span>
                  <span>${f.requiredClasses.map(formatFormationClassName).join('、')}</span>
                </div>`
             : '';
 
           const ultHtml = f.ultimateSkillName
-            ? `<div style="font-size:11px;color:#facc15;">⚡ 專屬奧義：【${f.ultimateSkillName}】</div>`
+            ? `<div style="font-size:var(--font-xs);color:#facc15;">⚡ 專屬奧義：【${f.ultimateSkillName}】</div>`
             : '';
 
           return `
@@ -606,8 +606,8 @@ function renderFormationLibraryView(party) {
                 </div>
                 <!-- 陣法描述與光環 -->
                 <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;">
-                  <div style="font-size:11px;color:#cbd5e1;line-height:1.4;">${f.description || ''}</div>
-                  ${f.passiveAura ? `<div style="font-size:11px;color:#6ee7b7;line-height:1.3;">${f.passiveAura}</div>` : ''}
+                  <div style="font-size:var(--font-xs);color:#cbd5e1;line-height:1.4;">${f.description || ''}</div>
+                  ${f.passiveAura ? `<div style="font-size:var(--font-xs);color:#6ee7b7;line-height:1.3;">${f.passiveAura}</div>` : ''}
                 </div>
               </div>
 
@@ -623,7 +623,7 @@ function renderFormationLibraryView(party) {
         <button class="act-btn btn-sm" onclick="window.changeFormationPage(-1)" ${safePage === 0 ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>
           ◀ 上一頁
         </button>
-        <span style="font-size:12px;color:#94a3b8;">
+        <span style="font-size:var(--font-xs);color:#94a3b8;">
           第 <span style="color:#e2e8f0;font-weight:bold;">${safePage + 1}</span> / ${totalPages} 頁 (共 ${filteredList.length} 個陣法)
         </span>
         <button class="act-btn btn-sm" onclick="window.changeFormationPage(1)" ${safePage >= totalPages - 1 ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>
@@ -756,7 +756,7 @@ function renderPartyModal() {
         <button class="party-member-tab-btn ${isSel ? 'active' : ''}" type="button" onclick="selectPartyModalMember(${idx})"
           style="font-size:13px;padding:6px 12px;" title="#${idx + 1} ${mem.name} (${mem.className || '道友'}) - ${rowBadge}">
           <span style="font-weight:bold;">#${idx + 1} ${mem.name}</span>
-          ${(idx === 0 && mem.freeStatPoints > 0) ? `<span class="hud-free-points-pill" style="margin-left:4px; font-size:10px; padding:1px 5px;">+${mem.freeStatPoints}點</span>` : ''}
+          ${(idx === 0 && mem.freeStatPoints > 0) ? `<span class="hud-free-points-pill" style="margin-left:4px; font-size:var(--font-xs); padding:1px 5px;">+${mem.freeStatPoints}點</span>` : ''}
         </button>
       `;
     }).join('');
@@ -952,7 +952,7 @@ function renderPartyModal() {
             </div>
             <div style="font-size:13px;color:#94a3b8;display:flex;align-items:center;gap:12px;">
               <span>💡 點擊裝備或功法槽位，即可展開專屬挑選與配置視窗</span>
-              <button class="act-btn btn-sm" onclick="toggleBagDrawer(true)" style="font-size:12px;padding:3px 10px;background:#1e293b;" title="開啟右側獨立行囊抽屜">🎒 側欄行囊 (B)</button>
+              <button class="act-btn btn-sm" onclick="toggleBagDrawer(true)" style="font-size:var(--font-xs);padding:3px 10px;background:#1e293b;" title="開啟右側獨立行囊抽屜">🎒 側欄行囊 (B)</button>
             </div>
           `;
         }
@@ -993,12 +993,12 @@ function renderSystemSlotsHtml(sysMode) {
                      <span>🕒 <strong>${slot.savedAt || ''}</strong></span>`}
               </div>
               ${(!slot.empty && slot.memberNames && slot.memberNames.length > 0)
-                ? `<div class="slot-members-row" style="font-size:12px;color:#94a3b8;">👥 小隊隊容：${slot.memberNames.join('、')}</div>`
+                ? `<div class="slot-members-row" style="font-size:var(--font-xs);color:#94a3b8;">👥 小隊隊容：${slot.memberNames.join('、')}</div>`
                 : ''}
             </div>
             <div class="slot-actions-col">
               ${slot.empty
-                ? (!isAuto ? `<button class="slot-btn slot-btn-save" onclick="window.triggerSaveSlot(${slot.slotId})" style="font-size:13px;">💾 存檔於此</button>` : '<span style="color:#64748b;font-size:12px;">待觸發</span>')
+                ? (!isAuto ? `<button class="slot-btn slot-btn-save" onclick="window.triggerSaveSlot(${slot.slotId})" style="font-size:13px;">💾 存檔於此</button>` : '<span style="color:#64748b;font-size:var(--font-xs);">待觸發</span>')
                 : `
                   <button class="slot-btn slot-btn-load" onclick="window.triggerLoadSlot(${slot.slotId})" style="font-size:13px;">${isAuto ? '📂 載入自動存檔' : '📂 載入此檔'}</button>
                   ${!isAuto ? `
@@ -1042,8 +1042,8 @@ function renderPartyRosterHtml(party) {
                   <div style="font-size:15px;font-weight:bold;color:#f1f5f9;display:flex;align-items:center;gap:8px;">
                     ${isLeader ? '👑' : '👤'} ${mem.name}
                     <span style="font-size:13px;color:#94a3b8;font-weight:normal;">(${mem.roleTitle || '道友'})</span>
-                    <span style="font-size:11px;color:${rowColor};font-weight:bold;background:#1e293b;padding:2px 8px;border-radius:4px;">${rowBadge}</span>
-                    ${!isAlive ? '<span style="font-size:11px;color:#ef4444;font-weight:bold;background:#450a0a;padding:2px 8px;border-radius:4px;">💀 陣亡</span>' : ''}
+                    <span style="font-size:var(--font-xs);color:${rowColor};font-weight:bold;background:#1e293b;padding:2px 8px;border-radius:4px;">${rowBadge}</span>
+                    ${!isAlive ? '<span style="font-size:var(--font-xs);color:#ef4444;font-weight:bold;background:#450a0a;padding:2px 8px;border-radius:4px;">💀 陣亡</span>' : ''}
                   </div>
                   <div style="font-size:13px;color:#64748b;margin-top:4px;">
                     境界 Lv.${mem.level || 1} ‧ 氣血 ${mem.hp}/${mem.maxHp} ‧ 真元/戰氣 ${mem.mp || 0}/${mem.maxMp || 0}
@@ -1222,12 +1222,12 @@ function renderItemsListHtml(itemTab, secFilter, party) {
       if (item.consumable) {
         actionButtons = `
           <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end;">
-            <span style="font-size:11px;color:#94a3b8;margin-right:2px;">服用給：</span>
+            <span style="font-size:var(--font-xs);color:#94a3b8;margin-right:2px;">服用給：</span>
             ${members.map((mem, mIdx) => {
               const isAlive = (mem.alive !== undefined) ? mem.alive : (mem.hp > 0);
               return `
                 <button class="act-btn btn-sm btn-green" ${isAlive ? '' : 'disabled style="opacity:0.35;cursor:not-allowed;"'}
-                  onclick="send('use ${item.slotId} ${mIdx}')" title="為 #${mIdx + 1} ${mem.name} 服用" style="font-size:12px;padding:3px 7px;">
+                  onclick="send('use ${item.slotId} ${mIdx}')" title="為 #${mIdx + 1} ${mem.name} 服用" style="font-size:var(--font-xs);padding:3px 7px;">
                   #${mIdx + 1} ${mem.name}
                 </button>
               `;
@@ -1237,12 +1237,12 @@ function renderItemsListHtml(itemTab, secFilter, party) {
       } else if (item.weapon || item.armor || item.equipment || item.itemType === 'WEAPON' || item.itemType === 'ARMOR' || item.itemType === 'SHIELD' || item.itemType === 'ACCESSORY') {
         actionButtons = `
           <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end;">
-            <span style="font-size:11px;color:#94a3b8;margin-right:2px;">穿戴給：</span>
+            <span style="font-size:var(--font-xs);color:#94a3b8;margin-right:2px;">穿戴給：</span>
             ${members.map((mem, mIdx) => {
               const isAlive = (mem.alive !== undefined) ? mem.alive : (mem.hp > 0);
               return `
                 <button class="act-btn btn-sm btn-blue" ${isAlive ? '' : 'disabled style="opacity:0.35;cursor:not-allowed;"'}
-                  onclick="send('equip ${item.slotId} ${mIdx}')" title="為 #${mIdx + 1} ${mem.name} 穿戴" style="font-size:12px;padding:3px 7px;">
+                  onclick="send('equip ${item.slotId} ${mIdx}')" title="為 #${mIdx + 1} ${mem.name} 穿戴" style="font-size:var(--font-xs);padding:3px 7px;">
                   #${mIdx + 1}
                 </button>
               `;
@@ -1250,7 +1250,7 @@ function renderItemsListHtml(itemTab, secFilter, party) {
           </div>
         `;
       } else if (item.itemType === 'QUEST' || item.subType === 'QUEST' || item.quality === 'QUEST') {
-        actionButtons = `<span style="font-size:12px;color:#fde047;background:rgba(253,224,71,0.15);border:1px solid #ca8a04;padding:2px 8px;border-radius:4px;">📜 機緣信物</span>`;
+        actionButtons = `<span style="font-size:var(--font-xs);color:#fde047;background:rgba(253,224,71,0.15);border:1px solid #ca8a04;padding:2px 8px;border-radius:4px;">📜 機緣信物</span>`;
       }
 
       return `
@@ -1263,11 +1263,11 @@ function renderItemsListHtml(itemTab, secFilter, party) {
           <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;">
             <div style="display:flex;align-items:center;gap:8px;">
               <span style="font-size:15px;font-weight:bold;color:${qColor};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.name}</span>
-              ${item.count > 1 ? `<span style="font-size:12px;color:#cbd5e1;background:#1e293b;padding:1px 6px;border-radius:4px;font-weight:bold;flex-shrink:0;">×${item.count}</span>` : ''}
-              <span style="font-size:11px;color:#94a3b8;border:1px solid #334155;padding:1px 6px;border-radius:3px;flex-shrink:0;">${item.itemType || '道具'}</span>
+              ${item.count > 1 ? `<span style="font-size:var(--font-xs);color:#cbd5e1;background:#1e293b;padding:1px 6px;border-radius:4px;font-weight:bold;flex-shrink:0;">×${item.count}</span>` : ''}
+              <span style="font-size:var(--font-xs);color:#94a3b8;border:1px solid #334155;padding:1px 6px;border-radius:3px;flex-shrink:0;">${item.itemType || '道具'}</span>
             </div>
             ${effectDesc ? `<div style="font-size:13px;font-weight:500;">${effectDesc}</div>` : ''}
-            <div style="font-size:12px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${item.description || ''}">
+            <div style="font-size:var(--font-xs);color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${item.description || ''}">
               ${item.description || '無描述'}
             </div>
           </div>
@@ -1442,26 +1442,26 @@ function renderMemberSkillsView(m, memberIdx, party, skillTab) {
         if (it.isCurrent) {
           actionBtn = `
             <div style="display:flex;align-items:center;gap:6px;">
-              <span style="font-size:12px;color:#34d399;font-weight:bold;background:rgba(52,211,153,0.15);padding:2px 8px;border-radius:4px;border:1px solid #34d399;">✔ 當前主力</span>
-              <button class="act-btn btn-sm" onclick="send('party enable ${memberIdx} none')" style="font-size:11px;padding:2px 6px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;" title="卸下還原為基礎預設">✕ 卸下</button>
+              <span style="font-size:var(--font-xs);color:#34d399;font-weight:bold;background:rgba(52,211,153,0.15);padding:2px 8px;border-radius:4px;border:1px solid #34d399;">✔ 當前主力</span>
+              <button class="act-btn btn-sm" onclick="send('party enable ${memberIdx} none')" style="font-size:var(--font-xs);padding:2px 6px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;" title="卸下還原為基礎預設">✕ 卸下</button>
             </div>
           `;
         } else {
-          actionBtn = `<button class="act-btn btn-sm" onclick="send('party enable ${memberIdx} ${it.id}')" style="font-size:12px;padding:3px 10px;">⚔️ 設為主力</button>`;
+          actionBtn = `<button class="act-btn btn-sm" onclick="send('party enable ${memberIdx} ${it.id}')" style="font-size:var(--font-xs);padding:3px 10px;">⚔️ 設為主力</button>`;
         }
       } else if (it.isPassive) {
         if (it.isCurrent) {
           actionBtn = `
             <div style="display:flex;align-items:center;gap:6px;">
-              <span style="font-size:12px;color:#c084fc;font-weight:bold;background:rgba(192,132,252,0.15);padding:2px 8px;border-radius:4px;border:1px solid #c084fc;">✔ 運轉中</span>
-              <button class="act-btn btn-sm" onclick="send('party enable ${memberIdx} none ${it.category || ''}')" style="font-size:11px;padding:2px 6px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;" title="卸下還原為基礎預設">✕ 卸下</button>
+              <span style="font-size:var(--font-xs);color:#c084fc;font-weight:bold;background:rgba(192,132,252,0.15);padding:2px 8px;border-radius:4px;border:1px solid #c084fc;">✔ 運轉中</span>
+              <button class="act-btn btn-sm" onclick="send('party enable ${memberIdx} none ${it.category || ''}')" style="font-size:var(--font-xs);padding:2px 6px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;" title="卸下還原為基礎預設">✕ 卸下</button>
             </div>
           `;
         } else {
-          actionBtn = `<button class="act-btn btn-sm" onclick="send('party enable ${memberIdx} ${it.id}')" style="font-size:12px;padding:3px 10px;">🧘 裝配心法</button>`;
+          actionBtn = `<button class="act-btn btn-sm" onclick="send('party enable ${memberIdx} ${it.id}')" style="font-size:var(--font-xs);padding:3px 10px;">🧘 裝配心法</button>`;
         }
       } else {
-        actionBtn = `<span style="font-size:12px;color:#38bdf8;background:rgba(56,189,248,0.15);padding:2px 8px;border-radius:4px;">戰鬥絕技</span>`;
+        actionBtn = `<span style="font-size:var(--font-xs);color:#38bdf8;background:rgba(56,189,248,0.15);padding:2px 8px;border-radius:4px;">戰鬥絕技</span>`;
       }
 
       return `
@@ -1474,9 +1474,9 @@ function renderMemberSkillsView(m, memberIdx, party, skillTab) {
           <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;">
             <div style="display:flex;align-items:center;gap:8px;">
               <span style="font-size:15px;font-weight:bold;color:#f1f5f9;">${it.name}</span>
-              <span style="font-size:11px;color:${it.badgeColor || '#38bdf8'};border:1px solid #334155;padding:1px 6px;border-radius:3px;">${it.typeLabel}</span>
-              ${it.cost ? `<span style="font-size:11px;color:#e2e8f0;background:#1e293b;padding:1px 6px;border-radius:3px;">${it.cost}</span>` : ''}
-              ${it.cooldown ? `<span style="font-size:11px;color:#94a3b8;">${it.cooldown}</span>` : ''}
+              <span style="font-size:var(--font-xs);color:${it.badgeColor || '#38bdf8'};border:1px solid #334155;padding:1px 6px;border-radius:3px;">${it.typeLabel}</span>
+              ${it.cost ? `<span style="font-size:var(--font-xs);color:#e2e8f0;background:#1e293b;padding:1px 6px;border-radius:3px;">${it.cost}</span>` : ''}
+              ${it.cooldown ? `<span style="font-size:var(--font-xs);color:#94a3b8;">${it.cooldown}</span>` : ''}
             </div>
             <div style="font-size:13px;color:#cbd5e1;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${it.desc}">
               ${it.desc}
@@ -1571,7 +1571,6 @@ function renderMemberStatusDetailHtml(m, selIdx, party) {
           <span style="color:#38bdf8;font-weight:bold;font-size:18px;">#${selIdx + 1} ${m.name}</span>
           <span class="member-level-badge" style="font-size:13px;background:#0f172a;border:1px solid #eab308;padding:2px 8px;border-radius:4px;">Lv.${level}</span>
           ${m.className ? `<span class="member-class-badge" style="background:#1e293b;border:1px solid #38bdf8;color:#7dd3fc;padding:2px 8px;border-radius:4px;font-size:13px;">🏷️ ${m.className}</span>` : ''}
-          <button class="item-act-mini-btn" onclick="send('party switch ${selIdx}')" title="切換前衛/中衛/後衛站位" style="font-size:13px;padding:3px 8px;">🔄 換位 (${m.row === 'FRONT' ? '前衛' : (m.row === 'MIDDLE' ? '中衛' : '後衛')})</button>
         </div>
         <span class="party-detail-role" style="font-size:13px;color:#94a3b8;">${m.roleTitle}</span>
       </div>
@@ -1605,7 +1604,7 @@ function renderMemberStatusDetailHtml(m, selIdx, party) {
             ${renderStatAddBtn('str', '力量')}
           </div>
           <div class="stat-item-val" style="font-size:20px;">${strVal}</div>
-          <div class="stat-item-desc" style="font-size:12px;">物理傷害、負重、招架</div>
+          <div class="stat-item-desc" style="font-size:var(--font-xs);">物理傷害、負重、招架</div>
         </div>
 
         <div class="stat-item-box">
@@ -1614,7 +1613,7 @@ function renderMemberStatusDetailHtml(m, selIdx, party) {
             ${renderStatAddBtn('con', '根骨')}
           </div>
           <div class="stat-item-val" style="font-size:20px;">${conVal}</div>
-          <div class="stat-item-desc" style="font-size:12px;">血量上限 (+10/點)、減傷</div>
+          <div class="stat-item-desc" style="font-size:var(--font-xs);">血量上限 (+10/點)、減傷</div>
         </div>
 
         <div class="stat-item-box">
@@ -1623,7 +1622,7 @@ function renderMemberStatusDetailHtml(m, selIdx, party) {
             ${renderStatAddBtn('dex', '靈巧')}
           </div>
           <div class="stat-item-val" style="font-size:20px;">${dexVal}</div>
-          <div class="stat-item-desc" style="font-size:12px;">暴擊率、命中、身法閃避</div>
+          <div class="stat-item-desc" style="font-size:var(--font-xs);">暴擊率、命中、身法閃避</div>
         </div>
 
         <div class="stat-item-box">
@@ -1632,7 +1631,7 @@ function renderMemberStatusDetailHtml(m, selIdx, party) {
             ${renderStatAddBtn('int', '悟性')}
           </div>
           <div class="stat-item-val" style="font-size:20px;">${intVal}</div>
-          <div class="stat-item-desc" style="font-size:12px;">真元上限 (+8/點)、法術</div>
+          <div class="stat-item-desc" style="font-size:var(--font-xs);">真元上限 (+8/點)、法術</div>
         </div>
 
         <div class="stat-item-box">
@@ -1641,7 +1640,7 @@ function renderMemberStatusDetailHtml(m, selIdx, party) {
             ${renderStatAddBtn('wis', '定力')}
           </div>
           <div class="stat-item-val" style="font-size:20px;">${wisVal}</div>
-          <div class="stat-item-desc" style="font-size:12px;">治療增幅、法力恢復、抗性</div>
+          <div class="stat-item-desc" style="font-size:var(--font-xs);">治療增幅、法力恢復、抗性</div>
         </div>
       </div>
 
@@ -1698,10 +1697,10 @@ function renderMemberEquipHtml(m, selIdx, party) {
         <div class="equip-slot-box has-item" title="${item.description || ''}" style="font-size:13px;">
           <div class="equip-slot-title">
             <span style="font-size:13px;">${slot.icon} ${slot.label}</span>
-            <button class="unequip-mini-btn" onclick="send('item unequip ${slot.alias} ${selIdx}')" title="卸下放回行囊" style="font-size:12px;">✕ 卸下</button>
+            <button class="unequip-mini-btn" onclick="send('item unequip ${slot.alias} ${selIdx}')" title="卸下放回行囊" style="font-size:var(--font-xs);">✕ 卸下</button>
           </div>
           <div class="equip-slot-name" style="font-size:14px;font-weight:bold;">${item.icon || '📦'} ${item.name}</div>
-          <div class="equip-slot-stats" style="font-size:12px;">${statsStr}</div>
+          <div class="equip-slot-stats" style="font-size:var(--font-xs);">${statsStr}</div>
         </div>
       `;
     } else {
@@ -1712,7 +1711,7 @@ function renderMemberEquipHtml(m, selIdx, party) {
           </div>
           <div class="equip-slot-name" style="color:#64748b;font-weight:normal;font-size:13px;">(未穿戴)</div>
           <div class="equip-slot-act">
-            <button class="item-act-mini-btn" onclick="toggleBagDrawer(true)" title="開啟行囊挑選裝備穿戴" style="font-size:12px;">🎒 挑選</button>
+            <button class="item-act-mini-btn" onclick="toggleBagDrawer(true)" title="開啟行囊挑選裝備穿戴" style="font-size:var(--font-xs);">🎒 挑選</button>
           </div>
         </div>
       `;
@@ -1734,7 +1733,7 @@ function renderMemberEquipHtml(m, selIdx, party) {
           <span style="font-size:13px;color:#94a3b8;">${p.icon} ${p.label}</span>
           <div style="display:flex;align-items:center;gap:8px;">
             <span style="font-size:13px;color:#38bdf8;font-weight:bold;">${p.val}</span>
-            <button class="act-btn btn-sm" onclick="event.stopPropagation();window.confirmUnequipSkill(${selIdx}, '${p.key}');" style="font-size:12px;padding:2px 6px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;" title="卸下還原為預設">✕</button>
+            <button class="act-btn btn-sm" onclick="event.stopPropagation();window.confirmUnequipSkill(${selIdx}, '${p.key}');" style="font-size:var(--font-xs);padding:2px 6px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;" title="卸下還原為預設">✕</button>
           </div>
         </div>
       `;
@@ -1757,9 +1756,6 @@ function renderMemberEquipHtml(m, selIdx, party) {
           <span style="font-size:13px;color:#cbd5e1;background:#0f172a;padding:2px 8px;border-radius:4px;">Lv.${m.level || 1} ${m.className || '道友'}</span>
           <span style="font-size:13px;color:#94a3b8;">氣血: ${m.hp}/${m.maxHp}</span>
         </div>
-        <button class="act-btn btn-sm" onclick="send('party switch ${selIdx}')" style="font-size:13px;padding:4px 10px;">
-          🔄 站位：${m.row === 'FRONT' ? '前衛' : (m.row === 'MIDDLE' ? '中衛' : '後衛')}
-        </button>
       </div>
 
       <!-- 2. 7 部位裝備槽位 (5 基礎 + 2 飾品) -->
@@ -2437,7 +2433,7 @@ function renderSkillPickerView(party) {
         <span style="font-size:36px;">📜</span>
         <span style="font-size:15px;color:#e2e8f0;font-weight:bold;">尚無可啟用的【${categoryLabel}】</span>
         <span style="font-size:13px;color:#64748b;">${emptyReason}</span>
-        <span style="font-size:12px;color:#475569;">可於秘境古塚中研讀武道秘笈以領悟新功法。</span>
+        <span style="font-size:var(--font-xs);color:#475569;">可於秘境古塚中研讀武道秘笈以領悟新功法。</span>
       </div>
     `;
   } else {
@@ -2451,17 +2447,17 @@ function renderSkillPickerView(party) {
           <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;">
             <div style="display:flex;align-items:center;gap:6px;">
               <span style="font-size:14px;font-weight:bold;color:#f1f5f9;">${it.name}</span>
-              ${it.isCurrent ? '<span style="font-size:11px;color:#34d399;background:rgba(52,211,153,0.15);padding:1px 6px;border-radius:3px;border:1px solid #34d399;">✔ 當前裝備</span>' : ''}
-              ${isSelected ? '<span style="font-size:11px;color:#38bdf8;background:rgba(56,189,248,0.15);padding:1px 6px;border-radius:3px;">選取中</span>' : ''}
+              ${it.isCurrent ? '<span style="font-size:var(--font-xs);color:#34d399;background:rgba(52,211,153,0.15);padding:1px 6px;border-radius:3px;border:1px solid #34d399;">✔ 當前裝備</span>' : ''}
+              ${isSelected ? '<span style="font-size:var(--font-xs);color:#38bdf8;background:rgba(56,189,248,0.15);padding:1px 6px;border-radius:3px;">選取中</span>' : ''}
             </div>
-            <div style="font-size:12px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${it.desc}</div>
+            <div style="font-size:var(--font-xs);color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${it.desc}</div>
           </div>
           ${it.isCurrent ? `
-            <button class="act-btn btn-sm btn-red" onclick="event.stopPropagation();window.confirmUnequipSkill(${memberIdx}, '${category}');" style="font-size:12px;padding:3px 10px;flex-shrink:0;">
+            <button class="act-btn btn-sm btn-red" onclick="event.stopPropagation();window.confirmUnequipSkill(${memberIdx}, '${category}');" style="font-size:var(--font-xs);padding:3px 10px;flex-shrink:0;">
               ✕ 卸下
             </button>
           ` : `
-            <button class="act-btn btn-sm btn-blue" onclick="event.stopPropagation();window.confirmEquipSkill(${memberIdx}, '${it.id}', '${category}');" style="font-size:12px;padding:3px 10px;flex-shrink:0;">
+            <button class="act-btn btn-sm btn-blue" onclick="event.stopPropagation();window.confirmEquipSkill(${memberIdx}, '${it.id}', '${category}');" style="font-size:var(--font-xs);padding:3px 10px;flex-shrink:0;">
               ⚡ 啟用
             </button>
           `}
@@ -2504,10 +2500,10 @@ function renderSkillPickerView(party) {
           </div>
           <div style="flex:1;min-width:0;">
             <div style="font-size:16px;font-weight:bold;color:#f1f5f9;">${selectedCandidate.name}</div>
-            <div style="font-size:12px;color:#38bdf8;margin-top:2px;">${selectedCandidate.typeLabel} ‧ ${selectedCandidate.cost}</div>
+            <div style="font-size:var(--font-xs);color:#38bdf8;margin-top:2px;">${selectedCandidate.typeLabel} ‧ ${selectedCandidate.cost}</div>
           </div>
           ${selectedCandidate.isCurrent ? `
-            <span style="font-size:12px;color:#34d399;font-weight:bold;background:rgba(52,211,153,0.15);padding:3px 10px;border-radius:4px;border:1px solid #34d399;">✔ 運轉中</span>
+            <span style="font-size:var(--font-xs);color:#34d399;font-weight:bold;background:rgba(52,211,153,0.15);padding:3px 10px;border-radius:4px;border:1px solid #34d399;">✔ 運轉中</span>
           ` : ''}
         </div>
 
@@ -2525,7 +2521,7 @@ function renderSkillPickerView(party) {
         ` : ''}
 
         <!-- 預設機制說明提示 -->
-        <div style="background:rgba(15,23,42,0.8);border:1px dashed #475569;border-radius:6px;padding:10px 14px;font-size:12px;color:#94a3b8;line-height:1.4;">
+        <div style="background:rgba(15,23,42,0.8);border:1px dashed #475569;border-radius:6px;padding:10px 14px;font-size:var(--font-xs);color:#94a3b8;line-height:1.4;">
           <span>💡 提示：若未裝配任何進階功法，系統將自動以角色預設基礎武學（如基本招架、基本身法）運轉，畫面上顯示為「(無)」。</span>
         </div>
 
@@ -2713,7 +2709,7 @@ function renderMemberSpellbook(m, memberIdx) {
       const switchTitle = (curTab === 'PASSIVES') ? '裝配至常駐被動心法槽位' : '啟用為當前主力普攻套路';
       actBtnHtml = `<button class="spell-switch-btn" onclick="send('party enable ${memberIdx} ${it.id}')" title="${switchTitle}">${switchLabel}</button>`;
     } else if (curTab === 'SKILLS') {
-      actBtnHtml = '<span style="font-size:9px;color:#60a5fa;">戰鬥快捷施展</span>';
+      actBtnHtml = '<span style="font-size:var(--font-xs);color:#60a5fa;">戰鬥快捷施展</span>';
     }
 
     return `
@@ -2751,7 +2747,7 @@ function renderMemberSpellbook(m, memberIdx) {
     const forceName = passives.find(p => p.category === 'FORCE' && p.isCurrentEnabled)?.skillName || m.passiveSlots?.FORCE || '未裝配';
 
     passiveSlotsBanner = `
-      <div style="margin-bottom:10px;padding:8px 12px;background:rgba(15,23,42,0.7);border:1px solid rgba(148,163,184,0.25);border-radius:6px;display:flex;gap:12px;font-size:11px;justify-content:space-around;">
+      <div style="margin-bottom:10px;padding:8px 12px;background:rgba(15,23,42,0.7);border:1px solid rgba(148,163,184,0.25);border-radius:6px;display:flex;gap:12px;font-size:var(--font-xs);justify-content:space-around;">
         <span style="color:#38bdf8;">💨 <strong>輕功身法</strong>：${dodgeName}</span>
         <span style="color:#fbbf24;">🛡️ <strong>招架護體</strong>：${parryName}</span>
         <span style="color:#c084fc;">🟣 <strong>內功真元</strong>：${forceName}</span>
@@ -2763,7 +2759,7 @@ function renderMemberSpellbook(m, memberIdx) {
     <div class="wow-spellbook-container">
       <div class="wow-spellbook-header">
         <span class="wow-spellbook-title">📖 修仙武學典籍・道種法術書 (Spellbook)</span>
-        <span style="font-size:10px;color:#94a3b8;">${tabs.find(t=>t.key===curTab)?.label || ''}</span>
+        <span style="font-size:var(--font-xs);color:#94a3b8;">${tabs.find(t=>t.key===curTab)?.label || ''}</span>
       </div>
       <div class="wow-spellbook-layout">
         <div class="wow-spellbook-page">
@@ -2781,9 +2777,9 @@ function renderMemberSpellbook(m, memberIdx) {
           ${tabsHtml}
         </div>
       </div>
-      <div style="margin-top:12px;padding:8px 14px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);border-radius:6px;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#c7d2fe;">
+      <div style="margin-top:12px;padding:8px 14px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);border-radius:6px;display:flex;align-items:center;justify-content:space-between;font-size:var(--font-xs);color:#c7d2fe;">
         <span>☯️ <strong>全隊陣法奧義</strong>屬於全隊共有，不局限於個人武學。請前往全隊陣法面板進行切換與站位調配。</span>
-        <button class="act-btn btn-sm" onclick="selectPartyFormationTab()" style="padding:3px 10px;font-size:11px;background:#4f46e5;color:#fff;">前往全隊陣法 ➔</button>
+        <button class="act-btn btn-sm" onclick="selectPartyFormationTab()" style="padding:3px 10px;font-size:var(--font-xs);background:#4f46e5;color:#fff;">前往全隊陣法 ➔</button>
       </div>
     </div>
   `;

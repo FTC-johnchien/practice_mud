@@ -84,26 +84,42 @@ export function renderPartyHud(party) {
       `;
     }
 
-    card.className = `party-card row-${m.row.toLowerCase()}${isSelected ? ' selected-card' : ''}${madnessCardClass}`;
+    card.className = `party-card${isSelected ? ' selected-card' : ''}${madnessCardClass}`;
     card.onclick = () => selectPartyMember(idx);
-    card.title = `點選 #${idx + 1} ${m.name} 展開技能盤`;
+    card.title = `點選 #${idx + 1} ${m.name} 展開技能盤 (按 C 開啟選單查看完整道基/裝備)`;
 
+    // 1. HP 氣血
     const hpPct = Math.min(100, Math.max(0, (m.hp / m.maxHp) * 100));
+
+    // 2. MP 真元 (法術/神通資源)
+    const curMp = m.mp !== undefined ? m.mp : 0;
+    const maxMp = m.maxMp !== undefined ? m.maxMp : 0;
+    const mpPct = Math.min(100, Math.max(0, maxMp > 0 ? (curMp / maxMp) * 100 : 0));
+    const mpText = maxMp > 0 ? `${curMp}/${maxMp}` : '—';
+    const mpFillClass = maxMp > 0 ? 'mp-fill' : 'empty-res-fill';
+
+    // 3. SP 戰氣 (武學/套路/身法資源)
+    const curSp = m.sp !== undefined ? m.sp : (m.currentSp !== undefined ? m.currentSp : (m.resourceType === 'SP' ? m.currentResource : 0));
+    const maxSp = m.maxSp !== undefined ? m.maxSp : 100;
+    const spPct = Math.min(100, Math.max(0, maxSp > 0 ? (curSp / maxSp) * 100 : 0));
+    const spText = maxSp > 0 ? `${curSp}/${maxSp}` : '—';
+    const spFillClass = maxSp > 0 ? 'sp-fill' : 'empty-res-fill';
+
+    // 4. SAN 道心
     const sanPct = Math.min(100, Math.max(0, (m.san / m.maxSan) * 100));
     const sanClass = `san-${(m.sanLevel || 'NORMAL').toLowerCase()}`;
-    const rowBadge = m.row === 'FRONT' ? '前衛' : '後衛';
 
-    // 依職業三態資源判定能量條
-    const resType = m.resourceType || 'MP';
-    const curRes = m.currentResource !== undefined ? m.currentResource : m.mp;
-    const maxRes = m.maxResource !== undefined ? m.maxResource : m.maxMp;
-    const resPct = Math.min(100, Math.max(0, maxRes > 0 ? (curRes / maxRes) * 100 : 0));
-
-    let resFillClass = 'mp-fill';
-    let resLabel = `MP ${curRes}/${maxRes}`;
-    if (resType === 'SP' || resType === 'RAGE' || resType === 'COMBO' || resType === 'STAMINA' || resType === 'FORCE' || resType === 'ENERGY') {
-      resFillClass = 'sp-fill';
-      resLabel = `戰氣 ${curRes}/${maxRes}`;
+    // 精簡 Buff 圖示
+    let buffsHtml = '';
+    if (m.activeBuffs && Array.isArray(m.activeBuffs) && m.activeBuffs.length > 0) {
+      buffsHtml = `
+        <div class="buff-badges-row" style="margin-top: 4px; display: flex; gap: 3px; flex-wrap: wrap;">
+          ${m.activeBuffs.map(b => {
+            const cat = (b.category || 'SHIELD').toLowerCase();
+            return `<span class="buff-badge buff-${cat}" title="${b.name}: 剩餘 ${b.remainingSeconds || 0}秒">${b.icon || '✨'}</span>`;
+          }).join('')}
+        </div>
+      `;
     }
 
     card.innerHTML = `
@@ -112,27 +128,21 @@ export function renderPartyHud(party) {
           <span class="member-idx">#${idx + 1}</span>
           <span class="member-name" title="${m.name}">${m.name}</span>
           <span class="member-level-badge" title="境界等級 Lv.${m.level || 1}">Lv.${m.level || 1}</span>
-          <span class="member-row badge-${m.row.toLowerCase()}">${rowBadge}</span>
-          ${m.className ? `<span class="member-class-badge" title="${m.classDescription || ''}" style="font-size:11px;color:#7dd3fc;background:#0f172a;border:1px solid #0284c7;border-radius:3px;padding:1px 4px;">${m.className}</span>` : ''}
-          ${(idx === 0 && m.freeStatPoints > 0) ? `<span class="hud-free-points-pill" title="尚有 ${m.freeStatPoints} 點未分配自由點數！點擊開啟配點" onclick="event.stopPropagation(); if(window.openPartyModal) window.openPartyModal(0);">+${m.freeStatPoints}點</span>` : ''}
         </div>
-        ${m.roleTitle ? `<div class="member-title" title="${m.roleTitle}">${m.roleTitle}</div>` : ''}
-        ${m.formationSlotName ? `
-          <div class="member-formation-slot" style="font-size:11px; margin:2px 0; display:inline-flex; align-items:center; gap:4px; padding:2px 6px; border-radius:4px; ${m.formationSlotActive ? 'background:rgba(16,185,129,0.15); border:1px solid #10b981; color:#6ee7b7;' : 'background:rgba(239,68,68,0.15); border:1px solid #ef4444; color:#fca5a5;'}"
-               title="陣法孔位：${m.formationSlotName} (要求: ${m.formationSlotRequiredRow === 'FRONT' ? '前衛' : (m.formationSlotRequiredRow === 'BACK' ? '後衛' : '任意')}) - ${m.formationSlotBonus || ''} ${m.formationSlotActive ? '【加成生效中】' : '【站位不符，無法獲得加成】'}">
-            <span>💠 ${m.formationSlotName}</span>
-            <span style="font-size:10px; opacity:0.9;">${m.formationSlotBonus ? m.formationSlotBonus : ''}</span>
-            ${!m.formationSlotActive ? '<span style="font-weight:bold; color:#ef4444;">⚠️需' + (m.formationSlotRequiredRow === 'FRONT' ? '前衛' : '後衛') + '</span>' : ''}
-          </div>` : ''}
+        ${buffsHtml}
       </div>
       <div class="card-bars-side">
         <div class="mini-bar-wrap" title="氣血 HP: ${m.hp}/${m.maxHp}">
           <div class="mini-bar hp-fill" style="width: ${hpPct}%"></div>
           <span class="mini-val">HP ${m.hp}/${m.maxHp}</span>
         </div>
-        <div class="mini-bar-wrap" title="${resLabel}">
-          <div class="mini-bar ${resFillClass}" style="width: ${resPct}%"></div>
-          <span class="mini-val">${resLabel}</span>
+        <div class="mini-bar-wrap" title="真元 MP: ${mpText}">
+          <div class="mini-bar ${mpFillClass}" style="width: ${mpPct}%"></div>
+          <span class="mini-val">MP ${mpText}</span>
+        </div>
+        <div class="mini-bar-wrap" title="戰氣 SP: ${spText}">
+          <div class="mini-bar ${spFillClass}" style="width: ${spPct}%"></div>
+          <span class="mini-val">SP ${spText}</span>
         </div>
         <div class="mini-bar-wrap san-bar-wrap" title="道心 SAN: ${m.san}/${m.maxSan} ${m.sanState || ''}">
           <div class="mini-bar san-fill ${sanClass}" style="width: ${sanPct}%"></div>
@@ -141,25 +151,12 @@ export function renderPartyHud(party) {
         ${m.isCasting ? `
         <div class="mini-bar-wrap casting-bar-wrap" style="border-color:#38bdf8; background:rgba(14,165,233,0.15);" title="正在施法: ${m.castingSkillName || '凝氣運轉'} (剩餘 ${(m.castingRemainingMs / 1000).toFixed(1)} 秒)">
           <div class="mini-bar casting-fill" style="width: ${Math.min(100, Math.max(0, (1 - (m.castingRemainingMs / Math.max(1, m.castingDurationMs))) * 100))}%; background: linear-gradient(90deg, #38bdf8, #818cf8);"></div>
-          <span class="mini-val" style="color:#e0f2fe; text-shadow:0 0 3px #0284c7; font-weight:bold;">🌀 吟唱: ${m.castingSkillName || '施法'} ${(m.castingRemainingMs / 1000).toFixed(1)}s</span>
+          <span class="mini-val" style="color:#e0f2fe; text-shadow:0 0 3px #0284c7; font-weight:bold;">🌀 ${m.castingSkillName || '施法'} ${(m.castingRemainingMs / 1000).toFixed(1)}s</span>
         </div>` : ''}
         ${m.isOnGcd && !m.isCasting ? `
-        <div style="font-size:11px; color:#94a3b8; text-align:right; padding-right:2px;" title="全域招式調息中 (GCD)">
+        <div style="font-size:var(--font-xs); color:#94a3b8; text-align:right; padding-right:2px;" title="全域招式調息中 (GCD)">
           ⏳ 調息 ${(m.remainingGcdMs / 1000).toFixed(1)}s
         </div>` : ''}
-        ${m.activeBuffs && Array.isArray(m.activeBuffs) && m.activeBuffs.length > 0 ? `
-          <div class="buff-badges-row" style="margin-top:2px;">
-            ${m.activeBuffs.map(b => {
-              const cat = (b.category || 'SHIELD').toLowerCase();
-              let valText = '';
-              if (cat === 'shield' && b.value > 0) valText = ` ${b.value}`;
-              else if (cat === 'hot' && b.value > 0) valText = ` +${b.value}`;
-              else if (cat === 'dot' && b.value > 0) valText = ` -${b.value}`;
-              else if (b.stacks > 1) valText = ` x${b.stacks}`;
-              return `<span class="buff-badge buff-${cat}" title="${b.name} (${b.category}): ${valText} 剩餘 ${b.remainingSeconds || 0}s">${b.icon || '✨'}${valText} (${b.remainingSeconds || 0}s)</span>`;
-            }).join('')}
-          </div>
-        ` : ''}
         ${madnessExtraHtml}
       </div>
     `;

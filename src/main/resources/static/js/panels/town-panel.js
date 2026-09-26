@@ -125,7 +125,7 @@ export function renderTownNav(town) {
     }
 
     if (npcs.length === 0) {
-      npcsContainer.innerHTML = '<div style="font-size:12px; color:#64748b; padding:8px 4px;">(周圍暫無其他生靈)</div>';
+      npcsContainer.innerHTML = '<div style="font-size:var(--font-xs); color:#64748b; padding:8px 4px;">(周圍暫無其他生靈)</div>';
     } else {
       npcs.forEach(npc => {
         const card = document.createElement('div');
@@ -138,14 +138,14 @@ export function renderTownNav(town) {
         const rank = npc.rank || 'NORMAL';
         let rankBadge = '';
         if (rank === 'BOSS') {
-          rankBadge = `<span style="font-size:10px; color:#f59e0b; background:rgba(245,158,11,0.2); border:1px solid #f59e0b; padding:1px 6px; border-radius:3px; margin-left:4px;">👑 首領</span>`;
+          rankBadge = `<span style="font-size:var(--font-xs); color:#f59e0b; background:rgba(245,158,11,0.2); border:1px solid #f59e0b; padding:1px 6px; border-radius:3px; margin-left:4px;">👑 首領</span>`;
         } else if (rank === 'ELITE') {
-          rankBadge = `<span style="font-size:10px; color:#38bdf8; background:rgba(56,189,248,0.2); border:1px solid #38bdf8; padding:1px 6px; border-radius:3px; margin-left:4px;">⭐ 精英</span>`;
+          rankBadge = `<span style="font-size:var(--font-xs); color:#38bdf8; background:rgba(56,189,248,0.2); border:1px solid #38bdf8; padding:1px 6px; border-radius:3px; margin-left:4px;">⭐ 精英</span>`;
         }
 
         const roleHtml = isHostile
-          ? `<span style="font-size:10px; color:#f87171; background:rgba(239,68,68,0.2); border:1px solid #ef4444; padding:1px 6px; border-radius:3px;">敵對</span>`
-          : `<span style="font-size:11px; color:#94a3b8;">${npc.title || ''}</span>`;
+          ? `<span style="font-size:var(--font-xs); color:#f87171; background:rgba(239,68,68,0.2); border:1px solid #ef4444; padding:1px 6px; border-radius:3px;">敵對</span>`
+          : `<span style="font-size:var(--font-xs); color:#94a3b8;">${npc.title || ''}</span>`;
         const header = document.createElement('div');
         header.className = 'npc-header';
         header.innerHTML = `<span class="npc-name">${npc.name}</span>${rankBadge}${roleHtml}`;
@@ -190,7 +190,7 @@ export function renderTownNav(town) {
       itemCountBadge.innerText = items.length > 0 ? `(${items.length})` : '';
     }
     if (items.length === 0) {
-      itemsContainer.innerHTML = '<div style="font-size:12px; color:#64748b; padding:4px;">(地面空無一物)</div>';
+      itemsContainer.innerHTML = '<div style="font-size:var(--font-xs); color:#64748b; padding:4px;">(地面空無一物)</div>';
     } else {
       items.forEach(it => {
         const chip = document.createElement('button');
