@@ -459,7 +459,7 @@ function renderFormationLibraryView(party) {
   const allList = party.availableFormations || [];
   const currentFilter = drpgState.formationFilterSize || 'ALL';
   const currentPage = drpgState.formationPage || 0;
-  const PAGE_SIZE = 6;
+  const PAGE_SIZE = 20;
 
   // 1. 根據人數頁籤篩選
   const filteredList = allList.filter(f => {
@@ -810,18 +810,21 @@ function renderPartyModal() {
     }
 
     case 'SKILLS': {
+      const skillTab = drpgState.skillsTab || 'ACTIVE';
       if (subHeaderEl) {
         subHeaderEl.innerHTML = `
           <div style="display:flex;align-items:center;gap:8px;overflow-x:auto;">
             ${renderMemberTabButtons()}
           </div>
-          <div style="font-size:13px;color:#94a3b8;">
-            📖 武學套路與道術典籍（被動身法/心法/招架/兵刃自動生效）
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <button class="act-btn btn-sm ${skillTab === 'FIELD_USABLE' ? 'btn-blue' : ''}" onclick="window.setSkillsTab('FIELD_USABLE')" style="font-size:13px;padding:4px 12px;">🌿 可使用 (探索/回復)</button>
+            <button class="act-btn btn-sm ${skillTab === 'ACTIVE' ? 'btn-blue' : ''}" onclick="window.setSkillsTab('ACTIVE')" style="font-size:13px;padding:4px 12px;">⚡ 主動絕技</button>
+            <button class="act-btn btn-sm ${skillTab === 'ALL' ? 'btn-blue' : ''}" onclick="window.setSkillsTab('ALL')" style="font-size:13px;padding:4px 12px;">📖 全部道法</button>
           </div>
         `;
       }
       if (contentEl) {
-        contentEl.innerHTML = renderMemberSpellbook(m, selIdx);
+        contentEl.innerHTML = renderMemberSkillsView(m, selIdx, party, skillTab);
       }
       break;
     }
@@ -862,6 +865,7 @@ function renderPartyModal() {
 
     case 'ITEMS': {
       const itemTab = drpgState.mainMenuItemsTab || 'USABLE';
+      const secFilter = drpgState.itemsSecondaryFilter || 'ALL';
       if (subHeaderEl) {
         subHeaderEl.innerHTML = `
           <div style="display:flex;align-items:center;gap:10px;">
@@ -870,12 +874,12 @@ function renderPartyModal() {
             <button class="act-btn ${itemTab === 'ALL' ? 'btn-blue' : ''}" onclick="window.switchMainMenuTab('ITEMS', 'ALL')" style="font-size:13px;padding:5px 14px;">📦 全部道具</button>
           </div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <button class="act-btn" onclick="toggleBagDrawer(true)" style="font-size:13px;padding:5px 12px;background:#334155;">🎒 開啟公共行囊 (B)</button>
+            <button class="act-btn" onclick="toggleBagDrawer(true)" style="font-size:13px;padding:5px 12px;background:#334155;" title="展開右側獨立行囊抽屜">🎒 側欄行囊 (B)</button>
           </div>
         `;
       }
       if (contentEl) {
-        contentEl.innerHTML = renderItemsListHtml(itemTab);
+        contentEl.innerHTML = renderItemsListHtml(itemTab, secFilter, party);
       }
       break;
     }
@@ -1002,28 +1006,425 @@ function renderPartyRosterHtml(party) {
 }
 
 /**
- * 渲染道具畫面 (Items View)
+ * 通用 20 筆單頁分頁元件 (Pagination Component)
  */
-function renderItemsListHtml(itemTab) {
+function renderPaginationBar(currentPage, totalPages, totalCount, onPageChangeFnName) {
+  if (totalCount === 0) return '';
+  const safeCurrent = Math.max(1, currentPage);
+  const safeTotal = Math.max(1, totalPages);
+
   return `
-    <div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:16px;flex:1;display:flex;flex-direction:column;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <span style="font-size:14px;color:#cbd5e1;">
-          當前檢視：<strong>${itemTab === 'USABLE' ? '🧪 可使用靈藥與 Buff 符籙' : (itemTab === 'QUEST' ? '📜 重要任務與機緣信物' : '📦 全部隨身物資')}</strong>
+    <div class="menu-pagination-bar" style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:#0b1120;border:1px solid #1e293b;border-radius:6px;margin-top:auto;">
+      <div style="font-size:13px;color:#94a3b8;">
+        共 <strong style="color:#e2e8f0;font-size:14px;">${totalCount}</strong> 筆項目 ‧ 每頁上限 20 筆
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="act-btn btn-sm" onclick="${onPageChangeFnName}(-1)" ${safeCurrent <= 1 ? 'disabled style="opacity:0.35;cursor:not-allowed;"' : ''} style="font-size:13px;padding:4px 12px;">
+          ◀ 上一頁
+        </button>
+        <span style="font-size:13px;color:#cbd5e1;font-weight:bold;">
+          第 ${safeCurrent} / ${safeTotal} 頁
         </span>
-        <button class="act-btn" onclick="toggleBagDrawer(true)" style="font-size:13px;padding:5px 14px;background:#0284c7;color:#fff;">
-          🎒 展開公共行囊
+        <button class="act-btn btn-sm" onclick="${onPageChangeFnName}(1)" ${safeCurrent >= safeTotal ? 'disabled style="opacity:0.35;cursor:not-allowed;"' : ''} style="font-size:13px;padding:4px 12px;">
+          下一頁 ▶
         </button>
       </div>
-      <div style="flex:1;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:14px;border:1px dashed #334155;border-radius:6px;padding:30px;text-align:center;">
-        <div>
-          <div style="font-size:40px;margin-bottom:12px;">🎒</div>
-          <div style="color:#f1f5f9;font-weight:bold;font-size:16px;margin-bottom:8px;">行囊與道具管理 (Phase 2 分頁模組整合中)</div>
-          <div style="font-size:14px;color:#94a3b8;max-width:520px;line-height:1.6;margin:0 auto;">
-            目前道友可透過右上角「🎒 展開公共行囊」或按鍵盤快捷鍵 <strong style="color:#38bdf8;">B</strong> 即時管理與使用全隊公共丹藥靈物！
+    </div>
+  `;
+}
+
+function setItemsSecondaryFilter(filter) {
+  drpgState.itemsSecondaryFilter = filter;
+  drpgState.itemsPage = 1;
+  renderPartyModal();
+}
+
+function changeItemsPage(delta) {
+  drpgState.itemsPage = Math.max(1, (drpgState.itemsPage || 1) + delta);
+  renderPartyModal();
+}
+
+function setSkillsTab(tab) {
+  drpgState.skillsTab = tab;
+  drpgState.skillsPage = 1;
+  renderPartyModal();
+}
+
+function changeSkillsPage(delta) {
+  drpgState.skillsPage = Math.max(1, (drpgState.skillsPage || 1) + delta);
+  renderPartyModal();
+}
+
+/**
+ * 渲染道具畫面 (Items View - 單頁上限 20 筆)
+ */
+function renderItemsListHtml(itemTab, secFilter, party) {
+  const inv = (party && party.inventory) ? party.inventory : null;
+  const allSlots = (inv && inv.slots) ? inv.slots : [];
+  const currentSec = secFilter || 'ALL';
+
+  // 1. 依據 itemTab 與 secFilter 進行多維度篩選
+  const filtered = allSlots.filter(item => {
+    if (!item) return false;
+    if (itemTab === 'USABLE') {
+      const isUsable = Boolean(item.consumable || item.effectType);
+      if (!isUsable) return false;
+      if (currentSec === 'HEAL') {
+        return item.effectType === 'HEAL_HP' || item.effectType === 'RESTORE_SAN';
+      }
+      if (currentSec === 'BUFF') {
+        return item.effectType === 'BUFF' || item.effectType === 'LEARN_SKILL' || (item.effectType !== 'HEAL_HP' && item.effectType !== 'RESTORE_SAN');
+      }
+      return true;
+    } else if (itemTab === 'QUEST') {
+      return item.itemType === 'QUEST' || item.subType === 'QUEST' || item.quality === 'QUEST';
+    } else {
+      // ALL
+      if (currentSec === 'EQUIP') return Boolean(item.weapon || item.armor || item.equipment || item.itemType === 'WEAPON' || item.itemType === 'ARMOR' || item.itemType === 'SHIELD' || item.itemType === 'ACCESSORY');
+      if (currentSec === 'CONSUMABLE') return Boolean(item.consumable);
+      if (currentSec === 'QUEST') return item.itemType === 'QUEST' || item.subType === 'QUEST' || item.quality === 'QUEST';
+      if (currentSec === 'MISC') return !item.weapon && !item.armor && !item.equipment && !item.consumable && item.itemType !== 'QUEST';
+      return true;
+    }
+  });
+
+  // 2. 20 筆單頁分頁計算
+  const PAGE_SIZE = 20;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const curPage = Math.min(Math.max(1, drpgState.itemsPage || 1), totalPages);
+  drpgState.itemsPage = curPage;
+
+  const startIdx = (curPage - 1) * PAGE_SIZE;
+  const pagedItems = filtered.slice(startIdx, startIdx + PAGE_SIZE);
+
+  // 3. 次級分類標籤列 (Chips)
+  let chipsHtml = '';
+  if (itemTab === 'USABLE') {
+    chipsHtml = `
+      <div style="display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid #1e293b;margin-bottom:12px;flex-wrap:wrap;">
+        <span style="font-size:13px;color:#94a3b8;">子分類篩選：</span>
+        <button class="act-btn btn-sm ${currentSec === 'ALL' ? 'active' : ''}" onclick="window.setItemsSecondaryFilter('ALL')" style="font-size:13px;padding:3px 12px;background:${currentSec === 'ALL' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'ALL' ? '#0f172a' : '#cbd5e1'};">全部可使用</button>
+        <button class="act-btn btn-sm ${currentSec === 'HEAL' ? 'active' : ''}" onclick="window.setItemsSecondaryFilter('HEAL')" style="font-size:13px;padding:3px 12px;background:${currentSec === 'HEAL' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'HEAL' ? '#0f172a' : '#cbd5e1'};">🌿 氣血/道心回復</button>
+        <button class="act-btn btn-sm ${currentSec === 'BUFF' ? 'active' : ''}" onclick="window.setItemsSecondaryFilter('BUFF')" style="font-size:13px;padding:3px 12px;background:${currentSec === 'BUFF' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'BUFF' ? '#0f172a' : '#cbd5e1'};">⚡ 增益/丹道Buff</button>
+      </div>
+    `;
+  } else if (itemTab === 'ALL') {
+    chipsHtml = `
+      <div style="display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid #1e293b;margin-bottom:12px;flex-wrap:wrap;">
+        <span style="font-size:13px;color:#94a3b8;">品項篩選：</span>
+        <button class="act-btn btn-sm ${currentSec === 'ALL' ? 'active' : ''}" onclick="window.setItemsSecondaryFilter('ALL')" style="font-size:13px;padding:3px 12px;background:${currentSec === 'ALL' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'ALL' ? '#0f172a' : '#cbd5e1'};">全部 (${allSlots.length})</button>
+        <button class="act-btn btn-sm ${currentSec === 'EQUIP' ? 'active' : ''}" onclick="window.setItemsSecondaryFilter('EQUIP')" style="font-size:13px;padding:3px 12px;background:${currentSec === 'EQUIP' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'EQUIP' ? '#0f172a' : '#cbd5e1'};">🛡️ 裝備法寶</button>
+        <button class="act-btn btn-sm ${currentSec === 'CONSUMABLE' ? 'active' : ''}" onclick="window.setItemsSecondaryFilter('CONSUMABLE')" style="font-size:13px;padding:3px 12px;background:${currentSec === 'CONSUMABLE' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'CONSUMABLE' ? '#0f172a' : '#cbd5e1'};">🧪 消耗靈丹</button>
+        <button class="act-btn btn-sm ${currentSec === 'QUEST' ? 'active' : ''}" onclick="window.setItemsSecondaryFilter('QUEST')" style="font-size:13px;padding:3px 12px;background:${currentSec === 'QUEST' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'QUEST' ? '#0f172a' : '#cbd5e1'};">📜 任務信物</button>
+        <button class="act-btn btn-sm ${currentSec === 'MISC' ? 'active' : ''}" onclick="window.setItemsSecondaryFilter('MISC')" style="font-size:13px;padding:3px 12px;background:${currentSec === 'MISC' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'MISC' ? '#0f172a' : '#cbd5e1'};">📦 靈材雜項</button>
+      </div>
+    `;
+  }
+
+  // 4. 物品卡片渲染
+  let itemsGridHtml = '';
+  if (pagedItems.length === 0) {
+    itemsGridHtml = `
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:14px;padding:40px;border:1px dashed #334155;border-radius:6px;grid-column:1/-1;">
+        🎒 此分類下尚無符合條件之靈物或道具。
+      </div>
+    `;
+  } else {
+    itemsGridHtml = pagedItems.map(item => {
+      const q = (item.quality || 'COMMON').toUpperCase();
+      let qColor = '#cbd5e1';
+      let qBorder = '#334155';
+      if (q === 'UNCOMMON') { qColor = '#34d399'; qBorder = '#059669'; }
+      else if (q === 'RARE') { qColor = '#60a5fa'; qBorder = '#2563eb'; }
+      else if (q === 'EPIC') { qColor = '#c084fc'; qBorder = '#7c3aed'; }
+      else if (q === 'LEGENDARY') { qColor = '#fbbf24'; qBorder = '#d97706'; }
+      else if (q === 'QUEST') { qColor = '#fde047'; qBorder = '#ca8a04'; }
+
+      let effectDesc = '';
+      if (item.weapon) {
+        effectDesc = `<span style="color:#f87171;">🗡️ 攻 +${item.bonusMinDamage}~${item.bonusMaxDamage}</span>`;
+      } else if (item.armor) {
+        effectDesc = `<span style="color:#60a5fa;">🥋 防 +${item.bonusDefense}, 血 +${item.bonusHp}</span>`;
+      } else if (item.effectType === 'HEAL_HP') {
+        effectDesc = `<span style="color:#34d399;">🌿 服用回復 ${item.effectValue} HP</span>`;
+      } else if (item.effectType === 'RESTORE_SAN') {
+        effectDesc = `<span style="color:#c084fc;">📜 服用回復 ${item.effectValue} SAN (定神)</span>`;
+      } else if (item.effectType === 'LEARN_SKILL') {
+        effectDesc = `<span style="color:#fde047;">🧬 煉化領悟絕學【${item.grantedSkillName || '道種'}】</span>`;
+      } else if (item.effectType === 'BUFF') {
+        effectDesc = `<span style="color:#38bdf8;">⚡ 服用賦予專屬靈效加持</span>`;
+      }
+
+      // 操作按鍵 (支援點擊直接指定隊員)
+      let actionButtons = '';
+      const members = (party && party.members) ? party.members : [];
+      if (item.consumable) {
+        actionButtons = `
+          <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end;">
+            <span style="font-size:11px;color:#94a3b8;margin-right:2px;">服用給：</span>
+            ${members.map((mem, mIdx) => {
+              const isAlive = (mem.alive !== undefined) ? mem.alive : (mem.hp > 0);
+              return `
+                <button class="act-btn btn-sm btn-green" ${isAlive ? '' : 'disabled style="opacity:0.35;cursor:not-allowed;"'}
+                  onclick="send('use ${item.slotId} ${mIdx}')" title="為 #${mIdx + 1} ${mem.name} 服用" style="font-size:12px;padding:3px 7px;">
+                  #${mIdx + 1} ${mem.name}
+                </button>
+              `;
+            }).join('')}
+          </div>
+        `;
+      } else if (item.weapon || item.armor || item.equipment || item.itemType === 'WEAPON' || item.itemType === 'ARMOR' || item.itemType === 'SHIELD' || item.itemType === 'ACCESSORY') {
+        actionButtons = `
+          <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end;">
+            <span style="font-size:11px;color:#94a3b8;margin-right:2px;">穿戴給：</span>
+            ${members.map((mem, mIdx) => {
+              const isAlive = (mem.alive !== undefined) ? mem.alive : (mem.hp > 0);
+              return `
+                <button class="act-btn btn-sm btn-blue" ${isAlive ? '' : 'disabled style="opacity:0.35;cursor:not-allowed;"'}
+                  onclick="send('equip ${item.slotId} ${mIdx}')" title="為 #${mIdx + 1} ${mem.name} 穿戴" style="font-size:12px;padding:3px 7px;">
+                  #${mIdx + 1}
+                </button>
+              `;
+            }).join('')}
+          </div>
+        `;
+      } else if (item.itemType === 'QUEST' || item.subType === 'QUEST' || item.quality === 'QUEST') {
+        actionButtons = `<span style="font-size:12px;color:#fde047;background:rgba(253,224,71,0.15);border:1px solid #ca8a04;padding:2px 8px;border-radius:4px;">📜 機緣信物</span>`;
+      }
+
+      return `
+        <div style="background:#0f172a;border:1px solid ${qBorder};border-radius:8px;padding:12px 14px;display:flex;gap:14px;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,0.35);">
+          <!-- 左側物品圖標 -->
+          <div style="font-size:24px;width:44px;height:44px;background:#1e293b;border:1px solid #475569;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            ${item.icon || '📦'}
+          </div>
+          <!-- 中間文字資訊 -->
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:15px;font-weight:bold;color:${qColor};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.name}</span>
+              ${item.count > 1 ? `<span style="font-size:12px;color:#cbd5e1;background:#1e293b;padding:1px 6px;border-radius:4px;font-weight:bold;flex-shrink:0;">×${item.count}</span>` : ''}
+              <span style="font-size:11px;color:#94a3b8;border:1px solid #334155;padding:1px 6px;border-radius:3px;flex-shrink:0;">${item.itemType || '道具'}</span>
+            </div>
+            ${effectDesc ? `<div style="font-size:13px;font-weight:500;">${effectDesc}</div>` : ''}
+            <div style="font-size:12px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${item.description || ''}">
+              ${item.description || '無描述'}
+            </div>
+          </div>
+          <!-- 右側操作按鈕 -->
+          <div style="flex-shrink:0;">
+            ${actionButtons}
           </div>
         </div>
+      `;
+    }).join('');
+  }
+
+  return `
+    <div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:16px;flex:1;display:flex;flex-direction:column;">
+      ${chipsHtml}
+      <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(460px, 1fr));gap:12px;flex:1;align-content:start;">
+        ${itemsGridHtml}
       </div>
+      ${renderPaginationBar(curPage, totalPages, filtered.length, 'window.changeItemsPage')}
+    </div>
+  `;
+}
+
+/**
+ * 渲染成員技能與道法典籍 (Skills View - 單頁上限 20 筆)
+ */
+function renderMemberSkillsView(m, memberIdx, party, skillTab) {
+  const curTab = skillTab || 'ACTIVE';
+  const stances = m.availableStances || [];
+  const skills = m.skills || [];
+  const passives = m.availablePassives || [];
+
+  // 1. 依據 curTab 收集與分類技能
+  let items = [];
+
+  if (curTab === 'FIELD_USABLE') {
+    // 探索可用：治療、道心平復、修煉或輔助絕學
+    skills.forEach(s => {
+      const isHealOrSan = (s.description && (s.description.includes('氣血') || s.description.includes('道心') || s.description.includes('治療') || s.description.includes('清心') || s.description.includes('調息'))) || (s.category && (s.category === 'HEAL' || s.category === 'SUPPORT'));
+      if (isHealOrSan) {
+        items.push({
+          id: s.id,
+          name: s.name,
+          icon: s.icon || '🌿',
+          typeLabel: '探索道法',
+          cost: s.costDescription || (s.costValue ? `${s.costValue} ${s.costType || 'MP'}` : '無消耗'),
+          cooldown: s.cooldownMs ? `${(s.cooldownMs / 1000).toFixed(1)}秒` : '無調息',
+          desc: s.description || '調息養元、穩定道心。',
+          canFieldCast: true,
+          badgeColor: '#34d399'
+        });
+      }
+    });
+
+    // 通用凝神吐納 (可作為基礎備選)
+    items.push({
+      id: 'rest_action',
+      name: '凝神吐納 (通用)',
+      icon: '🧘',
+      typeLabel: '基礎調息',
+      cost: '無消耗',
+      cooldown: '即時',
+      desc: '運轉五臟六腑真氣，緩慢調養氣血與道心 (可直接按鍵盤 R 鍵)。',
+      canFieldCast: true,
+      isGeneralRest: true,
+      badgeColor: '#38bdf8'
+    });
+  } else if (curTab === 'ACTIVE') {
+    // 主動絕學：主力武器套路 + 所有戰鬥絕技
+    stances.forEach(st => {
+      items.push({
+        id: st.skillId,
+        name: st.skillName,
+        icon: '⚔️',
+        typeLabel: '主力套路',
+        cost: '普攻無耗',
+        cooldown: '1.5秒攻擊節奏',
+        desc: st.description || '兵刃連招套路。',
+        isStance: true,
+        isCurrent: !!st.enabled,
+        badgeColor: '#f59e0b'
+      });
+    });
+
+    skills.forEach(s => {
+      items.push({
+        id: s.id,
+        name: s.name,
+        icon: s.icon || '⚡',
+        typeLabel: s.category || '門派絕技',
+        cost: s.costDescription || (s.costValue ? `${s.costValue} ${s.costType || 'MP'}` : '無消耗'),
+        cooldown: s.cooldownMs ? `調息 ${(s.cooldownMs / 1000).toFixed(1)}秒` : '即時',
+        desc: s.description || '威能莫測之道術絕招。',
+        isSkill: true,
+        available: !!s.available,
+        badgeColor: '#38bdf8'
+      });
+    });
+  } else {
+    // ALL：全部道法 (絕學 + 套路 + 身法/招架/心法)
+    stances.forEach(st => {
+      items.push({
+        id: st.skillId,
+        name: st.skillName,
+        icon: '⚔️',
+        typeLabel: '兵刃套路',
+        cost: '普攻連攜',
+        desc: st.description || '兵刃招式套路。',
+        isStance: true,
+        isCurrent: !!st.enabled,
+        badgeColor: '#f59e0b'
+      });
+    });
+
+    skills.forEach(s => {
+      items.push({
+        id: s.id,
+        name: s.name,
+        icon: s.icon || '⚡',
+        typeLabel: '門派絕技',
+        cost: s.costDescription || (s.costValue ? `${s.costValue} ${s.costType || 'MP'}` : '絕學'),
+        desc: s.description || '主動道法絕技。',
+        isSkill: true,
+        badgeColor: '#38bdf8'
+      });
+    });
+
+    passives.forEach(p => {
+      let icon = '🧘';
+      if (p.category === 'DODGE') icon = '💨';
+      else if (p.category === 'PARRY') icon = '🛡️';
+      else if (p.category === 'FORCE') icon = '🟣';
+
+      items.push({
+        id: p.skillId,
+        name: p.skillName,
+        icon: icon,
+        typeLabel: p.categoryName || '常駐心法',
+        cost: '被動常駐',
+        desc: p.description || '常駐運轉之防禦或內功心法。',
+        isPassive: true,
+        isCurrent: !!p.isCurrentEnabled,
+        badgeColor: '#c084fc'
+      });
+    });
+  }
+
+  // 2. 20 筆單頁分頁計算
+  const PAGE_SIZE = 20;
+  const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+  const curPage = Math.min(Math.max(1, drpgState.skillsPage || 1), totalPages);
+  drpgState.skillsPage = curPage;
+
+  const startIdx = (curPage - 1) * PAGE_SIZE;
+  const pagedItems = items.slice(startIdx, startIdx + PAGE_SIZE);
+
+  // 3. 網格卡片生成
+  let gridHtml = '';
+  if (pagedItems.length === 0) {
+    gridHtml = '<div style="color:#94a3b8;padding:30px;grid-column:1/-1;text-align:center;">此分類下尚無武學或道法記錄。</div>';
+  } else {
+    gridHtml = pagedItems.map(it => {
+      let actionBtn = '';
+      if (it.canFieldCast) {
+        if (it.isGeneralRest) {
+          actionBtn = `<button class="act-btn btn-sm btn-green" onclick="window.triggerRestAction()" style="font-size:13px;padding:4px 12px;">🌿 調息吐納</button>`;
+        } else {
+          actionBtn = `<button class="act-btn btn-sm btn-blue" onclick="send('skill cast ${memberIdx} ${it.id} 0')" style="font-size:13px;padding:4px 12px;">⚡ 施展</button>`;
+        }
+      } else if (it.isStance) {
+        if (it.isCurrent) {
+          actionBtn = `<span style="font-size:12px;color:#34d399;font-weight:bold;background:rgba(52,211,153,0.15);padding:2px 8px;border-radius:4px;border:1px solid #34d399;">✔ 當前主力</span>`;
+        } else {
+          actionBtn = `<button class="act-btn btn-sm" onclick="send('party enable ${memberIdx} ${it.id}')" style="font-size:12px;padding:3px 10px;">⚔️ 設為主力</button>`;
+        }
+      } else if (it.isPassive) {
+        if (it.isCurrent) {
+          actionBtn = `<span style="font-size:12px;color:#c084fc;font-weight:bold;background:rgba(192,132,252,0.15);padding:2px 8px;border-radius:4px;border:1px solid #c084fc;">✔ 運轉中</span>`;
+        } else {
+          actionBtn = `<button class="act-btn btn-sm" onclick="send('party enable ${memberIdx} ${it.id}')" style="font-size:12px;padding:3px 10px;">🧘 裝配心法</button>`;
+        }
+      } else {
+        actionBtn = `<span style="font-size:12px;color:#38bdf8;background:rgba(56,189,248,0.15);padding:2px 8px;border-radius:4px;">戰鬥絕技</span>`;
+      }
+
+      return `
+        <div style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px 14px;display:flex;gap:14px;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,0.35);">
+          <!-- 左側圖示 -->
+          <div style="font-size:24px;width:44px;height:44px;background:#1e293b;border:1px solid #475569;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            ${it.icon}
+          </div>
+          <!-- 中間說明 -->
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:15px;font-weight:bold;color:#f1f5f9;">${it.name}</span>
+              <span style="font-size:11px;color:${it.badgeColor || '#38bdf8'};border:1px solid #334155;padding:1px 6px;border-radius:3px;">${it.typeLabel}</span>
+              ${it.cost ? `<span style="font-size:11px;color:#e2e8f0;background:#1e293b;padding:1px 6px;border-radius:3px;">${it.cost}</span>` : ''}
+              ${it.cooldown ? `<span style="font-size:11px;color:#94a3b8;">${it.cooldown}</span>` : ''}
+            </div>
+            <div style="font-size:13px;color:#cbd5e1;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${it.desc}">
+              ${it.desc}
+            </div>
+          </div>
+          <!-- 右側動作 -->
+          <div style="flex-shrink:0;">
+            ${actionBtn}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  return `
+    <div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:16px;flex:1;display:flex;flex-direction:column;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(460px, 1fr));gap:12px;flex:1;align-content:start;">
+        ${gridHtml}
+      </div>
+      ${renderPaginationBar(curPage, totalPages, items.length, 'window.changeSkillsPage')}
     </div>
   `;
 }
@@ -1529,11 +1930,16 @@ if (typeof window !== 'undefined') {
   window.renderTeamFormationView = renderTeamFormationView;
   window.renderPartyModal = renderPartyModal;
   window.renderMemberSpellbook = renderMemberSpellbook;
+  window.renderMemberSkillsView = renderMemberSkillsView;
   window.switchSpellbookTab = switchSpellbookTab;
   window.switchSpellbookPage = switchSpellbookPage;
   window.toggleFormationViewMode = toggleFormationViewMode;
   window.setFormationFilterSize = setFormationFilterSize;
   window.changeFormationPage = changeFormationPage;
+  window.changeItemsPage = changeItemsPage;
+  window.setItemsSecondaryFilter = setItemsSecondaryFilter;
+  window.changeSkillsPage = changeSkillsPage;
+  window.setSkillsTab = setSkillsTab;
 }
 
 export {
@@ -1553,9 +1959,14 @@ export {
   renderTeamFormationView,
   renderPartyModal,
   renderMemberSpellbook,
+  renderMemberSkillsView,
   switchSpellbookTab,
   switchSpellbookPage,
   toggleFormationViewMode,
   setFormationFilterSize,
-  changeFormationPage
+  changeFormationPage,
+  changeItemsPage,
+  setItemsSecondaryFilter,
+  changeSkillsPage,
+  setSkillsTab
 };

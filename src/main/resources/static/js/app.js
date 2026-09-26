@@ -33,7 +33,11 @@ import {
   renderPartyModal,
   renderMemberSpellbook,
   switchSpellbookTab,
-  switchSpellbookPage
+  switchSpellbookPage,
+  changeItemsPage,
+  setItemsSecondaryFilter,
+  changeSkillsPage,
+  setSkillsTab
 } from './modals/party-modal.js';
 
 import {
@@ -476,6 +480,10 @@ if (typeof window !== 'undefined') {
   window.triggerRestAction = triggerRestAction;
   window.switchMainMenuTab = switchMainMenuTab;
   window.openMainMenu = openMainMenu;
+  window.changeItemsPage = changeItemsPage;
+  window.setItemsSecondaryFilter = setItemsSecondaryFilter;
+  window.changeSkillsPage = changeSkillsPage;
+  window.setSkillsTab = setSkillsTab;
   window.initKeyboardControls = initKeyboardControls;
 }
 
