@@ -177,11 +177,11 @@ function renderMemberTactics(m, idx) {
       <div class="tactics-builder-card">
         <div class="tactics-builder-title">➕ 新增戰術方針規則 (Gambit Rule)</div>
         <div class="tactics-builder-row">
-          <label style="font-size:12px;color:#94a3b8;">優先級：</label>
-          <input type="number" id="t-builder-prio" value="${nextPriority}" min="1" max="99" style="width:55px;" />
+          <label style="font-size:13px;color:#94a3b8;">優先級：</label>
+          <input type="number" id="t-builder-prio" value="${nextPriority}" min="1" max="99" style="width:55px;font-size:13px;" />
 
-          <label style="font-size:12px;color:#94a3b8;">觸發條件：</label>
-          <select id="t-builder-cond" onchange="handleTacticsCondChange()">
+          <label style="font-size:13px;color:#94a3b8;">觸發條件：</label>
+          <select id="t-builder-cond" onchange="handleTacticsCondChange()" style="font-size:13px;">
             <option value="ALLY_HP_LESS_THAN">隊友氣血低於 (%)</option>
             <option value="SELF_HP_LESS_THAN">自身氣血低於 (%)</option>
             <option value="RESOURCE_GTE">自身資源 >= (點/怒氣/連擊)</option>
@@ -190,12 +190,12 @@ function renderMemberTactics(m, idx) {
             <option value="ALWAYS">無條件施展 (必定觸發)</option>
           </select>
 
-          <label id="t-builder-val-label" style="font-size:12px;color:#94a3b8;">閥值：</label>
-          <input type="number" id="t-builder-val" value="50" min="0" max="9999" style="width:65px;" />
+          <label id="t-builder-val-label" style="font-size:13px;color:#94a3b8;">閥值：</label>
+          <input type="number" id="t-builder-val" value="50" min="0" max="9999" style="width:65px;font-size:13px;" />
         </div>
         <div class="tactics-builder-row">
-          <label style="font-size:12px;color:#94a3b8;">目標：</label>
-          <select id="t-builder-target">
+          <label style="font-size:13px;color:#94a3b8;">目標：</label>
+          <select id="t-builder-target" style="font-size:13px;">
             <option value="FRONT_ROW_ALLY">前衛肉盾 (Tank)</option>
             <option value="LOWEST_HP_ALLY">氣血最低隊友</option>
             <option value="LEADER">小隊隊長</option>
@@ -207,8 +207,8 @@ function renderMemberTactics(m, idx) {
             <option value="ALL_ALLIES">全體隊友</option>
           </select>
 
-          <label style="font-size:12px;color:#94a3b8;">執行武學：</label>
-          <select id="t-builder-skill">
+          <label style="font-size:13px;color:#94a3b8;">執行武學：</label>
+          <select id="t-builder-skill" style="font-size:13px;">
             ${skillOptionsHtml}
           </select>
         </div>
