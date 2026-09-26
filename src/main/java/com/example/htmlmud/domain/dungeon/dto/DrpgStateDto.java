@@ -224,47 +224,53 @@ public record DrpgStateDto(
         });
       }
 
-      var basicSkill = m.getEnabledBasicSkill();
+      // 兵刃套路：若玩家有啟用非 basic_* 的進階套路，則傳遞該進階套路名稱；若為 basic_* 或未啟用，則傳遞 null（前端呈現 "(無)"）
+      String customStanceId = m.getCustomEnabledBasicSkillId();
       String basicSkillId = m.getEffectiveBasicSkillId();
-      String basicSkillName = (basicSkill != null) ? basicSkill.getName() : "基礎武學";
+      String basicSkillName = null;
+      if (customStanceId != null) {
+        var customSkillOpt = templateReader.findSkill(customStanceId);
+        basicSkillName = customSkillOpt.map(com.example.htmlmud.domain.model.template.SkillTemplate::getName).orElse(customStanceId);
+      }
 
       com.example.htmlmud.domain.model.enums.SkillCategory currentCat =
           PartyMember.toSkillCategory(m.getMainHandWeaponType());
       List<PartyStanceSkillDto> availableStances = new ArrayList<>();
 
-      // 1. 預設基礎套路 (如 basic_sword, basic_fist 等)
-      String defaultBasicId = m.getBasicSkillId();
-      var defSkillOpt = templateReader.findSkill(defaultBasicId);
-      String defName = defSkillOpt.map(com.example.htmlmud.domain.model.template.SkillTemplate::getName).orElse(defaultBasicId);
-      String defDesc = defSkillOpt.map(com.example.htmlmud.domain.model.template.SkillTemplate::getDescription).orElse("");
-      availableStances.add(new PartyStanceSkillDto(defaultBasicId, defName, currentCat.name(), defDesc, defaultBasicId.equals(basicSkillId)));
-
-      // 2. 角色已學的該武器分類套路 (若有)
+      // 角色已學的該武器分類套路 (若有，排除 basic_* 佔位)
       if (m.getLearnedStances() != null) {
         for (String stId : m.getLearnedStances()) {
-          if (stId.equals(defaultBasicId)) continue;
+          if (stId.startsWith("basic_")) continue; // 排除基礎招式佔位
           var skOpt = templateReader.findSkill(stId);
           if (skOpt.isPresent()) {
             var sk = skOpt.get();
-            if (PartyMember.resolveSkillCategory(sk) == currentCat) {
-              availableStances.add(new PartyStanceSkillDto(stId, sk.getName(), currentCat.name(), sk.getDescription(), stId.equals(basicSkillId)));
+            if (PartyMember.supportsSkillCategory(sk, currentCat)) {
+              availableStances.add(new PartyStanceSkillDto(stId, sk.getName(), currentCat.name(), sk.getDescription(), stId.equals(customStanceId)));
             }
           }
         }
       }
 
       // 3. 收集被動心法槽位與可用被動技能 (DODGE, PARRY, FORCE)
+      // 若為 basic_* 視為預設底層機制，不放入 passiveSlots，使前端呈現 (無)
       Map<String, String> passiveSlots = new HashMap<>();
-      String curDodgeId = m.getEnabledPassiveSkillId(com.example.htmlmud.domain.model.enums.SkillCategory.DODGE);
-      String curParryId = m.getEnabledPassiveSkillId(com.example.htmlmud.domain.model.enums.SkillCategory.PARRY);
-      String curForceId = m.getEnabledPassiveSkillId(com.example.htmlmud.domain.model.enums.SkillCategory.FORCE);
-      if (curDodgeId != null) passiveSlots.put("DODGE", curDodgeId);
-      if (curParryId != null) passiveSlots.put("PARRY", curParryId);
-      if (curForceId != null) passiveSlots.put("FORCE", curForceId);
+      String curDodgeId = m.getCustomEnabledPassiveSkillId(com.example.htmlmud.domain.model.enums.SkillCategory.DODGE);
+      String curParryId = m.getCustomEnabledPassiveSkillId(com.example.htmlmud.domain.model.enums.SkillCategory.PARRY);
+      String curForceId = m.getCustomEnabledPassiveSkillId(com.example.htmlmud.domain.model.enums.SkillCategory.FORCE);
+      if (curDodgeId != null) {
+        passiveSlots.put("DODGE", curDodgeId);
+      }
+      if (curParryId != null) {
+        passiveSlots.put("PARRY", curParryId);
+      }
+      if (curForceId != null) {
+        passiveSlots.put("FORCE", curForceId);
+      }
 
       List<PartyPassiveSkillDto> availablePassives = new ArrayList<>();
       if (m.getLearnedStances() != null) {
         for (String stId : m.getLearnedStances()) {
+          if (stId.startsWith("basic_")) continue; // 排除基礎招式佔位
           var skOpt = templateReader.findSkill(stId);
           if (skOpt.isPresent()) {
             var sk = skOpt.get();
@@ -278,7 +284,7 @@ public record DrpgStateDto(
                 case FORCE -> "內功真元";
                 default -> "輔助心法";
               };
-              boolean isCurrent = stId.equals(m.getEnabledPassiveSkillId(cat));
+              boolean isCurrent = stId.equals(m.getCustomEnabledPassiveSkillId(cat));
               availablePassives.add(new PartyPassiveSkillDto(
                   stId,
                   sk.getName(),

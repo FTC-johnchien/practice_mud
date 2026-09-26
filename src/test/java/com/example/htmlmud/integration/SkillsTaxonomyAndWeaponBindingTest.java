@@ -216,4 +216,66 @@ public class SkillsTaxonomyAndWeaponBindingTest {
     assertThat(moYan).isNotNull();
     assertThat(moYan.getLearnedStances()).contains("basic_blade", "storm_blade", "thunder_strike");
   }
+
+  @Test
+  @DisplayName("驗證狂風絕息刀分類解析、裝備刀類時可用套路過濾與切換武器獨立記憶")
+  void testStormBladeWeaponSwitchingAndCustomStanceResolution() {
+    SkillTemplate storm = TemplateRepository.findSkill("storm_blade").orElse(null);
+    assertThat(storm).isNotNull();
+    // 1. 狂風絕息刀必須被解析為 BLADE 分類（而非誤判為 UNARMED）
+    assertThat(PartyMember.resolveSkillCategory(storm)).isEqualTo(SkillCategory.BLADE);
+    assertThat(PartyMember.supportsSkillCategory(storm, SkillCategory.BLADE)).isTrue();
+    assertThat(PartyMember.supportsSkillCategory(storm, SkillCategory.SWORD)).isFalse();
+
+    PartyMember moYan = partyService.createCompanion("mo_yan");
+    // 2. 初始空手時：主手為 UNARMED，未自訂時 custom 為 null，effective 回落 basic_fist
+    assertThat(moYan.getMainHandWeaponType()).isEqualTo(WeaponType.UNARMED);
+    assertThat(moYan.getCustomEnabledBasicSkillId()).isNull();
+    assertThat(moYan.getEffectiveBasicSkillId()).isEqualTo("basic_fist");
+
+    // 3. 裝備百辟精鋼刀 (BLADE)
+    moYan.getEquipment().put(EquipmentSlot.MAIN_HAND,
+        PartyItemSlot.builder()
+            .itemId("steel_blade")
+            .name("百辟精鋼刀")
+            .itemType(ItemType.WEAPON)
+            .subType("BLADE")
+            .equipSlot(EquipmentSlot.MAIN_HAND)
+            .build());
+    assertThat(moYan.getMainHandWeaponType()).isEqualTo(WeaponType.BLADE);
+    // 尚未手動 enable 時，custom 為 null (對應 UI 顯示 "(無)")，effective 回落 basic_blade
+    assertThat(moYan.getCustomEnabledBasicSkillId()).isNull();
+    assertThat(moYan.getEffectiveBasicSkillId()).isEqualTo("basic_blade");
+
+    // 4. 手動 enable 狂風絕息刀
+    moYan.enableSkill(SkillCategory.BLADE, "storm_blade");
+    assertThat(moYan.getCustomEnabledBasicSkillId()).isEqualTo("storm_blade");
+    assertThat(moYan.getEffectiveBasicSkillId()).isEqualTo("storm_blade");
+
+    // 5. 切換為長劍 (SWORD) -> 刀法套路不應洩漏，SWORD 未設定 custom 應為 null
+    moYan.getEquipment().put(EquipmentSlot.MAIN_HAND,
+        PartyItemSlot.builder()
+            .itemId("test_sword")
+            .name("青銅古劍")
+            .itemType(ItemType.WEAPON)
+            .subType("SWORD")
+            .equipSlot(EquipmentSlot.MAIN_HAND)
+            .build());
+    assertThat(moYan.getMainHandWeaponType()).isEqualTo(WeaponType.SWORD);
+    assertThat(moYan.getCustomEnabledBasicSkillId()).isNull();
+    assertThat(moYan.getEffectiveBasicSkillId()).isEqualTo("basic_sword");
+
+    // 6. 再切換回百辟精鋼刀 (BLADE) -> 應自動恢復狂風絕息刀
+    moYan.getEquipment().put(EquipmentSlot.MAIN_HAND,
+        PartyItemSlot.builder()
+            .itemId("steel_blade")
+            .name("百辟精鋼刀")
+            .itemType(ItemType.WEAPON)
+            .subType("BLADE")
+            .equipSlot(EquipmentSlot.MAIN_HAND)
+            .build());
+    assertThat(moYan.getMainHandWeaponType()).isEqualTo(WeaponType.BLADE);
+    assertThat(moYan.getCustomEnabledBasicSkillId()).isEqualTo("storm_blade");
+    assertThat(moYan.getEffectiveBasicSkillId()).isEqualTo("storm_blade");
+  }
 }

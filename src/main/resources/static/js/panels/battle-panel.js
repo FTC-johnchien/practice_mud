@@ -97,7 +97,7 @@ export function renderBattleArena(battle) {
         <span class="enemy-hp-text">${isAlive ? `${e.hp}/${e.maxHp}` : '已伏誅'}</span>
       </div>
       <div class="enemy-status-row">
-        ${e.targetMemberName ? `<span class="enemy-aggro-badge" style="font-size:10px; color:#fca5a5; background:#450a0a; border:1px solid #ef4444; border-radius:3px; padding:0 4px; display:inline-flex; align-items:center; gap:2px;" title="怪物當前仇恨鎖定目標">🎯 盯上: ${e.targetMemberName}</span>` : ''}
+        ${e.targetMemberName ? `<span class="enemy-aggro-badge" style="font-size:11px; color:#fca5a5; background:#450a0a; border:1px solid #ef4444; border-radius:3px; padding:1px 5px; display:inline-flex; align-items:center; gap:2px;" title="怪物當前仇恨鎖定目標">🎯 盯上: ${e.targetMemberName}</span>` : ''}
         ${e.isStunned ? '<span class="enemy-stun-badge">💫 眩暈中</span>' : ''}
         ${buffsHtml}
       </div>
@@ -204,27 +204,23 @@ export function renderBattlePartyQuickBar(party) {
 
     card.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span class="bpmc-name" style="font-weight:bold; color:${isAlive ? '#e2e8f0' : '#94a3b8'}; font-size:12px;">#${idx + 1} ${m.name}</span>
+        <span class="bpmc-name" style="font-weight:bold; color:${isAlive ? '#e2e8f0' : '#94a3b8'}; font-size:13px;">#${idx + 1} ${m.name}</span>
         <div style="display:flex; align-items:center; gap:4px;">
-          ${!isAlive ? '<span style="font-size:9px; color:#ef4444; background:rgba(239,68,68,0.2); border:1px solid #ef4444; border-radius:3px; padding:0 3px;">💀陣亡</span>' : `<span class="bpmc-badge" style="font-size:9px; color:${rowColor};">[${rowBadge}]</span>`}
-          <div class="bpmc-swap-btns" style="display:inline-flex; gap:1px;">
-            ${idx > 0 ? `<button onclick="event.stopPropagation(); window.send('party swap ${idx} ${idx - 1}')" title="與前一位隊員換位" style="background:#1e293b; border:1px solid #475569; color:#94a3b8; border-radius:2px; padding:0 3px; font-size:9px; cursor:pointer;">◀</button>` : ''}
-            ${idx < party.members.length - 1 ? `<button onclick="event.stopPropagation(); window.send('party swap ${idx} ${idx + 1}')" title="與後一位隊員換位" style="background:#1e293b; border:1px solid #475569; color:#94a3b8; border-radius:2px; padding:0 3px; font-size:9px; cursor:pointer;">▶</button>` : ''}
-          </div>
+          ${!isAlive ? '<span style="font-size:11px; color:#ef4444; background:rgba(239,68,68,0.2); border:1px solid #ef4444; border-radius:3px; padding:1px 4px;">💀陣亡</span>' : `<span class="bpmc-badge" style="font-size:11px; font-weight:bold; color:${rowColor};">[${rowBadge}]</span>`}
         </div>
       </div>
-      <div class="enemy-hp-wrap" style="height:10px; margin:2px 0;">
+      <div class="enemy-hp-wrap" style="height:12px; margin:3px 0;">
         <div class="hp-bar" style="width:${hpPct}%; background:${isAlive ? '#10b981' : '#6b7280'}; height:100%;"></div>
       </div>
-      <div style="font-size:9px; color:#94a3b8; display:flex; justify-content:space-between; align-items:center;">
+      <div style="font-size:11px; color:#94a3b8; display:flex; justify-content:space-between; align-items:center;">
         <span class="bpmc-hp-text">HP ${m.hp}/${m.maxHp}</span>
         <span class="bpmc-select-indicator" style="color:${isAlive ? '#38bdf8' : '#ef4444'}; font-weight:bold;">${isSelected ? '▶ 當前選中' : (isAlive ? '點選切換' : '點選施救')}</span>
       </div>
       ${m.formationSlotName ? `
-        <div class="bpmc-slot-badge" style="font-size:9px; margin-top:2px; padding:1px 4px; border-radius:3px; display:flex; justify-content:space-between; align-items:center; ${isAlive && m.formationSlotActive ? 'background:rgba(16,185,129,0.12); color:#6ee7b7; border:1px solid rgba(16,185,129,0.3);' : 'background:rgba(239,68,68,0.12); color:#fca5a5; border:1px solid rgba(239,68,68,0.3);'}"
+        <div class="bpmc-slot-badge" style="font-size:11px; margin-top:2px; padding:2px 5px; border-radius:3px; display:flex; justify-content:space-between; align-items:center; ${isAlive && m.formationSlotActive ? 'background:rgba(16,185,129,0.12); color:#6ee7b7; border:1px solid rgba(16,185,129,0.3);' : 'background:rgba(239,68,68,0.12); color:#fca5a5; border:1px solid rgba(239,68,68,0.3);'}"
              title="陣法孔位：${m.formationSlotName} - ${m.formationSlotBonus || ''}">
           <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">💠 ${m.formationSlotName}</span>
-          ${isAlive && m.formationSlotActive ? '<span style="font-size:8px; flex-shrink:0;">✓生效</span>' : '<span style="font-size:8px; color:#ef4444; flex-shrink:0;">' + (!isAlive ? '✗離陣' : '✗不符') + '</span>'}
+          ${isAlive && m.formationSlotActive ? '<span style="font-size:10px; flex-shrink:0;">✓生效</span>' : '<span style="font-size:10px; color:#ef4444; flex-shrink:0;">' + (!isAlive ? '✗離陣' : '✗不符') + '</span>'}
         </div>
       ` : ''}
       <div class="bpmc-buffs-wrap">
@@ -314,7 +310,7 @@ export function renderBattlePartyQuickBar(party) {
  * @param {number} idx 隊員索引
  */
 export function selectCombatMember(idx) {
-  store.setState({ selectedMemberIdx: idx });
+  store.setState({ selectedMemberIdx: idx, dockSkillPage: 1 });
   const lastParty = store.get('lastParty');
   if (lastParty) {
     renderBattlePartyQuickBar(lastParty);
@@ -447,7 +443,7 @@ export function renderCombatCommandDock(party, selectedMemberIdx) {
     }
   }
 
-  // 2. 中央技能動作欄 (採用 In-place 更新，按鈕節點永久保留，徹底消滅閃爍與點不到問題)
+  // 2. 中央技能動作欄 (實裝單頁 20 筆上限的分頁機制與 In-place 更新，零閃爍)
   if (skillDeckEl) {
     const activeTab = store.get('dockSkillTab') || 'ALL';
     const skills = m.skills || [];
@@ -458,30 +454,42 @@ export function renderCombatCommandDock(party, selectedMemberIdx) {
     const maxRes = m.maxResource !== undefined ? m.maxResource : m.maxMp;
     const resBadgeLabel = (resType === 'MP') ? `🔮 真元 ${curRes}/${maxRes}` : `⚡ 戰氣 ${curRes}/${maxRes}`;
 
+    let filteredSkills = skills.filter(s => {
+      const cat = (s.category || 'CLASS').toUpperCase();
+      if (activeTab === 'ALL') return true;
+      if (activeTab === 'WEAPON') return cat === 'WEAPON';
+      if (activeTab === 'CLASS') return cat === 'CLASS';
+      if (activeTab === 'SPELL') return cat === 'SPELL';
+      if (activeTab === 'COMBO') return (cat === 'COMBO' || s.synergy);
+      return true;
+    });
+
+    const PAGE_SIZE = 20;
+    const totalPages = Math.max(1, Math.ceil(filteredSkills.length / PAGE_SIZE));
+    let currentPage = store.get('dockSkillPage') || 1;
+    if (currentPage > totalPages) {
+      currentPage = totalPages;
+      store.setState({ dockSkillPage: currentPage });
+    }
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const pageSkills = filteredSkills.slice(startIndex, startIndex + PAGE_SIZE);
+
     const needSkillRebuild = (skillDeckEl.dataset.memberIdx !== curMemberIdxStr) ||
                              (skillDeckEl.dataset.tab !== activeTab) ||
+                             (skillDeckEl.dataset.page !== String(currentPage)) ||
                              (skillDeckEl.dataset.skillCount !== String(skills.length));
 
     if (needSkillRebuild) {
       skillDeckEl.dataset.memberIdx = curMemberIdxStr;
       skillDeckEl.dataset.tab = activeTab;
+      skillDeckEl.dataset.page = String(currentPage);
       skillDeckEl.dataset.skillCount = String(skills.length);
 
-      let filteredSkills = skills.filter(s => {
-        const cat = (s.category || 'CLASS').toUpperCase();
-        if (activeTab === 'ALL') return true;
-        if (activeTab === 'WEAPON') return cat === 'WEAPON';
-        if (activeTab === 'CLASS') return cat === 'CLASS';
-        if (activeTab === 'SPELL') return cat === 'SPELL';
-        if (activeTab === 'COMBO') return (cat === 'COMBO' || s.synergy);
-        return true;
-      });
-
       let skillsGridHtml = '';
-      if (filteredSkills.length === 0) {
+      if (pageSkills.length === 0) {
         skillsGridHtml = `<div class="dock-empty-skills">當前分類暫無可用招式</div>`;
       } else {
-        skillsGridHtml = filteredSkills.map((s, sIdx) => {
+        skillsGridHtml = pageSkills.map((s, sIdx) => {
           return `
             <button class="dock-skill-card" data-skill-idx="${sIdx}" data-skill-id="${s.id}">
               <div class="dock-skill-title-row">
@@ -506,6 +514,11 @@ export function renderCombatCommandDock(party, selectedMemberIdx) {
             <button class="dock-tab ${activeTab === 'SPELL' ? 'active' : ''}" onclick="window.setDockSkillTab('SPELL')">🔮 法術</button>
             <button class="dock-tab ${activeTab === 'COMBO' ? 'active' : ''}" onclick="window.setDockSkillTab('COMBO')">🌟 合擊</button>
           </div>
+          <div class="dock-skill-paginator">
+            <button class="dock-page-btn" ${currentPage <= 1 ? 'disabled' : ''} onclick="window.changeDockSkillPage(-1)" title="上一頁">◀</button>
+            <span class="dock-page-text">${currentPage}/${totalPages}</span>
+            <button class="dock-page-btn" ${currentPage >= totalPages ? 'disabled' : ''} onclick="window.changeDockSkillPage(1)" title="下一頁">▶</button>
+          </div>
           <div class="dock-res-badge">${resBadgeLabel}</div>
         </div>
         <div class="dock-skills-grid">
@@ -518,19 +531,9 @@ export function renderCombatCommandDock(party, selectedMemberIdx) {
     const resBadgeEl = skillDeckEl.querySelector('.dock-res-badge');
     if (resBadgeEl) resBadgeEl.textContent = resBadgeLabel;
 
-    // In-place 更新各技能卡狀態 (冷卻、可用性、點擊事件，絕不重建節點)
-    let filteredSkills = skills.filter(s => {
-      const cat = (s.category || 'CLASS').toUpperCase();
-      if (activeTab === 'ALL') return true;
-      if (activeTab === 'WEAPON') return cat === 'WEAPON';
-      if (activeTab === 'CLASS') return cat === 'CLASS';
-      if (activeTab === 'SPELL') return cat === 'SPELL';
-      if (activeTab === 'COMBO') return (cat === 'COMBO' || s.synergy);
-      return true;
-    });
-
+    // In-place 更新當前頁各技能卡狀態 (冷卻、可用性、點擊事件，絕不重建節點)
     const cardNodes = skillDeckEl.querySelectorAll('.dock-skills-grid .dock-skill-card');
-    filteredSkills.forEach((s, sIdx) => {
+    pageSkills.forEach((s, sIdx) => {
       const cardBtn = cardNodes[sIdx];
       if (!cardBtn) return;
 
@@ -579,45 +582,24 @@ export function renderCombatCommandDock(party, selectedMemberIdx) {
     });
   }
 
-  // 3. 右側戰術指令欄 (In-place 更新按鈕狀態，絕不重構 DOM)
+  // 3. 右側戰術指令欄 (明確的戰術行動按鈕：行囊、選單、遁地，徹底移除容易混淆的換位按鈕)
   if (tacticsDeckEl) {
-    const isFirst = (selectedMemberIdx === 0);
-    const isLast = (selectedMemberIdx === party.members.length - 1);
-
     if (tacticsDeckEl.dataset.initialized !== 'true') {
       tacticsDeckEl.dataset.initialized = 'true';
       tacticsDeckEl.innerHTML = `
-        <div class="dock-tactics-title">戰術調度</div>
-        <div class="dock-swap-row">
-          <button id="dock-btn-swap-prev" class="dock-swap-btn" title="與前一位隊員換位">
-            ◀ 前調
+        <div class="dock-tactics-title">戰術指令</div>
+        <div class="dock-tactic-actions-list">
+          <button class="dock-tactic-sub-btn" onclick="window.toggleBagDrawer ? window.toggleBagDrawer() : null" title="開啟公共行囊 (B)">
+            🎒 行囊 (B)
           </button>
-          <button id="dock-btn-swap-next" class="dock-swap-btn" title="與後一位隊員換位">
-            後調 ▶
-          </button>
-        </div>
-        <div class="dock-tactic-actions-row">
-          <button class="dock-tactic-sub-btn" onclick="window.toggleBagDrawer ? window.toggleBagDrawer() : null" title="開啟公共行囊使用丹藥 (B)">
-            🎒 行囊
+          <button class="dock-tactic-sub-btn" onclick="window.openMainMenu ? window.openMainMenu('FORMATION') : (window.togglePartyModal ? window.togglePartyModal() : null)" title="開啟功能選單 (C)">
+            📜 選單 (C)
           </button>
           <button class="dock-tactic-sub-btn btn-tactic-flee" onclick="window.send('battle flee')" title="遁地撤退 (-5 SAN) (Esc)">
-            🏃 遁地
+            🏃 遁地 (Esc)
           </button>
         </div>
       `;
-    }
-
-    // In-place 更新換位按鈕啟用/禁用
-    const swapPrevBtn = document.getElementById('dock-btn-swap-prev');
-    if (swapPrevBtn) {
-      swapPrevBtn.disabled = isFirst;
-      swapPrevBtn.onclick = isFirst ? null : () => window.send(`party swap ${selectedMemberIdx} ${selectedMemberIdx - 1}`);
-    }
-
-    const swapNextBtn = document.getElementById('dock-btn-swap-next');
-    if (swapNextBtn) {
-      swapNextBtn.disabled = isLast;
-      swapNextBtn.onclick = isLast ? null : () => window.send(`party swap ${selectedMemberIdx} ${selectedMemberIdx + 1}`);
     }
   }
 }
@@ -661,7 +643,22 @@ export function handleDockSkillCast(memberIdx, skillId, canCast, skillName, cost
  * 切換戰備指揮台技能分類標籤
  */
 export function setDockSkillTab(tab) {
-  store.setState({ dockSkillTab: tab });
+  store.setState({ dockSkillTab: tab, dockSkillPage: 1 });
+  const lastParty = store.get('lastParty');
+  const selectedMemberIdx = store.get('selectedMemberIdx') || 0;
+  if (lastParty) {
+    renderCombatCommandDock(lastParty, selectedMemberIdx);
+  }
+}
+
+/**
+ * 切換戰備指揮台技能分頁
+ * @param {number} delta 換頁增量 (+1 或 -1)
+ */
+export function changeDockSkillPage(delta) {
+  const curPage = store.get('dockSkillPage') || 1;
+  const newPage = Math.max(1, curPage + delta);
+  store.setState({ dockSkillPage: newPage });
   const lastParty = store.get('lastParty');
   const selectedMemberIdx = store.get('selectedMemberIdx') || 0;
   if (lastParty) {
@@ -765,6 +762,7 @@ if (typeof window !== 'undefined') {
   window.selectCombatMember = selectCombatMember;
   window.handleDockSkillCast = handleDockSkillCast;
   window.setDockSkillTab = setDockSkillTab;
+  window.changeDockSkillPage = changeDockSkillPage;
   window.hideBattleArena = hideBattleArena;
   window.selectBattleTarget = selectBattleTarget;
   window.toggleBattleMode = toggleBattleMode;

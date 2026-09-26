@@ -106,31 +106,6 @@ export function renderPartyHud(party) {
       resLabel = `戰氣 ${curRes}/${maxRes}`;
     }
 
-    // 7 大部位裝備槽位 (5 基礎 + 2 飾品)
-    const allSlots = [
-      { key: 'MAIN_HAND', alias: 'weapon', label: '主手', icon: '🗡️', defaultName: '空主' },
-      { key: 'OFF_HAND', alias: 'shield', label: '副手', icon: '🛡️', defaultName: '空副' },
-      { key: 'HEAD', alias: 'head', label: '頭部', icon: '👑', defaultName: '空頭' },
-      { key: 'BODY', alias: 'armor', label: '身軀', icon: '🥋', defaultName: '空身' },
-      { key: 'FEET', alias: 'feet', label: '靴履', icon: '👢', defaultName: '空履' },
-      { key: 'ACCESSORY_1', alias: 'acc1', label: '飾品1', icon: '💍', defaultName: '空飾1' },
-      { key: 'ACCESSORY_2', alias: 'acc2', label: '飾品2', icon: '📿', defaultName: '空飾2' }
-    ];
-
-    let equipHtml = '';
-    for (const slot of allSlots) {
-      let item = m.equipment ? m.equipment[slot.key] : null;
-      if (!item && slot.key === 'MAIN_HAND' && m.equippedWeapon) item = m.equippedWeapon;
-      if (!item && slot.key === 'BODY' && m.equippedArmor) item = m.equippedArmor;
-
-      if (item) {
-        const btn = `<button class="unequip-mini-btn" onclick="event.stopPropagation(); window.send('item unequip ${slot.alias} ${idx}')" title="卸下${slot.label}【${item.name}】放回行囊">✕</button>`;
-        equipHtml += `<span class="equip-tag equipped-slot" title="${slot.label}: ${item.name} (${item.description || ''})">${item.icon || slot.icon} ${item.name}${btn}</span>`;
-      } else {
-        equipHtml += `<span class="equip-tag empty-slot" title="${slot.label} (未穿戴)">${slot.icon}${slot.defaultName}</span>`;
-      }
-    }
-
     card.innerHTML = `
       <div class="card-info-side">
         <div class="card-name-row">
@@ -138,24 +113,17 @@ export function renderPartyHud(party) {
           <span class="member-name" title="${m.name}">${m.name}</span>
           <span class="member-level-badge" title="境界等級 Lv.${m.level || 1}">Lv.${m.level || 1}</span>
           <span class="member-row badge-${m.row.toLowerCase()}">${rowBadge}</span>
-          ${m.className ? `<span class="member-class-badge" title="${m.classDescription || ''}" style="font-size:9px;color:#7dd3fc;background:#0f172a;border:1px solid #0284c7;border-radius:3px;padding:0 3px;">${m.className}</span>` : ''}
+          ${m.className ? `<span class="member-class-badge" title="${m.classDescription || ''}" style="font-size:11px;color:#7dd3fc;background:#0f172a;border:1px solid #0284c7;border-radius:3px;padding:1px 4px;">${m.className}</span>` : ''}
           ${(idx === 0 && m.freeStatPoints > 0) ? `<span class="hud-free-points-pill" title="尚有 ${m.freeStatPoints} 點未分配自由點數！點擊開啟配點" onclick="event.stopPropagation(); if(window.openPartyModal) window.openPartyModal(0);">+${m.freeStatPoints}點</span>` : ''}
-          <div class="member-swap-tools" style="display:inline-flex; gap:2px; margin-left:auto;">
-            ${idx > 0 ? `<button class="hud-swap-btn" onclick="event.stopPropagation(); window.send('party swap ${idx} ${idx - 1}')" title="與前一位隊員換位" style="background:#1e293b; border:1px solid #475569; color:#94a3b8; border-radius:3px; padding:0 4px; font-size:10px; cursor:pointer;">◀</button>` : ''}
-            ${idx < party.members.length - 1 ? `<button class="hud-swap-btn" onclick="event.stopPropagation(); window.send('party swap ${idx} ${idx + 1}')" title="與後一位隊員換位" style="background:#1e293b; border:1px solid #475569; color:#94a3b8; border-radius:3px; padding:0 4px; font-size:10px; cursor:pointer;">▶</button>` : ''}
-          </div>
         </div>
-        <div class="member-title" title="${m.roleTitle}">${m.roleTitle}</div>
+        ${m.roleTitle ? `<div class="member-title" title="${m.roleTitle}">${m.roleTitle}</div>` : ''}
         ${m.formationSlotName ? `
-          <div class="member-formation-slot" style="font-size:10px; margin:2px 0; display:inline-flex; align-items:center; gap:4px; padding:1px 6px; border-radius:4px; ${m.formationSlotActive ? 'background:rgba(16,185,129,0.15); border:1px solid #10b981; color:#6ee7b7;' : 'background:rgba(239,68,68,0.15); border:1px solid #ef4444; color:#fca5a5;'}"
+          <div class="member-formation-slot" style="font-size:11px; margin:2px 0; display:inline-flex; align-items:center; gap:4px; padding:2px 6px; border-radius:4px; ${m.formationSlotActive ? 'background:rgba(16,185,129,0.15); border:1px solid #10b981; color:#6ee7b7;' : 'background:rgba(239,68,68,0.15); border:1px solid #ef4444; color:#fca5a5;'}"
                title="陣法孔位：${m.formationSlotName} (要求: ${m.formationSlotRequiredRow === 'FRONT' ? '前衛' : (m.formationSlotRequiredRow === 'BACK' ? '後衛' : '任意')}) - ${m.formationSlotBonus || ''} ${m.formationSlotActive ? '【加成生效中】' : '【站位不符，無法獲得加成】'}">
             <span>💠 ${m.formationSlotName}</span>
-            <span style="font-size:9px; opacity:0.85;">${m.formationSlotBonus ? m.formationSlotBonus : ''}</span>
+            <span style="font-size:10px; opacity:0.9;">${m.formationSlotBonus ? m.formationSlotBonus : ''}</span>
             ${!m.formationSlotActive ? '<span style="font-weight:bold; color:#ef4444;">⚠️需' + (m.formationSlotRequiredRow === 'FRONT' ? '前衛' : '後衛') + '</span>' : ''}
           </div>` : ''}
-        <div class="member-equip-row">
-          ${equipHtml}
-        </div>
       </div>
       <div class="card-bars-side">
         <div class="mini-bar-wrap" title="氣血 HP: ${m.hp}/${m.maxHp}">
@@ -176,7 +144,7 @@ export function renderPartyHud(party) {
           <span class="mini-val" style="color:#e0f2fe; text-shadow:0 0 3px #0284c7; font-weight:bold;">🌀 吟唱: ${m.castingSkillName || '施法'} ${(m.castingRemainingMs / 1000).toFixed(1)}s</span>
         </div>` : ''}
         ${m.isOnGcd && !m.isCasting ? `
-        <div style="font-size:9px; color:#94a3b8; text-align:right; padding-right:2px;" title="全域招式調息中 (GCD)">
+        <div style="font-size:11px; color:#94a3b8; text-align:right; padding-right:2px;" title="全域招式調息中 (GCD)">
           ⏳ 調息 ${(m.remainingGcdMs / 1000).toFixed(1)}s
         </div>` : ''}
         ${m.activeBuffs && Array.isArray(m.activeBuffs) && m.activeBuffs.length > 0 ? `

@@ -491,23 +491,23 @@ body, html {
 
 .member-idx {
   color: #9ca3af;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
 }
 
 .member-name {
   font-weight: bold;
-  font-size: 12px;
+  font-size: 14px;
   color: #f3f4f6;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 68px;
+  max-width: 90px;
 }
 
 .member-row {
-  font-size: 9px;
-  padding: 0px 3px;
+  font-size: 11px;
+  padding: 1px 4px;
   border-radius: 2px;
   line-height: 14px;
 }
@@ -531,26 +531,26 @@ body, html {
 }
 
 .member-title {
-  font-size: 10px;
+  font-size: 11px;
   color: #9ca3af;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100px;
+  max-width: 110px;
 }
 
 /* 右側：縮短緊湊能量條 (HP/MP/SAN) */
 .card-bars-side {
-  width: 96px;
+  width: 110px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .mini-bar-wrap {
   position: relative;
-  height: 12px;
+  height: 14px;
   background: #1f2937;
   border-radius: 2px;
   overflow: hidden;
@@ -606,11 +606,11 @@ body, html {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 9px;
+  font-size: 11px;
   color: #fff;
   text-shadow: 0 0 2px #000;
   font-weight: 600;
-  line-height: 12px;
+  line-height: 14px;
 }
 
 .mini-val.san-normal { color: #a7f3d0; }
@@ -1229,14 +1229,14 @@ body, html {
 }
 
 .enemy-row-badge {
-  font-size: 10px;
-  padding: 1px 4px;
+  font-size: 11px;
+  padding: 1px 5px;
   border-radius: 2px;
 }
 
 .enemy-hp-wrap {
   position: relative;
-  height: 14px;
+  height: 16px;
   background: #0f172a;
   border-radius: 3px;
   overflow: hidden;
@@ -1255,7 +1255,7 @@ body, html {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: bold;
   color: #fff;
   text-shadow: 0 0 2px #000;
@@ -1288,9 +1288,9 @@ body, html {
    暗黑地牢式固定戰備指揮台 (Combat Command Dock，零高度跳動)
    ======================================================== */
 .combat-command-dock {
-  height: 125px;
-  min-height: 125px;
-  max-height: 125px;
+  height: 142px;
+  min-height: 142px;
+  max-height: 142px;
   flex-shrink: 0;
   display: flex;
   gap: 8px;
@@ -1304,16 +1304,16 @@ body, html {
 
 /* 1. 左側英雄面板 */
 .dock-hero-profile {
-  width: 240px;
+  width: 250px;
   flex-shrink: 0;
   background: #111827;
   border: 1px solid #374151;
   border-radius: 6px;
-  padding: 4px 8px;
+  padding: 6px 10px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 2px;
+  gap: 3px;
   overflow: hidden;
   box-sizing: border-box;
   height: 100%;
@@ -1342,11 +1342,11 @@ body, html {
 }
 
 .dock-hero-gcd-badge {
-  font-size: 9px;
+  font-size: 11px;
   color: #f59e0b;
   background: rgba(245, 158, 11, 0.15);
   border: 1px solid rgba(245, 158, 11, 0.4);
-  padding: 1px 4px;
+  padding: 1px 5px;
   border-radius: 4px;
   font-weight: bold;
   display: inline-flex;
@@ -1363,7 +1363,7 @@ body, html {
 }
 
 .dock-hero-name {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: bold;
   color: #38bdf8;
   overflow: hidden;
@@ -1371,17 +1371,17 @@ body, html {
 }
 
 .dock-hero-lvl {
-  font-size: 9px;
+  font-size: 12px;
   color: #94a3b8;
   background: #0f172a;
-  padding: 0 3px;
+  padding: 1px 4px;
   border-radius: 3px;
   border: 1px solid #334155;
   flex-shrink: 0;
 }
 
 .dock-hero-row {
-  font-size: 9px;
+  font-size: 12px;
   font-weight: bold;
   flex-shrink: 0;
 }
@@ -1395,12 +1395,12 @@ body, html {
 }
 
 .dock-hero-class {
-  font-size: 8.5px;
+  font-size: 11px;
   color: #a7f3d0;
   background: #064e3b;
   border: 1px solid #059669;
   border-radius: 3px;
-  padding: 0 3px;
+  padding: 1px 4px;
   flex-shrink: 0;
 }
 
@@ -1485,8 +1485,8 @@ body, html {
   background: #1e293b;
   border: 1px solid #334155;
   color: #94a3b8;
-  font-size: 9px;
-  padding: 1px 5px;
+  font-size: 12px;
+  padding: 2px 7px;
   border-radius: 3px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1504,10 +1504,44 @@ body, html {
   font-weight: bold;
 }
 
+.dock-skill-paginator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dock-page-btn {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #cbd5e1;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dock-page-btn:hover:not(:disabled) {
+  background: #334155;
+  color: #38bdf8;
+  border-color: #38bdf8;
+}
+
+.dock-page-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.dock-page-text {
+  font-size: 11px;
+  color: #94a3b8;
+  font-family: monospace;
+}
+
 .dock-res-badge {
-  font-size: 9px;
+  font-size: 12px;
   font-weight: bold;
-  padding: 1px 5px;
+  padding: 2px 7px;
   border-radius: 3px;
   background: rgba(56, 189, 248, 0.15);
   border: 1px solid rgba(56, 189, 248, 0.4);
@@ -1517,8 +1551,8 @@ body, html {
 
 .dock-skills-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
-  gap: 4px;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 5px;
   overflow-y: auto;
   flex: 1;
   padding-right: 2px;
@@ -1528,7 +1562,7 @@ body, html {
   background: #151d2c;
   border: 1px solid #334155;
   border-radius: 4px;
-  padding: 3px 6px;
+  padding: 4px 7px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1536,7 +1570,7 @@ body, html {
   text-align: left;
   transition: all 0.15s ease;
   position: relative;
-  min-height: 36px;
+  min-height: 40px;
   box-sizing: border-box;
 }
 
@@ -1569,17 +1603,17 @@ body, html {
 .dock-skill-title-row {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   overflow: hidden;
 }
 
 .dock-skill-icon {
-  font-size: 11px;
+  font-size: 14px;
   flex-shrink: 0;
 }
 
 .dock-skill-name {
-  font-size: 10px;
+  font-size: 13px;
   font-weight: bold;
   color: #f1f5f9;
   overflow: hidden;
@@ -1591,12 +1625,12 @@ body, html {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 8.5px;
-  margin-top: 1px;
+  font-size: 11px;
+  margin-top: 2px;
 }
 
 .dock-skill-cost {
-  padding: 0 3px;
+  padding: 1px 4px;
   border-radius: 2px;
   font-weight: bold;
 }
@@ -1620,7 +1654,7 @@ body, html {
 
 .dock-empty-skills {
   color: #64748b;
-  font-size: 10px;
+  font-size: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1630,12 +1664,12 @@ body, html {
 
 /* 3. 右側戰術指令欄 */
 .dock-tactics-deck {
-  width: 105px;
+  width: 120px;
   flex-shrink: 0;
   background: #111827;
   border: 1px solid #374151;
   border-radius: 6px;
-  padding: 4px 6px;
+  padding: 6px 8px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1645,69 +1679,43 @@ body, html {
 }
 
 .dock-tactics-title {
-  font-size: 9.5px;
+  font-size: 12px;
   font-weight: bold;
   color: #94a3b8;
   text-align: center;
   border-bottom: 1px solid #1e293b;
-  padding-bottom: 2px;
+  padding-bottom: 3px;
 }
 
-.dock-swap-row {
+.dock-tactic-actions-list {
   display: flex;
-  gap: 4px;
-}
-
-.dock-swap-btn {
+  flex-direction: column;
+  gap: 5px;
   flex: 1;
-  background: #1e293b;
-  border: 1px solid #475569;
-  color: #94a3b8;
-  border-radius: 3px;
-  padding: 5px 2px;
-  font-size: 10px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  display: flex;
-  align-items: center;
   justify-content: center;
-}
-
-.dock-swap-btn:hover:not(:disabled) {
-  background: #334155;
-  color: #f1f5f9;
-  border-color: #38bdf8;
-}
-
-.dock-swap-btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.dock-tactic-actions-row {
-  display: flex;
-  gap: 4px;
 }
 
 .dock-tactic-sub-btn {
-  flex: 1;
+  width: 100%;
   background: #1e293b;
   border: 1px solid #475569;
   color: #cbd5e1;
-  border-radius: 3px;
-  padding: 5px 2px;
-  font-size: 10px;
+  border-radius: 4px;
+  padding: 6px 4px;
+  font-size: 12px;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
 }
 
 .dock-tactic-sub-btn:hover {
   background: #334155;
+  border-color: #38bdf8;
+  color: #f8fafc;
 }
 
 .btn-tactic-flee {
@@ -1717,6 +1725,7 @@ body, html {
 
 .btn-tactic-flee:hover {
   background: #450a0a !important;
+  border-color: #ef4444 !important;
 }
 
 /* 底部戰鬥資訊列 */

@@ -160,7 +160,7 @@ public class PartyCommand implements PlayerCommand {
       }
       case "enable" -> {
         if (parts.length < 3) {
-          self.reply("用法: party enable <隊員編號: 0~5> <技能ID>");
+          self.reply("用法: party enable <隊員編號: 0~5> <技能ID 或 none/clear> [類別]");
           return;
         }
         try {
@@ -171,6 +171,25 @@ public class PartyCommand implements PlayerCommand {
           }
           String skillId = parts[2].trim();
           PartyMember m = party.getMembers().get(mIdx);
+
+          if (skillId.equalsIgnoreCase("none") || skillId.equalsIgnoreCase("clear") || skillId.equalsIgnoreCase("unequip")) {
+            if (parts.length > 3) {
+              try {
+                var cat = com.example.htmlmud.domain.model.enums.SkillCategory.valueOf(parts[3].trim().toUpperCase());
+                m.enableSkill(cat, null);
+                self.reply("【武學卸下】已卸下成員「" + m.getName() + "」的 [" + cat + "] 主修武學，還原為預設！");
+              } catch (IllegalArgumentException e) {
+                self.reply("無效的功法類別: " + parts[3]);
+              }
+            } else {
+              var currentCat = PartyMember.toSkillCategory(m.getMainHandWeaponType());
+              m.enableSkill(currentCat, null);
+              self.reply("【武學卸下】已卸下成員「" + m.getName() + "」當前兵刃套路，還原為基礎普攻！");
+            }
+            broadcastDrpgState(self);
+            return;
+          }
+
           var skillOpt = templateReader.findSkill(skillId);
           if (skillOpt.isEmpty()) {
             self.reply("找不到指定的武學或道術: " + skillId);
@@ -178,8 +197,41 @@ public class PartyCommand implements PlayerCommand {
           }
           var skill = skillOpt.get();
           var cat = PartyMember.resolveSkillCategory(skill);
+          // 若為武器套路且支援當前手持兵刃，優先綁定為當前主手武器分類
+          var currentWeaponCat = PartyMember.toSkillCategory(m.getMainHandWeaponType());
+          if (PartyMember.supportsSkillCategory(skill, currentWeaponCat)) {
+            cat = currentWeaponCat;
+          }
           m.enableSkill(cat, skillId);
           self.reply("【武學掛載】已將成員「" + m.getName() + "」的 [" + cat + "] 分類主修武學設定為【" + skill.getName() + "】！");
+          broadcastDrpgState(self);
+        } catch (NumberFormatException e) {
+          self.reply("隊員編號格式錯誤，請輸入數字 (0~5)。");
+        }
+      }
+      case "disable" -> {
+        if (parts.length < 2) {
+          self.reply("用法: party disable <隊員編號: 0~5> [類別: BLADE|SWORD|PARRY|DODGE|FORCE]");
+          return;
+        }
+        try {
+          int mIdx = Integer.parseInt(parts[1]);
+          if (mIdx < 0 || mIdx >= party.getMembers().size()) {
+            self.reply("隊員編號超出範圍 (0 ~ " + (party.getMembers().size() - 1) + ")！");
+            return;
+          }
+          PartyMember m = party.getMembers().get(mIdx);
+          com.example.htmlmud.domain.model.enums.SkillCategory cat = null;
+          if (parts.length > 2) {
+            try {
+              cat = com.example.htmlmud.domain.model.enums.SkillCategory.valueOf(parts[2].trim().toUpperCase());
+            } catch (IllegalArgumentException ignored) {}
+          }
+          if (cat == null) {
+            cat = PartyMember.toSkillCategory(m.getMainHandWeaponType());
+          }
+          m.enableSkill(cat, null);
+          self.reply("【武學卸下】已卸下成員「" + m.getName() + "」的 [" + cat + "] 主修武學，還原為預設！");
           broadcastDrpgState(self);
         } catch (NumberFormatException e) {
           self.reply("隊員編號格式錯誤，請輸入數字 (0~5)。");

@@ -39,6 +39,7 @@ function togglePartyModal(forceOpen) {
   } else {
     modal.classList.add('hidden');
     drpgState.equipPicker = null;
+    drpgState.skillPicker = null;
     if (document.activeElement) {
       document.activeElement.blur();
     }
@@ -57,6 +58,16 @@ function openPartyModal(memberIdx) {
 }
 
 function closePartyModal() {
+  if (drpgState.equipPicker) {
+    drpgState.equipPicker = null;
+    renderPartyModal();
+    return;
+  }
+  if (drpgState.skillPicker) {
+    drpgState.skillPicker = null;
+    renderPartyModal();
+    return;
+  }
   togglePartyModal(false);
   if (document.activeElement) {
     document.activeElement.blur();
@@ -653,6 +664,8 @@ function changeFormationPage(delta) {
 
 function switchMainMenuTab(tab, subOption) {
   drpgState.mainMenuTab = tab || 'FORMATION';
+  drpgState.equipPicker = null;
+  drpgState.skillPicker = null;
   if (subOption) {
     if (tab === 'SYSTEM') drpgState.mainMenuSystemMode = subOption;
     if (tab === 'FORMATION') drpgState.formationViewMode = subOption;
@@ -665,6 +678,8 @@ function switchMainMenuTab(tab, subOption) {
 }
 
 function openMainMenu(tab, subOption) {
+  drpgState.equipPicker = null;
+  drpgState.skillPicker = null;
   if (tab) {
     drpgState.mainMenuTab = tab;
   }
@@ -894,7 +909,7 @@ function renderPartyModal() {
           subHeaderEl.innerHTML = `
             <div style="display:flex;align-items:center;gap:12px;">
               <button class="act-btn btn-sm" onclick="window.closeEquipPicker()" style="font-size:13px;padding:4px 12px;background:#334155;">
-                ◀ 返回 5人裝備總覽
+                ◀ 返回全隊裝備總覽
               </button>
               <span style="font-size:15px;font-weight:bold;color:#f1f5f9;">
                 🛡️ 裝備挑選與 Diff 比較 - #${pMemIdx + 1} ${pMem ? pMem.name : ''} 的【${drpgState.equipPicker.slotLabel}】
@@ -908,6 +923,27 @@ function renderPartyModal() {
         if (contentEl) {
           contentEl.innerHTML = renderEquipmentDiffPickerView(party);
         }
+      } else if (drpgState.skillPicker) {
+        const pMemIdx = drpgState.skillPicker.memberIdx;
+        const pMem = (party.members && party.members[pMemIdx]) ? party.members[pMemIdx] : m;
+        if (subHeaderEl) {
+          subHeaderEl.innerHTML = `
+            <div style="display:flex;align-items:center;gap:12px;">
+              <button class="act-btn btn-sm" onclick="window.closeSkillPicker()" style="font-size:13px;padding:4px 12px;background:#334155;">
+                ◀ 返回全隊裝備總覽
+              </button>
+              <span style="font-size:15px;font-weight:bold;color:#f1f5f9;">
+                🧘 功法配置與挑選 - #${pMemIdx + 1} ${pMem ? pMem.name : ''} 的【${drpgState.skillPicker.categoryLabel}】
+              </span>
+            </div>
+            <div style="font-size:13px;color:#94a3b8;">
+              挑選合適的主修套路或常駐心法；未裝配時自動以角色基礎武學作為預設值
+            </div>
+          `;
+        }
+        if (contentEl) {
+          contentEl.innerHTML = renderSkillPickerView(party);
+        }
       } else {
         if (subHeaderEl) {
           subHeaderEl.innerHTML = `
@@ -915,7 +951,7 @@ function renderPartyModal() {
               <span>🛡️ 全隊裝備與功法一覽 (${(party.members || []).length} / 5 人)</span>
             </div>
             <div style="font-size:13px;color:#94a3b8;display:flex;align-items:center;gap:12px;">
-              <span>💡 點擊任一隊員裝備槽位，即可展開裝備挑選與 Diff 比較</span>
+              <span>💡 點擊裝備或功法槽位，即可展開專屬挑選與配置視窗</span>
               <button class="act-btn btn-sm" onclick="toggleBagDrawer(true)" style="font-size:12px;padding:3px 10px;background:#1e293b;" title="開啟右側獨立行囊抽屜">🎒 側欄行囊 (B)</button>
             </div>
           `;
@@ -1268,8 +1304,8 @@ function renderMemberSkillsView(m, memberIdx, party, skillTab) {
   let items = [];
 
   if (curTab === 'FIELD_USABLE') {
-    // 探索可用：治療、道心平復、修煉或輔助絕學
-    skills.forEach(s => {
+    // 探索可用：治療、道心平復、修煉或輔助絕學 (過濾 basic_*)
+    skills.filter(s => s.id && !s.id.startsWith('basic_')).forEach(s => {
       const isHealOrSan = (s.description && (s.description.includes('氣血') || s.description.includes('道心') || s.description.includes('治療') || s.description.includes('清心') || s.description.includes('調息'))) || (s.category && (s.category === 'HEAL' || s.category === 'SUPPORT'));
       if (isHealOrSan) {
         items.push({
@@ -1300,8 +1336,8 @@ function renderMemberSkillsView(m, memberIdx, party, skillTab) {
       badgeColor: '#38bdf8'
     });
   } else if (curTab === 'ACTIVE') {
-    // 主動絕學：主力武器套路 + 所有戰鬥絕技
-    stances.forEach(st => {
+    // 主動絕學：主力武器套路 + 所有戰鬥絕技 (過濾 basic_*)
+    stances.filter(st => st.skillId && !st.skillId.startsWith('basic_')).forEach(st => {
       items.push({
         id: st.skillId,
         name: st.skillName,
@@ -1316,7 +1352,7 @@ function renderMemberSkillsView(m, memberIdx, party, skillTab) {
       });
     });
 
-    skills.forEach(s => {
+    skills.filter(s => s.id && !s.id.startsWith('basic_')).forEach(s => {
       items.push({
         id: s.id,
         name: s.name,
@@ -1331,8 +1367,8 @@ function renderMemberSkillsView(m, memberIdx, party, skillTab) {
       });
     });
   } else {
-    // ALL：全部道法 (絕學 + 套路 + 身法/招架/心法)
-    stances.forEach(st => {
+    // ALL：全部道法 (絕學 + 套路 + 身法/招架/心法，過濾 basic_*)
+    stances.filter(st => st.skillId && !st.skillId.startsWith('basic_')).forEach(st => {
       items.push({
         id: st.skillId,
         name: st.skillName,
@@ -1346,7 +1382,7 @@ function renderMemberSkillsView(m, memberIdx, party, skillTab) {
       });
     });
 
-    skills.forEach(s => {
+    skills.filter(s => s.id && !s.id.startsWith('basic_')).forEach(s => {
       items.push({
         id: s.id,
         name: s.name,
@@ -1359,7 +1395,7 @@ function renderMemberSkillsView(m, memberIdx, party, skillTab) {
       });
     });
 
-    passives.forEach(p => {
+    passives.filter(p => p.skillId && !p.skillId.startsWith('basic_')).forEach(p => {
       let icon = '🧘';
       if (p.category === 'DODGE') icon = '💨';
       else if (p.category === 'PARRY') icon = '🛡️';
@@ -1369,6 +1405,7 @@ function renderMemberSkillsView(m, memberIdx, party, skillTab) {
         id: p.skillId,
         name: p.skillName,
         icon: icon,
+        category: p.category,
         typeLabel: p.categoryName || '常駐心法',
         cost: '被動常駐',
         desc: p.description || '常駐運轉之防禦或內功心法。',
@@ -1391,7 +1428,7 @@ function renderMemberSkillsView(m, memberIdx, party, skillTab) {
   // 3. 網格卡片生成
   let gridHtml = '';
   if (pagedItems.length === 0) {
-    gridHtml = '<div style="color:#94a3b8;padding:30px;grid-column:1/-1;text-align:center;">此分類下尚無武學或道法記錄。</div>';
+    gridHtml = '<div style="color:#94a3b8;padding:30px;grid-column:1/-1;text-align:center;">此分類下尚無已修習之進階武學或道法記錄。</div>';
   } else {
     gridHtml = pagedItems.map(it => {
       let actionBtn = '';
@@ -1403,13 +1440,23 @@ function renderMemberSkillsView(m, memberIdx, party, skillTab) {
         }
       } else if (it.isStance) {
         if (it.isCurrent) {
-          actionBtn = `<span style="font-size:12px;color:#34d399;font-weight:bold;background:rgba(52,211,153,0.15);padding:2px 8px;border-radius:4px;border:1px solid #34d399;">✔ 當前主力</span>`;
+          actionBtn = `
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-size:12px;color:#34d399;font-weight:bold;background:rgba(52,211,153,0.15);padding:2px 8px;border-radius:4px;border:1px solid #34d399;">✔ 當前主力</span>
+              <button class="act-btn btn-sm" onclick="send('party enable ${memberIdx} none')" style="font-size:11px;padding:2px 6px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;" title="卸下還原為基礎預設">✕ 卸下</button>
+            </div>
+          `;
         } else {
           actionBtn = `<button class="act-btn btn-sm" onclick="send('party enable ${memberIdx} ${it.id}')" style="font-size:12px;padding:3px 10px;">⚔️ 設為主力</button>`;
         }
       } else if (it.isPassive) {
         if (it.isCurrent) {
-          actionBtn = `<span style="font-size:12px;color:#c084fc;font-weight:bold;background:rgba(192,132,252,0.15);padding:2px 8px;border-radius:4px;border:1px solid #c084fc;">✔ 運轉中</span>`;
+          actionBtn = `
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-size:12px;color:#c084fc;font-weight:bold;background:rgba(192,132,252,0.15);padding:2px 8px;border-radius:4px;border:1px solid #c084fc;">✔ 運轉中</span>
+              <button class="act-btn btn-sm" onclick="send('party enable ${memberIdx} none ${it.category || ''}')" style="font-size:11px;padding:2px 6px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;" title="卸下還原為基礎預設">✕ 卸下</button>
+            </div>
+          `;
         } else {
           actionBtn = `<button class="act-btn btn-sm" onclick="send('party enable ${memberIdx} ${it.id}')" style="font-size:12px;padding:3px 10px;">🧘 裝配心法</button>`;
         }
@@ -1608,6 +1655,17 @@ function renderMemberStatusDetailHtml(m, selIdx, party) {
   `;
 }
 
+function getPassiveSkillDisplayName(m, category) {
+  if (!m || !m.passiveSlots || !m.passiveSlots[category]) return null;
+  const skillId = m.passiveSlots[category];
+  if (!skillId || skillId.startsWith('basic_')) return null;
+  if (m.availablePassives) {
+    const found = m.availablePassives.find(p => p.skillId === skillId);
+    if (found && found.skillName) return found.skillName;
+  }
+  return skillId;
+}
+
 /**
  * 渲染成員裝備與被動功法畫面 (Equipment View)
  */
@@ -1661,20 +1719,34 @@ function renderMemberEquipHtml(m, selIdx, party) {
     }
   }
 
-  // 被動功法欄位 (Weapon, Parry, Dodge, Force)
+  // 被動功法欄位 (Stance, Parry, Dodge, Force)
   const passiveCategories = [
-    { key: 'WEAPON', label: '兵刃套路', icon: '⚔️', val: m.basicSkillName || '基礎套路' },
-    { key: 'PARRY', label: '護身招架', icon: '🛡️', val: (m.passiveSlots && m.passiveSlots.PARRY) || '基本招架' },
-    { key: 'DODGE', label: '靈動身法', icon: '💨', val: (m.passiveSlots && m.passiveSlots.DODGE) || '基本身法' },
-    { key: 'FORCE', label: '玄門心法', icon: '🧘', val: (m.passiveSlots && m.passiveSlots.FORCE) || '吐納內功' }
+    { key: 'STANCE', label: '兵刃套路', icon: '⚔️', val: m.basicSkillName || null },
+    { key: 'PARRY', label: '護身招架', icon: '🛡️', val: getPassiveSkillDisplayName(m, 'PARRY') },
+    { key: 'DODGE', label: '靈動身法', icon: '💨', val: getPassiveSkillDisplayName(m, 'DODGE') },
+    { key: 'FORCE', label: '玄門心法', icon: '🧘', val: getPassiveSkillDisplayName(m, 'FORCE') }
   ];
 
-  let passivesHtml = passiveCategories.map(p => `
-    <div style="background:#0f172a;border:1px solid #334155;border-radius:6px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-size:13px;color:#94a3b8;">${p.icon} ${p.label}</span>
-      <span style="font-size:13px;color:#38bdf8;font-weight:bold;">${p.val}</span>
-    </div>
-  `).join('');
+  let passivesHtml = passiveCategories.map(p => {
+    if (p.val) {
+      return `
+        <div class="equip-slot-item-row" onclick="window.openSkillPicker(${selIdx}, '${p.key}', '${p.label}')" title="點擊更換功法" style="background:#0f172a;border:1px solid #334155;border-radius:6px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;">
+          <span style="font-size:13px;color:#94a3b8;">${p.icon} ${p.label}</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:13px;color:#38bdf8;font-weight:bold;">${p.val}</span>
+            <button class="act-btn btn-sm" onclick="event.stopPropagation();window.confirmUnequipSkill(${selIdx}, '${p.key}');" style="font-size:12px;padding:2px 6px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;" title="卸下還原為預設">✕</button>
+          </div>
+        </div>
+      `;
+    } else {
+      return `
+        <div class="equip-slot-item-row is-empty" onclick="window.openSkillPicker(${selIdx}, '${p.key}', '${p.label}')" title="點擊挑選功法" style="background:#0f172a;border:1px dashed #334155;border-radius:6px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;">
+          <span style="font-size:13px;color:#64748b;">${p.icon} ${p.label}</span>
+          <span style="font-size:13px;color:#64748b;">(無) <span style="color:#94a3b8;">+ 選擇功法</span></span>
+        </div>
+      `;
+    }
+  }).join('');
 
   return `
     <div style="display:flex;flex-direction:column;gap:14px;">
@@ -1798,6 +1870,47 @@ function confirmUnequipItem(slotAlias, memberIdx) {
   drpgState.equipPicker = null;
 }
 
+function openSkillPicker(memberIdx, category, categoryLabel) {
+  drpgState.skillPicker = {
+    memberIdx,
+    category,
+    categoryLabel,
+    selectedSkillId: null,
+    page: 1
+  };
+  renderPartyModal();
+}
+
+function closeSkillPicker() {
+  drpgState.skillPicker = null;
+  renderPartyModal();
+}
+
+function selectSkillPickerItem(skillId) {
+  if (drpgState.skillPicker) {
+    drpgState.skillPicker.selectedSkillId = skillId;
+    renderPartyModal();
+  }
+}
+
+function changeSkillPickerPage(delta) {
+  if (drpgState.skillPicker) {
+    drpgState.skillPicker.page = Math.max(1, (drpgState.skillPicker.page || 1) + delta);
+    renderPartyModal();
+  }
+}
+
+function confirmEquipSkill(memberIdx, skillId, category) {
+  if (!skillId) return;
+  send(`party enable ${memberIdx} ${skillId} ${category || ''}`);
+  drpgState.skillPicker = null;
+}
+
+function confirmUnequipSkill(memberIdx, category) {
+  send(`party enable ${memberIdx} none ${category || ''}`);
+  drpgState.skillPicker = null;
+}
+
 /**
  * 5 隊員直排全隊裝備總覽 (5-column vertical overview)
  */
@@ -1874,18 +1987,36 @@ function renderTeamEquipmentOverview(party) {
 
     // 4 個被動功法槽位
     const passives = [
-      { icon: '⚔️', label: '兵刃套路', val: m.basicSkillName || '基礎套路' },
-      { icon: '🛡️', label: '護身招架', val: (m.passiveSlots && m.passiveSlots.PARRY) || '基本招架' },
-      { icon: '💨', label: '靈動身法', val: (m.passiveSlots && m.passiveSlots.DODGE) || '基本身法' },
-      { icon: '🟣', label: '玄門心法', val: (m.passiveSlots && m.passiveSlots.FORCE) || '吐納內功' }
+      { key: 'STANCE', icon: '⚔️', label: '兵刃套路', val: m.basicSkillName || null },
+      { key: 'PARRY', icon: '🛡️', label: '護身招架', val: getPassiveSkillDisplayName(m, 'PARRY') },
+      { key: 'DODGE', icon: '💨', label: '靈動身法', val: getPassiveSkillDisplayName(m, 'DODGE') },
+      { key: 'FORCE', icon: '🟣', label: '玄門心法', val: getPassiveSkillDisplayName(m, 'FORCE') }
     ];
 
-    const passivesHtml = passives.map(p => `
-      <div style="background:#090e1a;border:1px solid #1e293b;border-radius:4px;padding:5px 8px;display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-size:13px;color:#94a3b8;">${p.icon} ${p.label}</span>
-        <span style="font-size:13px;color:#38bdf8;font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px;" title="${p.val}">${p.val}</span>
-      </div>
-    `).join('');
+    const passivesHtml = passives.map(p => {
+      if (p.val) {
+        return `
+          <div class="equip-slot-item-row" onclick="window.openSkillPicker(${idx}, '${p.key}', '${p.label}')" title="點擊更換功法">
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="font-size:13px;color:#94a3b8;">${p.icon} ${p.label}</span>
+                <span style="font-size:13px;font-weight:bold;color:#38bdf8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.val}</span>
+              </div>
+            </div>
+            <button class="act-btn btn-sm" onclick="event.stopPropagation();window.confirmUnequipSkill(${idx}, '${p.key}');" style="font-size:13px;padding:2px 8px;margin-left:6px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;" title="卸下還原為基礎預設">
+              ✕
+            </button>
+          </div>
+        `;
+      } else {
+        return `
+          <div class="equip-slot-item-row is-empty" onclick="window.openSkillPicker(${idx}, '${p.key}', '${p.label}')" title="點擊挑選功法">
+            <span style="font-size:13px;color:#64748b;">${p.icon} ${p.label}</span>
+            <span style="font-size:13px;color:#64748b;">(無) <span style="color:#94a3b8;">+ 選擇功法</span></span>
+          </div>
+        `;
+      }
+    }).join('');
 
     return `
       <div class="equip-member-col">
@@ -1939,8 +2070,9 @@ function renderTeamEquipmentOverview(party) {
 
         <!-- 4 部位被動功法 -->
         <div style="display:flex;flex-direction:column;gap:6px;margin-top:auto;">
-          <div style="font-size:13px;font-weight:bold;color:#cbd5e1;">
+          <div style="font-size:13px;font-weight:bold;color:#cbd5e1;display:flex;justify-content:space-between;align-items:center;">
             <span>🧘 主修功法 (4 部位)</span>
+            <span style="font-size:13px;color:#64748b;">點擊設定</span>
           </div>
           ${passivesHtml}
         </div>
@@ -2212,6 +2344,238 @@ function renderEquipmentDiffPickerView(party) {
 }
 
 /**
+ * 功法與套路挑選子視圖 (Skill Picker Sub-view)
+ * 支援兵刃套路依手持武器類型動態過濾、心法分類過濾、20 筆單頁分頁與還原預設
+ */
+function renderSkillPickerView(party) {
+  const picker = drpgState.skillPicker;
+  if (!picker) return '';
+
+  const memberIdx = picker.memberIdx || 0;
+  const m = (party.members && party.members[memberIdx]) ? party.members[memberIdx] : null;
+  if (!m) return '<div style="color:#94a3b8;padding:20px;font-size:14px;">隊員資料異常。</div>';
+
+  const category = picker.category; // 'STANCE', 'PARRY', 'DODGE', 'FORCE'
+  const categoryLabel = picker.categoryLabel;
+
+  // 1. 取得主手武器資訊
+  const mainWeapon = getMemberSlotItem(m, 'MAIN_HAND');
+  const weaponName = mainWeapon ? mainWeapon.name : '空手';
+
+  // 2. 候選功法收集 (徹底過濾 basic_*)
+  let candidates = [];
+  let curEquippedName = null;
+
+  if (category === 'STANCE') {
+    curEquippedName = m.basicSkillName || null;
+    const rawStances = m.availableStances || [];
+    candidates = rawStances.filter(st => st.skillId && !st.skillId.startsWith('basic_')).map(st => {
+      let icon = '⚔️';
+      const sId = (st.skillId || '').toLowerCase();
+      if (sId.includes('blade')) icon = '🗡️';
+      else if (sId.includes('axe')) icon = '🪓';
+      else if (sId.includes('staff') || sId.includes('stick')) icon = '🦯';
+      else if (sId.includes('fist') || sId.includes('unarmed')) icon = '👊';
+      else if (sId.includes('spear')) icon = '🔱';
+      return {
+        id: st.skillId,
+        name: st.skillName,
+        icon: icon,
+        typeLabel: '兵刃套路',
+        cost: '自動普攻',
+        desc: st.description || '隨兵刃揮舞自動施展之套路招式。',
+        isCurrent: Boolean(st.enabled || (curEquippedName && curEquippedName === st.skillName))
+      };
+    });
+  } else {
+    // PARRY, DODGE, FORCE
+    curEquippedName = getPassiveSkillDisplayName(m, category);
+    const curEquippedId = (m.passiveSlots && m.passiveSlots[category]) || null;
+    const rawPassives = m.availablePassives || [];
+    candidates = rawPassives.filter(p => p.category === category && p.skillId && !p.skillId.startsWith('basic_')).map(p => {
+      let icon = '🧘';
+      if (p.category === 'DODGE') icon = '💨';
+      else if (p.category === 'PARRY') icon = '🛡️';
+      else if (p.category === 'FORCE') icon = '🟣';
+      return {
+        id: p.skillId,
+        name: p.skillName,
+        icon: icon,
+        typeLabel: p.categoryName || categoryLabel,
+        cost: '常駐運轉',
+        desc: p.description || '常駐運轉之防禦或內功心法。',
+        isCurrent: Boolean(p.isCurrentEnabled || (curEquippedId && curEquippedId === p.skillId) || (curEquippedName && curEquippedName === p.skillName))
+      };
+    });
+  }
+
+  // 3. 預設選中第一項
+  if (!picker.selectedSkillId && candidates.length > 0) {
+    picker.selectedSkillId = candidates[0].id;
+  }
+
+  // 4. 20 筆單頁分頁計算
+  const PAGE_SIZE = 20;
+  const totalPages = Math.max(1, Math.ceil(candidates.length / PAGE_SIZE));
+  const curPage = Math.min(Math.max(1, picker.page || 1), totalPages);
+  picker.page = curPage;
+
+  const startIdx = (curPage - 1) * PAGE_SIZE;
+  const pagedCandidates = candidates.slice(startIdx, startIdx + PAGE_SIZE);
+
+  // 5. 左側候選列表 HTML
+  let candidateListHtml = '';
+  if (pagedCandidates.length === 0) {
+    let emptyReason = '';
+    if (category === 'STANCE') {
+      emptyReason = `尚未習得契合主手武器【${weaponName}】之進階套路，將以基礎武學（預設）應戰。`;
+    } else {
+      emptyReason = `尚未領悟此類進階常駐心法，將以基礎心法（預設）運轉。`;
+    }
+    candidateListHtml = `
+      <div style="padding:40px 20px;text-align:center;color:#94a3b8;display:flex;flex-direction:column;gap:12px;align-items:center;grid-column:1/-1;">
+        <span style="font-size:36px;">📜</span>
+        <span style="font-size:15px;color:#e2e8f0;font-weight:bold;">尚無可啟用的【${categoryLabel}】</span>
+        <span style="font-size:13px;color:#64748b;">${emptyReason}</span>
+        <span style="font-size:12px;color:#475569;">可於秘境古塚中研讀武道秘笈以領悟新功法。</span>
+      </div>
+    `;
+  } else {
+    candidateListHtml = pagedCandidates.map(it => {
+      const isSelected = (it.id === picker.selectedSkillId);
+      return `
+        <div class="equip-candidate-card ${isSelected ? 'is-selected' : ''}" onclick="window.selectSkillPickerItem('${it.id}')">
+          <div style="font-size:24px;width:40px;height:40px;background:#0b1120;border:1px solid #334155;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            ${it.icon}
+          </div>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-size:14px;font-weight:bold;color:#f1f5f9;">${it.name}</span>
+              ${it.isCurrent ? '<span style="font-size:11px;color:#34d399;background:rgba(52,211,153,0.15);padding:1px 6px;border-radius:3px;border:1px solid #34d399;">✔ 當前裝備</span>' : ''}
+              ${isSelected ? '<span style="font-size:11px;color:#38bdf8;background:rgba(56,189,248,0.15);padding:1px 6px;border-radius:3px;">選取中</span>' : ''}
+            </div>
+            <div style="font-size:12px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${it.desc}</div>
+          </div>
+          ${it.isCurrent ? `
+            <button class="act-btn btn-sm btn-red" onclick="event.stopPropagation();window.confirmUnequipSkill(${memberIdx}, '${category}');" style="font-size:12px;padding:3px 10px;flex-shrink:0;">
+              ✕ 卸下
+            </button>
+          ` : `
+            <button class="act-btn btn-sm btn-blue" onclick="event.stopPropagation();window.confirmEquipSkill(${memberIdx}, '${it.id}', '${category}');" style="font-size:12px;padding:3px 10px;flex-shrink:0;">
+              ⚡ 啟用
+            </button>
+          `}
+        </div>
+      `;
+    }).join('');
+  }
+
+  // 6. 右側詳情面板
+  const selectedCandidate = candidates.find(c => c.id === picker.selectedSkillId);
+  let detailPanelHtml = '';
+  if (!selectedCandidate) {
+    detailPanelHtml = `
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="background:#1e293b;border:1px solid #334155;border-radius:6px;padding:16px;color:#94a3b8;text-align:center;font-size:13px;">
+          ${candidates.length > 0 ? '請從左側點選一門功法查看詳情' : '當前分類無可選功法'}
+        </div>
+        ${curEquippedName ? `
+          <div style="background:#1e293b;border:1px solid #334155;border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:8px;">
+            <div style="font-size:13px;font-weight:bold;color:#cbd5e1;">當前運轉功法：</div>
+            <div style="font-size:15px;font-weight:bold;color:#38bdf8;">${curEquippedName}</div>
+            <button class="act-btn btn-sm btn-red" onclick="window.confirmUnequipSkill(${memberIdx}, '${category}')" style="font-size:13px;padding:6px 14px;margin-top:6px;">
+              ✕ 卸下還原為預設 (無)
+            </button>
+          </div>
+        ` : `
+          <div style="background:#1e293b;border:1px solid #334155;border-radius:6px;padding:14px;color:#64748b;font-size:13px;">
+            當前狀態：(無) ‧ 系統預設運轉基礎武學。
+          </div>
+        `}
+      </div>
+    `;
+  } else {
+    detailPanelHtml = `
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <!-- 頂部功法卡片 -->
+        <div style="background:#1e293b;border:1px solid #38bdf8;border-radius:6px;padding:12px;display:flex;align-items:center;gap:12px;">
+          <div style="font-size:28px;width:48px;height:48px;background:#0b1120;border:1px solid #334155;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            ${selectedCandidate.icon}
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:16px;font-weight:bold;color:#f1f5f9;">${selectedCandidate.name}</div>
+            <div style="font-size:12px;color:#38bdf8;margin-top:2px;">${selectedCandidate.typeLabel} ‧ ${selectedCandidate.cost}</div>
+          </div>
+          ${selectedCandidate.isCurrent ? `
+            <span style="font-size:12px;color:#34d399;font-weight:bold;background:rgba(52,211,153,0.15);padding:3px 10px;border-radius:4px;border:1px solid #34d399;">✔ 運轉中</span>
+          ` : ''}
+        </div>
+
+        <!-- 功法描述與口訣 -->
+        <div style="background:#1e293b;border:1px solid #334155;border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:13px;font-weight:bold;color:#cbd5e1;">📜 功法要訣與效果：</div>
+          <div style="font-size:13px;color:#cbd5e1;line-height:1.5;">${selectedCandidate.desc}</div>
+        </div>
+
+        <!-- 兵刃契合提示 (若為 STANCE) -->
+        ${category === 'STANCE' ? `
+          <div style="background:rgba(16,185,129,0.12);border:1px solid #10b981;border-radius:6px;padding:10px 14px;font-size:13px;color:#a7f3d0;line-height:1.4;">
+            <span>✔ 當前手持兵刃【${weaponName}】，此套路已完全契合，啟用後自動取代普攻！</span>
+          </div>
+        ` : ''}
+
+        <!-- 預設機制說明提示 -->
+        <div style="background:rgba(15,23,42,0.8);border:1px dashed #475569;border-radius:6px;padding:10px 14px;font-size:12px;color:#94a3b8;line-height:1.4;">
+          <span>💡 提示：若未裝配任何進階功法，系統將自動以角色預設基礎武學（如基本招架、基本身法）運轉，畫面上顯示為「(無)」。</span>
+        </div>
+
+        <!-- 操作按鈕列 -->
+        <div style="display:flex;gap:10px;margin-top:6px;">
+          ${selectedCandidate.isCurrent ? `
+            <button class="act-btn btn-red" onclick="window.confirmUnequipSkill(${memberIdx}, '${category}')" style="flex:1;font-size:14px;font-weight:bold;padding:10px 16px;">
+              ✕ 卸下當前套路 (還原為預設)
+            </button>
+          ` : `
+            <button class="act-btn btn-blue" onclick="window.confirmEquipSkill(${memberIdx}, '${selectedCandidate.id}', '${category}')" style="flex:1;font-size:14px;font-weight:bold;padding:10px 16px;">
+              ✨ 即刻啟用此功法
+            </button>
+            ${curEquippedName ? `
+              <button class="act-btn btn-red" onclick="window.confirmUnequipSkill(${memberIdx}, '${category}')" style="font-size:13px;padding:10px 14px;">
+                ✕ 還原預設
+              </button>
+            ` : ''}
+          `}
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="equip-diff-view">
+      <!-- 左側候選列表 -->
+      <div class="equip-candidate-list-col">
+        <div style="font-size:14px;font-weight:bold;color:#e2e8f0;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+          <span>📖 可啟用的【${categoryLabel}】(${candidates.length})</span>
+          <span style="font-size:13px;color:#94a3b8;">每頁上限 20 筆</span>
+        </div>
+        <div class="equip-candidate-grid">
+          ${candidateListHtml}
+        </div>
+        ${renderPaginationBar(curPage, totalPages, candidates.length, 'window.changeSkillPickerPage')}
+      </div>
+
+      <!-- 右側詳情面板 -->
+      <div class="equip-diff-panel-col">
+        <div style="font-size:15px;font-weight:bold;color:#38bdf8;border-bottom:1px solid #334155;padding-bottom:8px;">
+          ☯️ 功法詳情與運轉狀態
+        </div>
+        ${detailPanelHtml}
+      </div>
+    </div>
+  `;
+}
+
+/**
  * 渲染單一成員的 WoW 經典修仙武學典籍 (Spellbook)
  * 陣法奧義已抽離至全隊陣法面板，此處專注於兵刃套路與門派絕技
  */
@@ -2475,6 +2839,13 @@ if (typeof window !== 'undefined') {
   window.confirmUnequipItem = confirmUnequipItem;
   window.renderTeamEquipmentOverview = renderTeamEquipmentOverview;
   window.renderEquipmentDiffPickerView = renderEquipmentDiffPickerView;
+  window.openSkillPicker = openSkillPicker;
+  window.closeSkillPicker = closeSkillPicker;
+  window.selectSkillPickerItem = selectSkillPickerItem;
+  window.changeSkillPickerPage = changeSkillPickerPage;
+  window.confirmEquipSkill = confirmEquipSkill;
+  window.confirmUnequipSkill = confirmUnequipSkill;
+  window.renderSkillPickerView = renderSkillPickerView;
 }
 
 export {
@@ -2511,5 +2882,12 @@ export {
   confirmEquipItem,
   confirmUnequipItem,
   renderTeamEquipmentOverview,
-  renderEquipmentDiffPickerView
+  renderEquipmentDiffPickerView,
+  openSkillPicker,
+  closeSkillPicker,
+  selectSkillPickerItem,
+  changeSkillPickerPage,
+  confirmEquipSkill,
+  confirmUnequipSkill,
+  renderSkillPickerView
 };
