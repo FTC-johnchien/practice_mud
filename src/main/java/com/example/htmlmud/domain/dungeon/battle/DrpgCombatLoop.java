@@ -233,6 +233,7 @@ public class DrpgCombatLoop {
                     broadcastLog(player, ctx, "\u001B[1;35m🔥【魔道凶威】" + member.getName() + " 狂亂暴怒，爆發走火入魔之煞氣，對【" + target.getName() + "】造成 " + boostedDmg + " 點雙倍狂暴打擊！\u001B[0m");
                     if (!target.isAlive()) {
                       broadcastLog(player, ctx, "\u001B[1;32m💥【" + target.getName() + "】被斬殺倒地！\u001B[0m");
+                      ctx.checkEnemyRowAdvancement();
                       if (ctx.isAllEnemiesDead()) {
                         ctx.setState(BattleState.VICTORY);
                         break;
@@ -296,6 +297,7 @@ public class DrpgCombatLoop {
 
               if (!target.isAlive()) {
                 broadcastLog(player, ctx, "\u001B[1;32m💥【" + target.getName() + "】被斬殺倒地！\u001B[0m");
+                ctx.checkEnemyRowAdvancement();
                 if (ctx.isAllEnemiesDead()) {
                   ctx.setState(BattleState.VICTORY);
                   break;
@@ -567,7 +569,10 @@ public class DrpgCombatLoop {
             e.addThreat(member.getId(), dmg + skill.getThreatBonus());
             broadcastLog(player, ctx, "\u001B[1;36m   ↳ 擊中【" + e.getName() + "】造成 " + dmg + " 點傷害！\u001B[0m");
             if (skill.isStun()) e.applyStun(skill.getStunDurationSeconds() * 1000L);
-            if (!e.isAlive()) broadcastLog(player, ctx, "\u001B[1;32m💥【" + e.getName() + "】在靈力轟擊下灰飛煙滅！\u001B[0m");
+            if (!e.isAlive()) {
+              broadcastLog(player, ctx, "\u001B[1;32m💥【" + e.getName() + "】在靈力轟擊下灰飛煙滅！\u001B[0m");
+              ctx.checkEnemyRowAdvancement();
+            }
           }
         }
         if (ctx.isAllEnemiesDead()) ctx.setState(BattleState.VICTORY);
@@ -587,6 +592,7 @@ public class DrpgCombatLoop {
           broadcastLog(player, ctx, "\u001B[1;33m" + tag + "🔥 " + member.getName() + " 施展【" + skill.getName() + "】，直取【" + target.getName() + "】要害，造成 " + dmg + " 點毀滅打擊！\u001B[0m");
           if (!target.isAlive()) {
             broadcastLog(player, ctx, "\u001B[1;32m💥【" + target.getName() + "】慘叫倒地氣絕！\u001B[0m");
+            ctx.checkEnemyRowAdvancement();
             if (ctx.isAllEnemiesDead()) ctx.setState(BattleState.VICTORY);
           }
         }

@@ -12,7 +12,8 @@ public record BattleEnemyViewDto(
     boolean isStunned,
     String targetMemberId,
     String targetMemberName,
-    int threat
+    int threat,
+    boolean isLarge
 ) {
   public BattleEnemyViewDto(
       int index,
@@ -25,6 +26,6 @@ public record BattleEnemyViewDto(
       boolean isTarget,
       boolean isStunned
   ) {
-    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, null, null, 0);
+    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, null, null, 0, false);
   }
 }

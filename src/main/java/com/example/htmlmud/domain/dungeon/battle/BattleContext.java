@@ -65,7 +65,20 @@ public class BattleContext {
     return null;
   }
 
+  public void checkEnemyRowAdvancement() {
+    if (enemies == null) return;
+    boolean hasLivingFront = enemies.stream().anyMatch(e -> e.isAlive() && e.getRow() == RowPosition.FRONT);
+    if (!hasLivingFront) {
+      for (BattleEnemy e : enemies) {
+        if (e.isAlive() && e.getRow() == RowPosition.BACK) {
+          e.setRow(RowPosition.FRONT);
+        }
+      }
+    }
+  }
+
   public BattleEnemy getFrontTargetEnemy() {
+    checkEnemyRowAdvancement();
     // 1. 若玩家已明確指定鎖定集火目標，且該目標活著，全隊集中火力優先擊殺！
     if (selectedTargetIndex >= 0 && selectedTargetIndex < enemies.size()) {
       BattleEnemy selected = enemies.get(selectedTargetIndex);

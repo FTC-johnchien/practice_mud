@@ -13,10 +13,10 @@ import { eventBus } from '../core/event-bus.js';
  */
 export function renderPartyHud(party) {
   const partyContainer = document.getElementById('party-members-list');
-  const formNameEl = document.getElementById('formation-name-badge') || document.querySelector('.formation-name');
-  const energyFillEl = document.getElementById('formation-energy-fill') || document.getElementById('formation-bar');
+  const formNameEl = document.getElementById('formation-name') || document.getElementById('formation-name-badge') || document.querySelector('.formation-name');
+  const energyFillEl = document.getElementById('formation-bar') || document.getElementById('formation-energy-fill');
   const energyValEl = document.getElementById('formation-energy-val') || document.querySelector('.formation-energy-val');
-  const ultBtn = document.getElementById('formation-ult-btn') || document.getElementById('ult-btn');
+  const ultBtn = document.getElementById('dock-ult-btn') || document.getElementById('formation-ult-btn') || document.getElementById('ult-btn');
 
   // 更新頂部道門陣法與靈威狀態
   if (party.formationName && formNameEl) {
@@ -109,25 +109,23 @@ export function renderPartyHud(party) {
     const sanPct = Math.min(100, Math.max(0, (m.san / m.maxSan) * 100));
     const sanClass = `san-${(m.sanLevel || 'NORMAL').toLowerCase()}`;
 
-    // 精簡 Buff 圖示
+    // 精簡 Buff 圖示 (9~10 個小圖示方塊)
     let buffsHtml = '';
-    if (m.activeBuffs && Array.isArray(m.activeBuffs) && m.activeBuffs.length > 0) {
-      buffsHtml = `
-        <div class="buff-badges-row" style="margin-top: 4px; display: flex; gap: 3px; flex-wrap: wrap;">
-          ${m.activeBuffs.map(b => {
-            const cat = (b.category || 'SHIELD').toLowerCase();
-            return `<span class="buff-badge buff-${cat}" title="${b.name}: 剩餘 ${b.remainingSeconds || 0}秒">${b.icon || '✨'}</span>`;
-          }).join('')}
-        </div>
-      `;
-    }
+    const buffs = (m.activeBuffs && Array.isArray(m.activeBuffs)) ? m.activeBuffs : [];
+    buffsHtml = `
+      <div class="card-buffs-grid">
+        ${buffs.slice(0, 10).map(b => {
+          const cat = (b.category || 'SHIELD').toLowerCase();
+          return `<span class="party-buff-chip buff-${cat}" title="${b.name} (${b.category}): 剩餘 ${b.remainingSeconds || 0}秒">${b.icon || '✨'}</span>`;
+        }).join('')}
+      </div>
+    `;
 
     card.innerHTML = `
       <div class="card-info-side">
         <div class="card-name-row">
-          <span class="member-idx">#${idx + 1}</span>
           <span class="member-name" title="${m.name}">${m.name}</span>
-          <span class="member-level-badge" title="境界等級 Lv.${m.level || 1}">Lv.${m.level || 1}</span>
+          <span class="member-level-num" title="修為境界：第 ${m.level || 1} 重">${m.level || 1}</span>
         </div>
         ${buffsHtml}
       </div>

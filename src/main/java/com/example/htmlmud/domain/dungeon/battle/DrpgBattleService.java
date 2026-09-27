@@ -215,9 +215,10 @@ public class DrpgBattleService {
         .maxHp(3000)
         .minDamage(1)
         .maxDamage(1)
-        .defense(4)
+        .defense(8)
         .dex(5)
         .row(RowPosition.BACK)
+        .isLarge(true)
         .attackIntervalMs(3000)
         .nextAttackTime(System.currentTimeMillis() + 2000)
         .alive(true)
@@ -752,7 +753,8 @@ public class DrpgBattleService {
           e.isStunned(),
           e.getTargetMemberId(),
           e.getTargetMemberName(),
-          e.getTopThreat()
+          e.getTopThreat(),
+          e.isLarge()
       ));
     }
     return new BattleViewDto(

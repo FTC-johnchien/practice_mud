@@ -13,20 +13,25 @@ import { selectPartyMember } from './party-hud-panel.js';
  */
 export function renderBattleArena(battle) {
   const panel = document.getElementById('battle-arena-panel');
-  const enemiesBox = document.getElementById('battle-enemies-container');
-  const badge = document.getElementById('battle-status-badge');
+  if (!panel || !battle) return;
+
+  if (battle.inBattle) {
+    panel.classList.remove('hidden');
+  } else {
+    panel.classList.add('hidden');
+    return;
+  }
+
   const countBadge = document.getElementById('battle-enemies-count');
+  const enemiesBox = document.getElementById('battle-enemies-container');
   const focusNameEl = document.getElementById('battle-focus-name');
-
-  if (!panel || !enemiesBox || !battle) return;
-
-  panel.classList.remove('hidden');
+  const badge = document.getElementById('battle-status-badge');
 
   if (badge) {
     if (battle.state === 'VICTORY') {
-      badge.innerText = '★ 戰鬥大捷！';
-      badge.style.background = 'rgba(16, 185, 129, 0.2)';
-      badge.style.borderColor = '#10b981';
+      badge.innerText = '🎉 戰鬥大捷！';
+      badge.style.background = 'rgba(16, 185, 129, 0.3)';
+      badge.style.borderColor = 'rgba(16, 185, 129, 0.5)';
       badge.style.color = '#34d399';
     } else if (battle.state === 'DEFEAT') {
       badge.innerText = '⚠️ 戰陣潰散！';
@@ -40,89 +45,177 @@ export function renderBattleArena(battle) {
   }
 
   const enemies = battle.enemies || [];
+  const livingEnemies = enemies.filter(e => e.alive);
   if (countBadge) {
-    countBadge.innerText = `${enemies.length} 體`;
+    countBadge.innerText = `${livingEnemies.length} 體`;
   }
 
   // 尋找當前鎖定集火目標 (優先以 battle.selectedTargetIndex 或 isTarget 判定)
   let selectedEnemy = null;
   if (battle.selectedTargetIndex !== undefined && battle.selectedTargetIndex >= 0) {
-    selectedEnemy = enemies.find(e => e.index === battle.selectedTargetIndex && e.alive);
+    selectedEnemy = livingEnemies.find(e => e.index === battle.selectedTargetIndex);
   }
   if (!selectedEnemy) {
-    selectedEnemy = enemies.find(e => (e.isTarget || e.isSelectedTarget) && e.alive);
+    selectedEnemy = livingEnemies.find(e => e.isTarget || e.isSelectedTarget);
   }
   if (!selectedEnemy) {
     // 預設鎖定前排第一個存活者，或任意存活者
-    selectedEnemy = enemies.find(e => e.row === 'FRONT' && e.alive) || enemies.find(e => e.alive);
+    selectedEnemy = livingEnemies.find(e => (e.row || 'FRONT').toUpperCase() !== 'BACK') || livingEnemies[0];
   }
 
   if (focusNameEl) {
     if (selectedEnemy) {
-      focusNameEl.innerText = `#${selectedEnemy.index + 1} ${selectedEnemy.name} (${selectedEnemy.row === 'FRONT' ? '前衛' : '後衛'})`;
+      focusNameEl.innerText = `#${selectedEnemy.index + 1} ${selectedEnemy.name}`;
     } else {
       focusNameEl.innerText = '無（全體覆滅）';
     }
   }
 
-  enemiesBox.innerHTML = '';
-  const backEnemies = enemies.filter(e => (e.row || 'FRONT').toUpperCase() === 'BACK');
-  const frontEnemies = enemies.filter(e => (e.row || 'FRONT').toUpperCase() !== 'BACK');
+  // 存活敵人前後排推進：若原本前排存活怪物全滅，後排存活怪物自動向前挺進！
+  const hasLivingFront = livingEnemies.some(e => (e.row || 'FRONT').toUpperCase() !== 'BACK');
+  let activeFront = [];
+  let activeBack = [];
 
-  function createEnemyCard(e) {
-    const card = document.createElement('div');
-    const isTarget = (selectedEnemy && selectedEnemy.index === e.index) || e.isTarget || (battle.selectedTargetIndex === e.index);
-    const isAlive = e.alive;
-    const rowClass = (e.row || 'FRONT').toLowerCase();
+  if (hasLivingFront) {
+    activeFront = livingEnemies.filter(e => (e.row || 'FRONT').toUpperCase() !== 'BACK');
+    activeBack = livingEnemies.filter(e => (e.row || 'FRONT').toUpperCase() === 'BACK');
+  } else {
+    // 前排全滅，後排活敵全部推進至前排！
+    activeFront = livingEnemies;
+    activeBack = [];
+  }
 
-    card.className = `enemy-card row-${rowClass}${isTarget && isAlive ? ' selected-target' : ''}${!isAlive ? ' dead' : ''}`;
-    card.title = isAlive ? `點擊鎖定【${e.name}】為集火目標` : '已伏誅';
-    card.onclick = () => {
-      if (isAlive) {
-        selectBattleTarget(e.index);
+  // 結構鍵判定：怪物數量、前後排分佈或巨怪狀態變更時才重繪 DOM，其餘時間全 In-place 更新防閃爍！
+  const structureKey = [
+    activeBack.map(e => `${e.index}_${e.id}_${e.isLarge ? 'L' : 'S'}`).join(','),
+    activeFront.map(e => `${e.index}_${e.id}_${e.isLarge ? 'L' : 'S'}`).join(',')
+  ].join('|');
+
+  const needFullRebuild = (enemiesBox.dataset.structureKey !== structureKey);
+
+
+    function createEnemyCard(e) {
+      const card = document.createElement('div');
+      card.dataset.enemyIndex = String(e.index);
+      const isTarget = (selectedEnemy && selectedEnemy.index === e.index) || e.isTarget || (battle.selectedTargetIndex === e.index);
+      const isLarge = Boolean(e.isLarge);
+
+      card.className = `enemy-card${isLarge ? ' size-2x2' : ''}${isTarget ? ' selected-target' : ''}`;
+      card.title = `點擊鎖定 ${e.name} 為集火目標`;
+      card.onclick = () => selectBattleTarget(e.index);
+
+      const hpPct = Math.min(100, Math.max(0, (e.hp / e.maxHp) * 100));
+
+      const targetBadge = e.targetMemberName
+        ? `<span class="enemy-aggro-badge" style="background:#450a0a; color:#fca5a5; border:1px solid #7f1d1d; padding:1px 4px; border-radius:3px; font-size:10px;">🎯 ${e.targetMemberName}</span>`
+        : '';
+      const stunBadge = e.isStunned
+        ? `<span class="enemy-stun-badge" style="background:#422006; color:#fdba74; border:1px solid #9a3412; padding:1px 4px; border-radius:3px; font-size:10px;">💫 暈眩</span>`
+        : '';
+
+      let buffsHtml = '';
+      if (e.activeBuffs) {
+          buffsHtml = e.activeBuffs.map(b => `<span class="enemy-buff-badge" style="background:#172554; color:#93c5fd; border:1px solid #1e3a8a; padding:1px 4px; border-radius:3px; font-size:10px;">${b.icon || '✨'} ${b.name}</span>`).join('');
       }
-    };
 
-    const hpPct = Math.min(100, Math.max(0, (e.hp / e.maxHp) * 100));
-    const rowBadge = e.row === 'FRONT' ? '前衛' : '後衛';
-    const buffsHtml = renderBuffBadges(e.activeBuffs);
+      if (isLarge) {
+        card.innerHTML = `
+          <div class="enemy-name-row">
+            <div style="display:flex; align-items:center; gap:6px; min-width:0; flex:1; overflow:hidden;">
+              <span class="large-enemy-badge">👹 巨型 2x2</span>
+              <span class="enemy-name" style="font-size:var(--font-base); font-weight:bold;" title="${e.name}">#${e.index + 1} ${e.name}</span>
+            </div>
+            <div class="enemy-badges-right" style="display:flex; gap:4px;">
+              ${targetBadge}
+              ${stunBadge}
+              ${buffsHtml}
+            </div>
+          </div>
+          <div class="large-enemy-info" style="font-size:var(--font-xs); color:#c084fc; display:flex; align-items:center; gap:6px;">
+            <span>🛡️ 雙倍防禦 • 巨型陣樁 (2x2 佔位)</span>
+          </div>
+          <div class="enemy-hp-wrap large-hp-wrap" title="生命 HP: ${e.hp}/${e.maxHp}">
+            <div class="enemy-hp-bar" style="width: ${hpPct}%; background: linear-gradient(90deg, #dc2626, #f97316);"></div>
+            <span class="enemy-hp-text">HP ${e.hp}/${e.maxHp}</span>
+          </div>
+        `;
+      } else {
+        card.innerHTML = `
+          <div class="enemy-name-row">
+            <span class="enemy-name" title="${e.name}">#${e.index + 1} ${e.name}</span>
+            <div class="enemy-badges-right" style="display:flex; gap:4px;">
+              ${targetBadge}
+              ${stunBadge}
+              ${buffsHtml}
+            </div>
+          </div>
+          <div class="enemy-hp-wrap" title="生命 HP: ${e.hp}/${e.maxHp}">
+            <div class="enemy-hp-bar" style="width: ${hpPct}%"></div>
+            <span class="enemy-hp-text">HP ${e.hp}/${e.maxHp}</span>
+          </div>
+        `;
+      }
+      return card;
+    }
 
-    card.innerHTML = `
-      <div class="enemy-name-row">
-        <span class="enemy-name" title="${e.name}">#${e.index + 1} ${e.name}</span>
-        <span class="enemy-row-badge ${e.row === 'FRONT' ? 'badge-front' : 'badge-back'}">${rowBadge}</span>
-      </div>
-      <div class="enemy-hp-wrap" title="生命 HP: ${e.hp}/${e.maxHp}">
-        <div class="enemy-hp-bar" style="width: ${hpPct}%"></div>
-        <span class="enemy-hp-text">${isAlive ? `${e.hp}/${e.maxHp}` : '已伏誅'}</span>
-      </div>
-      <div class="enemy-status-row">
-        ${e.targetMemberName ? `<span class="enemy-aggro-badge" style="font-size:11px; color:#fca5a5; background:#450a0a; border:1px solid #ef4444; border-radius:3px; padding:1px 5px; display:inline-flex; align-items:center; gap:2px;" title="怪物當前仇恨鎖定目標">🎯 盯上: ${e.targetMemberName}</span>` : ''}
-        ${e.isStunned ? '<span class="enemy-stun-badge">💫 眩暈中</span>' : ''}
-        ${buffsHtml}
-      </div>
-    `;
-    return card;
-  }
 
-  // 1. 敵方後排 (位於最上方)
-  if (backEnemies.length > 0) {
-    const tierBack = document.createElement('div');
-    tierBack.className = 'battle-tier-wrapper tier-enemy-back';
-    tierBack.innerHTML = `<div class="battle-tier-label">〈 敵方後衛陣線 〉</div><div class="battle-tier-cards"></div>`;
-    const cardsBox = tierBack.querySelector('.battle-tier-cards');
-    backEnemies.forEach(e => cardsBox.appendChild(createEnemyCard(e)));
-    enemiesBox.appendChild(tierBack);
-  }
+  if (needFullRebuild) {
+    enemiesBox.dataset.structureKey = structureKey;
+    enemiesBox.innerHTML = '';
 
-  // 2. 敵方前排 (緊鄰交鋒線)
-  if (frontEnemies.length > 0) {
-    const tierFront = document.createElement('div');
-    tierFront.className = 'battle-tier-wrapper tier-enemy-front';
-    tierFront.innerHTML = `<div class="battle-tier-label">〈 敵方前衛陣線 〉</div><div class="battle-tier-cards"></div>`;
-    const cardsBox = tierFront.querySelector('.battle-tier-cards');
-    frontEnemies.forEach(e => cardsBox.appendChild(createEnemyCard(e)));
-    enemiesBox.appendChild(tierFront);
+    // 1. 敵方後排 (若有存活者且前排未全滅)
+    if (activeBack.length > 0) {
+      const tierBack = document.createElement('div');
+      tierBack.className = 'battle-tier-wrapper tier-enemy-back';
+      const cardsBox = document.createElement('div');
+      cardsBox.className = 'battle-tier-cards';
+      activeBack.forEach(e => cardsBox.appendChild(createEnemyCard(e)));
+      tierBack.appendChild(cardsBox);
+      enemiesBox.appendChild(tierBack);
+    }
+
+    // 2. 敵方前排 (緊鄰交鋒線)
+    if (activeFront.length > 0) {
+      const tierFront = document.createElement('div');
+      tierFront.className = 'battle-tier-wrapper tier-enemy-front';
+      const cardsBox = document.createElement('div');
+      cardsBox.className = 'battle-tier-cards';
+      activeFront.forEach(e => cardsBox.appendChild(createEnemyCard(e)));
+      tierFront.appendChild(cardsBox);
+      enemiesBox.appendChild(tierFront);
+    }
+
+    // 【重要】死亡怪物立即移出戰場陣列，不再渲染任何佔位條 (deadStrip)，空間完全釋放！
+  } else {
+    // In-place 零閃爍更新各怪物數值與選取標記，絕不摧毀重建節點
+    const cardNodes = enemiesBox.querySelectorAll('.enemy-card');
+    cardNodes.forEach(card => {
+      const idx = parseInt(card.dataset.enemyIndex, 10);
+      const e = livingEnemies.find(item => item.index === idx);
+      if (!e) return;
+
+      const isTarget = (selectedEnemy && selectedEnemy.index === idx);
+      card.classList.toggle('selected-target', isTarget);
+
+      const hpPct = Math.min(100, Math.max(0, (e.hp / e.maxHp) * 100));
+      const hpBar = card.querySelector('.enemy-hp-bar');
+      if (hpBar) hpBar.style.width = `${hpPct}%`;
+
+      const hpText = card.querySelector('.enemy-hp-text');
+      if (hpText) hpText.textContent = `HP ${e.hp}/${e.maxHp}`;
+
+      const badgesRight = card.querySelector('.enemy-badges-right');
+      if (badgesRight) {
+        const targetBadge = e.targetMemberName
+          ? `<span class="enemy-aggro-badge" title="怪物當前仇恨鎖定目標">🎯 ${e.targetMemberName}</span>`
+          : '';
+        const stunBadge = e.isStunned
+          ? '<span class="enemy-stun-badge" title="眩暈不可行動">💫 暈</span>'
+          : '';
+        const buffsHtml = renderBuffBadges(e.activeBuffs);
+        badgesRight.innerHTML = `${targetBadge}${stunBadge}${buffsHtml}`;
+      }
+    });
   }
 
   // 渲染戰場我方隊伍陣列與底部暗黑地牢戰備指揮台
@@ -132,9 +225,6 @@ export function renderBattleArena(battle) {
   }
 }
 
-/**
- * 輔助函式：渲染狀態效果膠囊列
- */
 function renderBuffBadges(activeBuffs) {
   if (!activeBuffs || !Array.isArray(activeBuffs) || activeBuffs.length === 0) return '';
   return `
@@ -204,7 +294,7 @@ export function renderBattlePartyQuickBar(party) {
 
     card.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span class="bpmc-name" style="font-weight:bold; color:${isAlive ? '#e2e8f0' : '#94a3b8'}; font-size:13px;">#${idx + 1} ${m.name}</span>
+        <span class="bpmc-name" style="font-weight:bold; color:${isAlive ? '#e2e8f0' : '#94a3b8'}; font-size:13px;">${m.name}</span>
         <div style="display:flex; align-items:center; gap:4px;">
           ${!isAlive ? '<span style="font-size:var(--font-xs); color:#ef4444; background:rgba(239,68,68,0.2); border:1px solid #ef4444; border-radius:3px; padding:1px 4px;">💀陣亡</span>' : ''}
         </div>
@@ -216,13 +306,6 @@ export function renderBattlePartyQuickBar(party) {
         <span class="bpmc-hp-text">HP ${m.hp}/${m.maxHp}</span>
         <span class="bpmc-select-indicator" style="color:${isAlive ? '#38bdf8' : '#ef4444'}; font-weight:bold;">${isSelected ? '▶ 當前選中' : (isAlive ? '點選切換' : '點選施救')}</span>
       </div>
-      ${m.formationSlotName ? `
-        <div class="bpmc-slot-badge" style="font-size:11px; margin-top:2px; padding:2px 5px; border-radius:3px; display:flex; justify-content:space-between; align-items:center; ${isAlive && m.formationSlotActive ? 'background:rgba(16,185,129,0.12); color:#6ee7b7; border:1px solid rgba(16,185,129,0.3);' : 'background:rgba(239,68,68,0.12); color:#fca5a5; border:1px solid rgba(239,68,68,0.3);'}"
-             title="陣法孔位：${m.formationSlotName} - ${m.formationSlotBonus || ''}">
-          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">💠 ${m.formationSlotName}</span>
-          ${isAlive && m.formationSlotActive ? '<span style="font-size:10px; flex-shrink:0;">✓生效</span>' : '<span style="font-size:10px; color:#ef4444; flex-shrink:0;">' + (!isAlive ? '✗離陣' : '✗不符') + '</span>'}
-        </div>
-      ` : ''}
       <div class="bpmc-buffs-wrap">
         ${renderBuffBadges(m.activeBuffs)}
       </div>
@@ -234,44 +317,44 @@ export function renderBattlePartyQuickBar(party) {
     bar.dataset.structureKey = structureKey;
     bar.innerHTML = '';
 
-    // 1. 我方前衛 (緊鄰交鋒線)
-    if (frontMembers.length > 0) {
-      const tierFront = document.createElement('div');
-      tierFront.className = 'battle-tier-wrapper tier-party-front';
-      tierFront.innerHTML = `<div class="battle-tier-label" style="color:#f87171;">〈 我方前衛陣線 〉</div><div class="battle-tier-cards" style="display:flex; justify-content:center; gap:8px;"></div>`;
-      const cardsBox = tierFront.querySelector('.battle-tier-cards');
-      frontMembers.forEach(item => cardsBox.appendChild(createPartyCard(item.m, item.idx)));
-      bar.appendChild(tierFront);
+    const tiers = [
+      { key: 'FRONT', list: frontMembers, cls: 'tier-party-front' },
+      { key: 'MIDDLE', list: middleMembers, cls: 'tier-party-middle' },
+      { key: 'BACK', list: backMembers, cls: 'tier-party-back' }
+    ];
+
+    let hasAnyTier = false;
+    tiers.forEach(t => {
+      if (t.list.length > 0) {
+        hasAnyTier = true;
+        const tierWrap = document.createElement('div');
+        tierWrap.className = `battle-tier-wrapper ${t.cls}`;
+        const cardsBox = document.createElement('div');
+        cardsBox.className = 'battle-tier-cards';
+        t.list.forEach(item => cardsBox.appendChild(createPartyCard(item.m, item.idx)));
+        tierWrap.appendChild(cardsBox);
+        bar.appendChild(tierWrap);
+      }
+    });
+
+    if (!hasAnyTier) {
+      const tierWrap = document.createElement('div');
+      tierWrap.className = 'battle-tier-wrapper tier-party-front';
+      const cardsBox = document.createElement('div');
+      cardsBox.className = 'battle-tier-cards';
+      aliveMembers.forEach(item => cardsBox.appendChild(createPartyCard(item.m, item.idx)));
+      tierWrap.appendChild(cardsBox);
+      bar.appendChild(tierWrap);
     }
 
-    // 2. 我方中衛 (若陣法有中衛則展開)
-    if (middleMembers.length > 0) {
-      const tierMiddle = document.createElement('div');
-      tierMiddle.className = 'battle-tier-wrapper tier-party-middle';
-      tierMiddle.innerHTML = `<div class="battle-tier-label" style="color:#c084fc;">〈 我方中衛陣線 〉</div><div class="battle-tier-cards" style="display:flex; justify-content:center; gap:8px;"></div>`;
-      const cardsBox = tierMiddle.querySelector('.battle-tier-cards');
-      middleMembers.forEach(item => cardsBox.appendChild(createPartyCard(item.m, item.idx)));
-      bar.appendChild(tierMiddle);
-    }
-
-    // 3. 我方後衛 (位於下方)
-    if (backMembers.length > 0) {
-      const tierBack = document.createElement('div');
-      tierBack.className = 'battle-tier-wrapper tier-party-back';
-      tierBack.innerHTML = `<div class="battle-tier-label" style="color:#60a5fa;">〈 我方後衛陣線 〉</div><div class="battle-tier-cards" style="display:flex; justify-content:center; gap:8px;"></div>`;
-      const cardsBox = tierBack.querySelector('.battle-tier-cards');
-      backMembers.forEach(item => cardsBox.appendChild(createPartyCard(item.m, item.idx)));
-      bar.appendChild(tierBack);
-    }
-
-    // 4. 陣亡重傷待援區 (若有隊員陣亡)
     if (deadMembers.length > 0) {
-      const tierDead = document.createElement('div');
-      tierDead.className = 'battle-tier-wrapper tier-party-dead';
-      tierDead.innerHTML = `<div class="battle-tier-label" style="color:#ef4444; font-size:10px;">〈 💀 陣亡重傷待援 〉</div><div class="battle-tier-cards" style="display:flex; justify-content:center; gap:8px;"></div>`;
-      const cardsBox = tierDead.querySelector('.battle-tier-cards');
+      const deadWrap = document.createElement('div');
+      deadWrap.className = 'battle-tier-wrapper tier-party-dead';
+      const cardsBox = document.createElement('div');
+      cardsBox.className = 'battle-tier-cards';
       deadMembers.forEach(item => cardsBox.appendChild(createPartyCard(item.m, item.idx)));
-      bar.appendChild(tierDead);
+      deadWrap.appendChild(cardsBox);
+      bar.appendChild(deadWrap);
     }
   } else {
     // In-place 更新隊員卡片數值與選取狀態，絕不重構 DOM (防閃爍)
@@ -333,133 +416,83 @@ export function renderCombatCommandDock(party, selectedMemberIdx) {
   const m = party.members[selectedMemberIdx];
   if (!m) return;
 
-  const heroProfileEl = document.getElementById('dock-hero-profile');
-  const skillDeckEl = document.getElementById('dock-skill-deck');
-  const tacticsDeckEl = document.getElementById('dock-tactics-deck');
+  const actionsColEl = document.getElementById('dock-actions-column');
+  const contentColEl = document.getElementById('dock-content-column');
 
-  const curMemberIdxStr = String(selectedMemberIdx);
+  if (!actionsColEl || !contentColEl) return;
 
-  // 1. 左側英雄面板 (In-place 更新數值，漏斗 GCD 置於頂部標題右側絕不推擠版面)
-  if (heroProfileEl) {
+  const activeTab = store.get('dockSkillTab') || 'DEFAULT';
+
+  // Left Column: Actions
+  actionsColEl.innerHTML = `
+    <div style="color: var(--text-color); font-weight: bold; margin-bottom: 4px;">🎯 ${m.name}</div>
+    <div class="dock-action-btn ${activeTab === 'DEFAULT' ? 'active' : ''}" onclick="setDockSkillTab('DEFAULT')">
+      <span>屬性與狀態</span><span>👁️</span>
+    </div>
+    <div class="dock-action-btn ${activeTab === 'SKILL' ? 'active' : ''}" onclick="setDockSkillTab('SKILL')">
+      <span>戰陣武技</span><span>⚔️</span>
+    </div>
+    <div class="dock-action-btn ${activeTab === 'SPELL' ? 'active' : ''}" onclick="setDockSkillTab('SPELL')">
+      <span>仙道法術</span><span>✨</span>
+    </div>
+  `;
+
+  // Right Column: Content
+  if (activeTab === 'DEFAULT') {
     const hpPct = Math.min(100, Math.max(0, (m.hp / m.maxHp) * 100));
+    const curMp = m.mp !== undefined ? m.mp : 0;
+    const maxMp = m.maxMp !== undefined ? m.maxMp : 0;
+    const mpPct = Math.min(100, Math.max(0, maxMp > 0 ? (curMp / maxMp) * 100 : 0));
+
+    const curSp = m.sp !== undefined ? m.sp : (m.currentSp !== undefined ? m.currentSp : (m.resourceType === 'SP' ? m.currentResource : 0));
+    const maxSp = m.maxSp !== undefined ? m.maxSp : 100;
+    const spPct = Math.min(100, Math.max(0, maxSp > 0 ? (curSp / maxSp) * 100 : 0));
+
     const sanPct = Math.min(100, Math.max(0, (m.san / m.maxSan) * 100));
-    const sanClass = `san-${(m.sanLevel || 'NORMAL').toLowerCase()}`;
-    const rowBadge = m.row === 'FRONT' ? '前衛' : '後衛';
 
-    const resType = m.resourceType || 'MP';
-    const curRes = m.currentResource !== undefined ? m.currentResource : m.mp;
-    const maxRes = m.maxResource !== undefined ? m.maxResource : m.maxMp;
-    const resPct = Math.min(100, Math.max(0, maxRes > 0 ? (curRes / maxRes) * 100 : 0));
-    let resLabel = (resType === 'MP') ? `MP ${curRes}/${maxRes}` : `戰氣 ${curRes}/${maxRes}`;
-    let resFillClass = (resType === 'MP') ? 'mp-fill' : 'sp-fill';
+    const buffs = (m.activeBuffs && Array.isArray(m.activeBuffs)) ? m.activeBuffs : [];
+    const buffsHtml = buffs.slice(0, 10).map(b => {
+      const cat = (b.category || 'SHIELD').toLowerCase();
+      return `<span class="party-buff-chip buff-${cat}" title="${b.name} (${b.category}): 餘 ${b.remainingSeconds || 0}秒">${b.icon || '✨'}</span>`;
+    }).join('');
 
-    const needHeroRebuild = (heroProfileEl.dataset.memberIdx !== curMemberIdxStr);
-
-    if (needHeroRebuild) {
-      heroProfileEl.dataset.memberIdx = curMemberIdxStr;
-      heroProfileEl.innerHTML = `
-        <div class="dock-hero-header">
-          <div class="dock-hero-header-left">
-            <span class="dock-hero-name" title="${m.name}">#${selectedMemberIdx + 1} ${m.name}</span>
-            <span class="dock-hero-lvl">Lv.${m.level || 1}</span>
-            ${m.className ? `<span class="dock-hero-class">${m.className}</span>` : ''}
+    contentColEl.innerHTML = `
+      <div class="dock-info-view">
+        <div style="display: flex; gap: 12px;">
+          <div style="flex: 1;">
+            <div class="mini-bar-wrap">
+              <div class="mini-bar hp-fill" style="width: ${hpPct}%"></div>
+              <span class="mini-val hp-val">HP ${m.hp}/${m.maxHp}</span>
+            </div>
+            <div class="mini-bar-wrap">
+              <div class="mini-bar mp-fill ${maxMp > 0 ? '' : 'empty-res-fill'}" style="width: ${mpPct}%"></div>
+              <span class="mini-val mp-val">MP ${maxMp > 0 ? curMp+'/'+maxMp : '無'}</span>
+            </div>
           </div>
-          <div class="dock-hero-header-right">
-            <span id="dock-hero-gcd" class="dock-hero-gcd-badge hidden">⏳ 0.0s</span>
-          </div>
-        </div>
-        <div class="dock-hero-bars">
-          <div class="mini-bar-wrap" title="氣血 HP">
-            <div class="mini-bar hp-fill" style="width: ${hpPct}%"></div>
-            <span class="mini-val hp-val">HP ${m.hp}/${m.maxHp}</span>
-          </div>
-          <div class="mini-bar-wrap" title="${resLabel}">
-            <div class="mini-bar res-fill ${resFillClass}" style="width: ${resPct}%"></div>
-            <span class="mini-val res-val">${resLabel}</span>
-          </div>
-          <div class="mini-bar-wrap san-bar-wrap" title="道心 SAN">
-            <div class="mini-bar san-fill ${sanClass}" style="width: ${sanPct}%"></div>
-            <span class="mini-val san-val ${sanClass}">SAN ${m.san}/${m.maxSan}</span>
+          <div style="flex: 1;">
+            <div class="mini-bar-wrap">
+              <div class="mini-bar sp-fill ${maxSp > 0 ? '' : 'empty-res-fill'}" style="width: ${spPct}%"></div>
+              <span class="mini-val sp-val">SP ${maxSp > 0 ? curSp+'/'+maxSp : '無'}</span>
+            </div>
+            <div class="mini-bar-wrap san-bar-wrap">
+              <div class="mini-bar san-fill san-${(m.sanLevel || 'NORMAL').toLowerCase()}" style="width: ${sanPct}%"></div>
+              <span class="mini-val san-val">SAN ${m.san}/${m.maxSan}</span>
+            </div>
           </div>
         </div>
-        ${m.formationSlotName ? `
-          <div id="dock-hero-slot" class="dock-formation-slot ${m.formationSlotActive ? 'active' : 'inactive'}"
-               title="陣法孔位：${m.formationSlotName} - ${m.formationSlotBonus || ''}">
-            <span class="slot-text" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">💠 ${m.formationSlotName} <small>${m.formationSlotBonus || ''}</small></span>
-            <span class="slot-status">${m.formationSlotActive ? '✓生效' : '✗站位不符'}</span>
-          </div>` : '<div id="dock-hero-slot"></div>'}
-        <div id="dock-hero-buffs" class="dock-buffs-wrap">
-          ${renderBuffBadges(m.activeBuffs)}
+        <div style="color: #94a3b8; font-size: 11px;">狀態加持：</div>
+        <div class="card-buffs-grid" style="display: flex; flex-wrap: wrap; gap: 4px;">
+          ${buffsHtml || '<span style="color:#64748b;font-size:11px;">(無狀態)</span>'}
         </div>
-      `;
-    } else {
-      // In-place 更新血量、能量、SAN 與頂部 GCD 徽章 (零 DOM 銷毀、零高度跳動)
-      const hpFill = heroProfileEl.querySelector('.hp-fill');
-      const hpVal = heroProfileEl.querySelector('.hp-val');
-      if (hpFill) hpFill.style.width = `${hpPct}%`;
-      if (hpVal) hpVal.textContent = `HP ${m.hp}/${m.maxHp}`;
-
-      const resFill = heroProfileEl.querySelector('.res-fill');
-      const resVal = heroProfileEl.querySelector('.res-val');
-      if (resFill) {
-        resFill.style.width = `${resPct}%`;
-        resFill.className = `mini-bar res-fill ${resFillClass}`;
-      }
-      if (resVal) resVal.textContent = resLabel;
-
-      const sanFill = heroProfileEl.querySelector('.san-fill');
-      const sanVal = heroProfileEl.querySelector('.san-val');
-      if (sanFill) {
-        sanFill.style.width = `${sanPct}%`;
-        sanFill.className = `mini-bar san-fill ${sanClass}`;
-      }
-      if (sanVal) sanVal.textContent = `SAN ${m.san}/${m.maxSan}`;
-
-      const slotEl = document.getElementById('dock-hero-slot');
-      if (slotEl && m.formationSlotName) {
-        slotEl.className = `dock-formation-slot ${m.formationSlotActive ? 'active' : 'inactive'}`;
-        const slotStatus = slotEl.querySelector('.slot-status');
-        if (slotStatus) slotStatus.textContent = m.formationSlotActive ? '✓生效' : '✗站位不符';
-      }
-    }
-
-    // 頂部固定位置 GCD / 施法指示器更新 (位於標題右側，絕不推擠下層屬性條)
-    const gcdBadge = document.getElementById('dock-hero-gcd');
-    if (gcdBadge) {
-      if (m.isCasting) {
-        gcdBadge.classList.remove('hidden');
-        gcdBadge.className = 'dock-hero-gcd-badge casting';
-        gcdBadge.textContent = `🌀 吟唱 ${(m.castingRemainingMs / 1000).toFixed(1)}s`;
-        gcdBadge.title = `正在施法【${m.castingSkillName}】，剩餘 ${(m.castingRemainingMs / 1000).toFixed(1)} 秒`;
-      } else if (m.isOnGcd) {
-        gcdBadge.classList.remove('hidden');
-        gcdBadge.className = 'dock-hero-gcd-badge';
-        gcdBadge.textContent = `⏳ 調息 ${(m.remainingGcdMs / 1000).toFixed(1)}s`;
-        gcdBadge.title = `全域招式調息中 (GCD)，剩餘 ${(m.remainingGcdMs / 1000).toFixed(1)} 秒`;
-      } else {
-        gcdBadge.classList.add('hidden');
-      }
-    }
-  }
-
-  // 2. 中央技能動作欄 (實裝單頁 20 筆上限的分頁機制與 In-place 更新，零閃爍)
-  if (skillDeckEl) {
-    const activeTab = store.get('dockSkillTab') || 'ALL';
+      </div>
+    `;
+  } else {
+    // SKILL or SPELL tab
     const skills = m.skills || [];
-    const isAlive = (m.alive !== undefined) ? m.alive : (m.hp > 0);
-
-    const resType = m.resourceType || 'MP';
-    const curRes = m.currentResource !== undefined ? m.currentResource : m.mp;
-    const maxRes = m.maxResource !== undefined ? m.maxResource : m.maxMp;
-    const resBadgeLabel = (resType === 'MP') ? `🔮 真元 ${curRes}/${maxRes}` : `⚡ 戰氣 ${curRes}/${maxRes}`;
-
     let filteredSkills = skills.filter(s => {
       const cat = (s.category || 'CLASS').toUpperCase();
-      if (activeTab === 'ALL') return true;
-      if (activeTab === 'WEAPON') return cat === 'WEAPON';
-      if (activeTab === 'CLASS') return cat === 'CLASS';
+      if (activeTab === 'SKILL') return cat !== 'SPELL';
       if (activeTab === 'SPELL') return cat === 'SPELL';
-      if (activeTab === 'COMBO') return (cat === 'COMBO' || s.synergy);
       return true;
     });
 
@@ -473,174 +506,64 @@ export function renderCombatCommandDock(party, selectedMemberIdx) {
     const startIndex = (currentPage - 1) * PAGE_SIZE;
     const pageSkills = filteredSkills.slice(startIndex, startIndex + PAGE_SIZE);
 
-    const needSkillRebuild = (skillDeckEl.dataset.memberIdx !== curMemberIdxStr) ||
-                             (skillDeckEl.dataset.tab !== activeTab) ||
-                             (skillDeckEl.dataset.page !== String(currentPage)) ||
-                             (skillDeckEl.dataset.skillCount !== String(skills.length));
+    let slotsHtml = '';
+    const isAlive = (m.alive !== undefined) ? m.alive : (m.hp > 0);
 
-    if (needSkillRebuild) {
-      skillDeckEl.dataset.memberIdx = curMemberIdxStr;
-      skillDeckEl.dataset.tab = activeTab;
-      skillDeckEl.dataset.page = String(currentPage);
-      skillDeckEl.dataset.skillCount = String(skills.length);
+    for (let i = 0; i < PAGE_SIZE; i++) {
+      if (i < pageSkills.length) {
+        const s = pageSkills[i];
+        const onCd = s.remainingCooldownMs > 0;
+        const disabled = !isAlive || !s.available || onCd;
+        const cdSec = onCd ? (s.remainingCooldownMs / 1000).toFixed(1) : 0;
 
-      let skillsGridHtml = '';
-      if (pageSkills.length === 0) {
-        skillsGridHtml = `<div class="dock-empty-skills">當前分類暫無可用招式</div>`;
+        let costLabel = '';
+        if (s.costValue > 0) {
+          if (s.costType === 'MP') costLabel = `<span class="cost-mp">${s.costValue}</span>`;
+          else if (s.costType === 'RAGE') costLabel = `<span class="cost-rage">${s.costValue}</span>`;
+          else if (s.costType === 'COMBO') costLabel = `<span class="cost-combo">${s.costValue}</span>`;
+          else costLabel = `<span style="color:#cbd5e1">${s.costValue}</span>`;
+        }
+
+        slotsHtml += `
+          <div class="dock-mini-skill ${disabled ? 'disabled' : ''}"
+               title="${s.name}\n${s.description || ''}${onCd ? '\n[調息中 ' + cdSec + '秒]' : ''}"
+               onclick="${disabled ? '' : `handleDockSkillCast('${s.id}', '${s.name}'); setDockSkillTab('DEFAULT');`}">
+            <span class="skill-icon">${s.icon || '⚡'}</span>
+            <span class="skill-name">${s.name}</span>
+            <span class="skill-cost">${costLabel}</span>
+          </div>
+        `;
       } else {
-        skillsGridHtml = pageSkills.map((s, sIdx) => {
-          return `
-            <button class="dock-skill-card" data-skill-idx="${sIdx}" data-skill-id="${s.id}">
-              <div class="dock-skill-title-row">
-                <span class="dock-skill-icon">${s.icon || '⚡'}</span>
-                <span class="dock-skill-name">${s.name}</span>
-              </div>
-              <div class="dock-skill-meta">
-                <span class="dock-skill-cost ${s.costType === 'MP' ? 'cost-mp' : 'cost-sp'}"></span>
-                <span class="dock-skill-cd hidden"></span>
-              </div>
-            </button>
-          `;
-        }).join('');
+        slotsHtml += `<div class="dock-mini-skill" style="opacity: 0.1; cursor: default;"></div>`;
       }
+    }
 
-      skillDeckEl.innerHTML = `
-        <div class="dock-skill-top-bar">
-          <div class="dock-skill-tabs">
-            <button class="dock-tab ${activeTab === 'ALL' ? 'active' : ''}" onclick="window.setDockSkillTab('ALL')">全部</button>
-            <button class="dock-tab ${activeTab === 'WEAPON' ? 'active' : ''}" onclick="window.setDockSkillTab('WEAPON')">⚔️ 武學</button>
-            <button class="dock-tab ${activeTab === 'CLASS' ? 'active' : ''}" onclick="window.setDockSkillTab('CLASS')">🛡️ 職業</button>
-            <button class="dock-tab ${activeTab === 'SPELL' ? 'active' : ''}" onclick="window.setDockSkillTab('SPELL')">🔮 法術</button>
-            <button class="dock-tab ${activeTab === 'COMBO' ? 'active' : ''}" onclick="window.setDockSkillTab('COMBO')">🌟 合擊</button>
-          </div>
-          <div class="dock-skill-paginator">
-            <button class="dock-page-btn" ${currentPage <= 1 ? 'disabled' : ''} onclick="window.changeDockSkillPage(-1)" title="上一頁">◀</button>
-            <span class="dock-page-text">${currentPage}/${totalPages}</span>
-            <button class="dock-page-btn" ${currentPage >= totalPages ? 'disabled' : ''} onclick="window.changeDockSkillPage(1)" title="下一頁">▶</button>
-          </div>
-          <div class="dock-res-badge">${resBadgeLabel}</div>
-        </div>
+    contentColEl.innerHTML = `
+      <div class="dock-skills-view">
         <div class="dock-skills-grid">
-          ${skillsGridHtml}
+          ${slotsHtml}
         </div>
-      `;
-    }
-
-    // 更新能量徽章文字
-    const resBadgeEl = skillDeckEl.querySelector('.dock-res-badge');
-    if (resBadgeEl) resBadgeEl.textContent = resBadgeLabel;
-
-    // In-place 更新當前頁各技能卡狀態 (冷卻、可用性、點擊事件，絕不重建節點)
-    const cardNodes = skillDeckEl.querySelectorAll('.dock-skills-grid .dock-skill-card');
-    pageSkills.forEach((s, sIdx) => {
-      const cardBtn = cardNodes[sIdx];
-      if (!cardBtn) return;
-
-      const onCd = s.remainingCooldownMs > 0;
-      let resOk = s.available;
-      if (resOk === undefined) {
-        resOk = (curRes >= (s.costValue || 0));
-      }
-      const canCast = Boolean(resOk && !onCd && isAlive);
-      const cdSec = onCd ? (s.remainingCooldownMs / 1000).toFixed(1) : 0;
-
-      let costLabel = s.costDescription;
-      if (!costLabel || costLabel === 'undefined') {
-        if (!s.costValue || s.costValue <= 0) {
-          costLabel = '無消耗';
-        } else if (s.costType === 'SP' || s.costType === 'RAGE' || s.costType === 'COMBO') {
-          costLabel = `${s.costValue} 戰氣`;
-        } else {
-          costLabel = `${s.costValue} 真元`;
-        }
-      }
-
-      // 更新樣式與提示 (防閃爍)
-      cardBtn.className = `dock-skill-card ${canCast ? '' : 'cant-cast'}${s.synergy && canCast ? ' synergy-glow' : ''}`;
-      cardBtn.title = `${s.name} - ${s.description}`;
-
-      const costSpan = cardBtn.querySelector('.dock-skill-cost');
-      if (costSpan) {
-        costSpan.className = `dock-skill-cost ${s.costType === 'MP' ? 'cost-mp' : 'cost-sp'}`;
-        costSpan.textContent = costLabel;
-      }
-
-      const cdSpan = cardBtn.querySelector('.dock-skill-cd');
-      if (cdSpan) {
-        if (onCd) {
-          cdSpan.classList.remove('hidden');
-          cdSpan.textContent = `⌛ ${cdSec}s`;
-        } else {
-          cdSpan.classList.add('hidden');
-        }
-      }
-
-      cardBtn.onclick = () => {
-        handleDockSkillCast(selectedMemberIdx, s.id, canCast, s.name, costLabel, onCd, cdSec, s.costDescription || '', Boolean(s.synergy));
-      };
-    });
-  }
-
-  // 3. 右側戰術指令欄 (明確的戰術行動按鈕：行囊、選單、遁地，徹底移除容易混淆的換位按鈕)
-  if (tacticsDeckEl) {
-    if (tacticsDeckEl.dataset.initialized !== 'true') {
-      tacticsDeckEl.dataset.initialized = 'true';
-      tacticsDeckEl.innerHTML = `
-        <div class="dock-tactics-title">戰術指令</div>
-        <div class="dock-tactic-actions-list">
-          <button class="dock-tactic-sub-btn" onclick="window.toggleBagDrawer ? window.toggleBagDrawer() : null" title="開啟公共行囊 (B)">
-            🎒 行囊 (B)
-          </button>
-          <button class="dock-tactic-sub-btn" onclick="window.openMainMenu ? window.openMainMenu('FORMATION') : (window.togglePartyModal ? window.togglePartyModal() : null)" title="開啟功能選單 (C)">
-            📜 選單 (C)
-          </button>
-          <button class="dock-tactic-sub-btn btn-tactic-flee" onclick="window.send('battle flee')" title="遁地撤退 (-5 SAN) (Esc)">
-            🏃 遁地 (Esc)
-          </button>
+        <div class="dock-skill-pagination">
+          <button class="page-btn" ${currentPage <= 1 ? 'disabled' : ''} onclick="changeDockSkillPage(-1)">◀</button>
+          <span>頁次 ${currentPage} / ${totalPages}</span>
+          <button class="page-btn" ${currentPage >= totalPages ? 'disabled' : ''} onclick="changeDockSkillPage(1)">▶</button>
         </div>
-      `;
-    }
+      </div>
+    `;
   }
 }
 
 /**
- * 處理戰備指揮台技能施放
+ * 處理技能快捷施放
  */
-export function handleDockSkillCast(memberIdx, skillId, canCast, skillName, costLabel, onCd, cdSec, costDesc, isSynergy) {
-  if (!canCast) {
-    let warnMsg = '';
-    if (onCd) {
-      warnMsg = `⏳【調息中】「${skillName}」正在調息冷卻中，尚需 ${cdSec} 秒！`;
-    } else if (costDesc && costDesc.includes('需')) {
-      warnMsg = `⚠️【兵刃未備】「${skillName}」${costDesc}！請在小隊面板 (P) 佩戴對應兵刃。`;
-    } else {
-      warnMsg = `⚠️【元氣未備】「${skillName}」釋放條件不足（需 ${costLabel}）！`;
-    }
-    if (typeof window.appendHtml === 'function') {
-      window.appendHtml(warnMsg, '#f59e0b');
-    }
-    const focusHint = document.getElementById('battle-focus-hint');
-    if (focusHint) {
-      focusHint.innerHTML = `<span style="color:#f59e0b; font-weight:bold;">${warnMsg}</span>`;
-      setTimeout(() => {
-        const lastBattle = store.get('lastBattle');
-        if (focusHint && lastBattle) {
-          renderBattleArena(lastBattle);
-        }
-      }, 3500);
-    }
-    return;
-  }
-  if (isSynergy) {
-    sendCmd(`battle combo ${skillId}`);
-  } else {
-    sendCmd(`skill cast ${memberIdx} ${skillId}`);
+export function handleDockSkillCast(skillId, skillName) {
+  const selectedMemberIdx = store.get('selectedMemberIdx') || 0;
+  sendCmd(`skill cast ${selectedMemberIdx} ${skillId}`);
+  if (typeof window.appendHtml === 'function') {
+    window.appendHtml(`隊員施放【${skillName}】！`, '#38bdf8');
   }
 }
 
-/**
- * 切換戰備指揮台技能分類標籤
- */
 export function setDockSkillTab(tab) {
   store.setState({ dockSkillTab: tab, dockSkillPage: 1 });
   const lastParty = store.get('lastParty');
@@ -708,11 +631,14 @@ export function toggleBattleMode(inBattle) {
   const skillDrawer = document.getElementById('skill-drawer');
   const bottomControlPanel = document.querySelector('.bottom-control-panel');
   const modeBadge = document.getElementById('control-mode-badge');
-
   const footerHintExplore = document.getElementById('footer-hint-explore');
+  const footerUltBtn = document.getElementById('footer-ult-btn');
+  const footerFleeBtn = document.getElementById('footer-flee-btn');
 
   if (inBattle) {
-    // 戰鬥模式：切換提示文字為戰鬥提示，保持常駐 40px 工具列可用 (選單/行囊/終端)
+    // 戰鬥模式：顯示底部陣法奧義與遁地按鈕，切換提示文字為戰鬥提示
+    if (footerUltBtn) footerUltBtn.classList.remove('hidden');
+    if (footerFleeBtn) footerFleeBtn.classList.remove('hidden');
     if (footerHintExplore) footerHintExplore.classList.add('hidden');
     if (battleStatusDock) battleStatusDock.classList.remove('hidden');
     if (partyHud) partyHud.classList.add('hidden');
@@ -728,7 +654,9 @@ export function toggleBattleMode(inBattle) {
       modeBadge.innerText = '⚔️ 戰鬥交鋒中';
     }
   } else {
-    // 探索模式：切換提示為探索指引，恢復外層隊伍 HUD
+    // 探索模式：隱藏底部戰鬥專用按鈕，切換提示為探索指引，恢復外層隊伍 HUD
+    if (footerUltBtn) footerUltBtn.classList.add('hidden');
+    if (footerFleeBtn) footerFleeBtn.classList.add('hidden');
     if (bottomControlPanel) bottomControlPanel.classList.remove('hidden');
     if (battleStatusDock) battleStatusDock.classList.add('hidden');
     if (footerHintExplore) footerHintExplore.classList.remove('hidden');

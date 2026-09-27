@@ -974,6 +974,13 @@ function renderSystemSlotsHtml(sysMode) {
     : [0, 1, 2, 3, 4, 5].map(id => ({ slotId: id, empty: true, title: id === 0 ? '自動存檔' : `存檔槽位 ${id}` }));
 
   return `
+    <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px 16px;">
+      <div>
+        <span style="font-size:14px;color:#cbd5e1;font-weight:bold;">⚙️ 系統存讀檔與遊戲控制</span>
+        <span style="font-size:13px;color:#94a3b8;margin-left:8px;">(可在此儲存/載入進度，或返回標題畫面)</span>
+      </div>
+      <button class="act-btn btn-primary" onclick="if(window.openTitleScreen) { if(window.closePartyModal) window.closePartyModal(); window.openTitleScreen(); }" style="font-size:13px;padding:6px 14px;font-weight:bold;cursor:pointer;">🏠 返回遊戲主封面</button>
+    </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(360px, 1fr));gap:14px;padding:4px 0;">
       ${slots.map(slot => {
         const isAuto = (slot.slotId === 0);

@@ -154,13 +154,48 @@ public class PartyService {
         .build();
 
     PartyMember leader = createCompanion("leader");
-    if (leader != null) {
-      leader.setId("m-leader");
-      if (leaderName != null && !leaderName.isBlank()) {
-        leader.setName(leaderName);
+    
+      if (leader != null) {
+        leader.setId("m-leader");
+        if (leaderName != null && !leaderName.isBlank()) {
+          leader.setName(leaderName);
+        }
+        
+        // 注入測試技能 (21+ SKILL, 21+ SPELL)
+        for (int i = 1; i <= 25; i++) {
+            com.example.htmlmud.domain.party.model.PartyMemberSkill testSkill = com.example.htmlmud.domain.party.model.PartyMemberSkill.builder()
+                .id("test_skill_" + i)
+                .name("測試武技 " + i)
+                .icon("⚔️")
+                .description("這是測試用武技")
+                .category("CLASS")
+                .skillType(com.example.htmlmud.domain.model.enums.SkillType.ACTIVE)
+                .costType(com.example.htmlmud.domain.party.model.CombatResourceType.MP)
+                .costValue(i * 2)
+                .cooldownMs(2000L)
+                .damageMultiplier(1.5)
+                .build();
+            leader.getSkills().add(testSkill);
+        }
+        for (int i = 1; i <= 25; i++) {
+            com.example.htmlmud.domain.party.model.PartyMemberSkill testSpell = com.example.htmlmud.domain.party.model.PartyMemberSkill.builder()
+                .id("test_spell_" + i)
+                .name("測試法術 " + i)
+                .icon("✨")
+                .description("這是測試用法術")
+                .category("SPELL")
+                .skillType(com.example.htmlmud.domain.model.enums.SkillType.ACTIVE)
+                .costType(com.example.htmlmud.domain.party.model.CombatResourceType.MP)
+                .costValue(i * 5)
+                .cooldownMs(3000L)
+                .damageMultiplier(2.0)
+                .build();
+            leader.getSkills().add(testSpell);
+        }
+
+        party.addMember(leader);
       }
-      party.addMember(leader);
-    }
+
 
     return party;
   }

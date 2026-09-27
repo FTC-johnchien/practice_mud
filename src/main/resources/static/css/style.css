@@ -59,13 +59,14 @@ body, html {
 /* 頂部全域狀態與陣法列 */
 .top-nav-bar {
   background: var(--sidebar-bg);
-  padding: 8px 16px;
+  padding: 2px 16px;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  border-bottom: 2px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
-  gap: 12px;
+  height: 30px;
+  box-sizing: border-box;
 }
 
 .mode-badge {
@@ -471,6 +472,43 @@ body, html {
   flex-shrink: 0;
 }
 
+/* 隊伍陣法與靈威狀態條 */
+.party-formation-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 3px 8px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.party-formation-header:hover {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: #3b82f6;
+}
+
+.party-formation-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-xs);
+}
+
+.party-formation-bar-container {
+  flex: 1;
+  max-width: 140px;
+  height: 8px;
+  background: #1f2937;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #374151;
+}
+
 .party-members-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(var(--card-min-width), 1fr));
@@ -497,21 +535,15 @@ body, html {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 2px;
+  justify-content: flex-start;
+  gap: 4px;
 }
 
 .card-name-row {
   display: flex;
   align-items: center;
-  gap: 4px;
-  white-space: nowrap;
-}
-
-.member-idx {
-  color: #9ca3af;
-  font-size: var(--font-xs);
-  font-weight: 600;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .member-name {
@@ -521,7 +553,42 @@ body, html {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 90px;
+}
+
+.member-level-num {
+  font-size: var(--font-xs);
+  font-weight: bold;
+  color: #fde047;
+  background: rgba(234, 179, 8, 0.15);
+  border: 1px solid rgba(234, 179, 8, 0.35);
+  padding: 0 4px;
+  border-radius: 3px;
+  line-height: 16px;
+  flex-shrink: 0;
+}
+
+.card-buffs-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  align-content: flex-start;
+  min-height: 38px;
+  max-height: 48px;
+  overflow: hidden;
+}
+
+.party-buff-chip {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  border-radius: 3px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  cursor: pointer;
+  box-sizing: border-box;
 }
 
 .member-row {
@@ -1139,16 +1206,21 @@ body, html {
   background: #141b27;
   border: 1px solid #334155;
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 6px 10px;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  justify-content: space-between;
+  gap: 4px;
   position: relative;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
   min-width: 160px;
   max-width: 250px;
+  height: 56px;
+  min-height: 56px;
+  max-height: 56px;
+  box-sizing: border-box;
   flex: 1 1 auto;
 }
 
@@ -1157,6 +1229,59 @@ body, html {
   background: #231b26;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+/* 巨型 2x2 敵方卡片 (Boss / 大型怪物) */
+.enemy-card.size-2x2 {
+  min-width: 320px;
+  max-width: 440px;
+  height: 120px;
+  min-height: 120px;
+  max-height: 120px;
+  background: radial-gradient(circle at top left, #241429, #0f1422);
+  border: 2px solid #a855f7;
+  box-shadow: 0 4px 16px rgba(168, 85, 247, 0.35);
+  padding: 8px 12px;
+  gap: 6px;
+}
+
+.enemy-card.size-2x2:hover {
+  border-color: #f43f5e;
+  box-shadow: 0 6px 20px rgba(244, 63, 94, 0.4);
+}
+
+.enemy-card.size-2x2.selected-target {
+  border: 2px solid #ef4444 !important;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), inset 0 0 10px rgba(239, 68, 68, 0.3);
+}
+
+.large-enemy-badge {
+  font-size: var(--font-xs);
+  color: #fde047;
+  background: rgba(168, 85, 247, 0.25);
+  border: 1px solid rgba(168, 85, 247, 0.5);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.large-enemy-info {
+  font-size: var(--font-xs);
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 18px;
+  overflow: hidden;
+}
+
+.large-hp-wrap {
+  height: 22px !important;
+}
+
+.large-hp-wrap .enemy-hp-text {
+  font-size: var(--font-sm) !important;
 }
 
 /* 當選中為集火目標時的光環準星效果 */
@@ -1272,12 +1397,21 @@ body, html {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 6px;
+  height: 20px;
+  min-height: 20px;
+  overflow: hidden;
 }
 
 .enemy-name {
   font-weight: bold;
   font-size: var(--font-sm);
   color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
 }
 
 .enemy-row-badge {
@@ -1356,16 +1490,17 @@ body, html {
 
 /* 1. 左側英雄面板 */
 .dock-hero-profile {
-  width: 250px;
+  width: 190px;
+  min-width: 190px;
+  max-width: 190px;
   flex-shrink: 0;
   background: #111827;
   border: 1px solid #374151;
   border-radius: 6px;
-  padding: 6px 10px;
+  padding: 4px 6px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 3px;
+  justify-content: center;
   overflow: hidden;
   box-sizing: border-box;
   height: 100%;
@@ -1603,11 +1738,120 @@ body, html {
 
 .dock-skills-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 5px;
-  overflow-y: auto;
+  grid-template-columns: repeat(5, 1fr);
+  grid-auto-rows: 23px;
+  gap: 3px;
+  overflow: hidden;
   flex: 1;
   padding-right: 2px;
+}
+
+/* 緊湊 20 槽微型技能晶片 (Scheme B: 5x4 Grid) */
+.dock-skill-chip {
+  height: 23px;
+  min-height: 23px;
+  max-height: 23px;
+  background: #151d2c;
+  border: 1px solid #334155;
+  border-radius: 3px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.dock-skill-chip:hover {
+  background: #1e293b;
+  border-color: #38bdf8;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(56, 189, 248, 0.25);
+}
+
+.dock-skill-chip.cant-cast {
+  opacity: 0.45;
+  border-color: #1e293b;
+  cursor: not-allowed;
+  filter: grayscale(0.7);
+}
+
+.dock-skill-chip.cant-cast:hover {
+  background: #151d2c;
+  border-color: #334155;
+  transform: none;
+  box-shadow: none;
+}
+
+.dock-skill-chip.synergy-glow {
+  border-color: #f59e0b;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
+}
+
+.dock-skill-chip-left {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.dock-skill-chip-icon {
+  font-size: var(--font-xs);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.dock-skill-chip-name {
+  font-size: var(--font-xs);
+  font-weight: 500;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
+}
+
+.dock-skill-chip-cost {
+  font-size: var(--font-xs);
+  font-weight: bold;
+  flex-shrink: 0;
+  line-height: 1;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.dock-skill-chip-cost.cost-sp {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+}
+
+.dock-skill-chip-cost.cost-mp {
+  color: #818cf8;
+  background: rgba(129, 140, 248, 0.15);
+}
+
+.dock-skill-chip-cost.cost-none {
+  color: #64748b;
+}
+
+.dock-skill-chip-cd {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.85);
+  color: #ef4444;
+  font-size: var(--font-xs);
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
 }
 
 .dock-skill-card {
@@ -5133,3 +5377,145 @@ body, html {
   border-color: #dc2626;
   color: #fca5a5;
 }
+
+.enemy-badges-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.enemy-aggro-badge {
+  font-size: var(--font-xs);
+  color: #fca5a5;
+  background: #450a0a;
+  border: 1px solid #ef4444;
+  border-radius: 3px;
+  padding: 1px 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 80px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.battle-dead-strip {
+  text-align: center;
+  padding: 4px;
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+/* 2-Column Command Dock Redesign */
+.combat-command-dock {
+  height: 142px !important;
+}
+.dock-actions-column {
+  width: 140px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-right: 1px dashed #374151;
+  padding-right: 8px;
+  overflow-y: auto;
+}
+.dock-action-btn {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #e2e8f0;
+  padding: 6px;
+  border-radius: 4px;
+  font-size: var(--font-sm);
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+}
+.dock-action-btn:hover { background: #334155; }
+.dock-action-btn.active { background: #0f172a; border-color: #38bdf8; color: #38bdf8; }
+
+.dock-content-column {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-left: 4px;
+}
+.dock-info-view {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  overflow-y: auto;
+}
+.dock-skills-view {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 100%;
+}
+.dock-skills-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 4px;
+  flex: 1;
+  min-height: 0;
+}
+.dock-mini-skill {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-xs);
+  cursor: pointer;
+  padding: 2px;
+  overflow: hidden;
+}
+.dock-mini-skill:hover { background: #334155; }
+.dock-mini-skill.disabled { opacity: 0.5; cursor: not-allowed; }
+.dock-mini-skill .skill-icon { font-size: 16px; line-height: 1; }
+.dock-mini-skill .skill-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; font-size: 10px; }
+.dock-mini-skill .skill-cost { font-size: 10px; font-weight: bold; }
+.cost-mp { color: #60a5fa; }
+.cost-rage { color: #f87171; }
+.cost-combo { color: #facc15; }
+
+.dock-skill-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 4px;
+  border-top: 1px solid #1e293b;
+  font-size: var(--font-xs);
+  height: 24px;
+}
+.page-btn {
+  background: #334155;
+  border: none;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.page-btn:hover { background: #475569; }
+.page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+
+.battle-enemies-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.battle-enemies-container {
+  flex: 1;
+}
+

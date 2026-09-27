@@ -43,6 +43,8 @@ public class BattleEnemy implements Buffable {
   private int dex = 10;
   @Builder.Default
   private RowPosition row = RowPosition.FRONT;
+    @Builder.Default
+    private boolean isLarge = false;
   @Builder.Default
   private long attackIntervalMs = 2200;
   @Builder.Default

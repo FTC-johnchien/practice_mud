@@ -171,28 +171,8 @@
   </div>
 
   <div class="game-container">
-    <!-- 頂部資訊列：模式提示與陣法靈威槽 -->
+    <!-- 頂部資訊列：模式提示 -->
     <header class="top-nav-bar">
-      <div id="control-mode-badge" class="mode-badge mode-exploring">
-        🎮 步進探索模式 (按 W/A/S/D 移動，按 / 或 Enter 輸入指令)
-      </div>
-
-      <div class="top-nav-center-actions">
-        <button class="top-nav-btn btn-menu-quick" onclick="openTitleScreen()" title="返回遊戲主封面與秘錄">🏠 主選單</button>
-        <button class="top-nav-btn btn-save-quick" onclick="openSaveModal('save')" title="儲存進度 (F5)">💾 存檔</button>
-        <button class="top-nav-btn btn-load-quick" onclick="openSaveModal('load')" title="載入進度 / 開闢新道途">📂 讀檔 / 新局</button>
-      </div>
-
-      <div class="formation-status-wrap" onclick="if(window.triggerFormationAction) triggerFormationAction(); else send('formation toggle');" style="cursor: pointer;" title="點擊切換結成之道門陣法 (F)">
-        <div id="formation-info" class="formation-info">
-          <span class="formation-name">☯️ 陣法：【未結陣】</span>
-          <span class="formation-energy-val">靈威: 0/100</span>
-        </div>
-        <div class="formation-bar-container">
-          <div id="formation-bar" class="formation-bar-fill" style="width: 0%"></div>
-        </div>
-        <button id="ult-btn" class="ult-trigger-btn" onclick="event.stopPropagation(); send('formation cast')" title="釋放陣法奧義大招 (U)">⚡ 陣法奧義</button>
-      </div>
     </header>
 
     <!-- 主畫面視窗：可切換左側/右側停靠的地牢雷達，右側冒險文字日誌 -->
@@ -337,19 +317,25 @@
 
         <!-- 4. 暗黑地牢式固定戰備指揮台 (Combat Command Dock，零高度跳動) -->
         <div id="combat-command-dock" class="combat-command-dock">
-          <!-- 左側：所選英雄面板 (Hero Profile Dock) -->
-          <div id="dock-hero-profile" class="dock-hero-profile"></div>
+          <!-- 左欄：指令選單 -->
+          <div id="dock-actions-column" class="dock-actions-column"></div>
 
-          <!-- 中央：技能動作欄位 (Skill Action Deck) -->
-          <div id="dock-skill-deck" class="dock-skill-deck"></div>
-
-          <!-- 右側：戰術戰鬥指令 (Combat Tactics Deck) -->
-          <div id="dock-tactics-deck" class="dock-tactics-deck"></div>
+          <!-- 右欄：屬性與技能顯示 -->
+          <div id="dock-content-column" class="dock-content-column"></div>
         </div>
       </section>
 
         <!-- 下部：隊伍狀態 HUD (吸附於左舞台底部) -->
         <section class="party-hud-panel">
+          <div class="party-formation-header" onclick="if(window.triggerFormationAction) triggerFormationAction(); else send('formation toggle');" title="點擊切換結成之道門陣法 (F)">
+            <div class="party-formation-left">
+              <span id="formation-name" class="formation-name">☯️ 陣法：【未結陣】</span>
+              <span id="formation-energy-val" class="formation-energy-val">靈威: 0/100</span>
+            </div>
+            <div class="party-formation-bar-container">
+              <div id="formation-bar" class="formation-bar-fill" style="width: 0%"></div>
+            </div>
+          </div>
           <div id="party-members-list" class="party-members-list">
             <!-- 由 party-hud-panel.js 動態渲染小隊成員卡片 -->
           </div>
@@ -502,6 +488,8 @@
       <div id="action-buttons-group" class="footer-shortcuts-group">
         <button class="act-btn footer-btn" onclick="if(window.triggerPartyAction) triggerPartyAction(); else send('party');" title="開啟仙道總覽・功能選單 (C / P)">📜 選單 (C)</button>
         <button class="act-btn footer-btn btn-bag" onclick="toggleBagDrawer()" title="開啟隊伍公共行囊 (B)">🎒 行囊 (B)</button>
+        <button id="footer-ult-btn" class="act-btn footer-btn btn-ult hidden" onclick="send('formation cast')" title="釋放陣法奧義大招 (U)">⚡ 陣法奧義 (U)</button>
+        <button id="footer-flee-btn" class="act-btn footer-btn btn-flee hidden" onclick="send('battle flee')" title="遁地撤退 (-5 SAN) (Esc)">🏃 遁地 (Esc)</button>
         <button class="act-btn footer-btn" onclick="toggleDevConsole()" title="打開開發者終端 (~)">⌨️ 終端 (~)</button>
       </div>
 
