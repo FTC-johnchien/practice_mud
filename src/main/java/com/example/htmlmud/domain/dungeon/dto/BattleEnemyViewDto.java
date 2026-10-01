@@ -13,8 +13,91 @@ public record BattleEnemyViewDto(
     String targetMemberId,
     String targetMemberName,
     int threat,
-    boolean isLarge
+    boolean isLarge,
+    int size,
+    String slot,
+    int rowIdx,
+    int colIdx,
+    int width,
+    int height
 ) {
+  public BattleEnemyViewDto(
+      int index,
+      String id,
+      String name,
+      int hp,
+      int maxHp,
+      String row,
+      boolean alive,
+      boolean isTarget,
+      boolean isStunned,
+      String targetMemberId,
+      String targetMemberName,
+      int threat,
+      boolean isLarge,
+      int size,
+      String slot,
+      int rowIdx,
+      int colIdx
+  ) {
+    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, targetMemberId, targetMemberName, threat, isLarge, size, slot, rowIdx, colIdx, size, size);
+  }
+  public BattleEnemyViewDto(
+      int index,
+      String id,
+      String name,
+      int hp,
+      int maxHp,
+      String row,
+      boolean alive,
+      boolean isTarget,
+      boolean isStunned,
+      String targetMemberId,
+      String targetMemberName,
+      int threat,
+      boolean isLarge,
+      int size,
+      String slot
+  ) {
+    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, targetMemberId, targetMemberName, threat, isLarge, size, slot, 1, 2);
+  }
+  public BattleEnemyViewDto(
+      int index,
+      String id,
+      String name,
+      int hp,
+      int maxHp,
+      String row,
+      boolean alive,
+      boolean isTarget,
+      boolean isStunned,
+      String targetMemberId,
+      String targetMemberName,
+      int threat,
+      boolean isLarge,
+      int size
+  ) {
+    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, targetMemberId, targetMemberName, threat, isLarge, size, "CENTER");
+  }
+
+  public BattleEnemyViewDto(
+      int index,
+      String id,
+      String name,
+      int hp,
+      int maxHp,
+      String row,
+      boolean alive,
+      boolean isTarget,
+      boolean isStunned,
+      String targetMemberId,
+      String targetMemberName,
+      int threat,
+      boolean isLarge
+  ) {
+    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, targetMemberId, targetMemberName, threat, isLarge, isLarge ? 2 : 1, "CENTER");
+  }
+
   public BattleEnemyViewDto(
       int index,
       String id,
@@ -26,6 +109,6 @@ public record BattleEnemyViewDto(
       boolean isTarget,
       boolean isStunned
   ) {
-    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, null, null, 0, false);
+    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, null, null, 0, false, 1, "CENTER");
   }
 }

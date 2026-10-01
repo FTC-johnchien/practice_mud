@@ -207,6 +207,25 @@ public class Party {
     return target.getName() + " 的【" + targetSlot.getDisplayName() + "】部位未穿戴任何裝備！";
   }
 
+  public boolean isFormationActive() {
+    if (equippedFormation == null || formationBroken || members == null || members.isEmpty()) {
+      return false;
+    }
+    int effSize = getAliveCount();
+    if (equippedFormation.getRequiredPartySize() > 0 && effSize != equippedFormation.getRequiredPartySize()) {
+      return false;
+    }
+    if (equippedFormation.getRequiredClasses() != null && !equippedFormation.getRequiredClasses().isEmpty()) {
+      List<PartyMember> livingMembers = members.stream().filter(PartyMember::isAlive).toList();
+      if (livingMembers.isEmpty()) livingMembers = members;
+      for (String req : equippedFormation.getRequiredClasses()) {
+        boolean has = livingMembers.stream().anyMatch(m -> FormationTemplate.satisfiesClassRequirement(m, req));
+        if (!has) return false;
+      }
+    }
+    return true;
+  }
+
   public void setEquippedFormation(FormationTemplate equippedFormation) {
     this.equippedFormation = equippedFormation;
     this.formationBroken = false;
@@ -215,7 +234,7 @@ public class Party {
   }
 
   public FormationSlot getSlotForMember(int memberIndex) {
-    if (equippedFormation == null || formationBroken || members == null || memberIndex < 0 || memberIndex >= members.size()) {
+    if (!isFormationActive() || members == null || memberIndex < 0 || memberIndex >= members.size()) {
       return null;
     }
     PartyMember target = members.get(memberIndex);
@@ -231,7 +250,16 @@ public class Party {
   }
 
   public void alignFormationRows() {
-    if (members == null || members.isEmpty() || equippedFormation == null || formationBroken) return;
+    if (members == null || members.isEmpty()) return;
+    if (!isFormationActive()) {
+      // 陣法無法生效 (即沒有使用陣法)，讓角色都放到前衛比較合理
+      for (PartyMember m : members) {
+        if (m != null) {
+          m.setRow(RowPosition.FRONT);
+        }
+      }
+      return;
+    }
     for (int i = 0; i < members.size(); i++) {
       PartyMember m = members.get(i);
       if (m == null || !m.isAlive()) continue;
@@ -250,7 +278,7 @@ public class Party {
       for (int j = 0; j < 10; j++) {
         m.removeBuff("buff_formation_slot_" + j);
       }
-      if (equippedFormation != null && !formationBroken && m.isAlive()) {
+      if (isFormationActive() && m.isAlive()) {
         FormationSlot slot = getSlotForMember(i);
         if (slot != null) {
           ActiveBuff formBuff = ActiveBuff.builder()
@@ -319,13 +347,19 @@ public class Party {
       }
     }
     members.add(member);
+    alignFormationRows();
     refreshFormation();
     return true;
   }
 
   public boolean removeMember(String memberId) {
     if (memberId == null) return false;
-    return members.removeIf(m -> memberId.equals(m.getId()));
+    boolean removed = members.removeIf(m -> memberId.equals(m.getId()));
+    if (removed) {
+      alignFormationRows();
+      refreshFormation();
+    }
+    return removed;
   }
 
   public PartyMember getMember(int index) {

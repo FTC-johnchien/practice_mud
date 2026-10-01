@@ -138,8 +138,11 @@ public record DrpgStateDto(
     return toPartyViewDto(party, new TemplateCatalog());
   }
 
-  public static PartyViewDto toPartyViewDto(Party party, TemplateReader templateReader) {
+  public static PartyViewDto toPartyViewDto(Party party, TemplateReader templateReaderInput) {
     if (party == null || party.getMembers() == null) return null;
+    final TemplateReader templateReader = (templateReaderInput != null)
+        ? templateReaderInput
+        : new TemplateCatalog();
     List<PartyMemberViewDto> memberViews = new ArrayList<>();
     for (int memberIdx = 0; memberIdx < party.getMembers().size(); memberIdx++) {
       PartyMember m = party.getMembers().get(memberIdx);
@@ -361,26 +364,30 @@ public record DrpgStateDto(
           (m.getCurrentCastingSkill() != null ? m.getCurrentCastingSkill().getName() : null),
           m.getCastingDurationMs(),
           m.getCastingRemainingMs(),
-          (party.getSlotForMember(memberIdx) != null
+          (party.isFormationActive() && party.getSlotForMember(memberIdx) != null
               ? party.getSlotForMember(memberIdx).getSlotName() : (!m.isAlive() ? "【陣亡離陣】" : null)),
-          (party.getSlotForMember(memberIdx) != null && party.getSlotForMember(memberIdx).getRequiredRow() != null
+          (party.isFormationActive() && party.getSlotForMember(memberIdx) != null && party.getSlotForMember(memberIdx).getRequiredRow() != null
               ? party.getSlotForMember(memberIdx).getRequiredRow().name() : "ANY"),
-          (party.getSlotForMember(memberIdx) != null
+          (party.isFormationActive() && party.getSlotForMember(memberIdx) != null
               ? party.getSlotForMember(memberIdx).getSpecialBonusDesc() : null),
-          (party.getSlotForMember(memberIdx) != null
+          (party.isFormationActive() && party.getSlotForMember(memberIdx) != null
               && (party.getSlotForMember(memberIdx).getRequiredRow() == com.example.htmlmud.domain.party.model.RowPosition.ANY
                   || party.getSlotForMember(memberIdx).getRequiredRow() == m.getRow())),
-          (party.getSlotForMember(memberIdx) != null
+          (party.isFormationActive() && party.getSlotForMember(memberIdx) != null
               ? party.getSlotForMember(memberIdx).getGridX() : Math.min(memberIdx, 4)),
-          (party.getSlotForMember(memberIdx) != null
-              ? party.getSlotForMember(memberIdx).getGridY() : (m.getRow() == com.example.htmlmud.domain.party.model.RowPosition.FRONT ? 0 : (m.getRow() == com.example.htmlmud.domain.party.model.RowPosition.MIDDLE ? 1 : 2)))
+          (party.isFormationActive() && party.getSlotForMember(memberIdx) != null
+              ? party.getSlotForMember(memberIdx).getGridY() : 0)
       ));
     }
 
+    boolean isBroken = party.isFormationBroken();
+    boolean isActive = party.isFormationActive();
     String formName = party.getEquippedFormation() != null
-        ? (party.isFormationBroken() ? party.getEquippedFormation().getName() + " (已崩解)" : party.getEquippedFormation().getName())
+        ? (isBroken ? party.getEquippedFormation().getName() + " (已崩解)"
+            : (!isActive ? party.getEquippedFormation().getName() + " (未生效)"
+            : party.getEquippedFormation().getName()))
         : "無";
-    String ultName = (party.getEquippedFormation() != null && party.getEquippedFormation().getUltimateSkill() != null && !party.isFormationBroken())
+    String ultName = (party.getEquippedFormation() != null && party.getEquippedFormation().getUltimateSkill() != null && isActive)
         ? party.getEquippedFormation().getUltimateSkill().getName() : "";
 
     List<PartyFormationOptionDto> availableFormations = new ArrayList<>();
@@ -441,10 +448,11 @@ public record DrpgStateDto(
         formName,
         party.getFormationEnergy(),
         ultName,
-        party.canCastUltimate(),
+        party.canCastUltimate() && isActive,
         memberViews,
         invView,
-        availableFormations
+        availableFormations,
+        isActive
     );
   }
 
@@ -612,8 +620,22 @@ public record DrpgStateDto(
       boolean canCastUltimate,
       List<PartyMemberViewDto> members,
       PartyInventoryViewDto inventory,
-      List<PartyFormationOptionDto> availableFormations
+      List<PartyFormationOptionDto> availableFormations,
+      boolean formationActive
   ) {
+    public PartyViewDto(
+        String name,
+        String formationName,
+        int formationEnergy,
+        String ultimateSkillName,
+        boolean canCastUltimate,
+        List<PartyMemberViewDto> members,
+        PartyInventoryViewDto inventory,
+        List<PartyFormationOptionDto> availableFormations
+    ) {
+      this(name, formationName, formationEnergy, ultimateSkillName, canCastUltimate, members, inventory, availableFormations, true);
+    }
+
     public PartyViewDto(
         String name,
         String formationName,
@@ -623,7 +645,7 @@ public record DrpgStateDto(
         List<PartyMemberViewDto> members,
         PartyInventoryViewDto inventory
     ) {
-      this(name, formationName, formationEnergy, ultimateSkillName, canCastUltimate, members, inventory, List.of());
+      this(name, formationName, formationEnergy, ultimateSkillName, canCastUltimate, members, inventory, List.of(), true);
     }
   }
 

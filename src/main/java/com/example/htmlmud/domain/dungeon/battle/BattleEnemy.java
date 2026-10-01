@@ -45,6 +45,18 @@ public class BattleEnemy implements Buffable {
   private RowPosition row = RowPosition.FRONT;
     @Builder.Default
     private boolean isLarge = false;
+    @Builder.Default
+    private int size = 1;
+    @Builder.Default
+    private String slot = "CENTER";
+    @Builder.Default
+    private int rowIdx = 1;
+    @Builder.Default
+    private int colIdx = 2;
+    @Builder.Default
+    private int width = 1;
+    @Builder.Default
+    private int height = 1;
   @Builder.Default
   private long attackIntervalMs = 2200;
   @Builder.Default

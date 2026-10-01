@@ -268,60 +268,45 @@
         </div>
       </section>
 
-      <!-- 3. 戰鬥交鋒主舞台 (戰鬥爆發時展開，佔 60% 寬度，支援 1~7 隻怪雙排陣列與直覺集火) -->
+      <!-- 3. 戰鬥交鋒主舞台 (戰鬥爆發時展開，支援 5x5 敵方與 5x3 我方交鋒) -->
       <section id="battle-arena-panel" class="battle-arena-panel battle-main-stage hidden">
-        <div class="battle-arena-header">
-          <div class="battle-header-left">
-            <span class="battle-title">⚔️ 生死交鋒・戰場對峙</span>
-            <span id="battle-status-badge" class="battle-status-badge">戰鬥交鋒中</span>
-          </div>
-          <div class="battle-header-right">
-            <span class="battle-tip">💡 點擊敵怪鎖定全隊集火目標，點擊下方隊員施放招式，按 Space 迎戰，Esc 遁地</span>
-            <button id="battle-swap-side-btn" class="town-switch-side-btn" onclick="toggleRadarPosition()" title="切換左右視窗佈局">⇄ 換邊</button>
-          </div>
-        </div>
+        <!-- 浮動右上角換邊按鈕 (省去整行 Header 垂直空間) -->
+        <button id="battle-swap-side-btn" class="floating-battle-swap-btn" onclick="toggleRadarPosition()" title="切換左右視窗佈局">⇄ 換邊</button>
 
-        <!-- 戰場交鋒主體：上部敵方陣線、中部鎖定準星線、下部我方戰陣概覽 -->
+        <!-- 戰場交鋒主體：上部敵方 5x5 陣線、中部純粹交鋒細線、下部我方戰陣與戰備甲板 -->
         <div class="battle-arena-body">
-          <!-- 敵方陣營 (支援 1~7 隻彈性雙排佈局) -->
+          <!-- 敵方陣營 5x5 格盤 (內嵌角標與狀態，底部靠齊交鋒線) -->
           <div class="battle-enemies-wrapper">
-            <div class="battle-section-title">
+            <div class="battle-enemies-badge-corner">
               <span>👹 敵方陣線</span>
               <span id="battle-enemies-count" class="battle-count-badge">2 體</span>
+              <span id="battle-status-badge" class="battle-status-badge">戰鬥交鋒中</span>
             </div>
             <div id="battle-enemies-container" class="battle-enemies-container">
-              <!-- 由 drpg-view.js 動態渲染敵方前排與後排 -->
+              <!-- 由 battle-panel.js 動態渲染敵方陣列 -->
             </div>
           </div>
 
-          <!-- 戰場交鋒線 (集火目標提示 & 陣法流光) -->
+          <!-- 戰場交鋒線 (純粹一條 2px 微光細線，無文字佔位) -->
           <div class="battle-clash-divider">
             <div class="clash-line"></div>
-            <div id="battle-focus-hint" class="battle-focus-hint">
-              🎯 全隊集火目標：<span id="battle-focus-name" class="focus-name-highlight">未指定</span>
-            </div>
-            <div class="clash-line"></div>
           </div>
 
-          <!-- 我方戰陣隊伍 (居中雙排前衛/後衛陣列) -->
-          <div class="battle-party-wrapper">
-            <div class="battle-section-title">
-              <span>🛡️ 我方作戰隊伍</span>
-              <span class="battle-tip-sub">點選隊員切換下方戰備指揮台</span>
+          <!-- 我方戰備甲板 (三欄複合佈局：左欄指令選單 + 中欄 5x3 戰陣盤 + 右欄英雄狀態/技能區) -->
+          <div id="combat-command-dock" class="battle-lower-combat-deck">
+            <!-- 左欄：隊員名稱與三態動作指令選單 (屬性與狀態、戰陣武技、仙道法術) -->
+            <div id="dock-actions-column" class="dock-actions-column"></div>
+
+            <!-- 中欄：我方戰陣 5x3 盤 (5 欄 x 3 排，原位倒下標記 💀，字體嚴格 >= 13px) -->
+            <div class="battle-party-wrapper">
+              <div id="battle-party-grid-5x3" class="battle-party-grid-5x3">
+                <!-- 由 battle-panel.js 動態渲染 5x3 矩陣孔位 -->
+              </div>
             </div>
-            <div id="battle-party-quick-bar" class="battle-party-quick-bar">
-              <!-- 由 battle-panel.js 動態渲染當前隊員快速狀態 -->
-            </div>
+
+            <!-- 右欄：隊員四維狀態條或武技法術選擇網格 -->
+            <div id="dock-content-column" class="dock-content-column"></div>
           </div>
-        </div>
-
-        <!-- 4. 暗黑地牢式固定戰備指揮台 (Combat Command Dock，零高度跳動) -->
-        <div id="combat-command-dock" class="combat-command-dock">
-          <!-- 左欄：指令選單 -->
-          <div id="dock-actions-column" class="dock-actions-column"></div>
-
-          <!-- 右欄：屬性與技能顯示 -->
-          <div id="dock-content-column" class="dock-content-column"></div>
         </div>
       </section>
 

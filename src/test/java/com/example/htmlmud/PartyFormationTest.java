@@ -345,4 +345,56 @@ class PartyFormationTest {
     var f5List = partyService.getFormationsForPartySize(5);
     assertEquals(7, f5List.size(), "五行、十字、鳳天舞、青龍、白虎、玄武、玄陰");
   }
+
+  @Test
+  @DisplayName("測試隊伍不符合陣法要求時（如3人隊伍裝備4人四象陣），陣法無法生效且全員移至前衛")
+  void testFormationInactiveWhenPartySizeMismatchAndFrontRowPlacement() {
+    // 建立 3 人隊伍
+    party.getMembers().remove(4);
+    party.getMembers().remove(3);
+    assertEquals(3, party.size());
+
+    // 裝備 4 人陣法《四象辟邪陣》
+    var fourSymbols = partyService.getFormation("formation_four_symbols");
+    party.setEquippedFormation(fourSymbols);
+
+    // 驗證陣法不生效
+    assertFalse(party.isFormationActive(), "3 人隊伍裝備 4 人陣法應無法生效");
+    assertNull(party.getSlotForMember(0), "未生效時不應分配孔位");
+    assertNull(party.getSlotForMember(1), "未生效時不應分配孔位");
+    assertNull(party.getSlotForMember(2), "未生效時不應分配孔位");
+
+    // 驗證全員自動移至前衛線
+    assertEquals(RowPosition.FRONT, party.getMember(0).getRow(), "未生效時全員應置於前衛");
+    assertEquals(RowPosition.FRONT, party.getMember(1).getRow(), "未生效時全員應置於前衛");
+    assertEquals(RowPosition.FRONT, party.getMember(2).getRow(), "未生效時全員應置於前衛");
+
+    // 驗證未享有陣法屬性加成
+    for (int i = 0; i < 3; i++) {
+      for (int slotIdx = 0; slotIdx < 5; slotIdx++) {
+        assertFalse(party.getMember(i).hasActiveBuff("buff_formation_slot_" + slotIdx), "未生效時不應有孔位 Buff");
+      }
+    }
+
+    // 驗證 DrpgStateDto 轉換
+    var dto = com.example.htmlmud.domain.dungeon.dto.DrpgStateDto.toPartyViewDto(party, null);
+    assertNotNull(dto);
+    assertFalse(dto.formationActive(), "dto.formationActive 應為 false");
+    assertTrue(dto.formationName().contains("未生效"), "dto.formationName 應標註未生效");
+    assertEquals("", dto.ultimateSkillName(), "未生效時奧義應為空");
+    for (var mDto : dto.members()) {
+      assertNull(mDto.formationSlotBonus(), "未生效時 formationSlotBonus 應為 null");
+      assertFalse(mDto.formationSlotActive(), "未生效時 formationSlotActive 應為 false");
+      assertEquals(0, mDto.gridY(), "未生效時網格 Y 應固定在前衛線 0");
+    }
+
+    // 當換成合適的 3 人陣法《三才聚靈陣》時，恢復生效
+    var sanCai = partyService.getFormation("formation_san_cai");
+    party.setEquippedFormation(sanCai);
+    assertTrue(party.isFormationActive(), "3 人隊伍裝備 3 人陣法應生效");
+    assertNotNull(party.getSlotForMember(0), "生效時應分配孔位");
+    var dtoActive = com.example.htmlmud.domain.dungeon.dto.DrpgStateDto.toPartyViewDto(party, null);
+    assertTrue(dtoActive.formationActive());
+    assertFalse(dtoActive.formationName().contains("未生效"));
+  }
 }

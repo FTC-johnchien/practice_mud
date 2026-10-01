@@ -1037,8 +1037,9 @@ body, html {
   background: radial-gradient(circle at 50% 20%, #1c141d 0%, #0d1117 80%, #06090e 100%);
   display: flex;
   flex-direction: column;
-  padding: 12px 18px;
-  gap: 10px;
+  padding: 8px 12px;
+  gap: 4px;
+  position: relative;
   overflow: hidden;
   box-shadow: inset 0 0 30px rgba(185, 28, 28, 0.15);
   animation: arena-appear 0.3s ease-out;
@@ -1053,53 +1054,37 @@ body, html {
   border-left: 2px solid #b91c1c;
 }
 
-@keyframes arena-appear {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+/* 浮動換邊按鈕 (省去整行 Header 垂直空間) */
+.floating-battle-swap-btn {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  z-index: 20;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid #334155;
+  color: #94a3b8;
+  font-size: 13px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
 }
 
-.battle-arena-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  border-bottom: 1px solid #37232b;
-  padding-bottom: 6px;
-}
-
-.battle-header-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.battle-title {
-  font-weight: bold;
-  font-size: var(--font-base);
-  color: #f87171;
-  letter-spacing: 0.5px;
+.floating-battle-swap-btn:hover {
+  background: rgba(30, 41, 59, 0.95);
+  color: #38bdf8;
+  border-color: #38bdf8;
 }
 
 .battle-status-badge {
-  font-size: var(--font-xs);
-  padding: 2px 8px;
-  border-radius: 12px;
+  font-size: 13px;
+  padding: 1px 6px;
+  border-radius: 10px;
   background: rgba(239, 68, 68, 0.2);
   color: #fca5a5;
   border: 1px solid rgba(239, 68, 68, 0.4);
   animation: pulse-danger 1.5s infinite;
-}
-
-.battle-header-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.battle-tip {
-  font-size: var(--font-xs);
-  color: #94a3b8;
 }
 
 .battle-arena-body {
@@ -1107,37 +1092,37 @@ body, html {
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  gap: 12px;
-  overflow-y: auto;
-  padding-right: 4px;
+  gap: 4px;
+  overflow: hidden;
 }
 
-/* 敵方陣營外殼與標題 */
+/* 敵方陣營外殼與標題 (底部靠齊交鋒線，頂部預留標籤安全間距) */
 .battle-enemies-wrapper {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  justify-content: flex-end;
+  position: relative;
+  padding-top: 26px;
 }
 
-.battle-section-title {
+.battle-enemies-badge-corner {
+  position: absolute;
+  top: 2px;
+  left: 4px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  font-size: var(--font-xs);
+  gap: 6px;
+  z-index: 10;
+  font-size: 13px;
   font-weight: bold;
   color: #fca5a5;
-  border-bottom: 1px solid rgba(239, 68, 68, 0.25);
-  padding-bottom: 4px;
-}
-
-.battle-tip-sub {
-  font-size: var(--font-xs);
-  font-weight: normal;
-  color: #94a3b8;
+  pointer-events: none;
 }
 
 .battle-count-badge {
-  font-size: var(--font-xs);
+  font-size: 13px;
   background: rgba(239, 68, 68, 0.25);
   border: 1px solid rgba(239, 68, 68, 0.4);
   color: #fecaca;
@@ -1145,10 +1130,11 @@ body, html {
   border-radius: 10px;
 }
 
-/* 敵方陣營容器 (雙層前後排、水平完全居中) */
+/* 敵方陣營容器 (雙層前後排、朝向交鋒線底部貼齊) */
 .battle-enemies-container {
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   gap: 8px;
   width: 100%;
 }
@@ -1195,33 +1181,43 @@ body, html {
 .battle-tier-cards {
   display: flex;
   justify-content: center;
-  align-items: stretch;
-  gap: 12px;
+  align-items: flex-end;
+  gap: 10px;
   flex-wrap: wrap;
   width: 100%;
 }
 
-/* 敵方卡片 */
+/* 敵方 5x5 真正網格陣盤 (寬 674px x 高 374px，完美適配主舞台高度，不被頂部邊界遮擋) */
+.battle-enemies-grid-5x5 {
+  display: grid;
+  grid-template-columns: repeat(5, 130px);
+  grid-template-rows: repeat(5, 70px);
+  gap: 6px;
+  justify-content: center;
+  align-content: end;
+  width: 674px;
+  height: 374px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* 敵方卡片 (基準 1x1 單元: 130px 寬 x 70px 高，滿 5x5 時 25 格完美填滿) */
 .enemy-card {
   background: #141b27;
   border: 1px solid #334155;
-  border-radius: 8px;
-  padding: 6px 10px;
+  border-radius: 6px;
+  padding: 5px 8px;
   cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 4px;
+  gap: 2px;
   position: relative;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-  min-width: 160px;
-  max-width: 250px;
-  height: 56px;
-  min-height: 56px;
-  max-height: 56px;
+  width: 100%;
+  height: 100%;
   box-sizing: border-box;
-  flex: 1 1 auto;
 }
 
 .enemy-card:hover {
@@ -1231,18 +1227,20 @@ body, html {
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
 }
 
-/* 巨型 2x2 敵方卡片 (Boss / 大型怪物) */
+.enemy-card.size-1x1 {
+  width: 130px;
+  height: 70px;
+}
+
+/* 巨型 2x2 敵方卡片 (精確佔 2 欄 2 排: 266px 寬 x 146px 高) */
 .enemy-card.size-2x2 {
-  min-width: 320px;
-  max-width: 440px;
-  height: 120px;
-  min-height: 120px;
-  max-height: 120px;
+  width: 266px;
+  height: 146px;
   background: radial-gradient(circle at top left, #241429, #0f1422);
   border: 2px solid #a855f7;
   box-shadow: 0 4px 16px rgba(168, 85, 247, 0.35);
   padding: 8px 12px;
-  gap: 6px;
+  gap: 5px;
 }
 
 .enemy-card.size-2x2:hover {
@@ -1253,6 +1251,67 @@ body, html {
 .enemy-card.size-2x2.selected-target {
   border: 2px solid #ef4444 !important;
   box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), inset 0 0 10px rgba(239, 68, 68, 0.3);
+}
+
+/* 巨擘 3x3 敵方卡片 (精確佔 3 欄 3 排: 402px 寬 x 222px 高) */
+.enemy-card.size-3x3 {
+  width: 402px;
+  height: 222px;
+  background: radial-gradient(circle at top center, #3c1334 0%, #1c0e29 55%, #0c101a 100%);
+  border: 2px solid #ec4899;
+  box-shadow: 0 6px 24px rgba(236, 72, 153, 0.4), inset 0 0 16px rgba(236, 72, 153, 0.2);
+  padding: 10px 14px;
+  gap: 6px;
+}
+
+.enemy-card.size-3x3:hover {
+  border-color: #fb7185;
+  box-shadow: 0 8px 28px rgba(244, 63, 94, 0.5);
+}
+
+.enemy-card.size-3x3.selected-target {
+  border: 2px solid #ec4899 !important;
+  box-shadow: 0 0 25px rgba(236, 72, 153, 0.9), inset 0 0 15px rgba(236, 72, 153, 0.3);
+}
+
+/* 貫通 1x5 敵方卡片 (精確佔 1 欄 5 排: 130px 寬 x 374px 高) */
+.enemy-card.size-1x5 {
+  width: 130px;
+  height: 374px;
+  background: radial-gradient(circle at top, #1e293b, #0a1120);
+  border: 2px solid #3b82f6;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+  padding: 8px 6px;
+}
+
+.enemy-card.size-1x5:hover {
+  border-color: #60a5fa;
+  box-shadow: 0 6px 24px rgba(96, 165, 250, 0.5);
+}
+
+.enemy-card.size-1x5.selected-target {
+  border: 2px solid #38bdf8 !important;
+  box-shadow: 0 0 22px rgba(56, 189, 248, 0.9), inset 0 0 12px rgba(56, 189, 248, 0.3);
+}
+
+/* 深處 1x3 敵方卡片 (精確佔 1 欄 3 排: 130px 寬 x 222px 高) */
+.enemy-card.size-1x3 {
+  width: 130px;
+  height: 222px;
+  background: radial-gradient(circle at top, #1e1b4b, #0f1422);
+  border: 2px solid #a855f7;
+  box-shadow: 0 4px 16px rgba(168, 85, 247, 0.35);
+  padding: 8px 6px;
+}
+
+.enemy-card.size-1x3:hover {
+  border-color: #c084fc;
+  box-shadow: 0 6px 20px rgba(192, 132, 252, 0.45);
+}
+
+.enemy-card.size-1x3.selected-target {
+  border: 2px solid #c084fc !important;
+  box-shadow: 0 0 20px rgba(192, 132, 252, 0.9), inset 0 0 10px rgba(192, 132, 252, 0.3);
 }
 
 .large-enemy-badge {
@@ -1284,99 +1343,155 @@ body, html {
   font-size: var(--font-sm) !important;
 }
 
-/* 當選中為集火目標時的光環準星效果 */
+/* 當選中為集火目標時的光環準星效果 (純色彩與外發光識別，無文字佔位) */
 .enemy-card.selected-target {
   border: 2px solid #ef4444 !important;
-  box-shadow: 0 0 16px rgba(239, 68, 68, 0.75), inset 0 0 8px rgba(239, 68, 68, 0.2);
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.85), inset 0 0 6px rgba(239, 68, 68, 0.3) !important;
   background: #2c161f;
-  transform: scale(1.02);
-}
-
-.enemy-card.selected-target::after {
-  content: "🎯 集火鎖定";
-  position: absolute;
-  top: -9px;
-  right: 10px;
-  font-size: var(--font-xs);
-  background: #ef4444;
-  color: #ffffff;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-weight: bold;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   animation: pulse-danger 1.5s infinite;
 }
 
-/* 戰場交鋒中線 */
+/* 戰場交鋒中線 (純粹一條 2px 微光細線) */
 .battle-clash-divider {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 2px 0;
+  height: 2px;
+  margin: 4px 0;
+  width: 100%;
 }
 
 .clash-line {
   flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.4), transparent);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.6) 35%, rgba(56, 189, 248, 0.6) 65%, transparent);
 }
 
-.battle-focus-hint {
-  font-size: var(--font-xs);
-  color: #cbd5e1;
-  background: rgba(15, 23, 42, 0.85);
-  padding: 3px 14px;
-  border-radius: 12px;
-  border: 1px solid #475569;
-  white-space: nowrap;
-}
-
-.focus-name-highlight {
-  color: #f87171;
-  font-weight: bold;
-}
-
-/* 我方戰隊在戰場主舞台的快速狀態列 */
+/* 我方戰隊在戰場主舞台的 5x3 戰陣盤 (放置於三欄式下半戰備甲板中央) */
 .battle-party-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  width: auto;
 }
 
-/* 我方戰隊在戰場主舞台的快速狀態列 (雙層前後排、居中) */
+.battle-party-grid-5x3,
 .battle-party-quick-bar {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  width: 100%;
+  gap: 3px;
+  align-items: center;
+  width: auto;
 }
 
-.battle-party-mini-card {
-  background: rgba(17, 24, 39, 0.85);
+.bpg-row {
+  display: grid;
+  grid-template-columns: repeat(5, 86px);
+  gap: 4px;
+  justify-content: center;
+  width: auto;
+}
+
+/* 5x3 我方角色卡片 (寬 102px，高 48px，完整容納 HP 9999/9999 絕不換行破版) */
+.battle-party-grid-card {
+  background: rgba(17, 24, 39, 0.92);
   border: 1px solid #374151;
-  border-radius: 6px;
-  padding: 6px 10px;
-  font-size: var(--font-xs);
+  border-radius: 5px;
+  padding: 2px 4px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  justify-content: space-between;
   cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 160px;
-  max-width: 230px;
-  flex: 1 1 auto;
+  transition: all 0.15s ease;
+  height: 48px;
+  box-sizing: border-box;
+  user-select: none;
 }
 
-.battle-party-mini-card:hover {
+.battle-party-grid-card:hover {
   border-color: #60a5fa;
   background: #1e293b;
 }
 
-.battle-party-mini-card.active-selected {
-  border-color: #3b82f6;
-  background: #1e2538;
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+.battle-party-grid-card.active-selected {
+  border-color: #38bdf8;
+  background: #1e293b;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+}
+
+.battle-party-grid-card.is-dead {
+  opacity: 0.65;
+  border-color: #7f1d1d;
+  background: rgba(30, 20, 25, 0.85);
+}
+
+.bpg-name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 18px;
+  line-height: 18px;
+}
+
+.bpg-name {
+  font-size: 13px;
+  font-weight: bold;
+  color: #f1f5f9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bpg-dead-badge {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.bpg-hp-wrap {
+  position: relative;
+  height: 20px;
+  background: #090e17;
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid #1e293b;
+}
+
+.bpg-hp-bar {
+  height: 100%;
+  background: #10b981;
+  transition: width 0.25s ease;
+}
+
+.bpg-hp-bar.is-dead {
+  background: #475569;
+}
+
+.bpg-hp-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: bold;
+  color: #ffffff;
+  text-shadow: 0 0 2px #000, 0 1px 2px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+  letter-spacing: 0.1px;
+  white-space: nowrap;
+  overflow: hidden;
+  line-height: 20px;
+}
+
+/* 5x3 空孔位 */
+.bpg-empty-cell {
+  height: 48px;
+  border: 1px dashed rgba(71, 85, 105, 0.35);
+  border-radius: 5px;
+  background: rgba(15, 23, 42, 0.15);
+  box-sizing: border-box;
+  pointer-events: none;
 }
 
 .enemy-card.dead {
@@ -5409,82 +5524,151 @@ body, html {
   margin-top: 4px;
 }
 
-/* 2-Column Command Dock Redesign */
+/* ========================================================
+   下半戰備甲板 (3-Column Lower Combat Deck)
+   ======================================================== */
+.battle-lower-combat-deck,
 .combat-command-dock {
-  height: 142px !important;
+  height: 162px !important;
+  min-height: 162px !important;
+  max-height: 162px !important;
+  flex-shrink: 0;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  padding: 4px 8px !important;
+  background: #090d14 !important;
+  border-top: 1px solid rgba(133, 30, 30, 0.8) !important;
+  border-radius: 6px;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
 }
+
+/* 左欄：隊員名稱與三態動作指令選單 */
 .dock-actions-column {
-  width: 140px;
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+  height: 152px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  justify-content: space-between;
+  gap: 4px;
   border-right: 1px dashed #374151;
-  padding-right: 8px;
-  overflow-y: auto;
+  padding-right: 6px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
+
 .dock-action-btn {
   background: #1e293b;
   border: 1px solid #334155;
   color: #e2e8f0;
-  padding: 6px;
+  padding: 4px 6px;
   border-radius: 4px;
-  font-size: var(--font-sm);
+  font-size: 13px;
   cursor: pointer;
   text-align: left;
   display: flex;
+  align-items: center;
   justify-content: space-between;
+  height: 32px;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
 }
 .dock-action-btn:hover { background: #334155; }
 .dock-action-btn.active { background: #0f172a; border-color: #38bdf8; color: #38bdf8; }
 
+/* 右欄：隊員狀態/技能區 (擴大寬度至 300~350px，清晰展示技能圖示、名稱與消耗) */
 .dock-content-column {
   flex: 1;
-  min-width: 0;
+  min-width: 300px;
+  max-width: 350px;
+  height: 152px;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  border-left: 1px dashed #374151;
+  padding-left: 8px;
+  box-sizing: border-box;
   overflow: hidden;
-  padding-left: 4px;
 }
+
 .dock-info-view {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  justify-content: space-between;
   height: 100%;
-  overflow-y: auto;
+  gap: 4px;
+  overflow: hidden;
 }
+
 .dock-skills-view {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  justify-content: space-between;
   height: 100%;
+  overflow: hidden;
 }
+
 .dock-skills-grid {
   display: grid;
-  grid-template-columns: repeat(10, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   grid-template-rows: repeat(2, 1fr);
-  gap: 4px;
+  gap: 5px;
   flex: 1;
   min-height: 0;
 }
+
 .dock-mini-skill {
-  background: #1e293b;
+  background: #141c2b;
   border: 1px solid #334155;
   border-radius: 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-size: var(--font-xs);
+  justify-content: space-between;
   cursor: pointer;
-  padding: 2px;
+  padding: 3px 2px 2px 2px;
   overflow: hidden;
+  height: 52px;
+  min-height: 52px;
+  max-height: 52px;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
 }
-.dock-mini-skill:hover { background: #334155; }
-.dock-mini-skill.disabled { opacity: 0.5; cursor: not-allowed; }
-.dock-mini-skill .skill-icon { font-size: 16px; line-height: 1; }
-.dock-mini-skill .skill-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; font-size: 10px; }
-.dock-mini-skill .skill-cost { font-size: 10px; font-weight: bold; }
+.dock-mini-skill:hover {
+  background: #1e293b;
+  border-color: #38bdf8;
+  transform: translateY(-1px);
+}
+.dock-mini-skill.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+}
+.dock-mini-skill .skill-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+.dock-mini-skill .skill-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  font-size: 13px;
+  font-weight: 500;
+  color: #f1f5f9;
+  line-height: 1.1;
+}
+.dock-mini-skill .skill-cost {
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1;
+}
 .cost-mp { color: #60a5fa; }
 .cost-rage { color: #f87171; }
 .cost-combo { color: #facc15; }
@@ -5493,10 +5677,10 @@ body, html {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 4px;
+  padding-top: 2px;
   border-top: 1px solid #1e293b;
-  font-size: var(--font-xs);
-  height: 24px;
+  font-size: 13px;
+  height: 22px;
 }
 .page-btn {
   background: #334155;
@@ -5504,18 +5688,8 @@ body, html {
   color: white;
   padding: 2px 8px;
   border-radius: 3px;
+  font-size: 13px;
   cursor: pointer;
 }
 .page-btn:hover { background: #475569; }
 .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-
-.battle-enemies-wrapper {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-.battle-enemies-container {
-  flex: 1;
-}
-
