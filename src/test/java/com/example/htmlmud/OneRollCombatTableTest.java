@@ -146,4 +146,62 @@ public class OneRollCombatTableTest {
     assertThat(res.finalDamage()).isEqualTo(25);
     assertThat(res.combatLog()).contains("⚡【幽冥斥候】");
   }
+
+  @Test
+  @DisplayName("圓桌極限修復: 同時啟用身法、招架、盾牌且高屬性時，總防禦收斂於上限，Crit 與 Normal Hit 均可觸發")
+  void testCombinedMaxDefenseSlicesReachable() {
+    // 啟用所有防禦能力
+    defender.enableSkill(SkillCategory.DODGE, "cloud_step");
+    defender.enableSkill(SkillCategory.PARRY, "iron_cloth");
+    PartyItemSlot shield = PartyItemSlot.builder()
+        .slotId("shield_01")
+        .itemId("iron_shield")
+        .name("玄鐵重盾")
+        .itemType(ItemType.SHIELD)
+        .equipSlot(EquipmentSlot.OFF_HAND)
+        .bonusDefense(15)
+        .build();
+    defender.equipShield(shield);
+
+    // 防守方屬性：DEX 30, STR 30, CON 30；攻擊方 DEX 20
+    // 原公式計算：Miss 10% + Dodge 28% + Parry 39% + Block 29% = 106% (>100%)
+    // 修復後：防禦切片等比例縮放至 <= 75%，BlockLimit <= 0.75，CritLimit <= 0.84，Normal Hit 佔 >= 16%
+
+    // 1. 驗證 MISS 可達 (0.02)
+    var missRes = defenseResolver.resolveEnemyAttack(attacker, defender, 30, "攻勢", 0.02);
+    assertThat(missRes.outcome()).isEqualTo(DefenseOutcome.MISS);
+
+    // 2. 驗證 DODGED 可達 (0.15)
+    var dodgeRes = defenseResolver.resolveEnemyAttack(attacker, defender, 30, "攻勢", 0.15);
+    assertThat(dodgeRes.outcome()).isEqualTo(DefenseOutcome.DODGED);
+
+    // 3. 驗證 PARRIED 可達 (0.35)
+    var parryRes = defenseResolver.resolveEnemyAttack(attacker, defender, 30, "攻勢", 0.35);
+    assertThat(parryRes.outcome()).isEqualTo(DefenseOutcome.PARRIED);
+
+    // 4. 驗證 BLOCKED 可達 (0.65)
+    var blockRes = defenseResolver.resolveEnemyAttack(attacker, defender, 30, "攻勢", 0.65);
+    assertThat(blockRes.outcome()).isEqualTo(DefenseOutcome.BLOCKED);
+
+    // 5. 驗證 CRIT 可達 (0.78)
+    var critRes = defenseResolver.resolveEnemyAttack(attacker, defender, 30, "攻勢", 0.78);
+    assertThat(critRes.outcome()).isEqualTo(DefenseOutcome.CRIT);
+
+    // 6. 驗證 Normal HIT 可達 (0.95)
+    var hitRes = defenseResolver.resolveEnemyAttack(attacker, defender, 30, "攻勢", 0.95);
+    assertThat(hitRes.outcome()).isEqualTo(DefenseOutcome.HIT);
+
+    // 7. 蒙地卡羅隨機模擬 3000 次，驗證六種結果全部有命中次數 (無任何區間被湮滅)
+    java.util.Map<DefenseOutcome, Integer> counts = new java.util.EnumMap<>(DefenseOutcome.class);
+    for (int i = 0; i < 3000; i++) {
+      var res = defenseResolver.resolveEnemyAttack(attacker, defender, 30, "攻勢", null);
+      counts.put(res.outcome(), counts.getOrDefault(res.outcome(), 0) + 1);
+    }
+
+    for (DefenseOutcome outcome : DefenseOutcome.values()) {
+      assertThat(counts.getOrDefault(outcome, 0))
+          .as("極限複合防禦下，結果 %s 應具備可達性 (次數 > 0)", outcome)
+          .isGreaterThan(0);
+    }
+  }
 }

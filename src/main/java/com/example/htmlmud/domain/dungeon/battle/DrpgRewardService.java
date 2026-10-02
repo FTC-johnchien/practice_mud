@@ -53,6 +53,9 @@ public class DrpgRewardService {
   @Autowired(required = false)
   private SkillBridgeService skillBridgeService;
 
+  @Autowired(required = false)
+  private com.example.htmlmud.domain.factory.ItemFactory itemFactory;
+
   @Autowired
   public DrpgRewardService(TemplateReader templateReader, DungeonManager dungeonManager) {
     this.templateReader = templateReader != null ? templateReader : new TemplateCatalog();
@@ -145,21 +148,22 @@ public class DrpgRewardService {
     // 1. 檢查是否有被擊殺的深淵畸變體，掉落【血肉道核】
     for (BattleEnemy e : ctx.getEnemies()) {
       if (!e.isAlive() && e.getId().startsWith("aberration-") && e.getDroppedDaoSkillId() != null) {
-        String coreSlotId = "slot-" + UUID.randomUUID().toString().substring(0, 8);
-        PartyItemSlot coreSlot = PartyItemSlot.builder()
-            .slotId(coreSlotId)
-            .itemId("dao_core_" + e.getDroppedDaoSkillId())
-            .name("【血肉道核・" + e.getDroppedDaoMemberName() + "】")
-            .icon("🧿")
-            .itemType(ItemType.CONSUMABLE)
-            .subType("SKILL_CORE")
-            .count(1)
-            .quality("EPIC")
-            .description("自異變同伴殘軀中剖出的古神血肉道核，隱隱傳出殘留的道法共鳴。使用後可領悟其生前絕學【" + e.getDroppedDaoSkillName() + "】！")
-            .effectType("LEARN_SKILL")
-            .grantedSkillId(e.getDroppedDaoSkillId())
-            .grantedSkillName(e.getDroppedDaoSkillName())
-            .build();
+        PartyItemSlot coreSlot = (itemFactory != null)
+            ? itemFactory.createDaoCore(e.getDroppedDaoMemberName(), e.getDroppedDaoSkillId(), e.getDroppedDaoSkillName())
+            : PartyItemSlot.builder()
+                .slotId("slot-" + UUID.randomUUID().toString().substring(0, 8))
+                .itemId("dao_core_" + e.getDroppedDaoSkillId())
+                .name("【血肉道核・" + e.getDroppedDaoMemberName() + "】")
+                .icon("🧿")
+                .itemType(ItemType.CONSUMABLE)
+                .subType("SKILL_CORE")
+                .count(1)
+                .quality("EPIC")
+                .description("自異變同伴殘軀中剖出的古神血肉道核，隱隱傳出殘留的道法共鳴。使用後可領悟其生前絕學【" + e.getDroppedDaoSkillName() + "】！")
+                .effectType("LEARN_SKILL")
+                .grantedSkillId(e.getDroppedDaoSkillId())
+                .grantedSkillName(e.getDroppedDaoSkillName())
+                .build();
         boolean added = ctx.getParty().getInventory().addSlot(coreSlot);
         if (added) {
           droppedItemNames.add("【血肉道核・" + e.getDroppedDaoMemberName() + "】(遺留絕學: " + e.getDroppedDaoSkillName() + ")");

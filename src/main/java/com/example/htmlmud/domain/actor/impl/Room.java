@@ -93,7 +93,11 @@ public class Room extends VirtualActor<RoomMessage> {
         roomService.say(players, sourceId, content);
       }
       case RoomMessage.TryPickItem(var args, var picker, var future) -> {
-        future.complete(roomService.tryPickItem(items, args, picker));
+        GameItem picked = roomService.tryPickItem(items, args, picker);
+        if (picked != null) {
+          roomService.record(this.getId(), items);
+        }
+        future.complete(picked);
       }
       case RoomMessage.Tick(var tickCount, var timestamp) -> {
         roomService.tick(this, tickCount, timestamp);
@@ -130,17 +134,19 @@ public class Room extends VirtualActor<RoomMessage> {
         future.complete(items);
       }
       case RoomMessage.RemoveItem(var itemId) -> {
-        items.removeIf(item -> item.getId().equals(itemId));
-        // 標記為 Dirty (需要存檔)
-        // WorldManager.markDirty(this.template.id());
+        boolean removed = items.removeIf(item -> item.getId().equals(itemId));
+        if (removed) {
+          roomService.record(this.getId(), items);
+        }
       }
       case RoomMessage.DropItem(var item) -> {
         if (item != null && !items.contains(item)) {
           items.add(item);
+          roomService.record(this.getId(), items);
         }
       }
       case RoomMessage.Record() -> {
-        roomService.record(this.getTemplate().id(), items);
+        roomService.record(this.getId(), items);
       }
       case RoomMessage.LookAtRoom(var playerId, var future) -> {
         future.complete(roomService.lookAtRoom(this, players, mobs, items, playerId));
@@ -197,7 +203,11 @@ public class Room extends VirtualActor<RoomMessage> {
 
   public Optional<GameItem> tryPickItem(String args, Player picker) {
     if (isActorThread()) {
-      return Optional.ofNullable(roomService.tryPickItem(items, args, picker));
+      GameItem item = roomService.tryPickItem(items, args, picker);
+      if (item != null) {
+        roomService.record(this.getId(), items);
+      }
+      return Optional.ofNullable(item);
     }
     CompletableFuture<GameItem> future = new CompletableFuture<>();
     this.send(new RoomMessage.TryPickItem(args, picker, future));

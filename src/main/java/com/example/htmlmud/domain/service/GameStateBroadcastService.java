@@ -95,9 +95,13 @@ public class GameStateBroadcastService {
         String displayName = dir != null ? dir.getDisplayName() : dirKey;
         String targetRoomId = entry.getValue().targetRoomId();
         String targetName = targetRoomId;
-        Room targetRoom = worldManager.getRoomActor(targetRoomId);
-        if (targetRoom != null && targetRoom.getTemplate() != null) {
-          targetName = targetRoom.getTemplate().name();
+        if (targetRoomId != null && templateReader.findRoom(targetRoomId).isPresent()) {
+          Room targetRoom = worldManager.getRoomActor(targetRoomId);
+          if (targetRoom != null && targetRoom.getTemplate() != null) {
+            targetName = targetRoom.getTemplate().name();
+          }
+        } else if (entry.getValue().doorName() != null && !entry.getValue().doorName().isBlank()) {
+          targetName = entry.getValue().doorName();
         }
         exits.add(new TownExitDto(dirKey, displayName, targetRoomId, targetName));
       }

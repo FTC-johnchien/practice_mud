@@ -245,13 +245,13 @@ function renderMemberTactics(m, idx) {
           const valDisplay = (!isAlways && !isBoss) ? ` ${r.conditionValue}` : '';
           return `
             <div class="tactics-rule-row ${r.enabled ? 'enabled' : 'disabled'}">
-              <div class="tactics-prio-badge">#${r.priority}</div>
+              <div class="tactics-prio-badge">#${escapeHtml(String(r.priority || ''))}</div>
               <div class="tactics-rule-desc">
-                <span class="tactics-cond-tag">${r.conditionLabel}${valDisplay}</span>
+                <span class="tactics-cond-tag">${escapeHtml(r.conditionLabel || '')}${escapeHtml(valDisplay)}</span>
                 <span class="tactics-arrow">➜</span>
-                <span class="tactics-target-tag">對 ${r.targetLabel}</span>
+                <span class="tactics-target-tag">對 ${escapeHtml(r.targetLabel || '')}</span>
                 <span class="tactics-arrow">➜</span>
-                <span class="tactics-skill-tag">施展【${r.skillName}】</span>
+                <span class="tactics-skill-tag">施展【${escapeHtml(r.skillName || '')}】</span>
               </div>
               <div class="tactics-rule-actions">
                 <button class="act-btn btn-sm ${r.enabled ? 'btn-green' : 'btn-gray'}" type="button"

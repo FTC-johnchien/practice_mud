@@ -183,6 +183,7 @@ class PartySwapAndAoeDamageTest {
     FormationTemplate formation = FormationTemplate.builder()
         .id("test_formation")
         .name("八卦大陣")
+        .requiredPartySize(2)
         .slots(List.of(slot0, slot1))
         .build();
 

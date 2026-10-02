@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import com.example.htmlmud.domain.model.config.ConsumableProp;
 import com.example.htmlmud.domain.model.config.EquipmentProp;
+import com.example.htmlmud.domain.model.definition.ItemDefinition;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -47,5 +48,9 @@ public record ItemTemplate(
 
   public boolean isStackable() {
     return isStackable;
+  }
+
+  public ItemDefinition toDefinition() {
+    return ItemDefinition.fromTemplate(this);
   }
 }

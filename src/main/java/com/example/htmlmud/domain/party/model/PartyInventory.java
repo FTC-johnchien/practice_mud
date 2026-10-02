@@ -141,18 +141,7 @@ public class PartyInventory {
       return PartyItemSlot.fromItemTemplate(opt.get(), count, slotId);
     }
 
-    // 內建 fallback 物品
-    if (templateId.contains("pill")) {
-      return PartyItemSlot.builder().slotId(slotId).itemId(templateId).name("太陰培元丹").icon("🧪").itemType(ItemType.CONSUMABLE).subType("POTION").count(count).description("太陰靈丹，服之可調和陰陽，回復 50 HP。").quality("UNCOMMON").effectType("HEAL_HP").effectValue(50).build();
-    } else if (templateId.contains("talisman")) {
-      return PartyItemSlot.builder().slotId(slotId).itemId(templateId).name("辟邪清心符").icon("📜").itemType(ItemType.CONSUMABLE).subType("TALISMAN").count(count).description("平復心魔與雜念，恢復 25 SAN，可解走火入魔。").quality("RARE").effectType("RESTORE_SAN").effectValue(25).build();
-    } else if (templateId.contains("sword")) {
-      return PartyItemSlot.builder().slotId(slotId).itemId(templateId).name("鏽蝕青銅古劍").icon("🗡️").itemType(ItemType.WEAPON).subType("SWORD").equipSlot(com.example.htmlmud.domain.model.enums.EquipmentSlot.MAIN_HAND).count(1).description("古墓出土古劍，攻擊力 +12~20。").quality("UNCOMMON").bonusMinDamage(12).bonusMaxDamage(20).build();
-    } else if (templateId.contains("robe")) {
-      return PartyItemSlot.builder().slotId(slotId).itemId(templateId).name("陰煞道袍").icon("🥋").itemType(ItemType.ARMOR).subType("CHEST").equipSlot(com.example.htmlmud.domain.model.enums.EquipmentSlot.BODY).count(1).description("玄絲道袍，防禦 +6，生命上限 +30。").quality("RARE").bonusDefense(6).bonusHp(30).build();
-    } else {
-      return PartyItemSlot.builder().slotId(slotId).itemId(templateId).name("古仙法物").icon("🔮").itemType(ItemType.MISC).count(count).description("古塚中掘出之神秘法物。").quality("COMMON").build();
-    }
+    return PartyItemSlot.createFallback(templateId, count);
   }
 
   private TemplateReader getTemplateReader() {

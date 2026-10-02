@@ -2,8 +2,13 @@ package com.example.htmlmud.domain.party.model;
 
 import java.util.HashMap;
 import java.util.Map;
+import com.example.htmlmud.domain.model.definition.ItemDefinition;
+import com.example.htmlmud.domain.model.entity.GameItem;
+import com.example.htmlmud.domain.model.entity.ItemInstance;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
+import com.example.htmlmud.domain.model.template.ItemTemplate;
+import com.example.htmlmud.domain.model.view.ItemView;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -81,129 +86,69 @@ public class PartyItemSlot {
     return itemType == ItemType.CONSUMABLE || itemType == ItemType.MATERIAL;
   }
 
-  public static PartyItemSlot fromItemTemplate(com.example.htmlmud.domain.model.template.ItemTemplate t) {
-    return fromItemTemplate(t, 1, null);
+  public static PartyItemSlot fromDefinition(ItemDefinition d) {
+    return fromDefinition(d, 1, null);
   }
 
-  public static PartyItemSlot fromItemTemplate(com.example.htmlmud.domain.model.template.ItemTemplate t, int count) {
-    return fromItemTemplate(t, count, null);
+  public static PartyItemSlot fromDefinition(ItemDefinition d, int count) {
+    return fromDefinition(d, count, null);
   }
 
-  public static PartyItemSlot fromItemTemplate(com.example.htmlmud.domain.model.template.ItemTemplate t, int count, String slotId) {
-    if (t == null) return null;
+  public static PartyItemSlot fromDefinition(ItemDefinition d, int count, String slotId) {
+    if (d == null) return null;
     if (slotId == null || slotId.isBlank()) {
       slotId = "slot-" + java.util.UUID.randomUUID().toString().substring(0, 8);
     }
-    String icon = "📦";
-    String effectType = null;
-    int effectValue = 0;
-    int minDmg = 0;
-    int maxDmg = 0;
-    int def = 0;
-    int hp = 0;
-    int san = 0;
-
-    EquipmentSlot equipSlot = null;
-    if (t.equipmentProp() != null && t.equipmentProp().slot() != null) {
-      equipSlot = t.equipmentProp().slot();
-    } else if (t.type() == ItemType.WEAPON) {
-      equipSlot = EquipmentSlot.MAIN_HAND;
-    } else if (t.type() == ItemType.SHIELD) {
-      equipSlot = EquipmentSlot.OFF_HAND;
-    } else if (t.type() == ItemType.ACCESSORY) {
-      equipSlot = EquipmentSlot.ACCESSORY_1;
-    } else if (t.type() == ItemType.ARMOR) {
-      equipSlot = EquipmentSlot.fromString(t.subType());
-    }
-
-    if (t.type() == ItemType.CONSUMABLE) {
-      if ("POTION".equals(t.subType())) {
-        icon = "🧪";
-        effectType = "HEAL_HP";
-        effectValue = 50;
-      } else if ("TALISMAN".equals(t.subType())) {
-        icon = "📜";
-        effectType = "RESTORE_SAN";
-        effectValue = 25;
-      } else if ("FOOD".equals(t.subType())) {
-        icon = "🍞";
-        effectType = "HEAL_HP";
-        effectValue = 20;
-      } else {
-        icon = "💊";
-        effectType = "HEAL_HP";
-        effectValue = 30;
-      }
-
-      if (t.consumableProp() != null) {
-        if (t.consumableProp().effect() != null) {
-          String effStr = t.consumableProp().effect().toUpperCase();
-          if (effStr.contains("SAN")) {
-            effectType = "RESTORE_SAN";
-          } else if (effStr.contains("HEAL") || effStr.contains("HP")) {
-            effectType = "HEAL_HP";
-          } else if (effStr.contains("MP")) {
-            effectType = "RESTORE_MP";
-          }
-        }
-        if (t.consumableProp().value() > 0) {
-          effectValue = t.consumableProp().value();
-        }
-      }
-    } else if (equipSlot != null) {
-      icon = switch (equipSlot) {
-        case MAIN_HAND -> "🗡️";
-        case OFF_HAND -> "🛡️";
-        case HEAD -> "👑";
-        case BODY -> "🥋";
-        case FEET -> "👢";
-        case ACCESSORY_1, ACCESSORY_2 -> "💍";
-      };
-
-      if (t.equipmentProp() != null) {
-        minDmg = t.equipmentProp().minDamage();
-        maxDmg = t.equipmentProp().maxDamage();
-        def = t.equipmentProp().defense();
-      } else if (t.type() == ItemType.WEAPON) {
-        minDmg = 12;
-        maxDmg = 20;
-      } else if (t.type() == ItemType.ARMOR) {
-        def = 6;
-      }
-
-      if (t.bonusStats() != null) {
-        hp += t.bonusStats().getOrDefault("MAX_HP", t.bonusStats().getOrDefault("hp", 0));
-        san += t.bonusStats().getOrDefault("MAX_SAN", t.bonusStats().getOrDefault("san", 0));
-        def += t.bonusStats().getOrDefault("DEFENSE", t.bonusStats().getOrDefault("def", 0));
-        minDmg += t.bonusStats().getOrDefault("MIN_DAMAGE", 0);
-        maxDmg += t.bonusStats().getOrDefault("MAX_DAMAGE", 0);
-      }
-    } else if (t.type() == ItemType.KEY_ITEM) {
-      icon = "🗝️";
-    }
-
     return PartyItemSlot.builder()
         .slotId(slotId)
-        .itemId(t.id())
-        .name(t.name())
-        .icon(icon)
-        .itemType(t.type())
-        .subType(t.subType())
-        .equipSlot(equipSlot)
+        .itemId(d.id())
+        .name(d.name())
+        .icon(d.icon())
+        .itemType(d.type())
+        .subType(d.subType())
+        .equipSlot(d.equipSlot())
         .count(count)
-        .description(t.description())
-        .quality(t.quality() != null ? t.quality() : "COMMON")
-        .effectType(effectType)
-        .effectValue(effectValue)
-        .bonusMinDamage(minDmg)
-        .bonusMaxDamage(maxDmg)
-        .bonusDefense(def)
-        .bonusHp(hp)
-        .bonusSan(san)
+        .maxStack(d.maxStack())
+        .description(d.description())
+        .quality(d.quality() != null ? d.quality() : "COMMON")
+        .effectType(d.effectType())
+        .effectValue(d.effectValue())
+        .bonusMinDamage(d.bonusMinDamage())
+        .bonusMaxDamage(d.bonusMaxDamage())
+        .bonusDefense(d.bonusDefense())
+        .bonusHp(d.bonusHp())
+        .bonusSan(d.bonusSan())
         .build();
   }
 
-  public static PartyItemSlot fromGameItem(com.example.htmlmud.domain.model.entity.GameItem item) {
+  public static PartyItemSlot fromItemTemplate(ItemTemplate t) {
+    return fromItemTemplate(t, 1, null);
+  }
+
+  public static PartyItemSlot fromItemTemplate(ItemTemplate t, int count) {
+    return fromItemTemplate(t, count, null);
+  }
+
+  public static PartyItemSlot fromItemTemplate(ItemTemplate t, int count, String slotId) {
+    if (t == null) return null;
+    return fromDefinition(ItemDefinition.fromTemplate(t), count, slotId);
+  }
+
+  public static PartyItemSlot createFallback(String templateId, int count) {
+    String slotId = "slot-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+    return PartyItemSlot.builder()
+        .slotId(slotId)
+        .itemId(templateId)
+        .name("法寶遺物 (" + templateId + ")")
+        .icon("📦")
+        .itemType(ItemType.MISC)
+        .count(count)
+        .description("未明之仙道遺物。")
+        .quality("COMMON")
+        .build();
+  }
+
+  public static PartyItemSlot fromGameItem(GameItem item) {
     if (item == null) return null;
     if (item.getTemplate() != null) {
       PartyItemSlot slot = fromItemTemplate(item.getTemplate(), item.getAmount() > 0 ? item.getAmount() : 1, item.getId());
@@ -225,8 +170,8 @@ public class PartyItemSlot {
         .build();
   }
 
-  public com.example.htmlmud.domain.model.entity.GameItem toGameItem() {
-    com.example.htmlmud.domain.model.entity.GameItem item = new com.example.htmlmud.domain.model.entity.GameItem();
+  public GameItem toGameItem() {
+    GameItem item = new GameItem();
     item.setId(this.slotId != null ? this.slotId : java.util.UUID.randomUUID().toString());
     item.setName(this.name);
     item.setDescription(this.description);
@@ -236,5 +181,44 @@ public class PartyItemSlot {
     var tpl = com.example.htmlmud.infra.persistence.repository.TemplateRepository.findItem(this.itemId);
     tpl.ifPresent(item::setTemplate);
     return item;
+  }
+
+  public ItemInstance toItemInstance() {
+    return ItemInstance.builder()
+        .instanceId(this.slotId != null ? this.slotId : java.util.UUID.randomUUID().toString())
+        .definitionId(this.itemId)
+        .quantity(this.count > 0 ? this.count : 1)
+        .build();
+  }
+
+  public ItemView toItemView() {
+    return ItemView.builder()
+        .slotId(this.slotId)
+        .itemId(this.itemId)
+        .name(this.name)
+        .icon(this.icon)
+        .itemType(this.itemType)
+        .subType(this.subType)
+        .equipSlot(this.equipSlot)
+        .count(this.count)
+        .maxStack(this.maxStack)
+        .description(this.description)
+        .quality(this.quality)
+        .effectType(this.effectType)
+        .effectValue(this.effectValue)
+        .grantedSkillId(this.grantedSkillId)
+        .grantedSkillName(this.grantedSkillName)
+        .bonusMinDamage(this.bonusMinDamage)
+        .bonusMaxDamage(this.bonusMaxDamage)
+        .bonusDefense(this.bonusDefense)
+        .bonusHp(this.bonusHp)
+        .bonusSan(this.bonusSan)
+        .consumable(isConsumable())
+        .weapon(isWeapon())
+        .armor(isArmor())
+        .shield(isShield())
+        .accessory(isAccessory())
+        .equipment(isEquipment())
+        .build();
   }
 }

@@ -478,6 +478,123 @@ export function initKeyboardControls() {
   updateModeBadge(false);
 }
 
+/**
+ * 全域事件委派系統 (集中處理 data-action 與對話框點擊外部關閉，徹底消除 inline onclick 以滿足嚴格 CSP)
+ */
+export function initEventDelegation() {
+  document.addEventListener('click', (e) => {
+    // 1. 處理 modal-overlay 點擊背景關閉
+    if (e.target.classList && e.target.classList.contains('modal-overlay')) {
+      const id = e.target.id;
+      if (id === 'new-game-modal') closeNewGameModal();
+      else if (id === 'guide-modal') closeGuideModal();
+      else if (id === 'save-modal') closeSaveModal();
+      else if (id === 'party-modal') togglePartyModal(false);
+      else if (id === 'shop-modal') toggleShopModal(false);
+      else if (id === 'dev-console-modal') toggleDevConsole(false);
+      return;
+    }
+
+    // 2. 尋找最近的帶有 data-action 的元素
+    const target = e.target.closest ? e.target.closest('[data-action]') : null;
+    if (!target) return;
+
+    const action = target.getAttribute('data-action');
+    switch (action) {
+      case 'continue-latest-save':
+        continueLatestSave();
+        break;
+      case 'open-save-modal':
+        openSaveModal(target.getAttribute('data-mode') || 'load');
+        break;
+      case 'close-save-modal':
+        closeSaveModal();
+        break;
+      case 'open-new-game-modal':
+        openNewGameModal();
+        break;
+      case 'close-new-game-modal':
+        closeNewGameModal();
+        break;
+      case 'trigger-new-game':
+        triggerNewGame();
+        break;
+      case 'open-guide-modal':
+        openGuideModal();
+        break;
+      case 'close-guide-modal':
+        closeGuideModal();
+        break;
+      case 'select-formation':
+        selectFormation(target.getAttribute('data-formation'));
+        break;
+      case 'start-prologue':
+        startPrologueFlow();
+        break;
+      case 'finish-prologue':
+        finishPrologueAndEnter();
+        break;
+      case 'toggle-radar-dock':
+        toggleRadarPosition();
+        break;
+      case 'toggle-radar-mode':
+        toggleRadarViewMode();
+        break;
+      case 'town-move':
+        sendTownMove(target.getAttribute('data-dir'));
+        break;
+      case 'party-formation-header':
+        if (window.triggerFormationAction) window.triggerFormationAction();
+        else sendCmd('formation');
+        break;
+      case 'toggle-bag':
+        toggleBagDrawer();
+        break;
+      case 'close-bag':
+        toggleBagDrawer(false);
+        break;
+      case 'toggle-party':
+        if (window.triggerPartyAction) window.triggerPartyAction();
+        else sendCmd('party');
+        break;
+      case 'close-party':
+        togglePartyModal(false);
+        break;
+      case 'main-menu-tab':
+        switchMainMenuTab(target.getAttribute('data-menu'));
+        break;
+      case 'close-shop':
+        toggleShopModal(false);
+        break;
+      case 'toggle-dev-console':
+        toggleDevConsole();
+        break;
+      case 'close-dev-console':
+        toggleDevConsole(false);
+        break;
+      case 'send-dev':
+        handleDevEnter();
+        break;
+      case 'send-cmd': {
+        const cmd = target.getAttribute('data-cmd');
+        if (cmd) sendCmd(cmd);
+        break;
+      }
+      case 'trigger-inspect':
+        if (window.triggerInspectAction) window.triggerInspectAction();
+        else sendCmd('look');
+        break;
+      case 'trigger-rest':
+        if (window.triggerRestAction) window.triggerRestAction();
+        else sendCmd('rest');
+        break;
+      case 'handle-enter':
+        if (window.handleEnter) window.handleEnter();
+        break;
+    }
+  });
+}
+
 // 頁面載入完成後初始化與全域函式掛載 (維持 100% 向後相容)
 if (typeof window !== 'undefined') {
   window.GameConstants = constants;
@@ -506,10 +623,12 @@ if (typeof window !== 'undefined') {
   window.renderTeamEquipmentOverview = renderTeamEquipmentOverview;
   window.renderEquipmentDiffPickerView = renderEquipmentDiffPickerView;
   window.initKeyboardControls = initKeyboardControls;
+  window.initEventDelegation = initEventDelegation;
 }
 
 window.addEventListener('DOMContentLoaded', () => {
   initKeyboardControls();
+  initEventDelegation();
   applyRadarPosition();
   updateRadarModeBtn();
   setTimeout(() => {

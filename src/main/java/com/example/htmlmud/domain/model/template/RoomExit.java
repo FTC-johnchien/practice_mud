@@ -20,12 +20,14 @@ public record RoomExit(
 
     boolean isHidden, // 是否隱藏 (需 search)
 
-    boolean pickProof // 是否無法被盜賊撬開？
+    boolean pickProof, // 是否無法被盜賊撬開？
+
+    String actionCommand // 特殊自定義動作指令 (例如進入地牢: dungeon enter mozhu_mines_b1f)
 
 ) {
   // 為了方便 JSON 簡寫 (如果只有 targetId)，可以透過 Custom Deserializer 處理，
   // 或者在 Java 程式碼中提供一個簡易建構的靜態方法。
   public static RoomExit of(String targetId) {
-    return new RoomExit(targetId, null, false, null, false, false);
+    return new RoomExit(targetId, null, false, null, false, false, null);
   }
 }

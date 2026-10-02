@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.model.entity.RoomStateRecord;
+import com.example.htmlmud.infra.persistence.entity.RoomStateEntity;
 import com.example.htmlmud.infra.persistence.repository.RoomStateRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,11 +35,30 @@ public class RoomPersistenceService extends AbstractAsyncBatchPersistenceService
       latestRecords.put(key, rec);
     }
 
-    // 只寫入去重後的資料
+    // 寫入去重後的資料 (存在則更新，不存在則新增)
     for (RoomStateRecord rec : latestRecords.values()) {
-      roomRepository.findByRoomIdAndZoneId(rec.roomId(), rec.zoneId()).ifPresent(entity -> {
+      try {
+        RoomStateEntity entity = roomRepository.findByRoomIdAndZoneId(rec.roomId(), rec.zoneId())
+            .orElseGet(() -> {
+              RoomStateEntity newEntity = new RoomStateEntity();
+              newEntity.setRoomId(rec.roomId());
+              newEntity.setZoneId(rec.zoneId());
+              return newEntity;
+            });
+
+        entity.setDroppedItems(rec.droppedItems() != null ? new java.util.ArrayList<>(rec.droppedItems()) : new java.util.ArrayList<>());
         roomRepository.save(entity);
-      });
+      } catch (Exception e) {
+        log.error("Failed to persist room state for {}:{}", rec.zoneId(), rec.roomId(), e);
+      }
     }
+  }
+
+  /**
+   * 讀取特定房間歷史儲存的地面掉落物清單
+   */
+  public java.util.Optional<List<com.example.htmlmud.domain.model.entity.GameItem>> loadDroppedItems(String zoneId, String roomId) {
+    return roomRepository.findByRoomIdAndZoneId(roomId, zoneId)
+        .map(entity -> entity.getDroppedItems() != null ? entity.getDroppedItems() : java.util.Collections.emptyList());
   }
 }

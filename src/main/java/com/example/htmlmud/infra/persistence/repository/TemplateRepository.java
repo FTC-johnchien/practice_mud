@@ -412,6 +412,9 @@ public class TemplateRepository {
     for (RoomTemplate room : roomTemplates.values()) {
       if (room.exits() != null) {
         for (Map.Entry<String, RoomExit> entry : room.exits().entrySet()) {
+          if (entry.getValue().actionCommand() != null && !entry.getValue().actionCommand().isBlank()) {
+            continue;
+          }
           String targetId = entry.getValue().targetRoomId();
           if (targetId != null && !targetId.isBlank()) {
             String resolvedId = targetId.contains(":") ? targetId

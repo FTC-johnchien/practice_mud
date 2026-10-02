@@ -54,6 +54,9 @@ class WorldDataIntegrityTest {
     for (RoomTemplate room : rooms.values()) {
       if (room.exits() != null) {
         for (Map.Entry<String, RoomExit> entry : room.exits().entrySet()) {
+          if (entry.getValue().actionCommand() != null && !entry.getValue().actionCommand().isBlank()) {
+            continue;
+          }
           String targetId = entry.getValue().targetRoomId();
           assertNotNull(targetId, "房間 " + room.id() + " 的出口 " + entry.getKey() + " targetRoomId 不得為 null");
           assertTrue(TemplateRepository.findRoom(targetId).isPresent(),

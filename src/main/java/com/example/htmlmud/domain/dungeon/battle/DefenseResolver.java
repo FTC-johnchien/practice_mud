@@ -131,6 +131,32 @@ public class DefenseResolver {
     double critChance = Math.min(0.35, Math.max(0.05, 0.05 + (atkDex * 0.002)));
 
     // =========================================================================
+    // 圓桌總機率安全收斂與歸一化 (Probability Normalization & Safe Allocation)
+    // 1. 防禦切片總和 (Miss + Dodge + Parry + Block) 不可突破全域上限 (maxTotalDef, 預設 0.75)
+    // 2. 致命一擊 (Crit) 僅分配剩餘機率，且保留至少 minNormalHit (預設 0.05) 作為普通命中窗口
+    // =========================================================================
+    double maxTotalDef = (gameConfig != null && gameConfig.getCombat() != null)
+        ? gameConfig.getCombat().getMaxTotalDefenseChance()
+        : 0.75;
+    double minNormalHit = (gameConfig != null && gameConfig.getCombat() != null)
+        ? gameConfig.getCombat().getMinNormalHitChance()
+        : 0.05;
+
+    double totalDef = missChance + dodgeChance + parryChance + blockChance;
+    if (totalDef > maxTotalDef) {
+      double scale = maxTotalDef / totalDef;
+      missChance *= scale;
+      dodgeChance *= scale;
+      parryChance *= scale;
+      blockChance *= scale;
+      totalDef = maxTotalDef;
+    }
+
+    double remainingPool = Math.max(0.0, 1.0 - totalDef);
+    double maxCritAllowed = Math.max(0.01, remainingPool - minNormalHit);
+    double actualCrit = Math.min(critChance, maxCritAllowed);
+
+    // =========================================================================
     // 一元一次擲骰圓桌判定 (One-Roll Resolution)
     // 累積邊界: [0, Miss) -> [Miss, Dodge) -> [Dodge, Parry) -> [Parry, Block) -> [Block, Crit) -> [Crit, 1.0)
     // =========================================================================
@@ -142,7 +168,7 @@ public class DefenseResolver {
     double dodgeLimit = missLimit + dodgeChance;
     double parryLimit = dodgeLimit + parryChance;
     double blockLimit = parryLimit + blockChance;
-    double critLimit = blockLimit + critChance;
+    double critLimit = blockLimit + actualCrit;
 
     // 內功護體微調 (FORCE Mitigation)
     int forceReduction = 0;

@@ -4,12 +4,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.example.htmlmud.domain.model.definition.ItemDefinition;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.domain.model.template.ItemTemplate;
 import com.example.htmlmud.protocol.MessageFactory;
 import com.example.htmlmud.protocol.MudMessage;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -57,6 +59,7 @@ public class GameItem {
 
   // 輔助方法：獲取顯示名稱 (包含強化等級)
   // e.g., "鐵劍 (+5)"
+  @JsonIgnore
   public String getDisplayName() {
     if (level > 1) {
       return name + " (+" + level + ")";
@@ -83,22 +86,23 @@ public class GameItem {
     return false; // 還沒壞
   }
 
+  @JsonIgnore
   public boolean isStackable() {
-    return template.isStackable();
+    return template != null && template.isStackable();
   }
 
   /**
    * 取得此物品對應的技能類別 (給 SkillManager 用)
    */
+  @JsonIgnore
   public SkillCategory getWeaponSkillCategory() {
-    // log.info("type:{} subType:{}", this.type, this.subType);
-    if (this.type != ItemType.WEAPON)
+    if (this.type != ItemType.WEAPON || this.subType == null)
       return SkillCategory.UNARMED;
 
     try {
       // 將 "SWORD" 字串轉為 SkillCategory.SWORD
       return SkillCategory.valueOf(this.subType);
-    } catch (IllegalArgumentException e) {
+    } catch (Exception e) {
       return SkillCategory.UNARMED; // 預設/容錯
     }
   }
@@ -106,6 +110,7 @@ public class GameItem {
   /**
    * 取得此物品對應的裝備欄位 (給 EquipmentService 用)
    */
+  @JsonIgnore
   public EquipmentSlot getEquipmentSlot() {
     ItemTemplate tpl = getTemplate();
     if (tpl != null && tpl.equipmentProp() != null && tpl.equipmentProp().slot() != null) {
@@ -138,5 +143,29 @@ public class GameItem {
         log.info("lookAtMe type:{}", this.type);
         return MessageFactory.itemDetail(this);
     }
+  }
+
+  @JsonIgnore
+  public ItemDefinition getDefinition() {
+    return template != null ? template.toDefinition() : null;
+  }
+
+  public ItemInstance toInstance() {
+    List<ItemInstance> subContents = new ArrayList<>();
+    if (contents != null) {
+      for (GameItem gi : contents) {
+        if (gi != null) subContents.add(gi.toInstance());
+      }
+    }
+    return ItemInstance.builder()
+        .instanceId(id != null ? id : java.util.UUID.randomUUID().toString())
+        .definitionId(template != null ? template.id() : id)
+        .quantity(amount > 0 ? amount : 1)
+        .currentDurability(currentDurability)
+        .maxDurability(maxDurability)
+        .level(level)
+        .dynamicProps(dynamicProps != null ? new HashMap<>(dynamicProps) : new HashMap<>())
+        .contents(subContents)
+        .build();
   }
 }

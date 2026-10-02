@@ -307,24 +307,10 @@ public class PartyService {
           var itemOpt = templateReader.findItem(entry.getValue());
           if (itemOpt.isPresent()) {
             ItemTemplate it = itemOpt.get();
-            int minD = (it.equipmentProp() != null) ? it.equipmentProp().minDamage() : 0;
-            int maxD = (it.equipmentProp() != null) ? it.equipmentProp().maxDamage() : 0;
-            int def = (it.equipmentProp() != null) ? it.equipmentProp().defense() : 0;
-            int bHp = (it.bonusStats() != null) ? it.bonusStats().getOrDefault("MAX_HP", 0) : 0;
-            int bSan = (it.bonusStats() != null) ? it.bonusStats().getOrDefault("MAX_SAN", 0) : 0;
-            PartyItemSlot slot = PartyItemSlot.builder()
-                .slotId("init-" + it.id())
-                .itemId(it.id())
-                .name(it.name())
-                .itemType(it.type())
-                .subType(it.subType())
-                .equipSlot(entry.getKey())
-                .bonusMinDamage(minD)
-                .bonusMaxDamage(maxD)
-                .bonusDefense(def)
-                .bonusHp(bHp)
-                .bonusSan(bSan)
-                .build();
+            PartyItemSlot slot = PartyItemSlot.fromItemTemplate(it, 1, "init-" + it.id());
+            if (entry.getKey() != null) {
+              slot.setEquipSlot(entry.getKey());
+            }
             member.equip(entry.getKey(), slot);
           }
         }

@@ -139,6 +139,8 @@ public class GameConfig {
     private long unarmedAttackSpeedMs = 2000;
     private long multiAttackMinIntervalMs = 450;
     private long multiAttackMaxIntervalMs = 551;
+    private double maxTotalDefenseChance = 0.75;
+    private double minNormalHitChance = 0.05;
 
     public int getDefaultGcdMs() {
       return defaultGcdMs;
@@ -186,6 +188,22 @@ public class GameConfig {
 
     public void setMultiAttackMaxIntervalMs(long multiAttackMaxIntervalMs) {
       this.multiAttackMaxIntervalMs = multiAttackMaxIntervalMs;
+    }
+
+    public double getMaxTotalDefenseChance() {
+      return maxTotalDefenseChance;
+    }
+
+    public void setMaxTotalDefenseChance(double maxTotalDefenseChance) {
+      this.maxTotalDefenseChance = maxTotalDefenseChance;
+    }
+
+    public double getMinNormalHitChance() {
+      return minNormalHitChance;
+    }
+
+    public void setMinNormalHitChance(double minNormalHitChance) {
+      this.minNormalHitChance = minNormalHitChance;
     }
   }
 

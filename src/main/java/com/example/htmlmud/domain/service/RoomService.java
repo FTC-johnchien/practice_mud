@@ -42,6 +42,8 @@ public class RoomService {
 
   private final TemplateReader templateReader;
 
+  private final com.example.htmlmud.infra.persistence.service.RoomPersistenceService roomPersistenceService;
+
 
 
   public ZoneTemplate getZoneTemplate(String zoneId) {
@@ -306,17 +308,13 @@ public class RoomService {
 
   public void record(String roomTemplateId, List<GameItem> items) {
     RoomStateRecord record = toRecord(roomTemplateId, items);
-    // TODO 還沒紀錄
-    // 丟給 save 的 queue 就不管了
-
-
-
+    if (roomPersistenceService != null) {
+      roomPersistenceService.saveAsync(record);
+    }
   }
 
-
-
   /**
-   * 房間初次載入時的生怪邏輯
+   * 房間初次載入時的生怪與掉落物邏輯
    */
   public void spawnInitial(Room room, List<Mob> mobs, List<GameItem> items) {
     List<SpawnRule> spawnRules = room.getTemplate().spawnRules();
@@ -329,6 +327,16 @@ public class RoomService {
           }
         }
       }
+    }
+
+    // 若資料庫有歷史持久化的掉落物狀態，載入並還原 (以存檔狀態覆蓋初始靜態掉落)
+    if (roomPersistenceService != null && room.getTemplate() != null) {
+      String zoneId = room.getTemplate().zoneId();
+      String roomId = room.getTemplate().id();
+      roomPersistenceService.loadDroppedItems(zoneId, roomId).ifPresent(persistedItems -> {
+        items.clear();
+        items.addAll(persistedItems);
+      });
     }
   }
 
@@ -446,9 +454,18 @@ public class RoomService {
 
 
   private RoomStateRecord toRecord(String roomTemplateId, List<GameItem> items) {
-    String[] args = roomTemplateId.split(":");
-    String zoneId = args[0];
-    String roomId = args[1];
+    String zoneId = "";
+    String roomId = (roomTemplateId != null) ? roomTemplateId : "";
+    if (roomTemplateId != null && roomTemplateId.contains(":")) {
+      String[] args = roomTemplateId.split(":", 2);
+      zoneId = args[0];
+      roomId = args[1];
+    } else if (roomTemplateId != null) {
+      RoomTemplate tpl = getRoomTemplate(roomTemplateId);
+      if (tpl != null && tpl.zoneId() != null) {
+        zoneId = tpl.zoneId();
+      }
+    }
     return new RoomStateRecord(roomId, zoneId, new ArrayList<>(items));
   }
 

@@ -33,8 +33,9 @@ public class ExitDeserializer extends JsonDeserializer<RoomExit> {
       String keyId = node.has("keyId") ? node.get("keyId").asText() : null;
       boolean isHidden = node.has("isHidden") && node.get("isHidden").asBoolean();
       boolean pickProof = node.has("pickProof") && node.get("pickProof").asBoolean();
+      String actionCommand = node.has("actionCommand") ? node.get("actionCommand").asText() : null;
 
-      return new RoomExit(targetId, doorName, isLocked, keyId, isHidden, pickProof);
+      return new RoomExit(targetId, doorName, isLocked, keyId, isHidden, pickProof, actionCommand);
     }
 
     throw new IOException("Invalid exit format: expected String or Object");

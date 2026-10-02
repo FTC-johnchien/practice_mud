@@ -92,11 +92,13 @@ com.example.htmlmud/
 │
 ├── domain/                              # === 核心領域層 (Domain Layer) ===
 │   ├── actor/                           # Actor 模型核心
-│   │   ├── Actor.java                   #   Actor 介面
-│   │   ├── VirtualActor.java            #   虛擬執行緒 Actor 基礎類別
-│   │   ├── message/                     #   Actor 訊息定義
+│   │   ├── core/                        #   Actor 核心基類與通訊緩衝
+│   │   │   ├── VirtualActor.java        #     虛擬執行緒 Actor 抽象基類
+│   │   │   ├── RoomMessageBuffer.java   #     房間訊息緩衝
+│   │   │   ├── MessageFragment.java     #     訊息片段
+│   │   │   └── MessageOutput.java       #     訊息輸出介面
 │   │   ├── impl/                        #   Actor 實體 (Living, Player, Mob, Room)
-│   │   └── behavior/                    #   行為模式 (PlayerBehavior, MobBehavior)
+│   │   └── behavior/                    #   行為模式 (PlayerBehavior, MobBehavior, GuestBehavior)
 │   │
 │   ├── service/                         # 領域服務 (無狀態業務邏輯)
 │   │   ├── WorldManager.java            #   世界管理器 (房間管理與生命週期)
@@ -111,8 +113,13 @@ com.example.htmlmud/
 │   │   ├── CharacterSyncService.java    #   角色狀態同步服務
 │   │   └── TemplateCatalog.java         #   模板目錄 (TemplateReader 實作)
 │   │
+│   ├── factory/                         # 領域工廠
+│   │   └── ItemFactory.java             #   標準物品工廠 (ItemInstance / PartyItemSlot 生成)
+│   │
 │   ├── model/                           # 領域模型實體與值物件
-│   │   ├── entity/                      #   可變實體 (LivingStats, GameItem, SkillEntry)
+│   │   ├── definition/                  #   不可變標準定義 (ItemDefinition)
+│   │   ├── entity/                      #   可變實體 (LivingStats, GameItem, ItemInstance, SkillEntry)
+│   │   ├── view/                        #   只讀合成視圖 (ItemView)
 │   │   ├── template/                    #   不可變定義模板 (Record 封裝)
 │   │   │   ├── ItemTemplate.java        #     物品模板
 │   │   │   ├── MobTemplate.java         #     怪物模板
@@ -173,7 +180,7 @@ com.example.htmlmud/
     │   ├── town-panel.js                #   城鎮探索、NPC 互動與羅盤
     │   ├── dungeon-panel.js             #   地牢迷宮雷達、靈壓與視野
     │   ├── battle-panel.js              #   戰鬥主舞台、5x5 敵陣與指揮台
-    │   ├── party-hud-panel.js           #   6 人小隊 HUD 狀態列與異變進度
+    │   ├── party-hud-panel.js           #   5 人小隊 HUD 狀態列與異變進度 (Party.MAX_PARTY_SIZE = 5)
     │   └── message-log-panel.js         #   情報文字日誌與 ANSI 色碼解析
     └── modals/                          # 彈窗與抽屜組件 (Modals & Drawers)
         ├── party-modal.js               #   小隊整備、裝備比對、Gambit 戰術、主選單
@@ -190,7 +197,7 @@ com.example.htmlmud/
 1. **Virtual Threads (Project Loom)**：
    - 專案全面啟用 Java 21+ 虛擬執行緒。每個 Actor（玩家、怪物、房間、地牢迴圈）均在獨立的虛擬執行緒排程中運作，杜絕傳統執行緒池飽和瓶頸。
 2. **Actor 郵箱模型 (Actor Pattern)**：
-   - 每個實體（`Player`、`Mob`、`Room`）繼承自 [`VirtualActor`](./src/main/java/com/example/htmlmud/domain/actor/VirtualActor.java)，持有獨立的訊息佇列（Mailbox）。
+   - 每個實體（`Player`、`Mob`、`Room`）繼承自 [`VirtualActor`](./src/main/java/com/example/htmlmud/domain/actor/core/VirtualActor.java)，持有獨立的訊息佇列（Mailbox）。
    - **無鎖併發安全**：實體內部狀態（如坐標、HP、戰鬥目標）僅能在自身的 Actor 訊息處理循環中修改，禁止外部執行緒直接賦值。
    - **廣播緩衝防死鎖**：跨房間或全地圖廣播時，使用 `RoomMessageBuffer` 進行非同步解耦，消除 Actor 之間互相等待造成的死鎖。
 3. **Write-Behind 批次非同步持久化**：
