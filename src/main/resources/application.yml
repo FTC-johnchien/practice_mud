@@ -22,3 +22,23 @@ server:
 app:
   websocket:
     allowed-origins: http://localhost:8080,http://127.0.0.1:8080
+
+game:
+  defaults:
+    player:
+      initial-hp: 200
+      initial-mp: 100
+      initial-coin: 100
+      spawn-room-id: "newbie_village:inn"
+      respawn-room-id: "newbie_village:cemetery"
+  combat:
+    default-gcd-ms: 1500
+    base-hit-chance: 0.80
+    dex-hit-modifier: 0.01
+    unarmed-attack-speed-ms: 2000
+    multi-attack-min-interval-ms: 450
+    multi-attack-max-interval-ms: 551
+  regen:
+    tick-modulo: 150
+    hp-percent: 0.05
+    mp-percent: 0.01

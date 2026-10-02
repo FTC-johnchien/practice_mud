@@ -11,6 +11,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.MDC;
+import com.example.htmlmud.config.GameConfig;
 import com.example.htmlmud.domain.actor.behavior.GuestBehavior;
 import com.example.htmlmud.domain.actor.behavior.InGameBehavior;
 import com.example.htmlmud.domain.actor.behavior.PlayerBehavior;
@@ -108,15 +109,16 @@ public final class Player extends Living {
     String pid = (playerId != null && !playerId.isBlank() && !playerId.equals("p-single"))
         ? playerId
         : name;
+    var playerDefaults = GameConfig.getInstance().getDefaults().getPlayer();
     LivingStats stats = new LivingStats();
-    stats.setHp(200);
-    stats.setMaxHp(200);
-    stats.setMp(100);
-    stats.setMaxMp(100);
-    stats.setCoin(100);
+    stats.setHp(playerDefaults.getInitialHp());
+    stats.setMaxHp(playerDefaults.getInitialHp());
+    stats.setMp(playerDefaults.getInitialMp());
+    stats.setMaxMp(playerDefaults.getInitialMp());
+    stats.setCoin(playerDefaults.getInitialCoin());
     Player actor = new Player(output, pid, name, stats, worldManager, playerService);
     actor.setConnectionState(ConnectionState.IN_GAME);
-    actor.setCurrentRoomId("newbie_village:inn");
+    actor.setCurrentRoomId(playerDefaults.getSpawnRoomId());
     playerService.become(actor, new InGameBehavior());
     return actor;
   }
@@ -285,8 +287,7 @@ public final class Player extends Living {
    * @param duration 如果是 0，則使用預設值
    */
   public void triggerGcd(int duration) {
-    // int actualDuration = (duration > 0) ? duration : GameConfig.DEFAULT_GCD;
-    int actualDuration = (duration > 0) ? duration : 1500;
+    int actualDuration = (duration > 0) ? duration : GameConfig.getInstance().getCombat().getDefaultGcdMs();
     this.gcdEndTimestamp = System.currentTimeMillis() + actualDuration;
   }
 

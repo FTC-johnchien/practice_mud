@@ -1,9 +1,12 @@
+import { MAX_LOG_HISTORY_LINES } from '../core/constants.js';
+import { escapeHtml } from '../core/ui-utils.js';
+
 /**
  * 訊息日誌區塊面板 (Message Log Panel)
  * 負責 ANSI 色碼文字轉譯、即時滾動日誌、最長行數記憶體防護
  */
 
-const MAX_LOG_LINES = 200;
+const MAX_LOG_LINES = MAX_LOG_HISTORY_LINES || 200;
 
 export function getLogContainer() {
   return document.getElementById('log');
@@ -37,12 +40,14 @@ const colorMap = {
 
 function parseAnsiText(text) {
   if (!text) return '';
+  // 先對潛在的惡意 HTML 標籤進行轉義，防止 Log XSS
+  const safeText = escapeHtml(text);
   const conv = getAnsiConverter();
   if (conv && text.includes('\u001B')) {
-    return conv.ansi_to_html(text);
+    return conv.ansi_to_html(safeText);
   }
   // 容錯支援 \u001B 色碼或直接呈現的 [1;36m 格式
-  let html = text
+  let html = safeText
     .replace(/\u001B\[0m/g, '</span>')
     .replace(/\u001B\[([0-9;]+)m/g, (match, code) => {
       const c = colorMap[code] || '#94a3b8';

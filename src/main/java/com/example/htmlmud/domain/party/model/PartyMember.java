@@ -263,6 +263,10 @@ public class PartyMember implements Buffable {
     return equipment != null ? equipment.get(EquipmentSlot.MAIN_HAND) : null;
   }
 
+  public PartyItemSlot getEquippedShield() {
+    return equipment != null ? equipment.get(EquipmentSlot.OFF_HAND) : null;
+  }
+
   public PartyItemSlot getEquippedArmor() {
     return equipment != null ? equipment.get(EquipmentSlot.BODY) : null;
   }
@@ -271,12 +275,20 @@ public class PartyMember implements Buffable {
     return equip(EquipmentSlot.MAIN_HAND, weapon);
   }
 
+  public PartyItemSlot equipShield(PartyItemSlot shield) {
+    return equip(EquipmentSlot.OFF_HAND, shield);
+  }
+
   public PartyItemSlot equipArmor(PartyItemSlot armor) {
     return equip(EquipmentSlot.BODY, armor);
   }
 
   public PartyItemSlot unequipWeapon() {
     return unequip(EquipmentSlot.MAIN_HAND);
+  }
+
+  public PartyItemSlot unequipShield() {
+    return unequip(EquipmentSlot.OFF_HAND);
   }
 
   public PartyItemSlot unequipArmor() {

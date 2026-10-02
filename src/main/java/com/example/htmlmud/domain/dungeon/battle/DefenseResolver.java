@@ -3,16 +3,20 @@ package com.example.htmlmud.domain.dungeon.battle;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import com.example.htmlmud.config.GameConfig;
 import com.example.htmlmud.domain.model.config.MoveAction;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.domain.model.template.SkillTemplate;
 import com.example.htmlmud.domain.party.model.CombatResourceType;
+import com.example.htmlmud.domain.party.model.PartyItemSlot;
 import com.example.htmlmud.domain.party.model.PartyMember;
 
 /**
  * 戰鬥防禦與被動心法檢定解算器 (Generic Defense & Passive Resolver)
- * 負責小隊成員在遭受攻擊時的閃避 (DODGE)、招架 (PARRY)、內功減免 (FORCE) 檢定與日誌生成。
+ * 負責小隊成員在遭受攻擊時的一元一次擲骰圓桌判定 (One-Roll Combat Table)：
+ * [Miss] -> [Dodge] -> [Parry] -> [Block] -> [Crit] -> [Normal Hit]
  * 遵循「機制運行 + 資料驅動」原則：絕不寫死技能 ID，所有係數與文本全從 SkillTemplate 抽取。
  */
 @Component
@@ -20,8 +24,11 @@ public class DefenseResolver {
 
   public enum DefenseOutcome {
     HIT,      // 普通命中受創
+    CRIT,     // 致命一擊 (暴擊受創 1.5x)
+    BLOCKED,  // 盾牌格擋成功 (扣除盾牌格擋值)
+    PARRIED,  // 招架格擋成功 (傷害減免 50%~70%, +5 SP, +5 怒氣)
     DODGED,   // 身法閃避成功 (0傷害, +15 SP)
-    PARRIED   // 招架格擋成功 (傷害減免 50%~70%, +5 SP)
+    MISS      // 未命中 (0傷害)
   }
 
   public record DefenseResolution(
@@ -32,30 +39,56 @@ public class DefenseResolver {
       String combatLog
   ) {}
 
+  private final GameConfig gameConfig;
+
+  public DefenseResolver() {
+    this(null);
+  }
+
+  @Autowired
+  public DefenseResolver(@Autowired(required = false) GameConfig gameConfig) {
+    this.gameConfig = gameConfig;
+  }
+
   /**
-   * 解算敵怪對小隊成員的單次攻擊檢定
+   * 解算敵怪對小隊成員的單次攻擊檢定 (隨機擲骰)
+   */
+  public DefenseResolution resolveEnemyAttack(BattleEnemy enemy, PartyMember targetMember, int rawDamage, String enemyMove) {
+    return resolveEnemyAttack(enemy, targetMember, rawDamage, enemyMove, null);
+  }
+
+  /**
+   * 解算敵怪對小隊成員的單次攻擊檢定 (支援指定骰值便於單元測試驗證)
    *
    * @param enemy 攻擊者怪物
    * @param targetMember 防禦者隊員
    * @param rawDamage 未經被動檢定的基礎扣防傷害 (min 1)
    * @param enemyMove 敵方招式名稱 (可為 null)
+   * @param predeterminedRoll 指定隨機擲骰值 [0.0, 1.0)，為 null 則取隨機
    * @return DefenseResolution 結算結果
    */
-  public DefenseResolution resolveEnemyAttack(BattleEnemy enemy, PartyMember targetMember, int rawDamage, String enemyMove) {
+  public DefenseResolution resolveEnemyAttack(BattleEnemy enemy, PartyMember targetMember, int rawDamage, String enemyMove, Double predeterminedRoll) {
     String attackerName = (enemy != null) ? enemy.getName() : "敵人";
     String defenderName = (targetMember != null) ? targetMember.getName() : "防禦者";
     String weaponName = "利爪牙刃";
 
-    int dex = (targetMember != null && targetMember.getStats() != null) ? targetMember.getStats().getDex() : 5;
-    int str = (targetMember != null && targetMember.getStats() != null) ? targetMember.getStats().getStr() : 5;
-    int con = (targetMember != null && targetMember.getStats() != null) ? targetMember.getStats().getCon() : 5;
+    int defDex = (targetMember != null && targetMember.getStats() != null) ? targetMember.getStats().getDex() : 5;
+    int defStr = (targetMember != null && targetMember.getStats() != null) ? targetMember.getStats().getStr() : 5;
+    int defCon = (targetMember != null && targetMember.getStats() != null) ? targetMember.getStats().getCon() : 5;
+    int atkDex = (enemy != null) ? enemy.getDex() : 10;
 
     // =========================================================================
-    // 1. 身法閃避檢定 (DODGE Check)
+    // 圓桌各切片機率計算 (Combat Table Slices Calculation)
     // =========================================================================
+
+    // 1. Miss 閾值 (機率)：BaseMiss(5%) + max(0, (Def.DEX - Atk.DEX) * 0.5%)
+    double missChance = Math.min(0.25, Math.max(0.02, 0.05 + Math.max(0, defDex - atkDex) * 0.005));
+
+    // 2. Dodge 閾值 (機率)：Skill.dodgeRate + (Def.DEX * 0.8%) - (Atk.DEX * 0.3%)
+    double dodgeChance = 0.0;
     SkillTemplate dodgeSkill = (targetMember != null) ? targetMember.getEnabledPassive(SkillCategory.DODGE) : null;
     if (dodgeSkill != null) {
-      double baseDodge = 0.10; // 預設基礎 10%
+      double baseDodge = 0.10;
       if (dodgeSkill.getMechanics() != null) {
         if (dodgeSkill.getMechanics().dodgeRate() > 0) {
           baseDodge = dodgeSkill.getMechanics().dodgeRate();
@@ -63,24 +96,15 @@ public class DefenseResolver {
           baseDodge = dodgeSkill.getMechanics().dodgeMod();
         }
       }
-      // DEX 屬性每點增加 0.5% 閃避率
-      double dexBonus = (dex * 0.005);
-      double totalDodge = Math.min(0.75, Math.max(0.05, baseDodge + dexBonus));
-
-      if (ThreadLocalRandom.current().nextDouble() < totalDodge) {
-        String msg = extractDodgeMessage(dodgeSkill, attackerName, defenderName, weaponName);
-        String log = "\u001B[1;36m💨【身法閃避】" + msg + "\u001B[0m";
-        return new DefenseResolution(DefenseOutcome.DODGED, 0, 15, 0, log);
-      }
+      dodgeChance = Math.min(0.75, Math.max(0.05, baseDodge + (defDex * 0.008) - (atkDex * 0.003)));
     }
 
-    // =========================================================================
-    // 2. 招架格擋檢定 (PARRY Check)
-    // =========================================================================
+    // 3. Parry 閾值 (機率)：Skill.parryRate + (Def.STR * 0.4%) + (Def.DEX * 0.4%)
+    double parryChance = 0.0;
     SkillTemplate parrySkill = (targetMember != null) ? targetMember.getEnabledPassive(SkillCategory.PARRY) : null;
+    double reduceRatio = 0.50; // 招架傷害承受比率 (預設減免 50%)
     if (parrySkill != null) {
-      double baseParry = 0.15; // 預設基礎 15%
-      double reduceRatio = 0.50; // 預設招架減免 50%
+      double baseParry = 0.15;
       if (parrySkill.getMechanics() != null) {
         if (parrySkill.getMechanics().parryRate() > 0) {
           baseParry = parrySkill.getMechanics().parryRate();
@@ -92,32 +116,80 @@ public class DefenseResolver {
           reduceRatio = Math.max(0.20, 0.50 - extraReduce);
         }
       }
-      // STR 與 CON 均值每點增加 0.4% 招架率
-      double statBonus = (((str + con) / 2.0) * 0.004);
-      double totalParry = Math.min(0.65, Math.max(0.05, baseParry + statBonus));
-
-      if (ThreadLocalRandom.current().nextDouble() < totalParry) {
-        int parriedDmg = Math.max(1, (int) Math.round(rawDamage * reduceRatio));
-        String msg = extractParryMessage(parrySkill, attackerName, defenderName, weaponName, targetMember);
-        String log = "\u001B[1;33m🛡️【招架格擋】" + msg + "（傷害減免至 " + parriedDmg + " 點）\u001B[0m";
-        return new DefenseResolution(DefenseOutcome.PARRIED, parriedDmg, 5, 5, log);
-      }
+      parryChance = Math.min(0.65, Math.max(0.05, baseParry + (defStr * 0.004) + (defDex * 0.004)));
     }
 
+    // 4. Block 閾值 (機率)：副手配備盾牌時參與圓桌判定 (基礎 20% + CON * 0.3%)
+    double blockChance = 0.0;
+    PartyItemSlot shield = (targetMember != null) ? targetMember.getEquippedShield() : null;
+    boolean hasShield = (shield != null && shield.isShield());
+    if (hasShield) {
+      blockChance = Math.min(0.60, Math.max(0.10, 0.20 + (defCon * 0.003)));
+    }
+
+    // 5. Crit 閾值 (機率)：攻擊者暴擊率 (基礎 5% + Atk.DEX * 0.2%)
+    double critChance = Math.min(0.35, Math.max(0.05, 0.05 + (atkDex * 0.002)));
+
     // =========================================================================
-    // 3. 內功護體微調 (FORCE Mitigation)
+    // 一元一次擲骰圓桌判定 (One-Roll Resolution)
+    // 累積邊界: [0, Miss) -> [Miss, Dodge) -> [Dodge, Parry) -> [Parry, Block) -> [Block, Crit) -> [Crit, 1.0)
     // =========================================================================
-    int finalDmg = rawDamage;
+    double roll = (predeterminedRoll != null)
+        ? predeterminedRoll
+        : ThreadLocalRandom.current().nextDouble();
+
+    double missLimit = missChance;
+    double dodgeLimit = missLimit + dodgeChance;
+    double parryLimit = dodgeLimit + parryChance;
+    double blockLimit = parryLimit + blockChance;
+    double critLimit = blockLimit + critChance;
+
+    // 內功護體微調 (FORCE Mitigation)
+    int forceReduction = 0;
     SkillTemplate forceSkill = (targetMember != null) ? targetMember.getEnabledPassive(SkillCategory.FORCE) : null;
-    if (forceSkill != null && forceSkill.getMechanics() != null) {
-      if (forceSkill.getMechanics().defenseMod() > 0) {
-        finalDmg = Math.max(1, finalDmg - forceSkill.getMechanics().defenseMod());
-      }
+    if (forceSkill != null && forceSkill.getMechanics() != null && forceSkill.getMechanics().defenseMod() > 0) {
+      forceReduction = forceSkill.getMechanics().defenseMod();
     }
 
-    // =========================================================================
-    // 4. 普通命中受創 (HIT)
-    // =========================================================================
+    // 判定 1: 未命中 (MISS)
+    if (roll < missLimit) {
+      String missLog = "\u001B[1;30m💨【未命中】" + attackerName + " 攻勢落空，未能觸及 " + defenderName + "！\u001B[0m";
+      return new DefenseResolution(DefenseOutcome.MISS, 0, 0, 0, missLog);
+    }
+
+    // 判定 2: 身法閃避 (DODGED)
+    if (roll < dodgeLimit) {
+      String msg = extractDodgeMessage(dodgeSkill, attackerName, defenderName, weaponName);
+      String log = "\u001B[1;36m💨【身法閃避】" + msg + "\u001B[0m";
+      return new DefenseResolution(DefenseOutcome.DODGED, 0, 15, 0, log);
+    }
+
+    // 判定 3: 招架格擋 (PARRIED)
+    if (roll < parryLimit) {
+      int parriedDmg = Math.max(1, (int) Math.round(rawDamage * reduceRatio));
+      String msg = extractParryMessage(parrySkill, attackerName, defenderName, weaponName, targetMember);
+      String log = "\u001B[1;33m🛡️【招架格擋】" + msg + "（傷害減免至 " + parriedDmg + " 點）\u001B[0m";
+      return new DefenseResolution(DefenseOutcome.PARRIED, parriedDmg, 5, 5, log);
+    }
+
+    // 判定 4: 盾牌格擋 (BLOCKED)
+    if (roll < blockLimit) {
+      int shieldBlockValue = Math.max(5, (shield.getBonusDefense() * 2) + (defCon / 2));
+      int blockedDmg = Math.max(1, rawDamage - shieldBlockValue);
+      String shieldName = (shield.getName() != null && !shield.getName().isBlank()) ? shield.getName() : "護身盾";
+      String log = "\u001B[1;33m🛡️【盾牌格擋】" + defenderName + " 舉起【" + shieldName + "】固若金湯，化解了 " + shieldBlockValue + " 點衝擊！（承受 " + blockedDmg + " 點傷害）\u001B[0m";
+      return new DefenseResolution(DefenseOutcome.BLOCKED, blockedDmg, 5, 5, log);
+    }
+
+    // 判定 5: 致命一擊 (CRIT)
+    if (roll < critLimit) {
+      int critDmg = Math.max(1, (int) Math.round(rawDamage * 1.5) - forceReduction);
+      String critLog = "\u001B[1;31m💥【致命一擊】" + attackerName + " 破開空隙正中要害，對 " + defenderName + " 爆擊造成 " + critDmg + " 點毀滅傷害！\u001B[0m";
+      return new DefenseResolution(DefenseOutcome.CRIT, critDmg, 10, 15, critLog);
+    }
+
+    // 判定 6: 普通命中受創 (HIT)
+    int finalDmg = Math.max(1, rawDamage - forceReduction);
     int rage = (targetMember != null && targetMember.getResourceType() == CombatResourceType.RAGE) ? 15 : 0;
     String hitLog;
     if (enemyMove != null && !enemyMove.isBlank()) {

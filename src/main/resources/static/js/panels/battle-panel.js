@@ -1,6 +1,7 @@
 import { store } from '../core/state-store.js';
 import { sendCmd } from '../core/cmd-dispatcher.js';
 import { selectPartyMember } from './party-hud-panel.js';
+import { escapeHtml } from '../core/ui-utils.js';
 
 /**
  * 戰鬥主舞台與敵方陣列面板 (Battle Arena Panel)
@@ -136,9 +137,11 @@ export function renderBattleArena(battle) {
     card.style.gridRow = `${gridRowStart} / span ${h}`;
 
     const hpPct = Math.min(100, Math.max(0, (e.hp / e.maxHp) * 100));
+    const safeEnemyName = escapeHtml(e.name || '');
+    const safeTargetMember = escapeHtml(e.targetMemberName || '');
 
     const targetBadge = e.targetMemberName
-      ? `<span class="enemy-aggro-badge" style="background:#450a0a; color:#fca5a5; border:1px solid #7f1d1d; padding:1px 4px; border-radius:3px; font-size:12px; white-space:nowrap;" title="仇恨鎖定：${e.targetMemberName}">🎯${e.targetMemberName}</span>`
+      ? `<span class="enemy-aggro-badge" style="background:#450a0a; color:#fca5a5; border:1px solid #7f1d1d; padding:1px 4px; border-radius:3px; font-size:12px; white-space:nowrap;" title="仇恨鎖定：${safeTargetMember}">🎯${safeTargetMember}</span>`
       : '';
     const stunBadge = e.isStunned
       ? `<span class="enemy-stun-badge" style="background:#422006; color:#fdba74; border:1px solid #9a3412; padding:1px 4px; border-radius:3px; font-size:12px;">💫 暈</span>`
@@ -146,7 +149,7 @@ export function renderBattleArena(battle) {
 
     let buffsHtml = '';
     if (e.activeBuffs) {
-      buffsHtml = e.activeBuffs.map(b => `<span class="enemy-buff-badge" style="background:#172554; color:#93c5fd; border:1px solid #1e3a8a; padding:1px 4px; border-radius:3px; font-size:12px;">${b.icon || '✨'}${b.name}</span>`).join('');
+      buffsHtml = e.activeBuffs.map(b => `<span class="enemy-buff-badge" style="background:#172554; color:#93c5fd; border:1px solid #1e3a8a; padding:1px 4px; border-radius:3px; font-size:12px;">${escapeHtml(b.icon || '✨')}${escapeHtml(b.name || '')}</span>`).join('');
     }
 
     if (w === 1 && h === 5) {
@@ -160,7 +163,7 @@ export function renderBattleArena(battle) {
           </div>
         </div>
         <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:8px;">
-          <div style="writing-mode:vertical-rl; font-size:14px; font-weight:bold; letter-spacing:4px; color:#60a5fa;" title="${e.name}">${e.name}</div>
+          <div style="writing-mode:vertical-rl; font-size:14px; font-weight:bold; letter-spacing:4px; color:#60a5fa;" title="${safeEnemyName}">${safeEnemyName}</div>
           <div style="font-size:11px; color:#93c5fd; background:rgba(30,58,138,0.4); padding:2px 4px; border-radius:3px; text-align:center;">天罡通天</div>
         </div>
         <div class="enemy-hp-wrap large-hp-wrap" style="height:22px; border-radius:4px; overflow:hidden;" title="生命 HP: ${e.hp}/${e.maxHp}">
@@ -179,7 +182,7 @@ export function renderBattleArena(battle) {
           </div>
         </div>
         <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:6px;">
-          <div style="writing-mode:vertical-rl; font-size:13px; font-weight:bold; letter-spacing:2px; color:#d8b4fe;" title="${e.name}">${e.name}</div>
+          <div style="writing-mode:vertical-rl; font-size:13px; font-weight:bold; letter-spacing:2px; color:#d8b4fe;" title="${safeEnemyName}">${safeEnemyName}</div>
           <div style="font-size:11px; color:#c084fc; text-align:center;">紫電雷罡</div>
         </div>
         <div class="enemy-hp-wrap large-hp-wrap" style="height:20px; border-radius:4px; overflow:hidden;" title="生命 HP: ${e.hp}/${e.maxHp}">
@@ -193,7 +196,7 @@ export function renderBattleArena(battle) {
         <div class="enemy-name-row" style="align-items:center;">
           <div style="display:flex; align-items:center; gap:6px; min-width:0; flex:1; overflow:hidden;">
             <span class="large-enemy-badge size-3x3-badge" style="background:rgba(236,72,153,0.3); border:1px solid #ec4899; color:#f472b6; font-size:13px; font-weight:bold; padding:2px 7px; border-radius:4px;">👹 巨擘 3x3</span>
-            <span class="enemy-name" style="font-size:16px; font-weight:bold; color:#f472b6;" title="${e.name}">${e.name}</span>
+            <span class="enemy-name" style="font-size:16px; font-weight:bold; color:#f472b6;" title="${safeEnemyName}">${safeEnemyName}</span>
           </div>
           <div class="enemy-badges-right" style="display:flex; gap:4px;">
             ${targetBadge}
@@ -218,7 +221,7 @@ export function renderBattleArena(battle) {
         <div class="enemy-name-row" style="align-items:center;">
           <div style="display:flex; align-items:center; gap:6px; min-width:0; flex:1; overflow:hidden;">
             <span class="large-enemy-badge" style="font-size:13px; padding:1px 6px;">👹 巨型 2x2</span>
-            <span class="enemy-name" style="font-size:14px; font-weight:bold;" title="${e.name}">${e.name}</span>
+            <span class="enemy-name" style="font-size:14px; font-weight:bold;" title="${safeEnemyName}">${safeEnemyName}</span>
           </div>
           <div class="enemy-badges-right" style="display:flex; gap:4px;">
             ${targetBadge}
@@ -238,7 +241,7 @@ export function renderBattleArena(battle) {
       // 1x1 標準怪
       card.innerHTML = `
         <div class="enemy-name-row" style="align-items:center; height:20px;">
-          <span class="enemy-name" style="font-size:13px; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;" title="${e.name}">${e.name}</span>
+          <span class="enemy-name" style="font-size:13px; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;" title="${safeEnemyName}">${safeEnemyName}</span>
           <div class="enemy-badges-right" style="display:flex; gap:3px; flex-shrink:0;">
             ${targetBadge}
             ${stunBadge}
@@ -311,7 +314,7 @@ function renderBuffBadges(activeBuffs) {
   return `
     <div class="buff-badges-row">
       ${activeBuffs.map(b => {
-        const cat = (b.category || 'SHIELD').toLowerCase();
+        const cat = escapeHtml((b.category || 'SHIELD').toLowerCase());
         let valText = '';
         if (cat === 'shield' && b.value > 0) valText = ` ${b.value}`;
         else if (cat === 'hot' && b.value > 0) valText = ` +${b.value}`;
@@ -319,11 +322,11 @@ function renderBuffBadges(activeBuffs) {
         else if (b.stacks > 1) valText = ` x${b.stacks}`;
 
         const secText = b.remainingSeconds !== undefined ? `(${b.remainingSeconds}s)` : '';
-        const title = `${b.name} [${b.category}]: ${valText || ''} 剩餘 ${b.remainingSeconds || 0}秒`;
+        const title = escapeHtml(`${b.name || ''} [${b.category || ''}]: ${valText || ''} 剩餘 ${b.remainingSeconds || 0}秒`);
 
         return `
           <span class="buff-badge buff-${cat}" title="${title}">
-            ${b.icon || '✨'}${valText} ${secText}
+            ${escapeHtml(b.icon || '✨')}${valText} ${secText}
           </span>
         `;
       }).join('')}
@@ -391,17 +394,18 @@ export function renderBattlePartyQuickBar(party) {
     const isSelected = (selectedMemberIdx === idx);
     const isAlive = (m.alive !== undefined) ? m.alive : (m.hp > 0);
     const hpPct = isAlive ? Math.min(100, Math.max(0, (m.hp / (m.maxHp || 1)) * 100)) : 0;
+    const safeMemberName = escapeHtml(m.name || '無名');
 
     const card = document.createElement('div');
     card.dataset.memberIdx = String(idx);
     card.className = `battle-party-grid-card ${isSelected ? 'active-selected' : ''} ${!isAlive ? 'is-dead' : ''}`;
     card.onclick = () => selectCombatMember(idx);
-    card.title = isAlive ? `點選 #${idx + 1} ${m.name} 切換戰備指揮台` : `點選 #${idx + 1} ${m.name} (已陣亡，保留站位)`;
+    card.title = isAlive ? `點選 #${idx + 1} ${safeMemberName} 切換戰備指揮台` : `點選 #${idx + 1} ${safeMemberName} (已陣亡，保留站位)`;
 
     card.innerHTML = `
       <div class="bpg-name-row">
         <span class="bpg-name" style="font-size:13px; font-weight:bold; color:${isAlive ? '#f1f5f9' : '#f87171'}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-          ${m.name}
+          ${safeMemberName}
         </span>
         ${!isAlive ? '<span class="bpg-dead-badge" style="font-size:13px; font-weight:bold; color:#ef4444;">💀</span>' : ''}
       </div>
@@ -521,10 +525,11 @@ export function renderCombatCommandDock(party, selectedMemberIdx) {
 
   // Left Column: Actions (只有隊員或分頁改變時才重建，否則保持 DOM)
   const actionKey = `${m.id || m.name}_${activeTab}`;
+  const safeMemberName = escapeHtml(m.name || '無名');
   if (actionsColEl.dataset.actionKey !== actionKey) {
     actionsColEl.dataset.actionKey = actionKey;
     actionsColEl.innerHTML = `
-      <div style="color: var(--text-color); font-weight: bold; margin-bottom: 2px; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${m.name}</div>
+      <div style="color: var(--text-color); font-weight: bold; margin-bottom: 2px; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${safeMemberName}</div>
       <div class="dock-action-btn ${activeTab === 'DEFAULT' ? 'active' : ''}" onclick="setDockSkillTab('DEFAULT')">
         <span>屬性與狀態</span><span>👁️</span>
       </div>
@@ -552,8 +557,11 @@ export function renderCombatCommandDock(party, selectedMemberIdx) {
 
     const buffs = (m.activeBuffs && Array.isArray(m.activeBuffs)) ? m.activeBuffs : [];
     const buffsHtml = buffs.slice(0, 10).map(b => {
-      const cat = (b.category || 'SHIELD').toLowerCase();
-      return `<span class="party-buff-chip buff-${cat}" title="${b.name} (${b.category}): 餘 ${b.remainingSeconds || 0}秒">${b.icon || '✨'}</span>`;
+      const cat = escapeHtml((b.category || 'SHIELD').toLowerCase());
+      const safeBuffName = escapeHtml(b.name || '');
+      const safeBuffCat = escapeHtml(b.category || '');
+      const safeBuffIcon = escapeHtml(b.icon || '✨');
+      return `<span class="party-buff-chip buff-${cat}" title="${safeBuffName} (${safeBuffCat}): 餘 ${b.remainingSeconds || 0}秒">${safeBuffIcon}</span>`;
     }).join('');
 
     const defaultKey = `DEFAULT_${m.id || m.name}`;
@@ -650,6 +658,10 @@ export function renderCombatCommandDock(party, selectedMemberIdx) {
           const onCd = s.remainingCooldownMs > 0;
           const disabled = !isAlive || !s.available || onCd;
           const cdSec = onCd ? (s.remainingCooldownMs / 1000).toFixed(1) : 0;
+          const safeSkillId = escapeHtml(s.id || '');
+          const safeSkillName = escapeHtml(s.name || '');
+          const safeSkillDesc = escapeHtml(s.description || '');
+          const safeSkillIcon = escapeHtml(s.icon || '⚡');
 
           let costLabel = '';
           if (s.costValue > 0) {
@@ -661,12 +673,12 @@ export function renderCombatCommandDock(party, selectedMemberIdx) {
 
           slotsHtml += `
             <div class="dock-mini-skill ${disabled ? 'disabled' : ''}"
-                 data-skill-id="${s.id}"
-                 data-skill-name="${s.name}"
-                 title="${s.name}\n${s.description || ''}${onCd ? '\n[調息中 ' + cdSec + '秒]' : ''}"
+                 data-skill-id="${safeSkillId}"
+                 data-skill-name="${safeSkillName}"
+                 title="${safeSkillName}\n${safeSkillDesc}${onCd ? '\n[調息中 ' + cdSec + '秒]' : ''}"
                  onclick="handleDockSkillCardClick(event, this)">
-              <span class="skill-icon">${s.icon || '⚡'}</span>
-              <span class="skill-name">${s.name}</span>
+              <span class="skill-icon">${safeSkillIcon}</span>
+              <span class="skill-name">${safeSkillName}</span>
               <span class="skill-cost">${costLabel}</span>
             </div>
           `;

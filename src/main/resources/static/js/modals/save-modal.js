@@ -1,5 +1,6 @@
 import { store } from '../core/state-store.js';
 import { sendCmd } from '../core/cmd-dispatcher.js';
+import { escapeHtml } from '../core/ui-utils.js';
 
 /**
  * 存讀檔管理與引導彈窗組件 (Save Modal & Entry Flow Component)
@@ -99,10 +100,10 @@ function renderSaveSlots() {
     if (slot.empty) {
       metaRow.innerHTML = '<span>-- 空無道痕 (未存檔) --</span>';
     } else {
-      metaRow.innerHTML = `<span>👤 主角: <strong>${slot.protagonistName || '無名'}</strong></span>`
-          + `<span>🏛️ <strong>${slot.floorName || '太陰古塚'}</strong></span>`
-          + `<span>☯️ <strong>${slot.formationName || '四象辟邪陣'}</strong></span>`
-          + `<span>🕒 <strong>${slot.savedAt || ''}</strong></span>`;
+      metaRow.innerHTML = `<span>👤 主角: <strong>${escapeHtml(slot.protagonistName || '無名')}</strong></span>`
+          + `<span>🏛️ <strong>${escapeHtml(slot.floorName || '太陰古塚')}</strong></span>`
+          + `<span>☯️ <strong>${escapeHtml(slot.formationName || '四象辟邪陣')}</strong></span>`
+          + `<span>🕒 <strong>${escapeHtml(slot.savedAt || '')}</strong></span>`;
     }
     infoCol.appendChild(metaRow);
 

@@ -1,5 +1,6 @@
 import { store } from '../core/state-store.js';
 import { sendCmd } from '../core/cmd-dispatcher.js';
+import { escapeHtml } from '../core/ui-utils.js';
 
 /**
  * 隊伍公共行囊抽屜 (Bag Drawer Component)
@@ -52,7 +53,7 @@ export function renderBagDrawer() {
 
   slots.forEach((item, slotIdx) => {
     const card = document.createElement('div');
-    const qualityCls = `quality-${(item.quality || 'COMMON').toLowerCase()}`;
+    const qualityCls = `quality-${escapeHtml((item.quality || 'COMMON').toLowerCase())}`;
     card.className = `bag-item-card ${qualityCls}`;
 
     let effectDesc = '';
@@ -65,17 +66,25 @@ export function renderBagDrawer() {
     } else if (item.effectType === 'RESTORE_SAN') {
       effectDesc = `📜 服用回復 ${item.effectValue} SAN (解走火入魔)`;
     } else if (item.effectType === 'LEARN_SKILL') {
-      effectDesc = `🧬 煉化領悟絕學【${item.grantedSkillName || '道種'}】`;
+      effectDesc = `🧬 煉化領悟絕學【${escapeHtml(item.grantedSkillName || '道種')}】`;
     }
+
+    const safeSlotId = escapeHtml(String(item.slotId ?? ''));
+    const safeJsSlotId = String(item.slotId ?? '').replace(/'/g, "\\'");
+    const safeItemName = escapeHtml(item.name || '');
+    const safeItemIcon = escapeHtml(item.icon || '📦');
+    const safeItemDesc = escapeHtml(item.description || '');
 
     // 構造快捷操作按鍵 (對 6 位隊員)
     let actionButtons = '';
     if (item.consumable) {
       const btns = members.map((m, mIdx) => {
         const isAlive = (m.alive !== undefined) ? m.alive : (m.hp > 0);
+        const safeMemberName = escapeHtml(m.name || '無名');
+        const shortName = safeMemberName.slice(0, 3);
         return `<button class="item-act-mini-btn btn-use" ${isAlive ? '' : 'disabled'}
-          onclick="window.send('use ${item.slotId} ${mIdx}')" title="為 #${mIdx + 1} ${m.name} 使用">
-          #${mIdx + 1} ${m.name.slice(0, 3)}
+          onclick="window.send('use ${safeJsSlotId} ${mIdx}')" title="為 #${mIdx + 1} ${safeMemberName} 使用">
+          #${mIdx + 1} ${shortName}
         </button>`;
       }).join('');
       actionButtons += `
@@ -89,9 +98,11 @@ export function renderBagDrawer() {
     if (item.weapon || item.armor || item.equipment || item.equipSlot || item.itemType === 'WEAPON' || item.itemType === 'ARMOR' || item.itemType === 'SHIELD' || item.itemType === 'ACCESSORY') {
       const btns = members.map((m, mIdx) => {
         const isAlive = (m.alive !== undefined) ? m.alive : (m.hp > 0);
+        const safeMemberName = escapeHtml(m.name || '無名');
+        const shortName = safeMemberName.slice(0, 3);
         return `<button class="item-act-mini-btn btn-equip" ${isAlive ? '' : 'disabled'}
-          onclick="window.send('equip ${item.slotId} ${mIdx}')" title="為 #${mIdx + 1} ${m.name} 穿戴">
-          #${mIdx + 1} ${m.name.slice(0, 3)}
+          onclick="window.send('equip ${safeJsSlotId} ${mIdx}')" title="為 #${mIdx + 1} ${safeMemberName} 穿戴">
+          #${mIdx + 1} ${shortName}
         </button>`;
       }).join('');
       actionButtons += `
@@ -104,16 +115,16 @@ export function renderBagDrawer() {
 
     card.innerHTML = `
       <div class="bag-item-top">
-        <span class="bag-item-icon">${item.icon || '📦'}</span>
+        <span class="bag-item-icon">${safeItemIcon}</span>
         <div class="bag-item-meta">
           <div class="bag-item-name-line">
-            <span class="bag-item-title">${item.name}</span>
+            <span class="bag-item-title">${safeItemName}</span>
             <span class="bag-item-qty">x${item.count}</span>
           </div>
           <div class="bag-item-effect">${effectDesc}</div>
         </div>
       </div>
-      <div class="bag-item-desc">${item.description || ''}</div>
+      <div class="bag-item-desc">${safeItemDesc}</div>
       ${actionButtons ? `<div class="bag-item-actions">${actionButtons}</div>` : ''}
     `;
 

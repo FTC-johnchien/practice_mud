@@ -1,6 +1,7 @@
 import { store } from '../core/state-store.js';
 import { sendCmd } from '../core/cmd-dispatcher.js';
 import { eventBus } from '../core/event-bus.js';
+import { escapeHtml } from '../core/ui-utils.js';
 
 /**
  * 6 人小隊狀態列面板 (Party HUD Panel)
@@ -115,16 +116,23 @@ export function renderPartyHud(party) {
     buffsHtml = `
       <div class="card-buffs-grid">
         ${buffs.slice(0, 10).map(b => {
-          const cat = (b.category || 'SHIELD').toLowerCase();
-          return `<span class="party-buff-chip buff-${cat}" title="${b.name} (${b.category}): 剩餘 ${b.remainingSeconds || 0}秒">${b.icon || '✨'}</span>`;
+          const cat = escapeHtml((b.category || 'SHIELD').toLowerCase());
+          const safeName = escapeHtml(b.name || '');
+          const safeCat = escapeHtml(b.category || '');
+          const safeIcon = escapeHtml(b.icon || '✨');
+          return `<span class="party-buff-chip buff-${cat}" title="${safeName} (${safeCat}): 剩餘 ${b.remainingSeconds || 0}秒">${safeIcon}</span>`;
         }).join('')}
       </div>
     `;
 
+    const safeMemberName = escapeHtml(m.name || '無名');
+    const safeSanState = escapeHtml(m.sanState || '');
+    const safeCastingName = escapeHtml(m.castingSkillName || '施法');
+
     card.innerHTML = `
       <div class="card-info-side">
         <div class="card-name-row">
-          <span class="member-name" title="${m.name}">${m.name}</span>
+          <span class="member-name" title="${safeMemberName}">${safeMemberName}</span>
           <span class="member-level-num" title="修為境界：第 ${m.level || 1} 重">${m.level || 1}</span>
         </div>
         ${buffsHtml}
@@ -142,14 +150,14 @@ export function renderPartyHud(party) {
           <div class="mini-bar ${spFillClass}" style="width: ${spPct}%"></div>
           <span class="mini-val">SP ${spText}</span>
         </div>
-        <div class="mini-bar-wrap san-bar-wrap" title="道心 SAN: ${m.san}/${m.maxSan} ${m.sanState || ''}">
+        <div class="mini-bar-wrap san-bar-wrap" title="道心 SAN: ${m.san}/${m.maxSan} ${safeSanState}">
           <div class="mini-bar san-fill ${sanClass}" style="width: ${sanPct}%"></div>
           <span class="mini-val ${sanClass}">SAN ${m.san}/${m.maxSan}</span>
         </div>
         ${m.isCasting ? `
-        <div class="mini-bar-wrap casting-bar-wrap" style="border-color:#38bdf8; background:rgba(14,165,233,0.15);" title="正在施法: ${m.castingSkillName || '凝氣運轉'} (剩餘 ${(m.castingRemainingMs / 1000).toFixed(1)} 秒)">
+        <div class="mini-bar-wrap casting-bar-wrap" style="border-color:#38bdf8; background:rgba(14,165,233,0.15);" title="正在施法: ${safeCastingName} (剩餘 ${(m.castingRemainingMs / 1000).toFixed(1)} 秒)">
           <div class="mini-bar casting-fill" style="width: ${Math.min(100, Math.max(0, (1 - (m.castingRemainingMs / Math.max(1, m.castingDurationMs))) * 100))}%; background: linear-gradient(90deg, #38bdf8, #818cf8);"></div>
-          <span class="mini-val" style="color:#e0f2fe; text-shadow:0 0 3px #0284c7; font-weight:bold;">🌀 ${m.castingSkillName || '施法'} ${(m.castingRemainingMs / 1000).toFixed(1)}s</span>
+          <span class="mini-val" style="color:#e0f2fe; text-shadow:0 0 3px #0284c7; font-weight:bold;">🌀 ${safeCastingName} ${(m.castingRemainingMs / 1000).toFixed(1)}s</span>
         </div>` : ''}
         ${m.isOnGcd && !m.isCasting ? `
         <div style="font-size:var(--font-xs); color:#94a3b8; text-align:right; padding-right:2px;" title="全域招式調息中 (GCD)">

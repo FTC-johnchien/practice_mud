@@ -34,6 +34,8 @@ public class CombatService {
 
   private final SkillService skillService;
   private final XpService xpService;
+  private final XpProgressionService xpProgressionService;
+  private final com.example.htmlmud.config.GameConfig gameConfig;
   private final org.springframework.beans.factory.ObjectProvider<com.example.htmlmud.domain.party.service.PartyService> partyServiceProvider;
 
 
@@ -133,13 +135,15 @@ public class CombatService {
     LivingStats attState = attacker.getStats();
     LivingStats defState = defender.getStats();
 
-    // 1. 命中判定 (範例：靈巧越高，命中越高)
-    // 假設基礎命中 80% + (攻方靈巧 - 守方靈巧)%
-    double hitChance = 0.8 + ((attState.dex - defState.dex) * 0.01);
+    // 1. 命中判定 (由 GameConfig 驅動)
+    double baseHit = (gameConfig != null && gameConfig.getCombat() != null)
+        ? gameConfig.getCombat().getBaseHitChance()
+        : 0.80;
+    double dexMod = (gameConfig != null && gameConfig.getCombat() != null)
+        ? gameConfig.getCombat().getDexHitModifier()
+        : 0.01;
+    double hitChance = baseHit + ((attState.dex - defState.dex) * dexMod);
     if (ThreadLocalRandom.current().nextDouble() > hitChance) {
-      // Room room = attacker.getCurrentRoom();
-      // room.broadcast(attacker.getId(), "log:calculateDamage $N miss");
-      // log.info("calculateDamage miss");
       return -1; // -1 代表 Miss
     }
 
@@ -230,8 +234,14 @@ public class CombatService {
           // 如果還有下一次攻擊且目標未死，則等待間隔
           if (i < attacks - 1 && target.isValid()) {
 
-            // 種族的多次攻擊非由 tick 觸發，間隔 0.45 秒 - 0.55 秒
-            long nextAttackTime = ThreadLocalRandom.current().nextLong(450, 551);
+            // 種族的多次攻擊非由 tick 觸發，間隔由 GameConfig 驅動
+            long minInterval = (gameConfig != null && gameConfig.getCombat() != null)
+                ? gameConfig.getCombat().getMultiAttackMinIntervalMs()
+                : 450;
+            long maxInterval = (gameConfig != null && gameConfig.getCombat() != null)
+                ? gameConfig.getCombat().getMultiAttackMaxIntervalMs()
+                : 551;
+            long nextAttackTime = ThreadLocalRandom.current().nextLong(minInterval, maxInterval);
             Thread.sleep(nextAttackTime);
           }
         }
@@ -347,7 +357,9 @@ public class CombatService {
   }
 
   private long calculateNextLevelXp(int level) {
-    return 10;
+    return (xpProgressionService != null)
+        ? xpProgressionService.calculateNextLevelExp(level)
+        : Math.max(180L, (long) Math.floor(60.0 * Math.pow(level, 1.6) + 120.0 * level));
   }
 
   // 取出隨機數值

@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import com.example.htmlmud.config.GameConfig;
 import com.example.htmlmud.domain.actor.core.VirtualActor;
 import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.entity.GameItem;
@@ -392,8 +393,8 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
       return weapon.getTemplate().equipmentProp().attackSpeed();
     }
 
-    // 赤手空拳
-    return 2000;
+    // 赤手空拳 (由 GameConfig 驅動)
+    return GameConfig.getInstance().getCombat().getUnarmedAttackSpeedMs();
   }
 
   public int getAttacksPerRound() {

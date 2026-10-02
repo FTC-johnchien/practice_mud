@@ -1,4 +1,5 @@
 import { store } from '../core/state-store.js';
+import { escapeHtml } from '../core/ui-utils.js';
 
 /**
  * 地牢雷達與視野面板 (Dungeon Radar & Minimap Panel)
@@ -129,9 +130,9 @@ export function renderMinimap(dungeon) {
 
     infoHeader.innerHTML = `
       <div class="floor-header-row">
-        <span class="floor-title">🏛️ ${dungeon.floorName}</span>
+        <span class="floor-title">🏛️ ${escapeHtml(dungeon.floorName || '')}</span>
         <span class="coord-tag">[X: ${dungeon.x}, Y: ${dungeon.y}]</span>
-        <span class="facing-tag">朝向: <strong class="arrow-glow">${dungeon.directionArrow}</strong> ${dirCn}</span>
+        <span class="facing-tag">朝向: <strong class="arrow-glow">${escapeHtml(dungeon.directionArrow || '')}</strong> ${dirCn}</span>
       </div>
       <div class="danger-gauge-row">
         <span class="danger-status-badge ${dangerInfo.cls}">${dangerInfo.label}</span>

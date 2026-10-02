@@ -6,6 +6,8 @@
 import { eventBus } from './core/event-bus.js';
 import { store } from './core/state-store.js';
 import { sendCmd, sendStep, sendTownMove, handleDpad } from './core/cmd-dispatcher.js';
+import * as constants from './core/constants.js';
+import * as uiUtils from './core/ui-utils.js';
 
 import { renderTownNav, normalizeTownCapability } from './panels/town-panel.js';
 import { renderMinimap, applyRadarPosition, updateRadarModeBtn, toggleRadarPosition, toggleRadarViewMode } from './panels/dungeon-panel.js';
@@ -478,6 +480,9 @@ export function initKeyboardControls() {
 
 // 頁面載入完成後初始化與全域函式掛載 (維持 100% 向後相容)
 if (typeof window !== 'undefined') {
+  window.GameConstants = constants;
+  window.uiUtils = uiUtils;
+  window.escapeHtml = uiUtils.escapeHtml;
   window.updateDrpgView = updateDrpgView;
   window.toggleDevConsole = toggleDevConsole;
   window.handleDevEnter = handleDevEnter;

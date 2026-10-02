@@ -2,6 +2,7 @@ import { store } from '../core/state-store.js';
 import { sendCmd } from '../core/cmd-dispatcher.js';
 import { eventBus } from '../core/event-bus.js';
 import { renderBattleArena } from '../panels/battle-panel.js';
+import { escapeHtml } from '../core/ui-utils.js';
 
 /**
  * 隊員技能抽屜組件 (Skill Drawer Component)
@@ -58,14 +59,18 @@ export function renderSkillDrawer() {
       skillsHtml = '<span style="color:#9ca3af;font-size:12px;">該成員專注於自動平砍，暫無主動奧義。</span>';
     } else {
       skillsHtml = skills.map((s, sIdx) => {
-        const cat = s.category || 'CLASS';
+        const cat = escapeHtml(s.category || 'CLASS');
+        const safeSkillId = escapeHtml(s.id || '');
+        const safeIcon = escapeHtml(s.icon || '⚡');
+        const safeSkillName = escapeHtml(s.name || '');
+        const safeSkillDesc = escapeHtml(s.description || '');
         return `
-          <button class="skill-btn" data-skill-idx="${sIdx}" data-skill-id="${s.id}" data-category="${cat}">
+          <button class="skill-btn" data-skill-idx="${sIdx}" data-skill-id="${safeSkillId}" data-category="${cat}">
             <div class="skill-btn-title-row">
-              <span class="skill-btn-name">${s.icon || '⚡'} ${s.name}</span>
+              <span class="skill-btn-name">${safeIcon} ${safeSkillName}</span>
               <span class="skill-btn-cost"></span>
             </div>
-            <div class="skill-btn-desc">${s.description}</div>
+            <div class="skill-btn-desc">${safeSkillDesc}</div>
             <div class="skill-cd-overlay hidden"></div>
           </button>
         `;
@@ -82,11 +87,14 @@ export function renderSkillDrawer() {
       </div>
     `;
 
+    const safeMemberName = escapeHtml(m.name || '無名');
+    const safeRoleTitle = escapeHtml(m.roleTitle || '');
+
     drawer.innerHTML = `
       <div class="drawer-member-info">
         <div>
-          <span class="drawer-member-name">#${selectedMemberIdx + 1} ${m.name}</span>
-          <span class="drawer-member-role">${m.roleTitle}</span>
+          <span class="drawer-member-name">#${selectedMemberIdx + 1} ${safeMemberName}</span>
+          <span class="drawer-member-role">${safeRoleTitle}</span>
         </div>
         <span class="drawer-resource-badge ${badgeCls}">${badgeIcon} ${curRes}/${maxRes}</span>
       </div>
@@ -212,7 +220,7 @@ export function onSkillBtnClick(memberIdx, skillId, canCast, skillName, costLabe
     }
     const focusHint = document.getElementById('battle-focus-hint');
     if (focusHint) {
-      focusHint.innerHTML = `<span style="color:#f59e0b; font-weight:bold;">${warnMsg}</span>`;
+      focusHint.innerHTML = `<span style="color:#f59e0b; font-weight:bold;">${escapeHtml(warnMsg)}</span>`;
       setTimeout(() => {
         const lastBattle = store.get('lastBattle');
         if (focusHint && lastBattle) {

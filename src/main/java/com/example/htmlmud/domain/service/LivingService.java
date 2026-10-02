@@ -38,6 +38,8 @@ public class LivingService {
 
   private final WorldEntityFactoryPort worldFactory;
 
+  private final com.example.htmlmud.config.GameConfig gameConfig;
+
   private final ObjectProvider<WorldManager> worldManagerProvider;
 
   private final ObjectProvider<GameStateBroadcastService> broadcastServiceProvider;
@@ -52,8 +54,10 @@ public class LivingService {
     }
 
     // === 回復/狀態心跳 (Regen Tick) ===
-    // 頻率：每 15 秒執行一次 (mud時間 0.1小時)
-    if (!self.isInCombat() && tickCount % 150 == 0) {
+    int regenModulo = (gameConfig != null && gameConfig.getRegen() != null)
+        ? gameConfig.getRegen().getTickModulo()
+        : 150;
+    if (!self.isInCombat() && tickCount % regenModulo == 0) {
       processRegen(self);
       // processBuffs(); // 檢查 Buff 是否過期
     }
@@ -315,15 +319,24 @@ public class LivingService {
 
 
   private void processRegen(Living self) {
+    double hpRatio = (gameConfig != null && gameConfig.getRegen() != null)
+        ? gameConfig.getRegen().getHpPercent()
+        : 0.05;
+    double mpRatio = (gameConfig != null && gameConfig.getRegen() != null)
+        ? gameConfig.getRegen().getMpPercent()
+        : 0.01;
 
-    // hp 回復 5%
+    // hp 回復
     if (self.getStats().getHp() < self.getStats().getMaxHp()) {
-      int regenAmount = (int) (self.getStats().getMaxHp() * 0.05); // 回復 5%
+      int regenAmount = Math.max(1, (int) (self.getStats().getMaxHp() * hpRatio));
       heal(self, regenAmount);
     }
 
-    // mp 回復 1%
-
+    // mp 回復 (補完原先被註解的 MP 回復邏輯)
+    if (self.getStats().getMp() < self.getStats().getMaxMp()) {
+      int regenMpAmount = Math.max(1, (int) (self.getStats().getMaxMp() * mpRatio));
+      self.getStats().setMp(Math.min(self.getStats().getMaxMp(), self.getStats().getMp() + regenMpAmount));
+    }
   }
 
   // 準備反應的時間

@@ -1,5 +1,6 @@
 import { store } from '../core/state-store.js';
 import { sendCmd } from '../core/cmd-dispatcher.js';
+import { escapeHtml } from '../core/ui-utils.js';
 
 /**
  * 角色裝備、武學法術書與戰術方針彈窗 (Party Modal Component)
@@ -1008,18 +1009,18 @@ function renderSystemSlotsHtml(sysMode) {
             <div class="slot-info-col">
               <div class="slot-badge-row">
                 <span class="slot-id-tag ${isAuto ? 'auto-tag' : ''}">${isAuto ? '⚡ 自動存檔' : `槽位 ${slot.slotId}`}</span>
-                <span class="slot-title-text" style="font-size:14px;font-weight:bold;">${slot.title || (isAuto ? '自動存檔' : `存檔槽位 ${slot.slotId}`)}</span>
+                <span class="slot-title-text" style="font-size:14px;font-weight:bold;">${escapeHtml(slot.title || (isAuto ? '自動存檔' : `存檔槽位 ${slot.slotId}`))}</span>
               </div>
               <div class="slot-meta-row" style="font-size:13px;margin:6px 0;">
                 ${slot.empty
                   ? '<span style="color:#64748b;">-- 空無道痕 (未存檔) --</span>'
-                  : `<span>👤 主角: <strong>${slot.protagonistName || '無名'}</strong></span>
-                     <span>🏛️ <strong>${slot.floorName || '太陰古塚'}</strong></span>
-                     <span>☯️ <strong>${slot.formationName || '四象辟邪陣'}</strong></span>
-                     <span>🕒 <strong>${slot.savedAt || ''}</strong></span>`}
+                  : `<span>👤 主角: <strong>${escapeHtml(slot.protagonistName || '無名')}</strong></span>
+                     <span>🏛️ <strong>${escapeHtml(slot.floorName || '太陰古塚')}</strong></span>
+                     <span>☯️ <strong>${escapeHtml(slot.formationName || '四象辟邪陣')}</strong></span>
+                     <span>🕒 <strong>${escapeHtml(slot.savedAt || '')}</strong></span>`}
               </div>
               ${(!slot.empty && slot.memberNames && slot.memberNames.length > 0)
-                ? `<div class="slot-members-row" style="font-size:var(--font-xs);color:#94a3b8;">👥 小隊隊容：${slot.memberNames.join('、')}</div>`
+                ? `<div class="slot-members-row" style="font-size:var(--font-xs);color:#94a3b8;">👥 小隊隊容：${slot.memberNames.map(n => escapeHtml(n)).join('、')}</div>`
                 : ''}
             </div>
             <div class="slot-actions-col">

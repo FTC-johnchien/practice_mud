@@ -46,6 +46,8 @@ public class PlayerService {
 
   private final GuiBridge guiBridge;
 
+  private final com.example.htmlmud.config.GameConfig gameConfig;
+
   public com.example.htmlmud.domain.port.AuthenticationPort getAuthService() {
     return authenticationPort;
   }
@@ -153,8 +155,11 @@ public class PlayerService {
     } catch (InterruptedException ignored) {
     }
 
-    // 取出 currentRoom 區域的重生點/安全點 或是固定地點墳場 (如果有的話)
-    player.setCurrentRoomId("newbie_village:cemetery");
+    // 取出 currentRoom 區域的重生點/安全點 或是固定地點墳場 (由 GameConfig 驅動)
+    String respawnRoom = (gameConfig != null && gameConfig.getDefaults() != null && gameConfig.getDefaults().getPlayer() != null)
+        ? gameConfig.getDefaults().getPlayer().getRespawnRoomId()
+        : "newbie_village:cemetery";
+    player.setCurrentRoomId(respawnRoom);
 
     Room room = player.getCurrentRoom();
 

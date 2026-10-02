@@ -1,4 +1,5 @@
 import { sendCmd } from '../core/cmd-dispatcher.js';
+import { escapeHtml } from '../core/ui-utils.js';
 
 /**
  * 城鎮導航與房間互動面板 (Town Navigation & Room Interaction Panel)
@@ -102,7 +103,7 @@ export function renderTownNav(town) {
       else if (ex.direction === 'down') icon = '🪜 向下';
       else if (ex.direction === 'enter') icon = '⛩️ 踏入';
 
-      btn.innerHTML = `${icon} ${ex.targetRoomName || ex.targetRoomId}`;
+      btn.innerHTML = `${icon} ${escapeHtml(ex.targetRoomName || ex.targetRoomId)}`;
       btn.onclick = () => {
         if (ex.actionCommand) {
           sendCmd(ex.actionCommand);
@@ -145,10 +146,10 @@ export function renderTownNav(town) {
 
         const roleHtml = isHostile
           ? `<span style="font-size:var(--font-xs); color:#f87171; background:rgba(239,68,68,0.2); border:1px solid #ef4444; padding:1px 6px; border-radius:3px;">敵對</span>`
-          : `<span style="font-size:var(--font-xs); color:#94a3b8;">${npc.title || ''}</span>`;
+          : `<span style="font-size:var(--font-xs); color:#94a3b8;">${escapeHtml(npc.title || '')}</span>`;
         const header = document.createElement('div');
         header.className = 'npc-header';
-        header.innerHTML = `<span class="npc-name">${npc.name}</span>${rankBadge}${roleHtml}`;
+        header.innerHTML = `<span class="npc-name">${escapeHtml(npc.name || '')}</span>${rankBadge}${roleHtml}`;
         card.appendChild(header);
 
         if (npc.description) {
@@ -165,7 +166,7 @@ export function renderTownNav(town) {
           const norm = normalizeTownCapability(cap, npc);
           const chip = document.createElement('button');
           chip.className = `cap-chip cap-${norm.type}`;
-          chip.innerHTML = `<span>${norm.icon}</span><span>${norm.label}</span>`;
+          chip.innerHTML = `<span>${norm.icon}</span><span>${escapeHtml(norm.label)}</span>`;
           chip.onclick = () => {
             if (norm.command) {
               sendCmd(norm.command);
@@ -195,20 +196,21 @@ export function renderTownNav(town) {
       items.forEach(it => {
         const chip = document.createElement('button');
         chip.className = 'ground-item-chip';
-        const name = it.name || '物品';
-        const isChest = name.includes('寶箱') || name.includes('棺槨') || name.includes('秘寶');
-        const isPouch = name.includes('儲物袋') || name.includes('包裹') || (it.type === 'CONTAINER');
+        const rawName = it.name || '物品';
+        const safeName = escapeHtml(rawName);
+        const isChest = rawName.includes('寶箱') || rawName.includes('棺槨') || rawName.includes('秘寶');
+        const isPouch = rawName.includes('儲物袋') || rawName.includes('包裹') || (it.type === 'CONTAINER');
 
         if (isChest) {
           chip.classList.add('is-chest');
-          chip.innerHTML = `<span>📦</span> 開啟 ${name}`;
+          chip.innerHTML = `<span>📦</span> 開啟 ${safeName}`;
         } else if (isPouch) {
           chip.classList.add('is-loot-pouch');
-          chip.innerHTML = `<span>👝</span> 搜刮 ${name}`;
+          chip.innerHTML = `<span>👝</span> 搜刮 ${safeName}`;
         } else {
           const count = it.count || it.amount || 1;
           const countStr = count > 1 ? ` x${count}` : '';
-          chip.innerHTML = `<span>📦</span> 拾取 ${name}${countStr}`;
+          chip.innerHTML = `<span>📦</span> 拾取 ${safeName}${countStr}`;
         }
 
         chip.onclick = () => {

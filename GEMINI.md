@@ -27,6 +27,10 @@
       - **MUD 全面以網頁呈現**：所有的遊戲功能（包含傳統 MUD 指令與 DRPG 迷宮探索）都必須能在網頁介面上有對應的功能按鈕或操作元件供玩家直覺點擊操作，同時支援鍵盤快捷鍵（如 WASD 移動與特定功能熱鍵輸入）。
       - **拒絕雙軌並存與重複輪子**：系統中絕不允許 MUD 一套、DRPG 一套的雙軌機制（例如移動方向、資源類型、Buff/Debuff 狀態等必須徹底統一命名與模型）。
       - **不足即溝通重構**：若既有設定或資料結構考慮不周，主動透過分析與討論進行修改、擴充與統一命名重構，杜絕歷史包袱累積。
+   9. **文檔治理與核心工作流程鐵律 (Documentation & Workflow Governance) — 🚨 極度重要**：
+      - **待辦與未決事項第一時間入庫 (`FUTURE_IMPROVEMENTS.md`)**：凡是在對話討論中提出但「未決定」、「待決議」或「待執行/待重構」的項目與技術建議，**必須第一時間記錄至 [`docs/plans/FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md)**，按優先級 (P0~P3) 結構化排列，確保無遺漏。
+      - **每次新增/變更項目必記 Log (`CHANGELOG.md`)**：**每次進行專案功能新增、程式碼重構、缺陷修復或規格變更時，必須同步將變更內容詳細登載到 [`CHANGELOG.md`](./CHANGELOG.md)**，維持清晰可追溯的歷史演進歷程，嚴禁私自進行無記錄的靜默修改。
+      - **每次新增/變更時必 Review 並修調架構 (`ARCHITECTURE.md`)**：**每次進行功能新增或架構變更時，AI 必須主動 Review [`ARCHITECTURE.md`](./ARCHITECTURE.md)（若涉及前端視圖則同步 Review [`docs/UI_PAGE_STRUCTURE.md`](./docs/UI_PAGE_STRUCTURE.md)），並及時進行必要的修訂與調優**，確保架構說明書與實際代碼庫永遠維持 100% 同步一致。
 
 ---
 

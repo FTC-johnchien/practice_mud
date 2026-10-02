@@ -31,7 +31,10 @@ function appendHtml(rawText, color) {
     if (color) div.style.color = color;
 
     try {
-        div.innerHTML = ansi_up.ansi_to_html(rawText);
+        const safeText = (typeof window.escapeHtml === 'function')
+          ? window.escapeHtml(rawText)
+          : String(rawText).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        div.innerHTML = ansi_up.ansi_to_html(safeText);
         logDiv.appendChild(div);
         logDiv.scrollTop = logDiv.scrollHeight;
 

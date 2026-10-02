@@ -1,5 +1,6 @@
 import { store } from '../core/state-store.js';
 import { sendCmd } from '../core/cmd-dispatcher.js';
+import { escapeHtml } from '../core/ui-utils.js';
 
 /**
  * 貨棧交易彈窗組件 (Shop Modal Component)
@@ -85,23 +86,27 @@ function openShopModal(data) {
         const buyBtnText = isOutOfStock ? '❌ 售罄' : '🛒 購買';
         const buyBtnDisabled = isOutOfStock ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
         const maxQty = (item.stock !== undefined && item.stock > 0) ? item.stock : 99;
+        const safeId = escapeHtml(String(item.id || ''));
+        const safeJsId = String(item.id || '').replace(/'/g, "\\'");
+        const safeName = escapeHtml(item.name || '');
+        const safeDesc = escapeHtml(item.description || '');
 
         goodsHtml += `
-          <div class="shop-item-row" id="shop-item-${item.id}">
+          <div class="shop-item-row" id="shop-item-${safeId}">
             <div class="shop-item-info">
               <span class="shop-item-badge">#${item.index}</span>
-              <span class="shop-item-name">${item.name}</span>
+              <span class="shop-item-name">${safeName}</span>
               <span class="shop-item-price">💰 ${item.price} 靈石</span>
               ${stockHtml}
             </div>
-            <div class="shop-item-desc">${item.description || ''}</div>
+            <div class="shop-item-desc">${safeDesc}</div>
             <div class="shop-item-actions">
               <div class="shop-qty-picker">
-                <button class="qty-btn" type="button" onclick="adjustShopQty('${item.id}', -1)">-</button>
-                <input type="number" id="shop-qty-${item.id}" class="shop-qty-input" value="1" min="1" max="${maxQty}" />
-                <button class="qty-btn" type="button" onclick="adjustShopQty('${item.id}', 1)">+</button>
+                <button class="qty-btn" type="button" onclick="adjustShopQty('${safeJsId}', -1)">-</button>
+                <input type="number" id="shop-qty-${safeId}" class="shop-qty-input" value="1" min="1" max="${maxQty}" />
+                <button class="qty-btn" type="button" onclick="adjustShopQty('${safeJsId}', 1)">+</button>
               </div>
-              <button class="shop-buy-btn" type="button" ${buyBtnDisabled} onclick="triggerShopBuy('${item.id}')">${buyBtnText}</button>
+              <button class="shop-buy-btn" type="button" ${buyBtnDisabled} onclick="triggerShopBuy('${safeJsId}')">${buyBtnText}</button>
             </div>
           </div>
         `;
