@@ -31,11 +31,8 @@ public class LivingStats {
   public int stamina = 100;
   public int maxStamina = 100;
 
-  // private int qi = 50; // 氣 (用於武功傷害計算)
-  // private int maxQi = 50; // 最大氣值
-  // private int san = 100; // 理智值
-  // private int maxSan = 100; // 最大理智值
-
+  public int san = 100; // 理智值
+  public int maxSan = 100; // 最大理智值
 
   public int coin = 0; // 錢幣
   public int exp = 0; // 經驗值 (當前等級已積累修為)
@@ -51,19 +48,6 @@ public class LivingStats {
   public int dex = 5; // 靈巧/身法 dexterity (影響 物理威力 命中率Hit Rate、暴擊率、閃避)
   public int con = 5; // 根骨/體質 constitution (影響 生命值HP上限、防禦力、體力恢復速度)
   public int wis = 5; // 定力/精神 wisdom (影響 治療效果、法力恢復、道心抗性)
-
-  // private int agi = 5; // 敏捷 agility (影響 移動速度、躲避率Evasion 閃避攻擊、戰鬥中的出手順序（主動性）。)
-  // private int cha; // 魅力 charisma
-  // private int luk; // 福緣 luck
-  // private int karma; // 因果 karma
-  // private int spi; // 靈性 spirit
-  // private int cou; // 膽識 courage
-  // private int conce; // 定力 concentration
-  // private int app; // 容貌 appearance
-
-  // private int reputation; // 名聲 (影響 與 NPC 的互動)
-
-
 
   // === 裝備欄位 ===
   public Map<EquipmentSlot, GameItem> equipment = new HashMap<>();
@@ -98,6 +82,8 @@ public class LivingStats {
     copy.maxMp = this.maxMp;
     copy.stamina = this.stamina;
     copy.maxStamina = this.maxStamina;
+    copy.san = this.san;
+    copy.maxSan = this.maxSan;
 
     copy.coin = this.coin;
     copy.exp = this.exp;
@@ -119,12 +105,20 @@ public class LivingStats {
    * 取得指定類型的抗性 (包含父類別抗性的加總)
    */
   public double getResistance(DamageType type) {
+    if (type == null) return 0.0;
     double res = resistances.getOrDefault(type, 0.0);
     if (type.getParent() != null) {
       res += getResistance(type.getParent());
     }
     return res;
   }
+
+  public void setResistance(DamageType type, double value) {
+    if (type != null) {
+      resistances.put(type, value);
+    }
+  }
+
   // --- 用於 ResourceType.CHARGE 的方法 ---
   public int getCombatResource(String key) {
     return combatResources.getOrDefault(key, 0);
@@ -154,6 +148,14 @@ public class LivingStats {
     this.maxMp = Math.max(0, maxMp);
   }
 
+  public void setSan(int san) {
+    this.san = Math.max(0, san);
+  }
+
+  public void setMaxSan(int maxSan) {
+    this.maxSan = Math.max(1, maxSan);
+  }
+
   public void clampToMax() {
     if (this.hp > this.maxHp) {
       this.hp = this.maxHp;
@@ -161,6 +163,10 @@ public class LivingStats {
     if (this.mp > this.maxMp) {
       this.mp = this.maxMp;
     }
+    if (this.san > this.maxSan) {
+      this.san = this.maxSan;
+    }
   }
 
 }
+

@@ -40,6 +40,10 @@ public class KillCommand implements PlayerCommand {
 
     // 1. 取得房間內的怪物列表
     Room room = player.getCurrentRoom();
+    if (room != null && room.hasFlag(com.example.htmlmud.domain.model.enums.RoomFlag.SAFE_ZONE)) {
+      player.reply("此處乃安全祥和之地，嚴禁動武！");
+      return;
+    }
 
     // 2. 交給 Selector 處理複雜字串
     // args 可能是 "red goblin", "elite soldier 2"

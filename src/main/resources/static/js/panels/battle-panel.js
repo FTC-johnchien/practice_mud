@@ -564,6 +564,18 @@ export function renderCombatCommandDock(party, selectedMemberIdx) {
       return `<span class="party-buff-chip buff-${cat}" title="${safeBuffName} (${safeBuffCat}): 餘 ${b.remainingSeconds || 0}秒">${safeBuffIcon}</span>`;
     }).join('');
 
+    let spLabel = 'SP';
+    let spText = maxSp > 0 ? curSp + '/' + maxSp : '無';
+    if (m.resourceType === 'RAGE') {
+      spLabel = '怒氣';
+      const curRage = m.rage !== undefined ? m.rage : curSp;
+      spText = `${curRage}/${maxSp}`;
+    } else if (m.resourceType === 'COMBO') {
+      spLabel = '連擊';
+      const curCombo = m.combo !== undefined ? m.combo : Math.min(5, Math.floor(curSp / 20));
+      spText = `${curCombo}/5 (${curSp})`;
+    }
+
     const defaultKey = `DEFAULT_${m.id || m.name}`;
     if (contentColEl.dataset.viewKey !== defaultKey) {
       contentColEl.dataset.viewKey = defaultKey;
@@ -583,7 +595,7 @@ export function renderCombatCommandDock(party, selectedMemberIdx) {
             <div style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
               <div class="mini-bar-wrap" style="height: 14px; position: relative;">
                 <div class="mini-bar sp-fill ${maxSp > 0 ? '' : 'empty-res-fill'}" style="width: ${spPct}%; height: 100%;"></div>
-                <span class="mini-val sp-val" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; color: #fff; text-shadow: 0 0 2px #000;">SP ${maxSp > 0 ? curSp+'/'+maxSp : '無'}</span>
+                <span class="mini-val sp-val" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; color: #fff; text-shadow: 0 0 2px #000;">${spLabel} ${spText}</span>
               </div>
               <div class="mini-bar-wrap san-bar-wrap" style="height: 14px; position: relative;">
                 <div class="mini-bar san-fill san-${(m.sanLevel || 'NORMAL').toLowerCase()}" style="width: ${sanPct}%; height: 100%;"></div>
@@ -612,7 +624,7 @@ export function renderCombatCommandDock(party, selectedMemberIdx) {
       const spFill = contentColEl.querySelector('.sp-fill');
       if (spFill) spFill.style.width = `${spPct}%`;
       const spVal = contentColEl.querySelector('.sp-val');
-      if (spVal) spVal.textContent = `SP ${maxSp > 0 ? curSp+'/'+maxSp : '無'}`;
+      if (spVal) spVal.textContent = `${spLabel} ${spText}`;
 
       const sanFill = contentColEl.querySelector('.san-fill');
       if (sanFill) sanFill.style.width = `${sanPct}%`;

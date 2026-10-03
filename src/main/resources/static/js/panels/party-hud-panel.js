@@ -99,12 +99,23 @@ export function renderPartyHud(party) {
     const mpText = maxMp > 0 ? `${curMp}/${maxMp}` : '—';
     const mpFillClass = maxMp > 0 ? 'mp-fill' : 'empty-res-fill';
 
-    // 3. SP 戰氣 (武學/套路/身法資源)
+    // 3. SP 戰氣 (武學/套路/身法資源，支援 RAGE 與 COMBO 雙軌提示)
     const curSp = m.sp !== undefined ? m.sp : (m.currentSp !== undefined ? m.currentSp : (m.resourceType === 'SP' ? m.currentResource : 0));
     const maxSp = m.maxSp !== undefined ? m.maxSp : 100;
     const spPct = Math.min(100, Math.max(0, maxSp > 0 ? (curSp / maxSp) * 100 : 0));
     const spText = maxSp > 0 ? `${curSp}/${maxSp}` : '—';
     const spFillClass = maxSp > 0 ? 'sp-fill' : 'empty-res-fill';
+    let spLabel = 'SP';
+    let spTitle = `戰氣 SP: ${spText}`;
+    if (m.resourceType === 'RAGE') {
+      spLabel = '怒氣';
+      const curRage = m.rage !== undefined ? m.rage : curSp;
+      spTitle = `怒氣 (Rage): ${curRage}/${maxSp}`;
+    } else if (m.resourceType === 'COMBO') {
+      spLabel = '連擊';
+      const curCombo = m.combo !== undefined ? m.combo : Math.min(5, Math.floor(curSp / 20));
+      spTitle = `連擊 (Combo): ${curCombo}/5 點 (戰氣 ${curSp}/${maxSp})`;
+    }
 
     // 4. SAN 道心
     const sanPct = Math.min(100, Math.max(0, (m.san / m.maxSan) * 100));
@@ -146,9 +157,9 @@ export function renderPartyHud(party) {
           <div class="mini-bar ${mpFillClass}" style="width: ${mpPct}%"></div>
           <span class="mini-val">MP ${mpText}</span>
         </div>
-        <div class="mini-bar-wrap" title="戰氣 SP: ${spText}">
+        <div class="mini-bar-wrap" title="${spTitle}">
           <div class="mini-bar ${spFillClass}" style="width: ${spPct}%"></div>
-          <span class="mini-val">SP ${spText}</span>
+          <span class="mini-val">${spLabel} ${spText}</span>
         </div>
         <div class="mini-bar-wrap san-bar-wrap" title="道心 SAN: ${m.san}/${m.maxSan} ${safeSanState}">
           <div class="mini-bar san-fill ${sanClass}" style="width: ${sanPct}%"></div>

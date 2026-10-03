@@ -34,7 +34,13 @@ public sealed interface ActorMessage
   }
   record Say(String content) implements LivingMessage {
   }
-  record BuffEffect(String effectId) implements LivingMessage {
+  record BuffEffect(com.example.htmlmud.domain.dungeon.battle.ActiveBuff buff, String effectId) implements LivingMessage {
+    public BuffEffect(com.example.htmlmud.domain.dungeon.battle.ActiveBuff buff) {
+      this(buff, buff != null ? buff.getId() : null);
+    }
+    public BuffEffect(String effectId) {
+      this(null, effectId);
+    }
   }
   record Equip(GameItem item, CompletableFuture<Boolean> future) implements LivingMessage {
   }

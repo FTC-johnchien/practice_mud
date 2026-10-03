@@ -7,13 +7,15 @@ import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.model.entity.PlayerRecord;
 import com.example.htmlmud.infra.mapper.PlayerMapper;
 import com.example.htmlmud.infra.persistence.repository.CharacterRepository;
+import com.example.htmlmud.domain.port.PlayerPersistencePort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PlayerPersistenceService extends AbstractAsyncBatchPersistenceService<PlayerRecord> {
+public class PlayerPersistenceService extends AbstractAsyncBatchPersistenceService<PlayerRecord>
+    implements PlayerPersistencePort {
 
   private final PlayerMapper mapper;
   private final CharacterRepository playerRepository;

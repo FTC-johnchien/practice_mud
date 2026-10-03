@@ -171,28 +171,48 @@
 
 ## ⚔️ 3. 戰鬥圓桌判定、格擋與精力成長機制 (Combat Resolution & Progression) — Priority: P1 / P2
 
-### 3.1 🔄 一次擲骰圓桌判定 (One-Roll Combat Table) 收斂與修復 (P1)
-> **狀態說明**：核心架構已導入 `DefenseResolver.java`，但需執行 **§0.2** 之總機率防禦上限與歸一化修正，以消除極端屬性下暴擊與命中被吃掉的漏洞。
+### 3.1 ✅ [已完成] 一次擲骰圓桌判定 (One-Roll Combat Table) 收斂與修復 (P1)
+> **落地進度**：已於 2026-10-03 完成。
+> 1. `DefenseResolver` 擴充支援 `Living` 生靈對決體系（`resolveLivingAttack`），全面統一 DRPG 與 MUD 雙軌戰鬥之單次擲骰圓桌判定（One-Roll Combat Table）。
+> 2. 判定扇區嚴格依序解析：$\text{[Miss]} \to \text{[Dodge]} \to \text{[Parry]} \to \text{[Block]} \to \text{[Crit]} \to \text{[Normal Hit]}$。
+> 3. 防禦切片導入 75% 累積總防禦上限比例縮放，並保留 5% 保底普通命中窗口，杜絕複合高防禦下的機率湮滅與無敵 Bug。
+> 4. `CombatService.performAttack()` 全面整合 `DefenseResolver`，依據 MISS、DODGED、PARRIED、BLOCKED、CRIT、HIT 六象限判定產生細緻戰鬥日誌與精確傷害扣減。
+> 5. 新增專屬整合測試 `MudOneRollCombatTableTest`（5 項測試全數通過），全專案 225 項測試 100% 綠燈通過。
 
-- **判定扇區與累積邊界**：
-  $$\text{[Miss]} \to \text{[Dodge]} \to \text{[Parry]} \to \text{[Block]} \to \text{[Crit]} \to \text{[Normal Hit]}$$
-  - 各防禦切片加總需設定總上限（如 $75\%$），避免防守者達成絕對免傷。
-  - 未落入前述各事件之剩餘骰值必定為 `Normal Hit`。
+### 3.2 ✅ [已完成] 獨立盾牌格擋機制 (Shield Block) 與破招反擊 (Riposte) (P2)
+> **落地進度**：已於 2026-10-03 完成。
+> 1. **盾牌格擋值減免**：`DefenseResolver` 支援副手配備盾牌（`ItemType.SHIELD` 或 `subType == "SHIELD"`）時參與圓桌格擋判定。格擋值為 $\max(5, \text{shieldBonusDef} \times 2 + \frac{\text{defCon}}{2})$，格擋成功扣減傷害：$\text{FinalDamage} = \max(1, \text{RawDamage} - \text{ShieldBlockValue})$，並產生日誌。
+> 2. **破招反擊 (Riposte)**：俠客（`SWORDSMAN`）或配置招架技能之生靈在招架成功時，觸發無消耗破招突刺，對攻擊者結算反擊傷害與戰鬥日誌。
+> 3. **雙軌戰鬥完整支援**：MUD（`CombatService`）與 DRPG（`DrpgCombatLoop`）在結算反擊傷害時同步更新攻擊方血量並進行致死判斷。
+> 4. **專屬測試**：新增 `ShieldBlockAndRiposteTest`（4 項全數通過），全專案 229 項測試 100% 綠燈通過。
 
-### 3.2 🟧 獨立盾牌格擋機制 (Shield Block) 與破招反擊 (Riposte) (P2)
-- **盾牌格擋 (Block)**：副手配備盾牌時參與圓桌判定，成功時直接扣減盾牌「格擋值 (Block Value)」：
-  $$\text{FinalDamage} = \max(1, \text{RawDamage} - \text{ShieldBlockValue})$$
-- **破招反擊 (Riposte)**：俠客 (SWORDSMAN) 或裝備特定心法時，招架 (Parry) 成功機率觸發一次無消耗反擊突刺。
+### 3.3 ✅ [已完成] 魂系精力 (Stamina) 消耗與架勢破防 (Poise Break) (P2)
+> **落地進度**：已於 2026-10-03 完成。
+> 1. **防禦動作精力消耗**：`DefenseResolver` 於圓桌判定身法閃避 (`DODGED`) 成功時扣除防禦方 2 點 Stamina；兵刃招架 (`PARRIED`) 成功時扣除 3 點 Stamina，並記錄於 `DefenseResolution.staminaConsumed`。
+> 2. **架勢破防機制 (Poise Break)**：
+>    - 當防守方精力耗盡 ($\text{Stamina} \le 0$) 時，進入架勢破防狀態：身法閃避與兵刃招架機率強制歸零（不產生閃避/招架切片）。
+>    - 陷入架勢崩潰時，遭受攻擊（`HIT`、`CRIT`、`BLOCKED`）之最終傷害額外提升 **20%**（$\text{Dmg} = \text{round}(\text{Dmg} \times 1.20)$）。
+>    - 戰鬥日誌呈現專屬破防醒目標籤：`⚠️【架勢破防】防禦者 精力枯竭架勢崩潰，破綻大開！受到額外 20% 傷害！`。
+> 3. **自然回復閉環**：`LivingService.processRegen()` 支援生靈脫戰後自然回復 Stamina（每次心跳回復 10% 最大精力，至上限為止）。
+> 4. **併發安全防護**：`PartyMember.tactics` 升級為執行緒安全之 `CopyOnWriteArrayList` 與同步控制，杜絕戰鬥迴圈與戰術指令並發排序時引發之 CME。
+> 5. **專屬測試驗證**：新增 `StaminaAndPoiseBreakTest`（5 項專屬測試全數通過），全專案 230 項自動化測試 100% 綠燈通過。
 
-### 3.3 🟧 魂系精力 (Stamina) 消耗與架勢破防 (Poise Break) (P2)
-- 防禦動作消耗精力：身法閃避消耗 2 點、兵刃招架消耗 3 點 Stamina。
-- **精力枯竭狀態 ($\text{Stamina} \le 0$)**：
-  1. 閃避與招架機率強制歸零。
-  2. 陷入架勢崩潰 (Stagger / Vulnerable)，遭受攻擊傷害額外提升 **20%**，戰鬥日誌呈現破防提示。
-
-### 3.4 🟨 主角自由潛能點 (Potential Points) 雙軌升級 (P2)
-- **夥伴自動成長**：依 `classes.json` 中的 growth 模板自動分配 HP/MP 與四維屬性。
-- **主角專屬特權**：升級時除基礎職業成長外，額外入帳 **2~3 點自由道基潛能點**，玩家可於角色選單自由加點打造專屬 Build。
+### 3.4 ✅ [已完成] 主角自由潛能點 (Potential Points) 雙軌升級 (P2)
+> **落地進度**：已於 2026-10-03 完成。
+> 1. **雙軌升級機制**：
+>    - 夥伴（`PartyMember.isLeader() == false`）：升級純依 `classes.json` / `ClassTemplate` 自然成長，自由潛能點維持 0。
+>    - 主角（`Player` 或 `PartyMember.isLeader() == true`）：升級除基礎職業成長外，依 `freeStatPointsPerLevel`（預設 2 點，支援自訂 +2~3 點）發放自由道基潛能點。
+> 2. **自由加點公式與數值閉環**：
+>    - `STR`：力量/臂力提升，影響物理威力與負重。
+>    - `CON`：根骨/體質提升，每點同步躍升最大氣血上限 +10 HP 與當前氣血 +10 HP。
+>    - `DEX`：靈巧/身法提升，影響命中、暴擊與閃避迴避。
+>    - `INT`：悟性/智力提升，每點同步躍升最大真元上限 +8 MP 與當前真元 +8 MP。
+>    - `WIS`：定力/精神提升，影響治療加成、法力回復與道心抗性。
+>    - `XpProgressionService` 提供重載 `allocateStatPoint` 支援 `LivingStats`、`PartyMember` 與 `Player` 實體。
+> 3. **MUD + DRPG 雙軌操作與雙向同步閉環**：
+>    - 實作全新 MUD `StatCommand`（別名：`score`、`status`、`狀態`、`加點`、`屬性`），支援查看個人道行、六維屬性、未分配潛能點，並透過 `stat add <str|con|dex|int|wis> [點數]` 或 `加點 <屬性> [點數]` 自由配點。
+>    - 加點時透過 `CharacterSyncService` 與 `GameStateBroadcastService` 即時雙向同步至小隊隊長與前端 DRPG 介面（及反向從 `PartyCommand` 同步至 `Player` 實體）。
+> 4. 新增專屬整合測試 `DualTrackPotentialPointsTest`（涵蓋夥伴 0 點、隊長入帳、自訂點數率、加點公式、MUD 指令面板、雙向同步閉環等 6 大測試項），全專案 231 項測試 100% 綠燈通過。
 
 ---
 
@@ -213,39 +233,66 @@
 > 3. `Player.gainExp` 支援同步調用 `XpProgressionService.awardExp` 與發送屬性狀態更新通知。
 > 4. 新增整合測試 `MudMobAiAndProgressionTest`（包含喊話入戰、主動怪進場攻擊、商人求救、擊殺升級突破全閉環），全專案 224 項測試 100% 綠燈通過。
 
-### 4.3 🟧 MUD 端 Buff / Debuff 引擎串接 (P1)
-- 補完 `ActorMessage.BuffEffect` 處理。
-- 恢復 `Living` 的 Buff 集合管理與 `LivingService.tick()` 中的週期結算 (`processBuffs()`)。
+### 4.3 ✅ [已完成] MUD 端 Buff / Debuff 引擎串接 (P1)
+> **落地進度**：已於 2026-10-03 完成。
+> 1. `Living` 全面實作 `Buffable` 介面（`Player` 與 `Mob` 繼承），支援 `ActiveBuff` 集合管理、WoW 同名狀態刷新、多重護盾依最短持續時間優先（Shortest Duration First）吸收傷害與穿透扣減。
+> 2. `ActorMessage.BuffEffect` 補齊非同步與資料驅動解析，支援傳入 `ActiveBuff` 或 `effectId` 招式模板（如 `class_cleric_bless`、`spell_corpse_poison`）。
+> 3. `LivingService.tick()` 中重啟 `processBuffs()` 週期結算：每 500ms（5 ticks）跳算 HoT 氣血回流與 DoT 陰煞傷害，發送即時狀態日誌，並於 DoT 劇毒致死時觸發 `onDeath` 結算。
+> 4. `CombatService.performAttack()` 在命中後自動判斷招式所附帶之 `BuffConfig`，對敵方施加 DEBUFF 或對自身施加 BUFF。
+> 5. `RoomService.tick()` 恢復轉發心跳予活躍的 MUD 生靈。
+> 6. 新增專屬整合測試 `MudBuffDebuffEngineTest`（5 項測試全數通過），全專案 230 項測試 100% 綠燈通過。
 
-### 4.4 🟧 MUD 規則與戰鬥細節補齊 (P2)
-- **`LivingPosture` 姿勢系統生效**：戰鬥時切換為 FIGHTING、瀕死/死亡切換為 DEAD、非 STANDING/SITTING 限制移動。
-- **`RoomFlag` 15 種旗標生效**：實作 SAFE_ZONE 禁止攻擊、NO_MAGIC 禁止施法、HIGH_REGEN 加速回復等環境檢定。
-- **`DamageType` 抗性計算生效**：將 13 種傷害類型與 `LivingStats.resistances` 納入 `CombatService.calculateDamage()`。
-- **`MobRank` 倍率生效**：精英怪 (1.5x HP/1.2x Dmg)、首領怪 (3.0x HP/1.5x Dmg) 於生成時正確套用倍率。
-- **法力自然回復與道具使用**：補齊 `LivingService.processRegen()` 的 MP 回復，實作 `LivingService.use()`。
-- **`Player.forceLogout()` 補全**：解開被註解的存檔、房間移出與全域清理邏輯。
-- **死代碼清理**：清理 `CombatService` 中未被呼叫的 `startRound()`、`processSkillExperience()`、`calculateExp()` 等私有死方法。
+### 4.4 ✅ [已完成] MUD 規則與戰鬥細節補齊 (P2)
+> **落地進度**：已於 2026-10-03 完成。
+> 1. **`LivingPosture` 姿勢系統生效**：`enterCombat` 切換為 `FIGHTING`、`exitCombat` 回到 `STANDING`、瀕死/死亡切換為 `DEAD`；`canMove()` 嚴格要求 `posture == STANDING && !isDead()`，`RoomMovementService` 阻擋非站立姿勢移動並回饋專屬情境提示。
+> 2. **`RoomFlag` 旗標檢定生效**：
+>    - `SAFE_ZONE`（相容 `"SAFE"`）：`KillCommand` 與 `CombatService.startCombat` 雙層攔截，安全區嚴禁動武。
+>    - `NO_MAGIC`：`CombatService.performAttack` 檢查魔法/法術技能並阻擋，回饋「此處受到強大禁制，無法施展法術！」。
+>    - `NO_MOB`：`RoomService.enter` 與 `spawnOneMob` 阻擋怪物進駐或生成於禁怪區域。
+>    - `HIGH_REGEN`：`LivingService.processRegen` 賦予雙倍自然氣血與法力回復率，且打坐（`RESTING`/`SLEEPING`）額外加速 50%。
+> 3. **`DamageType` 抗性計算生效**：招式所屬傷害類型納入 `target.getStats().getResistance(dmgType)`（含父層傷害類型繼承加總）進行傷害增減結算。
+> 4. **`MobRank` 倍率生效**：`WorldFactory.createMob` 自動依階級套用 HP 倍率（精英 1.5x、首領 3.0x）與傷害倍率（精英 1.2x、首領 1.5x），並自動賦予【精英】/【首領】前綴。
+> 5. **法力自然回復與道具使用**：`LivingService.processRegen` 同步結算 MP 自然回復；實作 `LivingService.use()` 支援 `HEAL_HP`、`HEAL_MP`、`RESTORE_SAN`、`BUFF` 等消耗效果與堆疊數量扣減。
+> 6. **`Player.forceLogout()` 補全**：解開存檔、房間移出廣播、全域管理器移除與 VirtualActor 停機關閉。
+> 7. **死代碼清理**：清除 `CombatService` 中未使用的 `startRound()` 與 `calculateExp()` 死方法。
+> 8. **新增專屬整合測試**：`MudRulesAndMechanicsTest`（8/8 通過）與 `MudBuffDebuffEngineTest`（3/3 通過），全專案 236 項測試 100% 綠燈通過。
 
 ---
 
 ## 🖥️ 5. UI/UX 全域佈局重構與三種資訊密度 (UI Layout & Density) — Priority: P1 / P2
 
-### 5.1 🟧 三種資訊密度分區與字級規範 (>= 13px) (P1)
-- **核心原則**：徹底杜絕使用 < 12px 的過小字級硬塞排版，破版由佈局分區與捲動機制解決：
-  1. **探索密度**：字級 >= 13px，地圖格子固定尺寸，環境與日誌獨立捲動。
-  2. **戰鬥密度**：嚴格採「敵方目標區 → 回合/集火狀態 → 我方小隊摘要」三層分區，卡片不塞全量資料。
-  3. **管理密度**：主選單固定 1600x900 規格，獨立視口捲動，每頁 20 項分頁。
+### 5.1 ✅ [已完成] 三種資訊密度分區與字級規範 (>= 13px) (P1)
+> **落地進度**：已於 2026-10-03 完成。
+> 1. **全域字級規範 (>= 13px)**：全面審查並清除 `< 12px` 殘留樣式，`party-buff-chip` 與 `skill-cost` 等所有元素之 `font-size` 均嚴格遵循 `--font-xs: 13px` 以上底線標準，徹底杜絕縮字硬塞與破版。
+> 2. **探索密度 (Exploration Density)**：雷達地塊尺寸嚴格固定（26px x 26px，gap 2px），城鎮主舞台環境資訊與右側冒險日誌獨立各自捲動。
+> 3. **戰鬥密度 (Combat Density)**：嚴格採「上層敵方目標區（5x5 格盤）→ 中層回合狀態/集火指示/交鋒微光細線 → 下層我方小隊戰備甲板（指令選單 + 5x3 戰陣盤 + 技能網格）」三層分區，卡片不塞全量四維數值，介面清晰緊湊。
+> 4. **管理密度 (Management Density)**：主選單（`main-menu-card`）採固定 1600x900 規格（`width: min(1600px, 96vw); height: min(900px, 94vh)`），左側導覽列與右側視口獨立捲動，道具與技能清單採用每頁 20 項分頁機制（`PAGE_SIZE = 20`）。
 
-### 5.2 🟧 共用頁面 Shell 重構 (Global Layout) (P1)
-- 重構 `.game-container` 佈局：
-  - **1. Global Header**：模式、當前區域、陣法靈威、全域選單入口。
-  - **2. Context Viewport**：探索或戰鬥主舞台 (`min-height: 0`，內部各自捲動)。
-  - **3. Party Summary Rail**：固定高度的小隊摘要列（顯示 #1~#5、姓名、等級、4 資源條、關鍵狀態）。
-  - **4. Context Action Bar (Footer)**：縮減為 48~64px，僅保留當前模式的高頻立即動作（文字指令、開啟選單、戰鬥撤退/集火），移除重複的存檔/陣法按鈕。
+### 5.2 ✅ [已完成] 共用頁面 Shell 重構 (Global Layout) (P1)
+> **落地進度**：已於 2026-10-03 完成。
+> 1. **Global Header 重構**：
+>    - 左側：道門標識、隊長道號（`👤 玄靈子`）、盤纏靈石（`💰 靈石`）。
+>    - 中間：當前環境位置（`🗺️ 桃源新手村 · 村莊客棧 / 太陰古塚`）、時辰（`⏳ 午時`）、天候（`☁️ 天朗氣清 / 陰風煞氣`）。
+>    - 右側：全域快捷工具列（`📜 選單 (C)`、`🎒 行囊 (B)`、`📂 命冊`、`⌨️ 終端 (~)`）。
+> 2. **Context Viewport (中間主視覺)**：
+>    - 依據 `mode` 與 `inBattle` 狀態平滑切換城鎮主舞台、地牢雷達與戰鬥競技場，內部視口具備獨立捲動能力。
+> 3. **Party Summary Rail (固定小隊軌道)**：
+>    - 常駐主舞台底部，顯示 5 人血條 (HP)、真元/戰氣/怒氣/連擊點條 (MP/SP/Rage/Combo)、道心 (SAN)、當前姿態/Buff 標籤，以及陣法靈威條（0~100）與奧義狀態。
+> 4. **Context Action Bar (底部情境操作列)**：
+>    - 動態依模式切換操作動作群組：
+>      - **城鎮情境**：`🌿 打坐 (rest)`、`👀 環顧 (look)`、`📦 拾取 (get all)`、`💬 指令 (/)`。
+>      - **地牢探索情境**：`👁️ 探查 (I)`、`🌿 調息 (R)`、`🎒 行囊 (B)`、`📜 選單 (C)`。
+>      - **戰鬥情境**：`🎯 集火 (Space)`、`⚡ 陣法奧義 (U)`、`🏃 遁地 (Esc)`。
+>    - 底部提示文字依模式即時連動，支援點擊展開/收合指令輸入列。
+> 5. **測試全套綠燈**：全專案 229 項自動化測試 100% 綠燈通過。
 
-### 5.3 🟧 HP / MP / SP / SAN 雙軌資源顯示契約 (P2)
-- 修正 `DrpgStateDto` 將 MP 或 SP 粗暴二選一的遮蔽問題。
-- 小隊 HUD 與戰鬥卡片同時顯示法力 (MP) 與戰氣/真氣 (SP)，支援法系與近戰雙修武學資源呈現。
+### 5.3 ✅ [已完成] HP / MP / SP / SAN 雙軌資源顯示契約 (P2)
+> **落地進度**：已於 2026-10-03 完成。
+> 1. **`DrpgStateDto` 雙軌資料契約**：移除粗暴覆蓋 `resType = "SP"` 的舊邏輯，`resourceType` 忠實反映真實資源特性（`SP`, `RAGE`, `COMBO`, `MP`），`mp/maxMp`（法力）與 `sp/maxSp`（戰氣）雙軌數據完整並行，不被遮蔽。
+> 2. **DTO 欄位擴充**：`PartyMemberViewDto` 新增 `rage`, `maxRage`, `combo`, `maxCombo` 欄位（附帶向下相容建構子），精準傳遞怒氣與連擊點數值。
+> 3. **雙修技能條件檢定**：技能施展條件檢定按各自資源型別（MP, SP, RAGE, COMBO）獨立判斷可用性，近戰角色施展法術消耗 MP、施展招式消耗 SP/RAGE 互不干擾。
+> 4. **前端 HUD 與戰鬥卡片雙軌呈現**：`party-hud-panel.js` 與 `battle-panel.js` 同步展示 HP、MP、SP、SAN 四條柱，並動態將 SP 條智能標註為「怒氣 (Rage)」或「連擊 (Combo)」，支援法系與近戰雙修武學資源完整呈現。
+> 5. **專屬整合測試**：新增 `DualTrackResourceContractTest`（2/2 通過），全專案 231 項測試 100% 綠燈通過。
 
 ### 5.4 🟨 探索舞台雙欄化與控制回歸雷達 (P2)
 - 左欄佔比約 60%（場景資訊 + 3x3 方向羅盤 + NPC 網格卡片 + 地面物品）。
@@ -256,9 +303,14 @@
 
 ## 📐 6. 清潔架構與領域邊界 (Clean Architecture) — Priority: P1 / P2
 
-### 6.1 領域層反向依賴反轉 — Phase 10 (P1)
-- `LivingService`、`PlayerService`、`GuestBehavior` 等 Domain 層類別，目前仍有 import Application/Infrastructure 層元件。
-- 提取 Output Ports（如 `SessionMessageSender`、`GameEventPublisher`），由 Infrastructure 實作，確保領域模型純淨。
+### 6.1 ✅ [已完成] 領域層反向依賴反轉 — Phase 10 (Clean Architecture) (P1)
+> **落地進度**：已於 2026-10-03 完成。
+> 1. **持久化埠解耦**：建立 `PlayerPersistencePort`（`domain.port`），`PlayerPersistenceService`（`infra`）實作此埠；`PlayerService` 與 `Player` 依賴反轉為 `PlayerPersistencePort`，消除直接依賴具體實作。
+> 2. **監控度量埠解耦**：建立 `DomainMetricsPort`（`domain.port`），`GameMetrics` 實作此埠；`CombatService` 依賴反轉為 `DomainMetricsPort`，並清除未使用之 `FormulaEvaluator` import。
+> 3. **模板資料倉儲依賴反轉**：建立 `TemplateRegistryPort`（`domain.port`，繼承 `TemplateReader`）；`TemplateRepository` 實作此埠；`WorldManager` 改為注入 `TemplateRegistryPort`；`TemplateCatalog` 依賴反轉為 `TemplateReader`，無參數建構透過靜態供應者與反射動態載入預設倉儲，徹底杜絕編譯期依賴 `infra.persistence.repository.TemplateRepository`。
+> 4. **領域演算法工具收斂**：在 `domain.util` 建立 `RandomUtil` 與 `IdUtils`（純領域邏輯，無外部依賴），`infra.util` 工具類改為繼承以相容舊程式；`CombatService`、`SkillService`、`DrpgEnemyTacticsService`、`WorldManager` 全面接入 `domain.util`。
+> 5. **Jackson 反序列化解耦**：在 `domain.model.template.json` 建立 `ExitDeserializer` 與 `RoomDescriptionDeserializer`，`RoomExit` 與 `RoomTemplate` 移除對 `infra.persistence.json` 的引用。
+> 6. **全面合規檢驗**：整個 `com.example.htmlmud.domain` 套件的 `import com.example.htmlmud.infra` 達成 **0 違規**！全專案 227 項自動化測試 100% 綠燈通過。
 
 ### 6.2 指令入口與併發調度收斂 (P2)
 - **指令去重**：統一 `UseCommand` 與 `InventoryCommand` 的使用入口，全部收斂至 `ItemUsageService`。

@@ -55,6 +55,8 @@ public class Room extends VirtualActor<RoomMessage> {
 
 
 
+  private final Set<String> dynamicFlags = new java.util.concurrent.CopyOnWriteArraySet<>();
+
   public Room(String id, RoomService roomService) {
     super("room-" + id);
     this.roomService = roomService;
@@ -73,6 +75,51 @@ public class Room extends VirtualActor<RoomMessage> {
     }
 
     roomService.spawnInitial(this, mobs, items);
+  }
+
+  public Room(String id, String name, String description, RoomService roomService) {
+    super("room-" + id);
+    this.roomService = roomService;
+    this.id = id;
+    this.template = RoomTemplate.builder()
+        .id(id)
+        .name(name)
+        .description(description)
+        .flags(new java.util.HashSet<>())
+        .build();
+    this.zoneTemplate = null;
+  }
+
+  public void addFlag(com.example.htmlmud.domain.model.enums.RoomFlag flag) {
+    if (flag != null) {
+      dynamicFlags.add(flag.name());
+    }
+  }
+
+  public void addFlag(String flag) {
+    if (flag != null) {
+      dynamicFlags.add(flag);
+    }
+  }
+
+  public void removeFlag(String flag) {
+    if (flag != null) {
+      dynamicFlags.remove(flag);
+    }
+  }
+
+  public void addPlayer(Player player) {
+    if (player != null && !players.contains(player)) {
+      players.add(player);
+      player.setCurrentRoomId(this.id);
+    }
+  }
+
+  public void addMob(Mob mob) {
+    if (mob != null && !mobs.contains(mob)) {
+      mobs.add(mob);
+      mob.setCurrentRoomId(this.id);
+    }
   }
 
 
@@ -258,6 +305,34 @@ public class Room extends VirtualActor<RoomMessage> {
 
   public List<GameItem> getItems() {
     return Collections.unmodifiableList(items);
+  }
+
+  public boolean hasFlag(com.example.htmlmud.domain.model.enums.RoomFlag flag) {
+    if (flag == null) {
+      return false;
+    }
+    String flagName = flag.name();
+    if (dynamicFlags.stream().anyMatch(f -> f != null && (f.equalsIgnoreCase(flagName) || ("SAFE".equalsIgnoreCase(f) && flag == com.example.htmlmud.domain.model.enums.RoomFlag.SAFE_ZONE)))) {
+      return true;
+    }
+    if (template == null || template.flags() == null) {
+      return false;
+    }
+    return template.flags().stream()
+        .anyMatch(f -> f.equalsIgnoreCase(flagName) || ("SAFE".equalsIgnoreCase(f) && flag == com.example.htmlmud.domain.model.enums.RoomFlag.SAFE_ZONE));
+  }
+
+  public boolean hasFlag(String flagStr) {
+    if (flagStr == null) {
+      return false;
+    }
+    if (dynamicFlags.stream().anyMatch(f -> f != null && f.equalsIgnoreCase(flagStr))) {
+      return true;
+    }
+    if (template == null || template.flags() == null) {
+      return false;
+    }
+    return template.flags().stream().anyMatch(f -> f.equalsIgnoreCase(flagStr));
   }
 
   public void record() {

@@ -325,6 +325,14 @@ public class DrpgCombatLoop {
               var defenseRes = defenseResolver.resolveEnemyAttack(enemy, targetMember, rawDmg, moveName);
               targetMember.takeDamage(defenseRes.finalDamage());
 
+              // 破招反擊 (Riposte) 傷害結算
+              if (defenseRes.riposteTriggered() && defenseRes.riposteDamage() > 0) {
+                enemy.takeDamage(defenseRes.riposteDamage());
+                if (!enemy.isAlive()) {
+                  broadcastLog(player, ctx, "\u001B[1;31m💀 " + enemy.getName() + " 被 " + targetMember.getName() + " 的破招突刺擊殺倒地！\u001B[0m");
+                }
+              }
+
               String intReason = targetMember.popLastInterruptReason();
               if (intReason != null) {
                 broadcastLog(player, ctx, "\u001B[1;31m💥【施法被打斷】" + targetMember.getName() + " 遭受猛烈打擊（" + intReason + "），法術被迫中斷！\u001B[0m");

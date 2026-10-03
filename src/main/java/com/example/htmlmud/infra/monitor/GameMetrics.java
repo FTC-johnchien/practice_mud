@@ -2,9 +2,10 @@ package com.example.htmlmud.infra.monitor;
 
 import org.springframework.stereotype.Component;
 import java.util.concurrent.atomic.LongAdder;
+import com.example.htmlmud.domain.port.DomainMetricsPort;
 
 @Component
-public class GameMetrics {
+public class GameMetrics implements DomainMetricsPort {
   private final LongAdder perCommands = new LongAdder();
   private final LongAdder perTasks = new LongAdder();
   private final LongAdder playerCommands = new LongAdder();

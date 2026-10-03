@@ -14,7 +14,7 @@ import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.model.enums.Direction;
 import com.example.htmlmud.domain.port.ClientSessionManagerPort;
 import com.example.htmlmud.domain.port.CommandDispatcherPort;
-import com.example.htmlmud.infra.persistence.service.PlayerPersistenceService;
+import com.example.htmlmud.domain.port.PlayerPersistencePort;
 import com.example.htmlmud.protocol.ConnectionState;
 import com.example.htmlmud.protocol.GameCommand;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,7 +36,7 @@ public class PlayerService {
 
   private final com.example.htmlmud.domain.port.AuthenticationPort authenticationPort;
 
-  private final PlayerPersistenceService playerPersistenceService;
+  private final PlayerPersistencePort playerPersistencePort;
 
   private final SkillService skillService;
 
@@ -64,6 +64,10 @@ public class PlayerService {
 
   public com.example.htmlmud.domain.port.AuthenticationPort getAuthService() {
     return authenticationPort;
+  }
+
+  public PlayerPersistencePort getPlayerPersistenceService() {
+    return playerPersistencePort;
   }
 
   public void handleInput(Player player, String traceId, GameCommand cmd) {

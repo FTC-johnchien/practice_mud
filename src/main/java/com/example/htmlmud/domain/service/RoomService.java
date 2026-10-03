@@ -68,6 +68,10 @@ public class RoomService {
         mobs.forEach(m -> m.onPlayerEnter(player.getId()));
       }
       case Mob mob -> {
+        if (room.hasFlag(com.example.htmlmud.domain.model.enums.RoomFlag.NO_MOB)) {
+          log.info("房間 {} 禁止怪物進入，阻止 Mob {}", room.getId(), mob.getId());
+          return;
+        }
         livingName = mob.getName();
         if (!mobs.contains(mob)) {
           mobs.add(mob);
@@ -154,24 +158,22 @@ public class RoomService {
     // log.info("{} tickCount: {}", id, tickCount);
 
     // === 1. World/Zone 層級邏輯 (例如：每 60 秒檢查一次重生) ===
-    if (tickCount % room.getZoneTemplate().respawnTime() == 0) {
+    if (room.getZoneTemplate() != null && room.getZoneTemplate().respawnTime() > 0
+        && tickCount % room.getZoneTemplate().respawnTime() == 0) {
       checkSpawnRule(); // 檢查是否有怪物死掉很久該重生了
     }
 
     // === 2. 轉發給 Actor ===
     // 過濾掉 "完全沒事做且沒玩家在場" 的怪物
-    // if (!players.isEmpty() || mobs.stream().anyMatch(m -> m.isInCombat())) {
-    // ActorMessage.Tick msg = new ActorMessage.Tick(tickCount, timestamp);
+    if (!room.getPlayers().isEmpty() || room.getMobs().stream().anyMatch(Living::isInCombat)) {
+      for (Mob mob : room.getMobs()) {
+        mob.tick(tickCount, timestamp);
+      }
 
-    // for (Mob mob : mobs) {
-    // mob.tick(tickCount, timestamp);
-    // }
-
-    // for (Player player : players) {
-    // // log.info("send player");
-    // player.tick(tickCount, timestamp);
-    // }
-    // }
+      for (Player player : room.getPlayers()) {
+        player.tick(tickCount, timestamp);
+      }
+    }
   }
 
   public void broadcast(List<Player> players, List<Mob> mobs, String actorId, String targetId,
@@ -412,6 +414,9 @@ public class RoomService {
   }
 
   private void spawnOneMob(Room room, List<Mob> mobs, SpawnRule rule) {
+    if (room.hasFlag(com.example.htmlmud.domain.model.enums.RoomFlag.NO_MOB)) {
+      return;
+    }
 
     // 處理機率 (例如：稀有怪只有 10% 機率出現)
     if (Math.random() > rule.rate()) {

@@ -220,7 +220,7 @@ public final class Player extends Living {
 
   // 觸發存檔的輔助方法
   private void save() {
-    service.getPlayerPersistenceService().saveAsync(this.toRecord());
+    service.getPlayerPersistencePort().saveAsync(this.toRecord());
   }
 
 
@@ -318,22 +318,38 @@ public final class Player extends Living {
   // 強制登出程序
   public void forceLogout() {
     // 1. 存檔
-    // saveToDb();
+    save();
 
-    // // 2. 從房間移除
-    // if (currentRoom != null) {
-    // currentRoom.removePlayer(this);
-    // currentRoom.broadcast(name + " 的身影慢慢消失在空氣中。");
-    // }
+    // 2. 從房間移除
+    Room room = getCurrentRoom();
+    if (room != null) {
+      room.removePlayer(this.id);
+      room.broadcastToOthers(this.id, this.name + " 的身影慢慢消失在空氣中。");
+    }
 
-    // // 3. 從全域管理器移除 (Map<String, PlayerActor>)
-    // PlayerManager.remove(this.name);
+    // 3. 從全域管理器移除
+    if (this.manager != null) {
+      this.manager.removeLivingActor(this.id);
+    }
 
     // 4. 終止 Actor 迴圈
     stop();
 
     // 5. 關閉 Socket (保險起見)
-    output.close();
+    if (output != null) {
+      output.close();
+    }
+  }
+
+  @Override
+  public Room getCurrentRoom() {
+    if (this.currentRoomId == null) {
+      return null;
+    }
+    if (this.manager != null) {
+      return this.manager.getRoomActor(this.currentRoomId);
+    }
+    return super.getCurrentRoom();
   }
 
 

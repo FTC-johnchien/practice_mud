@@ -9,15 +9,15 @@ import com.example.htmlmud.domain.service.BodyPartSelector;
 import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
+import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.model.config.MoveAction;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.entity.SkillEntry;
 import com.example.htmlmud.domain.model.skill.dto.ActiveSkillResult;
 import com.example.htmlmud.domain.model.template.SkillTemplate;
 import com.example.htmlmud.domain.model.vo.DamageSource;
-import com.example.htmlmud.infra.monitor.GameMetrics;
-import com.example.htmlmud.infra.util.FormulaEvaluator;
-import com.example.htmlmud.infra.util.RandomUtil;
+import com.example.htmlmud.domain.port.DomainMetricsPort;
+import com.example.htmlmud.domain.util.RandomUtil;
 import com.example.htmlmud.protocol.util.ColorText;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class CombatService {
-  private final GameMetrics gameMetrics;
+  private final DomainMetricsPort gameMetrics;
   // 【戰鬥名單】
   // 使用 ConcurrentHashMap.newKeySet() 建立一個執行緒安全的 Set
   // 只有在名單裡的 Actor，系統才會計算它的攻擊 CD
@@ -36,7 +36,18 @@ public class CombatService {
   private final XpService xpService;
   private final XpProgressionService xpProgressionService;
   private final com.example.htmlmud.config.GameConfig gameConfig;
+  private final com.example.htmlmud.domain.dungeon.battle.DefenseResolver defenseResolver;
   private final org.springframework.beans.factory.ObjectProvider<com.example.htmlmud.domain.party.service.PartyService> partyServiceProvider;
+
+  @org.springframework.beans.factory.annotation.Autowired(required = false)
+  private com.example.htmlmud.domain.dungeon.battle.BuffSettlementService buffSettlementService;
+
+  public com.example.htmlmud.domain.dungeon.battle.BuffSettlementService getBuffSettlementService() {
+    if (buffSettlementService == null) {
+      buffSettlementService = new com.example.htmlmud.domain.dungeon.battle.BuffSettlementService();
+    }
+    return buffSettlementService;
+  }
 
 
 
@@ -91,6 +102,14 @@ public class CombatService {
    * 【註冊入口】 當發生攻擊行為時 (Player kill Mob 或 Mob aggro Player) 呼叫此方法
    */
   public void startCombat(Living self, String targetId) {
+    if (self == null) return;
+    Room room = self.getCurrentRoom();
+    if (room != null && room.hasFlag(com.example.htmlmud.domain.model.enums.RoomFlag.SAFE_ZONE)) {
+      if (self instanceof Player p) {
+        p.reply("此處乃安全祥和之地，嚴禁動武！");
+      }
+      return;
+    }
     self.enterCombat(targetId);
 
     // 【加入名單】
@@ -127,26 +146,9 @@ public class CombatService {
 
 
   /**
-   * 執行一次攻擊判定
-   *
-   * @return 造成的傷害值 (0 代表未命中或被格擋)
+   * 執行基礎原始傷害計算 (武器物理/法術基值 - 目標護甲防禦，加浮動)
    */
-  private int calculateDamage(Living attacker, Living defender) {
-    LivingStats attState = attacker.getStats();
-    LivingStats defState = defender.getStats();
-
-    // 1. 命中判定 (由 GameConfig 驅動)
-    double baseHit = (gameConfig != null && gameConfig.getCombat() != null)
-        ? gameConfig.getCombat().getBaseHitChance()
-        : 0.80;
-    double dexMod = (gameConfig != null && gameConfig.getCombat() != null)
-        ? gameConfig.getCombat().getDexHitModifier()
-        : 0.01;
-    double hitChance = baseHit + ((attState.dex - defState.dex) * dexMod);
-    if (ThreadLocalRandom.current().nextDouble() > hitChance) {
-      return -1; // -1 代表 Miss
-    }
-
+  private int calculateRawBaseDamage(Living attacker, Living defender) {
     DamageSource weapon = attacker.getCurrentAttackSource();
     if (attacker instanceof Player player && partyServiceProvider != null) {
       var ps = partyServiceProvider.getIfAvailable();
@@ -161,21 +163,22 @@ public class CombatService {
       }
     }
 
-    // 2. 傷害公式 (範例：攻擊力 - 防禦力，浮動 10%)
     int damage = random(weapon.minDamage(), weapon.maxDamage());
-    // log.info("attState.damage:{} defState.defense:{}", damage, defState.defense);
     int rawDmg = damage - defender.defense;
-    if (rawDmg <= 0)
+    if (rawDmg <= 0) {
       rawDmg = 1; // 至少造成 1 點傷害
+    }
 
     // 加入浮動 (0.9 ~ 1.1)
     double variance = 0.9 + (ThreadLocalRandom.current().nextDouble() * 0.2);
     int finalDmg = (int) (rawDmg * variance);
-    if (finalDmg <= 0) {
-      finalDmg = 0; // 至少造成 1 點傷害
+
+    // 怪物階級 (MobRank) 傷害倍率加成
+    if (attacker instanceof Mob mob && mob.getTemplate() != null && mob.getTemplate().rank() != null) {
+      finalDmg = (int) Math.round(finalDmg * mob.getTemplate().rank().getDamageMultiplier());
     }
-    // log.info("finalDmg:{}", finalDmg);
-    return finalDmg;
+
+    return Math.max(1, finalDmg);
   }
 
 
@@ -280,27 +283,42 @@ public class CombatService {
     String msg = action.msg().cast();
     List<Player> audiences = self.getCurrentRoom().getPlayers();
 
-    // ---------------------------------------------------------------------------------------------
-    int rawDmg = calculateDamage(self, target);
-    if (rawDmg < 0) {
-      // 未命中 (Miss Sentinel -1 短路處理，杜絕累加技能傷害)
-      msg += "\r\n" + action.msg().miss();
-      for (Player receiver : audiences) {
-        MessageUtil.send(CombineString(msg, sWeapon, tWeapon, part), self, target, receiver);
+    // 0. 檢查禁魔區域 (NO_MAGIC)
+    if (self.getCurrentRoom() != null && self.getCurrentRoom().hasFlag(com.example.htmlmud.domain.model.enums.RoomFlag.NO_MAGIC)) {
+      if (skill != null && skill.template() != null) {
+        boolean isMagic = skill.template().getType() == com.example.htmlmud.domain.model.enums.SkillType.MAGIC
+            || (skill.template().getTags() != null && (skill.template().getTags().contains("SPELL") || skill.template().getTags().contains("MAGIC")));
+        if (isMagic) {
+          if (self instanceof Player p) {
+            p.reply("此處為禁魔之地，靈氣枯竭，法術無法施展！");
+          }
+          return;
+        }
       }
-      return;
     }
 
-    // 套用 skill 倍率 (基礎傷害 + 等級 * 升級加級)
+    // 1. 基礎物理/法術原始傷害
+    int rawBaseDmg = calculateRawBaseDamage(self, target);
+
+    // 2. 套用 skill 倍率 (基礎傷害 + 等級 * 升級加級)
     double skillDmg = skill.template().getMechanics().damage()
         + (skill.getLevel() * skill.template().getScaling().damagePerLevel());
-    rawDmg += (int) skillDmg;
+    int rawDmg = Math.max(1, (int) ((rawBaseDmg + skillDmg) * action.damageMod()));
 
-    int dmgAmout = (int) (rawDmg * action.damageMod());
-    // ---------------------------------------------------------------------------------------------
+    // 2.1 傷害類型抗性結算 (DamageType & LivingStats.resistances)
+    var dmgType = (skill.template().getMechanics() != null && skill.template().getMechanics().damageType() != null)
+        ? skill.template().getMechanics().damageType()
+        : com.example.htmlmud.domain.model.enums.DamageType.PHYSICAL;
+    double resistance = (target.getStats() != null) ? target.getStats().getResistance(dmgType) : 0.0;
+    if (resistance != 0.0) {
+      rawDmg = Math.max(1, (int) Math.round(rawDmg * Math.max(0.1, 1.0 - resistance)));
+    }
 
-    // 招架 parry
-    if (dmgAmout <= 0) {
+    // 3. 一元一次擲骰圓桌判定 (One-Roll Combat Table: [Miss] -> [Dodge] -> [Parry] -> [Block] -> [Crit] -> [Normal Hit])
+    com.example.htmlmud.domain.dungeon.battle.DefenseResolver.DefenseResolution resolution =
+        defenseResolver.resolveLivingAttack(self, target, rawDmg);
+
+    if (resolution.outcome() == com.example.htmlmud.domain.dungeon.battle.DefenseResolver.DefenseOutcome.MISS) {
       msg += "\r\n" + action.msg().miss();
       for (Player receiver : audiences) {
         MessageUtil.send(CombineString(msg, sWeapon, tWeapon, part), self, target, receiver);
@@ -308,12 +326,62 @@ public class CombatService {
       return;
     }
 
-    // 將傷害送給 target
-    target.onDamage(dmgAmout, self.getId());
+    if (resolution.outcome() == com.example.htmlmud.domain.dungeon.battle.DefenseResolver.DefenseOutcome.DODGED) {
+      msg += "\r\n" + resolution.combatLog();
+      for (Player receiver : audiences) {
+        MessageUtil.send(CombineString(msg, sWeapon, tWeapon, part), self, target, receiver);
+      }
+      return;
+    }
 
-    msg += "\r\n" + action.msg().hit();
+    int finalDmg = resolution.finalDamage();
+
+    // 將結算後傷害送給 target
+    target.onDamage(finalDmg, self.getId());
+
+    // 破招反擊 (Riposte) 傷害結算：防守方成功招架後反刺攻擊方
+    if (resolution.riposteTriggered() && resolution.riposteDamage() > 0) {
+      self.onDamage(resolution.riposteDamage(), target.getId());
+      if (self.isDead()) {
+        self.onDeath(target.getId());
+      }
+    }
+
+    // 4. 技能附加之 Buff / Debuff 狀態施加
+    if (skill != null && skill.template() != null && skill.template().getBuff() != null) {
+      var buffCfg = skill.template().getBuff();
+      if (buffCfg.type() == com.example.htmlmud.domain.model.enums.BuffType.DEBUFF) {
+        var debuff = getBuffSettlementService().createActiveBuffFromConfig(buffCfg, target, self.getId(), skill.template().getId());
+        if (debuff != null) {
+          getBuffSettlementService().applyBuff(target, debuff);
+        }
+      } else if (buffCfg.type() == com.example.htmlmud.domain.model.enums.BuffType.BUFF) {
+        var buff = getBuffSettlementService().createActiveBuffFromConfig(buffCfg, self, self.getId(), skill.template().getId());
+        if (buff != null) {
+          getBuffSettlementService().applyBuff(self, buff);
+        }
+      }
+    }
+
+    // 5. 攻擊後經驗與熟練度增長
+    if (self instanceof Player attacker) {
+      afterAttack(attacker, skill);
+    }
+
+    if (resolution.outcome() == com.example.htmlmud.domain.dungeon.battle.DefenseResolver.DefenseOutcome.CRIT) {
+      msg += "\r\n" + resolution.combatLog();
+    } else if (resolution.outcome() == com.example.htmlmud.domain.dungeon.battle.DefenseResolver.DefenseOutcome.PARRIED
+        || resolution.outcome() == com.example.htmlmud.domain.dungeon.battle.DefenseResolver.DefenseOutcome.BLOCKED) {
+      msg += "\r\n" + resolution.combatLog();
+    } else {
+      msg += "\r\n" + action.msg().hit();
+      if (resolution.poiseBroken()) {
+        msg += "\r\n\u001B[1;35m⚠️【架勢破防】" + target.getName() + " 精力枯竭架勢崩潰，破綻大開！受到額外 20% 傷害！\u001B[0m";
+      }
+    }
+
     msg = CombineString(msg, sWeapon, tWeapon, part);
-    msg = msg.replace("$d", ColorText.damage(dmgAmout));
+    msg = msg.replace("$d", ColorText.damage(finalDmg));
 
     // 發送純淨無時間戳戰鬥訊息
     for (Player receiver : audiences) {
@@ -371,34 +439,6 @@ public class CombatService {
     return msg.replace("$l", l).replace("$W", W).replace("$w", w);
   }
 
-  private void startRound(Player player) {
-    ActiveSkillResult activeSkill = skillService.getAutoAttackSkill(player);
-    SkillTemplate template = activeSkill.getTemplate();
-
-    // 1. 計算本回合回復的 Charge
-    String regenFormula = template.getMechanics().getFormula("chargeRegen");
-    if (regenFormula != null) {
-      int regenAmount = FormulaEvaluator.evaluateInt(regenFormula, player, template);
-      player.getStats().modifyCombatResource("charge", regenAmount);
-
-      if (regenAmount > 0) {
-        player.reply("你的太極心法運轉，回復了 " + regenAmount + " 點氣勁。");
-      }
-    }
-
-    // 2. 決定連擊次數上限
-    String comboFormula = template.getMechanics().getFormula("maxComboCount");
-    int maxCombo = 0;
-    if (comboFormula != null) {
-      maxCombo = FormulaEvaluator.evaluateInt(comboFormula, player, template);
-    }
-
-    // 3. 執行連擊判定...
-    // 如果 maxCombo 是 0，就不執行連擊迴圈
-    // 如果 maxCombo 是 3，且目前 Charge 足夠，就最多打 3 下
-  }
-
-
   private void processSkillExperience(Player player, ActiveSkillResult result) {
     if (player == null || result == null) return;
     SkillEntry entry = result.entry();
@@ -419,17 +459,6 @@ public class CombatService {
       player.reply("你的 \u001B[33m" + template.getName() + "\u001B[0m 進步了！(等級 "
           + res.newLevel() + ")");
     }
-  }
-
-  /**
-   * 計算獲得經驗值 (統一由 XpProgressionService 計算)
-   */
-  private int calculateExp(Living mob, Living player) {
-    int mobLv = (mob != null && mob.getStats() != null) ? mob.getStats().getLevel() : 1;
-    int playerLv = (player != null && player.getStats() != null) ? player.getStats().getLevel() : 1;
-    return (xpProgressionService != null)
-        ? xpProgressionService.calculateMobExpReward(mobLv, playerLv)
-        : Math.max(10, mobLv * 10);
   }
 
   private void afterAttack(Player attacker, ActiveSkillResult skillResult) {

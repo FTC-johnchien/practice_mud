@@ -58,6 +58,20 @@ public class LivingService {
     this.xpProgressionService = xpProgressionService;
   }
 
+  @org.springframework.beans.factory.annotation.Autowired(required = false)
+  private com.example.htmlmud.domain.dungeon.battle.BuffSettlementService buffSettlementService;
+
+  public com.example.htmlmud.domain.dungeon.battle.BuffSettlementService getBuffSettlementService() {
+    if (buffSettlementService == null) {
+      buffSettlementService = new com.example.htmlmud.domain.dungeon.battle.BuffSettlementService();
+    }
+    return buffSettlementService;
+  }
+
+  public void setBuffSettlementService(com.example.htmlmud.domain.dungeon.battle.BuffSettlementService buffSettlementService) {
+    this.buffSettlementService = buffSettlementService;
+  }
+
 
 
   public void tick(Living self, long tickCount, long time) {
@@ -73,7 +87,11 @@ public class LivingService {
         : 150;
     if (!self.isInCombat() && tickCount % regenModulo == 0) {
       processRegen(self);
-      // processBuffs(); // 檢查 Buff 是否過期
+    }
+
+    // === Buff / Debuff 週期跳算 (1 Tick = 500ms，在 100ms 基準下每 5 ticks 觸發一次) ===
+    if (tickCount % 5 == 0) {
+      processBuffs(self);
     }
 
     // === AI 行為心跳 (AI Tick) ===
@@ -81,6 +99,41 @@ public class LivingService {
     // 只有怪物需要，玩家不需要
     if (self instanceof Mob mob && tickCount % 5 == 0) {
       // mob.processAI(); // 例如：隨機移動、喊話
+    }
+  }
+
+  public void processBuffs(Living self) {
+    if (self == null || !self.isValid() || self.isDead()) {
+      return;
+    }
+    List<String> logs = getBuffSettlementService().processTicks(self);
+    if (logs != null && !logs.isEmpty()) {
+      boolean sent = false;
+      if (self.getCurrentRoomId() != null) {
+        try {
+          Room room = self.getCurrentRoom();
+          if (room != null && !room.getPlayers().isEmpty()) {
+            for (Player p : room.getPlayers()) {
+              for (String l : logs) {
+                p.sendText(l);
+              }
+            }
+            sent = true;
+          }
+        } catch (Exception ignored) {
+        }
+      }
+      if (!sent && self instanceof Player p) {
+        for (String l : logs) {
+          p.sendText(l);
+        }
+      }
+
+      // 如果 Buff / DoT 致死
+      if (self.isDead()) {
+        log.info("{} 因狀態效果死亡", self.getName());
+        onDeath(self, null);
+      }
     }
   }
 
@@ -100,8 +153,8 @@ public class LivingService {
       return;
     }
 
-    // 扣除 HP
-    self.getStats().setHp(self.getStats().getHp() - amount);
+    // 透過 Buffable 護盾扣除與扣除 HP
+    self.takeDamage(amount);
 
     // for test----------------------------------------------------------------------------------
 
@@ -144,12 +197,16 @@ public class LivingService {
     // 標記狀態 (Mark State)：設為 Dead，停止接受新的傷害或治療。
     self.getStats().setHp(0);
     self.exitCombat();
+    self.setPosture(com.example.htmlmud.domain.model.enums.LivingPosture.DEAD);
 
     // 交代後事 (Cleanup & Notify)：取消心跳、製造屍體、通知房間。
     // 設定為無效狀態 (不處理心跳 tick)
     self.markInvalid();
 
     Room room = self.getCurrentRoom();
+    if (room == null) {
+      return;
+    }
 
     // 廣播死亡訊息
     String messageTemplate = "$n殺死了$N";
@@ -323,8 +380,74 @@ public class LivingService {
     return true;
   }
 
-  public boolean use() {
-    return false;
+  public boolean use(Living self, GameItem item) {
+    if (self == null || item == null || !self.isValid() || self.isDead()) {
+      return false;
+    }
+
+    ItemTemplate tpl = item.getTemplate();
+    var def = item.getDefinition();
+    if ((tpl != null && tpl.type() != ItemType.CONSUMABLE) || (def != null && !def.isConsumable())) {
+      if (self instanceof Player p) {
+        p.reply("這件物品無法直接服用使用。");
+      }
+      return false;
+    }
+
+    // 處理消耗品效果
+    if (def != null) {
+      String effType = def.effectType();
+      int effVal = def.effectValue();
+      if ("HEAL_HP".equalsIgnoreCase(effType)) {
+        int healAmt = effVal > 0 ? effVal : 50;
+        heal(self, healAmt);
+        if (self instanceof Player p) {
+          p.reply("\u001B[1;32m你服用了【" + item.getDisplayName() + "】，體內靈氣奔湧，氣血回復了 " + healAmt + " 點！\u001B[0m");
+        }
+      } else if ("HEAL_MP".equalsIgnoreCase(effType)) {
+        int healAmt = effVal > 0 ? effVal : 30;
+        if (self.getStats() != null) {
+          self.getStats().setMp(Math.min(self.getStats().getMaxMp(), self.getStats().getMp() + healAmt));
+        }
+        if (self instanceof Player p) {
+          p.reply("\u001B[1;34m你服用了【" + item.getDisplayName() + "】，體內法力充盈，回復了 " + healAmt + " 點法力！\u001B[0m");
+        }
+      } else if ("RESTORE_SAN".equalsIgnoreCase(effType)) {
+        if (self.getStats() != null) {
+          self.getStats().setSan(Math.min(self.getStats().getMaxSan(), self.getStats().getSan() + effVal));
+        }
+        if (self instanceof Player p) {
+          p.reply("\u001B[1;36m你服用了【" + item.getDisplayName() + "】，神識清明，道心穩定。\u001B[0m");
+        }
+      } else {
+        if (effVal > 0) {
+          heal(self, effVal);
+        }
+      }
+    }
+
+    // 扣除物品數量或自背包移除
+    if (item.getAmount() > 1) {
+      item.setAmount(item.getAmount() - 1);
+    } else {
+      self.getInventory().remove(item);
+    }
+
+    return true;
+  }
+
+  public boolean use(Living self, String itemId) {
+    if (self == null || itemId == null) return false;
+    GameItem item = self.getInventory().stream()
+        .filter(it -> it != null && (itemId.equalsIgnoreCase(it.getId()) || (it.getTemplate() != null && itemId.equalsIgnoreCase(it.getTemplate().id()))))
+        .findFirst().orElse(null);
+    if (item == null) {
+      if (self instanceof Player p) {
+        p.reply("你身上沒有這件物品。");
+      }
+      return false;
+    }
+    return use(self, item);
   }
 
   public int getAttacksPerRound(Living self) {
@@ -341,7 +464,11 @@ public class LivingService {
 
 
 
-  private void processRegen(Living self) {
+  public void processRegen(Living self) {
+    if (self == null || self.getStats() == null || self.isDead()) {
+      return;
+    }
+
     double hpRatio = (gameConfig != null && gameConfig.getRegen() != null)
         ? gameConfig.getRegen().getHpPercent()
         : 0.05;
@@ -349,16 +476,36 @@ public class LivingService {
         ? gameConfig.getRegen().getMpPercent()
         : 0.01;
 
+    // RoomFlag.HIGH_REGEN: 聚靈/高恢復環境加速回復 (加倍)
+    Room room = self.getCurrentRoom();
+    if (room != null && room.hasFlag(com.example.htmlmud.domain.model.enums.RoomFlag.HIGH_REGEN)) {
+      hpRatio *= 2.0;
+      mpRatio *= 2.0;
+    }
+
+    // 姿勢加成：打坐休息 (RESTING) 或安睡 (SLEEPING) 加速回復 50%
+    if (self.getPosture() == com.example.htmlmud.domain.model.enums.LivingPosture.RESTING
+        || self.getPosture() == com.example.htmlmud.domain.model.enums.LivingPosture.SLEEPING) {
+      hpRatio *= 1.5;
+      mpRatio *= 1.5;
+    }
+
     // hp 回復
     if (self.getStats().getHp() < self.getStats().getMaxHp()) {
-      int regenAmount = Math.max(1, (int) (self.getStats().getMaxHp() * hpRatio));
+      int regenAmount = Math.max(1, (int) Math.round(self.getStats().getMaxHp() * hpRatio));
       heal(self, regenAmount);
     }
 
-    // mp 回復 (補完原先被註解的 MP 回復邏輯)
+    // mp 回復
     if (self.getStats().getMp() < self.getStats().getMaxMp()) {
-      int regenMpAmount = Math.max(1, (int) (self.getStats().getMaxMp() * mpRatio));
+      int regenMpAmount = Math.max(1, (int) Math.round(self.getStats().getMaxMp() * mpRatio));
       self.getStats().setMp(Math.min(self.getStats().getMaxMp(), self.getStats().getMp() + regenMpAmount));
+    }
+
+    // stamina 回復
+    if (self.getStats().getStamina() < self.getStats().getMaxStamina()) {
+      int regenStamina = Math.max(5, (int) Math.round(self.getStats().getMaxStamina() * 0.10));
+      self.getStats().setStamina(Math.min(self.getStats().getMaxStamina(), self.getStats().getStamina() + regenStamina));
     }
   }
 

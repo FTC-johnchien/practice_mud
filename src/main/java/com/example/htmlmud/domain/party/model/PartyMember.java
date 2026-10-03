@@ -120,7 +120,7 @@ public class PartyMember implements Buffable {
 
   // 戰術方針規則清單 (Tactics / Gambit Rules)
   @Builder.Default
-  private java.util.List<TacticsRule> tactics = new java.util.ArrayList<>();
+  private java.util.List<TacticsRule> tactics = new java.util.concurrent.CopyOnWriteArrayList<>();
 
   // Phase 11: 全域冷卻 (GCD) 與施法狀態機 (Casting FSM)
   @Builder.Default
@@ -924,28 +924,30 @@ public class PartyMember implements Buffable {
     return getClassTemplate().map(com.example.htmlmud.domain.model.template.ClassTemplate::name).orElse(this.roleTitle);
   }
 
-  public java.util.List<TacticsRule> getTactics() {
+  public synchronized java.util.List<TacticsRule> getTactics() {
     if (tactics == null) {
-      tactics = new java.util.ArrayList<>();
+      tactics = new java.util.concurrent.CopyOnWriteArrayList<>();
     }
     return tactics;
   }
 
-  public void addTacticsRule(TacticsRule rule) {
-    getTactics().add(rule);
-    tactics.sort(java.util.Comparator.comparingInt(TacticsRule::getPriority));
+  public synchronized void addTacticsRule(TacticsRule rule) {
+    java.util.List<TacticsRule> list = new java.util.ArrayList<>(getTactics());
+    list.add(rule);
+    list.sort(java.util.Comparator.comparingInt(TacticsRule::getPriority));
+    this.tactics = new java.util.concurrent.CopyOnWriteArrayList<>(list);
   }
 
-  public void clearTactics() {
+  public synchronized void clearTactics() {
     getTactics().clear();
   }
 
-  public void resetTactics() {
+  public synchronized void resetTactics() {
     clearTactics();
     initDefaultTactics();
   }
 
-  public void initDefaultTactics() {
+  public synchronized void initDefaultTactics() {
     getTactics().clear();
     if (skills == null || skills.isEmpty()) return;
 

@@ -56,26 +56,90 @@ body, html {
   height: 100vh;
 }
 
-/* 頂部全域狀態與陣法列 */
-.top-nav-bar {
-  background: var(--sidebar-bg);
-  padding: 2px 16px;
+/* === 5.2 全域共用 Shell: Global Header === */
+.top-nav-bar.global-header {
+  background: #0d121d;
+  padding: 0 16px;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
-  height: 30px;
+  height: 38px;
   box-sizing: border-box;
+  font-size: var(--font-xs);
+  user-select: none;
+  z-index: 20;
 }
 
-.mode-badge {
-  font-size: var(--font-xs);
-  padding: 4px 10px;
-  border-radius: 20px;
+.global-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.global-header-logo {
   font-weight: bold;
+  color: #38bdf8;
   letter-spacing: 0.5px;
-  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.global-header-divider {
+  color: #334155;
+}
+
+.global-header-item {
+  color: #94a3b8;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.global-header-item strong {
+  color: #f1f5f9;
+}
+
+.global-header-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.global-header-badge {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid #334155;
+  border-radius: 4px;
+  padding: 2px 8px;
+  color: #cbd5e1;
+  font-size: var(--font-xs);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.global-header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.header-nav-btn {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #cbd5e1;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: var(--font-xs);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.header-nav-btn:hover {
+  background: #334155;
+  color: #f8fafc;
+  border-color: #38bdf8;
 }
 
 .mode-exploring {
@@ -578,12 +642,12 @@ body, html {
 }
 
 .party-buff-chip {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 13px;
   border-radius: 3px;
   background: rgba(15, 23, 42, 0.7);
   border: 1px solid rgba(148, 163, 184, 0.3);
@@ -751,8 +815,8 @@ body, html {
   box-shadow: 0 0 6px rgba(250, 204, 21, 0.5);
 }
 
-/* 底部操作面板：40px 極簡常駐工具列與操作指引 */
-.bottom-control-panel {
+/* === 5.2 全域共用 Shell: Context Action Bar (底部情境操作列) === */
+.bottom-control-panel.context-action-bar {
   background: #0f131a;
   border-top: 1px solid var(--border-color);
   height: var(--footer-height);
@@ -764,10 +828,61 @@ body, html {
   align-items: center;
   flex-shrink: 0;
   box-sizing: border-box;
+  font-size: var(--font-xs);
+  user-select: none;
+  z-index: 20;
 }
 
-.bottom-control-panel.hidden {
-  display: none !important;
+.context-actions-group {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.context-btn {
+  height: 28px;
+  padding: 0 10px;
+  font-size: var(--font-xs);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 4px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.context-btn:hover {
+  background: #334155;
+  color: #fff;
+  border-color: #38bdf8;
+}
+
+.context-btn.btn-focus {
+  border-color: #f59e0b;
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.15);
+}
+
+.context-btn.btn-ult {
+  border-color: #a855f7;
+  color: #e9d5ff;
+  background: rgba(168, 85, 247, 0.2);
+}
+
+.context-btn.btn-flee {
+  border-color: #ef4444;
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.footer-right-tools {
+  display: flex;
+  gap: 6px;
+  align-items: center;
 }
 
 .footer-shortcuts-group {
@@ -777,10 +892,10 @@ body, html {
 }
 
 .footer-btn {
-  height: 30px;
-  padding: 0 12px;
+  height: 28px;
+  padding: 0 10px;
   font-size: var(--font-xs);
-  font-weight: 600;
+  font-weight: 500;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -5665,7 +5780,7 @@ body, html {
   line-height: 1.1;
 }
 .dock-mini-skill .skill-cost {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: bold;
   line-height: 1;
 }

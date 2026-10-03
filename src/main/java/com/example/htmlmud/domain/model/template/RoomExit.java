@@ -1,6 +1,6 @@
 package com.example.htmlmud.domain.model.template;
 
-import com.example.htmlmud.infra.persistence.json.ExitDeserializer;
+import com.example.htmlmud.domain.model.template.json.ExitDeserializer;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Builder;

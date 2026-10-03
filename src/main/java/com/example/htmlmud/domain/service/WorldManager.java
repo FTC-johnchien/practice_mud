@@ -33,9 +33,9 @@ import com.example.htmlmud.domain.model.template.ClassTemplate;
 import com.example.htmlmud.domain.model.template.ShopTemplate;
 import com.example.htmlmud.domain.party.model.FormationTemplate;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
+import com.example.htmlmud.domain.port.TemplateRegistryPort;
 import com.example.htmlmud.domain.repository.TemplateReader;
-import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
-import com.example.htmlmud.infra.util.IdUtils;
+import com.example.htmlmud.domain.util.IdUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PreDestroy;
@@ -58,7 +58,7 @@ public class WorldManager {
   private final TemplateReader templateReader;
 
   @Getter
-  private final TemplateRepository templateRepository;
+  private final TemplateRegistryPort templateRepository;
 
   // 2. Runtime Actors: 存放正在運作的 RoomActor
   // 使用 ConcurrentHashMap 確保並發存取安全
@@ -436,6 +436,12 @@ public class WorldManager {
     return activeRooms.computeIfAbsent(roomId, id -> {
       return worldFactory.createRoom(id);
     });
+  }
+
+  public void addRoom(Room room) {
+    if (room != null && room.getId() != null) {
+      activeRooms.put(room.getId(), room);
+    }
   }
 
   public MobTemplate getMobTemplate(String mobId) {

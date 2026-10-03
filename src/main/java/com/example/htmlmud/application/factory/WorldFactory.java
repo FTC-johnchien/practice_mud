@@ -61,28 +61,39 @@ public class WorldFactory implements WorldEntityFactoryPort {
    * 建立怪物 Actor (包含 AI 啟動邏輯)
    */
   public Mob createMob(String templateId) {
-    // 1. 查 Template (Record)
-    // log.info("createMob templateId: {}", templateId);
     MobTemplate tpl = templateReader.findMob(templateId).orElse(null);
     if (tpl == null) {
       log.error("createMob failed: MobTemplate ID not found: " + templateId);
       throw new MudException("找不到這個怪物模板 MobTemplate ID: " + templateId);
     }
+    return createMob(tpl);
+  }
+
+  public Mob createMob(MobTemplate tpl) {
+    if (tpl == null) return null;
 
     // 2. new Actor
     LivingStats stats = mobMapper.toLivingStats(tpl);
+    com.example.htmlmud.domain.model.enums.MobRank rank = tpl.rank() != null ? tpl.rank() : com.example.htmlmud.domain.model.enums.MobRank.NORMAL;
+    if (rank != com.example.htmlmud.domain.model.enums.MobRank.NORMAL) {
+      stats.setMaxHp((int) Math.round(stats.getMaxHp() * rank.getHpMultiplier()));
+      stats.setHp(stats.getMaxHp());
+    }
     Mob mob = new Mob(tpl, stats, mobService);
+    if (rank != com.example.htmlmud.domain.model.enums.MobRank.NORMAL) {
+      mob.setName(rank.getPrefix() + tpl.name());
+    }
     mob.setTemplateReader(templateReader);
     mob.start();
 
-    // log.info("{}", tpl.equipment());
     // 處理裝備
-    for (var entry : tpl.equipment().entrySet()) {
-      GameItem item = createItem(entry.getValue());
-      if (item != null) {
-        mob.getInventory().add(item);
-        mob.equip(item);
-
+    if (tpl.equipment() != null) {
+      for (var entry : tpl.equipment().entrySet()) {
+        GameItem item = createItem(entry.getValue());
+        if (item != null) {
+          mob.getInventory().add(item);
+          mob.equip(item);
+        }
       }
     }
 

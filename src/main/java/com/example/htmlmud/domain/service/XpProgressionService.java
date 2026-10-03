@@ -23,6 +23,17 @@ public class XpProgressionService {
     this.templateReader = templateReader;
   }
 
+  public static final int DEFAULT_FREE_STAT_POINTS_PER_LEVEL = 2;
+  private int freeStatPointsPerLevel = DEFAULT_FREE_STAT_POINTS_PER_LEVEL;
+
+  public int getFreeStatPointsPerLevel() {
+    return freeStatPointsPerLevel;
+  }
+
+  public void setFreeStatPointsPerLevel(int freeStatPointsPerLevel) {
+    this.freeStatPointsPerLevel = Math.max(0, freeStatPointsPerLevel);
+  }
+
   public XpProgressionService() {
     this(new TemplateCatalog());
   }
@@ -207,9 +218,10 @@ public class XpProgressionService {
       // 玩家職業屬性成長 (由 ClassTemplate 驅動)
       applyClassGrowth(stats, classTpl, prevL, currentLevel, totalStatDeltas);
 
-      // 主角專屬 +2 自由分配點數
-      stats.setFreeStatPoints(stats.getFreeStatPoints() + 2);
-      freePointsEarned += 2;
+      // 主角專屬自由分配點數
+      int points = freeStatPointsPerLevel;
+      stats.setFreeStatPoints(stats.getFreeStatPoints() + points);
+      freePointsEarned += points;
 
       // 升級狀態回滿
       stats.setHp(stats.getMaxHp());
@@ -262,10 +274,11 @@ public class XpProgressionService {
       // 應用職業基礎成長 (由 ClassTemplate 驅動)
       applyClassGrowth(stats, classTpl, prevL, currentLevel, totalStatDeltas);
 
-      // 主角額外獲得 +2 自由分配點數
+      // 主角額外獲得自由分配點數
       if (isLeader) {
-        stats.setFreeStatPoints(stats.getFreeStatPoints() + 2);
-        freePointsEarned += 2;
+        int points = freeStatPointsPerLevel;
+        stats.setFreeStatPoints(stats.getFreeStatPoints() + points);
+        freePointsEarned += points;
       }
 
       // 升級狀態回滿
@@ -324,13 +337,12 @@ public class XpProgressionService {
   }
 
   /**
-   * 主角自由分配屬性點數
+   * 自由分配屬性點數 (底層 LivingStats 驅動)
    */
-  public boolean allocateStatPoint(PartyMember leader, String statName, int amount) {
-    if (leader == null || leader.getStats() == null || amount <= 0) {
+  public boolean allocateStatPoint(LivingStats stats, String statName, int amount) {
+    if (stats == null || statName == null || amount <= 0) {
       return false;
     }
-    LivingStats stats = leader.getStats();
     if (stats.getFreeStatPoints() < amount) {
       return false;
     }
@@ -357,5 +369,25 @@ public class XpProgressionService {
 
     stats.setFreeStatPoints(stats.getFreeStatPoints() - amount);
     return true;
+  }
+
+  /**
+   * 主角自由分配屬性點數 (DRPG PartyMember)
+   */
+  public boolean allocateStatPoint(PartyMember leader, String statName, int amount) {
+    if (leader == null || leader.getStats() == null) {
+      return false;
+    }
+    return allocateStatPoint(leader.getStats(), statName, amount);
+  }
+
+  /**
+   * 主角自由分配屬性點數 (MUD Player)
+   */
+  public boolean allocateStatPoint(Player player, String statName, int amount) {
+    if (player == null || player.getStats() == null) {
+      return false;
+    }
+    return allocateStatPoint(player.getStats(), statName, amount);
   }
 }

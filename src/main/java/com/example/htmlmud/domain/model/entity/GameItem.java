@@ -91,6 +91,15 @@ public class GameItem {
     return template != null && template.isStackable();
   }
 
+  @JsonIgnore
+  public int getCount() {
+    return amount;
+  }
+
+  public void setCount(int count) {
+    this.amount = count;
+  }
+
   /**
    * 取得此物品對應的技能類別 (給 SkillManager 用)
    */

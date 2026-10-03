@@ -171,8 +171,25 @@
   </div>
 
   <div class="game-container">
-    <!-- 頂部資訊列：模式提示 -->
-    <header class="top-nav-bar">
+    <!-- 頂部資訊列：Global Header 全域狀態 (道號、盤纏靈石、時辰天候、區域探索度、快捷導航) -->
+    <header class="top-nav-bar global-header">
+      <div class="global-header-left">
+        <span class="global-header-logo">☯️ 道祖是克蘇魯</span>
+        <span class="global-header-divider">|</span>
+        <span id="global-header-leader-wrap" class="global-header-item">👤 <strong id="header-leader-name">玄靈子</strong></span>
+        <span id="global-header-coins-wrap" class="global-header-item">💰 <strong id="header-coins-val">0</strong> 靈石</span>
+      </div>
+      <div class="global-header-center">
+        <span id="global-header-location-wrap" class="global-header-badge">🗺️ <span id="header-location-val">墨竹山</span></span>
+        <span id="global-header-time-wrap" class="global-header-badge">⏳ <span id="header-time-val">午時</span></span>
+        <span id="global-header-weather-wrap" class="global-header-badge">☁️ <span id="header-weather-val">天朗氣清</span></span>
+      </div>
+      <div class="global-header-right">
+        <button class="header-nav-btn" data-action="toggle-party" title="開啟功能選單 (C / P)">📜 選單 (C)</button>
+        <button class="header-nav-btn" data-action="toggle-bag" title="開啟公共行囊 (B)">🎒 行囊 (B)</button>
+        <button class="header-nav-btn" data-action="open-save-modal" data-mode="save" title="存檔 / 讀檔 (Esc)">📂 命冊</button>
+        <button class="header-nav-btn" data-action="toggle-dev-console" title="開啟靈識終端 (~)">⌨️ 終端 (~)</button>
+      </div>
     </header>
 
     <!-- 主畫面視窗：可切換左側/右側停靠的地牢雷達，右側冒險文字日誌 -->
@@ -468,24 +485,47 @@
       </div>
     </div>
 
-    <!-- 底部操作列：40px 極簡常駐工具列與操作指引 -->
-    <footer class="bottom-control-panel">
-      <div id="action-buttons-group" class="footer-shortcuts-group">
-        <button class="act-btn footer-btn" data-action="toggle-party" title="開啟仙道總覽・功能選單 (C / P)">📜 選單 (C)</button>
-        <button class="act-btn footer-btn btn-bag" data-action="toggle-bag" title="開啟隊伍公共行囊 (B)">🎒 行囊 (B)</button>
-        <button id="footer-ult-btn" class="act-btn footer-btn btn-ult hidden" data-action="send-cmd" data-cmd="formation cast" title="釋放陣法奧義大招 (U)">⚡ 陣法奧義 (U)</button>
-        <button id="footer-flee-btn" class="act-btn footer-btn btn-flee hidden" data-action="send-cmd" data-cmd="battle flee" title="遁地撤退 (-5 SAN) (Esc)">🏃 遁地 (Esc)</button>
-        <button class="act-btn footer-btn" data-action="toggle-dev-console" title="打開開發者終端 (~)">⌨️ 終端 (~)</button>
+    <!-- 底部情境操作列 (Context Action Bar)：依模式動態切換情境動作與操作指引 -->
+    <footer class="bottom-control-panel context-action-bar">
+      <!-- 1. 城鎮情境操作群組 -->
+      <div id="context-actions-town" class="context-actions-group hidden">
+        <button class="act-btn context-btn" data-action="send-cmd" data-cmd="rest" title="凝神打坐吐納，加快氣血與真元回復">🌿 打坐 (rest)</button>
+        <button class="act-btn context-btn" data-action="send-cmd" data-cmd="look" title="仔細環視當前客棧街道與生靈">👀 環顧 (look)</button>
+        <button class="act-btn context-btn" data-action="send-cmd" data-cmd="get all" title="拾取當前地面所有散落靈物">📦 拾取 (get all)</button>
+        <button class="act-btn context-btn" data-action="toggle-cmd-input" title="開啟或隱藏 MUD 指令輸入框">💬 指令 (/)</button>
       </div>
 
+      <!-- 2. 地牢探索情境操作群組 -->
+      <div id="context-actions-dungeon" class="context-actions-group">
+        <button class="act-btn context-btn" data-action="trigger-inspect" title="凝神探查正前方地塊 (I)">👁️ 探查 (I)</button>
+        <button class="act-btn context-btn" data-action="trigger-rest" title="凝神調息 (R)">🌿 調息 (R)</button>
+        <button class="act-btn context-btn btn-bag" data-action="toggle-bag" title="開啟隊伍公共行囊 (B)">🎒 行囊 (B)</button>
+        <button class="act-btn context-btn" data-action="toggle-party" title="開啟仙道總覽・功能選單 (C / P)">📜 選單 (C)</button>
+      </div>
+
+      <!-- 3. 戰鬥交鋒情境操作群組 -->
+      <div id="context-actions-battle" class="context-actions-group hidden">
+        <button class="act-btn context-btn btn-focus" data-action="send-cmd" data-cmd="battle focus" title="全隊集火切換目標 (Space)">🎯 集火 (Space)</button>
+        <button id="footer-ult-btn" class="act-btn context-btn btn-ult" data-action="send-cmd" data-cmd="formation cast" title="釋放陣法奧義大招 (U)">⚡ 陣法奧義 (U)</button>
+        <button id="footer-flee-btn" class="act-btn context-btn btn-flee" data-action="send-cmd" data-cmd="battle flee" title="遁地撤退 (-5 SAN) (Esc)">🏃 遁地 (Esc)</button>
+      </div>
+
+      <!-- 中段：情境指引與狀態標籤 -->
       <div id="footer-hint-bar" class="footer-hint-bar">
-        <span id="footer-hint-explore" class="footer-hint-text">💡 WASD: 移動 ‧ C: 選單 ‧ B: 行囊 ‧ 數字鍵 1~5: 招式 ‧ R: 吐納調息</span>
-        <span id="battle-status-dock" class="footer-hint-text hidden">⚔️ 生死交鋒中 ‧ 點擊角色切換指揮台 ‧ Space: 全隊集火 ‧ Esc: 遁地撤退</span>
+        <span id="footer-hint-text" class="footer-hint-text">💡 WASD: 移動 ‧ I: 探查 ‧ R: 調息 ‧ B: 行囊 ‧ C: 選單 ‧ 1~5: 招式</span>
       </div>
 
-      <div class="input-container hidden">
-        <input type="text" id="cmd-input" class="cmd-input-field" placeholder="按 / 或 Enter 輸入文字指令，Esc 切回步進..." autocomplete="off">
+      <!-- 右段：指令輸入框開關與常駐按鈕 -->
+      <div class="footer-right-tools">
+        <button class="act-btn footer-btn" data-action="toggle-cmd-input" title="開啟文字指令框">⌨️ 指令</button>
+        <button class="act-btn footer-btn" data-action="toggle-dev-console" title="打開開發者終端 (~)">🔧 (~)</button>
+      </div>
+
+      <!-- 展開型指令輸入列 -->
+      <div id="cmd-input-container" class="input-container hidden">
+        <input type="text" id="cmd-input" class="cmd-input-field" placeholder="輸入文字指令 (例如: look, buy, cast, rest)，按 Esc 關閉..." autocomplete="off">
         <button class="send-btn" data-action="handle-enter">發送</button>
+        <button class="drawer-close-btn" data-action="toggle-cmd-input" style="padding: 2px 8px; margin-left: 4px;">✕</button>
       </div>
     </footer>
   </div>

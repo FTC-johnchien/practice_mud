@@ -12,6 +12,12 @@ import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.entity.SkillEntry;
+import com.example.htmlmud.domain.model.template.SkillTemplate;
+import java.util.Comparator;
+import java.util.concurrent.CopyOnWriteArrayList;
+import com.example.htmlmud.domain.dungeon.battle.ActiveBuff;
+import com.example.htmlmud.domain.dungeon.battle.Buffable;
+import com.example.htmlmud.domain.model.enums.BuffCategory;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.LivingPosture;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
@@ -26,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 // 泛型 T 讓我們可以在子類別擴充更多 Message 類型
 @Getter
 @Slf4j
-public abstract sealed class Living extends VirtualActor<ActorMessage> permits Player, Mob {
+public abstract sealed class Living extends VirtualActor<ActorMessage> implements Buffable permits Player, Mob {
 
   private LivingService livingService;
 
@@ -42,6 +48,7 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
   protected LivingStats stats;
 
   // 姿勢 (站立, 戰鬥中, 死亡)
+  @Setter
   private LivingPosture posture = LivingPosture.STANDING;
 
   // 所有生物都在某個房間 (房間可能未載入)
@@ -74,10 +81,8 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
   protected volatile String combatTargetId;
   // 下一次可以攻擊的時間點 (System.currentTimeMillis)
   protected volatile long nextAttackTime = 0;
-  // 附加增益/減益
-  // public Map<String, Object> dynamicProps = new HashMap<>();
-
-
+  // 附加增益/減益 (Buff / Debuff / Shield / DoT / HoT)
+  protected List<ActiveBuff> activeBuffs = new CopyOnWriteArrayList<>();
 
   // 衍生屬性 (快取用，每次穿脫裝備後重新計算 通常不存 DB，由基礎屬性計算，但為了簡單先存這裡)
   public int minDamage = 0; // 最小傷害
@@ -96,6 +101,7 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
     this.stats = stats;
     this.livingService = livingService;
   }
+
 
 
 
@@ -132,7 +138,8 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
       }
       case ActorMessage.Say(var content) -> {
       }
-      case ActorMessage.BuffEffect(var buff) -> {
+      case ActorMessage.BuffEffect(var buff, var effectId) -> {
+        handleBuffEffect(buff, effectId);
       }
       case ActorMessage.Equip(var item, var future) -> {
         try {
@@ -197,6 +204,27 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
 
   protected boolean handleUnequip(EquipmentSlot slot) {
     return livingService.unequip(this, slot);
+  }
+
+  protected void handleBuffEffect(ActiveBuff buff, String effectId) {
+    if (buff != null) {
+      this.addBuff(buff);
+    } else if (effectId != null && livingService != null && livingService.getTemplateReader() != null) {
+      var skillOpt = livingService.getTemplateReader().findSkill(effectId);
+      SkillTemplate skill = skillOpt.orElse(null);
+      if (skill == null) {
+        skill = livingService.getTemplateReader().getAllSkills().values().stream()
+            .filter(s -> s != null && s.getBuff() != null && effectId.equalsIgnoreCase(s.getBuff().id()))
+            .findFirst().orElse(null);
+      }
+      if (skill != null && skill.getBuff() != null) {
+        ActiveBuff created = livingService.getBuffSettlementService()
+            .createActiveBuffFromConfig(skill.getBuff(), this, this.getId(), skill.getId());
+        if (created != null) {
+          this.addBuff(created);
+        }
+      }
+    }
   }
 
 
@@ -414,12 +442,16 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
       this.combatTargetId = targetId;
     }
     this.isInCombat = true;
+    this.posture = LivingPosture.FIGHTING;
   }
 
   // 脫離戰鬥狀態
   public void exitCombat() {
     this.isInCombat = false;
     this.combatTargetId = null;
+    if (this.posture == LivingPosture.FIGHTING) {
+      this.posture = LivingPosture.STANDING;
+    }
   }
 
   public String getCombatTargetId() {
@@ -457,20 +489,19 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
     return valid && !isDead(); // 活著且有效才算有效
   }
 
-  // 判斷範例
+  // 移動判斷：必須處於正常站立 (STANDING) 狀態
   public boolean canMove() {
-    return posture != LivingPosture.DEAD && posture != LivingPosture.SLEEPING;
+    return posture == LivingPosture.STANDING && !isDead();
   }
 
   public Room getCurrentRoom() {
-    Room room = livingService.getWorldManagerProvider().getObject().getRoomActor(currentRoomId);
-    // TODO 要丟到安全的房間
-    if (room == null) {
-      log.error("player:{} currentRoomId:{} 不存在", this.name, currentRoomId);
-      throw new RuntimeException("你處於一片虛空之中...");
+    if (currentRoomId == null) {
+      return null;
     }
-
-    return room;
+    if (livingService == null || livingService.getWorldManagerProvider() == null) {
+      return null;
+    }
+    return livingService.getWorldManagerProvider().getObject().getRoomActor(currentRoomId);
   }
 
   public Optional<Living> getCombatTarget() {
@@ -496,6 +527,138 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> permits P
     currentRoomId = null;
   }
 
+  // === Buffable 介面實作與狀態管理 ===
 
+  @Override
+  public boolean isAlive() {
+    return !isDead();
+  }
+
+  @Override
+  public int getHp() {
+    return stats != null ? stats.getHp() : 0;
+  }
+
+  @Override
+  public int getMaxHp() {
+    return stats != null ? stats.getMaxHp() : 0;
+  }
+
+  @Override
+  public void setHp(int hp) {
+    if (stats != null) {
+      stats.setHp(hp);
+    }
+  }
+
+  public int getMp() {
+    return stats != null ? stats.getMp() : 0;
+  }
+
+  public int getMaxMp() {
+    return stats != null ? stats.getMaxMp() : 0;
+  }
+
+  public void setMp(int mp) {
+    if (stats != null) {
+      stats.setMp(mp);
+    }
+  }
+
+  @Override
+  public List<ActiveBuff> getActiveBuffs() {
+    if (activeBuffs == null) {
+      activeBuffs = new CopyOnWriteArrayList<>();
+    }
+    return activeBuffs;
+  }
+
+  @Override
+  public boolean hasActiveBuff(String buffId) {
+    if (buffId == null || activeBuffs == null || activeBuffs.isEmpty()) return false;
+    return activeBuffs.stream().anyMatch(b -> b.getId().equalsIgnoreCase(buffId) && !b.isExpired());
+  }
+
+  @Override
+  public ActiveBuff getActiveBuff(String buffId) {
+    if (buffId == null || activeBuffs == null) return null;
+    return activeBuffs.stream()
+        .filter(b -> b.getId().equalsIgnoreCase(buffId) && !b.isExpired())
+        .findFirst()
+        .orElse(null);
+  }
+
+  @Override
+  public void addBuff(ActiveBuff newBuff) {
+    if (newBuff == null) return;
+    if (activeBuffs == null) {
+      activeBuffs = new CopyOnWriteArrayList<>();
+    }
+    ActiveBuff existing = getActiveBuff(newBuff.getId());
+    if (existing != null) {
+      existing.setDurationTicks(newBuff.getDurationTicks());
+      existing.setRemainingTicks(newBuff.getDurationTicks());
+      if (newBuff.getCategory() == BuffCategory.SHIELD) {
+        existing.setValue(Math.max(existing.getValue(), newBuff.getValue()));
+      } else if (newBuff.getMaxStacks() > 1) {
+        existing.setStacks(Math.min(existing.getMaxStacks(), existing.getStacks() + 1));
+      }
+    } else {
+      activeBuffs.add(newBuff);
+    }
+  }
+
+  @Override
+  public void removeBuff(String buffId) {
+    if (buffId == null || activeBuffs == null) return;
+    activeBuffs.removeIf(b -> b.getId().equalsIgnoreCase(buffId));
+  }
+
+  @Override
+  public int absorbShieldDamage(int incomingDmg) {
+    int remaining = incomingDmg;
+    if (activeBuffs != null && !activeBuffs.isEmpty()) {
+      var shields = activeBuffs.stream()
+          .filter(b -> b.getCategory() == BuffCategory.SHIELD && b.getValue() > 0 && !b.isExpired())
+          .sorted(Comparator.comparingInt(ActiveBuff::getRemainingTicks))
+          .toList();
+
+      for (ActiveBuff shield : shields) {
+        if (remaining <= 0) break;
+        int absorb = Math.min(remaining, shield.getValue());
+        shield.setValue(shield.getValue() - absorb);
+        remaining -= absorb;
+      }
+      activeBuffs.removeIf(ActiveBuff::isExpired);
+    }
+    return remaining;
+  }
+
+  @Override
+  public int getTotalShield() {
+    return (activeBuffs != null)
+        ? activeBuffs.stream()
+            .filter(b -> b.getCategory() == BuffCategory.SHIELD && !b.isExpired())
+            .mapToInt(ActiveBuff::getValue)
+            .sum()
+        : 0;
+  }
+
+  @Override
+  public void takeDamage(int dmg) {
+    if (this.stats == null) return;
+    int remainingDmg = absorbShieldDamage(dmg);
+    this.stats.setHp(Math.max(0, this.stats.getHp() - remainingDmg));
+  }
+
+  public void applyBuff(ActiveBuff buff) {
+    if (buff != null) {
+      this.addBuff(buff);
+    }
+  }
+
+  public void applyBuff(String effectId) {
+    handleBuffEffect(null, effectId);
+  }
 
 }

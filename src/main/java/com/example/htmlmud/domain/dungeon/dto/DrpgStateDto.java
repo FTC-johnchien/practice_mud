@@ -162,15 +162,17 @@ public record DrpgStateDto(
         level = "WARNING";
       }
 
-      String resType = m.getResourceType() != null ? m.getResourceType().name() : "MP";
-      if (m.getResourceType() == CombatResourceType.RAGE || m.getResourceType() == CombatResourceType.COMBO ||
-          m.getResourceType() == CombatResourceType.FORCE || m.getResourceType() == CombatResourceType.ENERGY ||
-          m.getResourceType() == CombatResourceType.STAMINA || m.getResourceType() == CombatResourceType.SP) {
-        resType = "SP";
-      }
+      String resType = m.getResourceType() != null ? m.getResourceType().name() : "SP";
       int curRes = mp;
       int maxRes = maxMp;
-      if ("SP".equals(resType)) {
+      if (m.getResourceType() == CombatResourceType.RAGE) {
+        curRes = m.getCurrentRage();
+        maxRes = m.getMaxRage();
+      } else if (m.getResourceType() == CombatResourceType.COMBO) {
+        curRes = m.getCurrentCombo();
+        maxRes = m.getMaxCombo();
+      } else if (m.getResourceType() == CombatResourceType.SP || m.getResourceType() == CombatResourceType.FORCE ||
+                 m.getResourceType() == CombatResourceType.ENERGY || m.getResourceType() == CombatResourceType.STAMINA) {
         curRes = m.getCurrentSp();
         maxRes = m.getMaxSp();
       }
@@ -182,8 +184,8 @@ public record DrpgStateDto(
           if (m.isOnCooldown(s.getId())) avail = false;
           if (s.getCostType() == CombatResourceType.MP && mp < s.getCostValue()) avail = false;
           if (s.getCostType() == CombatResourceType.SP && m.getCurrentSp() < s.getCostValue()) avail = false;
-          if (s.getCostType() == CombatResourceType.RAGE && m.getCurrentSp() < s.getCostValue()) avail = false;
-          if (s.getCostType() == CombatResourceType.COMBO && m.getCurrentSp() < (s.getCostValue() * 20) && m.getCurrentCombo() < s.getCostValue()) avail = false;
+          if (s.getCostType() == CombatResourceType.RAGE && m.getCurrentRage() < s.getCostValue() && m.getCurrentSp() < s.getCostValue()) avail = false;
+          if (s.getCostType() == CombatResourceType.COMBO && m.getCurrentCombo() < s.getCostValue() && m.getCurrentSp() < (s.getCostValue() * 20)) avail = false;
           if (s.getCostType() == CombatResourceType.HP && hp <= s.getCostValue()) avail = false;
           if (!m.isSkillUsable(s)) avail = false;
 
@@ -376,7 +378,11 @@ public record DrpgStateDto(
           (party.isFormationActive() && party.getSlotForMember(memberIdx) != null
               ? party.getSlotForMember(memberIdx).getGridX() : Math.min(memberIdx, 4)),
           (party.isFormationActive() && party.getSlotForMember(memberIdx) != null
-              ? party.getSlotForMember(memberIdx).getGridY() : 0)
+              ? party.getSlotForMember(memberIdx).getGridY() : 0),
+          m.getCurrentRage(),
+          m.getMaxRage(),
+          m.getCurrentCombo(),
+          m.getMaxCombo()
       ));
     }
 
@@ -703,8 +709,38 @@ public record DrpgStateDto(
       String formationSlotBonus,
       boolean formationSlotActive,
       int gridX,
-      int gridY
-  ) {}
+      int gridY,
+      int rage,
+      int maxRage,
+      int combo,
+      int maxCombo
+  ) {
+    public PartyMemberViewDto(
+        String id, String name, String roleTitle, String row,
+        int hp, int maxHp, int mp, int maxMp, int sp, int maxSp, int san, int maxSan,
+        String sanState, String sanLevel, String resourceType, int currentResource, int maxResource,
+        boolean alive, List<PartySkillViewDto> skills, String madnessState, int aberrationCounter,
+        PartyItemSlotViewDto equippedWeapon, PartyItemSlotViewDto equippedArmor, Map<String, PartyItemSlotViewDto> equipment,
+        String basicSkillId, String basicSkillName, List<PartyStanceSkillDto> availableStances,
+        Map<String, String> passiveSlots, List<PartyPassiveSkillDto> availablePassives,
+        String classId, String className, String classDescription, List<TacticsRuleViewDto> tactics,
+        int level, int exp, long nextLevelExp, int freeStatPoints,
+        int str, int con, int dex, int intStat, int wis,
+        boolean isOnGcd, long remainingGcdMs, boolean isCasting, String castingSkillName,
+        long castingDurationMs, long castingRemainingMs,
+        String formationSlotName, String formationSlotRequiredRow, String formationSlotBonus,
+        boolean formationSlotActive, int gridX, int gridY
+    ) {
+      this(id, name, roleTitle, row, hp, maxHp, mp, maxMp, sp, maxSp, san, maxSan, sanState, sanLevel,
+          resourceType, currentResource, maxResource, alive, skills, madnessState, aberrationCounter,
+          equippedWeapon, equippedArmor, equipment, basicSkillId, basicSkillName, availableStances,
+          passiveSlots, availablePassives, classId, className, classDescription, tactics,
+          level, exp, nextLevelExp, freeStatPoints, str, con, dex, intStat, wis,
+          isOnGcd, remainingGcdMs, isCasting, castingSkillName, castingDurationMs, castingRemainingMs,
+          formationSlotName, formationSlotRequiredRow, formationSlotBonus, formationSlotActive, gridX, gridY,
+          sp, maxSp, Math.min(5, sp / 20), 5);
+    }
+  }
 
   public record TacticsRuleViewDto(
       int priority,

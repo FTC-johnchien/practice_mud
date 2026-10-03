@@ -35,6 +35,7 @@ class DrpgBattleServiceTest {
 
   @BeforeEach
   void setUp() {
+    partyService.clearCache();
     dummyPlayer = mock(Player.class);
     when(dummyPlayer.getName()).thenReturn("tester");
     when(dummyPlayer.isValid()).thenReturn(true);

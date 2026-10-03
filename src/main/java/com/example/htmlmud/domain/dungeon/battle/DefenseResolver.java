@@ -36,18 +36,116 @@ public class DefenseResolver {
       int finalDamage,
       int spGained,
       int rageGained,
-      String combatLog
-  ) {}
+      String combatLog,
+      boolean riposteTriggered,
+      int riposteDamage,
+      int staminaConsumed,
+      boolean poiseBroken
+  ) {
+    public DefenseResolution(DefenseOutcome outcome, int finalDamage, int spGained, int rageGained, String combatLog) {
+      this(outcome, finalDamage, spGained, rageGained, combatLog, false, 0, 0, false);
+    }
+
+    public DefenseResolution(DefenseOutcome outcome, int finalDamage, int spGained, int rageGained, String combatLog, boolean riposteTriggered, int riposteDamage) {
+      this(outcome, finalDamage, spGained, rageGained, combatLog, riposteTriggered, riposteDamage, 0, false);
+    }
+  }
 
   private final GameConfig gameConfig;
+  private final com.example.htmlmud.domain.repository.TemplateReader templateReader;
 
   public DefenseResolver() {
-    this(null);
+    this(null, new com.example.htmlmud.domain.service.TemplateCatalog());
   }
 
   @Autowired
-  public DefenseResolver(@Autowired(required = false) GameConfig gameConfig) {
+  public DefenseResolver(@Autowired(required = false) GameConfig gameConfig,
+                         @Autowired(required = false) com.example.htmlmud.domain.repository.TemplateReader templateReader) {
     this.gameConfig = gameConfig;
+    this.templateReader = templateReader != null ? templateReader : new com.example.htmlmud.domain.service.TemplateCatalog();
+  }
+
+  /**
+   * 解算 MUD 端生靈之間的單次攻擊檢定 (隨機擲骰)
+   */
+  public DefenseResolution resolveLivingAttack(com.example.htmlmud.domain.actor.impl.Living attacker,
+                                               com.example.htmlmud.domain.actor.impl.Living defender,
+                                               int rawDamage) {
+    return resolveLivingAttack(attacker, defender, rawDamage, null);
+  }
+
+  /**
+   * 解算 MUD 端生靈之間的單次攻擊檢定 (支援指定骰值便於單元測試驗證)
+   */
+  public DefenseResolution resolveLivingAttack(com.example.htmlmud.domain.actor.impl.Living attacker,
+                                               com.example.htmlmud.domain.actor.impl.Living defender,
+                                               int rawDamage,
+                                               Double predeterminedRoll) {
+    String attackerName = (attacker != null) ? attacker.getName() : "攻擊者";
+    String defenderName = (defender != null) ? defender.getName() : "防禦者";
+    String weaponName = (attacker != null && attacker.getMainHandWeapon() != null)
+        ? attacker.getMainHandWeapon().getDisplayName()
+        : "兵刃";
+
+    int atkDex = (attacker != null && attacker.getStats() != null) ? attacker.getStats().getDex() : 10;
+    int defDex = (defender != null && defender.getStats() != null) ? defender.getStats().getDex() : 5;
+    int defStr = (defender != null && defender.getStats() != null) ? defender.getStats().getStr() : 5;
+    int defCon = (defender != null && defender.getStats() != null) ? defender.getStats().getCon() : 5;
+
+    SkillTemplate dodgeSkill = null;
+    SkillTemplate parrySkill = null;
+    SkillTemplate forceSkill = null;
+
+    if (defender != null && templateReader != null) {
+      String dodgeId = defender.getEnabledSkillId(SkillCategory.DODGE);
+      if (dodgeId != null) dodgeSkill = templateReader.findSkill(dodgeId).orElse(null);
+
+      String parryId = defender.getEnabledSkillId(SkillCategory.PARRY);
+      if (parryId != null) parrySkill = templateReader.findSkill(parryId).orElse(null);
+
+      String forceId = defender.getEnabledSkillId(SkillCategory.FORCE);
+      if (forceId != null) forceSkill = templateReader.findSkill(forceId).orElse(null);
+    }
+
+    com.example.htmlmud.domain.model.entity.GameItem offHand = (defender != null) ? defender.getOffHandEquip() : null;
+    boolean hasShield = (offHand != null && (offHand.getType() == com.example.htmlmud.domain.model.enums.ItemType.SHIELD
+        || "SHIELD".equalsIgnoreCase(offHand.getSubType())));
+    int shieldBonusDef = 0;
+    String shieldName = "護身盾";
+    if (hasShield) {
+      shieldName = offHand.getDisplayName();
+      if (offHand.getTemplate() != null && offHand.getTemplate().equipmentProp() != null) {
+        shieldBonusDef = offHand.getTemplate().equipmentProp().defense();
+      } else if (offHand.getDefinition() != null) {
+        shieldBonusDef = offHand.getDefinition().bonusDefense();
+      }
+    }
+
+    String defWeapon = (defender != null && defender.getMainHandWeapon() != null)
+        ? defender.getMainHandWeapon().getDisplayName()
+        : "兵刃";
+
+    CombatResourceType resType = (defender != null && defender.getStats() != null) ? CombatResourceType.SP : CombatResourceType.SP;
+
+    boolean canRiposte = false;
+    int riposteAtk = 5;
+    if (defender instanceof com.example.htmlmud.domain.actor.impl.Player p) {
+      canRiposte = "SWORDSMAN".equalsIgnoreCase(p.getClassId()) || parrySkill != null;
+      if (p.getStats() != null) {
+        riposteAtk = Math.max(5, (int)(p.getStats().getStr() * 1.2 + p.getStats().getDex()));
+      }
+    } else if (defender != null) {
+      canRiposte = parrySkill != null;
+      riposteAtk = Math.max(5, (defender.minDamage + defender.maxDamage) / 2);
+    }
+
+    return executeCombatTable(attackerName, defenderName, weaponName, defWeapon,
+        atkDex, defDex, defStr, defCon,
+        dodgeSkill, parrySkill, forceSkill,
+        hasShield, shieldBonusDef, shieldName,
+        rawDamage, null, predeterminedRoll, null, resType,
+        canRiposte, riposteAtk,
+        (defender != null ? defender.getStats() : null));
   }
 
   /**
@@ -59,13 +157,6 @@ public class DefenseResolver {
 
   /**
    * 解算敵怪對小隊成員的單次攻擊檢定 (支援指定骰值便於單元測試驗證)
-   *
-   * @param enemy 攻擊者怪物
-   * @param targetMember 防禦者隊員
-   * @param rawDamage 未經被動檢定的基礎扣防傷害 (min 1)
-   * @param enemyMove 敵方招式名稱 (可為 null)
-   * @param predeterminedRoll 指定隨機擲骰值 [0.0, 1.0)，為 null 則取隨機
-   * @return DefenseResolution 結算結果
    */
   public DefenseResolution resolveEnemyAttack(BattleEnemy enemy, PartyMember targetMember, int rawDamage, String enemyMove, Double predeterminedRoll) {
     String attackerName = (enemy != null) ? enemy.getName() : "敵人";
@@ -77,17 +168,103 @@ public class DefenseResolver {
     int defCon = (targetMember != null && targetMember.getStats() != null) ? targetMember.getStats().getCon() : 5;
     int atkDex = (enemy != null) ? enemy.getDex() : 10;
 
-    // =========================================================================
-    // 圓桌各切片機率計算 (Combat Table Slices Calculation)
-    // =========================================================================
+    SkillTemplate dodgeSkill = (targetMember != null) ? targetMember.getEnabledPassive(SkillCategory.DODGE) : null;
+    if (dodgeSkill == null && targetMember != null && templateReader != null) {
+      String sId = targetMember.getEnabledPassiveSkillId(SkillCategory.DODGE);
+      if (sId != null) dodgeSkill = templateReader.findSkill(sId).orElse(null);
+    }
+
+    SkillTemplate parrySkill = (targetMember != null) ? targetMember.getEnabledPassive(SkillCategory.PARRY) : null;
+    if (parrySkill == null && targetMember != null && templateReader != null) {
+      String sId = targetMember.getEnabledPassiveSkillId(SkillCategory.PARRY);
+      if (sId != null) parrySkill = templateReader.findSkill(sId).orElse(null);
+    }
+
+    SkillTemplate forceSkill = (targetMember != null) ? targetMember.getEnabledPassive(SkillCategory.FORCE) : null;
+    if (forceSkill == null && targetMember != null && templateReader != null) {
+      String sId = targetMember.getEnabledPassiveSkillId(SkillCategory.FORCE);
+      if (sId != null) forceSkill = templateReader.findSkill(sId).orElse(null);
+    }
+
+    PartyItemSlot shield = (targetMember != null) ? targetMember.getEquippedShield() : null;
+    boolean hasShield = (shield != null && shield.isShield());
+    int shieldBonusDef = (shield != null) ? shield.getBonusDefense() : 0;
+    String shieldName = (shield != null && shield.getName() != null && !shield.getName().isBlank()) ? shield.getName() : "護身盾";
+
+    String defWeapon = (targetMember != null && targetMember.getEquippedWeapon() != null)
+        ? targetMember.getEquippedWeapon().getName()
+        : "兵刃";
+
+    CombatResourceType resType = (targetMember != null) ? targetMember.getResourceType() : CombatResourceType.SP;
+
+    boolean canRiposte = false;
+    int riposteAtk = 5;
+    if (targetMember != null) {
+      canRiposte = "SWORDSMAN".equalsIgnoreCase(targetMember.getClassId()) || parrySkill != null;
+      riposteAtk = Math.max(5, targetMember.getEffectiveMaxDamage());
+    }
+
+    return executeCombatTable(attackerName, defenderName, weaponName, defWeapon,
+        atkDex, defDex, defStr, defCon,
+        dodgeSkill, parrySkill, forceSkill,
+        hasShield, shieldBonusDef, shieldName,
+        rawDamage, enemyMove, predeterminedRoll, targetMember, resType,
+        canRiposte, riposteAtk,
+        (targetMember != null ? targetMember.getStats() : null));
+  }
+
+  private DefenseResolution executeCombatTable(
+      String attackerName, String defenderName, String weaponName, String defWeapon,
+      int atkDex, int defDex, int defStr, int defCon,
+      SkillTemplate dodgeSkill, SkillTemplate parrySkill, SkillTemplate forceSkill,
+      boolean hasShield, int shieldBonusDef, String shieldName,
+      int rawDamage, String enemyMove, Double predeterminedRoll,
+      PartyMember targetMember, CombatResourceType resType) {
+    return executeCombatTable(attackerName, defenderName, weaponName, defWeapon,
+        atkDex, defDex, defStr, defCon,
+        dodgeSkill, parrySkill, forceSkill,
+        hasShield, shieldBonusDef, shieldName,
+        rawDamage, enemyMove, predeterminedRoll, targetMember, resType,
+        false, 0, (targetMember != null ? targetMember.getStats() : null));
+  }
+
+  private DefenseResolution executeCombatTable(
+      String attackerName, String defenderName, String weaponName, String defWeapon,
+      int atkDex, int defDex, int defStr, int defCon,
+      SkillTemplate dodgeSkill, SkillTemplate parrySkill, SkillTemplate forceSkill,
+      boolean hasShield, int shieldBonusDef, String shieldName,
+      int rawDamage, String enemyMove, Double predeterminedRoll,
+      PartyMember targetMember, CombatResourceType resType,
+      boolean canRiposte, int riposteAttackPower) {
+    return executeCombatTable(attackerName, defenderName, weaponName, defWeapon,
+        atkDex, defDex, defStr, defCon,
+        dodgeSkill, parrySkill, forceSkill,
+        hasShield, shieldBonusDef, shieldName,
+        rawDamage, enemyMove, predeterminedRoll, targetMember, resType,
+        canRiposte, riposteAttackPower, (targetMember != null ? targetMember.getStats() : null));
+  }
+
+  private DefenseResolution executeCombatTable(
+      String attackerName, String defenderName, String weaponName, String defWeapon,
+      int atkDex, int defDex, int defStr, int defCon,
+      SkillTemplate dodgeSkill, SkillTemplate parrySkill, SkillTemplate forceSkill,
+      boolean hasShield, int shieldBonusDef, String shieldName,
+      int rawDamage, String enemyMove, Double predeterminedRoll,
+      PartyMember targetMember, CombatResourceType resType,
+      boolean canRiposte, int riposteAttackPower,
+      com.example.htmlmud.domain.model.entity.LivingStats defStats) {
+
+    // 檢查防禦者精力狀態 (Stamina / Poise Break)
+    int currentStamina = (defStats != null) ? defStats.getStamina() : 100;
+    boolean poiseBroken = (currentStamina <= 0);
 
     // 1. Miss 閾值 (機率)：BaseMiss(5%) + max(0, (Def.DEX - Atk.DEX) * 0.5%)
     double missChance = Math.min(0.25, Math.max(0.02, 0.05 + Math.max(0, defDex - atkDex) * 0.005));
 
     // 2. Dodge 閾值 (機率)：Skill.dodgeRate + (Def.DEX * 0.8%) - (Atk.DEX * 0.3%)
+    // 若處於精力枯竭狀態 (Stamina <= 0)，閃避機率強制歸零
     double dodgeChance = 0.0;
-    SkillTemplate dodgeSkill = (targetMember != null) ? targetMember.getEnabledPassive(SkillCategory.DODGE) : null;
-    if (dodgeSkill != null) {
+    if (!poiseBroken && dodgeSkill != null) {
       double baseDodge = 0.10;
       if (dodgeSkill.getMechanics() != null) {
         if (dodgeSkill.getMechanics().dodgeRate() > 0) {
@@ -100,12 +277,12 @@ public class DefenseResolver {
     }
 
     // 3. Parry 閾值 (機率)：Skill.parryRate + (Def.STR * 0.4%) + (Def.DEX * 0.4%)
+    // 若處於精力枯竭狀態 (Stamina <= 0)，招架機率強制歸零
     double parryChance = 0.0;
-    SkillTemplate parrySkill = (targetMember != null) ? targetMember.getEnabledPassive(SkillCategory.PARRY) : null;
     double reduceRatio = 0.50; // 招架傷害承受比率 (預設減免 50%)
-    if (parrySkill != null) {
+    if (!poiseBroken && parrySkill != null) {
       double baseParry = 0.15;
-      if (parrySkill.getMechanics() != null) {
+      if (parrySkill != null && parrySkill.getMechanics() != null) {
         if (parrySkill.getMechanics().parryRate() > 0) {
           baseParry = parrySkill.getMechanics().parryRate();
         } else if (parrySkill.getMechanics().parryMod() > 0) {
@@ -121,8 +298,6 @@ public class DefenseResolver {
 
     // 4. Block 閾值 (機率)：副手配備盾牌時參與圓桌判定 (基礎 20% + CON * 0.3%)
     double blockChance = 0.0;
-    PartyItemSlot shield = (targetMember != null) ? targetMember.getEquippedShield() : null;
-    boolean hasShield = (shield != null && shield.isShield());
     if (hasShield) {
       blockChance = Math.min(0.60, Math.max(0.10, 0.20 + (defCon * 0.003)));
     }
@@ -172,7 +347,6 @@ public class DefenseResolver {
 
     // 內功護體微調 (FORCE Mitigation)
     int forceReduction = 0;
-    SkillTemplate forceSkill = (targetMember != null) ? targetMember.getEnabledPassive(SkillCategory.FORCE) : null;
     if (forceSkill != null && forceSkill.getMechanics() != null && forceSkill.getMechanics().defenseMod() > 0) {
       forceReduction = forceSkill.getMechanics().defenseMod();
     }
@@ -180,51 +354,88 @@ public class DefenseResolver {
     // 判定 1: 未命中 (MISS)
     if (roll < missLimit) {
       String missLog = "\u001B[1;30m💨【未命中】" + attackerName + " 攻勢落空，未能觸及 " + defenderName + "！\u001B[0m";
-      return new DefenseResolution(DefenseOutcome.MISS, 0, 0, 0, missLog);
+      return new DefenseResolution(DefenseOutcome.MISS, 0, 0, 0, missLog, false, 0, 0, poiseBroken);
     }
 
-    // 判定 2: 身法閃避 (DODGED)
+    // 判定 2: 身法閃避 (DODGED) - 消耗 2 點 Stamina
     if (roll < dodgeLimit) {
+      int staminaCost = 2;
+      if (defStats != null) {
+        defStats.setStamina(Math.max(0, defStats.getStamina() - staminaCost));
+      }
       String msg = extractDodgeMessage(dodgeSkill, attackerName, defenderName, weaponName);
       String log = "\u001B[1;36m💨【身法閃避】" + msg + "\u001B[0m";
-      return new DefenseResolution(DefenseOutcome.DODGED, 0, 15, 0, log);
+      return new DefenseResolution(DefenseOutcome.DODGED, 0, 15, 0, log, false, 0, staminaCost, false);
     }
 
-    // 判定 3: 招架格擋 (PARRIED)
+    // 判定 3: 招架格擋 (PARRIED) - 消耗 3 點 Stamina
     if (roll < parryLimit) {
+      int staminaCost = 3;
+      if (defStats != null) {
+        defStats.setStamina(Math.max(0, defStats.getStamina() - staminaCost));
+      }
       int parriedDmg = Math.max(1, (int) Math.round(rawDamage * reduceRatio));
-      String msg = extractParryMessage(parrySkill, attackerName, defenderName, weaponName, targetMember);
+      String msg = extractParryMessage(parrySkill, attackerName, defenderName, weaponName, defWeapon);
       String log = "\u001B[1;33m🛡️【招架格擋】" + msg + "（傷害減免至 " + parriedDmg + " 點）\u001B[0m";
-      return new DefenseResolution(DefenseOutcome.PARRIED, parriedDmg, 5, 5, log);
+
+      boolean triggeredRiposte = false;
+      int riposteDmg = 0;
+      if (canRiposte) {
+        boolean shouldTrigger = (predeterminedRoll != null) || (ThreadLocalRandom.current().nextDouble() < 0.50);
+        if (shouldTrigger) {
+          triggeredRiposte = true;
+          riposteDmg = Math.max(3, riposteAttackPower);
+          log += "\r\n\u001B[1;36m⚔️【破招反擊】" + defenderName + " 借力打力，反手一記突刺，對 " + attackerName + " 造成了 " + riposteDmg + " 點反擊傷害！\u001B[0m";
+        }
+      }
+
+      return new DefenseResolution(DefenseOutcome.PARRIED, parriedDmg, 5, 5, log, triggeredRiposte, riposteDmg, staminaCost, false);
     }
 
     // 判定 4: 盾牌格擋 (BLOCKED)
     if (roll < blockLimit) {
-      int shieldBlockValue = Math.max(5, (shield.getBonusDefense() * 2) + (defCon / 2));
+      int shieldBlockValue = Math.max(5, (shieldBonusDef * 2) + (defCon / 2));
       int blockedDmg = Math.max(1, rawDamage - shieldBlockValue);
-      String shieldName = (shield.getName() != null && !shield.getName().isBlank()) ? shield.getName() : "護身盾";
+      if (poiseBroken) {
+        blockedDmg = Math.max(1, (int) Math.round(blockedDmg * 1.20));
+      }
       String log = "\u001B[1;33m🛡️【盾牌格擋】" + defenderName + " 舉起【" + shieldName + "】固若金湯，化解了 " + shieldBlockValue + " 點衝擊！（承受 " + blockedDmg + " 點傷害）\u001B[0m";
-      return new DefenseResolution(DefenseOutcome.BLOCKED, blockedDmg, 5, 5, log);
+      if (poiseBroken) {
+        log += "\r\n\u001B[1;35m⚠️【架勢破防】" + defenderName + " 精力枯竭架勢崩潰，破綻大開！受到額外 20% 傷害！\u001B[0m";
+      }
+      return new DefenseResolution(DefenseOutcome.BLOCKED, blockedDmg, 5, 5, log, false, 0, 0, poiseBroken);
     }
 
     // 判定 5: 致命一擊 (CRIT)
     if (roll < critLimit) {
       int critDmg = Math.max(1, (int) Math.round(rawDamage * 1.5) - forceReduction);
+      if (poiseBroken) {
+        critDmg = Math.max(1, (int) Math.round(critDmg * 1.20));
+      }
       String critLog = "\u001B[1;31m💥【致命一擊】" + attackerName + " 破開空隙正中要害，對 " + defenderName + " 爆擊造成 " + critDmg + " 點毀滅傷害！\u001B[0m";
-      return new DefenseResolution(DefenseOutcome.CRIT, critDmg, 10, 15, critLog);
+      if (poiseBroken) {
+        critLog += "\r\n\u001B[1;35m⚠️【架勢破防】" + defenderName + " 精力枯竭架勢崩潰，破綻大開！受到額外 20% 傷害！\u001B[0m";
+      }
+      return new DefenseResolution(DefenseOutcome.CRIT, critDmg, 10, 15, critLog, false, 0, 0, poiseBroken);
     }
 
     // 判定 6: 普通命中受創 (HIT)
     int finalDmg = Math.max(1, rawDamage - forceReduction);
-    int rage = (targetMember != null && targetMember.getResourceType() == CombatResourceType.RAGE) ? 15 : 0;
+    if (poiseBroken) {
+      finalDmg = Math.max(1, (int) Math.round(finalDmg * 1.20));
+    }
+    int rage = (resType == CombatResourceType.RAGE) ? 15 : 0;
     String hitLog;
     if (enemyMove != null && !enemyMove.isBlank()) {
       hitLog = "\u001B[1;31m⚡【" + attackerName + "】施展【" + enemyMove + "】，重創 " + defenderName + " 造成 " + finalDmg + " 點傷害！\u001B[0m";
     } else {
       hitLog = "\u001B[1;31m⚡【" + attackerName + "】發起猛烈撲擊，重創 " + defenderName + " 造成 " + finalDmg + " 點傷害！\u001B[0m";
     }
+    if (poiseBroken) {
+      hitLog += "\r\n\u001B[1;35m⚠️【架勢破防】" + defenderName + " 精力枯竭架勢崩潰，破綻大開！受到額外 20% 傷害！\u001B[0m";
+    }
 
-    return new DefenseResolution(DefenseOutcome.HIT, finalDmg, 10, rage, hitLog);
+    return new DefenseResolution(DefenseOutcome.HIT, finalDmg, 10, rage, hitLog, false, 0, 0, poiseBroken);
   }
 
   /**
@@ -257,10 +468,10 @@ public class DefenseResolver {
   /**
    * 資料驅動抽取 PARRY 文本
    */
-  private String extractParryMessage(SkillTemplate skill, String attacker, String defender, String weapon, PartyMember member) {
-    String defWeapon = (member != null && member.getEquippedWeapon() != null)
-        ? member.getEquippedWeapon().getName()
-        : "兵刃";
+  private String extractParryMessage(SkillTemplate skill, String attacker, String defender, String weapon, String defWeapon) {
+    if (defWeapon == null || defWeapon.isBlank()) {
+      defWeapon = "兵刃";
+    }
 
     if (skill != null) {
       // 1. 優先嘗試 SkillTemplate.messages.parried

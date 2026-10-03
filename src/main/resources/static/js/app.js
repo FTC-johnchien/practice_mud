@@ -158,6 +158,93 @@ export function triggerRestAction() {
 }
 
 /**
+ * 依伺服器快照更新全域頂部狀態列 (Global Header)
+ */
+export function updateGlobalHeader(payload) {
+  if (!payload) return;
+
+  // 1. 隊長道號
+  if (payload.party && payload.party.members && payload.party.members.length > 0) {
+    const leader = payload.party.members[0];
+    const nameEl = document.getElementById('header-leader-name');
+    if (nameEl && leader.name) {
+      nameEl.innerText = leader.name;
+    }
+  }
+
+  // 2. 當前位置
+  const locEl = document.getElementById('header-location-val');
+  if (locEl) {
+    if (payload.town) {
+      const room = payload.town.roomName || '';
+      const zone = payload.town.zoneName || '';
+      locEl.innerText = `${zone}${zone && room ? ' · ' : ''}${room}`.trim() || '墨竹山';
+    } else if (payload.dungeon) {
+      locEl.innerText = `${payload.dungeon.floorName || '太陰古塚'} [${payload.dungeon.x}, ${payload.dungeon.y}]`;
+    }
+  }
+
+  // 3. 盤纏靈石
+  const coinEl = document.getElementById('header-coins-val');
+  if (coinEl) {
+    const lastShop = store.get('lastShopCatalog');
+    if (lastShop && typeof lastShop.playerCoin === 'number') {
+      coinEl.innerText = lastShop.playerCoin;
+    }
+  }
+
+  // 4. 時辰與天候 (營造仙俠氛圍)
+  const timeEl = document.getElementById('header-time-val');
+  const weatherEl = document.getElementById('header-weather-val');
+  if (timeEl) {
+    const hours = new Date().getHours();
+    const earthlyBranches = ['子時', '丑時', '寅時', '卯時', '辰時', '巳時', '午時', '未時', '申時', '酉時', '戌時', '亥時'];
+    const idx = Math.floor(((hours + 1) % 24) / 2);
+    timeEl.innerText = earthlyBranches[idx];
+  }
+  if (weatherEl) {
+    if (payload.mode === 'DUNGEON' || (payload.dungeon && !payload.town)) {
+      weatherEl.innerText = '陰風煞氣';
+    } else {
+      weatherEl.innerText = '天朗氣清';
+    }
+  }
+}
+
+/**
+ * 依情境模式動態更新底部情境操作列 (Context Action Bar)
+ */
+export function updateContextActionBar(mode, inBattle) {
+  const townActions = document.getElementById('context-actions-town');
+  const dungeonActions = document.getElementById('context-actions-dungeon');
+  const battleActions = document.getElementById('context-actions-battle');
+  const hintText = document.getElementById('footer-hint-text');
+
+  if (inBattle) {
+    if (townActions) townActions.classList.add('hidden');
+    if (dungeonActions) dungeonActions.classList.add('hidden');
+    if (battleActions) battleActions.classList.remove('hidden');
+    if (hintText) {
+      hintText.innerText = '⚔️ 生死交鋒中 ‧ 點選隊員施法 ‧ Space: 集火 ‧ U: 陣法奧義 ‧ Esc: 遁地';
+    }
+  } else if (mode === 'TOWN') {
+    if (battleActions) battleActions.classList.add('hidden');
+    if (dungeonActions) dungeonActions.classList.add('hidden');
+    if (townActions) townActions.classList.remove('hidden');
+    if (hintText) {
+      hintText.innerText = '🏮 城鎮休整中 ‧ 點擊道路/NPC 互動 ‧ rest: 調息 ‧ look: 環顧 ‧ C: 選單 ‧ B: 行囊';
+    }
+  } else {
+    if (battleActions) battleActions.classList.add('hidden');
+    if (townActions) townActions.classList.add('hidden');
+    if (dungeonActions) dungeonActions.classList.remove('hidden');
+    if (hintText) {
+      hintText.innerText = '🧭 靈境探索中 ‧ WASD: 步進 ‧ I: 探查 ‧ R: 調息 ‧ B: 行囊 ‧ C: 選單 ‧ 1~5: 招式';
+    }
+  }
+}
+
+/**
  * 接收後端推送的 DRPG_STATE 結構化資料，路由派發至相應面板
  * @param {Object} payload 狀態快照
  */
@@ -172,6 +259,10 @@ export function updateDrpgView(payload) {
   const battlePanel = document.getElementById('battle-arena-panel');
 
   const inBattle = Boolean(payload.battle && payload.battle.inBattle);
+
+  // 1. 同步更新 Global Header 與 Context Action Bar
+  updateGlobalHeader(payload);
+  updateContextActionBar(mode, inBattle);
 
   if (inBattle) {
     if (dungeonPanel) dungeonPanel.classList.add('hidden');
@@ -588,6 +679,17 @@ export function initEventDelegation() {
         if (window.triggerRestAction) window.triggerRestAction();
         else sendCmd('rest');
         break;
+      case 'toggle-cmd-input': {
+        const wrap = document.getElementById('cmd-input-container');
+        const input = document.getElementById('cmd-input');
+        if (wrap) {
+          const isHidden = wrap.classList.toggle('hidden');
+          if (!isHidden && input) {
+            input.focus();
+          }
+        }
+        break;
+      }
       case 'handle-enter':
         if (window.handleEnter) window.handleEnter();
         break;

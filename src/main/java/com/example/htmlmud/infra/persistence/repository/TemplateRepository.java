@@ -20,16 +20,17 @@ import com.example.htmlmud.domain.model.template.ClassTemplate;
 import com.example.htmlmud.domain.model.template.ShopTemplate;
 import com.example.htmlmud.domain.party.model.FormationTemplate;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
+import com.example.htmlmud.domain.port.TemplateRegistryPort;
 import com.example.htmlmud.domain.repository.TemplateReader;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * 模板資料倉儲 (Template Repository)
- * 由 Spring 容器管理生命週期之非靜態 Bean，內部持有獨立 Map 快取，落實 TemplateReader 埠。
+ * 由 Spring 容器管理生命週期之非靜態 Bean，內部持有獨立 Map 快取，落實 TemplateRegistryPort / TemplateReader 埠。
  */
 @Component
 @Slf4j
-public class TemplateRepository implements TemplateReader {
+public class TemplateRepository implements TemplateRegistryPort {
 
   // 快取映射 (純實例成員變數，杜絕靜態共享狀態污染)
   private final Map<String, ZoneTemplate> zoneTemplates = new ConcurrentHashMap<>();
@@ -65,6 +66,8 @@ public class TemplateRepository implements TemplateReader {
     MOB_BASIC_SKILL_IDS.put(SkillCategory.UNARMED, "mob_hit");
     MOB_BASIC_SKILL_IDS.put(SkillCategory.DODGE, "mob_basic_dodge");
     MOB_BASIC_SKILL_IDS.put(SkillCategory.PARRY, "mob_basic_parry");
+
+    com.example.htmlmud.domain.service.TemplateCatalog.setDefaultReaderSupplier(TemplateRepository::new);
   }
 
   public TemplateRepository() {

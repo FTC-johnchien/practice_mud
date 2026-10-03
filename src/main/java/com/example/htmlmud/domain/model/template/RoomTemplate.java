@@ -3,7 +3,7 @@ package com.example.htmlmud.domain.model.template;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import com.example.htmlmud.infra.persistence.json.RoomDescriptionDeserializer;
+import com.example.htmlmud.domain.model.template.json.RoomDescriptionDeserializer;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Builder;
