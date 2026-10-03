@@ -23,6 +23,27 @@ public record ClassTemplate(
     if (baseStats == null) baseStats = Map.of();
     if (traits == null) traits = Map.of();
     if (skills == null) skills = Map.of();
+    if (growth == null) growth = new ClassGrowth(20, 5, Map.of());
+    if (proficiencies == null) proficiencies = new ClassProficiencies(List.of(), List.of());
+  }
+
+  public com.example.htmlmud.domain.model.enums.ClassType toClassType() {
+    return com.example.htmlmud.domain.model.enums.ClassType.fromId(this.id);
+  }
+
+  public int getHpPerLevel() {
+    return growth != null ? growth.hpPerLevel() : 20;
+  }
+
+  public int getMpPerLevel() {
+    return growth != null ? growth.mpPerLevel() : 5;
+  }
+
+  public double getStatWeight(String statKey) {
+    if (growth == null || growth.statWeights() == null || statKey == null) {
+      return 0.0;
+    }
+    return growth.statWeights().getOrDefault(statKey.toUpperCase(), 0.0);
   }
 
   @JsonIgnoreProperties(ignoreUnknown = true)
@@ -30,11 +51,20 @@ public record ClassTemplate(
       int hpPerLevel,
       int mpPerLevel,
       Map<String, Double> statWeights
-  ) {}
+  ) {
+    public ClassGrowth {
+      if (statWeights == null) statWeights = Map.of();
+    }
+  }
 
   @JsonIgnoreProperties(ignoreUnknown = true)
   public record ClassProficiencies(
       List<String> armor,
       List<String> weapon
-  ) {}
+  ) {
+    public ClassProficiencies {
+      if (armor == null) armor = List.of();
+      if (weapon == null) weapon = List.of();
+    }
+  }
 }

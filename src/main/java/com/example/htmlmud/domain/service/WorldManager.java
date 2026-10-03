@@ -54,8 +54,10 @@ public class WorldManager {
 
   private final WorldEntityFactoryPort worldFactory; // 注入 Factory (Output Port)
 
+  @Getter
   private final TemplateReader templateReader;
 
+  @Getter
   private final TemplateRepository templateRepository;
 
   // 2. Runtime Actors: 存放正在運作的 RoomActor

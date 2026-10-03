@@ -19,19 +19,40 @@ public class MerchantBehavior implements MobBehavior {
     MobBehavior next = null;
     switch (msg) {
       case ActorMessage.OnPlayerEnter(var playerId) -> {
+        if (npc != null && npc.getCurrentRoom() != null) {
+          Player player = npc.getCurrentRoom().findLiving(playerId)
+              .filter(l -> l instanceof Player)
+              .map(l -> (Player) l)
+              .orElse(null);
+          if (player != null && player.isValid()) {
+            onPlayerEnter(npc, player);
+          }
+        }
       }
       case ActorMessage.OnPlayerFlee(var playerId, var direction) -> {
       }
       case ActorMessage.OnInteract(var playerId, var command) -> {
+        if (npc != null && npc.getCurrentRoom() != null) {
+          Player player = npc.getCurrentRoom().findLiving(playerId)
+              .filter(l -> l instanceof Player)
+              .map(l -> (Player) l)
+              .orElse(null);
+          if (player != null && player.isValid()) {
+            onInteract(npc, player, command);
+          }
+        }
       }
       case ActorMessage.AgroScan() -> {
       }
       case ActorMessage.RandomMove() -> {
       }
       case ActorMessage.Respawn() -> {
+        if (npc != null) {
+          npc.getAggroTable().clear();
+        }
       }
 
-      default -> log.warn("MerchantBehavior 收到無法處理的訊息: {} {}", npc.getName(), msg);
+      default -> log.warn("MerchantBehavior 收到無法處理的訊息: {} {}", npc != null ? npc.getName() : "null", msg);
     }
 
     return next;
@@ -40,27 +61,33 @@ public class MerchantBehavior implements MobBehavior {
   @Override
   public void onPlayerEnter(Mob npc, Player player) {
     // 禮貌性問候
-    npc.sayToRoom("歡迎光臨！需要買點什麼嗎？(輸入 'list' 查看商品)");
+    if (npc != null) {
+      npc.sayToRoom("歡迎光臨！需要買點什麼嗎？(輸入 'list' 查看商品)");
+    }
   }
 
   @Override
   public void onInteract(Mob npc, Player player, String command) {
+    if (npc == null) return;
     if ("list".equalsIgnoreCase(command)) {
-      // 顯示商品列表
-      // ShopService.showList(player, shopId);
-    } else if (command.startsWith("buy")) {
-      // 處理購買
+      npc.sayToRoom("客官請看貨架，所有好物均在此列。");
+    } else if (command != null && command.startsWith("buy")) {
+      npc.sayToRoom("多謝惠顧，貨真價實！");
     } else {
-      // 隨機講一句話
-      String dialog = npc.getTemplate().dialogues().iterator().next();
-      npc.sayToRoom(dialog);
+      // 隨機或預設講一句話 (防空保護)
+      if (npc.getTemplate() != null && npc.getTemplate().dialogues() != null && !npc.getTemplate().dialogues().isEmpty()) {
+        String dialog = npc.getTemplate().dialogues().iterator().next();
+        npc.sayToRoom(dialog);
+      } else {
+        npc.sayToRoom("本店誠信經營，童叟無欺。");
+      }
     }
   }
 
   @Override
   public void onDamaged(Mob npc, Living attacker) {
-    // 守衛邏輯：如果被打，可能呼叫警衛，或者單純不理會(因為無敵)
-    npc.sayToRoom("衛兵！有人在鬧事！");
-    // Spawn guards...
+    if (npc != null) {
+      npc.sayToRoom("衛兵！有人在鬧事！");
+    }
   }
 }

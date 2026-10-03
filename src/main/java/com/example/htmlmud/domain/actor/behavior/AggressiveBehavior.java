@@ -25,16 +25,48 @@ public class AggressiveBehavior implements MobBehavior {
     MobBehavior next = null;
     switch (msg) {
       case ActorMessage.OnPlayerEnter(var playerId) -> {
+        if (mob != null && mob.getCurrentRoom() != null) {
+          Player player = mob.getCurrentRoom().findLiving(playerId)
+              .filter(l -> l instanceof Player)
+              .map(l -> (Player) l)
+              .orElse(null);
+          if (player != null && player.isValid()) {
+            onPlayerEnter(mob, player);
+          }
+        }
       }
       case ActorMessage.OnPlayerFlee(var playerId, var direction) -> {
+        if (mob != null) {
+          mob.sayToRoom("休想逃跑！");
+        }
       }
       case ActorMessage.OnInteract(var playerId, var command) -> {
+        if (mob != null && mob.getCurrentRoom() != null) {
+          Player player = mob.getCurrentRoom().findLiving(playerId)
+              .filter(l -> l instanceof Player)
+              .map(l -> (Player) l)
+              .orElse(null);
+          if (player != null && player.isValid()) {
+            onInteract(mob, player, command);
+          }
+        }
       }
       case ActorMessage.AgroScan() -> {
+        if (mob != null && !mob.isInCombat() && mob.getCurrentRoom() != null) {
+          for (Player player : mob.getCurrentRoom().getPlayers()) {
+            if (player != null && player.isValid()) {
+              onPlayerEnter(mob, player);
+              break;
+            }
+          }
+        }
       }
       case ActorMessage.RandomMove() -> {
       }
       case ActorMessage.Respawn() -> {
+        if (mob != null) {
+          mob.getAggroTable().clear();
+        }
       }
 
       default -> log.warn("AggressiveBehavior 收到無法處理的訊息: {} {}", mob.getName(), msg);

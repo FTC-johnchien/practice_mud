@@ -123,15 +123,33 @@ public final class Mob extends Living {
 
   private void handleMobMessage(ActorMessage.MobMessage msg) {
     switch (msg) {
-      case ActorMessage.OnPlayerEnter(var playerId) -> behavior.handle(this, msg);
-      case ActorMessage.OnPlayerFlee(var playerId, var direction) -> behavior.handle(this, msg);
-      case ActorMessage.OnInteract(var playerId, var command) -> behavior.handle(this, msg);
+      case ActorMessage.OnPlayerEnter(var playerId) -> {
+        MobBehavior next = behavior != null ? behavior.handle(this, msg) : null;
+        if (next != null) this.behavior = next;
+      }
+      case ActorMessage.OnPlayerFlee(var playerId, var direction) -> {
+        MobBehavior next = behavior != null ? behavior.handle(this, msg) : null;
+        if (next != null) this.behavior = next;
+      }
+      case ActorMessage.OnInteract(var playerId, var command) -> {
+        MobBehavior next = behavior != null ? behavior.handle(this, msg) : null;
+        if (next != null) this.behavior = next;
+      }
       case ActorMessage.GetHighestAggroTarget(var future) -> {
         future.complete(service.getHighestAggroTarget(this));
       }
-      case ActorMessage.AgroScan() -> behavior.handle(this, msg);
-      case ActorMessage.RandomMove() -> behavior.handle(this, msg);
-      case ActorMessage.Respawn() -> behavior.handle(this, msg);
+      case ActorMessage.AgroScan() -> {
+        MobBehavior next = behavior != null ? behavior.handle(this, msg) : null;
+        if (next != null) this.behavior = next;
+      }
+      case ActorMessage.RandomMove() -> {
+        MobBehavior next = behavior != null ? behavior.handle(this, msg) : null;
+        if (next != null) this.behavior = next;
+      }
+      case ActorMessage.Respawn() -> {
+        MobBehavior next = behavior != null ? behavior.handle(this, msg) : null;
+        if (next != null) this.behavior = next;
+      }
     }
   }
 
@@ -260,34 +278,46 @@ public final class Mob extends Living {
 
 
   @Override
+  protected void handleTick(long tickCount, long time) {
+    super.handleTick(tickCount, time);
+    if (isValid() && !isInCombat() && behavior != null && tickCount % 50 == 0) {
+      behavior.onTick(this);
+      if (template != null && template.isAggressive()) {
+        this.send(new ActorMessage.AgroScan());
+      }
+    }
+  }
+
+  @Override
   protected void handleOnAttacked(String attackerId) {
     super.handleOnAttacked(attackerId);
     aggroTable.merge(attackerId, 1, Integer::sum);
+    if (behavior != null && getCurrentRoom() != null) {
+      Living attacker = getCurrentRoom().findLiving(attackerId).orElse(null);
+      if (attacker != null) {
+        behavior.onAttacked(this, attacker);
+      }
+    }
   }
 
   @Override
   protected void handleOnDamage(int amount, String attackerId) {
     super.handleOnDamage(amount, attackerId);
 
-    // log.info("增加仇恨 name:{} {}", attacker.getName(), amount);
     if (isValid()) {
       aggroTable.merge(attackerId, amount, Integer::sum);
+      if (behavior != null && getCurrentRoom() != null) {
+        Living attacker = getCurrentRoom().findLiving(attackerId).orElse(null);
+        if (attacker != null) {
+          behavior.onDamaged(this, attacker);
+        }
+      }
     }
   }
 
-
-
   // ---------------------------------------------------------------------------------------------
-
-
-
-  // ---------------------------------------------------------------------------------------------
-
-
 
   // 公開給外部呼叫的方法 --------------------------------------------------------------------------
-
-
 
   // 取得當前仇恨最高目標 ID
   public Optional<Living> getHighestAggroTarget() {
@@ -316,12 +346,21 @@ public final class Mob extends Living {
 
   // 行為層需要的輔助方法 (Facade)
   public void sayToRoom(String content) {
-    // 實作：取得當前 RoomActor 並廣播
-    // services.worldManager().getRoom(currentRoomId).broadcast(...)
+    Room room = getCurrentRoom();
+    if (room != null && content != null && !content.isBlank()) {
+      room.broadcastToOthers(this.getId(), this.getName() + "說道：「" + content + "」");
+    }
   }
 
   public void attack(Living target) {
-    // 實作：發送 AttackMessage 給 target
+    if (target == null || !target.isValid() || !this.isValid() || target.getId().equals(this.getId())) {
+      return;
+    }
+    if (getLivingService() != null) {
+      getLivingService().onAttacked(this, target.getId());
+      getLivingService().onAttacked(target, this.getId());
+      target.onAttacked(this.getId());
+    }
   }
 
 }

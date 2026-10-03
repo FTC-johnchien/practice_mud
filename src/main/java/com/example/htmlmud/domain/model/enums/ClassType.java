@@ -25,4 +25,19 @@ public enum ClassType {
   public String getDescription() {
     return description;
   }
+
+  public String getId() {
+    return this.name();
+  }
+
+  public static ClassType fromId(String id) {
+    if (id == null || id.isBlank()) {
+      return NONE;
+    }
+    try {
+      return ClassType.valueOf(id.trim().toUpperCase());
+    } catch (IllegalArgumentException e) {
+      return NONE;
+    }
+  }
 }

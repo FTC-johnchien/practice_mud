@@ -60,6 +60,20 @@ public final class Player extends Living {
   private String nickname;
 
   @Setter
+  private String classId = "SWORDSMAN";
+
+  public String getClassId() {
+    return (classId != null && !classId.isBlank()) ? classId : "SWORDSMAN";
+  }
+
+  public java.util.Optional<com.example.htmlmud.domain.model.template.ClassTemplate> getClassTemplate() {
+    if (this.manager != null && this.manager.getTemplateReader() != null) {
+      return this.manager.getTemplateReader().findClass(getClassId());
+    }
+    return java.util.Optional.empty();
+  }
+
+  @Setter
   private String lookDescription;
 
   // 當前的行為腦
@@ -445,6 +459,11 @@ public final class Player extends Living {
   }
 
   public void gainExp(int amount) {
+    if (this.service != null && this.service.getXpProgressionService() != null) {
+      this.service.getXpProgressionService().awardExp(this, amount);
+      this.sendStatUpdate();
+      return;
+    }
     this.send(new ActorMessage.GainExp(amount));
   }
 

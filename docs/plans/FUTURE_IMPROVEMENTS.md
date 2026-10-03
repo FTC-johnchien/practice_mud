@@ -152,9 +152,14 @@
 
 ---
 
-### 2.3 🟧 職業門派資料驅動 (`classes.json`) 串接 (P1)
-- `data/global/classes.json` 已定義職業屬性與成長模板，但後端部分邏輯仍依賴 `ClassType.java` 靜態列舉。
-- **改善方案**：新增 `ClassTemplate` 完整解析器，將升級成長係數完全由 JSON 控制。
+### 2.3 ✅ [已完成] 職業門派資料驅動 (`classes.json`) 串接 (P1)
+> **落地進度**：已於 2026-10-03 完成。
+> 1. `ClassTemplate` 完善屬性解析（`id`, `name`, `resourceType`, `baseStats`, `growth`, `proficiencies`, `traits`, `skills`），補齊防禦性預設建構與便利取值方法。
+> 2. `ClassType` 增強雙向互轉方法 `fromId(String)` 與 `getId()`，支援未知門派 fallback 到 `NONE` 與大小寫容錯；`ClassTemplate.toClassType()` 實現列舉與範本平滑互通。
+> 3. `TemplateRepository` 擴充 `findClass` / `getClassTemplate` 為全大小寫容錯查詢（原名/大寫/小寫），並於 `validateData()` 納入 6 大職業門派校驗統計。
+> 4. `Player` 實體新增門派屬性 `classId` 與 `getClassTemplate()`（預設為 `"SWORDSMAN"` 俠客）。
+> 5. `XpProgressionService` 注入 `TemplateReader`，將原本寫死之 `HP+25, MP+5, CON+1, STR+1` 成長係數徹底改由 `ClassTemplate.growth`（來自 `classes.json`）資料驅動計算；`Player` 與 `PartyMember` 統一共用 `applyClassGrowth` 精準階梯成長演算法。
+> 6. 新增專屬整合測試 `ClassProgressionDataDrivenTest`（5 項測試全數通過），全專案 225 項測試 100% 綠燈通過。
 
 ### 2.4 🟨 夥伴初始套路 (`learnedStances`) 與貨棧商品 (`INN_GOODS`) 資料驅動 (P2)
 - 擴充 `default_companions.json` 增加 `"learnedStances": [...]` 欄位，移除 `PartyService` 代碼保底給予。
@@ -193,13 +198,20 @@
 
 ## 🧟 4. MUD 端空殼機制補完 (Skeleton Mechanisms) — Priority: P1 / P2
 
-### 4.1 🟥 Mob 基礎行為與反應補完 (P1)
-- **`Mob.sayToRoom()` 與 `Mob.attack()`**：補完空殼方法，使怪物具備在房間說話與主動開戰能力。
-- **`MobBehavior.handle()` 各 Case 補完**：為 `AggressiveBehavior`、`PassiveBehavior`、`MerchantBehavior` 補齊 `OnPlayerEnter`、`AgroScan`、`RandomMove`、`Respawn` 等具體實現。
+### 4.1 ✅ [已完成] Mob 基礎行為與反應補完 (MUD-01) (P1)
+> **落地進度**：已於 2026-10-03 完成。
+> 1. `Mob` 補完 `sayToRoom(String)` 與 `attack(Living)` 門面方法，具備透過房間向非本人廣播喊話與雙向戰鬥鎖定/入戰功能。
+> 2. `Mob` 擴展 `handleTick`（主動怪每 5 秒週期發動 `AgroScan`、被動怪觸發閒話）、`handleOnAttacked`、`handleOnDamage` 同步仇恨並呼叫 `behavior.onAttacked` / `onDamaged`。
+> 3. `AggressiveBehavior` 實作 `OnPlayerEnter`、`AgroScan`、`OnInteract` 主動撲咬開戰與反擊。
+> 4. `PassiveBehavior` 實作 `OnInteract` 讀取模板對話回覆、`onTick` 隨機碎碎念、`onDamaged` 呼喊反擊。
+> 5. `MerchantBehavior` 實作 `OnPlayerEnter` 迎賓招呼、`OnInteract` 導引 list/buy 與對話、`onDamaged` 呼叫衛兵求救。
 
-### 4.2 🟥 MUD 端角色升級 (Player Level Up) 路徑閉環 (P1)
-- `Player.GainExp` 補回等級檢定與升級觸發。
-- 實作 `Player.levelUp()` 與 `LivingStateService.processLevelUp()`，完成 MUD 端角色升級廣播與屬性刷新。
+### 4.2 ✅ [已完成] MUD 端角色升級 (Player Level Up) 與經驗掉落閉環 (MUD-02) (P1)
+> **落地進度**：已於 2026-10-03 完成。
+> 1. 打通怪物擊殺經驗閉環：`LivingService.onDeath` 中當 Mob 死亡且擊殺者是 Player 時，依 `XpProgressionService.calculateMobExpReward` 計算擊殺修為。
+> 2. 串接 `XpProgressionService.awardExp(player, expReward)` 進行升級突破判定、屬性成長、全狀態回滿、發放 +2 自由修為點數與廣播升級提示。
+> 3. `Player.gainExp` 支援同步調用 `XpProgressionService.awardExp` 與發送屬性狀態更新通知。
+> 4. 新增整合測試 `MudMobAiAndProgressionTest`（包含喊話入戰、主動怪進場攻擊、商人求救、擊殺升級突破全閉環），全專案 224 項測試 100% 綠燈通過。
 
 ### 4.3 🟧 MUD 端 Buff / Debuff 引擎串接 (P1)
 - 補完 `ActorMessage.BuffEffect` 處理。

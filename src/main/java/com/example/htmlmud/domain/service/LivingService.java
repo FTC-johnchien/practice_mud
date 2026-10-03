@@ -44,6 +44,20 @@ public class LivingService {
 
   private final ObjectProvider<GameStateBroadcastService> broadcastServiceProvider;
 
+  @org.springframework.beans.factory.annotation.Autowired(required = false)
+  private XpProgressionService xpProgressionService;
+
+  public XpProgressionService getXpProgressionService() {
+    if (xpProgressionService == null) {
+      xpProgressionService = new XpProgressionService();
+    }
+    return xpProgressionService;
+  }
+
+  public void setXpProgressionService(XpProgressionService xpProgressionService) {
+    this.xpProgressionService = xpProgressionService;
+  }
+
 
 
   public void tick(Living self, long tickCount, long time) {
@@ -183,6 +197,15 @@ public class LivingService {
             messageTemplate = "\u001B[1;32m💥 $N 被擊敗倒地，戰利品散落在地，化為 " + lootPouch.getName() + "！\u001B[0m";
           }
         }
+      }
+
+      // 若擊殺者為玩家，結算修為經驗值並發放給玩家 (MUD-02)
+      if (killer instanceof Player player && player.isValid()) {
+        int mobLevel = (mob.getStats() != null) ? mob.getStats().getLevel() : 1;
+        int playerLevel = (player.getStats() != null) ? player.getStats().getLevel() : 1;
+        int expReward = getXpProgressionService().calculateMobExpReward(mobLevel, playerLevel);
+        player.gainExp(expReward);
+        player.reply("\u001B[1;32m你擊敗了 " + mob.getName() + "，獲得了 " + expReward + " 點修為經驗！\u001B[0m");
       }
     } else {
       // 玩家死亡時保留屍體轉移裝備遺物

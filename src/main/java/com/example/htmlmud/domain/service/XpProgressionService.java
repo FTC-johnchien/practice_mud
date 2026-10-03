@@ -16,6 +16,24 @@ import com.example.htmlmud.domain.party.model.PartyMember;
 @Service
 public class XpProgressionService {
 
+  private final com.example.htmlmud.domain.repository.TemplateReader templateReader;
+
+  @org.springframework.beans.factory.annotation.Autowired
+  public XpProgressionService(com.example.htmlmud.domain.repository.TemplateReader templateReader) {
+    this.templateReader = templateReader;
+  }
+
+  public XpProgressionService() {
+    this(new TemplateCatalog());
+  }
+
+  public java.util.Optional<ClassTemplate> resolveClassTemplate(String classId) {
+    if (classId == null || classId.isBlank() || templateReader == null) {
+      return java.util.Optional.empty();
+    }
+    return templateReader.findClass(classId);
+  }
+
   public record LevelUpResult(
       String memberName,
       int oldLevel,
@@ -175,19 +193,19 @@ public class XpProgressionService {
     int freePointsEarned = 0;
     Map<String, Integer> totalStatDeltas = new LinkedHashMap<>();
 
+    // 取得職業模板 (由 classes.json 驅動)
+    String classId = player.getClassId();
+    ClassTemplate classTpl = resolveClassTemplate(classId).orElse(null);
+
     while (stats.getExp() >= stats.getNextLevelExp() && currentLevel < 1000) {
       stats.setExp((int) (stats.getExp() - stats.getNextLevelExp()));
+      int prevL = currentLevel;
       currentLevel++;
       stats.setLevel(currentLevel);
       stats.setNextLevelExp(calculateNextLevelExp(currentLevel));
 
-      // 玩家基礎屬性成長 (HP +25, MP +5, 體質+1, 力量+1)
-      stats.setMaxHp(stats.getMaxHp() + 25);
-      stats.setMaxMp(stats.getMaxMp() + 5);
-      stats.setCon(stats.getCon() + 1);
-      stats.setStr(stats.getStr() + 1);
-      totalStatDeltas.merge("CON", 1, Integer::sum);
-      totalStatDeltas.merge("STR", 1, Integer::sum);
+      // 玩家職業屬性成長 (由 ClassTemplate 驅動)
+      applyClassGrowth(stats, classTpl, prevL, currentLevel, totalStatDeltas);
 
       // 主角專屬 +2 自由分配點數
       stats.setFreeStatPoints(stats.getFreeStatPoints() + 2);
@@ -230,6 +248,10 @@ public class XpProgressionService {
     Map<String, Integer> totalStatDeltas = new LinkedHashMap<>();
     boolean isLeader = member.isLeader();
 
+    ClassTemplate classTpl = member.getClassTemplate()
+        .or(() -> resolveClassTemplate(member.getClassId()))
+        .orElse(null);
+
     while (stats.getExp() >= stats.getNextLevelExp() && currentLevel < 1000) {
       stats.setExp((int) (stats.getExp() - stats.getNextLevelExp()));
       int prevL = currentLevel;
@@ -237,8 +259,8 @@ public class XpProgressionService {
       stats.setLevel(currentLevel);
       stats.setNextLevelExp(calculateNextLevelExp(currentLevel));
 
-      // 應用職業基礎成長
-      applyLevelGrowth(member, prevL, currentLevel, totalStatDeltas);
+      // 應用職業基礎成長 (由 ClassTemplate 驅動)
+      applyClassGrowth(stats, classTpl, prevL, currentLevel, totalStatDeltas);
 
       // 主角額外獲得 +2 自由分配點數
       if (isLeader) {
@@ -255,26 +277,24 @@ public class XpProgressionService {
   }
 
   /**
-   * 應用職業自適應成長數值
+   * 應用職業自適應成長數值 (完全資料驅動，由 classes.json 控制)
    */
-  private void applyLevelGrowth(PartyMember member, int fromLevel, int toLevel, Map<String, Integer> totalDeltas) {
-    LivingStats stats = member.getStats();
-    int hpGain = 25;
+  public void applyClassGrowth(LivingStats stats, ClassTemplate classTpl, int fromLevel, int toLevel, Map<String, Integer> totalDeltas) {
+    int hpGain = 20;
     int mpGain = 5;
     Map<String, Double> weights = Map.of(
-        "CON", 2.0,
-        "STR", 1.5,
+        "CON", 1.0,
+        "STR", 1.0,
         "DEX", 1.0,
-        "INT", 0.5,
+        "INT", 0.0,
         "WIS", 0.0
     );
 
-    var classOpt = member.getClassTemplate();
-    if (classOpt.isPresent() && classOpt.get().growth() != null) {
-      ClassTemplate.ClassGrowth growth = classOpt.get().growth();
+    if (classTpl != null && classTpl.growth() != null) {
+      ClassTemplate.ClassGrowth growth = classTpl.growth();
       hpGain = growth.hpPerLevel();
       mpGain = growth.mpPerLevel();
-      if (growth.statWeights() != null) {
+      if (growth.statWeights() != null && !growth.statWeights().isEmpty()) {
         weights = growth.statWeights();
       }
     }

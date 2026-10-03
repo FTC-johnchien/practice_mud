@@ -368,8 +368,11 @@ public class TemplateRepository implements TemplateReader {
   }
   public void registerClass(ClassTemplate tpl) { addClass(tpl); }
   public Optional<ClassTemplate> getClassTemplate(String id) {
-    if (id == null) return Optional.empty();
-    return Optional.ofNullable(classTemplates.get(id));
+    if (id == null || id.isBlank()) return Optional.empty();
+    ClassTemplate found = classTemplates.get(id);
+    if (found == null) found = classTemplates.get(id.toLowerCase());
+    if (found == null) found = classTemplates.get(id.toUpperCase());
+    return Optional.ofNullable(found);
   }
   @Override
   public Optional<ClassTemplate> findClass(String id) { return getClassTemplate(id); }
@@ -440,7 +443,8 @@ public class TemplateRepository implements TemplateReader {
             entry.getValue(), entry.getKey());
       }
     }
-    log.info("TemplateRepository validation complete. Loaded: {} zones, {} rooms, {} mobs, {} items, {} skills, {} races",
-        zoneTemplates.size(), roomTemplates.size(), mobTemplates.size(), itemTemplates.size(), skillTemplates.size(), raceTemplates.size());
+    log.info("TemplateRepository validation complete. Loaded: {} zones, {} rooms, {} mobs, {} items, {} skills, {} races, {} classes",
+        zoneTemplates.size(), roomTemplates.size(), mobTemplates.size(), itemTemplates.size(), skillTemplates.size(), raceTemplates.size(),
+        classTemplates.values().stream().map(ClassTemplate::id).distinct().count());
   }
 }
