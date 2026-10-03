@@ -214,7 +214,8 @@
     },
     "traits": {
       "parryBonus": 0.1,
-      "attackSpeedMod": 0.05
+      "attackSpeedMod": 0.05,
+      "canRiposte": true
     },
     "skills": {
       "basic_sword": 1,

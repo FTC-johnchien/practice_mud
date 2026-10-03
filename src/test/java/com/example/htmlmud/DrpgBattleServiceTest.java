@@ -13,6 +13,7 @@ import com.example.htmlmud.domain.dungeon.battle.DrpgBattleService;
 import com.example.htmlmud.domain.dungeon.model.Direction;
 import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
 import com.example.htmlmud.domain.dungeon.service.DungeonManager;
+import com.example.htmlmud.domain.dungeon.battle.BattleState;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.CombatResourceType;
@@ -35,12 +36,24 @@ class DrpgBattleServiceTest {
 
   @BeforeEach
   void setUp() {
+    BattleContext oldCtx = battleService.getBattle("tester");
+    if (oldCtx != null) {
+      oldCtx.setState(BattleState.VICTORY);
+    }
     partyService.clearCache();
     dummyPlayer = mock(Player.class);
     when(dummyPlayer.getName()).thenReturn("tester");
     when(dummyPlayer.isValid()).thenReturn(true);
 
     dungeonPos = new DungeonPosition("taiyin_tomb_b1f", 1, 1, Direction.NORTH, 10, 10);
+  }
+
+  @org.junit.jupiter.api.AfterEach
+  void tearDown() {
+    BattleContext ctx = battleService.getBattle("tester");
+    if (ctx != null) {
+      ctx.setState(BattleState.VICTORY);
+    }
   }
 
   @Test
@@ -76,6 +89,8 @@ class DrpgBattleServiceTest {
     PartyMember leader = ctx.getParty().getMembers().get(0);
     PartyMember iron = ctx.getParty().getMembers().get(1);
     PartyMember ling = ctx.getParty().getMembers().get(3);
+    ctx.getParty().getMembers().forEach(m -> m.setNextAttackTime(System.currentTimeMillis() + 600000L));
+    ctx.getEnemies().forEach(e -> e.setNextAttackTime(System.currentTimeMillis() + 600000L));
 
     // 1. 燕青/主角 COMBO 技能 (先裝備劍)
     leader.getEquipment().put(com.example.htmlmud.domain.model.enums.EquipmentSlot.MAIN_HAND,

@@ -65,6 +65,8 @@ public class PartyMemberSkill {
   private java.util.List<String> tags = java.util.List.of();
   @Builder.Default
   private java.util.List<String> allowedWeapons = java.util.List.of();
+  @Builder.Default
+  private java.util.List<String> aliases = java.util.List.of();
 
   // Phase 11: 戰鬥狀態機、GCD 與施法唱條屬性
   @Builder.Default

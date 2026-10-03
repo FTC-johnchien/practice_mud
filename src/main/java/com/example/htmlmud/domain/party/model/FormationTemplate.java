@@ -60,33 +60,29 @@ public class FormationTemplate {
     String actual = (member.getClassId() != null) ? member.getClassId().toUpperCase() : "";
     String req = reqClass.trim().toUpperCase();
     if (actual.equals(req)) return true;
-    if (req.equals("WARRIOR") || req.equals("TANK") || req.equals("戰") || req.equals("戰士")) {
-      return actual.equals("WARRIOR") || actual.equals("SWORDSMAN")
-          || (member.getRoleTitle() != null && (member.getRoleTitle().contains("體修") || member.getRoleTitle().contains("力士")));
+
+    com.example.htmlmud.domain.model.enums.RoleCategory reqCategory =
+        com.example.htmlmud.domain.model.enums.RoleCategory.parseRequirement(req);
+    if (reqCategory != null) {
+      com.example.htmlmud.domain.model.enums.RoleCategory memberCategory =
+          com.example.htmlmud.domain.model.enums.RoleCategory.fromClassOrRole(member.getClassId(), member.getRoleTitle());
+      if (memberCategory == reqCategory) return true;
+      // 容錯：若需求為 TANK，SWORDSMAN 作為前排亦可相容
+      if (reqCategory == com.example.htmlmud.domain.model.enums.RoleCategory.TANK && "SWORDSMAN".equals(actual)) {
+        return true;
+      }
     }
-    if (req.equals("MAGE") || req.equals("WIZARD") || req.equals("法") || req.equals("法師")) {
-      return actual.equals("MAGE") || actual.equals("TAOIST")
-          || (member.getRoleTitle() != null && (member.getRoleTitle().contains("符修") || member.getRoleTitle().contains("法修")));
-    }
-    if (req.equals("CLERIC") || req.equals("HEALER") || req.equals("牧") || req.equals("牧師")) {
-      return actual.equals("CLERIC")
-          || (member.getRoleTitle() != null && (member.getRoleTitle().contains("丹修") || member.getRoleTitle().contains("靈醫") || member.getRoleTitle().contains("醫仙")));
-    }
-    if (req.equals("ROGUE") || req.equals("RANGER") || req.equals("遊俠") || req.equals("刺客")) {
-      return actual.equals("ROGUE")
-          || (member.getRoleTitle() != null && member.getRoleTitle().contains("遊俠"));
-    }
+
     return actual.contains(req);
   }
 
   public static String formatClassName(String raw) {
     if (raw == null) return "";
-    return switch (raw.toUpperCase()) {
-      case "WARRIOR", "TANK", "戰", "戰士" -> "戰士(體修/肉盾)";
-      case "MAGE", "WIZARD", "法", "法師" -> "法師(符修/法修)";
-      case "CLERIC", "HEALER", "牧", "牧師" -> "牧師(丹修/靈醫)";
-      case "ROGUE", "RANGER", "遊俠", "刺客" -> "遊俠(刺客)";
-      default -> raw;
-    };
+    com.example.htmlmud.domain.model.enums.RoleCategory cat =
+        com.example.htmlmud.domain.model.enums.RoleCategory.parseRequirement(raw);
+    if (cat != null) {
+      return cat.getDisplayName() + "(" + cat.getRoleDescription() + ")";
+    }
+    return raw;
   }
 }

@@ -42,6 +42,7 @@ public class TemplateRepository implements TemplateRegistryPort {
   private final Map<String, CompanionTemplate> companionTemplates = new ConcurrentHashMap<>();
   private final Map<String, FormationTemplate> formationTemplates = new ConcurrentHashMap<>();
   private final Map<String, PartyMemberSkill> partySkillTemplates = new ConcurrentHashMap<>();
+  private final Map<String, String> skillAliasMap = new ConcurrentHashMap<>();
   private final Map<String, ClassTemplate> classTemplates = new ConcurrentHashMap<>();
   private final Map<String, ShopTemplate> shopTemplates = new ConcurrentHashMap<>();
 
@@ -327,7 +328,17 @@ public class TemplateRepository implements TemplateRegistryPort {
 
   // --- PartySkill ---
   public void addPartySkill(PartyMemberSkill skill) {
-    if (skill != null && skill.getId() != null) partySkillTemplates.put(skill.getId(), skill);
+    if (skill != null && skill.getId() != null) {
+      partySkillTemplates.put(skill.getId(), skill);
+      if (skill.getAliases() != null) {
+        for (String alias : skill.getAliases()) {
+          if (alias != null && !alias.isBlank()) {
+            skillAliasMap.put(alias.toLowerCase(), skill.getId());
+            skillAliasMap.put(skill.getId().toLowerCase(), alias);
+          }
+        }
+      }
+    }
   }
   public void registerPartySkill(PartyMemberSkill skill) { addPartySkill(skill); }
   public Optional<PartyMemberSkill> getPartySkill(String id) {
@@ -340,15 +351,13 @@ public class TemplateRepository implements TemplateRegistryPort {
     if (sTpl != null) {
       return Optional.of(PartyMemberSkill.fromSkillTemplate(sTpl));
     }
-    // 支援舊名稱與新職業技能別名映射
-    String alias = switch (id.toLowerCase()) {
-      case "tank_taunt" -> "class_warrior_taunt";
-      case "heal_single" -> "class_cleric_heal";
-      case "heal_all_purify" -> "class_cleric_purify";
-      case "taoist_seal" -> "class_taoist_seal";
-      default -> null;
-    };
-    if (alias != null) {
+    // 支援資料驅動別名表映射
+    String alias = skillAliasMap.get(id.toLowerCase());
+    if (alias != null && !alias.equalsIgnoreCase(id)) {
+      PartyMemberSkill aliasedSkill = partySkillTemplates.get(alias);
+      if (aliasedSkill != null) {
+        return Optional.of(aliasedSkill);
+      }
       SkillTemplate aliasTpl = skillTemplates.get(alias);
       if (aliasTpl != null) {
         PartyMemberSkill adapted = PartyMemberSkill.fromSkillTemplate(aliasTpl);
@@ -357,6 +366,11 @@ public class TemplateRepository implements TemplateRegistryPort {
       }
     }
     return Optional.empty();
+  }
+  @Override
+  public String resolveSkillAlias(String skillId) {
+    if (skillId == null) return null;
+    return skillAliasMap.get(skillId.toLowerCase());
   }
   @Override
   public Optional<PartyMemberSkill> findPartySkill(String id) { return getPartySkill(id); }

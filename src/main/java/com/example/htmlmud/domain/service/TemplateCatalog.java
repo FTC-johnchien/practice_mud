@@ -157,6 +157,11 @@ public class TemplateCatalog implements TemplateReader {
     return templateReader != null ? templateReader.getAllCompanions() : Collections.emptyMap();
   }
 
+  @Override
+  public String resolveSkillAlias(String skillId) {
+    return templateReader != null ? templateReader.resolveSkillAlias(skillId) : null;
+  }
+
   private Optional<String> normalize(String rawId) {
     if (rawId == null) {
       return Optional.empty();

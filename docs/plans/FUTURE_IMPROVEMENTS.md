@@ -2,21 +2,24 @@
 
 > **文件定位與目的**：
 > 本文件作為專案所有後續架構演進、機制補完、安全加固與重構任務的**單一權威來源 (Single Source of Truth, SSoT)**。
-> 完整收斂並整合了歷史架構規劃與各模型之深度代碼審查報告：
-> 1. **戰鬥與成長機制** (源自 `2026-09-18_combat_logic_damage_parry_dodge_and_growth.md`)
-> 2. **全實體資料驅動** (源自 `2026-09-18_data_driven_architecture_and_entity_relations.md`)
-> 3. **共用標準模型** (源自 `2026-09-22_shared_canonical_model_execution_plan.md`)
-> 4. **歷史深度架構審查報告** (整合並收斂 `Claude_Code_Review.md`、`Gemini_Code_Review.md`、`Copilot_Code_Review.md` 與 `Codex_Code_Review.md`)
+> 完整收斂並整合了歷史架構規劃與三大模型之深度代碼審查報告（`Claude_Code_Review.md`、`Copilot_Code_Review.md` 與 `Codex_Code_Review.md`）：
+> 1. **戰鬥與成長機制** (圓桌判定、魂系精力破防、主角自由潛能點、MUD 生靈閉環)
+> 2. **全實體資料驅動** (去除職業/陣型/反擊/別名硬編碼、集中式 JSON 啟動校驗)
+> 3. **共用規範模型與清潔架構** (Canonical Model、Domain 依賴反向、Actor 狀態邊界單一擁有)
+> 4. **連線安全與部署防禦** (WebSocket 身分票證、訊息長度與速率限制、部署模式明確化)
+> 5. **存檔版本治理與防損壞** (SaveData `schemaVersion`、遷移適配器、損壞槽位可識別)
+> 6. **前端模組化與代碼收斂** (巨石 `style.css` 拆分、`party-modal.js` 職責切分、legacy 模組除役)
+> 7. **測試工程分層加速** (領域純單元測試 vs Spring 整合測試、快取隔離)
 >
-> 經與當前程式庫（Java 21/25 Spring Boot / ES6 前端）精準比對，剔除已完成項目、修正過往宣稱完成之殘留缺陷，並按優先級（P0 ~ P3）與業務領域結構化整理，供後續開發與重構直接依序落地。
+> 經與當前程式庫（Java 25 / Spring Boot 4.1.1 / ES6 前端 / 231 項全綠燈測試）實地盤查與交叉校對，剔除已完成項目、修正歷史過期數據（如修正 CSS 5,810 行、party-modal 3,141 行），按優先級（P0 ~ P3）與業務領域結構化整理，供後續開發與重構直接依序落地。
 
 ---
 
 ## 📌 歷史演進指針 (Historical Records)
 
-> 💡 **已完成里程碑與歷史變更**：  
-> 本專案所有已落地之里程碑（Phase 0 ~ Phase 11.5 主選單重構）、Bug 修復與架構升級歷程，已全數移轉至專門文件維護：  
-> 👉 **請參閱 [`CHANGELOG.md`](../../CHANGELOG.md)**。  
+> 💡 **已完成里程碑與歷史變更**：
+> 本專案所有已落地之里程碑（Phase 0 ~ Phase 11.5 主選單重構）、Bug 修復與架構升級歷程，已全數移轉至專門文件維護：
+> 👉 **請參閱 [`CHANGELOG.md`](../../CHANGELOG.md)**。
 > 本文件僅專注於**「未決定議題、待執行架構任務與後續演化路線圖」**。
 
 ---
@@ -24,23 +27,21 @@
 ## 🧭 後續推薦實施路徑 (Next Evolution Paths)
 
 - [x] **路徑 0: 緊急程式與安全漏洞修復 (Hotfixes & Hardening)** (§0 全項)
-- [ ] **路徑 A: 共用 Canonical Model 徹底解耦 (Phase 2 ~ 5)** (§1 全項)
-- [ ] **路徑 B: 全域數值配置與硬編碼消除 (GameConfig)** (§2 全項)
-- [ ] **路徑 C: 戰鬥圓桌判定、盾牌格擋與精力/成長機制補完** (§3 全項)
-- [ ] **路徑 D: MUD 端 13 項空殼機制補完** (§4 全項)
-- [ ] **路徑 E: UI/UX 全域佈局重構、三種資訊密度與字級規範 (>= 13px)** (§5 全項)
-- [ ] **路徑 F: 領域邊界深化與反向依賴反轉 (Phase 10)** (§6 全項)
-- [ ] **路徑 G: 前端安全 XSS 轉義、CSP 事件委派與巨石 CSS 模組化** (§7 全項)
-- [ ] **路徑 H: 基礎設施持久化加固與優雅關閉** (§8 全項)
-- [ ] **路徑 I: 網路安全配額與啟動期資料校驗** (§9 全項)
-- [x] **路徑 J: 文件真理源與目錄結構治理** (§10 全項)
+- [x] **路徑 A: 共用 Canonical Model 徹底解耦 (Phase 2 ~ 5)** (§1 全項)
+- [x] **路徑 B: 戰鬥圓桌判定、盾牌格擋、魂系精力破防與主角雙軌升級** (§2 全項)
+- [x] **路徑 C: MUD 端生靈 AI、升級閉環、Buff 引擎與規則補齊** (§3 全項)
+- [x] **路徑 D: UI/UX 全域佈局重構、三種資訊密度、字級規範 (>= 13px) 與雙軌資源契約** (§4 全項)
+- [x] **路徑 E: 領域層反向依賴反轉 (Clean Architecture Phase 10)** (§5.1)
+- [ ] **路徑 F: 網路邊界安全、WebSocket 部署防護與連線配額** (§6 全項) — **Priority: P1**
+- [ ] **路徑 G: Actor 狀態修改單一擁有權與背景戰鬥生命週期治理** (§7 全項) — **Priority: P1**
+- [ ] **路徑 H: 檔案式存檔版本治理 (`schemaVersion`) 與壞檔防禦** (§8 全項) — **Priority: P1**
+- [ ] **路徑 I: 徹底資料驅動消除硬編碼與集中式 JSON 啟動拓撲校驗** (§9 全項) — **Priority: P1**
+- [ ] **路徑 J: 前端巨石模組拆分 (`style.css` / `party-modal.js`) 與 Legacy 除役** (§10 全項) — **Priority: P2**
+- [ ] **路徑 K: 測試工程分層加速與系統可觀測性** (§11 全項) — **Priority: P3**
 
 ---
 
-## 🚨 0. 緊急核心修復與安全性加固 (Critical Hotfixes & Hardening) — Priority: P0
-
-> **來源**：`Codex_Code_Review.md`、`Copilot_Code_Review.md` 深度抽查實地驗證。
-> 針對當前系統已存在之資料遺失風險、戰鬥數學溢出與安全漏洞進行第一優先修復。
+## 🚨 0. 緊急核心修復與安全性加固 (Critical Hotfixes & Hardening) — Priority: P0 (已完成)
 
 ### 0.1 ✅ [已完成] 房間狀態與地面掉落物持久化閉環 (P0)
 > **落地進度**：已於 2026-10-02 完成。
@@ -67,370 +68,284 @@
 ### 0.4 ✅ [已完成] 前端資料輸出轉義與 CSP 事件委派整頓 (P0)
 > **落地進度**：已於 2026-10-02 完成。
 > 1. `party-modal.js` Gambit 戰術方針動態插值（`conditionLabel`、`targetLabel`、`skillName`、`valDisplay`）全面導入 `escapeHtml()` 轉義防禦。
-> 2. `index.html` 移除全數 53 個 inline `onclick` 與 `on*=` 屬性，全面改為 `data-action` 屬性。
+> 2. `index.html` 移除全數 inline `onclick` 與 `on*=` 屬性，全面改為 `data-action` 屬性。
 > 3. `app.js` 實作全局集中式事件委派 (`initEventDelegation()`)，支援背景遮罩關閉、選單跳轉、快捷指令發送，徹底滿足嚴格 Content Security Policy (CSP) 規範。
 
 ---
 
-## 🏛️ 1. 共用 Canonical Model 實施計畫 (Canonical Model Decoupling) — Priority: P1
-
-> **來源**：`2026-09-22_shared_canonical_model_execution_plan.md`
-> **核心目標**：讓 MUD 世界模式與 DRPG 小隊模式共用「內容定義、ID 與可持久化狀態」，保留各自的戰鬥迴圈與 DTO，杜絕雙向任意複製與靜態查表。
+## 🏛️ 1. 共用 Canonical Model 徹底解耦 (Canonical Model Decoupling) — Priority: P1 (已完成)
 
 ### 1.1 ✅ [已完成] Phase 2: Canonical Item Model (`ItemDefinition` + `ItemInstance` + `ItemView`) (P1)
-> **落地進度**：已於 2026-10-02 完成。
-> 1. 建立不可變 `ItemDefinition` record，作為所有靜態定義之唯一來源，統一解析圖示、裝備槽位、傷害加成與消耗品效果。
-> 2. 建立純運行期實體 `ItemInstance`，持有 instanceId、definitionId、數量、耐久度、強化等級與動態詞綴。
-> 3. 建立不可變展示視圖 `ItemView`，由 `ItemDefinition` 與 `ItemInstance` 動態合成，杜絕可變性洩漏。
-> 4. 建立 Spring 託管之 `ItemFactory`，統一管理物品實體、道核遺物與槽位創建。
-> 5. 重構 `PartyItemSlot` 全面委派至 `ItemDefinition`，並於 `PartyInventory` 徹底移除 substring 猜測硬編碼。
-> 6. 新增專屬單元測試 `CanonicalItemModelTest` (7 測試項) 100% 綠燈通過。
+> **落地進度**：已於 2026-10-02 完成。不可變 `ItemDefinition` record、`ItemInstance` 實體、`ItemView` 投影與 Spring 託管之 `ItemFactory`，`CanonicalItemModelTest` 全數通過。
 
 ### 1.2 ✅ [已完成] Phase 3: 統一技能定義 Single `SkillDefinition` (MUD / DRPG Facets) (P1)
-> **落地進度**：已於 2026-10-03 完成。
-> 1. 建立規範化技能模型 `SkillDefinition` 與不可變切面 `MudSkillRules` (招式、消耗、倍率、連招、反擊) 及 `DrpgSkillRules` (小隊戰術、GCD、詠唱、仇恨、治療、護盾、異常)。
-> 2. 建立不可變橋接規則 `SkillBridgeRule`，支援以等級為門檻資料驅動解鎖 DRPG 技能 ID。
-> 3. `SkillTemplate` 新增 `bridges` 設定與 `toDefinition()` 工廠方法，並支援 `resolveDefaultBridges` 預設規則庫開箱相容。
-> 4. `SkillBridgeService` 重構為純資料驅動查表 (`mapMudSkillToDrpgSkills`, `getPrerequisiteMudSkills`)，徹底廢除寫死之 switch/if-else。
-> 5. 新增 `CanonicalSkillModelTest` (4 測試項) 100% 綠燈通過。
+> **落地進度**：已於 2026-10-03 完成。`SkillDefinition`、`MudSkillRules`、`DrpgSkillRules`、`SkillBridgeRule`，徹底廢除寫死之 switch/if-else，`CanonicalSkillModelTest` 通過。
 
 ### 1.3 ✅ [已完成] Phase 4: 徹底移除 `TemplateRepository` 靜態呼叫 (DI Migration) (P1)
-> **落地進度**：已於 2026-10-03 完成。
-> 1. `TemplateRepository` 重構為純非靜態 Spring `@Component`，移除了所有 `static final Map`、`INSTANCE` 單例及 static delegate 方法，直接實作 `TemplateReader` 埠。
-> 2. `TemplateCatalog` 標註 `@Primary @Service`，由 Spring 依賴注入管理；非 Spring 環境 fallback 保留獨立實例隔離。
-> 3. `WorldManager` 注入 `TemplateRepository`，完全以實例方法進行物品、技能、怪物、區域、房間、商店註冊與資料校驗。
-> 4. `PartyService` 建構子標註 `@Autowired`，確保 Spring 容器注入正規 `TemplateReader`。
-> 5. 所有 SpringBoot 整合測試徹底移除 `TemplateRepository.` 靜態呼叫，全專案自動化測試 211 項測試 100% 綠燈通過。
+> **落地進度**：已於 2026-10-03 完成。`TemplateRepository` 重構為純 Spring `@Component` 實作 `TemplateReader`，移除靜態 Map 與單例，全整合測試注入實例。
 
-- **現存缺陷 (已根治)**：
-  - ~~`TemplateRepository` 仍持有靜態 Map 快取 (`static final Map`) 與單例實例 (`INSTANCE`)。~~
-  - ~~專案中仍有呼叫點依賴靜態查詢或建構子 fallback (`new TemplateCatalog()`)，導致 Spring 管理生命週期不純淨且跨測試共享狀態。~~
-- **改善方案**：
-  1. 將 `TemplateRepository` 改為純 Spring 管理的非靜態 Bean，全面落實 `TemplateReader` port。
-  2. 所有 Service、Factory、Adapter 均透過 Constructor Injection 取得 `TemplateReader`。
-  3. 刪除所有 static map 與 static delegate 方法，單元測試注入 `InMemoryTemplateReader`。
-
-### 1.4 ✅ [已完成] Phase 5: 基於 Outcome 的角色同步機制 (Outcome-based Character Synchronization) (P1)
-> **落地進度**：已於 2026-10-03 完成。
-> 1. 新增不可變 Record `BattleParticipantSnapshot`，開戰前深度隔離 Player 屬性與技能資料，不持有 Player 物件或 LivingStats 引用。
-> 2. 新增不可變 Record `BattleOutcome` 與 Spring 服務 `BattleOutcomeApplier`，內建 LRU 冪等快取（防重放/重複發獎），支援戰後狀態單向安全套用。
-> 3. 重構 `CharacterSyncService`，開戰與戰後全面改走 Snapshot / Outcome 機制，徹底消除雙向同步與 Actor 併發競態風險。
-> 4. 新增專屬整合測試 `OutcomeBasedCharacterSyncTest`（快照隔離、冪等結算、升級增量、端到端閉環 4 測試項），全專案 215 項測試 100% 綠燈通過。
-
-- **現存缺陷 (已根治)**：
-  - ~~`CharacterSyncService` 在開戰/戰後直接互相拷貝 `Player` 與 `PartyMember` 欄位，甚至共享 `LivingStats` 物件引用，存在併發競爭風險。~~
-- **改善方案**：
-  1. **開戰前產生 Snapshot**：建立不可變 `BattleParticipantSnapshot` 提供戰鬥初始數據，不持有 Player 引用。
-  2. **戰鬥結算產生 Outcome**：戰鬥結束輸出不可變 `BattleOutcome` (包含 HP/MP delta, 經驗獲得, 道具異動, 技能進度, idempotency key)。
-  3. **由 `BattleOutcomeApplier` 套用**：在 Player actor thread 中單向應用 outcome，徹底消除雙向同步與重複發獎問題。
+### 1.4 ✅ [已完成] Phase 5: 基於 Outcome 的角色同步機制 (Outcome-based Synchronization) (P1)
+> **落地進度**：已於 2026-10-03 完成。開戰前產生不可變 `BattleParticipantSnapshot`；戰後產生不可變 `BattleOutcome` 由內建 LRU 冪等快取的 `BattleOutcomeApplier` 單向安全套用，徹底根除雙向拷貝與併發競態風險，`OutcomeBasedCharacterSyncTest` 通過。
 
 ---
 
-## 🚨 2. 全域數值配置與硬編碼消除 (Hardcoded Values & Data-Driven) — Priority: P1
+## ⚔️ 2. 戰鬥圓桌判定、格擋與成長機制 (Combat & Progression) — Priority: P1 / P2 (已完成)
 
-### 2.1 ✅ [已完成] 全域數值集中管理 — 建立 `GameConfig` (P0)
-> **落地進度**：已於 2026-10-02 完成。新增 `GameConfig.java` 支援 Spring Boot 綁定與靜態單例存取，於 `application.yml` 集中管理常數，已替換 `Player`、`PlayerService`、`CombatService`、`LivingService`、`Living` 各處硬編碼，並補齊單元測試 `GameConfigTest` 驗證通過。詳細見 `CHANGELOG.md`。
+### 2.1 ✅ [已完成] 全域數值集中管理 — `GameConfig` (P1)
+> **落地進度**：集中管理經驗、戰鬥、精力、冷卻等常數於 `GameConfig.java` 與 `application.yml`。
 
 ### 2.2 ✅ [已完成] 經驗值公式 3 套矛盾實作收斂 (XP-01) (P1)
-> **落地進度**：已於 2026-10-03 完成。
-> 1. 由 `XpProgressionService` 集中管理所有等級與技能熟練度曲線：
->    - 角色升級曲線：統一採用 `calculateNextLevelExp(level)` = `floor(60 * L^1.6 + 120 * L)`（Lv.1 = 180）。
->    - 技能熟練度曲線：統一採用 `calculateSkillRequiredExp(level, difficulty)` = `50 * lv^2 * difficulty`。
->    - 怪物擊殺修為公式：統一採用 `calculateMobExpReward(mobLevel, playerLevel)` 動態等級差補正。
-> 2. `XpProgressionService` 補齊 `awardExp(Player, long)` 與 `awardSkillExp(SkillEntry, SkillTemplate, long)`，支援溢出經驗保留、全屬性回滿與自由修為點數結算。
-> 3. `XpService` 改為向下相容轉發委託至 `XpProgressionService`。
-> 4. `CombatService` 移除混用角色等級公式計算技能升級之錯誤邏輯，技能熟練度結算全面接入 `XpProgressionService`。
-> 5. `SkillBridgeService` 移除寫死的 `level * 100` 升級門檻，統一接入 `XpProgressionService`。
-> 6. `Player` 實體之 `GainExp` 訊息處理完整對接 `XpProgressionService`。
-> 7. 全專案自動化測試 220 項測試 100% 綠燈通過。
+> **落地進度**：統一由 `XpProgressionService` 集中管理角色等級曲線 ($60L^{1.6} + 120L$) 與技能曲線 ($50 \times \text{lv}^2 \times \text{diff}$)，打通溢出經驗保留與全狀態回滿。
 
-- **現存狀況 (已根治)**：
-  - ~~`CombatService.calculateNextLevelXp()`：混用角色曲線判定技能升級。~~
-  - ~~`XpProgressionService.calculateNextLevelExp()`：僅供小隊隊員使用，MUD 主角無法共用。~~
-  - ~~`XpService.getRequiredXp()` 與 `SkillBridgeService`：各自實作技能升級門檻（50*lv^2 vs level*100）。~~
-- **改善方案**：統一由 `XpProgressionService` 集中管理所有角色等級曲線與技能熟練度曲線。
+### 2.3 ✅ [已完成] 一次擲骰圓桌判定 (One-Roll Combat Table) 收斂 (P1)
+> **落地進度**：`DefenseResolver` 統一雙軌單次擲骰圓桌判定：$\text{[Miss]} \to \text{[Dodge]} \to \text{[Parry]} \to \text{[Block]} \to \text{[Crit]} \to \text{[Normal Hit]}$，導入 75% 防禦上限與 5% 保底命中。
+
+### 2.4 ✅ [已完成] 獨立盾牌格擋 (Block) 與破招反擊 (Riposte) (P2)
+> **落地進度**：副手裝備盾牌參與圓桌格擋減傷；招架成功觸發無消耗破招反擊，MUD 與 DRPG 雙軌致死判斷閉環，`ShieldBlockAndRiposteTest` 通過。
+
+### 2.5 ✅ [已完成] 魂系精力 (Stamina) 消耗與架勢破防 (Poise Break) (P2)
+> **落地進度**：閃避扣 2 點、招架扣 3 點精力；精力歸零進入架勢破防（閃避/招架歸零、承受傷害 +20%），脫戰自然回復，`StaminaAndPoiseBreakTest` 通過。
+
+### 2.6 ✅ [已完成] 主角自由潛能點 (Potential Points) 雙軌升級 (P2)
+> **落地進度**：夥伴升級純依模板自動成長；主角/隊長每級獲得自由潛能點 (+2~3 點)；實作 MUD `StatCommand`（`score`/`status`/`加點`）與雙向即時同步，`DualTrackPotentialPointsTest` 通過。
 
 ---
 
-### 2.3 ✅ [已完成] 職業門派資料驅動 (`classes.json`) 串接 (P1)
-> **落地進度**：已於 2026-10-03 完成。
-> 1. `ClassTemplate` 完善屬性解析（`id`, `name`, `resourceType`, `baseStats`, `growth`, `proficiencies`, `traits`, `skills`），補齊防禦性預設建構與便利取值方法。
-> 2. `ClassType` 增強雙向互轉方法 `fromId(String)` 與 `getId()`，支援未知門派 fallback 到 `NONE` 與大小寫容錯；`ClassTemplate.toClassType()` 實現列舉與範本平滑互通。
-> 3. `TemplateRepository` 擴充 `findClass` / `getClassTemplate` 為全大小寫容錯查詢（原名/大寫/小寫），並於 `validateData()` 納入 6 大職業門派校驗統計。
-> 4. `Player` 實體新增門派屬性 `classId` 與 `getClassTemplate()`（預設為 `"SWORDSMAN"` 俠客）。
-> 5. `XpProgressionService` 注入 `TemplateReader`，將原本寫死之 `HP+25, MP+5, CON+1, STR+1` 成長係數徹底改由 `ClassTemplate.growth`（來自 `classes.json`）資料驅動計算；`Player` 與 `PartyMember` 統一共用 `applyClassGrowth` 精準階梯成長演算法。
-> 6. 新增專屬整合測試 `ClassProgressionDataDrivenTest`（5 項測試全數通過），全專案 225 項測試 100% 綠燈通過。
+## 🧟 3. MUD 端生靈 AI、升級閉環與規則補齊 (MUD Mechanics) — Priority: P1 / P2 (已完成)
 
-### 2.4 🟨 夥伴初始套路 (`learnedStances`) 與貨棧商品 (`INN_GOODS`) 資料驅動 (P2)
+### 3.1 ✅ [已完成] Mob 行為與反應補完 (MUD-01) (P1)
+> **落地進度**：`Mob.sayToRoom` 廣播、主動怪進場撲咬、被動怪閒話、商人求救與仇恨同步閉環。
+
+### 3.2 ✅ [已完成] MUD 端角色擊殺升級突破閉環 (MUD-02) (P1)
+> **落地進度**：怪死計算動態修為掉落，調用 `XpProgressionService.awardExp` 觸發升級突破與潛能點入帳。
+
+### 3.3 ✅ [已完成] MUD 端 Buff / Debuff 引擎串接 (P1)
+> **落地進度**：`Living` 實作 `Buffable`，支援多重護盾 Shortest-Duration-First 吸收，每 500ms 週期心跳結算 HoT/DoT 與 DoT 致死結算。
+
+### 3.4 ✅ [已完成] MUD 規則與戰鬥細節補齊 (P2)
+> **落地進度**：`LivingPosture` 姿勢檢定（阻擋非站立移動）、`RoomFlag`（SAFE_ZONE 禁武、NO_MAGIC 禁魔、NO_MOB、HIGH_REGEN）、`DamageType` 抗性增減、`MobRank` 精英/首領倍率全數生效。
+
+---
+
+## 🖥️ 4. UI/UX 全域佈局與資源契約 (UI Layout & Density) — Priority: P1 / P2 (已完成)
+
+### 4.1 ✅ [已完成] 三種資訊密度分區與字級規範 (>= 13px) (P1)
+> **落地進度**：全域審查消除 `< 12px` 樣式，遵循 `--font-xs: 13px`；探索密度雷達 26x26px、戰鬥密度三層甲板、管理密度 1600x900 規格。
+
+### 4.2 ✅ [已完成] 共用頁面 Shell 重構 (Global Layout) (P1)
+> **落地進度**：頂部 Global Header、中央 Context Viewport、底部常駐 5 人小隊軌道與情境動態操作列 (Context Action Bar)。
+
+### 4.3 ✅ [已完成] HP / MP / SP / SAN 雙軌資源顯示契約 (P2)
+> **落地進度**：`DrpgStateDto` 支援雙軌資源，近戰法術雙修條件各自獨立判定，前端 HUD 雙軌同步呈現，`DualTrackResourceContractTest` 通過。
+
+---
+
+## 📐 5. 清潔架構與領域依賴反向 (Clean Architecture) — Priority: P1 (已完成)
+
+### 5.1 ✅ [已完成] Domain 層反向依賴反轉 — Phase 10 (Clean Architecture) (P1)
+> **落地進度**：
+> 1. 提取 `PlayerPersistencePort`、`DomainMetricsPort`、`TemplateRegistryPort` 至 `domain.port`。
+> 2. `RandomUtil`、`IdUtils`、`RoomDescriptionDeserializer` 移入 `domain.util` / `domain.model.template.json`。
+> 3. `domain` 套件對外部 `infra` 依賴達成 **0 違規**！全專案 231 項自動化測試 100% 綠燈通過。
+
+---
+
+## 🌐 6. 網路邊界安全、WebSocket 部署防護與連線配額 (Network Hardening) — Priority: P1
+
+> **來源**：`Codex_Code_Review.md` (§P1)、`Copilot_Code_Review.md` (§3.4)、`Claude_Code_Review.md` (§五)。
+> **核心目標**：明確界定「單機本機」與「公開部署」的安全邊界，防止未驗證連線、大封包記憶體攻擊與指令洪水。
+
+### 6.1 明確定義部署模式與本機綁定預設 (P1)
+- **現存缺陷**：
+  `config/WebSocketConfig.java` 僅依賴 Origin 白名單註冊 `/ws`。Origin 白名單僅能防禦瀏覽器跨站連線，無法阻擋非瀏覽器客戶端（如手寫指令碼或爬蟲）。
+- **改善方案**：
+  1. 於 `application.yml` 提供明確的部署設定項：
+     ```yaml
+     game:
+       network:
+         mode: local # local | public
+         bind-address: 127.0.0.1
+     ```
+  2. 若為 `local` 模式，伺服器嚴格僅監聽 `127.0.0.1` 環回介面，杜絕外部區域網入侵。
+
+### 6.2 公開模式 WebSocket 握手票證驗證與連線配額 (P1)
+- **現存缺陷**：
+  `MudWebSocketHandler.afterConnectionEstablished()` 對所有進入連線直接建立並註冊玩家 Actor，缺乏身分鑑權。
+- **改善方案**：
+  1. **握手鑑權 (Handshake Auth)**：實作 `HandshakeInterceptor`，公開模式下要求客戶端在連線 URL 帶入短期 Ticket/Token（如 `/ws?ticket=xxx`），由伺服器驗證通過後才允許升級為 WebSocket。
+  2. **封包長度上限**：在 `WebSocketConfiguration` 配置 `ServletWebSocketHandlerRegistry` 與 `WebSocketSessionDecorator`，強制限制單一文字訊息長度最大為 **64 KB**，超額直接關閉連線。
+  3. **指令速率限制 (Rate Limiting)**：在 Handler 實作滑動窗口或令牌桶算法，限制每連線每秒最多處理 **20 次指令**，超額回傳警告訊息並短暫暫停處理。
+  4. **單 IP 連線配額**：限制單一 IP 最多建立 3 條活躍連線，防止資源耗盡攻擊。
+
+---
+
+## 🏛️ 7. Actor 狀態修改單一擁有權與背景生命週期治理 (Actor Lifecycle) — Priority: P1
+
+> **來源**：`Codex_Code_Review.md` (§P1)、`Claude_Code_Review.md` (§二)。
+> **核心目標**：杜絕繞過信箱的狀態變更，落實 Actor 嚴格單一線程排序，治理虛擬執行緒戰鬥生命週期與逾時斷路器。
+
+### 7.1 收斂 Room Actor 狀態修改通道（修復 `removePlayer` 雙軌修改） (P1)
+- **現存缺陷**：
+  [Room.java#L342-L346](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/actor/impl/Room.java#L342-L346) 的 `removePlayer(String playerId)` 在呼叫者線程直接調用 `players.removeIf(...)`，隨後又向佇列送出 `RoomMessage.RemovePlayer`。即使 `players` 為 `CopyOnWriteArrayList`，仍破壞了 Actor 作為狀態變更唯一排序者的契約。
+- **改善方案**：
+  1. 移除 `Room.removePlayer()` 與 `removeMob()` 中 caller 線程的直接 `removeIf` 呼叫。
+  2. 房間內所有成員新增、移出、掉落物撿取與丟棄，**100% 嚴格僅在信箱訊息處理器中執行**。
+  3. 若呼叫端需要確認移出完成，統一採用帶 `CompletableFuture<Boolean>` 的請求-回應信箱訊息。
+  4. 補齊高併發進出房間與掉落物變更的專屬併發測試。
+
+### 7.2 背景戰鬥虛擬執行緒治理與逾時斷路器 (P1)
+- **現存缺陷**：
+  [DrpgCombatLoop.java#L85](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java#L85) 開戰時以非管理的 `Thread.ofVirtual().start(...)` 裸啟動，缺乏全域戰鬥併發限制、伺服器關機時的任務盤點與逾時斷路器。若戰鬥雙方陷入無限回血/無攻擊能力死迴圈，執行緒將無限期佔用資源。
+- **改善方案**：
+  1. 引入 Spring 託管的 `ExecutorService`（如 `Executors.newVirtualThreadPerTaskExecutor()`）統籌戰鬥任務。
+  2. 在 `BattleContext` 設置最大戰鬥時間（預設 5 分鐘）與回合上限（預設 100 回合）。
+  3. 超過上限時觸發斷路器，判定平局/脫戰並安全清理 `activeBattles` 快取，產生日誌。
+  4. 連線斷開時依據設計原則判定戰鬥行為（如依預設 Gambit 持續結算或自動暫停），避免野執行緒持續運行。
+
+---
+
+## 🛡️ 8. 檔案式存檔版本治理 (`schemaVersion`) 與壞檔防禦 (Save File Resilience) — Priority: P1
+
+> **來源**：`Codex_Code_Review.md` (§P1)、`Copilot_Code_Review.md` (§3.5)、`Claude_Code_Review.md` (§三)。
+> **核心目標**：為 JSON 檔案式存檔建立版本遷移架構，嚴格區分「空存檔」與「損壞存檔」，杜絕意外覆寫。
+
+### 8.1 存檔資料模型引入 `schemaVersion` 與遷移適配器 (P1)
+- **現存缺陷**：
+  [SaveData.java](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/save/model/SaveData.java) 雖標註 `@JsonIgnoreProperties(ignoreUnknown = true)`，但缺乏版本號欄位。當角色屬性重構、欄位重新命名（如新增 `potentialPoints`、`stamina`、`learnedStances`）或型別轉換時，舊存檔無法平滑升級。
+- **改善方案**：
+  1. 在 `SaveData` 頂層增加 `private int schemaVersion = CURRENT_SCHEMA_VERSION;`（目前定義為 Version 1）。
+  2. 建立 `SaveMigrationPipeline`：
+     - 若讀取到無版本號或舊版存檔，依序流經 `SaveMigrationV1ToV2` 等純資料遷移器。
+     - 補齊缺失欄位的安全預設值，轉換為最新執行期模型。
+  3. 為歷史版本存檔建立固定 JSON Fixture 測試，確保版本迭代絕不破壞向後相容。
+
+### 8.2 壞檔防禦與明確狀態標記（杜絕壞檔誤當空槽覆寫） (P1)
+- **現存缺陷**：
+  在 [SaveGameService.java#L118-L123](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/save/service/SaveGameService.java#L118-L123) 中，當反序列化失敗時，`SaveSlotDto` 雖標記標題為 `(損壞)`，但仍回傳 `empty: true`。這會讓前端誤將其視為可用空槽，若玩家點擊存檔將直接**覆寫毀滅原始壞檔**。
+- **改善方案**：
+  1. `SaveSlotDto` 新增 `boolean corrupted` 欄位；當讀取異常時，設為 `empty: false, corrupted: true`。
+  2. 前端禁止直接點擊覆寫損壞槽位，並在 UI 提供「存檔損壞警告 / 備份匯出」按鈕。
+  3. 寫入新存檔時，自動將舊檔備份為 `.bak` 檔案，確保資料零遺失。
+
+---
+
+## 🏛️ 9. 徹底資料驅動消除硬編碼與集中式 JSON 啟動拓撲校驗 (Data-Driven Purity) — Priority: P1
+
+> **來源**：`Claude_Code_Review.md` (§一)、`Copilot_Code_Review.md` (§3.3)、`Codex_Code_Review.md` (§P2)。
+> **核心目標**：拔除底層代碼中殘留的職業名稱、陣法字串比對與技能別名映射；建立啟動期跨檔案資料校驗器。
+
+### 9.1 ✅ [已完成] 消除職業特例與反擊特性硬編碼 (DATA-01) (P1)
+> **落地進度**：已於 2026-10-03 完成。
+> 1. **職業特質資料化 (`ClassTemplate` / `classes.json`)**：在 `classes.json` 為俠客配置 `"canRiposte": true` 與通用 `traits`；`ClassTemplate` 支援 `hasTrait(...)` 與 `getTraitDouble(...)`；`DefenseResolver` 徹底廢除 `"SWORDSMAN"` 字串硬編碼，全面轉為資料驅動檢定。
+> 2. **職能角色標準化 (`RoleCategory` / `FormationTemplate`)**：引入標準枚舉 `RoleCategory`（`TANK`, `MELEE_DPS`, `RANGED_DPS`, `MAGIC_DPS`, `HEALER`），支援 `fromClassOrRole` 與 `parseRequirement`；`FormationTemplate` 的 `satisfiesClassRequirement` 與中文名稱格式化全面依賴職能枚舉比對，徹底移除寫死之 switch 中英文字串比對。
+> 3. **技能別名集中治理 (`party_skills.json` / `TemplateCatalog`)**：在 `PartyMemberSkill` 與 `party_skills.json` 引入 `aliases` 陣列（支援 `tank_taunt` ⇄ `class_warrior_taunt`、`heal_single` ⇄ `class_cleric_heal` 等）；`TemplateRepository` 建立雙向別名索引表；`TemplateReader` 與 `TemplateCatalog` 統一暴露 `resolveSkillAlias`；`PartyMember` 移除寫死別名 switch，冷卻時間判定與技能查詢皆完全資料驅動。
+> 4. **全專案 231 項測試 100% 綠燈通過**，包含 MUD/DRPG 雙軌防禦、陣法職能比對、三態資源消耗與冷卻別名查詢。
+
+### 9.2 集中式遊戲 JSON 啟動期拓撲校驗 (`DataIntegrityValidator`) (P1)
+- **現存缺陷**：
+  跨檔案資料關聯（如怪物掉落物是否存在於 items、房間出口目標是否存在於 rooms、陣法技能是否存在於 skills）目前分散於各單元測試，缺乏啟動期的強制 Fail-Fast 攔截。
+- **改善方案**：
+  1. 建立 `DataIntegrityValidator` 標註 `@Component`，於 Spring 啟動完成後執行：
+     - 校驗所有物品 ID、技能 ID、怪物 ID 唯一性。
+     - 校驗怪物的掉落物 ID、商店商品 ID 均存在於 `ItemDefinition`。
+     - 校驗房間雙向出口與地牢樓層座標合法性。
+  2. 開發模式下發現斷鏈直接拋出 `DataValidationException` 阻止啟動；正式模式回報嚴重警報記錄，防止執行期 NullPointerException。
+
+### 9.3 夥伴初始套路與貨棧商品全資料驅動 (P2)
 - 擴充 `default_companions.json` 增加 `"learnedStances": [...]` 欄位，移除 `PartyService` 代碼保底給予。
 - 將 `ShopCommand.INN_GOODS` 寫死的商品列表移至各區域 `shops.json`。
 - 開局行囊預設道具由代碼給予改由開局設定檔驅動。
-- `BodyPartSelector.DEFAULT_PARTS`（頭部、胸口、四肢等）改由 `RaceTemplate` 提供 `hitParts` 列表。
 
 ---
 
-## ⚔️ 3. 戰鬥圓桌判定、格擋與精力成長機制 (Combat Resolution & Progression) — Priority: P1 / P2
+## 🎨 10. 前端巨石模組拆分與 Legacy 除役 (Frontend Modularization) — Priority: P2
 
-### 3.1 ✅ [已完成] 一次擲骰圓桌判定 (One-Roll Combat Table) 收斂與修復 (P1)
-> **落地進度**：已於 2026-10-03 完成。
-> 1. `DefenseResolver` 擴充支援 `Living` 生靈對決體系（`resolveLivingAttack`），全面統一 DRPG 與 MUD 雙軌戰鬥之單次擲骰圓桌判定（One-Roll Combat Table）。
-> 2. 判定扇區嚴格依序解析：$\text{[Miss]} \to \text{[Dodge]} \to \text{[Parry]} \to \text{[Block]} \to \text{[Crit]} \to \text{[Normal Hit]}$。
-> 3. 防禦切片導入 75% 累積總防禦上限比例縮放，並保留 5% 保底普通命中窗口，杜絕複合高防禦下的機率湮滅與無敵 Bug。
-> 4. `CombatService.performAttack()` 全面整合 `DefenseResolver`，依據 MISS、DODGED、PARRIED、BLOCKED、CRIT、HIT 六象限判定產生細緻戰鬥日誌與精確傷害扣減。
-> 5. 新增專屬整合測試 `MudOneRollCombatTableTest`（5 項測試全數通過），全專案 225 項測試 100% 綠燈通過。
+> **來源**：`Claude_Code_Review.md` (§四)、`Codex_Code_Review.md` (§P2)、`Copilot_Code_Review.md` (§3.2)。
+> **核心目標**：拆解 5,810 行巨石 CSS 與 3,141 行 Party 模組；盤查並正式除役 legacy 代碼。
 
-### 3.2 ✅ [已完成] 獨立盾牌格擋機制 (Shield Block) 與破招反擊 (Riposte) (P2)
-> **落地進度**：已於 2026-10-03 完成。
-> 1. **盾牌格擋值減免**：`DefenseResolver` 支援副手配備盾牌（`ItemType.SHIELD` 或 `subType == "SHIELD"`）時參與圓桌格擋判定。格擋值為 $\max(5, \text{shieldBonusDef} \times 2 + \frac{\text{defCon}}{2})$，格擋成功扣減傷害：$\text{FinalDamage} = \max(1, \text{RawDamage} - \text{ShieldBlockValue})$，並產生日誌。
-> 2. **破招反擊 (Riposte)**：俠客（`SWORDSMAN`）或配置招架技能之生靈在招架成功時，觸發無消耗破招突刺，對攻擊者結算反擊傷害與戰鬥日誌。
-> 3. **雙軌戰鬥完整支援**：MUD（`CombatService`）與 DRPG（`DrpgCombatLoop`）在結算反擊傷害時同步更新攻擊方血量並進行致死判斷。
-> 4. **專屬測試**：新增 `ShieldBlockAndRiposteTest`（4 項全數通過），全專案 229 項測試 100% 綠燈通過。
+### 10.1 巨石 `style.css` 模組化拆分 (5,810 行拆分) (P2)
+- **現狀**：[style.css](file:///c:/Workspace/my_practice/practice_mud/src/main/resources/static/css/style.css) 目前達 5,810 行（120 KB），維護成本極高。
+- **改善方案**：依據職責與 UI 規範拆分為 5 大模組，於 `index.html` 按順序載入：
+  1. `base.css`：全域 Design Tokens、變數、字型重置、排版基線（嚴格確保字級 $\ge 13\text{px}$）。
+  2. `town.css`：城鎮主舞台、NPC 卡片網格、羅盤方向控制。
+  3. `battle.css`：戰鬥競技場、5x5 敵方陣列、戰備甲板、交鋒微光效果。
+  4. `menu.css`：1600x900 命冊主選單、分頁控制、裝備與 Gambit 介面。
+  5. `hud.css`：底部 5 人小隊軌道、四維資源條（HP/MP/SP/SAN）、Toast 提示。
 
-### 3.3 ✅ [已完成] 魂系精力 (Stamina) 消耗與架勢破防 (Poise Break) (P2)
-> **落地進度**：已於 2026-10-03 完成。
-> 1. **防禦動作精力消耗**：`DefenseResolver` 於圓桌判定身法閃避 (`DODGED`) 成功時扣除防禦方 2 點 Stamina；兵刃招架 (`PARRIED`) 成功時扣除 3 點 Stamina，並記錄於 `DefenseResolution.staminaConsumed`。
-> 2. **架勢破防機制 (Poise Break)**：
->    - 當防守方精力耗盡 ($\text{Stamina} \le 0$) 時，進入架勢破防狀態：身法閃避與兵刃招架機率強制歸零（不產生閃避/招架切片）。
->    - 陷入架勢崩潰時，遭受攻擊（`HIT`、`CRIT`、`BLOCKED`）之最終傷害額外提升 **20%**（$\text{Dmg} = \text{round}(\text{Dmg} \times 1.20)$）。
->    - 戰鬥日誌呈現專屬破防醒目標籤：`⚠️【架勢破防】防禦者 精力枯竭架勢崩潰，破綻大開！受到額外 20% 傷害！`。
-> 3. **自然回復閉環**：`LivingService.processRegen()` 支援生靈脫戰後自然回復 Stamina（每次心跳回復 10% 最大精力，至上限為止）。
-> 4. **併發安全防護**：`PartyMember.tactics` 升級為執行緒安全之 `CopyOnWriteArrayList` 與同步控制，杜絕戰鬥迴圈與戰術指令並發排序時引發之 CME。
-> 5. **專屬測試驗證**：新增 `StaminaAndPoiseBreakTest`（5 項專屬測試全數通過），全專案 230 項自動化測試 100% 綠燈通過。
+### 10.2 `party-modal.js` 垂直切片拆解 (3,141 行拆解) (P2)
+- **現狀**：[party-modal.js](file:///c:/Workspace/my_practice/practice_mud/src/main/resources/static/js/modals/party-modal.js) 達 3,141 行（159 KB），承載了隊員卡片、裝備穿脫、技能典籍、Gambit 戰術方針與陣法切換等多重責任。
+- **改善方案**：拆解為清晰的職責子模組：
+  - `party-equipment-tab.js`：裝備槽位切換與穿脫。
+  - `party-tactics-tab.js`：Gambit 戰術方針設定與驗證。
+  - `party-formation-tab.js`：陣型選取與角色站位拖曳。
+  - `party-skills-tab.js`：技能熟練度展示與快捷鍵配置。
+  - `party-modal.js` 僅作為外層選單標籤頁協調者。
 
-### 3.4 ✅ [已完成] 主角自由潛能點 (Potential Points) 雙軌升級 (P2)
-> **落地進度**：已於 2026-10-03 完成。
-> 1. **雙軌升級機制**：
->    - 夥伴（`PartyMember.isLeader() == false`）：升級純依 `classes.json` / `ClassTemplate` 自然成長，自由潛能點維持 0。
->    - 主角（`Player` 或 `PartyMember.isLeader() == true`）：升級除基礎職業成長外，依 `freeStatPointsPerLevel`（預設 2 點，支援自訂 +2~3 點）發放自由道基潛能點。
-> 2. **自由加點公式與數值閉環**：
->    - `STR`：力量/臂力提升，影響物理威力與負重。
->    - `CON`：根骨/體質提升，每點同步躍升最大氣血上限 +10 HP 與當前氣血 +10 HP。
->    - `DEX`：靈巧/身法提升，影響命中、暴擊與閃避迴避。
->    - `INT`：悟性/智力提升，每點同步躍升最大真元上限 +8 MP 與當前真元 +8 MP。
->    - `WIS`：定力/精神提升，影響治療加成、法力回復與道心抗性。
->    - `XpProgressionService` 提供重載 `allocateStatPoint` 支援 `LivingStats`、`PartyMember` 與 `Player` 實體。
-> 3. **MUD + DRPG 雙軌操作與雙向同步閉環**：
->    - 實作全新 MUD `StatCommand`（別名：`score`、`status`、`狀態`、`加點`、`屬性`），支援查看個人道行、六維屬性、未分配潛能點，並透過 `stat add <str|con|dex|int|wis> [點數]` 或 `加點 <屬性> [點數]` 自由配點。
->    - 加點時透過 `CharacterSyncService` 與 `GameStateBroadcastService` 即時雙向同步至小隊隊長與前端 DRPG 介面（及反向從 `PartyCommand` 同步至 `Player` 實體）。
-> 4. 新增專屬整合測試 `DualTrackPotentialPointsTest`（涵蓋夥伴 0 點、隊長入帳、自訂點數率、加點公式、MUD 指令面板、雙向同步閉環等 6 大測試項），全專案 231 項測試 100% 綠燈通過。
+### 10.3 歷史 Legacy 前端檔案盤查與正式除役 (P2)
+- **現狀**：`static/legacy/drpg-view.js` 仍保留 126 KB (2,835 行) 的舊代碼，且 `index.html` 中仍有 7 處註解提及此檔案。
+- **改善方案**：
+  1. 確認現代模組（`town-view-panel.js`、`battle-panel.js`、`party-modal.js`）已 100% 接管所有渲染職責。
+  2. 清理 `index.html` 中提及 `drpg-view.js` 的過期註解。
+  3. 將 `static/legacy/` 目錄正式封存或從生產部署資源中排除，消除維護者的認知混淆。
 
----
-
-## 🧟 4. MUD 端空殼機制補完 (Skeleton Mechanisms) — Priority: P1 / P2
-
-### 4.1 ✅ [已完成] Mob 基礎行為與反應補完 (MUD-01) (P1)
-> **落地進度**：已於 2026-10-03 完成。
-> 1. `Mob` 補完 `sayToRoom(String)` 與 `attack(Living)` 門面方法，具備透過房間向非本人廣播喊話與雙向戰鬥鎖定/入戰功能。
-> 2. `Mob` 擴展 `handleTick`（主動怪每 5 秒週期發動 `AgroScan`、被動怪觸發閒話）、`handleOnAttacked`、`handleOnDamage` 同步仇恨並呼叫 `behavior.onAttacked` / `onDamaged`。
-> 3. `AggressiveBehavior` 實作 `OnPlayerEnter`、`AgroScan`、`OnInteract` 主動撲咬開戰與反擊。
-> 4. `PassiveBehavior` 實作 `OnInteract` 讀取模板對話回覆、`onTick` 隨機碎碎念、`onDamaged` 呼喊反擊。
-> 5. `MerchantBehavior` 實作 `OnPlayerEnter` 迎賓招呼、`OnInteract` 導引 list/buy 與對話、`onDamaged` 呼叫衛兵求救。
-
-### 4.2 ✅ [已完成] MUD 端角色升級 (Player Level Up) 與經驗掉落閉環 (MUD-02) (P1)
-> **落地進度**：已於 2026-10-03 完成。
-> 1. 打通怪物擊殺經驗閉環：`LivingService.onDeath` 中當 Mob 死亡且擊殺者是 Player 時，依 `XpProgressionService.calculateMobExpReward` 計算擊殺修為。
-> 2. 串接 `XpProgressionService.awardExp(player, expReward)` 進行升級突破判定、屬性成長、全狀態回滿、發放 +2 自由修為點數與廣播升級提示。
-> 3. `Player.gainExp` 支援同步調用 `XpProgressionService.awardExp` 與發送屬性狀態更新通知。
-> 4. 新增整合測試 `MudMobAiAndProgressionTest`（包含喊話入戰、主動怪進場攻擊、商人求救、擊殺升級突破全閉環），全專案 224 項測試 100% 綠燈通過。
-
-### 4.3 ✅ [已完成] MUD 端 Buff / Debuff 引擎串接 (P1)
-> **落地進度**：已於 2026-10-03 完成。
-> 1. `Living` 全面實作 `Buffable` 介面（`Player` 與 `Mob` 繼承），支援 `ActiveBuff` 集合管理、WoW 同名狀態刷新、多重護盾依最短持續時間優先（Shortest Duration First）吸收傷害與穿透扣減。
-> 2. `ActorMessage.BuffEffect` 補齊非同步與資料驅動解析，支援傳入 `ActiveBuff` 或 `effectId` 招式模板（如 `class_cleric_bless`、`spell_corpse_poison`）。
-> 3. `LivingService.tick()` 中重啟 `processBuffs()` 週期結算：每 500ms（5 ticks）跳算 HoT 氣血回流與 DoT 陰煞傷害，發送即時狀態日誌，並於 DoT 劇毒致死時觸發 `onDeath` 結算。
-> 4. `CombatService.performAttack()` 在命中後自動判斷招式所附帶之 `BuffConfig`，對敵方施加 DEBUFF 或對自身施加 BUFF。
-> 5. `RoomService.tick()` 恢復轉發心跳予活躍的 MUD 生靈。
-> 6. 新增專屬整合測試 `MudBuffDebuffEngineTest`（5 項測試全數通過），全專案 230 項測試 100% 綠燈通過。
-
-### 4.4 ✅ [已完成] MUD 規則與戰鬥細節補齊 (P2)
-> **落地進度**：已於 2026-10-03 完成。
-> 1. **`LivingPosture` 姿勢系統生效**：`enterCombat` 切換為 `FIGHTING`、`exitCombat` 回到 `STANDING`、瀕死/死亡切換為 `DEAD`；`canMove()` 嚴格要求 `posture == STANDING && !isDead()`，`RoomMovementService` 阻擋非站立姿勢移動並回饋專屬情境提示。
-> 2. **`RoomFlag` 旗標檢定生效**：
->    - `SAFE_ZONE`（相容 `"SAFE"`）：`KillCommand` 與 `CombatService.startCombat` 雙層攔截，安全區嚴禁動武。
->    - `NO_MAGIC`：`CombatService.performAttack` 檢查魔法/法術技能並阻擋，回饋「此處受到強大禁制，無法施展法術！」。
->    - `NO_MOB`：`RoomService.enter` 與 `spawnOneMob` 阻擋怪物進駐或生成於禁怪區域。
->    - `HIGH_REGEN`：`LivingService.processRegen` 賦予雙倍自然氣血與法力回復率，且打坐（`RESTING`/`SLEEPING`）額外加速 50%。
-> 3. **`DamageType` 抗性計算生效**：招式所屬傷害類型納入 `target.getStats().getResistance(dmgType)`（含父層傷害類型繼承加總）進行傷害增減結算。
-> 4. **`MobRank` 倍率生效**：`WorldFactory.createMob` 自動依階級套用 HP 倍率（精英 1.5x、首領 3.0x）與傷害倍率（精英 1.2x、首領 1.5x），並自動賦予【精英】/【首領】前綴。
-> 5. **法力自然回復與道具使用**：`LivingService.processRegen` 同步結算 MP 自然回復；實作 `LivingService.use()` 支援 `HEAL_HP`、`HEAL_MP`、`RESTORE_SAN`、`BUFF` 等消耗效果與堆疊數量扣減。
-> 6. **`Player.forceLogout()` 補全**：解開存檔、房間移出廣播、全域管理器移除與 VirtualActor 停機關閉。
-> 7. **死代碼清理**：清除 `CombatService` 中未使用的 `startRound()` 與 `calculateExp()` 死方法。
-> 8. **新增專屬整合測試**：`MudRulesAndMechanicsTest`（8/8 通過）與 `MudBuffDebuffEngineTest`（3/3 通過），全專案 236 項測試 100% 綠燈通過。
-
----
-
-## 🖥️ 5. UI/UX 全域佈局重構與三種資訊密度 (UI Layout & Density) — Priority: P1 / P2
-
-### 5.1 ✅ [已完成] 三種資訊密度分區與字級規範 (>= 13px) (P1)
-> **落地進度**：已於 2026-10-03 完成。
-> 1. **全域字級規範 (>= 13px)**：全面審查並清除 `< 12px` 殘留樣式，`party-buff-chip` 與 `skill-cost` 等所有元素之 `font-size` 均嚴格遵循 `--font-xs: 13px` 以上底線標準，徹底杜絕縮字硬塞與破版。
-> 2. **探索密度 (Exploration Density)**：雷達地塊尺寸嚴格固定（26px x 26px，gap 2px），城鎮主舞台環境資訊與右側冒險日誌獨立各自捲動。
-> 3. **戰鬥密度 (Combat Density)**：嚴格採「上層敵方目標區（5x5 格盤）→ 中層回合狀態/集火指示/交鋒微光細線 → 下層我方小隊戰備甲板（指令選單 + 5x3 戰陣盤 + 技能網格）」三層分區，卡片不塞全量四維數值，介面清晰緊湊。
-> 4. **管理密度 (Management Density)**：主選單（`main-menu-card`）採固定 1600x900 規格（`width: min(1600px, 96vw); height: min(900px, 94vh)`），左側導覽列與右側視口獨立捲動，道具與技能清單採用每頁 20 項分頁機制（`PAGE_SIZE = 20`）。
-
-### 5.2 ✅ [已完成] 共用頁面 Shell 重構 (Global Layout) (P1)
-> **落地進度**：已於 2026-10-03 完成。
-> 1. **Global Header 重構**：
->    - 左側：道門標識、隊長道號（`👤 玄靈子`）、盤纏靈石（`💰 靈石`）。
->    - 中間：當前環境位置（`🗺️ 桃源新手村 · 村莊客棧 / 太陰古塚`）、時辰（`⏳ 午時`）、天候（`☁️ 天朗氣清 / 陰風煞氣`）。
->    - 右側：全域快捷工具列（`📜 選單 (C)`、`🎒 行囊 (B)`、`📂 命冊`、`⌨️ 終端 (~)`）。
-> 2. **Context Viewport (中間主視覺)**：
->    - 依據 `mode` 與 `inBattle` 狀態平滑切換城鎮主舞台、地牢雷達與戰鬥競技場，內部視口具備獨立捲動能力。
-> 3. **Party Summary Rail (固定小隊軌道)**：
->    - 常駐主舞台底部，顯示 5 人血條 (HP)、真元/戰氣/怒氣/連擊點條 (MP/SP/Rage/Combo)、道心 (SAN)、當前姿態/Buff 標籤，以及陣法靈威條（0~100）與奧義狀態。
-> 4. **Context Action Bar (底部情境操作列)**：
->    - 動態依模式切換操作動作群組：
->      - **城鎮情境**：`🌿 打坐 (rest)`、`👀 環顧 (look)`、`📦 拾取 (get all)`、`💬 指令 (/)`。
->      - **地牢探索情境**：`👁️ 探查 (I)`、`🌿 調息 (R)`、`🎒 行囊 (B)`、`📜 選單 (C)`。
->      - **戰鬥情境**：`🎯 集火 (Space)`、`⚡ 陣法奧義 (U)`、`🏃 遁地 (Esc)`。
->    - 底部提示文字依模式即時連動，支援點擊展開/收合指令輸入列。
-> 5. **測試全套綠燈**：全專案 229 項自動化測試 100% 綠燈通過。
-
-### 5.3 ✅ [已完成] HP / MP / SP / SAN 雙軌資源顯示契約 (P2)
-> **落地進度**：已於 2026-10-03 完成。
-> 1. **`DrpgStateDto` 雙軌資料契約**：移除粗暴覆蓋 `resType = "SP"` 的舊邏輯，`resourceType` 忠實反映真實資源特性（`SP`, `RAGE`, `COMBO`, `MP`），`mp/maxMp`（法力）與 `sp/maxSp`（戰氣）雙軌數據完整並行，不被遮蔽。
-> 2. **DTO 欄位擴充**：`PartyMemberViewDto` 新增 `rage`, `maxRage`, `combo`, `maxCombo` 欄位（附帶向下相容建構子），精準傳遞怒氣與連擊點數值。
-> 3. **雙修技能條件檢定**：技能施展條件檢定按各自資源型別（MP, SP, RAGE, COMBO）獨立判斷可用性，近戰角色施展法術消耗 MP、施展招式消耗 SP/RAGE 互不干擾。
-> 4. **前端 HUD 與戰鬥卡片雙軌呈現**：`party-hud-panel.js` 與 `battle-panel.js` 同步展示 HP、MP、SP、SAN 四條柱，並動態將 SP 條智能標註為「怒氣 (Rage)」或「連擊 (Combo)」，支援法系與近戰雙修武學資源完整呈現。
-> 5. **專屬整合測試**：新增 `DualTrackResourceContractTest`（2/2 通過），全專案 231 項測試 100% 綠燈通過。
-
-### 5.4 🟨 探索舞台雙欄化與控制回歸雷達 (P2)
+### 10.4 探索舞台雙欄化與控制回歸羅盤 (P2)
 - 左欄佔比約 60%（場景資訊 + 3x3 方向羅盤 + NPC 網格卡片 + 地面物品）。
 - 右欄佔比約 40%（沉浸式 MUD 故事日誌與戰報，純粹自動捲動）。
 - 方向鍵、探查等控制收納於羅盤周邊，杜絕 footer 重複佔位。
 
 ---
 
-## 📐 6. 清潔架構與領域邊界 (Clean Architecture) — Priority: P1 / P2
+## ⚡ 11. 測試工程分層加速與可觀測性加固 (Testing & Observability) — Priority: P3
 
-### 6.1 ✅ [已完成] 領域層反向依賴反轉 — Phase 10 (Clean Architecture) (P1)
-> **落地進度**：已於 2026-10-03 完成。
-> 1. **持久化埠解耦**：建立 `PlayerPersistencePort`（`domain.port`），`PlayerPersistenceService`（`infra`）實作此埠；`PlayerService` 與 `Player` 依賴反轉為 `PlayerPersistencePort`，消除直接依賴具體實作。
-> 2. **監控度量埠解耦**：建立 `DomainMetricsPort`（`domain.port`），`GameMetrics` 實作此埠；`CombatService` 依賴反轉為 `DomainMetricsPort`，並清除未使用之 `FormulaEvaluator` import。
-> 3. **模板資料倉儲依賴反轉**：建立 `TemplateRegistryPort`（`domain.port`，繼承 `TemplateReader`）；`TemplateRepository` 實作此埠；`WorldManager` 改為注入 `TemplateRegistryPort`；`TemplateCatalog` 依賴反轉為 `TemplateReader`，無參數建構透過靜態供應者與反射動態載入預設倉儲，徹底杜絕編譯期依賴 `infra.persistence.repository.TemplateRepository`。
-> 4. **領域演算法工具收斂**：在 `domain.util` 建立 `RandomUtil` 與 `IdUtils`（純領域邏輯，無外部依賴），`infra.util` 工具類改為繼承以相容舊程式；`CombatService`、`SkillService`、`DrpgEnemyTacticsService`、`WorldManager` 全面接入 `domain.util`。
-> 5. **Jackson 反序列化解耦**：在 `domain.model.template.json` 建立 `ExitDeserializer` 與 `RoomDescriptionDeserializer`，`RoomExit` 與 `RoomTemplate` 移除對 `infra.persistence.json` 的引用。
-> 6. **全面合規檢驗**：整個 `com.example.htmlmud.domain` 套件的 `import com.example.htmlmud.infra` 達成 **0 違規**！全專案 227 項自動化測試 100% 綠燈通過。
+> **來源**：`Claude_Code_Review.md` (§六)、`Copilot_Code_Review.md` (§3.6)、`Codex_Code_Review.md` (§P3)。
+> **核心目標**：測試架構下沉為純單元測試提高執行效率；補齊關鍵指標與稽核日誌。
 
-### 6.2 指令入口與併發調度收斂 (P2)
-- **指令去重**：統一 `UseCommand` 與 `InventoryCommand` 的使用入口，全部收斂至 `ItemUsageService`。
-- **Room 併發安全**：修復 `Room.removePlayer()` 先在呼叫線程操作集合、又送 `RoomMessage` 重複操作之隱患，統一走 Actor 訊息通道。
-- **類型修正**：修復 `MerchantBehavior.shopId` (int) 與 `MobTemplate.shopId` (String) 型別不符問題。
-
----
-
-## 🔒 7. 安全加固與前端工程品質 (Security & Quality) — Priority: P0 / P2
-
-### 7.1 🔄 前端全域 DOM XSS 防禦與事件委派 (P0)
-- **現狀校正**：先前雖引入 `escapeHtml()`，但未全面覆蓋模態框（如 `party-modal.js`）。
-- **待執行清單**：
-  1. 盤查並轉義 `party-modal.js`、`shop-modal.js`、`skill-drawer.js`、`battle-panel.js` 中的動態字串插值。
-  2. 移除 `index.html` 中的 53 個 inline `onclick`，全面改為模組監聽與委派。
-  3. 驗證 ANSI 轉 HTML 顏色解析器，確保只接受合法顏色代碼，文字內容經 HTML escape 處理。
-
-### 7.2 🟧 巨石 CSS 模組化拆分 (P2)
-- 將 4,180+ 行的單一 `style.css` 拆分為模組化樣式檔：
-  - `base.css`（全域變數、排版、字型、重置）
-  - `town.css`（城鎮舞台、NPC、羅盤）
-  - `battle.css`（戰鬥舞台、敵方陣列、技能台）
-  - `menu.css`（1600x900 主選單、裝備、Gambit）
-  - `hud.css`（小隊狀態軌道、Toast、狀態條）
-
-### 7.3 🟨 邊界防禦與歷史死代碼清理 (P2)
-- `TemplateCatalog` 查無模板時統一拋出 `TemplateNotFoundException`，禁止回傳空物件偽裝。
-- 清理 `Mob.java:L138-224` 約 90 行註解殘留，整理 `LivingStats` 7 項過期註解欄位。
-- 前端 CDN 外部依賴補齊 SRI (Subresource Integrity) 雜湊校驗。
-
----
-
-## 🛡️ 8. 基礎設施持久化加固 (Persistence Hardening) — Priority: P0 / P1
-
-### 8.1 Write-Behind 有界背壓與可靠關閉 (P0)
-- 參見 **§0.3**。落實有界佇列、滿載策略、優雅關機等待機制與錯誤重試。
-
-### 8.2 存檔資料版本相容與序列化隔離 (P1)
-- 存檔 Entity (`PlayerSaveEntity`、`PartySaveEntity`) 導入資料格式版本號 (`schemaVersion`)。
-- 建立升級遷移適配器 (Data Migration Adapter)，確保 JSON 結構演進時舊有存檔可平滑升級，避免資料庫反序列化報錯。
-
----
-
-## 🌐 9. 網路安全與資料校驗 (Network & Data Integrity) — Priority: P1 / P2
-
-### 9.1 WebSocket 身分驗證、資源配額與本機綁定 (P1)
-- **現存缺陷**：
-  - `MudWebSocketHandler.afterConnectionEstablished()` 對所有連線直接分配 Actor，無握手驗證；僅有 Origin 白名單限制。
-  - 缺乏單一 IP 連線配額、訊息長度限制與指令速率限制 (Rate Limiting)。
+### 11.1 測試套件分層與純單元測試下沉 (P3)
+- **現狀**：專案有 61 個測試檔案、231 項測試，其中有 41 個測試類標註了重量級 `@SpringBootTest`，整套測試需耗時 25+ 秒，且需手動排空 Party 快取。
 - **改善方案**：
-  - **本機單人模式防護**：若維持本機開發/遊玩，於設定中強制綁定本機環回介面 (`127.0.0.1`)，明確記載部署限制。
-  - **對外/多人部署防護**：
-    1. 在握手攔截器 (`HandshakeInterceptor`) 實作 Token / Principal 驗證。
-    2. 加入 `WebSocketSessionManager` 限制每連線最大訊息大小（例如 64KB）與頻率限制（例如 20 req/sec）。
-    3. 實作存檔存取權限驗證，防止越權操作其他角色資料。
+  1. **測試分層**：
+     - **Fast Unit Tests**：純演算法與領域模型（`DefenseResolver`、`XpProgressionService`、`FormationEngine`、`RandomUtil`），改寫為純單元測試（不啟動 Spring Context），反饋時間縮短至 3~5 秒。
+     - **Spring Integration Tests**：資料庫持久化、Actor 訊息信箱、WebSocket 通訊保留 `@SpringBootTest`。
+  2. **快取自動隔離**：建立 `BaseIntegrationTest`，於 `@AfterEach` 自動重置各類別單例與暫存快取，杜絕跨測試污染。
 
-### 9.2 集中式遊戲 JSON 啟動期拓撲驗證 (P1)
-- **現存缺陷**：
-  - 大量 JSON 模板分散在不同 loader 載入，資料欄位缺失或跨檔引用無效（如引用不存在的技能 ID、物品 ID 或出口房間 ID）需等到執行期才能發現。
-- **改善方案**：
-  - 建立 `DataIntegrityValidator` 於 Spring Boot 啟動時執行：
-    - 驗證所有物品 ID、技能 ID、怪物 ID 的唯一性。
-    - 驗證房間出口對應的目標房間是否存在。
-    - 驗證怪物的掉落清單物品 ID 是否存在。
-    - 產出詳細的啟動資料檢核報告，若有致命缺失直接阻止啟動。
-
----
-
-## 📚 10. ✅ [已完成] 文件真理源與目錄結構治理 (Documentation & Governance) — Priority: P1
-
-> **落地進度**：已於 2026-10-02 完成。
-> 1. 全專案嚴格以 `Party.MAX_PARTY_SIZE = 5` 為單一真相源。
-> 2. `ARCHITECTURE.md` 歷史殘留「6 人小隊 HUD」已全數更正為 5 人小隊 HUD。
-> 3. `ARCHITECTURE.md` 目錄結構校正：`domain/actor/core/VirtualActor.java`、`RoomMessageBuffer.java`、`MessageFragment.java`、`MessageOutput.java`。
-> 4. 消除死鏈接，統一文檔引用。
-
-### 10.1 全專案小隊容量規範統一
-- 全專案嚴格以 `Party.MAX_PARTY_SIZE = 5` 為單一真相源。
-- 全面清查並修正 `ARCHITECTURE.md`、`GEMINI.md` 等歷史文檔中殘留的「6 人小隊 HUD」等舊字樣，統一為 **5 人小隊**。
-
-### 10.2 架構圖與實體原始碼路徑校準
-- 校正 `ARCHITECTURE.md` 的目錄樹：
-  - `VirtualActor` 修正為 `domain/actor/core/VirtualActor.java`。
-  - 前端靜態資源修正為 `src/main/resources/static/js/` 及其子目錄（`panels/`, `modals/`, `network/` 等）。
-  - 移除已過時之檔案路徑描述，聚焦模組職責邊界。
-
-### 10.3 測試環境標準化與驗證基線
-- 專案基於 Java 25 與 Spring Boot 4.x。
-- 明確規定本機與 CI 必須以 JDK 25 執行 `test.ps1` 或 `mvn clean test`，避免因環境 Java 8 / 17 導致 `UnsupportedClassVersionError`。
+### 11.2 系統可觀測性與指標度量 (P3)
+- 透過 `DomainMetricsPort` 擴充指標收集：
+  - 活躍連線數、活躍房間 Actor 數、戰鬥迴圈進行中數量。
+  - 指令限流與拒絕次數。
+  - Write-Behind 佇列深度與 flush 失敗次數。
+  - 存檔讀取失敗與遷移執行計數。
+- 確保所有敏感資料（Token、票證、玩家密碼）絕不外洩至日誌中。
 
 ---
 
 ## 📋 改善項目實施優先序總表 (Execution Priority Matrix)
 
-| 優先序 | 類別代碼 | 改善任務簡述 | 核心影響領域 | 對應章節 |
-| :---: | :---: | :--- | :--- | :--- |
-| **P0** | ROOM-01 | ✅ 房間狀態與地面掉落物持久化閉環 (`RoomService.record`) (已完成) | 世界狀態防遺失 | §0.1 |
-| **P0** | COMB-00 | ✅ 圓桌戰鬥防禦切片累積總機率收斂 (消除 Crit/Hit 湮滅漏洞) (已完成) | 核心戰鬥數學 | §0.2, §3.1 |
-| **P0** | ASYNC-01 | ✅ Write-Behind 佇列有界背壓與優雅關閉無競態 (已完成) | 系統併發安全 | §0.3, §8.1 |
-| **P0** | SEC-01 | ✅ 前端未轉義動態插值修補與 53 個 inline 事件委派改造 (已完成) | 前端安全性與 CSP | §0.4, §7.1 |
-| **P0** | CFG-01 | ✅ 建立 `GameConfig` 集中管理全域硬編碼常數 (已完成) | 基礎設定解耦 | §2.1 |
-| **P1** | CANON-01 | ✅ Phase 2: `ItemDefinition` + `ItemInstance` + `ItemView` (已完成) | 物品單一真相源 | §1.1 |
-| **P1** | CANON-02 | ✅ Phase 3: Single `SkillDefinition` (MUD/DRPG Facets) (已完成) | 技能定義合併 | §1.2 |
-| **P1** | CANON-03 | ✅ Phase 4: 徹底移除 `TemplateRepository` 靜態呼叫 (DI 遷移) (已完成) | 測試與架構隔離 | §1.3 |
-| **P1** | CANON-04 | Phase 5: 基於 Snapshot / Outcome 的角色戰鬥同步 | 併發與資料一致性 | §1.4 |
-| **P1** | MUD-01 | 補完 `Mob.sayToRoom()` / `attack()` 與 AI 行為 | 怪物 AI 運作 | §4.1 |
-| **P1** | MUD-02 | 補完 MUD 端角色升級閉環與經驗值統一 | 角色數值成長 | §2.2, §4.2 |
-| **P1** | MUD-03 | 串接 MUD 端 Buff/Debuff 心跳處理引擎 | MUD 戰鬥完整性 | §4.3 |
-| **P1** | UI-01 | 全域佈局重構與三種資訊密度 (字級 >= 13px) | 介面破版徹底根治 | §5.1, §5.2 |
-| **P1** | ARCH-01 | Domain 層反向依賴反轉 (Phase 10) | 六角形純淨架構 | §6.1 |
-| **P1** | DATA-01 | `classes.json` 職業門派 JSON 串接 | 職業成長資料驅動 | §2.3 |
-| **P1** | VAL-01 | 集中式遊戲 JSON 啟動期拓撲校驗 (`DataIntegrityValidator`) | 資料啟動防禦 | §9.2 |
-| **P1** | DOC-01 | ✅ 文件全域統一 (5人小隊/真實目錄校準/狀態核銷) (已完成) | 文件單一真理源 | §10.1, §10.2 |
-| **P1** | NET-01 | WebSocket 本機綁定限制與公開部署身分驗證/配額防禦 | 網路安全邊界 | §9.1 |
-| **P2** | COMB-02 | 盾牌獨立格擋 (Block)、破招反擊 (Riposte)、魂系精力破防 | 魂系與深度博弈 | §3.2, §3.3 |
-| **P2** | COMB-03 | 主角自由潛能點 (Potential Points) 雙軌升級 | 角色 Build 自由度 | §3.4 |
-| **P2** | MUD-04 | RoomFlag / LivingPosture / DamageType 抗性生效 | 世界規則生效 | §4.4 |
-| **P2** | UI-02 | HP / MP / SP / SAN 雙軌資源顯示契約 | 技能資源清晰度 | §5.3 |
-| **P2** | UI-03 | 探索舞台雙欄化與控制回歸羅盤 | 操作流暢度 | §5.4 |
-| **P2** | FE-01 | 巨石 CSS 模組化拆分 (4180+ 行拆分) | 前端可維護性 | §7.2 |
-| **P2** | DATA-02 | 夥伴套路、貨棧商品、初始道具完全移入 JSON | 100% Data-Driven | §2.4 |
-| **P2** | QUAL-01 | 歷史註解殘留清理 / 死代碼移除 / 模板未找到異常 | 程式庫整潔度 | §4.4, §7.3 |
-| **P2** | DB-01 | 存檔 Entity 版本相容 (`schemaVersion`) 與遷移適配器 | 持久化平滑升級 | §8.2 |
+| 優先序 | 類別代碼 | 改善任務簡述 | 核心影響領域 | 對應章節 | 狀態 |
+| :---: | :---: | :--- | :--- | :---: | :---: |
+| **P0** | ROOM-01 | 房間狀態與地面掉落物持久化閉環 (`RoomService.record`) | 世界狀態防遺失 | §0.1 | ✅ 已完成 |
+| **P0** | COMB-00 | 圓桌戰鬥防禦切片累積總機率收斂 (消除 Crit/Hit 湮滅) | 核心戰鬥數學 | §0.2 | ✅ 已完成 |
+| **P0** | ASYNC-01 | Write-Behind 佇列有界背壓與優雅關閉無競態 | 系統併發安全 | §0.3 | ✅ 已完成 |
+| **P0** | SEC-01 | 前端未轉義動態插值修補與 53 個 inline 事件委派改造 | 前端安全性與 CSP | §0.4 | ✅ 已完成 |
+| **P1** | CANON-01 | Phase 2: Canonical Item (`Definition`+`Instance`+`View`) | 物品單一真相源 | §1.1 | ✅ 已完成 |
+| **P1** | CANON-02 | Phase 3: Single `SkillDefinition` (MUD/DRPG Facets) | 技能定義合併 | §1.2 | ✅ 已完成 |
+| **P1** | CANON-03 | Phase 4: 徹底移除 `TemplateRepository` 靜態呼叫 (DI) | 測試與架構隔離 | §1.3 | ✅ 已完成 |
+| **P1** | CANON-04 | Phase 5: 基於 Snapshot / Outcome 的角色戰鬥同步 | 併發與資料一致性 | §1.4 | ✅ 已完成 |
+| **P1** | COMB-01 | 圓桌單次擲骰收斂、Stamina 精力破防、主角潛能點加點 | 戰鬥深度與成長 | §2.3~2.6 | ✅ 已完成 |
+| **P1** | MUD-01 | MUD 怪物 AI、擊殺升級閉環、Buff 引擎與規則補齊 | 世界規則與 AI | §3.1~3.4 | ✅ 已完成 |
+| **P1** | UI-01 | 全域佈局重構、三種資訊密度 (字級 $\ge 13\text{px}$) 與雙軌契約 | 介面佈局與資源呈現 | §4.1~4.3 | ✅ 已完成 |
+| **P1** | ARCH-01 | Domain 層反向依賴反轉 (Phase 10 Clean Architecture) | 六角形純淨架構 | §5.1 | ✅ 已完成 |
+| **P1** | ACT-01 | 收斂 Room Actor 狀態修改通道 (修復 `removePlayer` 雙軌修改) | Actor 狀態單一所有 | §7.1 | 🔲 待執行 |
+| **P1** | ACT-02 | 戰鬥虛擬執行緒 Executor 治理與 5 分鐘逾時斷路器 | 執行緒防洩漏 | §7.2 | 🔲 待執行 |
+| **P1** | SAVE-01 | 檔案式存檔引入 `schemaVersion` 與版本遷移適配器 | 存檔平滑相容升級 | §8.1 | 🔲 待執行 |
+| **P1** | SAVE-02 | 壞檔防禦標記與防覆寫保護 (區分 `empty` 與 `corrupted`) | 進度防毀損保護 | §8.2 | 🔲 待執行 |
+| **P1** | DATA-01 | 消除職業反擊特例、陣型比對與技能別名硬編碼 | 100% 資料驅動 | §9.1 | 🔲 待執行 |
+| **P1** | VAL-01 | 集中式遊戲 JSON 啟動期拓撲校驗 (`DataIntegrityValidator`) | 啟動期 Fail-Fast | §9.2 | 🔲 待執行 |
+| **P2** | CSS-01 | 5,810 行巨石 `style.css` 拆分為 5 大模組 | 前端可維護性 | §10.1 | 🔲 待執行 |
+| **P2** | FE-01 | 3,141 行 `party-modal.js` 垂直切片模組化拆分 | 前端複雜度解耦 | §10.2 | 🔲 待執行 |
+| **P2** | LEG-01 | `static/legacy/drpg-view.js` 正式除役與註解清理 | 代碼庫整潔度 | §10.3 | 🔲 待執行 |
+| **P2** | UI-02 | 探索舞台雙欄化與控制回歸羅盤 | 操作流暢度 | §10.4 | 🔲 待執行 |
+| **P2** | DATA-02 | 夥伴套路、初始道具、貨棧商品移入 JSON | 資料配置徹底化 | §9.3 | 🔲 待執行 |
+| **P3** | TEST-01 | 核心數值與領域規則下沉為純單元測試 (加速 CI) | 測試工程效能 | §11.1 | 🔲 待執行 |
+| **P3** | OBS-01 | 系統度量指標擴充與敏感資料日誌審核 | 系統觀測性加固 | §11.2 | 🔲 待執行 |
+| **P4** | NET-01 | WebSocket 本機綁定模式與公開模式票證驗證 | 網路安全邊界 | §6.1, §6.2 | 🔲 待執行 |
+| **P4** | NET-02 | WebSocket 64KB 訊息長度上限與每秒 20 次指令限流 | 資源保護與抗洪水 | §6.2 | 🔲 待執行 |

@@ -36,6 +36,10 @@ public interface TemplateReader {
 
   Optional<PartyMemberSkill> findPartySkill(String skillId);
 
+  default String resolveSkillAlias(String skillId) {
+    return null;
+  }
+
   Optional<FormationTemplate> findFormation(String formationId);
 
   Optional<ZoneTemplate> findZone(String zoneId);

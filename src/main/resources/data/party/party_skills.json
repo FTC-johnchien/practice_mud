@@ -121,7 +121,8 @@
     "heal": false,
     "taunt": true,
     "stun": false,
-    "allowedWeapons": []
+    "allowedWeapons": [],
+    "aliases": ["class_warrior_taunt"]
   },
   {
     "id": "tank_smash",
@@ -161,7 +162,8 @@
       "STAFF",
       "WAND",
       "UNARMED"
-    ]
+    ],
+    "aliases": ["class_cleric_heal"]
   },
   {
     "id": "heal_all_purify",
@@ -182,7 +184,8 @@
       "STAFF",
       "WAND",
       "UNARMED"
-    ]
+    ],
+    "aliases": ["class_cleric_purify"]
   },
   {
     "id": "rogue_shadow_strike",

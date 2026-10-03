@@ -476,15 +476,27 @@ public class PartyMember implements Buffable {
 
   private String resolveSkillAlias(String skillId) {
     if (skillId == null) return null;
-    return switch (skillId.toLowerCase()) {
-      case "tank_taunt" -> "class_warrior_taunt";
-      case "class_warrior_taunt" -> "tank_taunt";
-      case "heal_single" -> "class_cleric_heal";
-      case "class_cleric_heal" -> "heal_single";
-      case "heal_all_purify" -> "class_cleric_purify";
-      case "class_cleric_purify" -> "heal_all_purify";
-      default -> null;
-    };
+    TemplateReader reader = getTemplateReader();
+    if (reader != null) {
+      String alias = reader.resolveSkillAlias(skillId);
+      if (alias != null) return alias;
+    }
+    if (this.skills != null) {
+      for (PartyMemberSkill s : this.skills) {
+        if (s == null) continue;
+        if (skillId.equalsIgnoreCase(s.getId()) && s.getAliases() != null && !s.getAliases().isEmpty()) {
+          return s.getAliases().get(0);
+        }
+        if (s.getAliases() != null) {
+          for (String a : s.getAliases()) {
+            if (skillId.equalsIgnoreCase(a)) {
+              return s.getId();
+            }
+          }
+        }
+      }
+    }
+    return null;
   }
 
   public boolean isOnCooldown(String skillId) {

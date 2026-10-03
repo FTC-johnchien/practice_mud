@@ -130,7 +130,8 @@ public class DefenseResolver {
     boolean canRiposte = false;
     int riposteAtk = 5;
     if (defender instanceof com.example.htmlmud.domain.actor.impl.Player p) {
-      canRiposte = "SWORDSMAN".equalsIgnoreCase(p.getClassId()) || parrySkill != null;
+      boolean classCanRiposte = p.getClassTemplate().map(t -> t.hasTrait("canRiposte")).orElse("SWORDSMAN".equalsIgnoreCase(p.getClassId()));
+      canRiposte = classCanRiposte || parrySkill != null;
       if (p.getStats() != null) {
         riposteAtk = Math.max(5, (int)(p.getStats().getStr() * 1.2 + p.getStats().getDex()));
       }
@@ -200,7 +201,8 @@ public class DefenseResolver {
     boolean canRiposte = false;
     int riposteAtk = 5;
     if (targetMember != null) {
-      canRiposte = "SWORDSMAN".equalsIgnoreCase(targetMember.getClassId()) || parrySkill != null;
+      boolean classCanRiposte = targetMember.getClassTemplate().map(t -> t.hasTrait("canRiposte")).orElse("SWORDSMAN".equalsIgnoreCase(targetMember.getClassId()));
+      canRiposte = classCanRiposte || parrySkill != null;
       riposteAtk = Math.max(5, targetMember.getEffectiveMaxDamage());
     }
 

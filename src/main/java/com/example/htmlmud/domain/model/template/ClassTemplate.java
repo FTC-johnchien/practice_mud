@@ -46,6 +46,29 @@ public record ClassTemplate(
     return growth.statWeights().getOrDefault(statKey.toUpperCase(), 0.0);
   }
 
+  public boolean hasTrait(String traitKey) {
+    if (traits == null || traitKey == null) return false;
+    Object val = traits.get(traitKey);
+    if (val instanceof Boolean b) return b;
+    if (val != null) {
+      String s = val.toString().trim();
+      return "true".equalsIgnoreCase(s) || "1".equals(s);
+    }
+    return false;
+  }
+
+  public double getTraitDouble(String traitKey, double defaultValue) {
+    if (traits == null || traitKey == null) return defaultValue;
+    Object val = traits.get(traitKey);
+    if (val instanceof Number n) return n.doubleValue();
+    if (val != null) {
+      try {
+        return Double.parseDouble(val.toString());
+      } catch (NumberFormatException ignored) {}
+    }
+    return defaultValue;
+  }
+
   @JsonIgnoreProperties(ignoreUnknown = true)
   public record ClassGrowth(
       int hpPerLevel,
