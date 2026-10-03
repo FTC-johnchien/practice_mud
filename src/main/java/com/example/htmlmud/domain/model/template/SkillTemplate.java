@@ -60,4 +60,16 @@ public class SkillTemplate {
 
   com.example.htmlmud.domain.model.config.BuffConfig buff;
 
+  // DRPG 戰術技能解鎖橋接規則
+  List<com.example.htmlmud.domain.model.definition.SkillBridgeRule> bridges;
+
+  public com.example.htmlmud.domain.model.definition.SkillDefinition toDefinition() {
+    com.example.htmlmud.domain.model.definition.SkillDefinition def =
+        com.example.htmlmud.domain.model.definition.SkillDefinition.fromSkillTemplate(this);
+    if (bridges != null && !bridges.isEmpty()) {
+      return def.toBuilder().bridgeRules(bridges).build();
+    }
+    return def;
+  }
+
 }

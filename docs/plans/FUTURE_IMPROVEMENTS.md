@@ -86,18 +86,13 @@
 > 5. 重構 `PartyItemSlot` 全面委派至 `ItemDefinition`，並於 `PartyInventory` 徹底移除 substring 猜測硬編碼。
 > 6. 新增專屬單元測試 `CanonicalItemModelTest` (7 測試項) 100% 綠燈通過。
 
-### 1.2 🟧 Phase 3: 統一技能定義 Single `SkillDefinition` (MUD / DRPG Facets) (P1)
-- **現存缺陷**：
-  - `data/global/skills/**` 與 `data/party/party_skills.json` 存在雙重維護與重複定義。
-  - `SkillBridgeService` 以大量硬編碼 `if-else / switch` 映射 MUD 與 DRPG 技能。
-- **改善方案**：
-  1. **Single `SkillDefinition` with Facets**：
-     - `identity`: id, name, description, icon, tags, weapon requirements.
-     - `mud`: `MudSkillRules` (招式 moves, counter, combo, SP cost).
-     - `drpg`: `DrpgSkillRules` (冷卻, 射程, 仇恨, 治療, 護盾, 異常狀態).
-     - `bridges`: `SkillBridgeRule[]`（定義 MUD 技能達到特定等級解鎖的 DRPG 技能 ID 清單）。
-  2. **資料驅動橋接**：將 `SkillBridgeService` 的映射邏輯改為完全由 JSON `bridges` 驅動，廢棄硬編碼 switch。
-  3. **小隊與角色僅持狀態**：`PartyMember` 僅保存 `Map<String, SkillState>`（ID 與冷卻/進度），施放時由 `SkillResolver` 動態合成視圖。
+### 1.2 ✅ [已完成] Phase 3: 統一技能定義 Single `SkillDefinition` (MUD / DRPG Facets) (P1)
+> **落地進度**：已於 2026-10-03 完成。
+> 1. 建立規範化技能模型 `SkillDefinition` 與不可變切面 `MudSkillRules` (招式、消耗、倍率、連招、反擊) 及 `DrpgSkillRules` (小隊戰術、GCD、詠唱、仇恨、治療、護盾、異常)。
+> 2. 建立不可變橋接規則 `SkillBridgeRule`，支援以等級為門檻資料驅動解鎖 DRPG 技能 ID。
+> 3. `SkillTemplate` 新增 `bridges` 設定與 `toDefinition()` 工廠方法，並支援 `resolveDefaultBridges` 預設規則庫開箱相容。
+> 4. `SkillBridgeService` 重構為純資料驅動查表 (`mapMudSkillToDrpgSkills`, `getPrerequisiteMudSkills`)，徹底廢除寫死之 switch/if-else。
+> 5. 新增 `CanonicalSkillModelTest` (4 測試項) 100% 綠燈通過。
 
 ### 1.3 🟧 Phase 4: 徹底移除 `TemplateRepository` 靜態呼叫 (DI Migration) (P1)
 - **現存缺陷**：

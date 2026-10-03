@@ -4,7 +4,9 @@ import java.util.Map;
 import com.example.htmlmud.domain.model.enums.DamageType;
 import com.example.htmlmud.domain.model.enums.ResourceType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Builder;
 
+@Builder(toBuilder = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Mechanics(
 

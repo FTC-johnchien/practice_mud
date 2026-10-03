@@ -104,63 +104,34 @@ public class SkillBridgeService {
   }
 
   /**
-   * 根據 MUD 技能 ID 與等級，動態求得對應解鎖的 DRPG 戰術技能清單
+   * 根據 MUD 技能 ID 與等級，動態求得對應解鎖的 DRPG 戰術技能清單 (完全由 SkillDefinition 與 SkillBridgeRule 資料驅動)
    */
   public List<String> mapMudSkillToDrpgSkills(String mudSkillId, int level) {
     List<String> results = new ArrayList<>();
     if (mudSkillId == null) return results;
-    String id = mudSkillId.toLowerCase();
 
-    // 劍系
-    if (id.equals("basic_sword")) {
-      results.add("sword_pierce");
-      if (level >= 5) results.add("sword_storm");
-    } else if (id.equals("taiji_sword") || id.equals("taiyin_sword") || id.equals("tianjian_sword")) {
-      results.add("sword_pierce");
-      results.add("sword_storm");
+    // 1. 優先由 TemplateReader 查取 SkillTemplate 轉換為 Canonical SkillDefinition
+    var skillOpt = templateReader.findSkill(mudSkillId);
+    List<com.example.htmlmud.domain.model.definition.SkillBridgeRule> rules = null;
+    if (skillOpt.isPresent()) {
+      var def = skillOpt.get().toDefinition();
+      if (def != null && def.hasBridgeRules()) {
+        rules = def.bridgeRules();
+      }
     }
-    // 刀法 / 重兵系
-    else if (id.equals("basic_blade") || id.equals("badao_blade") || id.equals("storm_blade")) {
-      results.add("sword_pierce");
-      if (level >= 3) results.add("tank_smash");
-    } else if (id.equals("basic_axe") || id.equals("mountain_split_axe") || id.equals("basic_blunt")) {
-      results.add("tank_smash");
+
+    // 2. 若未載入模板，則自 SkillDefinition 預設規則庫讀取
+    if (rules == null || rules.isEmpty()) {
+      rules = com.example.htmlmud.domain.model.definition.SkillDefinition.resolveDefaultBridges(mudSkillId);
     }
-    // 守禦 / 嘲諷系
-    else if (id.equals("basic_parry") || id.equals("iron_cloth")) {
-      results.add("tank_taunt");
-    }
-    // 刺術 / 敏捷系
-    else if (id.equals("basic_dagger")) {
-      results.add("rogue_shadow_strike");
-      if (level >= 5) results.add("rogue_seven_star");
-    } else if (id.equals("shadow_strike")) {
-      results.add("rogue_shadow_strike");
-      results.add("rogue_seven_star");
-    }
-    // 醫道 / 復原系
-    else if (id.equals("basic_first_aid")) {
-      results.add("heal_single");
-      if (level >= 5) results.add("heal_all_purify");
-    } else if (id.equals("divine_healing")) {
-      results.add("heal_single");
-      results.add("heal_all_purify");
-    }
-    // 法術 / 符策系
-    else if (id.equals("basic_magic")) {
-      results.add("taoist_seal");
-      if (level >= 5) results.add("taoist_thunder");
-    } else if (id.equals("thunder_strike") || id.equals("fireball") || id.equals("ice_spear")) {
-      results.add("taoist_seal");
-      results.add("taoist_thunder");
-    }
-    // 心法 / 星宿系
-    else if (id.equals("chaos_magic") || id.equals("violet_mist_force")) {
-      results.add("star_warp");
-      if (level >= 5) results.add("star_meteor");
-    } else if (id.equals("zen_trance")) {
-      results.add("star_warp");
-      results.add("star_meteor");
+
+    // 3. 依等級檢定判定解鎖
+    for (var rule : rules) {
+      if (level >= rule.requiredLevel()) {
+        if (!results.contains(rule.targetDrpgSkillId())) {
+          results.add(rule.targetDrpgSkillId());
+        }
+      }
     }
 
     return results;
@@ -247,20 +218,38 @@ public class SkillBridgeService {
     Set<String> prereqs = new LinkedHashSet<>();
     if (drpgSkillId == null) return prereqs;
 
-    switch (drpgSkillId.toLowerCase()) {
-      case "sword_pierce" -> prereqs.addAll(List.of("basic_sword", "basic_blade", "taiji_sword"));
-      case "sword_storm" -> prereqs.addAll(List.of("basic_sword (Lv.5)", "taiji_sword", "taiyin_sword", "tianjian_sword"));
-      case "tank_smash" -> prereqs.addAll(List.of("basic_axe", "mountain_split_axe", "basic_blunt", "basic_blade (Lv.3)"));
-      case "tank_taunt" -> prereqs.addAll(List.of("basic_parry", "iron_cloth"));
-      case "rogue_shadow_strike" -> prereqs.addAll(List.of("basic_dagger", "shadow_strike"));
-      case "rogue_seven_star" -> prereqs.addAll(List.of("basic_dagger (Lv.5)", "shadow_strike"));
-      case "heal_single" -> prereqs.addAll(List.of("basic_first_aid", "divine_healing"));
-      case "heal_all_purify" -> prereqs.addAll(List.of("basic_first_aid (Lv.5)", "divine_healing"));
-      case "taoist_seal" -> prereqs.addAll(List.of("basic_magic", "thunder_strike"));
-      case "taoist_thunder" -> prereqs.addAll(List.of("basic_magic (Lv.5)", "thunder_strike"));
-      case "star_warp" -> prereqs.addAll(List.of("chaos_magic", "violet_mist_force", "zen_trance"));
-      case "star_meteor" -> prereqs.addAll(List.of("zen_trance", "chaos_magic (Lv.5)"));
-      default -> {}
+    Map<String, com.example.htmlmud.domain.model.template.SkillTemplate> allSkills = templateReader.getAllSkills();
+    if (allSkills != null && !allSkills.isEmpty()) {
+      for (var entry : allSkills.entrySet()) {
+        var def = entry.getValue().toDefinition();
+        if (def != null && def.bridgeRules() != null) {
+          for (var rule : def.bridgeRules()) {
+            if (drpgSkillId.equalsIgnoreCase(rule.targetDrpgSkillId())) {
+              String label = entry.getValue().getId() + (rule.requiredLevel() > 1 ? " (Lv." + rule.requiredLevel() + ")" : "");
+              prereqs.add(label);
+            }
+          }
+        }
+      }
+    }
+
+    if (prereqs.isEmpty()) {
+      // 容錯靜態備用查表 (確保空模板測試環境穩定)
+      switch (drpgSkillId.toLowerCase()) {
+        case "sword_pierce" -> prereqs.addAll(List.of("basic_sword", "basic_blade", "taiji_sword"));
+        case "sword_storm" -> prereqs.addAll(List.of("basic_sword (Lv.5)", "taiji_sword", "taiyin_sword", "tianjian_sword"));
+        case "tank_smash" -> prereqs.addAll(List.of("basic_axe", "mountain_split_axe", "basic_blunt", "basic_blade (Lv.3)"));
+        case "tank_taunt" -> prereqs.addAll(List.of("basic_parry", "iron_cloth"));
+        case "rogue_shadow_strike" -> prereqs.addAll(List.of("basic_dagger", "shadow_strike"));
+        case "rogue_seven_star" -> prereqs.addAll(List.of("basic_dagger (Lv.5)", "shadow_strike"));
+        case "heal_single" -> prereqs.addAll(List.of("basic_first_aid", "divine_healing"));
+        case "heal_all_purify" -> prereqs.addAll(List.of("basic_first_aid (Lv.5)", "divine_healing"));
+        case "taoist_seal" -> prereqs.addAll(List.of("basic_magic", "thunder_strike"));
+        case "taoist_thunder" -> prereqs.addAll(List.of("basic_magic (Lv.5)", "thunder_strike"));
+        case "star_warp" -> prereqs.addAll(List.of("chaos_magic", "violet_mist_force", "zen_trance"));
+        case "star_meteor" -> prereqs.addAll(List.of("zen_trance", "chaos_magic (Lv.5)"));
+        default -> {}
+      }
     }
     return prereqs;
   }

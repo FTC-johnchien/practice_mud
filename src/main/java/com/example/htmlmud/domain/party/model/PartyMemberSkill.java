@@ -171,7 +171,10 @@ public class PartyMemberSkill {
 
     java.util.List<String> weapons = java.util.List.of();
     if (tpl.getUsage() != null && tpl.getUsage().allowedWeapons() != null) {
-      weapons = tpl.getUsage().allowedWeapons().stream().map(Enum::name).toList();
+      weapons = tpl.getUsage().allowedWeapons().stream()
+          .filter(java.util.Objects::nonNull)
+          .map(Enum::name)
+          .toList();
     }
 
     String category = "CLASS";
