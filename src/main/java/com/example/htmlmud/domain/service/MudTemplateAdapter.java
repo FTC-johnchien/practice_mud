@@ -41,7 +41,7 @@ public class MudTemplateAdapter {
   public Optional<GameItem> instantiateGameItem(String itemId, int amount) {
     return templateReader.findItem(itemId).map(tpl -> {
       PartyItemSlot slot = PartyItemSlot.fromItemTemplate(tpl, Math.max(1, amount));
-      GameItem item = slot.toGameItem();
+      GameItem item = slot.toGameItem(templateReader);
       item.setId(UUID.randomUUID().toString());
       return item;
     });

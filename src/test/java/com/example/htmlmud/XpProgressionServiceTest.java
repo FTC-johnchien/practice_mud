@@ -15,11 +15,13 @@ import com.example.htmlmud.domain.service.XpProgressionService;
 public class XpProgressionServiceTest {
 
   private XpProgressionService service;
+  private com.example.htmlmud.infra.persistence.repository.TemplateRepository templateRepository;
 
   @BeforeEach
   void setUp() {
     service = new XpProgressionService();
-    com.example.htmlmud.infra.persistence.repository.TemplateRepository.registerClass(
+    templateRepository = new com.example.htmlmud.infra.persistence.repository.TemplateRepository();
+    templateRepository.registerClass(
         com.example.htmlmud.domain.model.template.ClassTemplate.builder()
             .id("swordsman")
             .name("劍客")
@@ -31,7 +33,7 @@ public class XpProgressionServiceTest {
                 "WIS", 0.0
             )))
             .build());
-    com.example.htmlmud.infra.persistence.repository.TemplateRepository.registerClass(
+    templateRepository.registerClass(
         com.example.htmlmud.domain.model.template.ClassTemplate.builder()
             .id("warrior")
             .name("豪俠")
@@ -73,6 +75,7 @@ public class XpProgressionServiceTest {
     leader.setName("測試俠士");
     leader.setLeader(true);
     leader.setClassId("swordsman");
+    leader.setTemplateReader(templateRepository);
 
     LivingStats stats = new LivingStats();
     stats.setLevel(1);
@@ -127,6 +130,7 @@ public class XpProgressionServiceTest {
     tieNiu.setName("鐵牛");
     tieNiu.setLeader(false);
     tieNiu.setClassId("warrior");
+    tieNiu.setTemplateReader(templateRepository);
 
     LivingStats stats = new LivingStats();
     stats.setLevel(1);

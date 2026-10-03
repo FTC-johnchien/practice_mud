@@ -41,6 +41,7 @@ public class PartyService {
 
   private final Map<String, Party> partyCache = new java.util.concurrent.ConcurrentHashMap<>();
 
+  @org.springframework.beans.factory.annotation.Autowired
   public PartyService(TemplateReader templateReader) {
     this.templateReader = templateReader;
   }

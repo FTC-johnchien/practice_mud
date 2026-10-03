@@ -19,6 +19,9 @@ import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
 @ActiveProfiles("test")
 public class MobRankAndClassificationTest {
 
+  @org.springframework.beans.factory.annotation.Autowired
+  private TemplateRepository templateRepository;
+
   @Test
   @DisplayName("1. 驗證 MobRank 枚舉屬性與前綴設定")
   void testMobRankEnums() {
@@ -62,7 +65,7 @@ public class MobRankAndClassificationTest {
   @DisplayName("3. 驗證真實資料檔中 BOSS 與 UNIQUE 唯一命名生靈之正交標籤")
   void testRealWorldDataClassification() {
     // 畸變大師兄·宋天衡 (墨竹礦坑 BOSS, 唯一角色)
-    var songOpt = TemplateRepository.findMob("boss_song_tianheng");
+    var songOpt = templateRepository.getMob("boss_song_tianheng");
     assertThat(songOpt).isPresent();
     MobTemplate song = songOpt.get();
     assertThat(song.rank()).isEqualTo(MobRank.BOSS);
@@ -70,7 +73,7 @@ public class MobRankAndClassificationTest {
     assertThat(song.kind()).isEqualTo(MobKind.AGGRESSIVE);
 
     // 哥布林王 (銀葉村 BOSS, 唯一角色)
-    var goblinKingOpt = TemplateRepository.findMob("goblin_king");
+    var goblinKingOpt = templateRepository.getMob("goblin_king");
     assertThat(goblinKingOpt).isPresent();
     MobTemplate goblinKing = goblinKingOpt.get();
     assertThat(goblinKing.rank()).isEqualTo(MobRank.BOSS);
@@ -78,7 +81,7 @@ public class MobRankAndClassificationTest {
     assertThat(goblinKing.kind()).isEqualTo(MobKind.AGGRESSIVE);
 
     // 客棧掌櫃·福伯 (新手村 NPC, 唯一角色, 友善)
-    var innkeeperOpt = TemplateRepository.findMob("innkeeper");
+    var innkeeperOpt = templateRepository.getMob("innkeeper");
     assertThat(innkeeperOpt).isPresent();
     MobTemplate innkeeper = innkeeperOpt.get();
     assertThat(innkeeper.rank()).isEqualTo(MobRank.NORMAL);
@@ -86,7 +89,7 @@ public class MobRankAndClassificationTest {
     assertThat(innkeeper.kind()).isEqualTo(MobKind.FRIENDLY);
 
     // 新手村長·白石老人 (新手村 NPC, 唯一角色, 友善)
-    var elderOpt = TemplateRepository.findMob("village_elder");
+    var elderOpt = templateRepository.getMob("village_elder");
     assertThat(elderOpt).isPresent();
     MobTemplate elder = elderOpt.get();
     assertThat(elder.rank()).isEqualTo(MobRank.NORMAL);
@@ -94,7 +97,7 @@ public class MobRankAndClassificationTest {
     assertThat(elder.kind()).isEqualTo(MobKind.FRIENDLY);
 
     // 普通野鼠 (大眾量產怪物, 非唯一, 敵對)
-    var ratOpt = TemplateRepository.findMob("wild_rat");
+    var ratOpt = templateRepository.getMob("wild_rat");
     assertThat(ratOpt).isPresent();
     MobTemplate rat = ratOpt.get();
     assertThat(rat.rank()).isEqualTo(MobRank.NORMAL);
@@ -105,7 +108,7 @@ public class MobRankAndClassificationTest {
   @Test
   @DisplayName("4. 驗證 BattleEnemy 正確繼承 rank 與 isUnique，並注入【首領】前綴")
   void testBattleEnemyRankInheritance() {
-    var songOpt = TemplateRepository.findMob("boss_song_tianheng");
+    var songOpt = templateRepository.getMob("boss_song_tianheng");
     assertThat(songOpt).isPresent();
 
     BattleEnemy bossEnemy = BattleEnemy.fromTemplate("enemy_song", songOpt.get(), RowPosition.FRONT, null);
@@ -114,7 +117,7 @@ public class MobRankAndClassificationTest {
     assertThat(bossEnemy.isUnique()).isTrue();
     assertThat(bossEnemy.getName()).startsWith("【首領】");
 
-    var ratOpt = TemplateRepository.findMob("wild_rat");
+    var ratOpt = templateRepository.getMob("wild_rat");
     assertThat(ratOpt).isPresent();
 
     BattleEnemy ratEnemy = BattleEnemy.fromTemplate("enemy_rat", ratOpt.get(), RowPosition.FRONT, null);

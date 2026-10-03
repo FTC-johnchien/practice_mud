@@ -20,38 +20,31 @@ import com.example.htmlmud.domain.model.template.ClassTemplate;
 import com.example.htmlmud.domain.model.template.ShopTemplate;
 import com.example.htmlmud.domain.party.model.FormationTemplate;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
+import com.example.htmlmud.domain.repository.TemplateReader;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * 模板資料倉儲 (Template Repository)
- * 由 Spring 容器管理單例生命週期，內部持有實例化 Map 快取，
- * 同時提供 static delegate 方法確保既有靜態存取與各類測試 100% 向下相容。
+ * 由 Spring 容器管理生命週期之非靜態 Bean，內部持有獨立 Map 快取，落實 TemplateReader 埠。
  */
 @Component
 @Slf4j
-public class TemplateRepository {
+public class TemplateRepository implements TemplateReader {
 
-  // 快取映射 (static final 確保多實例與靜態存取資料一致性，必須在 INSTANCE 前初始化)
-  private static final Map<String, ZoneTemplate> zoneTemplates = new ConcurrentHashMap<>();
-  private static final Map<String, RoomTemplate> roomTemplates = new ConcurrentHashMap<>();
-  private static final Map<String, MobTemplate> mobTemplates = new ConcurrentHashMap<>();
-  private static final Map<String, ItemTemplate> itemTemplates = new ConcurrentHashMap<>();
-  private static final Map<String, SkillTemplate> skillTemplates = new ConcurrentHashMap<>();
-  private static final Map<String, RaceTemplate> raceTemplates = new ConcurrentHashMap<>();
-  private static final Map<String, CompanionTemplate> companionTemplates = new ConcurrentHashMap<>();
-  private static final Map<String, FormationTemplate> formationTemplates = new ConcurrentHashMap<>();
-  private static final Map<String, PartyMemberSkill> partySkillTemplates = new ConcurrentHashMap<>();
-  private static final Map<String, ClassTemplate> classTemplates = new ConcurrentHashMap<>();
-  private static final Map<String, ShopTemplate> shopTemplates = new ConcurrentHashMap<>();
+  // 快取映射 (純實例成員變數，杜絕靜態共享狀態污染)
+  private final Map<String, ZoneTemplate> zoneTemplates = new ConcurrentHashMap<>();
+  private final Map<String, RoomTemplate> roomTemplates = new ConcurrentHashMap<>();
+  private final Map<String, MobTemplate> mobTemplates = new ConcurrentHashMap<>();
+  private final Map<String, ItemTemplate> itemTemplates = new ConcurrentHashMap<>();
+  private final Map<String, SkillTemplate> skillTemplates = new ConcurrentHashMap<>();
+  private final Map<String, RaceTemplate> raceTemplates = new ConcurrentHashMap<>();
+  private final Map<String, CompanionTemplate> companionTemplates = new ConcurrentHashMap<>();
+  private final Map<String, FormationTemplate> formationTemplates = new ConcurrentHashMap<>();
+  private final Map<String, PartyMemberSkill> partySkillTemplates = new ConcurrentHashMap<>();
+  private final Map<String, ClassTemplate> classTemplates = new ConcurrentHashMap<>();
+  private final Map<String, ShopTemplate> shopTemplates = new ConcurrentHashMap<>();
 
-  // 靜態持有單例實例，確保向下相容靜態呼叫與純單元測試
-  private static final TemplateRepository INSTANCE = new TemplateRepository();
-
-  public static TemplateRepository getInstance() {
-    return INSTANCE;
-  }
-
-  // 預先計算基礎技能的 ID
+  // 預先計算基礎技能的 ID (不可變常數映射)
   private static final Map<SkillCategory, String> BASIC_SKILL_IDS = new EnumMap<>(SkillCategory.class);
   private static final Map<SkillCategory, String> MOB_BASIC_SKILL_IDS = new EnumMap<>(SkillCategory.class);
 
@@ -93,10 +86,6 @@ public class TemplateRepository {
     initDefaults();
   }
 
-  public static void clearAll() {
-    INSTANCE.clear();
-  }
-
   public synchronized void initDefaults() {
     com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
     if (partySkillTemplates.isEmpty()) {
@@ -131,24 +120,22 @@ public class TemplateRepository {
     }
   }
 
-  public static synchronized void initDataDrivenDefaults() {
-    INSTANCE.initDefaults();
-  }
-
   // --- Zone ---
   public void addZone(ZoneTemplate tpl) {
     if (tpl != null && tpl.id() != null) zoneTemplates.put(tpl.id(), tpl);
   }
+  public void registerZone(ZoneTemplate tpl) { addZone(tpl); }
   public Optional<ZoneTemplate> getZone(String id) {
     return Optional.ofNullable(zoneTemplates.get(id));
   }
-  public static void registerZone(ZoneTemplate tpl) { INSTANCE.addZone(tpl); }
-  public static Optional<ZoneTemplate> findZone(String id) { return INSTANCE.getZone(id); }
+  @Override
+  public Optional<ZoneTemplate> findZone(String id) { return getZone(id); }
 
   // --- Room ---
   public void addRoom(RoomTemplate tpl) {
     if (tpl != null && tpl.id() != null) roomTemplates.put(tpl.id(), tpl);
   }
+  public void registerRoom(RoomTemplate tpl) { addRoom(tpl); }
   public Optional<RoomTemplate> getRoom(String id) {
     if (id == null) return Optional.empty();
     RoomTemplate tpl = roomTemplates.get(id);
@@ -162,15 +149,15 @@ public class TemplateRepository {
     }
     return Optional.empty();
   }
+  @Override
+  public Optional<RoomTemplate> findRoom(String id) { return getRoom(id); }
   public Map<String, RoomTemplate> getRoomTemplateMap() { return roomTemplates; }
-  public static void registerRoom(RoomTemplate tpl) { INSTANCE.addRoom(tpl); }
-  public static Optional<RoomTemplate> findRoom(String id) { return INSTANCE.getRoom(id); }
-  public static Map<String, RoomTemplate> getRoomTemplates() { return INSTANCE.getRoomTemplateMap(); }
 
   // --- Mob ---
   public void addMob(MobTemplate tpl) {
     if (tpl != null && tpl.id() != null) mobTemplates.put(tpl.id(), tpl);
   }
+  public void registerMob(MobTemplate tpl) { addMob(tpl); }
   public Optional<MobTemplate> getMob(String id) {
     if (id == null) return Optional.empty();
     MobTemplate tpl = mobTemplates.get(id);
@@ -190,13 +177,14 @@ public class TemplateRepository {
     }
     return Optional.empty();
   }
-  public static void registerMob(MobTemplate tpl) { INSTANCE.addMob(tpl); }
-  public static Optional<MobTemplate> findMob(String id) { return INSTANCE.getMob(id); }
+  @Override
+  public Optional<MobTemplate> findMob(String id) { return getMob(id); }
 
   // --- Item ---
   public void addItem(ItemTemplate tpl) {
     if (tpl != null && tpl.id() != null) itemTemplates.put(tpl.id(), tpl);
   }
+  public void registerItem(ItemTemplate tpl) { addItem(tpl); }
   public Optional<ItemTemplate> getItem(String id) {
     if (id == null) return Optional.empty();
     ItemTemplate tpl = itemTemplates.get(id);
@@ -214,29 +202,43 @@ public class TemplateRepository {
     }
     return Optional.empty();
   }
-  public static void registerItem(ItemTemplate tpl) { INSTANCE.addItem(tpl); }
-  public static Optional<ItemTemplate> findItem(String id) { return INSTANCE.getItem(id); }
+  @Override
+  public Optional<ItemTemplate> findItem(String id) { return getItem(id); }
 
   // --- Skill ---
   public void addSkill(SkillTemplate tpl) {
     if (tpl != null && tpl.getId() != null) skillTemplates.put(tpl.getId(), tpl);
   }
+  public void registerSkill(SkillTemplate tpl) { addSkill(tpl); }
   public Optional<SkillTemplate> getSkillTemplate(String id) {
     return Optional.ofNullable(skillTemplates.get(id));
   }
+  @Override
+  public Optional<SkillTemplate> findSkill(String id) { return getSkillTemplate(id); }
   public Map<String, SkillTemplate> getAllSkillMap() { return skillTemplates; }
+  @Override
+  public Map<String, SkillTemplate> getAllSkills() { return getAllSkillMap(); }
   public SkillTemplate getSkillById(String id) {
     SkillTemplate tpl = skillTemplates.get(id);
     if (tpl == null) throw new MudException("Skill not found id:" + id);
     return tpl;
   }
+  @Override
+  public SkillTemplate requireSkill(String id) { return getSkillById(id); }
+
   public SkillTemplate getDefaultSkillByCategory(SkillCategory category) {
     return skillTemplates.get(BASIC_SKILL_IDS.get(category));
   }
+  @Override
+  public SkillTemplate findDefaultSkill(SkillCategory category) { return getDefaultSkillByCategory(category); }
+
   public String getDefaultSkillIdByCategory(SkillCategory category) {
     SkillTemplate defaultSkill = getDefaultSkillByCategory(category);
     return defaultSkill != null ? defaultSkill.getId() : BASIC_SKILL_IDS.get(category);
   }
+  @Override
+  public String findDefaultSkillId(SkillCategory category) { return getDefaultSkillIdByCategory(category); }
+
   public SkillTemplate getMobDefaultSkillByCategory(SkillCategory category) {
     return skillTemplates.get(MOB_BASIC_SKILL_IDS.get(category));
   }
@@ -244,27 +246,19 @@ public class TemplateRepository {
     SkillTemplate mobDefaultSkill = getMobDefaultSkillByCategory(category);
     return mobDefaultSkill != null ? mobDefaultSkill.getId() : MOB_BASIC_SKILL_IDS.get(category);
   }
-  public static void registerSkill(SkillTemplate tpl) { INSTANCE.addSkill(tpl); }
-  public static Optional<SkillTemplate> findSkill(String id) { return INSTANCE.getSkillTemplate(id); }
-  public static Map<String, SkillTemplate> getAllSkills() { return INSTANCE.getAllSkillMap(); }
-  public static SkillTemplate getSkill(String id) { return INSTANCE.getSkillById(id); }
-  public static SkillTemplate getDefaultSkill(SkillCategory category) { return INSTANCE.getDefaultSkillByCategory(category); }
-  public static String getDefaultSkillId(SkillCategory category) { return INSTANCE.getDefaultSkillIdByCategory(category); }
-  public static SkillTemplate getMobDefaultSkill(SkillCategory category) { return INSTANCE.getMobDefaultSkillByCategory(category); }
-  public static String getMobDefaultSkillId(SkillCategory category) { return INSTANCE.getMobDefaultSkillIdByCategory(category); }
 
   // --- Race ---
   public void addRace(RaceTemplate tpl) {
     if (tpl != null && tpl.id() != null) raceTemplates.put(tpl.id(), tpl);
   }
+  public void registerRace(RaceTemplate tpl) { addRace(tpl); }
   public Optional<RaceTemplate> getRace(String id) {
     if (id == null) return Optional.empty();
     return Optional.ofNullable(raceTemplates.get(id));
   }
+  @Override
+  public Optional<RaceTemplate> findRace(String id) { return getRace(id); }
   public Map<String, RaceTemplate> getRaceTemplateMap() { return raceTemplates; }
-  public static void registerRace(RaceTemplate tpl) { INSTANCE.addRace(tpl); }
-  public static Optional<RaceTemplate> findRace(String id) { return INSTANCE.getRace(id); }
-  public static Map<String, RaceTemplate> getRaceTemplates() { return INSTANCE.getRaceTemplateMap(); }
 
   // --- Companion ---
   public void addCompanion(CompanionTemplate tpl) {
@@ -290,6 +284,7 @@ public class TemplateRepository {
       }
     }
   }
+  public void registerCompanion(CompanionTemplate tpl) { addCompanion(tpl); }
   public Optional<CompanionTemplate> getCompanion(String id) {
     if (id == null) return Optional.empty();
     CompanionTemplate t = companionTemplates.get(id);
@@ -306,28 +301,32 @@ public class TemplateRepository {
     }
     return Optional.empty();
   }
+  @Override
+  public Optional<CompanionTemplate> findCompanion(String id) { return getCompanion(id); }
   public Map<String, CompanionTemplate> getAllCompanionMap() { return Collections.unmodifiableMap(companionTemplates); }
-  public static void registerCompanion(CompanionTemplate tpl) { INSTANCE.addCompanion(tpl); }
-  public static Optional<CompanionTemplate> findCompanion(String id) { return INSTANCE.getCompanion(id); }
-  public static Map<String, CompanionTemplate> getAllCompanions() { return INSTANCE.getAllCompanionMap(); }
+  @Override
+  public Map<String, CompanionTemplate> getAllCompanions() { return getAllCompanionMap(); }
 
   // --- Formation ---
   public void addFormation(FormationTemplate tpl) {
     if (tpl != null && tpl.getId() != null) formationTemplates.put(tpl.getId(), tpl);
   }
+  public void registerFormation(FormationTemplate tpl) { addFormation(tpl); }
   public Optional<FormationTemplate> getFormation(String id) {
     if (id == null) return Optional.empty();
     return Optional.ofNullable(formationTemplates.get(id));
   }
+  @Override
+  public Optional<FormationTemplate> findFormation(String id) { return getFormation(id); }
   public Map<String, FormationTemplate> getAllFormationMap() { return Collections.unmodifiableMap(formationTemplates); }
-  public static void registerFormation(FormationTemplate tpl) { INSTANCE.addFormation(tpl); }
-  public static Optional<FormationTemplate> findFormation(String id) { return INSTANCE.getFormation(id); }
-  public static Map<String, FormationTemplate> getAllFormations() { return INSTANCE.getAllFormationMap(); }
+  @Override
+  public Map<String, FormationTemplate> getAllFormations() { return getAllFormationMap(); }
 
   // --- PartySkill ---
   public void addPartySkill(PartyMemberSkill skill) {
     if (skill != null && skill.getId() != null) partySkillTemplates.put(skill.getId(), skill);
   }
+  public void registerPartySkill(PartyMemberSkill skill) { addPartySkill(skill); }
   public Optional<PartyMemberSkill> getPartySkill(String id) {
     if (id == null) return Optional.empty();
     PartyMemberSkill pSkill = partySkillTemplates.get(id);
@@ -356,10 +355,9 @@ public class TemplateRepository {
     }
     return Optional.empty();
   }
+  @Override
+  public Optional<PartyMemberSkill> findPartySkill(String id) { return getPartySkill(id); }
   public Map<String, PartyMemberSkill> getAllPartySkillMap() { return Collections.unmodifiableMap(partySkillTemplates); }
-  public static void registerPartySkill(PartyMemberSkill skill) { INSTANCE.addPartySkill(skill); }
-  public static Optional<PartyMemberSkill> findPartySkill(String id) { return INSTANCE.getPartySkill(id); }
-  public static Map<String, PartyMemberSkill> getAllPartySkills() { return INSTANCE.getAllPartySkillMap(); }
 
   // --- Class ---
   public void addClass(ClassTemplate tpl) {
@@ -368,14 +366,14 @@ public class TemplateRepository {
       classTemplates.put(tpl.id().toLowerCase(), tpl);
     }
   }
+  public void registerClass(ClassTemplate tpl) { addClass(tpl); }
   public Optional<ClassTemplate> getClassTemplate(String id) {
     if (id == null) return Optional.empty();
     return Optional.ofNullable(classTemplates.get(id));
   }
+  @Override
+  public Optional<ClassTemplate> findClass(String id) { return getClassTemplate(id); }
   public Map<String, ClassTemplate> getAllClassMap() { return Collections.unmodifiableMap(classTemplates); }
-  public static void registerClass(ClassTemplate tpl) { INSTANCE.addClass(tpl); }
-  public static Optional<ClassTemplate> findClass(String id) { return INSTANCE.getClassTemplate(id); }
-  public static Map<String, ClassTemplate> getAllClasses() { return INSTANCE.getAllClassMap(); }
 
   // --- Shop ---
   public void addShop(ShopTemplate tpl) {
@@ -386,10 +384,14 @@ public class TemplateRepository {
       }
     }
   }
+  public void registerShop(ShopTemplate tpl) { addShop(tpl); }
   public Optional<ShopTemplate> getShop(String id) {
     if (id == null) return Optional.empty();
     return Optional.ofNullable(shopTemplates.get(id));
   }
+  @Override
+  public Optional<ShopTemplate> findShop(String id) { return getShop(id); }
+
   public Optional<ShopTemplate> getShopByRoom(String roomId) {
     if (roomId == null) return Optional.empty();
     ShopTemplate shop = shopTemplates.get("room:" + roomId);
@@ -401,11 +403,10 @@ public class TemplateRepository {
     }
     return Optional.empty();
   }
+  public Optional<ShopTemplate> getShopByRoomId(String roomId) { return getShopByRoom(roomId); }
+  @Override
+  public Optional<ShopTemplate> findShopByRoomId(String roomId) { return getShopByRoom(roomId); }
   public Map<String, ShopTemplate> getAllShopMap() { return Collections.unmodifiableMap(shopTemplates); }
-  public static void registerShop(ShopTemplate tpl) { INSTANCE.addShop(tpl); }
-  public static Optional<ShopTemplate> findShop(String id) { return INSTANCE.getShop(id); }
-  public static Optional<ShopTemplate> findShopByRoomId(String roomId) { return INSTANCE.getShopByRoom(roomId); }
-  public static Map<String, ShopTemplate> getAllShops() { return INSTANCE.getAllShopMap(); }
 
   // --- Validate ---
   public void validateData() {
@@ -441,9 +442,5 @@ public class TemplateRepository {
     }
     log.info("TemplateRepository validation complete. Loaded: {} zones, {} rooms, {} mobs, {} items, {} skills, {} races",
         zoneTemplates.size(), roomTemplates.size(), mobTemplates.size(), itemTemplates.size(), skillTemplates.size(), raceTemplates.size());
-  }
-
-  public static void validate() {
-    INSTANCE.validateData();
   }
 }

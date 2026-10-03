@@ -19,29 +19,32 @@ public class ClassSkillAndSynergyTest {
   @Autowired
   private PartyService partyService;
 
+  @Autowired
+  private TemplateRepository templateRepository;
+
   @Test
   @DisplayName("驗證職業特徵技能已作為標準 SkillTemplate 成功載入")
   void testClassSkillsLoadedAsCanonicalTemplates() {
-    Optional<SkillTemplate> taunt = TemplateRepository.findSkill("class_warrior_taunt");
+    Optional<SkillTemplate> taunt = templateRepository.getSkillTemplate("class_warrior_taunt");
     assertTrue(taunt.isPresent(), "金剛怒目 (class_warrior_taunt) 應作為標準技能載入");
     assertEquals("金剛怒目", taunt.get().getName());
     assertTrue(taunt.get().getTags().contains("TAUNT"));
 
-    Optional<SkillTemplate> heal = TemplateRepository.findSkill("class_cleric_heal");
+    Optional<SkillTemplate> heal = templateRepository.getSkillTemplate("class_cleric_heal");
     assertTrue(heal.isPresent(), "九轉回春 (class_cleric_heal) 應作為標準技能載入");
     assertTrue(heal.get().getTags().contains("HEAL"));
 
-    Optional<SkillTemplate> stealth = TemplateRepository.findSkill("class_rogue_stealth");
+    Optional<SkillTemplate> stealth = templateRepository.getSkillTemplate("class_rogue_stealth");
     assertTrue(stealth.isPresent(), "斂息匿形 (class_rogue_stealth) 應作為標準技能載入");
 
-    Optional<SkillTemplate> ironBody = TemplateRepository.findSkill("class_monk_iron_body");
+    Optional<SkillTemplate> ironBody = templateRepository.getSkillTemplate("class_monk_iron_body");
     assertTrue(ironBody.isPresent(), "不滅金身 (class_monk_iron_body) 應作為標準技能載入");
   }
 
   @Test
   @DisplayName("驗證 SkillTemplate 能自動適配為 DRPG PartyMemberSkill 且不限武器")
   void testClassSkillAdaptationToDrpgPartySkill() {
-    Optional<PartyMemberSkill> opt = TemplateRepository.findPartySkill("class_warrior_taunt");
+    Optional<PartyMemberSkill> opt = templateRepository.getPartySkill("class_warrior_taunt");
     assertTrue(opt.isPresent(), "findPartySkill 應能查詢並自動適配 class_warrior_taunt");
     PartyMemberSkill skill = opt.get();
     assertTrue(skill.isTaunt(), "嘲諷特徵應為 true");
@@ -54,11 +57,11 @@ public class ClassSkillAndSynergyTest {
   @Test
   @DisplayName("驗證舊技能 ID 與別名相容性")
   void testLegacySkillAliasCompatibility() {
-    Optional<PartyMemberSkill> legacyTaunt = TemplateRepository.findPartySkill("tank_taunt");
+    Optional<PartyMemberSkill> legacyTaunt = templateRepository.getPartySkill("tank_taunt");
     assertTrue(legacyTaunt.isPresent(), "tank_taunt 應自動兼容");
     assertTrue(legacyTaunt.get().isTaunt());
 
-    Optional<PartyMemberSkill> legacyHeal = TemplateRepository.findPartySkill("heal_single");
+    Optional<PartyMemberSkill> legacyHeal = templateRepository.getPartySkill("heal_single");
     assertTrue(legacyHeal.isPresent(), "heal_single 應自動兼容");
     assertTrue(legacyHeal.get().isHeal());
   }
@@ -88,7 +91,7 @@ public class ClassSkillAndSynergyTest {
   @Test
   @DisplayName("驗證小隊合擊技能 (Party Combo Skills) 資料驅動正確解析")
   void testPartyComboSkillsLoading() {
-    Optional<PartyMemberSkill> comboBlade = TemplateRepository.findPartySkill("combo_blade_and_shadow");
+    Optional<PartyMemberSkill> comboBlade = templateRepository.getPartySkill("combo_blade_and_shadow");
     assertTrue(comboBlade.isPresent(), "刀劍合璧・斷空破合擊技能應載入");
     PartyMemberSkill skill = comboBlade.get();
     assertTrue(skill.isSynergy(), "應標記為合擊技能 (synergy=true)");
@@ -96,7 +99,7 @@ public class ClassSkillAndSynergyTest {
     assertTrue(skill.getRequiredClasses().contains("WARRIOR"), "需求戰士職業參與");
     assertTrue(skill.getRequiredClasses().contains("ROGUE"), "需求刺客職業參與");
 
-    Optional<PartyMemberSkill> comboFourSymbols = TemplateRepository.findPartySkill("combo_four_symbols_seal");
+    Optional<PartyMemberSkill> comboFourSymbols = templateRepository.getPartySkill("combo_four_symbols_seal");
     assertTrue(comboFourSymbols.isPresent(), "四象降魔大陣合擊技能應載入");
     assertEquals("formation_four_symbols", comboFourSymbols.get().getRequiredFormation(), "需求四象陣法");
     assertEquals(100, comboFourSymbols.get().getFormationEnergyCost(), "需求 100 靈威");

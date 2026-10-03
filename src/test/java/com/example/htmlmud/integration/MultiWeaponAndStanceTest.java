@@ -26,6 +26,9 @@ public class MultiWeaponAndStanceTest {
   @Autowired
   private PartyService partyService;
 
+  @Autowired
+  private TemplateRepository templateRepository;
+
   private Party party;
   private PartyMember leader;
 
@@ -104,28 +107,28 @@ public class MultiWeaponAndStanceTest {
   @DisplayName("測試非人怪物 (鼠、狼、龍) 能正確解析種族天然攻擊")
   void testMonsterNaturalAttacksResolution() {
     // 1. 野鼠 (rat)
-    var ratRace = TemplateRepository.findRace("rat");
+    var ratRace = templateRepository.getRace("rat");
     assertThat(ratRace).isPresent();
     assertThat(ratRace.get().combat().naturalAttacks()).isNotEmpty();
     List<String> ratAttacks = ratRace.get().combat().naturalAttacks().stream().map(a -> a.getId()).toList();
     assertThat(ratAttacks).contains("mob_claw", "mob_bite");
 
     // 2. 狼族 (wolf)
-    var wolfRace = TemplateRepository.findRace("wolf");
+    var wolfRace = templateRepository.getRace("wolf");
     assertThat(wolfRace).isPresent();
     assertThat(wolfRace.get().combat().naturalAttacks()).isNotEmpty();
     List<String> wolfAttacks = wolfRace.get().combat().naturalAttacks().stream().map(a -> a.getId()).toList();
     assertThat(wolfAttacks).contains("mob_claw", "mob_bite", "mob_tail_swipe");
 
     // 3. 龍族 (dragon)
-    var dragonRace = TemplateRepository.findRace("dragon");
+    var dragonRace = templateRepository.getRace("dragon");
     assertThat(dragonRace).isPresent();
     assertThat(dragonRace.get().combat().naturalAttacks()).isNotEmpty();
     List<String> dragonAttacks = dragonRace.get().combat().naturalAttacks().stream().map(a -> a.getId()).toList();
     assertThat(dragonAttacks).contains("mob_claw", "mob_bite", "mob_tail_swipe", "mob_smash");
 
     // 4. BattleEnemy fromTemplate 正確攜帶 race
-    var mobOpt = TemplateRepository.findMob("wild_rat");
+    var mobOpt = templateRepository.getMob("wild_rat");
     assertThat(mobOpt).isPresent();
     BattleEnemy enemy = BattleEnemy.fromTemplate("e-1", mobOpt.get(), null, null);
     assertThat(enemy.getRace()).isEqualTo("rat");

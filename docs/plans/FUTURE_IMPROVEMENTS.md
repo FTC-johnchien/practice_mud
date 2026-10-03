@@ -94,10 +94,17 @@
 > 4. `SkillBridgeService` 重構為純資料驅動查表 (`mapMudSkillToDrpgSkills`, `getPrerequisiteMudSkills`)，徹底廢除寫死之 switch/if-else。
 > 5. 新增 `CanonicalSkillModelTest` (4 測試項) 100% 綠燈通過。
 
-### 1.3 🟧 Phase 4: 徹底移除 `TemplateRepository` 靜態呼叫 (DI Migration) (P1)
-- **現存缺陷**：
-  - `TemplateRepository` 仍持有靜態 Map 快取 (`static final Map`) 與單例實例 (`INSTANCE`)。
-  - 專案中仍有呼叫點依賴靜態查詢或建構子 fallback (`new TemplateCatalog()`)，導致 Spring 管理生命週期不純淨且跨測試共享狀態。
+### 1.3 ✅ [已完成] Phase 4: 徹底移除 `TemplateRepository` 靜態呼叫 (DI Migration) (P1)
+> **落地進度**：已於 2026-10-03 完成。
+> 1. `TemplateRepository` 重構為純非靜態 Spring `@Component`，移除了所有 `static final Map`、`INSTANCE` 單例及 static delegate 方法，直接實作 `TemplateReader` 埠。
+> 2. `TemplateCatalog` 標註 `@Primary @Service`，由 Spring 依賴注入管理；非 Spring 環境 fallback 保留獨立實例隔離。
+> 3. `WorldManager` 注入 `TemplateRepository`，完全以實例方法進行物品、技能、怪物、區域、房間、商店註冊與資料校驗。
+> 4. `PartyService` 建構子標註 `@Autowired`，確保 Spring 容器注入正規 `TemplateReader`。
+> 5. 所有 SpringBoot 整合測試徹底移除 `TemplateRepository.` 靜態呼叫，全專案自動化測試 211 項測試 100% 綠燈通過。
+
+- **現存缺陷 (已根治)**：
+  - ~~`TemplateRepository` 仍持有靜態 Map 快取 (`static final Map`) 與單例實例 (`INSTANCE`)。~~
+  - ~~專案中仍有呼叫點依賴靜態查詢或建構子 fallback (`new TemplateCatalog()`)，導致 Spring 管理生命週期不純淨且跨測試共享狀態。~~
 - **改善方案**：
   1. 將 `TemplateRepository` 改為純 Spring 管理的非靜態 Bean，全面落實 `TemplateReader` port。
   2. 所有 Service、Factory、Adapter 均透過 Constructor Injection 取得 `TemplateReader`。
@@ -322,8 +329,8 @@
 | **P0** | SEC-01 | ✅ 前端未轉義動態插值修補與 53 個 inline 事件委派改造 (已完成) | 前端安全性與 CSP | §0.4, §7.1 |
 | **P0** | CFG-01 | ✅ 建立 `GameConfig` 集中管理全域硬編碼常數 (已完成) | 基礎設定解耦 | §2.1 |
 | **P1** | CANON-01 | ✅ Phase 2: `ItemDefinition` + `ItemInstance` + `ItemView` (已完成) | 物品單一真相源 | §1.1 |
-| **P1** | CANON-02 | Phase 3: Single `SkillDefinition` (MUD/DRPG Facets) | 技能定義合併 | §1.2 |
-| **P1** | CANON-03 | Phase 4: 徹底移除 `TemplateRepository` 靜態呼叫 (DI 遷移) | 測試與架構隔離 | §1.3 |
+| **P1** | CANON-02 | ✅ Phase 3: Single `SkillDefinition` (MUD/DRPG Facets) (已完成) | 技能定義合併 | §1.2 |
+| **P1** | CANON-03 | ✅ Phase 4: 徹底移除 `TemplateRepository` 靜態呼叫 (DI 遷移) (已完成) | 測試與架構隔離 | §1.3 |
 | **P1** | CANON-04 | Phase 5: 基於 Snapshot / Outcome 的角色戰鬥同步 | 併發與資料一致性 | §1.4 |
 | **P1** | MUD-01 | 補完 `Mob.sayToRoom()` / `attack()` 與 AI 行為 | 怪物 AI 運作 | §4.1 |
 | **P1** | MUD-02 | 補完 MUD 端角色升級閉環與經驗值統一 | 角色數值成長 | §2.2, §4.2 |

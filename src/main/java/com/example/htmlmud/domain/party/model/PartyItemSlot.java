@@ -171,6 +171,10 @@ public class PartyItemSlot {
   }
 
   public GameItem toGameItem() {
+    return toGameItem(null);
+  }
+
+  public GameItem toGameItem(com.example.htmlmud.domain.repository.TemplateReader templateReader) {
     GameItem item = new GameItem();
     item.setId(this.slotId != null ? this.slotId : java.util.UUID.randomUUID().toString());
     item.setName(this.name);
@@ -178,8 +182,9 @@ public class PartyItemSlot {
     item.setType(this.itemType);
     item.setSubType(this.subType);
     item.setAmount(this.count);
-    var tpl = com.example.htmlmud.infra.persistence.repository.TemplateRepository.findItem(this.itemId);
-    tpl.ifPresent(item::setTemplate);
+    if (templateReader != null) {
+      templateReader.findItem(this.itemId).ifPresent(item::setTemplate);
+    }
     return item;
   }
 

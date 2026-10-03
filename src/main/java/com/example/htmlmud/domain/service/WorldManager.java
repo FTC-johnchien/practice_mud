@@ -56,6 +56,8 @@ public class WorldManager {
 
   private final TemplateReader templateReader;
 
+  private final TemplateRepository templateRepository;
+
   // 2. Runtime Actors: 存放正在運作的 RoomActor
   // 使用 ConcurrentHashMap 確保並發存取安全
   @Getter
@@ -101,7 +103,7 @@ public class WorldManager {
     }
 
     // 啟動完成後校驗資料完整性
-    TemplateRepository.validate();
+    templateRepository.validateData();
   }
 
   private void loadGlobalData() {
@@ -129,12 +131,12 @@ public class WorldManager {
           if (rootNode.isArray()) {
             List<ItemTemplate> items = objectMapper.convertValue(rootNode, new TypeReference<List<ItemTemplate>>() {});
             for (ItemTemplate item : items) {
-              TemplateRepository.registerItem(item);
+              templateRepository.addItem(item);
             }
             log.info("Loaded {} global items from {}", items.size(), res.getFilename());
           } else if (rootNode.isObject()) {
             ItemTemplate item = objectMapper.convertValue(rootNode, ItemTemplate.class);
-            TemplateRepository.registerItem(item);
+            templateRepository.addItem(item);
             log.info("Loaded global item {} from {}", item.id(), res.getFilename());
           }
         } catch (Exception e) {
@@ -155,7 +157,7 @@ public class WorldManager {
         try (var is = res.getInputStream()) {
           List<ClassTemplate> classes = objectMapper.readValue(is, new TypeReference<List<ClassTemplate>>() {});
           for (ClassTemplate c : classes) {
-            TemplateRepository.registerClass(c);
+            templateRepository.addClass(c);
           }
           log.info("Loaded {} classes from {}", classes.size(), res.getFilename());
         } catch (Exception e) {
@@ -176,7 +178,7 @@ public class WorldManager {
         try (var is = res.getInputStream()) {
           List<PartyMemberSkill> skills = objectMapper.readValue(is, new TypeReference<List<PartyMemberSkill>>() {});
           for (PartyMemberSkill s : skills) {
-            TemplateRepository.registerPartySkill(s);
+            templateRepository.addPartySkill(s);
           }
           log.info("Loaded {} party skills from {}", skills.size(), res.getFilename());
         } catch (Exception e) {
@@ -197,7 +199,7 @@ public class WorldManager {
         try (var is = res.getInputStream()) {
           List<CompanionTemplate> companions = objectMapper.readValue(is, new TypeReference<List<CompanionTemplate>>() {});
           for (CompanionTemplate c : companions) {
-            TemplateRepository.registerCompanion(c);
+            templateRepository.addCompanion(c);
           }
           log.info("Loaded {} companions from {}", companions.size(), res.getFilename());
         } catch (Exception e) {
@@ -218,7 +220,7 @@ public class WorldManager {
         try (var is = res.getInputStream()) {
           List<FormationTemplate> formations = objectMapper.readValue(is, new TypeReference<List<FormationTemplate>>() {});
           for (FormationTemplate f : formations) {
-            TemplateRepository.registerFormation(f);
+            templateRepository.addFormation(f);
           }
           log.info("Loaded {} formations from {}", formations.size(), res.getFilename());
         } catch (Exception e) {
@@ -246,7 +248,7 @@ public class WorldManager {
           new TypeReference<Set<RaceTemplate>>() {});
       // log.info("{}", objectMapper.writeValueAsString(list));
       for (RaceTemplate race : list) {
-        TemplateRepository.registerRace(race);
+        templateRepository.addRace(race);
       }
       //
     } catch (IOException e) {
@@ -270,7 +272,7 @@ public class WorldManager {
           SkillTemplate tpl = objectMapper.readValue(is, SkillTemplate.class);
           log.info("Successfully loaded skill: {}:{}", tpl.getId(), tpl.getName());
           // log.info("log:{}", objectMapper.writeValueAsString(tpl));
-          TemplateRepository.registerSkill(tpl);
+          templateRepository.addSkill(tpl);
         } catch (Exception e) {
           log.error("Failed to parse JSON file: {} - Error: {}", res.getFilename(), e.getMessage());
         }
@@ -294,7 +296,7 @@ public class WorldManager {
       ZoneTemplate zoneTemplate =
           objectMapper.readValue(resource.getInputStream(), ZoneTemplate.class);
       // log.info("log:{}", objectMapper.writeValueAsString(zoneTemplate));
-      TemplateRepository.registerZone(zoneTemplate);
+      templateRepository.addZone(zoneTemplate);
       // String zoneId = zoneTemplate.id();
 
 
@@ -325,7 +327,7 @@ public class WorldManager {
             .loot(updatedLoot)
             .build();
         // log.info("log:{}", objectMapper.writeValueAsString(newMob));
-        TemplateRepository.registerMob(newMob);
+        templateRepository.addMob(newMob);
       }
 
 
@@ -341,7 +343,7 @@ public class WorldManager {
         String newItemId = IdUtils.resolveId(zoneId, item.id());
         ItemTemplate newItem = item.toBuilder().id(newItemId).build();
         // log.info("log:{}", objectMapper.writeValueAsString(newItem));
-        TemplateRepository.registerItem(newItem);
+        templateRepository.addItem(newItem);
       }
 
 
@@ -375,7 +377,7 @@ public class WorldManager {
         RoomTemplate newRoom = room.toBuilder().id(newRoomId).zoneId(zoneId).exits(updatedExits)
             .spawnRules(spawnRules).build();
         // log.info("log:{}", objectMapper.writeValueAsString(newRoom));
-        TemplateRepository.registerRoom(newRoom);
+        templateRepository.addRoom(newRoom);
 
         // init roomActor
         getRoomActor(newRoomId);
@@ -402,7 +404,7 @@ public class WorldManager {
                 .npcId(npcId)
                 .goods(updatedGoods)
                 .build();
-            TemplateRepository.registerShop(newShop);
+            templateRepository.addShop(newShop);
             log.info("Registered shop: [{}] for room [{}] with {} items", shopId, roomId, updatedGoods.size());
           }
         }
@@ -417,7 +419,7 @@ public class WorldManager {
 
   private void loadZone(String zoneId) {
     log.info("loadZone zoneId: {}", zoneId);
-    TemplateRepository.getRoomTemplates().values().forEach(room -> {
+    templateRepository.getRoomTemplateMap().values().forEach(room -> {
       if (room.zoneId().equals(zoneId)) {
         getRoomActor(room.id());
       }

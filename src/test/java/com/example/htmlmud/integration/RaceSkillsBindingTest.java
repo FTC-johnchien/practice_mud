@@ -29,13 +29,16 @@ public class RaceSkillsBindingTest {
   @Autowired
   private PartyService partyService;
 
+  @Autowired
+  private TemplateRepository templateRepository;
+
   @Test
   @DisplayName("測試所有種族在 races.json 中均具備專屬的 naturalDodge 與 naturalParry")
   void testRacesDefinitionAndSkillExistence() {
     String[] races = {"human", "rat", "wolf", "beast", "humanoid", "dragon", "undead"};
 
     for (String raceId : races) {
-      var raceOpt = TemplateRepository.findRace(raceId);
+      var raceOpt = templateRepository.getRace(raceId);
       assertThat(raceOpt).as("種族 " + raceId + " 必須存在").isPresent();
       RaceTemplate race = raceOpt.get();
       assertThat(race.combat()).as("種族 " + raceId + " 必須有 combat 設定").isNotNull();
@@ -46,11 +49,11 @@ public class RaceSkillsBindingTest {
       assertThat(parry).as("種族 " + raceId + " 的 naturalParry 不能為空").isNotBlank();
 
       // 驗證技能模板在庫中真實存在
-      var dodgeSkill = TemplateRepository.findSkill(dodge);
+      var dodgeSkill = templateRepository.getSkillTemplate(dodge);
       assertThat(dodgeSkill).as("閃避技能 " + dodge + " 必須載入成功").isPresent();
       assertThat(dodgeSkill.get().getMoves()).as("閃避技能 " + dodge + " 必須擁有招式").isNotEmpty();
 
-      var parrySkill = TemplateRepository.findSkill(parry);
+      var parrySkill = templateRepository.getSkillTemplate(parry);
       assertThat(parrySkill).as("招架技能 " + parry + " 必須載入成功").isPresent();
       assertThat(parrySkill.get().getMoves()).as("招架技能 " + parry + " 必須擁有招式").isNotEmpty();
     }
@@ -89,7 +92,7 @@ public class RaceSkillsBindingTest {
         .level(1)
         .maxHp(100)
         .build();
-    TemplateRepository.registerMob(undeadTpl);
+    templateRepository.addMob(undeadTpl);
 
     Mob skeleton = worldFactory.createMob("test_skeleton");
     assertThat(skeleton.getEnabledSkills().get(SkillCategory.DODGE)).isEqualTo("mob_undead_dodge");
@@ -103,7 +106,7 @@ public class RaceSkillsBindingTest {
         .level(50)
         .maxHp(5000)
         .build();
-    TemplateRepository.registerMob(dragonTpl);
+    templateRepository.addMob(dragonTpl);
 
     Mob dragon = worldFactory.createMob("test_dragon");
     assertThat(dragon.getEnabledSkills().get(SkillCategory.DODGE)).isEqualTo("mob_dragon_dodge");
@@ -113,10 +116,10 @@ public class RaceSkillsBindingTest {
   @Test
   @DisplayName("測試 BattleEnemy.fromTemplate 地牢戰鬥怪物自動關聯種族 Dodge 與 Parry")
   void testBattleEnemyRaceSkillBinding() {
-    var ratTplOpt = TemplateRepository.findMob("wild_rat");
+    var ratTplOpt = templateRepository.getMob("wild_rat");
     assertThat(ratTplOpt).isPresent();
 
-    BattleEnemy enemy = BattleEnemy.fromTemplate("e-1", ratTplOpt.get(), RowPosition.FRONT, null);
+    BattleEnemy enemy = BattleEnemy.fromTemplate("e-1", ratTplOpt.get(), RowPosition.FRONT, null, templateRepository);
     assertThat(enemy).isNotNull();
     assertThat(enemy.getDodgeSkillId()).isEqualTo("mob_rat_dodge");
     assertThat(enemy.getParrySkillId()).isEqualTo("mob_rat_parry");

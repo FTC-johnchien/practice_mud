@@ -27,6 +27,9 @@ class DataDrivenPartyAndThreatTest {
   @Autowired
   private DrpgBattleService battleService;
 
+  @Autowired
+  private TemplateRepository templateRepository;
+
   private Party party;
 
   @BeforeEach
@@ -38,18 +41,18 @@ class DataDrivenPartyAndThreatTest {
   @DisplayName("測試 Data-Driven: 成功從 JSON 載入技能與同伴模板")
   void testDataDrivenTemplatesLoaded() {
     // 1. 驗證 Party 專屬技能已由 JSON 載入至 TemplateRepository
-    assertTrue(TemplateRepository.findPartySkill("sword_pierce").isPresent(), "破空劍氣應已從 JSON 載入");
-    assertTrue(TemplateRepository.findPartySkill("tank_taunt").isPresent(), "金剛怒目應已從 JSON 載入");
-    assertTrue(TemplateRepository.findPartySkill("heal_single").isPresent(), "九轉回春應已從 JSON 載入");
+    assertTrue(templateRepository.getPartySkill("sword_pierce").isPresent(), "破空劍氣應已從 JSON 載入");
+    assertTrue(templateRepository.getPartySkill("tank_taunt").isPresent(), "金剛怒目應已從 JSON 載入");
+    assertTrue(templateRepository.getPartySkill("heal_single").isPresent(), "九轉回春應已從 JSON 載入");
 
-    PartyMemberSkill tauntSkill = TemplateRepository.findPartySkill("tank_taunt").get();
+    PartyMemberSkill tauntSkill = templateRepository.getPartySkill("tank_taunt").get();
     assertTrue(tauntSkill.isTaunt(), "金剛怒目應具備嘲諷屬性");
 
     // 2. 驗證同伴模板已由 JSON 載入至 TemplateRepository
-    assertTrue(TemplateRepository.findCompanion("iron").isPresent(), "鐵牛模板應已從 JSON 載入");
-    assertTrue(TemplateRepository.findCompanion("yan").isPresent(), "燕青模板應已從 JSON 載入");
-    assertTrue(TemplateRepository.findCompanion("ling").isPresent(), "凌霜模板應已從 JSON 載入");
-    assertTrue(TemplateRepository.findCompanion("mo").isPresent(), "墨衍模板應已從 JSON 載入");
+    assertTrue(templateRepository.getCompanion("iron").isPresent(), "鐵牛模板應已從 JSON 載入");
+    assertTrue(templateRepository.getCompanion("yan").isPresent(), "燕青模板應已從 JSON 載入");
+    assertTrue(templateRepository.getCompanion("ling").isPresent(), "凌霜模板應已從 JSON 載入");
+    assertTrue(templateRepository.getCompanion("mo").isPresent(), "墨衍模板應已從 JSON 載入");
   }
 
   @Test

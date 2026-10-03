@@ -27,20 +27,23 @@ public class MechanismPurityAndBugfixTest {
   @Autowired
   private SaveGameService saveGameService;
 
+  @Autowired
+  private com.example.htmlmud.domain.repository.TemplateReader templateReader;
+
   @Test
   @DisplayName("機制驗證：PartyInventory 容器建構子必須純淨，無任何寫死初始道具")
   void testPartyInventoryConstructorHasNoSideEffects() {
-    PartyInventory pureInv = new PartyInventory(10, new TemplateCatalog());
+    PartyInventory pureInv = new PartyInventory(10, templateReader);
     assertThat(pureInv.getSlots()).isEmpty();
 
-    PartyInventory defaultInv = new PartyInventory();
+    PartyInventory defaultInv = new PartyInventory(PartyInventory.DEFAULT_CAPACITY, templateReader);
     assertThat(defaultInv.getSlots()).isEmpty();
   }
 
   @Test
   @DisplayName("機制驗證：可堆疊物品超過 maxStack 時必須自動分槽，且不超出容量上限")
   void testPartyInventoryItemStackCapMechanism() {
-    PartyInventory inv = new PartyInventory(5, new TemplateCatalog());
+    PartyInventory inv = new PartyInventory(5, templateReader);
 
     // taiyin_pill 為可堆疊消耗品，maxStack 預設為 99
     // 加入 150 顆藥丸：第一格應滿 99 顆，第二格應有 51 顆

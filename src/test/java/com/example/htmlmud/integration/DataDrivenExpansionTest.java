@@ -34,6 +34,9 @@ public class DataDrivenExpansionTest {
   private com.example.htmlmud.application.command.impl.ShopCommand shopCommand;
 
   @Autowired
+  private TemplateRepository templateRepository;
+
+  @Autowired
   private com.example.htmlmud.application.command.impl.TalkCommand talkCommand;
 
   @Autowired
@@ -42,7 +45,7 @@ public class DataDrivenExpansionTest {
   @Test
   @DisplayName("1. 驗證 classes.json 成功載入為 ClassTemplate 且屬性齊全")
   void testClassTemplatesLoaded() {
-    Optional<ClassTemplate> warriorOpt = TemplateRepository.findClass("WARRIOR");
+    Optional<ClassTemplate> warriorOpt = templateRepository.getClassTemplate("WARRIOR");
     assertThat(warriorOpt).isPresent();
     ClassTemplate warrior = warriorOpt.get();
     assertThat(warrior.name()).isEqualTo("戰士");
@@ -50,7 +53,7 @@ public class DataDrivenExpansionTest {
     assertThat(warrior.growth().hpPerLevel()).isEqualTo(30);
     assertThat(warrior.proficiencies().weapon()).contains("SWORD", "AXE");
 
-    Optional<ClassTemplate> swordOpt = TemplateRepository.findClass("SWORDSMAN");
+    Optional<ClassTemplate> swordOpt = templateRepository.getClassTemplate("SWORDSMAN");
     assertThat(swordOpt).isPresent();
     ClassTemplate swordsman = swordOpt.get();
     assertThat(swordsman.name()).isEqualTo("俠客");
@@ -84,7 +87,7 @@ public class DataDrivenExpansionTest {
   @Test
   @DisplayName("3. 驗證新手村貨棧 shops.json 成功載入與註冊至 TemplateRepository")
   void testShopTemplateLoaded() {
-    Optional<ShopTemplate> shopOpt = TemplateRepository.findShop("newbie_village:inn_shop");
+    Optional<ShopTemplate> shopOpt = templateRepository.getShop("newbie_village:inn_shop");
     assertThat(shopOpt).isPresent();
 
     ShopTemplate shop = shopOpt.get();
@@ -101,7 +104,7 @@ public class DataDrivenExpansionTest {
     assertThat(bread.price()).isEqualTo(2);
 
     // 透過房間 ID 也能查得商店
-    Optional<ShopTemplate> byRoom = TemplateRepository.findShopByRoomId("newbie_village:inn");
+    Optional<ShopTemplate> byRoom = templateRepository.getShopByRoomId("newbie_village:inn");
     assertThat(byRoom).isPresent();
     assertThat(byRoom.get().id()).isEqualTo("newbie_village:inn_shop");
   }
@@ -110,7 +113,7 @@ public class DataDrivenExpansionTest {
   @DisplayName("4. 驗證 NPC 組件化能力 (NpcCapability) 100% 資料驅動")
   void testNpcCapabilitiesDataDriven() {
     // 福伯：TALK, SHOP, REST
-    MobTemplate innkeeper = TemplateRepository.findMob("newbie_village:innkeeper")
+    MobTemplate innkeeper = templateRepository.getMob("newbie_village:innkeeper")
         .orElseThrow();
     List<NpcCapability> innCaps = innkeeper.capabilities();
     assertThat(innCaps).isNotEmpty();
@@ -118,7 +121,7 @@ public class DataDrivenExpansionTest {
         .contains("TALK", "SHOP", "REST");
 
     // 白石老人：TALK, QUEST
-    MobTemplate elder = TemplateRepository.findMob("newbie_village:village_elder")
+    MobTemplate elder = templateRepository.getMob("newbie_village:village_elder")
         .orElseThrow();
     List<NpcCapability> elderCaps = elder.capabilities();
     assertThat(elderCaps).isNotEmpty();
@@ -126,7 +129,7 @@ public class DataDrivenExpansionTest {
         .contains("TALK", "QUEST");
 
     // 客棧隊友 NPC (Single Source of Truth 註冊為 MobTemplate)
-    MobTemplate tieNiuMob = TemplateRepository.findMob("newbie_village:tie_niu")
+    MobTemplate tieNiuMob = templateRepository.getMob("newbie_village:tie_niu")
         .orElseThrow();
     assertThat(tieNiuMob.capabilities().stream().map(NpcCapability::type).toList())
         .contains("TALK", "RECRUIT");

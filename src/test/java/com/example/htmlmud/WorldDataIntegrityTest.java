@@ -23,32 +23,35 @@ import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
 @SpringBootTest
 class WorldDataIntegrityTest {
 
+  @org.springframework.beans.factory.annotation.Autowired
+  private TemplateRepository templateRepository;
+
   @Test
   @DisplayName("驗證 4 大核心區域 (newbie_village, mozhu_mines, snow, silverleaf) 均成功載入")
   void testAllZonesLoaded() {
-    assertTrue(TemplateRepository.findZone("newbie_village").isPresent(), "newbie_village 應載入");
-    assertTrue(TemplateRepository.findZone("mozhu_mines").isPresent(), "mozhu_mines 應載入");
-    assertTrue(TemplateRepository.findZone("snow").isPresent(), "snow 應載入");
-    assertTrue(TemplateRepository.findZone("silverleaf").isPresent(), "silverleaf 應載入");
+    assertTrue(templateRepository.getZone("newbie_village").isPresent(), "newbie_village 應載入");
+    assertTrue(templateRepository.getZone("mozhu_mines").isPresent(), "mozhu_mines 應載入");
+    assertTrue(templateRepository.getZone("snow").isPresent(), "snow 應載入");
+    assertTrue(templateRepository.getZone("silverleaf").isPresent(), "silverleaf 應載入");
   }
 
   @Test
   @DisplayName("驗證雪亭鎮 (snow) 與銀葉村 (silverleaf) 地圖拓撲與房間存在")
   void testSnowAndSilverleafRooms() {
-    assertTrue(TemplateRepository.findRoom("snow:snow_gate").isPresent(), "snow_gate 應存在");
-    assertTrue(TemplateRepository.findRoom("snow:snow_square").isPresent(), "snow_square 應存在");
-    assertTrue(TemplateRepository.findRoom("snow:snow_hall").isPresent(), "snow_hall 應存在");
-    assertTrue(TemplateRepository.findRoom("snow:snow_warehouse").isPresent(), "snow_warehouse 應存在");
+    assertTrue(templateRepository.getRoom("snow:snow_gate").isPresent(), "snow_gate 應存在");
+    assertTrue(templateRepository.getRoom("snow:snow_square").isPresent(), "snow_square 應存在");
+    assertTrue(templateRepository.getRoom("snow:snow_hall").isPresent(), "snow_hall 應存在");
+    assertTrue(templateRepository.getRoom("snow:snow_warehouse").isPresent(), "snow_warehouse 應存在");
 
-    assertTrue(TemplateRepository.findRoom("silverleaf:sl_gate").isPresent(), "sl_gate 應存在");
-    assertTrue(TemplateRepository.findRoom("silverleaf:sl_square").isPresent(), "sl_square 應存在");
-    assertTrue(TemplateRepository.findRoom("silverleaf:sl_hidden_cellar").isPresent(), "sl_hidden_cellar 應存在");
+    assertTrue(templateRepository.getRoom("silverleaf:sl_gate").isPresent(), "sl_gate 應存在");
+    assertTrue(templateRepository.getRoom("silverleaf:sl_square").isPresent(), "sl_square 應存在");
+    assertTrue(templateRepository.getRoom("silverleaf:sl_hidden_cellar").isPresent(), "sl_hidden_cellar 應存在");
   }
 
   @Test
   @DisplayName("驗證全地圖房間出口 (Exits) 指向的目標房間皆存在 (無懸空出口)")
   void testAllRoomExitsExist() {
-    Map<String, RoomTemplate> rooms = TemplateRepository.getRoomTemplates();
+    Map<String, RoomTemplate> rooms = templateRepository.getRoomTemplateMap();
     assertFalse(rooms.isEmpty(), "房間模板清單不應為空");
 
     for (RoomTemplate room : rooms.values()) {
@@ -59,7 +62,7 @@ class WorldDataIntegrityTest {
           }
           String targetId = entry.getValue().targetRoomId();
           assertNotNull(targetId, "房間 " + room.id() + " 的出口 " + entry.getKey() + " targetRoomId 不得為 null");
-          assertTrue(TemplateRepository.findRoom(targetId).isPresent(),
+          assertTrue(templateRepository.getRoom(targetId).isPresent(),
               "房間 [" + room.id() + "] 的出口 [" + entry.getKey() + "] 指向不存在的房間 [" + targetId + "]");
         }
       }
@@ -70,31 +73,31 @@ class WorldDataIntegrityTest {
   @DisplayName("驗證技能分類與怪物基礎技能映射完整性")
   void testSkillCategoryAndMobSkillsIntegrity() {
     // 預設基礎拳法
-    assertEquals("basic_fist", TemplateRepository.getDefaultSkillId(SkillCategory.UNARMED));
-    assertEquals("mob_basic_dodge", TemplateRepository.getMobDefaultSkillId(SkillCategory.DODGE));
-    assertEquals("mob_basic_parry", TemplateRepository.getMobDefaultSkillId(SkillCategory.PARRY));
+    assertEquals("basic_fist", templateRepository.getDefaultSkillIdByCategory(SkillCategory.UNARMED));
+    assertEquals("mob_basic_dodge", templateRepository.getMobDefaultSkillIdByCategory(SkillCategory.DODGE));
+    assertEquals("mob_basic_parry", templateRepository.getMobDefaultSkillIdByCategory(SkillCategory.PARRY));
 
-    assertTrue(TemplateRepository.findSkill("basic_fist").isPresent(), "basic_fist 技能模板應存在");
-    assertTrue(TemplateRepository.findSkill("mob_basic_dodge").isPresent(), "mob_basic_dodge 技能模板應存在");
-    assertTrue(TemplateRepository.findSkill("mob_basic_parry").isPresent(), "mob_basic_parry 技能模板應存在");
-    assertTrue(TemplateRepository.findSkill("taichi_fist").isPresent(), "taichi_fist 技能模板應存在");
-    assertTrue(TemplateRepository.findSkill("lion_roar").isPresent(), "lion_roar 技能模板應存在");
+    assertTrue(templateRepository.getSkillTemplate("basic_fist").isPresent(), "basic_fist 技能模板應存在");
+    assertTrue(templateRepository.getSkillTemplate("mob_basic_dodge").isPresent(), "mob_basic_dodge 技能模板應存在");
+    assertTrue(templateRepository.getSkillTemplate("mob_basic_parry").isPresent(), "mob_basic_parry 技能模板應存在");
+    assertTrue(templateRepository.getSkillTemplate("taichi_fist").isPresent(), "taichi_fist 技能模板應存在");
+    assertTrue(templateRepository.getSkillTemplate("lion_roar").isPresent(), "lion_roar 技能模板應存在");
   }
 
   @Test
   @DisplayName("驗證種族 (Races) 完整性與自然戰鬥技能")
   void testRacesIntegrity() {
-    Optional<RaceTemplate> human = TemplateRepository.findRace("human");
+    Optional<RaceTemplate> human = templateRepository.getRace("human");
     assertTrue(human.isPresent(), "human 種族應存在");
 
-    Optional<RaceTemplate> wolf = TemplateRepository.findRace("wolf");
+    Optional<RaceTemplate> wolf = templateRepository.getRace("wolf");
     assertTrue(wolf.isPresent(), "wolf 種族應存在");
     assertNotNull(wolf.get().combat(), "wolf 應定義 combat");
 
-    Optional<RaceTemplate> rat = TemplateRepository.findRace("rat");
+    Optional<RaceTemplate> rat = templateRepository.getRace("rat");
     assertTrue(rat.isPresent(), "rat 種族應存在");
 
-    Optional<RaceTemplate> humanoid = TemplateRepository.findRace("humanoid");
+    Optional<RaceTemplate> humanoid = templateRepository.getRace("humanoid");
     assertTrue(humanoid.isPresent(), "humanoid 種族應存在");
   }
 

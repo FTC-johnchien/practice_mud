@@ -22,37 +22,40 @@ public class GlobalItemsAndShopOverridesTest {
   @Autowired
   private ShopCommand shopCommand;
 
+  @Autowired
+  private TemplateRepository templateRepository;
+
   @Test
   @DisplayName("1. 驗證全域物品庫 (Global Items) 遞迴自動掃描載入")
   void testGlobalItemsLoaded() {
     // 消耗品類
-    Optional<ItemTemplate> bread = TemplateRepository.findItem("village_bread");
+    Optional<ItemTemplate> bread = templateRepository.getItem("village_bread");
     assertThat(bread).isPresent();
     assertThat(bread.get().name()).contains("烤麵包");
     assertThat(bread.get().isStackable()).isTrue();
 
-    Optional<ItemTemplate> salve = TemplateRepository.findItem("healing_salve");
+    Optional<ItemTemplate> salve = templateRepository.getItem("healing_salve");
     assertThat(salve).isPresent();
     assertThat(salve.get().value()).isEqualTo(8);
 
     // 兵刃類
-    Optional<ItemTemplate> blade = TemplateRepository.findItem("steel_blade");
+    Optional<ItemTemplate> blade = templateRepository.getItem("steel_blade");
     assertThat(blade).isPresent();
     assertThat(blade.get().subType()).isEqualTo("BLADE");
 
-    Optional<ItemTemplate> spear = TemplateRepository.findItem("standard_spear");
+    Optional<ItemTemplate> spear = templateRepository.getItem("standard_spear");
     assertThat(spear).isPresent();
     assertThat(spear.get().equipmentProp().minDamage()).isEqualTo(15);
 
     // 防具與飾品
-    Optional<ItemTemplate> armor = TemplateRepository.findItem("rusty_armor");
+    Optional<ItemTemplate> armor = templateRepository.getItem("rusty_armor");
     assertThat(armor).isPresent();
 
-    Optional<ItemTemplate> ring = TemplateRepository.findItem("rusty_ring");
+    Optional<ItemTemplate> ring = templateRepository.getItem("rusty_ring");
     assertThat(ring).isPresent();
 
     // 貨幣與材料
-    Optional<ItemTemplate> coin = TemplateRepository.findItem("copper_coin");
+    Optional<ItemTemplate> coin = templateRepository.getItem("copper_coin");
     assertThat(coin).isPresent();
     assertThat(coin.get().type().name()).isEqualTo("CURRENCY");
   }
@@ -61,17 +64,17 @@ public class GlobalItemsAndShopOverridesTest {
   @DisplayName("2. 驗證帶有 zoneId 前綴與純 ID 的雙向智慧容錯查詢")
   void testBidirectionalIdLookup() {
     // 2.1 帶前綴查詢只在全域定義的物品 (驗證前綴剝離回退查找全域庫)
-    Optional<ItemTemplate> prefixedSword = TemplateRepository.findItem("newbie_village:iron_sword");
+    Optional<ItemTemplate> prefixedSword = templateRepository.getItem("newbie_village:iron_sword");
     assertThat(prefixedSword).isPresent();
     assertThat(prefixedSword.get().id()).isEqualTo("iron_sword");
 
     // 2.2 帶前綴查詢既有消耗品，驗證名稱與藥效皆正確解析
-    Optional<ItemTemplate> prefixedSalve = TemplateRepository.findItem("newbie_village:healing_salve");
+    Optional<ItemTemplate> prefixedSalve = templateRepository.getItem("newbie_village:healing_salve");
     assertThat(prefixedSalve).isPresent();
     assertThat(prefixedSalve.get().name()).contains("金創藥");
 
     // 2.3 不帶前綴查詢區域特有物品 (驗證後綴反向匹配)
-    Optional<ItemTemplate> scythe = TemplateRepository.findItem("black_obsidian_scythe");
+    Optional<ItemTemplate> scythe = templateRepository.getItem("black_obsidian_scythe");
     assertThat(scythe).isPresent();
     assertThat(scythe.get().name()).contains("骨鐮");
   }
@@ -88,10 +91,10 @@ public class GlobalItemsAndShopOverridesTest {
         .stock(5)
         .build();
 
-    assertThat(customPriceItem.getEffectivePrice()).isEqualTo(18);
-    assertThat(customPriceItem.getEffectiveName()).isEqualTo("百草金創藥膏");
+    assertThat(customPriceItem.getEffectivePrice(templateRepository)).isEqualTo(18);
+    assertThat(customPriceItem.getEffectiveName(templateRepository)).isEqualTo("百草金創藥膏");
     assertThat(customPriceItem.getEffectiveStock()).isEqualTo(5);
-    assertThat(customPriceItem.getEffectiveDescription()).contains("塗抹傷口可迅速癒合");
+    assertThat(customPriceItem.getEffectiveDescription(templateRepository)).contains("塗抹傷口可迅速癒合");
 
     // 3.2 價格倍率 (priceMultiplier) 浮動定價
     ShopItemTemplate multiplierItem = ShopItemTemplate.builder()
@@ -101,8 +104,8 @@ public class GlobalItemsAndShopOverridesTest {
         .priceMultiplier(2.5) // 2 * 2.5 = 5
         .build();
 
-    assertThat(multiplierItem.getEffectivePrice()).isEqualTo(5);
-    assertThat(multiplierItem.getEffectiveName()).isEqualTo("村莊烤麵包");
+    assertThat(multiplierItem.getEffectivePrice(templateRepository)).isEqualTo(5);
+    assertThat(multiplierItem.getEffectiveName(templateRepository)).isEqualTo("村莊烤麵包");
     assertThat(multiplierItem.getEffectiveStock()).isEqualTo(-1); // 預設無窮
 
     // 3.3 完全未指定 price 與 multiplier，自動回退到物品原型基礎價值
@@ -112,8 +115,8 @@ public class GlobalItemsAndShopOverridesTest {
         .templateId("steel_blade") // 原品價值 15
         .build();
 
-    assertThat(defaultItem.getEffectivePrice()).isEqualTo(15);
-    assertThat(defaultItem.getEffectiveName()).isEqualTo("百辟精鋼刀");
+    assertThat(defaultItem.getEffectivePrice(templateRepository)).isEqualTo(15);
+    assertThat(defaultItem.getEffectiveName(templateRepository)).isEqualTo("百辟精鋼刀");
 
     // 3.4 覆寫名稱與說明
     ShopItemTemplate customNameItem = ShopItemTemplate.builder()
@@ -125,9 +128,9 @@ public class GlobalItemsAndShopOverridesTest {
         .price(88)
         .build();
 
-    assertThat(customNameItem.getEffectiveName()).isEqualTo("【福伯親傳】祖傳長槍");
-    assertThat(customNameItem.getEffectiveDescription()).contains("福伯年輕時闖蕩江湖");
-    assertThat(customNameItem.getEffectivePrice()).isEqualTo(88);
+    assertThat(customNameItem.getEffectiveName(templateRepository)).isEqualTo("【福伯親傳】祖傳長槍");
+    assertThat(customNameItem.getEffectiveDescription(templateRepository)).contains("福伯年輕時闖蕩江湖");
+    assertThat(customNameItem.getEffectivePrice(templateRepository)).isEqualTo(88);
   }
 
   @Test
@@ -171,9 +174,9 @@ public class GlobalItemsAndShopOverridesTest {
   @Test
   @DisplayName("5. 驗證真實 newbie_village/shops.json 客棧貨棧商品載入與限量參數")
   void testRealShopTemplateLoaded() {
-    Optional<ShopTemplate> innShopOpt = TemplateRepository.findShop("inn_shop");
+    Optional<ShopTemplate> innShopOpt = templateRepository.getShop("inn_shop");
     if (innShopOpt.isEmpty()) {
-      innShopOpt = TemplateRepository.findShop("newbie_village:inn_shop");
+      innShopOpt = templateRepository.getShop("newbie_village:inn_shop");
     }
     assertThat(innShopOpt).isPresent();
     ShopTemplate innShop = innShopOpt.get();
@@ -199,7 +202,7 @@ public class GlobalItemsAndShopOverridesTest {
     assertThat(pickaxe.templateId()).isIn("miner_pickaxe", "newbie_village:miner_pickaxe");
     assertThat(pickaxe.getEffectiveStock()).isEqualTo(5);
     assertThat(pickaxe.getEffectivePrice()).isEqualTo(25);
-    assertThat(TemplateRepository.findItem(pickaxe.templateId())).isPresent();
-    assertThat(TemplateRepository.findItem(pickaxe.templateId()).get().name()).contains("鶴嘴鋤");
+    assertThat(templateRepository.getItem(pickaxe.templateId())).isPresent();
+    assertThat(templateRepository.getItem(pickaxe.templateId()).get().name()).contains("鶴嘴鋤");
   }
 }

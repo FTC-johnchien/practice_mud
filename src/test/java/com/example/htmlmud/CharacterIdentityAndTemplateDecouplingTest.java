@@ -166,16 +166,16 @@ class CharacterIdentityAndTemplateDecouplingTest {
   class TemplateDecouplingTests {
 
     @Test
-    @DisplayName("TemplateRepository 應作為 Spring Bean 成功注入，且其實例方法與靜態方法皆回傳同源資料")
-    void templateRepositoryBeanAndStaticConsistency() {
+    @DisplayName("TemplateRepository 應作為 Spring Bean 成功注入，且其實例方法與 TemplateCatalog 皆回傳同源資料")
+    void templateRepositoryBeanAndCatalogConsistency() {
       assertThat(templateRepository).isNotNull();
 
       var ironSwordOpt = templateRepository.getItem("iron_sword");
       assertThat(ironSwordOpt).isPresent();
 
-      var staticIronSwordOpt = TemplateRepository.findItem("iron_sword");
-      assertThat(staticIronSwordOpt).isPresent();
-      assertThat(staticIronSwordOpt.get().name()).isEqualTo(ironSwordOpt.get().name());
+      var catalogIronSwordOpt = templateCatalog.findItem("iron_sword");
+      assertThat(catalogIronSwordOpt).isPresent();
+      assertThat(catalogIronSwordOpt.get().name()).isEqualTo(ironSwordOpt.get().name());
     }
 
     @Test

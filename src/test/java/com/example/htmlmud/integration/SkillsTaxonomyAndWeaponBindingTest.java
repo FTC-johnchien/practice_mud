@@ -27,11 +27,14 @@ public class SkillsTaxonomyAndWeaponBindingTest {
   @Autowired
   private PartyService partyService;
 
+  @Autowired
+  private TemplateRepository templateRepository;
+
   @Test
   @DisplayName("驗證技能庫全域載入與九大武器基礎招式註冊完整")
   void testSkillsTaxonomyAndBasicWeapons() {
     // 1. 驗證全域技能總量充足且均已加載 (遷移後為 67 個)
-    assertThat(TemplateRepository.getAllSkills().size()).isGreaterThanOrEqualTo(60);
+    assertThat(templateRepository.getAllSkillMap().size()).isGreaterThanOrEqualTo(60);
 
     // 2. 驗證九大武器類別與空手之基礎招式皆存在
     List<String> expectedBasicSkills = List.of(
@@ -41,7 +44,7 @@ public class SkillsTaxonomyAndWeaponBindingTest {
     );
 
     for (String skillId : expectedBasicSkills) {
-      Optional<SkillTemplate> skillOpt = TemplateRepository.findSkill(skillId);
+      Optional<SkillTemplate> skillOpt = templateRepository.getSkillTemplate(skillId);
       assertThat(skillOpt)
           .as("基礎技能 %s 必須存在於 TemplateRepository", skillId)
           .isPresent();
@@ -57,44 +60,44 @@ public class SkillsTaxonomyAndWeaponBindingTest {
   @DisplayName("驗證門派特色高階武學與道術之元數據與門派歸屬")
   void testSectAdvancedSkillsAndSchools() {
     // 驗證新增的各門派武學
-    SkillTemplate badao = TemplateRepository.findSkill("badao_blade").orElse(null);
+    SkillTemplate badao = templateRepository.getSkillTemplate("badao_blade").orElse(null);
     assertThat(badao).isNotNull();
     assertThat(badao.getName()).isEqualTo("霸刀歸一斬");
     assertThat(badao.getSchool()).isEqualTo("BADAO");
     assertThat(badao.getTags()).contains("BLADE", "RAGE");
 
-    SkillTemplate storm = TemplateRepository.findSkill("storm_blade").orElse(null);
+    SkillTemplate storm = templateRepository.getSkillTemplate("storm_blade").orElse(null);
     assertThat(storm).isNotNull();
     assertThat(storm.getName()).isEqualTo("狂風絕息刀");
     assertThat(storm.getSchool()).isEqualTo("KUANGFENG");
     assertThat(storm.getTags()).contains("BLADE", "COMBO");
 
-    SkillTemplate dragonSpear = TemplateRepository.findSkill("dragon_spear").orElse(null);
+    SkillTemplate dragonSpear = templateRepository.getSkillTemplate("dragon_spear").orElse(null);
     assertThat(dragonSpear).isNotNull();
     assertThat(dragonSpear.getName()).isEqualTo("破陣遊龍槍");
     assertThat(dragonSpear.getSchool()).isEqualTo("TIANCE");
 
-    SkillTemplate madStaff = TemplateRepository.findSkill("mad_demon_staff").orElse(null);
+    SkillTemplate madStaff = templateRepository.getSkillTemplate("mad_demon_staff").orElse(null);
     assertThat(madStaff).isNotNull();
     assertThat(madStaff.getName()).isEqualTo("瘋魔杖法");
     assertThat(madStaff.getSchool()).isEqualTo("SHAOLIN");
 
-    SkillTemplate shadowDagger = TemplateRepository.findSkill("shadow_strike").orElse(null);
+    SkillTemplate shadowDagger = templateRepository.getSkillTemplate("shadow_strike").orElse(null);
     assertThat(shadowDagger).isNotNull();
     assertThat(shadowDagger.getName()).isEqualTo("無影幽冥刺");
     assertThat(shadowDagger.getSchool()).isEqualTo("SHADOW");
 
-    SkillTemplate axeSkill = TemplateRepository.findSkill("mountain_split_axe").orElse(null);
+    SkillTemplate axeSkill = templateRepository.getSkillTemplate("mountain_split_axe").orElse(null);
     assertThat(axeSkill).isNotNull();
     assertThat(axeSkill.getName()).isEqualTo("開山裂地斧");
     assertThat(axeSkill.getSchool()).isEqualTo("JULI");
 
-    SkillTemplate thunder = TemplateRepository.findSkill("thunder_strike").orElse(null);
+    SkillTemplate thunder = templateRepository.getSkillTemplate("thunder_strike").orElse(null);
     assertThat(thunder).isNotNull();
     assertThat(thunder.getName()).isEqualTo("九天應元雷訣");
     assertThat(thunder.getSchool()).isEqualTo("SHENXIAO");
 
-    SkillTemplate iceSpear = TemplateRepository.findSkill("ice_spear").orElse(null);
+    SkillTemplate iceSpear = templateRepository.getSkillTemplate("ice_spear").orElse(null);
     assertThat(iceSpear).isNotNull();
     assertThat(iceSpear.getName()).isEqualTo("玄冰聚煞引");
     assertThat(iceSpear.getSchool()).isEqualTo("TAIYIN");
@@ -220,7 +223,7 @@ public class SkillsTaxonomyAndWeaponBindingTest {
   @Test
   @DisplayName("驗證狂風絕息刀分類解析、裝備刀類時可用套路過濾與切換武器獨立記憶")
   void testStormBladeWeaponSwitchingAndCustomStanceResolution() {
-    SkillTemplate storm = TemplateRepository.findSkill("storm_blade").orElse(null);
+    SkillTemplate storm = templateRepository.getSkillTemplate("storm_blade").orElse(null);
     assertThat(storm).isNotNull();
     // 1. 狂風絕息刀必須被解析為 BLADE 分類（而非誤判為 UNARMED）
     assertThat(PartyMember.resolveSkillCategory(storm)).isEqualTo(SkillCategory.BLADE);

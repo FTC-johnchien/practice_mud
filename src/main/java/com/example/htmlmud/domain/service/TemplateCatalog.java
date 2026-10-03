@@ -20,7 +20,9 @@ import com.example.htmlmud.domain.model.template.SkillTemplate;
 import com.example.htmlmud.domain.repository.TemplateReader;
 import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
+import org.springframework.context.annotation.Primary;
 
+@Primary
 @Service
 public class TemplateCatalog implements TemplateReader {
 
@@ -28,11 +30,11 @@ public class TemplateCatalog implements TemplateReader {
 
   @org.springframework.beans.factory.annotation.Autowired
   public TemplateCatalog(TemplateRepository templateRepository) {
-    this.templateRepository = templateRepository != null ? templateRepository : TemplateRepository.getInstance();
+    this.templateRepository = templateRepository != null ? templateRepository : new TemplateRepository();
   }
 
   public TemplateCatalog() {
-    this(TemplateRepository.getInstance());
+    this(new TemplateRepository());
   }
 
   @Override
