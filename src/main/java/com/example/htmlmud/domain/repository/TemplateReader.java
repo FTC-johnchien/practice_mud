@@ -57,4 +57,24 @@ public interface TemplateReader {
   Map<String, SkillTemplate> getAllSkills();
 
   Map<String, CompanionTemplate> getAllCompanions();
+
+  default Map<String, MobTemplate> getAllMobs() {
+    return Map.of();
+  }
+
+  default Map<String, ItemTemplate> getAllItems() {
+    return Map.of();
+  }
+
+  default Map<String, RoomTemplate> getAllRooms() {
+    return Map.of();
+  }
+
+  default Map<String, ShopTemplate> getAllShops() {
+    return Map.of();
+  }
+
+  default Map<String, PartyMemberSkill> getAllPartySkills() {
+    return Map.of();
+  }
 }

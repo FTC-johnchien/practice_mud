@@ -156,6 +156,8 @@ public class TemplateRepository implements TemplateRegistryPort {
   @Override
   public Optional<RoomTemplate> findRoom(String id) { return getRoom(id); }
   public Map<String, RoomTemplate> getRoomTemplateMap() { return roomTemplates; }
+  @Override
+  public Map<String, RoomTemplate> getAllRooms() { return Collections.unmodifiableMap(roomTemplates); }
 
   // --- Mob ---
   public void addMob(MobTemplate tpl) {
@@ -183,6 +185,9 @@ public class TemplateRepository implements TemplateRegistryPort {
   }
   @Override
   public Optional<MobTemplate> findMob(String id) { return getMob(id); }
+  public Map<String, MobTemplate> getMobTemplateMap() { return Collections.unmodifiableMap(mobTemplates); }
+  @Override
+  public Map<String, MobTemplate> getAllMobs() { return getMobTemplateMap(); }
 
   // --- Item ---
   public void addItem(ItemTemplate tpl) {
@@ -208,6 +213,9 @@ public class TemplateRepository implements TemplateRegistryPort {
   }
   @Override
   public Optional<ItemTemplate> findItem(String id) { return getItem(id); }
+  public Map<String, ItemTemplate> getItemTemplateMap() { return Collections.unmodifiableMap(itemTemplates); }
+  @Override
+  public Map<String, ItemTemplate> getAllItems() { return getItemTemplateMap(); }
 
   // --- Skill ---
   public void addSkill(SkillTemplate tpl) {
@@ -375,6 +383,8 @@ public class TemplateRepository implements TemplateRegistryPort {
   @Override
   public Optional<PartyMemberSkill> findPartySkill(String id) { return getPartySkill(id); }
   public Map<String, PartyMemberSkill> getAllPartySkillMap() { return Collections.unmodifiableMap(partySkillTemplates); }
+  @Override
+  public Map<String, PartyMemberSkill> getAllPartySkills() { return getAllPartySkillMap(); }
 
   // --- Class ---
   public void addClass(ClassTemplate tpl) {
@@ -427,6 +437,8 @@ public class TemplateRepository implements TemplateRegistryPort {
   @Override
   public Optional<ShopTemplate> findShopByRoomId(String roomId) { return getShopByRoom(roomId); }
   public Map<String, ShopTemplate> getAllShopMap() { return Collections.unmodifiableMap(shopTemplates); }
+  @Override
+  public Map<String, ShopTemplate> getAllShops() { return getAllShopMap(); }
 
   // --- Validate ---
   public void validateData() {

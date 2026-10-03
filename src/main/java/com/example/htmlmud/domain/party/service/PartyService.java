@@ -144,11 +144,10 @@ public class PartyService {
   public Party createSoloParty(String leaderName) {
     FormationTemplate form = getBasicFormationForPartySize(5);
     PartyInventory inv = new PartyInventory(PartyInventory.DEFAULT_CAPACITY, templateReader);
-    // 開局初始配置應急物資
-    inv.addItem("taiyin_pill", 3);
-    inv.addItem("purify_talisman", 2);
-    inv.addItem("steel_blade", 1);
-    inv.addItem("standard_spear", 1);
+    // 開局初始配置應急物資 (資料驅動)
+    for (var entry : getStartingSupplies().entrySet()) {
+      inv.addItem(entry.getKey(), entry.getValue());
+    }
 
     Party party = Party.builder()
         .id("party-" + leaderName)
@@ -159,48 +158,13 @@ public class PartyService {
         .build();
 
     PartyMember leader = createCompanion("leader");
-    
-      if (leader != null) {
-        leader.setId("m-leader");
-        if (leaderName != null && !leaderName.isBlank()) {
-          leader.setName(leaderName);
-        }
-        
-        // 注入測試技能 (21+ SKILL, 21+ SPELL)
-        for (int i = 1; i <= 25; i++) {
-            com.example.htmlmud.domain.party.model.PartyMemberSkill testSkill = com.example.htmlmud.domain.party.model.PartyMemberSkill.builder()
-                .id("test_skill_" + i)
-                .name("測試武技 " + i)
-                .icon("⚔️")
-                .description("這是測試用武技")
-                .category("CLASS")
-                .skillType(com.example.htmlmud.domain.model.enums.SkillType.ACTIVE)
-                .costType(com.example.htmlmud.domain.party.model.CombatResourceType.MP)
-                .costValue(i * 2)
-                .cooldownMs(2000L)
-                .damageMultiplier(1.5)
-                .build();
-            leader.getSkills().add(testSkill);
-        }
-        for (int i = 1; i <= 25; i++) {
-            com.example.htmlmud.domain.party.model.PartyMemberSkill testSpell = com.example.htmlmud.domain.party.model.PartyMemberSkill.builder()
-                .id("test_spell_" + i)
-                .name("測試法術 " + i)
-                .icon("✨")
-                .description("這是測試用法術")
-                .category("SPELL")
-                .skillType(com.example.htmlmud.domain.model.enums.SkillType.ACTIVE)
-                .costType(com.example.htmlmud.domain.party.model.CombatResourceType.MP)
-                .costValue(i * 5)
-                .cooldownMs(3000L)
-                .damageMultiplier(2.0)
-                .build();
-            leader.getSkills().add(testSpell);
-        }
-
-        party.addMember(leader);
+    if (leader != null) {
+      leader.setId("m-leader");
+      if (leaderName != null && !leaderName.isBlank()) {
+        leader.setName(leaderName);
       }
-
+      party.addMember(leader);
+    }
 
     return party;
   }
@@ -218,7 +182,11 @@ public class PartyService {
 
   public PartyMember createCompanion(String key) {
     if (key == null) return null;
-    String k = key.toLowerCase();
+    String k = key.trim().toLowerCase();
+    if (k.startsWith("party recruit ")) k = k.substring(14).trim();
+    else if (k.startsWith("recruit ")) k = k.substring(8).trim();
+    else if (k.startsWith("talk ")) k = k.substring(5).trim();
+    else if (k.startsWith("companion:")) k = k.substring(10).trim();
 
     // 1. 優先透過 template reader 查詢 (支持標準 ID 與 aliases)
     var tplOpt = templateReader.findCompanion(key);
@@ -226,18 +194,22 @@ public class PartyService {
       tplOpt = templateReader.findCompanion(k);
     }
 
-    // 2. 若傳入包含前綴或中文別名 (資料驅動：遍歷所有伴侶模板之 name 與 aliases 比對，絕不硬編碼)
+    // 2. 若傳入包含前綴或中文別名 (資料驅動：精確比對伴侶模板之 id, name 與 aliases，消除包含誤判)
     if (tplOpt.isEmpty()) {
       Map<String, CompanionTemplate> allCompanions = templateReader.getAllCompanions();
       if (allCompanions != null) {
         for (CompanionTemplate c : allCompanions.values()) {
-          if (c.name() != null && (k.contains(c.name().toLowerCase()) || c.name().toLowerCase().contains(k))) {
+          if (c.id() != null && c.id().equalsIgnoreCase(k)) {
+            tplOpt = Optional.of(c);
+            break;
+          }
+          if (c.name() != null && c.name().equalsIgnoreCase(k)) {
             tplOpt = Optional.of(c);
             break;
           }
           if (c.aliases() != null) {
             for (String alias : c.aliases()) {
-              if (alias != null && (k.contains(alias.toLowerCase()) || alias.toLowerCase().contains(k))) {
+              if (alias != null && alias.equalsIgnoreCase(k)) {
                 tplOpt = Optional.of(c);
                 break;
               }
@@ -389,14 +361,27 @@ public class PartyService {
   public boolean dismissCompanion(Party party, String memberIdOrName) {
     if (party == null || memberIdOrName == null) return false;
     String cleanTarget = memberIdOrName.trim().toLowerCase();
+    String rawKey = cleanTarget.startsWith("m-") ? cleanTarget.substring(2) : cleanTarget;
+
     PartyMember target = party.getMembers().stream()
-        .filter(m -> m.getId().equalsIgnoreCase(memberIdOrName)
-            || m.getName().equalsIgnoreCase(memberIdOrName)
-            || m.getId().replace("m-", "").equalsIgnoreCase(cleanTarget)
-            || ((cleanTarget.contains("iron") || cleanTarget.contains("tie_niu") || cleanTarget.contains("鐵牛")) && (m.getId().contains("tie_niu") || m.getName().contains("鐵牛")))
-            || ((cleanTarget.contains("ling") || cleanTarget.contains("ling_shuang") || cleanTarget.contains("凌霜")) && (m.getId().contains("ling_shuang") || m.getName().contains("凌霜")))
-            || ((cleanTarget.contains("yan") || cleanTarget.contains("yan_qing") || cleanTarget.contains("燕青")) && (m.getId().contains("yan_qing") || m.getName().contains("燕青")))
-            || ((cleanTarget.contains("mo") || cleanTarget.contains("mo_yan") || cleanTarget.contains("墨衍")) && (m.getId().contains("mo_yan") || m.getName().contains("墨衍"))))
+        .filter(m -> {
+          if (m.getId().equalsIgnoreCase(memberIdOrName) || m.getName().equalsIgnoreCase(memberIdOrName)) {
+            return true;
+          }
+          String baseId = m.getId().startsWith("m-") ? m.getId().substring(2) : m.getId();
+          if (baseId.equalsIgnoreCase(rawKey)) {
+            return true;
+          }
+          if (templateReader != null) {
+            var compOpt = templateReader.findCompanion(baseId);
+            if (compOpt.isPresent()) {
+              var comp = compOpt.get();
+              if (comp.name() != null && (comp.name().equalsIgnoreCase(cleanTarget) || comp.name().equalsIgnoreCase(rawKey))) return true;
+              if (comp.aliases() != null && comp.aliases().stream().anyMatch(a -> a.equalsIgnoreCase(cleanTarget) || a.equalsIgnoreCase(rawKey))) return true;
+            }
+          }
+          return false;
+        })
         .findFirst().orElse(null);
 
     if (target == null) return false;
@@ -557,5 +542,17 @@ public class PartyService {
       broadcastService.broadcastState(self);
     }
     return success;
+  }
+
+  /**
+   * 取得開局贈送之應急物資 (可擴充由 GameConfig 或資料庫配置)
+   */
+  public Map<String, Integer> getStartingSupplies() {
+    return Map.of(
+        "taiyin_pill", 3,
+        "purify_talisman", 2,
+        "steel_blade", 1,
+        "standard_spear", 1
+    );
   }
 }

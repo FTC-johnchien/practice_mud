@@ -141,21 +141,17 @@ public class GameStateBroadcastService {
         if (mob.getTemplate().shopId() != null) {
           caps.add(new TownCapabilityDto("SHOP", "貨棧買賣", "shop", "🛒"));
         }
-        if (id.contains("innkeeper") || (mob.getAliases() != null && mob.getAliases().contains("innkeeper"))) {
-          caps.add(new TownCapabilityDto("REST", "客棧安歇", "rest", "🛏️"));
-        }
-        if (id.contains("tie_niu") || id.contains("ling_shuang") || id.contains("iron") || id.contains("ling") || id.contains("companion")) {
+        // 資料驅動：查詢是否為已註冊之伴侶模板，取代字串寫死匹配
+        String cleanId = id.contains(":") ? id.substring(id.indexOf(":") + 1) : id;
+        if (templateReader != null && templateReader.findCompanion(cleanId).isPresent()) {
           boolean inParty = (party != null && party.getMembers() != null && party.getMembers().stream().anyMatch(m ->
-              (m.getId() != null && (m.getId().equals(id) || m.getId().contains(alias))) ||
+              (m.getId() != null && (m.getId().equals(id) || m.getId().contains(alias) || m.getId().endsWith(cleanId))) ||
               (m.getName() != null && (m.getName().contains(name) || name.contains(m.getName())))));
           if (inParty) {
             caps.add(new TownCapabilityDto("DISMISS", "請離隊友", "dismiss " + alias, "👋"));
           } else {
             caps.add(new TownCapabilityDto("RECRUIT", "招募入隊", "recruit " + alias, "🤝"));
           }
-        }
-        if (id.contains("elder")) {
-          caps.add(new TownCapabilityDto("QUEST", "任務指引", "ask " + alias, "📜"));
         }
         if (mob.getTemplate().kind() == MobKind.AGGRESSIVE || mob.getTemplate().kind() == MobKind.BOSS) {
           caps.add(new TownCapabilityDto("FIGHT", "拔劍迎擊", "kill " + alias, "⚔️"));

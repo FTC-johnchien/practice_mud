@@ -158,6 +158,31 @@ public class TemplateCatalog implements TemplateReader {
   }
 
   @Override
+  public Map<String, MobTemplate> getAllMobs() {
+    return templateReader != null ? templateReader.getAllMobs() : Collections.emptyMap();
+  }
+
+  @Override
+  public Map<String, ItemTemplate> getAllItems() {
+    return templateReader != null ? templateReader.getAllItems() : Collections.emptyMap();
+  }
+
+  @Override
+  public Map<String, RoomTemplate> getAllRooms() {
+    return templateReader != null ? templateReader.getAllRooms() : Collections.emptyMap();
+  }
+
+  @Override
+  public Map<String, ShopTemplate> getAllShops() {
+    return templateReader != null ? templateReader.getAllShops() : Collections.emptyMap();
+  }
+
+  @Override
+  public Map<String, PartyMemberSkill> getAllPartySkills() {
+    return templateReader != null ? templateReader.getAllPartySkills() : Collections.emptyMap();
+  }
+
+  @Override
   public String resolveSkillAlias(String skillId) {
     return templateReader != null ? templateReader.resolveSkillAlias(skillId) : null;
   }

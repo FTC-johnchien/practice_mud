@@ -172,7 +172,7 @@
       "天機不可洩，但若下地宮除魔，貧道自當奉陪。"
     ],
     "initialEquipment": {
-      "MAIN_HAND": "taiyin_tomb:ghost_seal",
+      "ACCESSORY_2": "taiyin_tomb:ghost_seal",
       "BODY": "taiyin_tomb:yin_robe"
     },
     "skills": ["taoist_seal", "taoist_thunder"],

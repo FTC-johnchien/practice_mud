@@ -28,5 +28,155 @@
     "value": 20,
     "quality": "COMMON",
     "level": 1
+  },
+  {
+    "id": "iron_heavy_hammer",
+    "name": "玄鐵八棱錘",
+    "aliases": ["hammer", "iron heavy hammer", "重錘"],
+    "description": "八棱沉重的玄鐵重錘，沉雄厚重，威勢駭人。",
+    "type": "WEAPON",
+    "subType": "HAMMER",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "怒砸向",
+      "minDamage": 16,
+      "maxDamage": 24,
+      "attackSpeed": 2300,
+      "maxDurability": 100
+    },
+    "value": 40,
+    "quality": "COMMON"
+  },
+  {
+    "id": "black_iron_armor",
+    "name": "玄甲重鎧",
+    "aliases": ["armor", "black iron armor", "重鎧"],
+    "description": "千錘百煉的黑鐵鱗甲，厚重堅實，能禦巨力劈砍。",
+    "type": "ARMOR",
+    "subType": "CHEST",
+    "stats": {
+      "slot": "BODY",
+      "defense": 8,
+      "maxDurability": 100
+    },
+    "value": 50,
+    "quality": "COMMON"
+  },
+  {
+    "id": "bronze_shield",
+    "name": "青銅重盾",
+    "aliases": ["shield", "bronze shield", "盾牌"],
+    "description": "沉重的青銅方盾，盾面刻有饕餮吞煞紋路。",
+    "type": "SHIELD",
+    "subType": "OFF_HAND",
+    "stats": {
+      "slot": "OFF_HAND",
+      "attackVerb": "持盾怒撞向",
+      "minDamage": 4,
+      "maxDamage": 8,
+      "defense": 6,
+      "attackSpeed": 2400,
+      "maxDurability": 100
+    },
+    "value": 35,
+    "quality": "COMMON"
+  },
+  {
+    "id": "dagger_twin",
+    "name": "雙生寒鐵匕",
+    "aliases": ["dagger", "dagger twin", "雙匕"],
+    "description": "淬以幽藍寒毒的對稱短匕，刃薄如紙，削鐵如泥。",
+    "type": "WEAPON",
+    "subType": "DAGGER",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "疾刺向",
+      "minDamage": 14,
+      "maxDamage": 22,
+      "attackSpeed": 1500,
+      "maxDurability": 80
+    },
+    "value": 45,
+    "quality": "COMMON"
+  },
+  {
+    "id": "leather_vest",
+    "name": "夜行獵裝",
+    "aliases": ["vest", "leather vest", "皮甲"],
+    "description": "暗影黑皮鞣製的貼身護甲，輕巧貼身且不發聲響。",
+    "type": "ARMOR",
+    "subType": "CHEST",
+    "stats": {
+      "slot": "BODY",
+      "defense": 4,
+      "maxDurability": 80
+    },
+    "value": 30,
+    "quality": "COMMON"
+  },
+  {
+    "id": "herbal_staff",
+    "name": "辟邪百草杖",
+    "aliases": ["staff", "herbal staff", "藥杖"],
+    "description": "以百年辟邪靈木雕琢之短杖，杖首鑲嵌回春靈石，常伴草木清香。",
+    "type": "WEAPON",
+    "subType": "STAFF",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "輕揮藥杖指向",
+      "minDamage": 10,
+      "maxDamage": 16,
+      "attackSpeed": 1900,
+      "maxDurability": 80
+    },
+    "value": 40,
+    "quality": "COMMON"
+  },
+  {
+    "id": "linen_robe",
+    "name": "素問青囊袍",
+    "aliases": ["robe", "linen robe", "素袍"],
+    "description": "素白苧麻織就之道醫長袍，繪有保命安魂之八卦微印。",
+    "type": "ARMOR",
+    "subType": "CHEST",
+    "stats": {
+      "slot": "BODY",
+      "defense": 3,
+      "maxDurability": 60
+    },
+    "value": 25,
+    "quality": "COMMON"
+  },
+  {
+    "id": "ghost_seal",
+    "name": "玄冥幽魂印",
+    "aliases": ["seal", "ghost seal", "幽魂印", "法印"],
+    "description": "刻滿太陰鎖魂篆咒的玄墨古印，蘊含九幽森寒煞氣。",
+    "type": "ACCESSORY",
+    "subType": "ACCESSORY_2",
+    "stats": {
+      "slot": "ACCESSORY_2",
+      "maxDurability": 100
+    },
+    "value": 50,
+    "quality": "COMMON"
+  },
+  {
+    "id": "star_wand",
+    "name": "紫霄星辰杖",
+    "aliases": ["wand", "star wand", "星杖"],
+    "description": "流轉著點點紫微星芒的短杖，能牽引九天星辰靈力。",
+    "type": "WEAPON",
+    "subType": "STAFF",
+    "stats": {
+      "slot": "MAIN_HAND",
+      "attackVerb": "引動星光指向",
+      "minDamage": 13,
+      "maxDamage": 21,
+      "attackSpeed": 1800,
+      "maxDurability": 80
+    },
+    "value": 50,
+    "quality": "COMMON"
   }
 ]

@@ -115,6 +115,20 @@ public class PartyMemberSkill {
     return false;
   }
 
+  /**
+   * 判定技能是否匹配指定 ID 或別名 (完全資料驅動)
+   */
+  public boolean matchesIdOrAlias(String targetId) {
+    if (targetId == null) return false;
+    if (id != null && id.equalsIgnoreCase(targetId)) return true;
+    if (aliases != null) {
+      for (String a : aliases) {
+        if (targetId.equalsIgnoreCase(a)) return true;
+      }
+    }
+    return false;
+  }
+
   public static PartyMemberSkill fromSkillTemplate(com.example.htmlmud.domain.model.template.SkillTemplate tpl) {
     if (tpl == null) return null;
 

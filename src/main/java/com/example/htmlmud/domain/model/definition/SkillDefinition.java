@@ -284,5 +284,35 @@ public record SkillDefinition(
       default -> List.of();
     };
   }
+
+  private static final List<String> CANONICAL_MUD_SKILLS = List.of(
+      "basic_sword", "taiji_sword", "taiyin_sword", "tianjian_sword",
+      "basic_blade", "badao_blade", "storm_blade",
+      "basic_axe", "mountain_split_axe", "basic_blunt",
+      "basic_parry", "iron_cloth",
+      "basic_dagger", "shadow_strike",
+      "basic_first_aid", "divine_healing",
+      "basic_magic", "thunder_strike", "fireball", "ice_spear",
+      "chaos_magic", "violet_mist_force", "zen_trance"
+  );
+
+  /**
+   * 根據預設規範橋接規則，反查解鎖特定 DRPG 技能所需之 MUD 前置武學 (Single Source of Truth)
+   */
+  public static List<String> findDefaultPrerequisites(String drpgSkillId) {
+    if (drpgSkillId == null) return List.of();
+    List<String> list = new ArrayList<>();
+    for (String mId : CANONICAL_MUD_SKILLS) {
+      for (var rule : resolveDefaultBridges(mId)) {
+        if (drpgSkillId.equalsIgnoreCase(rule.targetDrpgSkillId())) {
+          String label = mId + (rule.requiredLevel() > 1 ? " (Lv." + rule.requiredLevel() + ")" : "");
+          if (!list.contains(label)) {
+            list.add(label);
+          }
+        }
+      }
+    }
+    return list;
+  }
 }
 

@@ -236,22 +236,8 @@ public class SkillBridgeService {
     }
 
     if (prereqs.isEmpty()) {
-      // 容錯靜態備用查表 (確保空模板測試環境穩定)
-      switch (drpgSkillId.toLowerCase()) {
-        case "sword_pierce" -> prereqs.addAll(List.of("basic_sword", "basic_blade", "taiji_sword"));
-        case "sword_storm" -> prereqs.addAll(List.of("basic_sword (Lv.5)", "taiji_sword", "taiyin_sword", "tianjian_sword"));
-        case "tank_smash" -> prereqs.addAll(List.of("basic_axe", "mountain_split_axe", "basic_blunt", "basic_blade (Lv.3)"));
-        case "tank_taunt" -> prereqs.addAll(List.of("basic_parry", "iron_cloth"));
-        case "rogue_shadow_strike" -> prereqs.addAll(List.of("basic_dagger", "shadow_strike"));
-        case "rogue_seven_star" -> prereqs.addAll(List.of("basic_dagger (Lv.5)", "shadow_strike"));
-        case "heal_single" -> prereqs.addAll(List.of("basic_first_aid", "divine_healing"));
-        case "heal_all_purify" -> prereqs.addAll(List.of("basic_first_aid (Lv.5)", "divine_healing"));
-        case "taoist_seal" -> prereqs.addAll(List.of("basic_magic", "thunder_strike"));
-        case "taoist_thunder" -> prereqs.addAll(List.of("basic_magic (Lv.5)", "thunder_strike"));
-        case "star_warp" -> prereqs.addAll(List.of("chaos_magic", "violet_mist_force", "zen_trance"));
-        case "star_meteor" -> prereqs.addAll(List.of("zen_trance", "chaos_magic (Lv.5)"));
-        default -> {}
-      }
+      // 容錯備用查表：統一自 SkillDefinition 逆向反查規範橋接規則 (完全消除硬編碼 switch)
+      prereqs.addAll(com.example.htmlmud.domain.model.definition.SkillDefinition.findDefaultPrerequisites(drpgSkillId));
     }
     return prereqs;
   }
