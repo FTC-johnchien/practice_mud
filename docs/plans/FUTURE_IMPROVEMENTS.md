@@ -110,9 +110,15 @@
   2. 所有 Service、Factory、Adapter 均透過 Constructor Injection 取得 `TemplateReader`。
   3. 刪除所有 static map 與 static delegate 方法，單元測試注入 `InMemoryTemplateReader`。
 
-### 1.4 🟧 Phase 5: 基於 Outcome 的角色同步機制 (Outcome-based Character Synchronization) (P1)
-- **現存缺陷**：
-  - `CharacterSyncService` 在開戰/戰後直接互相拷貝 `Player` 與 `PartyMember` 欄位，甚至共享 `LivingStats` 物件引用，存在併發競爭風險。
+### 1.4 ✅ [已完成] Phase 5: 基於 Outcome 的角色同步機制 (Outcome-based Character Synchronization) (P1)
+> **落地進度**：已於 2026-10-03 完成。
+> 1. 新增不可變 Record `BattleParticipantSnapshot`，開戰前深度隔離 Player 屬性與技能資料，不持有 Player 物件或 LivingStats 引用。
+> 2. 新增不可變 Record `BattleOutcome` 與 Spring 服務 `BattleOutcomeApplier`，內建 LRU 冪等快取（防重放/重複發獎），支援戰後狀態單向安全套用。
+> 3. 重構 `CharacterSyncService`，開戰與戰後全面改走 Snapshot / Outcome 機制，徹底消除雙向同步與 Actor 併發競態風險。
+> 4. 新增專屬整合測試 `OutcomeBasedCharacterSyncTest`（快照隔離、冪等結算、升級增量、端到端閉環 4 測試項），全專案 215 項測試 100% 綠燈通過。
+
+- **現存缺陷 (已根治)**：
+  - ~~`CharacterSyncService` 在開戰/戰後直接互相拷貝 `Player` 與 `PartyMember` 欄位，甚至共享 `LivingStats` 物件引用，存在併發競爭風險。~~
 - **改善方案**：
   1. **開戰前產生 Snapshot**：建立不可變 `BattleParticipantSnapshot` 提供戰鬥初始數據，不持有 Player 引用。
   2. **戰鬥結算產生 Outcome**：戰鬥結束輸出不可變 `BattleOutcome` (包含 HP/MP delta, 經驗獲得, 道具異動, 技能進度, idempotency key)。

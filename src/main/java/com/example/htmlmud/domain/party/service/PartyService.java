@@ -92,6 +92,10 @@ public class PartyService {
     return party;
   }
 
+  public void clearCache() {
+    partyCache.clear();
+  }
+
   @PostConstruct
   public void initDefaultFormations() {
     Map<String, FormationTemplate> repoFormations = templateReader.getAllFormations();

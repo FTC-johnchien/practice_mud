@@ -45,7 +45,7 @@ class PartyInventoryAndMadnessTest {
     dungeonManager.init();
 
     dummyPlayer = mock(Player.class);
-    when(dummyPlayer.getName()).thenReturn("tester");
+    when(dummyPlayer.getName()).thenReturn("madness_tester");
     when(dummyPlayer.isValid()).thenReturn(true);
 
     dungeonPos = new DungeonPosition("taiyin_tomb_b1f", 1, 1, Direction.NORTH, 10, 10);
@@ -54,7 +54,7 @@ class PartyInventoryAndMadnessTest {
   @Test
   @DisplayName("測試隊伍公共行囊：初始物品、裝備穿戴與卸下數值加成")
   void testInventoryEquipAndUnequip() {
-    Party party = partyService.getOrCreateParty("tester");
+    Party party = partyService.getOrCreateParty("madness_tester");
     assertThat(party.getInventory()).isNotNull();
     assertThat(party.getInventory().getSlots()).isNotEmpty();
 
@@ -86,7 +86,7 @@ class PartyInventoryAndMadnessTest {
   @Test
   @DisplayName("測試隊伍公共行囊：丹藥服用恢復氣血與清心符回復道心")
   void testInventoryItemUse() {
-    Party party = partyService.getOrCreateParty("tester");
+    Party party = partyService.getOrCreateParty("madness_tester");
     PartyMember member = party.getMembers().get(1);
 
     member.getStats().setHp(30);
@@ -116,7 +116,7 @@ class PartyInventoryAndMadnessTest {
   @Test
   @DisplayName("測試第一階段走火入魔 (CHAOS) 與清心符解除心魔")
   void testChaosMadnessAndPurifyRecovery() {
-    Party party = partyService.getOrCreateParty("tester");
+    Party party = partyService.getOrCreateParty("madness_tester");
     PartyMember iron = party.getMembers().get(1); // 鐵牛 (非主角)
 
     iron.consumeSan(100);
@@ -143,7 +143,7 @@ class PartyInventoryAndMadnessTest {
   @Test
   @DisplayName("測試太上鎮魔封印術 (SEALED) 凍結異變進度")
   void testSealMemberAction() {
-    Party party = partyService.getOrCreateParty("tester");
+    Party party = partyService.getOrCreateParty("madness_tester");
     PartyMember iron = party.getMembers().get(1);
 
     iron.consumeSan(100);
@@ -158,7 +158,7 @@ class PartyInventoryAndMadnessTest {
   @Test
   @DisplayName("測試血肉道核遺學吸收：隊友學會異變隊員之絕學")
   void testLearnSkillFromDaoCore() {
-    Party party = partyService.getOrCreateParty("tester");
+    Party party = partyService.getOrCreateParty("madness_tester");
     PartyMember iron = party.getMembers().get(1); // 鐵牛
     int initialSkillCount = iron.getSkills().size();
 
@@ -193,7 +193,7 @@ class PartyInventoryAndMadnessTest {
   @Test
   @DisplayName("測試背包物品去綴比對堆疊與 5+2 裝備欄格式化輸出")
   void testItemPrefixNormalizationAndEquipmentSlots() {
-    Party party = partyService.getOrCreateParty("tester");
+    Party party = partyService.getOrCreateParty("madness_tester");
 
     // 1. 驗證消耗品去綴堆疊：初始行囊已有 taiyin_pill，再加入 taiyin_tomb:taiyin_pill 應合併堆疊而非建立新格位
     int initialSlotsCount = party.getInventory().getSlots().size();
