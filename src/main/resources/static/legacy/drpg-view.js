@@ -2333,8 +2333,8 @@ function closeSaveModal() {
 function updateSaveSlotsView(slots) {
   drpgState.saveSlots = slots || [];
 
-  // 解析最新存檔 (優先排除空存檔)
-  const populated = drpgState.saveSlots.filter(s => !s.empty);
+  // 解析最新存檔 (優先排除空存檔與損壞存檔)
+  const populated = drpgState.saveSlots.filter(s => !s.empty && !s.corrupted);
   if (populated.length > 0) {
     populated.sort((a, b) => {
       const timeA = a.savedAt || '';
@@ -2363,12 +2363,13 @@ function renderSaveSlots() {
   container.innerHTML = '';
   const slots = drpgState.saveSlots && drpgState.saveSlots.length > 0
       ? drpgState.saveSlots
-      : [0, 1, 2, 3, 4, 5].map(id => ({ slotId: id, empty: true, title: id === 0 ? '自動存檔' : `存檔槽位 ${id}` }));
+      : [0, 1, 2, 3, 4, 5].map(id => ({ slotId: id, empty: true, corrupted: false, title: id === 0 ? '自動存檔' : `存檔槽位 ${id}` }));
 
   slots.forEach(slot => {
     const isAuto = (slot.slotId === 0);
+    const cardStatusClass = slot.corrupted ? 'is-corrupted' : (slot.empty ? 'is-empty' : 'is-populated');
     const card = document.createElement('div');
-    card.className = `slot-item-card ${isAuto ? 'is-autosave' : ''} ${slot.empty ? 'is-empty' : 'is-populated'}`;
+    card.className = `slot-item-card ${isAuto ? 'is-autosave' : ''} ${cardStatusClass}`;
 
     const infoCol = document.createElement('div');
     infoCol.className = 'slot-info-col';
@@ -2376,7 +2377,7 @@ function renderSaveSlots() {
     const badgeRow = document.createElement('div');
     badgeRow.className = 'slot-badge-row';
     const tag = document.createElement('span');
-    tag.className = `slot-id-tag ${isAuto ? 'auto-tag' : ''}`;
+    tag.className = `slot-id-tag ${isAuto ? 'auto-tag' : ''} ${slot.corrupted ? 'corrupted-tag' : ''}`;
     tag.innerText = isAuto ? '⚡ 自動存檔' : `槽位 ${slot.slotId}`;
     badgeRow.appendChild(tag);
 
@@ -2388,7 +2389,9 @@ function renderSaveSlots() {
 
     const metaRow = document.createElement('div');
     metaRow.className = 'slot-meta-row';
-    if (slot.empty) {
+    if (slot.corrupted) {
+      metaRow.innerHTML = '<span class="slot-corrupted-warning">⚠️ 存檔資料損毀或格式異常，無法直接載入。</span>';
+    } else if (slot.empty) {
       metaRow.innerHTML = '<span>-- 空無道痕 (未存檔) --</span>';
     } else {
       metaRow.innerHTML = `<span>👤 主角: <strong>${slot.protagonistName || '無名'}</strong></span>`
@@ -2398,7 +2401,7 @@ function renderSaveSlots() {
     }
     infoCol.appendChild(metaRow);
 
-    if (!slot.empty && slot.memberNames && slot.memberNames.length > 0) {
+    if (!slot.empty && !slot.corrupted && slot.memberNames && slot.memberNames.length > 0) {
       const membersRow = document.createElement('div');
       membersRow.className = 'slot-members-row';
       membersRow.innerText = '👥 小隊隊容：' + slot.memberNames.join('、');
@@ -2409,7 +2412,38 @@ function renderSaveSlots() {
     const actionsCol = document.createElement('div');
     actionsCol.className = 'slot-actions-col';
 
-    if (slot.empty) {
+    if (slot.corrupted) {
+      // 損壞存檔防禦：禁用載入，提供備份還原、重新覆寫與刪除
+      const disabledLoadBtn = document.createElement('button');
+      disabledLoadBtn.className = 'slot-btn slot-btn-load';
+      disabledLoadBtn.disabled = true;
+      disabledLoadBtn.innerText = '❌ 損壞無法讀取';
+      disabledLoadBtn.style.opacity = '0.5';
+      disabledLoadBtn.style.cursor = 'not-allowed';
+      actionsCol.appendChild(disabledLoadBtn);
+
+      const restoreBtn = document.createElement('button');
+      restoreBtn.className = 'slot-btn slot-btn-save';
+      restoreBtn.innerText = '🔄 還原備份';
+      restoreBtn.title = '嘗試從 .bak 備份檔案還原';
+      restoreBtn.onclick = () => triggerRestoreSlot(slot.slotId);
+      actionsCol.appendChild(restoreBtn);
+
+      if (!isAuto) {
+        const overwriteBtn = document.createElement('button');
+        overwriteBtn.className = 'slot-btn slot-btn-save';
+        overwriteBtn.innerText = '💾 重新覆寫';
+        overwriteBtn.onclick = () => triggerSaveSlot(slot.slotId);
+        actionsCol.appendChild(overwriteBtn);
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'slot-btn slot-btn-del';
+        delBtn.innerText = '🗑️';
+        delBtn.title = '刪除此損壞存檔';
+        delBtn.onclick = () => triggerDeleteSlot(slot.slotId);
+        actionsCol.appendChild(delBtn);
+      }
+    } else if (slot.empty) {
       if (!isAuto) {
         const saveBtn = document.createElement('button');
         saveBtn.className = 'slot-btn slot-btn-save';
@@ -2456,6 +2490,12 @@ function triggerSaveSlot(slotId) {
   if (title !== null) {
     const cmd = title.trim() ? `save ${slotId} ${title.trim()}` : `save ${slotId}`;
     send(cmd);
+  }
+}
+
+function triggerRestoreSlot(slotId) {
+  if (confirm(`確定要嘗試從 .bak 備份還原【存檔槽位 ${slotId}】嗎？`)) {
+    send(`save restore ${slotId}`);
   }
 }
 
@@ -2940,6 +2980,7 @@ window.updateSaveSlotsView = updateSaveSlotsView;
 window.triggerSaveSlot = triggerSaveSlot;
 window.triggerLoadSlot = triggerLoadSlot;
 window.triggerDeleteSlot = triggerDeleteSlot;
+window.triggerRestoreSlot = triggerRestoreSlot;
 window.triggerNewGame = triggerNewGame;
 
 // 新增流程函式全域掛載
@@ -3124,4 +3165,4 @@ window.addEventListener('DOMContentLoaded', () => {
       send('saves quiet', true);
     }
   }, 300);
-});
+});

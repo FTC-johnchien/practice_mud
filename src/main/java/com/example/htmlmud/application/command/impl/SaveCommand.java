@@ -68,6 +68,16 @@ public class SaveCommand implements PlayerCommand {
       return;
     }
 
+    // 支援 save restore <slot>
+    if ("restore".equals(sub)) {
+      if (tokens.length < 2) {
+        player.reply("請指定欲還原之存檔槽位 (0~5)，例如: save restore 1");
+        return;
+      }
+      saveGameService.handleRestore(player, tokens[1]);
+      return;
+    }
+
     // 預設為存檔至指定槽位: save <1..5> [自訂標題]
     try {
       int slotId = Integer.parseInt(sub);
@@ -87,7 +97,8 @@ public class SaveCommand implements PlayerCommand {
           + "  save 1 [自訂標題]      - 儲存進度至槽位 1\n"
           + "  load 1                - 載入槽位 1 進度\n"
           + "  new [主角姓名]         - 開闢全新修仙道途\n"
-          + "  save del 1            - 刪除槽位 1 進度");
+          + "  save del 1            - 刪除槽位 1 進度\n"
+          + "  save restore 1        - 從備份還原槽位 1 進度");
     } catch (Exception e) {
       player.reply("❌ 存檔失敗: " + e.getMessage());
     }

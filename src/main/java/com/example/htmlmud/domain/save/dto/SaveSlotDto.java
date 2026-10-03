@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class SaveSlotDto {
   private int slotId; // 0 = autosave, 1..5 = manual
   private boolean empty;
+  private boolean corrupted;
   private String title;
   private String protagonistName;
   private String floorId;

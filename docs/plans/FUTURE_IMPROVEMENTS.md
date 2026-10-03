@@ -204,28 +204,25 @@
 
 ---
 
-## 🛡️ 8. 檔案式存檔版本治理 (`schemaVersion`) 與壞檔防禦 (Save File Resilience) — Priority: P1
+## 🛡️ 8. ✅ [已完成] 檔案式存檔版本治理 (`schemaVersion`) 與壞檔防禦 (Save File Resilience) — Priority: P1
 
 > **來源**：`Codex_Code_Review.md` (§P1)、`Copilot_Code_Review.md` (§3.5)、`Claude_Code_Review.md` (§三)。
-> **核心目標**：為 JSON 檔案式存檔建立版本遷移架構，嚴格區分「空存檔」與「損壞存檔」，杜絕意外覆寫。
-
-### 8.1 存檔資料模型引入 `schemaVersion` 與遷移適配器 (P1)
-- **現存缺陷**：
-  [SaveData.java](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/save/model/SaveData.java) 雖標註 `@JsonIgnoreProperties(ignoreUnknown = true)`，但缺乏版本號欄位。當角色屬性重構、欄位重新命名（如新增 `potentialPoints`、`stamina`、`learnedStances`）或型別轉換時，舊存檔無法平滑升級。
-- **改善方案**：
-  1. 在 `SaveData` 頂層增加 `private int schemaVersion = CURRENT_SCHEMA_VERSION;`（目前定義為 Version 1）。
-  2. 建立 `SaveMigrationPipeline`：
-     - 若讀取到無版本號或舊版存檔，依序流經 `SaveMigrationV1ToV2` 等純資料遷移器。
-     - 補齊缺失欄位的安全預設值，轉換為最新執行期模型。
-  3. 為歷史版本存檔建立固定 JSON Fixture 測試，確保版本迭代絕不破壞向後相容。
-
-### 8.2 壞檔防禦與明確狀態標記（杜絕壞檔誤當空槽覆寫） (P1)
-- **現存缺陷**：
-  在 [SaveGameService.java#L118-L123](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/save/service/SaveGameService.java#L118-L123) 中，當反序列化失敗時，`SaveSlotDto` 雖標記標題為 `(損壞)`，但仍回傳 `empty: true`。這會讓前端誤將其視為可用空槽，若玩家點擊存檔將直接**覆寫毀滅原始壞檔**。
-- **改善方案**：
-  1. `SaveSlotDto` 新增 `boolean corrupted` 欄位；當讀取異常時，設為 `empty: false, corrupted: true`。
-  2. 前端禁止直接點擊覆寫損壞槽位，並在 UI 提供「存檔損壞警告 / 備份匯出」按鈕。
-  3. 寫入新存檔時，自動將舊檔備份為 `.bak` 檔案，確保資料零遺失。
+> **落地進度**：已於 2026-10-03 完成。
+> 1. **資料模型版本治理 (`CURRENT_SCHEMA_VERSION = 1` / `SaveMigrationPipeline`)**：
+>    - [SaveData.java](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/save/model/SaveData.java) 引入 `CURRENT_SCHEMA_VERSION = 1` 與 `schemaVersion` 欄位（`@Builder.Default`）。
+>    - 實作 [SaveMigrationPipeline.java](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/save/migration/SaveMigrationPipeline.java) 與 `SaveMigration` 介面，內建 v0（歷史 legacy 無版本存檔）平滑遷移升級至 v1 的安全補齊管線。
+> 2. **壞檔狀態明確標記與防禦 (`SaveSlotDto` / `SaveCorruptedException`)**：
+>    - [SaveSlotDto.java](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/save/dto/SaveSlotDto.java) 新增 `boolean corrupted` 欄位。
+>    - [SaveGameService.java](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/save/service/SaveGameService.java) 的 `readSlotSummary()` 在 JSON 格式不合法或解析例外時，嚴格回傳 `empty: false, corrupted: true, title: "... (存檔損壞)"`，杜絕壞檔被誤判為空槽而遭意外覆寫。
+>    - `loadGame()` 遇到損壞存檔時嚴格拋出 [SaveCorruptedException.java](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/save/exception/SaveCorruptedException.java)，阻止殘破資料注入記憶體。
+> 3. **原子性自動 `.bak` 備份與還原機制 (`restoreBackup` / `save restore`)**：
+>    - 存檔寫入或覆寫時，自動將前代舊存檔備份為 `autosave.json.bak` / `slot_X.json.bak`。
+>    - `SaveGameService` 提供 `hasBackup(slotId)` 與 `restoreBackup(slotId)`；指令行支援 `save restore <slotId>`；刪除存檔時同步安全清理備份。
+> 4. **前端防禦與 UI 視覺適配 (`drpg-view.js` / `style.css`)**：
+>    - `drpgState.latestSaveSlot` 排除壞檔，避免「繼續遊戲」嘗試載入損壞資料。
+>    - 壞檔卡片呈現醒目警示樣式（`.is-corrupted`, `.corrupted-tag`），禁用載入按鈕，並提供「🔄 還原備份」、「💾 重新覆寫」與「🗑️ 刪除」。
+> 5. **完整單元測試覆蓋 (`SaveGameServiceTest.java`)**：
+>    - 覆蓋單機存檔全生命週期、壞檔偵測與防禦攔截、v0 舊檔自動遷移至 v1、以及 `.bak` 備份自動生成與時空還原驗證。
 
 ---
 

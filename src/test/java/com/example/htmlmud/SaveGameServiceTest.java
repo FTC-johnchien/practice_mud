@@ -125,4 +125,102 @@ class SaveGameServiceTest {
     SaveSlotDto slot1After = saveGameService.readSlotSummary(1, "存檔槽位 1");
     assertTrue(slot1After.isEmpty());
   }
+
+  @Test
+  @DisplayName("驗證存檔損壞時防禦機制：卡片標記 corrupted 且拒絕直接加載")
+  void testCorruptedSaveDetectionAndDefense() throws Exception {
+    int slotId = 2;
+    java.io.File saveFile = new java.io.File("saves", "slot_" + slotId + ".json");
+    if (!saveFile.getParentFile().exists()) {
+      saveFile.getParentFile().mkdirs();
+    }
+    java.nio.file.Files.writeString(saveFile.toPath(), "{ invalid json content: corrupt! @@@");
+
+    try {
+      // 1. 槽位清單與摘要檢查：應標記 empty = false, corrupted = true
+      SaveSlotDto summary = saveGameService.readSlotSummary(slotId, "存檔槽位 " + slotId);
+      assertFalse(summary.isEmpty(), "損壞存檔不可誤判為空");
+      assertTrue(summary.isCorrupted(), "損壞存檔應明確標記 corrupted=true");
+      assertThat(summary.getTitle()).contains("存檔損壞");
+
+      // 2. 嘗試 loadGame 應嚴格拋出 SaveCorruptedException
+      org.junit.jupiter.api.Assertions.assertThrows(
+          com.example.htmlmud.domain.save.exception.SaveCorruptedException.class,
+          () -> saveGameService.loadGame(testPlayerId, slotId),
+          "加載壞檔應拋出 SaveCorruptedException"
+      );
+    } finally {
+      saveGameService.deleteSave(slotId);
+    }
+  }
+
+  @Test
+  @DisplayName("驗證舊版本存檔 (v0 無 schemaVersion) 能平滑遷移至 v1 最新版本")
+  void testSaveMigrationFromLegacyV0ToV1() throws Exception {
+    int slotId = 3;
+    java.io.File saveFile = new java.io.File("saves", "slot_" + slotId + ".json");
+    if (!saveFile.getParentFile().exists()) {
+      saveFile.getParentFile().mkdirs();
+    }
+
+    String legacyJson = """
+        {
+          "slotId": 3,
+          "title": "太陰舊版存檔",
+          "playerId": "test_player",
+          "protagonistName": "古修殘魂",
+          "floorId": "mozhu_mines_b1f",
+          "floorX": 2,
+          "floorY": 2
+        }
+        """;
+    java.nio.file.Files.writeString(saveFile.toPath(), legacyJson);
+
+    try {
+      SaveSlotDto summary = saveGameService.readSlotSummary(slotId, "存檔槽位 " + slotId);
+      assertFalse(summary.isEmpty());
+      assertFalse(summary.isCorrupted());
+      assertThat(summary.getTitle()).isEqualTo("太陰舊版存檔");
+      assertThat(summary.getProtagonistName()).isEqualTo("古修殘魂");
+
+      SaveData loaded = saveGameService.loadGame(testPlayerId, slotId);
+      assertNotNull(loaded);
+      assertThat(loaded.getSchemaVersion()).isEqualTo(SaveData.CURRENT_SCHEMA_VERSION);
+      assertThat(loaded.getProtagonistName()).isEqualTo("古修殘魂");
+    } finally {
+      saveGameService.deleteSave(slotId);
+    }
+  }
+
+  @Test
+  @DisplayName("驗證存檔自動 .bak 備份機制與還原功能")
+  void testBackupCreationAndRestore() {
+    int slotId = 4;
+    try {
+      // 首次存檔：尚無前代檔案，不應有備份
+      SaveData firstSave = saveGameService.saveGame(testPlayerId, slotId, "第一代進度");
+      assertNotNull(firstSave);
+      assertFalse(saveGameService.hasBackup(slotId));
+
+      // 第二次覆寫存檔：應自動將「第一代進度」存入 .bak
+      SaveData secondSave = saveGameService.saveGame(testPlayerId, slotId, "第二代進度");
+      assertNotNull(secondSave);
+      assertTrue(saveGameService.hasBackup(slotId));
+
+      // 模擬人為破壞主存檔
+      java.io.File mainFile = new java.io.File("saves", "slot_" + slotId + ".json");
+      mainFile.delete();
+
+      // 執行備份還原
+      boolean restored = saveGameService.restoreBackup(slotId);
+      assertTrue(restored, "備份還原應成功");
+
+      // 驗證讀檔成功且內容為第一代進度
+      SaveData loaded = saveGameService.loadGame(testPlayerId, slotId);
+      assertNotNull(loaded);
+      assertThat(loaded.getTitle()).isEqualTo("第一代進度");
+    } finally {
+      saveGameService.deleteSave(slotId);
+    }
+  }
 }

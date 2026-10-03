@@ -3014,6 +3014,22 @@ body, html {
   opacity: 0.75;
 }
 
+.slot-item-card.is-corrupted {
+  border-left: 4px solid #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.slot-id-tag.corrupted-tag {
+  background: #7f1d1d;
+  color: #fca5a5;
+  border: 1px solid #dc2626;
+}
+
+.slot-corrupted-warning {
+  color: #f87171;
+  font-weight: bold;
+}
+
 .slot-info-col {
   flex: 1;
   display: flex;

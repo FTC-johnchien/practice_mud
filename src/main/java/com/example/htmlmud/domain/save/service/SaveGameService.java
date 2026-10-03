@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.dungeon.model.GridDirection;
 import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
@@ -18,7 +19,10 @@ import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.service.PartyService;
 import com.example.htmlmud.domain.save.dto.SaveSlotDto;
+import com.example.htmlmud.domain.save.exception.SaveCorruptedException;
+import com.example.htmlmud.domain.save.migration.SaveMigrationPipeline;
 import com.example.htmlmud.domain.save.model.SaveData;
+import com.example.htmlmud.domain.service.GameStateBroadcastService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import jakarta.annotation.PostConstruct;
@@ -37,13 +41,30 @@ public class SaveGameService {
   private final PartyService partyService;
   private final DungeonManager dungeonManager;
 
-  @org.springframework.beans.factory.annotation.Autowired(required = false)
-  private com.example.htmlmud.domain.service.GameStateBroadcastService broadcastService;
+  @Autowired(required = false)
+  private SaveMigrationPipeline migrationPipeline;
+
+  @Autowired(required = false)
+  private GameStateBroadcastService broadcastService;
 
   private File savesDir;
 
+  public SaveMigrationPipeline getMigrationPipeline() {
+    if (migrationPipeline == null) {
+      migrationPipeline = new SaveMigrationPipeline();
+    }
+    return migrationPipeline;
+  }
+
+  public void setMigrationPipeline(SaveMigrationPipeline pipeline) {
+    this.migrationPipeline = pipeline;
+  }
+
   @PostConstruct
   public void init() {
+    if (migrationPipeline == null) {
+      migrationPipeline = new com.example.htmlmud.domain.save.migration.SaveMigrationPipeline();
+    }
     savesDir = new File("saves");
     if (!savesDir.exists()) {
       boolean created = savesDir.mkdirs();
@@ -57,6 +78,37 @@ public class SaveGameService {
     }
     String filename = (slotId == 0) ? "autosave.json" : "slot_" + slotId + ".json";
     return new File(savesDir, filename);
+  }
+
+  public File getBackupFile(int slotId) {
+    if (slotId < 0 || slotId > TOTAL_MANUAL_SLOTS) {
+      throw new IllegalArgumentException("無效的存檔槽位: " + slotId + " (合法範圍: 0.." + TOTAL_MANUAL_SLOTS + ")");
+    }
+    String filename = (slotId == 0) ? "autosave.json.bak" : "slot_" + slotId + ".json.bak";
+    return new File(savesDir, filename);
+  }
+
+  public boolean hasBackup(int slotId) {
+    File backupFile = getBackupFile(slotId);
+    return backupFile.exists() && backupFile.length() > 0;
+  }
+
+  public boolean restoreBackup(int slotId) {
+    File backupFile = getBackupFile(slotId);
+    File targetFile = getSaveFile(slotId);
+    if (!backupFile.exists() || backupFile.length() == 0) {
+      log.warn("查無可用備份: slot {}", slotId);
+      return false;
+    }
+    try {
+      java.nio.file.Files.copy(backupFile.toPath(), targetFile.toPath(),
+          java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+      log.info("成功還原 slot {} 的備份檔案: {}", slotId, backupFile.getName());
+      return true;
+    } catch (Exception e) {
+      log.error("還原 slot {} 的備份檔案失敗: {}", slotId, e.getMessage(), e);
+      return false;
+    }
   }
 
   public List<SaveSlotDto> listSaveSlots() {
@@ -75,16 +127,26 @@ public class SaveGameService {
 
   public SaveSlotDto readSlotSummary(int slotId, String defaultTitle) {
     File file = getSaveFile(slotId);
-    if (!file.exists()) {
+    if (!file.exists() || file.length() == 0) {
       return SaveSlotDto.builder()
           .slotId(slotId)
           .empty(true)
+          .corrupted(false)
           .title(defaultTitle + " (空)")
           .build();
     }
 
     try {
-      SaveData data = objectMapper.readValue(file, SaveData.class);
+      com.fasterxml.jackson.databind.JsonNode rootNode = objectMapper.readTree(file);
+      if (rootNode == null || !rootNode.isObject()) {
+        throw new com.example.htmlmud.domain.save.exception.SaveCorruptedException("存檔格式非合法 JSON 物件");
+      }
+      com.fasterxml.jackson.databind.JsonNode migratedNode = getMigrationPipeline().migrateToLatest(rootNode);
+      SaveData data = objectMapper.treeToValue(migratedNode, SaveData.class);
+      if (data == null) {
+        throw new com.example.htmlmud.domain.save.exception.SaveCorruptedException("存檔反序列化失敗");
+      }
+
       DungeonFloor floor = dungeonManager.getFloor(data.getFloorId());
       String floorName = floor != null ? floor.getName() : data.getFloorId();
 
@@ -104,6 +166,7 @@ public class SaveGameService {
       return SaveSlotDto.builder()
           .slotId(slotId)
           .empty(false)
+          .corrupted(false)
           .title(data.getTitle() != null ? data.getTitle() : defaultTitle)
           .protagonistName(data.getProtagonistName())
           .floorId(data.getFloorId())
@@ -117,8 +180,9 @@ public class SaveGameService {
       log.error("Failed to read save slot summary from {}: {}", file.getName(), e.getMessage());
       return SaveSlotDto.builder()
           .slotId(slotId)
-          .empty(true)
-          .title(defaultTitle + " (損壞)")
+          .empty(false)
+          .corrupted(true)
+          .title(defaultTitle + " (存檔損壞)")
           .build();
     }
   }
@@ -170,6 +234,18 @@ public class SaveGameService {
         .build();
 
     File file = getSaveFile(slotId);
+    // 覆寫前若存檔已存在且非空，先建立 .bak 備份
+    if (file.exists() && file.length() > 0) {
+      try {
+        File backupFile = getBackupFile(slotId);
+        java.nio.file.Files.copy(file.toPath(), backupFile.toPath(),
+            java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        log.info("Created backup for slot {} before overwriting: {}", slotId, backupFile.getName());
+      } catch (Exception be) {
+        log.warn("Failed to create backup for slot {}: {}", slotId, be.getMessage());
+      }
+    }
+
     File tempFile = new File(file.getParentFile(), file.getName() + ".tmp");
     try {
       objectMapper.writerWithDefaultPrettyPrinter().writeValue(tempFile, saveData);
@@ -194,59 +270,75 @@ public class SaveGameService {
 
   public SaveData loadGame(String playerId, int slotId) {
     File file = getSaveFile(slotId);
-    if (!file.exists()) {
+    if (!file.exists() || file.length() == 0) {
       throw new IllegalArgumentException("存檔槽位 " + slotId + " 不存在！");
     }
 
+    SaveData data;
     try {
-      SaveData data = objectMapper.readValue(file, SaveData.class);
-
-      // 1. 還原小隊 Party
-      if (data.getParty() != null) {
-        // 若缺少陣法參照，從 registry 補全
-        if (data.getParty().getEquippedFormation() == null) {
-          data.getParty().setEquippedFormation(partyService.getFormation("formation_four_symbols"));
-        }
-        partyService.setParty(playerId, data.getParty());
+      com.fasterxml.jackson.databind.JsonNode rootNode = objectMapper.readTree(file);
+      if (rootNode == null || !rootNode.isObject()) {
+        throw new com.example.htmlmud.domain.save.exception.SaveCorruptedException("存檔格式非合法 JSON 物件");
       }
-
-      // 2. 還原地牢坐標與迷霧狀態
-      String floorId = (data.getFloorId() != null) ? data.getFloorId() : "taiyin_tomb_b1f";
-      DungeonFloor floor = dungeonManager.getFloor(floorId);
-      int w = (floor != null) ? floor.getWidth() : 10;
-      int h = (floor != null) ? floor.getHeight() : 10;
-
-      GridDirection facing = GridDirection.NORTH;
-      if (data.getFloorFacing() != null) {
-        try {
-          facing = GridDirection.valueOf(data.getFloorFacing().toUpperCase());
-        } catch (Exception ignored) {}
+      int origVersion = getMigrationPipeline().extractVersion(rootNode);
+      com.fasterxml.jackson.databind.JsonNode migratedNode = getMigrationPipeline().migrateToLatest(rootNode);
+      data = objectMapper.treeToValue(migratedNode, SaveData.class);
+      if (data == null) {
+        throw new com.example.htmlmud.domain.save.exception.SaveCorruptedException("存檔反序列化失敗");
       }
-
-      DungeonPosition pos = new DungeonPosition(floorId, data.getFloorX(), data.getFloorY(), facing, w, h);
-      if (data.getVisitedTiles() != null) {
-        pos.setVisited(data.getVisitedTiles());
+      if (origVersion < SaveData.CURRENT_SCHEMA_VERSION) {
+        log.info("Loaded legacy save slot {} (migrated v{} -> v{})", slotId, origVersion, SaveData.CURRENT_SCHEMA_VERSION);
       }
-      if (data.getOpenedChests() != null) {
-        for (String chestStr : data.getOpenedChests()) {
-          String[] parts = chestStr.split(",");
-          if (parts.length == 2) {
-            try {
-              int cx = Integer.parseInt(parts[0].trim());
-              int cy = Integer.parseInt(parts[1].trim());
-              pos.markChestOpened(cx, cy);
-            } catch (Exception ignored) {}
-          }
-        }
-      }
-
-      dungeonManager.setPlayerPosition(playerId, pos);
-      log.info("Successfully loaded game from slot {} for player {}: {}", slotId, playerId, data.getTitle());
-      return data;
+    } catch (com.example.htmlmud.domain.save.exception.SaveCorruptedException sce) {
+      log.error("Corrupted save file detected in slot {}: {}", slotId, sce.getMessage());
+      throw sce;
     } catch (Exception e) {
       log.error("Failed to load game from slot {}: {}", slotId, e.getMessage(), e);
-      throw new RuntimeException("讀檔失敗: " + e.getMessage(), e);
+      throw new com.example.htmlmud.domain.save.exception.SaveCorruptedException("存檔檔案損壞或格式不相容: " + e.getMessage(), e);
     }
+
+    // 1. 還原小隊 Party
+    if (data.getParty() != null) {
+      // 若缺少陣法參照，從 registry 補全
+      if (data.getParty().getEquippedFormation() == null) {
+        data.getParty().setEquippedFormation(partyService.getFormation("formation_four_symbols"));
+      }
+      partyService.setParty(playerId, data.getParty());
+    }
+
+    // 2. 還原地牢坐標與迷霧狀態
+    String floorId = (data.getFloorId() != null) ? data.getFloorId() : "taiyin_tomb_b1f";
+    DungeonFloor floor = dungeonManager.getFloor(floorId);
+    int w = (floor != null) ? floor.getWidth() : 10;
+    int h = (floor != null) ? floor.getHeight() : 10;
+
+    GridDirection facing = GridDirection.NORTH;
+    if (data.getFloorFacing() != null) {
+      try {
+        facing = GridDirection.valueOf(data.getFloorFacing().toUpperCase());
+      } catch (Exception ignored) {}
+    }
+
+    DungeonPosition pos = new DungeonPosition(floorId, data.getFloorX(), data.getFloorY(), facing, w, h);
+    if (data.getVisitedTiles() != null) {
+      pos.setVisited(data.getVisitedTiles());
+    }
+    if (data.getOpenedChests() != null) {
+      for (String chestStr : data.getOpenedChests()) {
+        String[] parts = chestStr.split(",");
+        if (parts.length == 2) {
+          try {
+            int cx = Integer.parseInt(parts[0].trim());
+            int cy = Integer.parseInt(parts[1].trim());
+            pos.markChestOpened(cx, cy);
+          } catch (Exception ignored) {}
+        }
+      }
+    }
+
+    dungeonManager.setPlayerPosition(playerId, pos);
+    log.info("Successfully loaded game from slot {} for player {}: {}", slotId, playerId, data.getTitle());
+    return data;
   }
 
   public Party createNewGame(String playerId, String protagonistName, String formationId) {
@@ -286,6 +378,10 @@ public class SaveGameService {
   }
 
   public boolean deleteSave(int slotId) {
+    File bak = getBackupFile(slotId);
+    if (bak.exists()) {
+      bak.delete();
+    }
     File file = getSaveFile(slotId);
     if (file.exists()) {
       boolean deleted = file.delete();
@@ -297,8 +393,9 @@ public class SaveGameService {
 
   public void handleLoad(com.example.htmlmud.domain.actor.impl.Player player, String slotStr) {
     if (player == null) return;
+    int slotId = -1;
     try {
-      int slotId = Integer.parseInt(slotStr.trim());
+      slotId = Integer.parseInt(slotStr.trim());
       var data = loadGame(player.getName(), slotId);
       if (data.getProtagonistName() != null && !data.getProtagonistName().isBlank()) {
         player.setName(data.getProtagonistName());
@@ -316,8 +413,29 @@ public class SaveGameService {
       broadcastSaveSlots(player);
     } catch (NumberFormatException e) {
       player.reply("⚠️ 存檔槽位必須為數字 (0~5)！");
+    } catch (com.example.htmlmud.domain.save.exception.SaveCorruptedException e) {
+      String backupTip = (slotId >= 0 && hasBackup(slotId)) ? "（偵測到有 .bak 備份檔案，可輸入 'save restore " + slotId + "' 還原）" : "";
+      player.reply("❌ 存檔損壞: " + e.getMessage() + backupTip);
     } catch (Exception e) {
       player.reply("❌ 讀檔失敗: " + e.getMessage());
+    }
+  }
+
+  public void handleRestore(com.example.htmlmud.domain.actor.impl.Player player, String slotStr) {
+    if (player == null) return;
+    try {
+      int slotId = Integer.parseInt(slotStr.trim());
+      boolean restored = restoreBackup(slotId);
+      if (restored) {
+        player.reply("\n\u001B[1;32m🔄【逆轉時空】已成功從備份 (.bak) 還原【存檔槽位 " + slotId + "】！\u001B[0m\n");
+      } else {
+        player.reply("⚠️ 槽位 " + slotId + " 無備份檔案或還原失敗。");
+      }
+      broadcastSaveSlots(player);
+    } catch (NumberFormatException e) {
+      player.reply("⚠️ 存檔槽位必須為數字 (0~5)！");
+    } catch (Exception e) {
+      player.reply("❌ 還原備份失敗: " + e.getMessage());
     }
   }
 
@@ -373,7 +491,9 @@ public class SaveGameService {
     sb.append("=== 📜【仙道命冊・單機存檔槽位】===\n");
     for (SaveSlotDto s : slots) {
       String slotName = (s.getSlotId() == 0) ? "[自動存檔]" : "[槽位 " + s.getSlotId() + "]";
-      if (s.isEmpty()) {
+      if (s.isCorrupted()) {
+        sb.append(String.format(" %-10s ⚠️ 【存檔損壞】(檔案損毀或版本異常，不可讀取)\n", slotName));
+      } else if (s.isEmpty()) {
         sb.append(String.format(" %-10s -- (空無道痕) --\n", slotName));
       } else {
         sb.append(String.format(" %-10s %-20s | 主角: %-6s | %s | %s\n",
@@ -385,7 +505,7 @@ public class SaveGameService {
       }
     }
     sb.append("------------------------------------------\n");
-    sb.append("提示: 輸入 'save <1-5>' 儲存，'load <0-5>' 讀檔，'new [姓名]' 新開局\n");
+    sb.append("提示: 輸入 'save <1-5>' 儲存，'load <0-5>' 讀檔，'new [姓名]' 新開局，'save restore <0-5>' 還原備份\n");
     player.reply(sb.toString());
 
     broadcastSaveSlots(player);

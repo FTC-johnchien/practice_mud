@@ -15,6 +15,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SaveData {
+  public static final int CURRENT_SCHEMA_VERSION = 1;
+
+  @Builder.Default
+  private int schemaVersion = CURRENT_SCHEMA_VERSION;
   private int slotId; // 0 = autosave, 1..5 = manual saves
   private String title;
   private String playerId;
