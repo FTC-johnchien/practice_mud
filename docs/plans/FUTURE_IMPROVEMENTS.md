@@ -131,12 +131,26 @@
 ### 2.1 ✅ [已完成] 全域數值集中管理 — 建立 `GameConfig` (P0)
 > **落地進度**：已於 2026-10-02 完成。新增 `GameConfig.java` 支援 Spring Boot 綁定與靜態單例存取，於 `application.yml` 集中管理常數，已替換 `Player`、`PlayerService`、`CombatService`、`LivingService`、`Living` 各處硬編碼，並補齊單元測試 `GameConfigTest` 驗證通過。詳細見 `CHANGELOG.md`。
 
-### 2.2 🟧 經驗值公式 3 套矛盾實作收斂 (P1)
-- **現存狀況**：
-  - `CombatService.calculateNextLevelXp()`：固定回傳 `10`（placeholder）。
-  - `XpProgressionService.calculateNextLevelExp()`：`floor(60 * L^1.6 + 120 * L)`（小隊成員）。
-  - `XpService.getRequiredXp()`：`50 * lv^2 * difficulty`（MUD 技能）。
+### 2.2 ✅ [已完成] 經驗值公式 3 套矛盾實作收斂 (XP-01) (P1)
+> **落地進度**：已於 2026-10-03 完成。
+> 1. 由 `XpProgressionService` 集中管理所有等級與技能熟練度曲線：
+>    - 角色升級曲線：統一採用 `calculateNextLevelExp(level)` = `floor(60 * L^1.6 + 120 * L)`（Lv.1 = 180）。
+>    - 技能熟練度曲線：統一採用 `calculateSkillRequiredExp(level, difficulty)` = `50 * lv^2 * difficulty`。
+>    - 怪物擊殺修為公式：統一採用 `calculateMobExpReward(mobLevel, playerLevel)` 動態等級差補正。
+> 2. `XpProgressionService` 補齊 `awardExp(Player, long)` 與 `awardSkillExp(SkillEntry, SkillTemplate, long)`，支援溢出經驗保留、全屬性回滿與自由修為點數結算。
+> 3. `XpService` 改為向下相容轉發委託至 `XpProgressionService`。
+> 4. `CombatService` 移除混用角色等級公式計算技能升級之錯誤邏輯，技能熟練度結算全面接入 `XpProgressionService`。
+> 5. `SkillBridgeService` 移除寫死的 `level * 100` 升級門檻，統一接入 `XpProgressionService`。
+> 6. `Player` 實體之 `GainExp` 訊息處理完整對接 `XpProgressionService`。
+> 7. 全專案自動化測試 220 項測試 100% 綠燈通過。
+
+- **現存狀況 (已根治)**：
+  - ~~`CombatService.calculateNextLevelXp()`：混用角色曲線判定技能升級。~~
+  - ~~`XpProgressionService.calculateNextLevelExp()`：僅供小隊隊員使用，MUD 主角無法共用。~~
+  - ~~`XpService.getRequiredXp()` 與 `SkillBridgeService`：各自實作技能升級門檻（50*lv^2 vs level*100）。~~
 - **改善方案**：統一由 `XpProgressionService` 集中管理所有角色等級曲線與技能熟練度曲線。
+
+---
 
 ### 2.3 🟧 職業門派資料驅動 (`classes.json`) 串接 (P1)
 - `data/global/classes.json` 已定義職業屬性與成長模板，但後端部分邏輯仍依賴 `ClassType.java` 靜態列舉。

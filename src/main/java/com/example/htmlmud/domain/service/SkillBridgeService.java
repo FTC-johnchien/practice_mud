@@ -24,14 +24,20 @@ import lombok.extern.slf4j.Slf4j;
 public class SkillBridgeService {
 
   private final TemplateReader templateReader;
+  private final XpProgressionService xpProgressionService;
 
   @Autowired
-  public SkillBridgeService(TemplateReader templateReader) {
+  public SkillBridgeService(TemplateReader templateReader, XpProgressionService xpProgressionService) {
     this.templateReader = templateReader != null ? templateReader : new TemplateCatalog();
+    this.xpProgressionService = xpProgressionService != null ? xpProgressionService : new XpProgressionService();
+  }
+
+  public SkillBridgeService(TemplateReader templateReader) {
+    this(templateReader, new XpProgressionService());
   }
 
   public SkillBridgeService() {
-    this(new TemplateCatalog());
+    this(new TemplateCatalog(), new XpProgressionService());
   }
 
   /**
@@ -198,15 +204,11 @@ public class SkillBridgeService {
 
     for (Map.Entry<String, SkillEntry> entry : skills.entrySet()) {
       SkillEntry se = entry.getValue();
-      se.addXp(skillGain);
-
-      // 簡化升級檢定：每級所需熟練度為 level * 100
-      long needXp = Math.max(100L, se.getLevel() * 100L);
-      if (se.getXp() >= needXp) {
-        se.levelUp();
-        if (player.isValid()) {
-          player.reply("\u001B[1;36m💡【武學頓悟】在太陰死鬥中歷經磨礪，你的技能【" + entry.getKey() + "】突破精進至 Lv." + se.getLevel() + "！\u001B[0m");
-        }
+      com.example.htmlmud.domain.model.template.SkillTemplate tmpl =
+          templateReader != null ? templateReader.findSkill(entry.getKey()).orElse(null) : null;
+      var res = xpProgressionService.awardSkillExp(se, tmpl, skillGain);
+      if (res.leveledUp() && player.isValid()) {
+        player.reply("\u001B[1;36m💡【武學頓悟】在太陰死鬥中歷經磨礪，你的技能【" + res.skillName() + "】突破精進至 Lv." + res.newLevel() + "！\u001B[0m");
       }
     }
   }

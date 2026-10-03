@@ -146,9 +146,9 @@ class SkillBridgeIntegrationTest {
 
     skillBridgeService.awardCombatSkillXp(player, 100);
 
-    // 獲得 25 點熟練度 (100 / 4)，突破 100 門檻升為 Lv.2
+    // 獲得 25 點熟練度 (100 / 4)，突破 Lv.1 門檻 (50) 升為 Lv.2，依統一公式保留溢出熟練度 65 (90 + 25 - 50)
     assertThat(swordEntry.getLevel()).isEqualTo(2);
-    assertThat(swordEntry.getXp()).isZero();
+    assertThat(swordEntry.getXp()).isEqualTo(65L);
   }
 
   @Test

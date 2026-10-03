@@ -48,6 +48,20 @@ public class PlayerService {
 
   private final com.example.htmlmud.config.GameConfig gameConfig;
 
+  @org.springframework.beans.factory.annotation.Autowired(required = false)
+  private XpProgressionService xpProgressionService;
+
+  public XpProgressionService getXpProgressionService() {
+    if (xpProgressionService == null) {
+      xpProgressionService = new XpProgressionService();
+    }
+    return xpProgressionService;
+  }
+
+  public void setXpProgressionService(XpProgressionService xpProgressionService) {
+    this.xpProgressionService = xpProgressionService;
+  }
+
   public com.example.htmlmud.domain.port.AuthenticationPort getAuthService() {
     return authenticationPort;
   }

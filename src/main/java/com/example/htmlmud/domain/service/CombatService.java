@@ -400,54 +400,40 @@ public class CombatService {
 
 
   private void processSkillExperience(Player player, ActiveSkillResult result) {
+    if (player == null || result == null) return;
     SkillEntry entry = result.entry();
     SkillTemplate template = result.template();
+    if (entry == null || template == null) return;
 
-    // 如果是最高等級，就不加經驗了
     if (entry.getLevel() >= template.getMechanics().maxLevel()) {
       return;
     }
 
-    // A. 增加經驗值 (公式：智力越高練越快)
+    // 增加經驗值 (智力越高練越快)
     long gain = 10 + (player.getStats().intelligence / 2);
-    entry.addXp(gain);
+    var res = (xpProgressionService != null)
+        ? xpProgressionService.awardSkillExp(entry, template, gain)
+        : (xpService != null ? xpService.awardSkillExp(entry, template, gain) : null);
 
-    // B. 檢查是否升級 (呼叫我們第一部分寫的公式)
-    long needed = xpService.getRequiredXp(entry, template);
-    log.info("Level:{} needed to next Level:{}", entry.getLevel(), needed);
-
-    if (entry.getXp() >= needed) {
-      entry.levelUp();
-      entry.setXp(entry.getXp() - needed); // 扣除升級所需，溢出的保留
-
-      player.reply("你的 \u001B[33m" + template.getName() + "\u001B[0m 進步了！" + "(等級 "
-          + entry.getLevel() + ")");
+    if (res != null && res.leveledUp()) {
+      player.reply("你的 \u001B[33m" + template.getName() + "\u001B[0m 進步了！(等級 "
+          + res.newLevel() + ")");
     }
   }
 
   /**
-   * 計算獲得經驗值 (範例)
+   * 計算獲得經驗值 (統一由 XpProgressionService 計算)
    */
   private int calculateExp(Living mob, Living player) {
-    return mob.getStats().getLevel() * 10;
+    int mobLv = (mob != null && mob.getStats() != null) ? mob.getStats().getLevel() : 1;
+    int playerLv = (player != null && player.getStats() != null) ? player.getStats().getLevel() : 1;
+    return (xpProgressionService != null)
+        ? xpProgressionService.calculateMobExpReward(mobLv, playerLv)
+        : Math.max(10, mobLv * 10);
   }
 
   private void afterAttack(Player attacker, ActiveSkillResult skillResult) {
-    SkillEntry userSkill = skillResult.entry();
-    SkillTemplate template = skillResult.template();
-
-    // 1. 計算獲得熟練度
-    // 智力越高練越快，或者根據怪物強度
-    int xpGain = 1 + (attacker.getStats().intelligence / 10);
-
-    // 2. 增加熟練度
-    userSkill.addXp(xpGain);
-
-    // 3. 檢查升級
-    if (userSkill.getXp() >= calculateNextLevelXp(userSkill.getLevel())) {
-      userSkill.levelUp();
-      attacker.reply("你的 " + template.getName() + " 進步了！(等級 " + userSkill.getLevel() + ")");
-    }
+    processSkillExperience(attacker, skillResult);
   }
 
 }

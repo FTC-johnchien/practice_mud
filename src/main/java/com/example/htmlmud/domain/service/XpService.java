@@ -1,24 +1,35 @@
 package com.example.htmlmud.domain.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.model.entity.SkillEntry;
 import com.example.htmlmud.domain.model.template.SkillTemplate;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * 技能熟練度經驗服務適配器 (向下相容)，已統一收斂委託至 {@link XpProgressionService}。
+ */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class XpService {
 
+  private final XpProgressionService xpProgressionService;
+
+  @Autowired
+  public XpService(XpProgressionService xpProgressionService) {
+    this.xpProgressionService = xpProgressionService != null ? xpProgressionService : new XpProgressionService();
+  }
+
+  public XpService() {
+    this(new XpProgressionService());
+  }
+
   public long getRequiredXp(SkillEntry userSkill, SkillTemplate template) {
-    int lv = userSkill.getLevel();
-    double difficulty = template.getMechanics().learningDifficulty(); // 預設 1.0
+    return xpProgressionService.calculateSkillRequiredExp(userSkill, template);
+  }
 
-    // 基礎公式 (平方曲線)
-    long baseReq = 50 * (long) Math.pow(lv, 2);
-
-    // 乘上技能個別的難度係數
-    return (long) (baseReq * difficulty);
+  public XpProgressionService.SkillLevelUpResult awardSkillExp(SkillEntry entry, SkillTemplate template, long gain) {
+    return xpProgressionService.awardSkillExp(entry, template, gain);
   }
 }
+

@@ -179,11 +179,21 @@ public final class Player extends Living {
         save();
       }
       case ActorMessage.GainExp(var amount) -> {
-        // TODO
-        this.stats.exp += amount;
-        // if (this.stats.exp >= this.stats.nextLevelExp) {
-        // this.levelUp();
-        // }
+        if (this.service != null && this.service.getXpProgressionService() != null) {
+          this.service.getXpProgressionService().awardExp(this, amount);
+        } else {
+          this.stats.exp += amount;
+          long nextReq = Math.max(180L, (long) Math.floor(60.0 * Math.pow(this.stats.level, 1.6) + 120.0 * this.stats.level));
+          while (this.stats.exp >= nextReq && this.stats.level < 1000) {
+            this.stats.exp -= nextReq;
+            this.stats.level++;
+            nextReq = Math.max(180L, (long) Math.floor(60.0 * Math.pow(this.stats.level, 1.6) + 120.0 * this.stats.level));
+            this.stats.nextLevelExp = nextReq;
+            this.stats.freeStatPoints += 2;
+            this.stats.hp = this.stats.maxHp;
+            this.stats.mp = this.stats.maxMp;
+          }
+        }
       }
       case ActorMessage.QuestUpdate(var questId, var status) -> {
         // TODO
