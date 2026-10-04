@@ -226,4 +226,26 @@ public class SystemDefenseAndStabilityTest {
     assertTrue(future.isDone(), "戰鬥循環執行緒在收到 cancel 後應及時退出");
     assertThat(activeBattles.containsKey(playerName)).isFalse();
   }
+
+  @Test
+  @DisplayName("Combat-02: 玩家無操作放置超時 (AFK Idle Timeout) 熔斷驗證")
+  void testCombatLoopIdleTimeoutGuard() throws Exception {
+    Map<String, BattleContext> activeBattles = new ConcurrentHashMap<>();
+    String playerName = "放置超時測試者";
+    // 設置 maxDurationMs 很大 (5 分鐘)，但 maxIdleDurationMs 為 300ms
+    BattleContext ctx = createStallBattleContext("b-idle-1", playerName, 300_000L, 50_000);
+    ctx.setMaxIdleDurationMs(300L);
+    activeBattles.put(playerName, ctx);
+
+    Future<?> future = combatLoop.startBattleLoop(null, ctx, null, activeBattles, null);
+    assertThat(future).isNotNull();
+
+    // 等待 800ms 超過 300ms 放置門檻
+    Thread.sleep(800);
+
+    assertEquals(BattleState.TIMEOUT, ctx.getState(), "超過無操作放置時間後戰鬥狀態必須標記為 TIMEOUT");
+    assertTrue(ctx.isOver(), "戰鬥必須判定為已結束");
+    assertThat(activeBattles.containsKey(playerName)).isFalse();
+    assertTrue(future.isDone(), "戰鬥循環執行緒應因放置超時退出");
+  }
 }

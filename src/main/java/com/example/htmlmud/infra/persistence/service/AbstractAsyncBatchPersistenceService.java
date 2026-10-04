@@ -59,31 +59,55 @@ public abstract class AbstractAsyncBatchPersistenceService<T> {
     log.info("[{}] Write-Behind DB Writer started.", getWorkerThreadName());
     List<T> batch = new ArrayList<>();
 
-    while (running) {
+    while (running || !saveQueue.isEmpty() || !batch.isEmpty()) {
       try {
-        T record = saveQueue.poll(1, TimeUnit.SECONDS);
+        T record = null;
+        if (running && saveQueue.isEmpty() && batch.isEmpty()) {
+          record = saveQueue.poll(1, TimeUnit.SECONDS);
+        } else {
+          record = saveQueue.poll();
+        }
+
         if (record != null) {
           batch.add(record);
         }
 
-        if (batch.size() >= 50 || (record == null && !batch.isEmpty())) {
-          flushBatch(new ArrayList<>(batch));
-          batch.clear();
-        }
-
         if (!saveQueue.isEmpty() && batch.size() < 100) {
           saveQueue.drainTo(batch, 100 - batch.size());
+        }
+
+        // 當累積滿 50 筆、或輪詢超時且有積累、或處於關閉階段 (running == false) 時觸發 flush
+        if (batch.size() >= 50 || (!running && !batch.isEmpty()) || (record == null && !batch.isEmpty())) {
           flushBatch(new ArrayList<>(batch));
           batch.clear();
         }
       } catch (InterruptedException e) {
+        log.warn("[{}] DB Writer thread interrupted, executing final emergency drain.", getWorkerThreadName());
+        // 中斷時排空 batch 與 saveQueue
+        if (!batch.isEmpty()) {
+          try {
+            flushBatch(new ArrayList<>(batch));
+            batch.clear();
+          } catch (Exception ex) {
+            log.error("[{}] Error flushing local batch on interrupt", getWorkerThreadName(), ex);
+          }
+        }
+        List<T> remaining = new ArrayList<>();
+        saveQueue.drainTo(remaining);
+        if (!remaining.isEmpty()) {
+          try {
+            flushBatch(remaining);
+          } catch (Exception ex) {
+            log.error("[{}] Error flushing remaining queue on interrupt", getWorkerThreadName(), ex);
+          }
+        }
         Thread.currentThread().interrupt();
-        log.warn("[{}] DB Writer thread interrupted.", getWorkerThreadName());
         break;
       } catch (Exception e) {
         log.error("[{}] DB Writer loop error", getWorkerThreadName(), e);
       }
     }
+    log.info("[{}] Write-Behind DB Writer loop ended cleanly.", getWorkerThreadName());
   }
 
   /**
@@ -104,23 +128,29 @@ public abstract class AbstractAsyncBatchPersistenceService<T> {
     running = false;
 
     if (workerThread != null) {
+      // 喚醒可能在 poll 阻塞的 worker
+      workerThread.interrupt();
       try {
         workerThread.join(TimeUnit.SECONDS.toMillis(3));
+        if (workerThread.isAlive()) {
+          log.warn("[{}] Worker thread did not terminate within 3s", getWorkerThreadName());
+        }
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
         log.warn("[{}] Interrupted while awaiting worker thread shutdown", getWorkerThreadName());
       }
     }
 
+    // 最後兜底保障：若 worker 逾時仍有遺留
     List<T> remaining = new ArrayList<>();
     saveQueue.drainTo(remaining);
 
     if (!remaining.isEmpty()) {
-      log.info("[{}] Flushing remaining {} records...", getWorkerThreadName(), remaining.size());
+      log.info("[{}] Fallback flushing remaining {} records...", getWorkerThreadName(), remaining.size());
       try {
         flushBatch(remaining);
       } catch (Exception e) {
-        log.error("[{}] Error flushing remaining records during shutdown", getWorkerThreadName(), e);
+        log.error("[{}] Error fallback flushing remaining records during shutdown", getWorkerThreadName(), e);
       }
       remaining.clear();
     }

@@ -7,7 +7,14 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>道祖是克蘇魯 - DRPG 靈境探索</title>
-  <link rel="stylesheet" href="css/style.css?v=1.7.3">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☯️</text></svg>">
+  <!-- DRPG 樣式模組 (依原始串流順序加載，確保 CSS Cascade 優先級 100% 一致) -->
+  <link rel="stylesheet" href="css/style-01-tokens-and-shell.css?v=1.8.0">
+  <link rel="stylesheet" href="css/style-02-combat-arena.css?v=1.8.0">
+  <link rel="stylesheet" href="css/style-03-battle-actions.css?v=1.8.0">
+  <link rel="stylesheet" href="css/style-04-main-menu.css?v=1.8.0">
+  <link rel="stylesheet" href="css/style-05-town-and-hub.css?v=1.8.0">
+  <link rel="stylesheet" href="css/style-06-shop-and-responsive.css?v=1.8.0">
   <script src="https://cdn.jsdelivr.net/npm/ansi_up@5.1.0/ansi_up.min.js"></script>
 </head>
 <body>
@@ -26,7 +33,7 @@
       </div>
 
       <div class="title-menu-actions">
-        <button id="btn-continue-game" class="title-menu-btn btn-primary-glow" data-action="continue-latest-save" disabled>
+        <button id="btn-continue-game" class="title-menu-btn btn-primary-glow" data-action="continue-latest-save" onclick="if(window.continueLatestSave)window.continueLatestSave()" disabled>
           <span class="btn-icon">⚔️</span>
           <span class="btn-text">
             <strong class="btn-main-label">繼續冒險</strong>
@@ -34,7 +41,7 @@
           </span>
         </button>
 
-        <button id="btn-open-load" class="title-menu-btn" data-action="open-save-modal" data-mode="load">
+        <button id="btn-open-load" class="title-menu-btn" data-action="open-save-modal" data-mode="load" onclick="if(window.openSaveModal)window.openSaveModal('load')">
           <span class="btn-icon">📂</span>
           <span class="btn-text">
             <strong class="btn-main-label">選擇存檔</strong>
@@ -42,7 +49,7 @@
           </span>
         </button>
 
-        <button id="btn-open-new-game" class="title-menu-btn btn-new-glow" data-action="open-new-game-modal">
+        <button id="btn-open-new-game" class="title-menu-btn btn-new-glow" data-action="open-new-game-modal" onclick="if(window.openNewGameModal)window.openNewGameModal()">
           <span class="btn-icon">✨</span>
           <span class="btn-text">
             <strong class="btn-main-label">開闢新途</strong>
@@ -50,7 +57,7 @@
           </span>
         </button>
 
-        <button id="btn-open-guide" class="title-menu-btn" data-action="open-guide-modal">
+        <button id="btn-open-guide" class="title-menu-btn" data-action="open-guide-modal" onclick="if(window.openGuideModal)window.openGuideModal()">
           <span class="btn-icon">📜</span>
           <span class="btn-text">
             <strong class="btn-main-label">太陰秘錄</strong>
@@ -566,6 +573,6 @@
     window.send = send;
     connect();
   </script>
-  <script type="module" src="js/app.js?v=1.7.3"></script>
+  <script type="module" src="js/app.js?v=1.8.1"></script>
 </body>
 </html>

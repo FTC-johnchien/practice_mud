@@ -125,14 +125,16 @@ public class DrpgCombatLoop {
 
         ctx.setRoundCount(ctx.getRoundCount() + 1);
 
-        // 逾時或回合上限熔斷斷路器 (ACT-02)
+        // 逾時或放置超時熔斷斷路器 (ACT-02 / Combat-02)
         if (ctx.isTimedOut() || ctx.isMaxRoundsExceeded()) {
           ctx.setState(BattleState.TIMEOUT);
-          String reason = ctx.isTimedOut()
-              ? "戰鬥超時 (超過 " + (ctx.getMaxDurationMs() / 1000) + " 秒)"
-              : "戰鬥超過最大回合上限 (" + ctx.getMaxRounds() + " 回合)";
+          String reason = ctx.isIdleTimedOut()
+              ? "小隊長久無人指揮 (超過 " + (ctx.getMaxIdleDurationMs() / 60000) + " 分鐘無操作)"
+              : (ctx.isMaxRoundsExceeded()
+                  ? "戰鬥超過極限回合上限 (" + ctx.getMaxRounds() + " 回合)"
+                  : "戰鬥超時 (超過 " + (ctx.getMaxDurationMs() / 1000) + " 秒)");
           log.warn("戰鬥熔斷斷路器觸發: {} for player {}", reason, (player != null ? player.getName() : "anon"));
-          broadcastLog(player, ctx, "\n\u001B[1;31m⚡【戰鬥熔斷】" + reason + "，天地靈氣劇烈震盪，雙方被迫脫離戰鬥！\u001B[0m\n");
+          broadcastLog(player, ctx, "\n\u001B[1;31m⚡【心神渙散】" + reason + "，天地靈氣劇烈震盪，陣法自動潰散脫離戰鬥！\u001B[0m\n");
           break;
         }
 

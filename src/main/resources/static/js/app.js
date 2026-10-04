@@ -728,7 +728,7 @@ if (typeof window !== 'undefined') {
   window.initEventDelegation = initEventDelegation;
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+function setupApp() {
   initKeyboardControls();
   initEventDelegation();
   applyRadarPosition();
@@ -738,4 +738,11 @@ window.addEventListener('DOMContentLoaded', () => {
       window.send('saves quiet', true);
     }
   }, 300);
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupApp);
+} else {
+  setupApp();
+}
+

@@ -18,12 +18,16 @@ spring:
 
 server:
   port: 8080
+  address: 127.0.0.1
 
 app:
   websocket:
     allowed-origins: http://localhost:8080,http://127.0.0.1:8080
 
 game:
+  network:
+    mode: local
+    bind-address: 127.0.0.1
   defaults:
     player:
       initial-hp: 200

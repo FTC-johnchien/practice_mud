@@ -34,21 +34,34 @@ public class BattleContext {
   @Builder.Default
   private long startTime = System.currentTimeMillis();
   @Builder.Default
+  private long lastActivityTime = System.currentTimeMillis(); // 玩家最後操作時間戳記
+  @Builder.Default
+  private long maxIdleDurationMs = 600_000L; // 預設 10 分鐘無操作放置超時
+  @Builder.Default
   private long maxDurationMs = 300_000L; // 預設 5 分鐘
   @Builder.Default
-  private int maxRounds = 100; // 預設 100 回合
+  private int maxRounds = 50_000; // 原 100 回合放寬為防禦極限安全閾值 (約 7 小時)，常規由 10 分鐘放置超時守護
   @Builder.Default
   private int roundCount = 0;
   private java.util.concurrent.Future<?> combatFuture;
   @Builder.Default
   private long lastHeartbeat = System.currentTimeMillis();
 
+  public void touchActivity() {
+    this.lastActivityTime = System.currentTimeMillis();
+  }
+
+  public boolean isIdleTimedOut() {
+    return (System.currentTimeMillis() - lastActivityTime) >= maxIdleDurationMs;
+  }
+
   public boolean isOver() {
     return state == BattleState.VICTORY || state == BattleState.DEFEAT || state == BattleState.FLED || state == BattleState.TIMEOUT;
   }
 
   public boolean isTimedOut() {
-    return (System.currentTimeMillis() - startTime) >= maxDurationMs;
+    boolean durationExpired = (maxDurationMs > 0 && (System.currentTimeMillis() - startTime) >= maxDurationMs);
+    return durationExpired || isIdleTimedOut();
   }
 
   public boolean isMaxRoundsExceeded() {

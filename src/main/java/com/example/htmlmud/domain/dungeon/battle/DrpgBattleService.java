@@ -586,6 +586,7 @@ public class DrpgBattleService {
       player.reply("【戰鬥】四周暫無妖邪現身，請移步探索。");
       return;
     }
+    ctx.touchActivity();
     BattleEnemy target = ctx.getTargetEnemy();
     if (target != null && target.isAlive()) {
       broadcastLog(player, ctx, "\u001B[1;31m⚔️【迎戰】全隊拔劍出鞘，陣型收束，集中火力直攻【" + target.getName() + "】！\u001B[0m");
@@ -605,6 +606,7 @@ public class DrpgBattleService {
       player.reply("當前並未處於戰鬥之中！");
       return;
     }
+    ctx.touchActivity();
 
     if (memberIdx < 0 || memberIdx >= ctx.getParty().getMembers().size()) {
       player.reply("無效的隊員編號！");
@@ -687,6 +689,7 @@ public class DrpgBattleService {
       player.reply("當前未在戰鬥中！");
       return;
     }
+    ctx.touchActivity();
     Party party = ctx.getParty();
     if (!party.canCastUltimate()) {
       player.reply("陣法靈威不足 100，無法施展陣法奧義！");
@@ -733,6 +736,7 @@ public class DrpgBattleService {
       player.reply("當前未在戰鬥中！");
       return;
     }
+    ctx.touchActivity();
     PartyMemberSkill comboSkill = templateReader.findPartySkill(comboSkillId).orElse(null);
     if (comboSkill == null) {
       player.reply("找不到指定的合擊絕技：【" + comboSkillId + "】！");
@@ -751,6 +755,7 @@ public class DrpgBattleService {
   public void selectTarget(Player player, int targetIdx, DungeonPosition pos) {
     BattleContext ctx = activeBattles.get(player.getName());
     if (ctx != null && targetIdx >= 0 && targetIdx < ctx.getEnemies().size()) {
+      ctx.touchActivity();
       ctx.setSelectedTargetIndex(targetIdx);
       BattleEnemy e = ctx.getEnemies().get(targetIdx);
       broadcastLog(player, ctx, "🎯 全隊鎖定集火目標：【" + e.getName() + "】！");
@@ -839,6 +844,9 @@ public class DrpgBattleService {
   public void useItem(Player player, String slotIdOrIndex, int memberIdx, DungeonPosition pos) {
     Party party = partyService.getOrCreateParty(player.getName());
     BattleContext ctx = activeBattles.get(player.getName());
+    if (ctx != null) {
+      ctx.touchActivity();
+    }
 
     String realSlotId = resolveSlotId(party, slotIdOrIndex);
     if (realSlotId == null) {
@@ -854,6 +862,9 @@ public class DrpgBattleService {
   public void equipItem(Player player, String slotIdOrIndex, int memberIdx, DungeonPosition pos) {
     Party party = partyService.getOrCreateParty(player.getName());
     BattleContext ctx = activeBattles.get(player.getName());
+    if (ctx != null) {
+      ctx.touchActivity();
+    }
 
     String realSlotId = resolveSlotId(party, slotIdOrIndex);
     if (realSlotId == null) {
@@ -869,6 +880,9 @@ public class DrpgBattleService {
   public void unequipItem(Player player, String slotType, int memberIdx, DungeonPosition pos) {
     Party party = partyService.getOrCreateParty(player.getName());
     BattleContext ctx = activeBattles.get(player.getName());
+    if (ctx != null) {
+      ctx.touchActivity();
+    }
 
     String result = party.unequipItemFromMember(slotType, memberIdx);
     broadcastLog(player, ctx, result);

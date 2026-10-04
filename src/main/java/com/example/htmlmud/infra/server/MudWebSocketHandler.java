@@ -66,8 +66,40 @@ public class MudWebSocketHandler extends TextWebSocketHandler implements ClientS
     }
   }
 
+  public static final int MAX_TEXT_MESSAGE_SIZE = 64 * 1024; // 64 KB
+  public static final int MAX_COMMANDS_PER_SECOND = 20;
+
+  // 記錄 session 每秒指令窗口: sessionId -> [windowStartTimestamp, count]
+  private final java.util.Map<String, long[]> rateLimitMap = new java.util.concurrent.ConcurrentHashMap<>();
+
   @Override
   protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+    // 1. 訊息長度上限檢查 (64 KB)
+    if (message.getPayloadLength() > MAX_TEXT_MESSAGE_SIZE) {
+      log.warn("WebSocket 封包超過上限 ({} bytes > 64KB)，強制關閉連線: {}", message.getPayloadLength(), session.getId());
+      session.close(new CloseStatus(CloseStatus.BAD_DATA.getCode(), "Payload too large (max 64KB)"));
+      return;
+    }
+
+    // 2. 指令頻率限制檢查 (每秒最多 20 次指令)
+    long now = System.currentTimeMillis();
+    long[] rateData = rateLimitMap.compute(session.getId(), (k, v) -> {
+      if (v == null || now - v[0] >= 1000) {
+        return new long[] {now, 1};
+      }
+      v[1]++;
+      return v;
+    });
+
+    if (rateData[1] > MAX_COMMANDS_PER_SECOND) {
+      Player player = sessionRegistry.get(session.getId());
+      if (player != null) {
+        player.reply("操作過於頻繁，請稍候再試！(Rate limit exceeded)");
+      }
+      log.warn("WebSocket 指令頻率超限 ({} cmds/s)，暫停處理: {}", rateData[1], session.getId());
+      return;
+    }
+
     Player player = sessionRegistry.get(session.getId());
     if (player != null) {
 
@@ -90,6 +122,7 @@ public class MudWebSocketHandler extends TextWebSocketHandler implements ClientS
 
   @Override
   public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+    rateLimitMap.remove(session.getId());
     log.info("afterConnectionClosed");
     // 從 Registry 移除並取得 Actor
     Player actor = sessionRegistry.remove(session.getId());

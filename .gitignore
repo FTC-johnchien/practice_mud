@@ -44,3 +44,5 @@ build/
 /saves/slot_*.json
 logs/
 .env
+
+*.bak

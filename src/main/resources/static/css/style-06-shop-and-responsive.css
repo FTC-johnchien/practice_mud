@@ -1,0 +1,577 @@
+/* ==========================================================
+   貨棧買賣互動櫃檯卡片 (Shop Catalog Card in Log)
+   ========================================================== */
+.shop-catalog-card {
+  margin: 8px 0;
+  padding: 12px 14px;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
+  border: 1px solid #38bdf8;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(56, 189, 248, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #e2e8f0;
+}
+
+.shop-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px dashed rgba(56, 189, 248, 0.3);
+  padding-bottom: 6px;
+}
+
+.shop-card-title {
+  font-size: var(--font-sm);
+  font-weight: bold;
+  color: #38bdf8;
+}
+
+.shop-card-coin {
+  font-size: var(--font-xs);
+  color: #fbbf24;
+}
+
+.shop-card-greeting {
+  font-size: var(--font-xs);
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.shop-goods-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.shop-item-row {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.shop-item-row:hover {
+  border-color: rgba(56, 189, 248, 0.5);
+  background: rgba(30, 41, 59, 0.8);
+}
+
+.shop-item-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shop-item-badge {
+  font-size: var(--font-xs);
+  background: #334155;
+  color: #94a3b8;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.shop-item-name {
+  font-weight: bold;
+  font-size: var(--font-xs);
+  color: #f1f5f9;
+}
+
+.shop-item-price {
+  margin-left: auto;
+  font-size: var(--font-xs);
+  color: #f59e0b;
+  font-weight: bold;
+}
+
+.shop-item-desc {
+  font-size: var(--font-xs);
+  color: #94a3b8;
+  padding-left: 20px;
+}
+
+.shop-item-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.shop-qty-picker {
+  display: inline-flex;
+  align-items: center;
+  background: #0f172a;
+  border: 1px solid #475569;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.qty-btn {
+  background: #1e293b;
+  border: none;
+  color: #cbd5e1;
+  width: 22px;
+  height: 22px;
+  font-size: var(--font-xs);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qty-btn:hover {
+  background: #334155;
+  color: #ffffff;
+}
+
+.shop-qty-input {
+  width: 32px;
+  height: 22px;
+  background: transparent;
+  border: none;
+  color: #f8fafc;
+  text-align: center;
+  font-size: var(--font-xs);
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.shop-qty-input::-webkit-outer-spin-button,
+.shop-qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.shop-buy-btn {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  border: 1px solid #38bdf8;
+  color: #ffffff;
+  padding: 3px 10px;
+  font-size: var(--font-xs);
+  font-weight: bold;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.shop-buy-btn:hover {
+  background: linear-gradient(135deg, #0369a1, #075985);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+  transform: translateY(-1px);
+}
+
+.shop-buy-btn:active {
+  transform: translateY(0);
+}
+
+/* 貨棧買賣專屬模態視窗 (Shop Modal) */
+.shop-modal-card {
+  background: #151922;
+  border: 2px solid #f59e0b;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 820px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85), 0 0 25px rgba(245, 158, 11, 0.25);
+  overflow: hidden;
+}
+
+.shop-modal-header {
+  padding: 12px 18px;
+  background: #11141c;
+  border-bottom: 1px solid rgba(245, 158, 11, 0.25);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.shop-modal-title {
+  font-size: var(--font-lg);
+  font-weight: bold;
+  color: #fbbf24;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shop-modal-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.shop-modal-coin-badge {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 16px;
+  padding: 3px 12px;
+  font-size: var(--font-xs);
+  color: #fde68a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.shop-modal-coin-badge strong {
+  color: #fbbf24;
+  font-size: var(--font-base);
+}
+
+.shop-modal-greeting {
+  padding: 10px 18px;
+  background: rgba(245, 158, 11, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: var(--font-xs);
+  color: #d1d5db;
+  font-style: italic;
+}
+
+.shop-modal-goods-list {
+  padding: 16px;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 12px;
+  max-height: 60vh;
+}
+
+.shop-modal-card .shop-item-row {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.shop-modal-card .shop-item-row:hover {
+  border-color: rgba(245, 158, 11, 0.6);
+  background: rgba(30, 41, 59, 0.85);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.shop-modal-card .shop-item-desc {
+  font-size: var(--font-xs);
+  color: #94a3b8;
+  line-height: 1.4;
+  min-height: 28px;
+}
+
+.shop-modal-footer {
+  padding: 10px 18px;
+  background: #11141c;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: var(--font-xs);
+  color: #64748b;
+  text-align: right;
+}
+
+/* 技能抽屜分類分頁 (Drawer Tabs) 與合擊光效 */
+.drawer-category-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #111827;
+  border-bottom: 1px solid #374151;
+  overflow-x: auto;
+}
+
+.drawer-tab {
+  background: #1f2937;
+  color: #9ca3af;
+  border: 1px solid #374151;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: var(--font-xs);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.drawer-tab:hover {
+  background: #374151;
+  color: #f3f4f6;
+}
+
+.drawer-tab.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #60a5fa;
+  font-weight: bold;
+}
+
+.skill-btn.synergy-glow {
+  border-color: #f59e0b;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+}
+
+/* WoW 風格狀態效果徽章列與懸浮提示 (Buff/Debuff Pills & Tooltip) */
+.buff-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+  align-items: center;
+}
+
+.buff-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: var(--font-xs);
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.1s ease;
+  line-height: 1.2;
+}
+
+.buff-badge:hover {
+  transform: scale(1.05);
+  filter: brightness(1.15);
+}
+
+.buff-badge.buff-shield {
+  background: rgba(14, 165, 233, 0.2);
+  border-color: #0284c7;
+  color: #7dd3fc;
+}
+
+.buff-badge.buff-hot {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #059669;
+  color: #6ee7b7;
+}
+
+.buff-badge.buff-dot {
+  background: rgba(168, 85, 247, 0.25);
+  border-color: #9333ea;
+  color: #d8b4fe;
+}
+
+.buff-badge.buff-stat {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: #d97706;
+  color: #fcd34d;
+}
+
+.buff-badge.buff-control {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #dc2626;
+  color: #fca5a5;
+}
+
+.enemy-badges-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.enemy-aggro-badge {
+  font-size: var(--font-xs);
+  color: #fca5a5;
+  background: #450a0a;
+  border: 1px solid #ef4444;
+  border-radius: 3px;
+  padding: 1px 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 80px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.battle-dead-strip {
+  text-align: center;
+  padding: 4px;
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+/* ========================================================
+   下半戰備甲板 (3-Column Lower Combat Deck)
+   ======================================================== */
+.battle-lower-combat-deck,
+.combat-command-dock {
+  height: 162px !important;
+  min-height: 162px !important;
+  max-height: 162px !important;
+  flex-shrink: 0;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  padding: 4px 8px !important;
+  background: #090d14 !important;
+  border-top: 1px solid rgba(133, 30, 30, 0.8) !important;
+  border-radius: 6px;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
+}
+
+/* 左欄：隊員名稱與三態動作指令選單 */
+.dock-actions-column {
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+  height: 152px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 4px;
+  border-right: 1px dashed #374151;
+  padding-right: 6px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.dock-action-btn {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #e2e8f0;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 32px;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+.dock-action-btn:hover { background: #334155; }
+.dock-action-btn.active { background: #0f172a; border-color: #38bdf8; color: #38bdf8; }
+
+/* 右欄：隊員狀態/技能區 (擴大寬度至 300~350px，清晰展示技能圖示、名稱與消耗) */
+.dock-content-column {
+  flex: 1;
+  min-width: 300px;
+  max-width: 350px;
+  height: 152px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-left: 1px dashed #374151;
+  padding-left: 8px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.dock-info-view {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.dock-skills-view {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  overflow: hidden;
+}
+
+.dock-skills-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 5px;
+  flex: 1;
+  min-height: 0;
+}
+
+.dock-mini-skill {
+  background: #141c2b;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 3px 2px 2px 2px;
+  overflow: hidden;
+  height: 52px;
+  min-height: 52px;
+  max-height: 52px;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+.dock-mini-skill:hover {
+  background: #1e293b;
+  border-color: #38bdf8;
+  transform: translateY(-1px);
+}
+.dock-mini-skill.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+}
+.dock-mini-skill .skill-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+.dock-mini-skill .skill-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  font-size: 13px;
+  font-weight: 500;
+  color: #f1f5f9;
+  line-height: 1.1;
+}
+.dock-mini-skill .skill-cost {
+  font-size: 13px;
+  font-weight: bold;
+  line-height: 1;
+}
+.cost-mp { color: #60a5fa; }
+.cost-rage { color: #f87171; }
+.cost-combo { color: #facc15; }
+
+.dock-skill-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 2px;
+  border-top: 1px solid #1e293b;
+  font-size: 13px;
+  height: 22px;
+}
+.page-btn {
+  background: #334155;
+  border: none;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.page-btn:hover { background: #475569; }
+.page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
