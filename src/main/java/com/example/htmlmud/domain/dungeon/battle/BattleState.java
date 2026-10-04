@@ -5,5 +5,6 @@ public enum BattleState {
   FIGHTING,
   VICTORY,
   DEFEAT,
-  FLED
+  FLED,
+  TIMEOUT
 }

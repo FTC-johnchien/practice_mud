@@ -34,10 +34,31 @@ public class BattleContext {
   @Builder.Default
   private long startTime = System.currentTimeMillis();
   @Builder.Default
+  private long maxDurationMs = 300_000L; // 預設 5 分鐘
+  @Builder.Default
+  private int maxRounds = 100; // 預設 100 回合
+  @Builder.Default
+  private int roundCount = 0;
+  private java.util.concurrent.Future<?> combatFuture;
+  @Builder.Default
   private long lastHeartbeat = System.currentTimeMillis();
 
   public boolean isOver() {
-    return state == BattleState.VICTORY || state == BattleState.DEFEAT || state == BattleState.FLED;
+    return state == BattleState.VICTORY || state == BattleState.DEFEAT || state == BattleState.FLED || state == BattleState.TIMEOUT;
+  }
+
+  public boolean isTimedOut() {
+    return (System.currentTimeMillis() - startTime) >= maxDurationMs;
+  }
+
+  public boolean isMaxRoundsExceeded() {
+    return roundCount >= maxRounds;
+  }
+
+  public void cancelBattle() {
+    if (combatFuture != null && !combatFuture.isDone()) {
+      combatFuture.cancel(true);
+    }
   }
 
   public boolean isAllEnemiesDead() {

@@ -179,28 +179,27 @@
 
 ---
 
-## 🏛️ 7. Actor 狀態修改單一擁有權與背景生命週期治理 (Actor Lifecycle) — Priority: P1
+## 🏛️ 7. ✅ [已完成] Actor 狀態修改單一擁有權與背景生命週期治理 (Actor Lifecycle) — Priority: P1
 
 > **來源**：`Codex_Code_Review.md` (§P1)、`Claude_Code_Review.md` (§二)。
 > **核心目標**：杜絕繞過信箱的狀態變更，落實 Actor 嚴格單一線程排序，治理虛擬執行緒戰鬥生命週期與逾時斷路器。
+> **落地進度**：已於 2026-10-04 完成。
 
-### 7.1 收斂 Room Actor 狀態修改通道（修復 `removePlayer` 雙軌修改） (P1)
-- **現存缺陷**：
-  [Room.java#L342-L346](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/actor/impl/Room.java#L342-L346) 的 `removePlayer(String playerId)` 在呼叫者線程直接調用 `players.removeIf(...)`，隨後又向佇列送出 `RoomMessage.RemovePlayer`。即使 `players` 為 `CopyOnWriteArrayList`，仍破壞了 Actor 作為狀態變更唯一排序者的契約。
-- **改善方案**：
-  1. 移除 `Room.removePlayer()` 與 `removeMob()` 中 caller 線程的直接 `removeIf` 呼叫。
-  2. 房間內所有成員新增、移出、掉落物撿取與丟棄，**100% 嚴格僅在信箱訊息處理器中執行**。
-  3. 若呼叫端需要確認移出完成，統一採用帶 `CompletableFuture<Boolean>` 的請求-回應信箱訊息。
-  4. 補齊高併發進出房間與掉落物變更的專屬併發測試。
+### 7.1 ✅ [已完成] 收斂 Room Actor 狀態修改通道（修復 `removePlayer` 雙軌修改） (ACT-01) (P1)
+> **落地進度**：
+> 1. **消除雙軌修改**：徹底移除 `Room.java` 中 `removePlayer`、`removeMob`、`removeItem`、`dropItem` 在 caller 線程對 `players`、`mobs`、`items` 內部集合的直接修改，所有狀態變更 100% 嚴格僅由 Actor 信箱訊息處理器排序執行。
+> 2. **Actor 自身線程判定 (`isActorThread()`)**：呼叫端若已在 Actor 自身線程內，安全直通修改；外部呼叫端一律投遞信箱訊息。
+> 3. **請求-回應同步確認通道**：`RoomMessage` 的 `RemovePlayer`、`RemoveMob`、`RemoveItem`、`DropItem` 擴充支援 `CompletableFuture<Boolean>`；`Room` 暴露相應的 `removePlayerAsync`、`removeMobAsync`、`removeItemAsync`、`dropItemAsync`。
+> 4. **`addPlayer` 與 `addMob` 收斂**：外部呼叫自動收斂至 `enter` 信箱訊息通道。
+> 5. **併發安全驗證**：[SystemDefenseAndStabilityTest.java](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/SystemDefenseAndStabilityTest.java) 包含 20 執行緒高併發丟棄、讀取與非同步移除驗證，全數通過。
 
-### 7.2 背景戰鬥虛擬執行緒治理與逾時斷路器 (P1)
-- **現存缺陷**：
-  [DrpgCombatLoop.java#L85](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java#L85) 開戰時以非管理的 `Thread.ofVirtual().start(...)` 裸啟動，缺乏全域戰鬥併發限制、伺服器關機時的任務盤點與逾時斷路器。若戰鬥雙方陷入無限回血/無攻擊能力死迴圈，執行緒將無限期佔用資源。
-- **改善方案**：
-  1. 引入 Spring 託管的 `ExecutorService`（如 `Executors.newVirtualThreadPerTaskExecutor()`）統籌戰鬥任務。
-  2. 在 `BattleContext` 設置最大戰鬥時間（預設 5 分鐘）與回合上限（預設 100 回合）。
-  3. 超過上限時觸發斷路器，判定平局/脫戰並安全清理 `activeBattles` 快取，產生日誌。
-  4. 連線斷開時依據設計原則判定戰鬥行為（如依預設 Gambit 持續結算或自動暫停），避免野執行緒持續運行。
+### 7.2 ✅ [已完成] 背景戰鬥虛擬執行緒治理與逾時斷路器 (ACT-02) (P1)
+> **落地進度**：
+> 1. **Spring 託管戰鬥執行緒池 (`combatExecutor`)**：在 `SchedulerConfig.java` 註冊名為 `combatExecutor` 的虛擬執行緒 `ExecutorService` Bean（自帶優雅停機），注入 `DrpgCombatLoop` 統籌管理戰鬥虛擬執行緒，杜絕裸啟動。
+> 2. **雙重斷路器熔斷機制**：`BattleContext` 引入 `startTime`、`maxDurationMs`（預設 5 分鐘）、`maxRounds`（預設 100 回合）與 `roundCount` 計數器；戰鬥循環每輪檢測超時或超過回合上限，觸發斷路器強制切換為 `BattleState.TIMEOUT` 並中斷迴圈。
+> 3. **任務控制控制碼 (`combatFuture`) 與中斷治理**：`BattleContext` 保存 `Future<?> combatFuture`，提供 `cancelBattle()`；`DrpgCombatLoop` 循環嚴格檢驗 `Thread.currentThread().isInterrupted()`，中斷時即刻優雅退出。
+> 4. **健壯清理保證**：`DrpgCombatLoop.finally` 區塊無論 `Player` 實例是否為 null（或玩家是否已離線），均嚴格依 `ctx.getPlayerId()` 與 `ctx.getBattleId()` 清理 `activeBattles` 快取，絕不發生記憶體或執行緒洩漏。
+> 5. **完整測試驗證**：[SystemDefenseAndStabilityTest.java](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/SystemDefenseAndStabilityTest.java) 完整驗證超時熔斷、回合上限熔斷、執行緒中斷取消與 Spring Bean 注入治理，全數綠燈通過。
 
 ---
 
@@ -341,8 +340,8 @@
 | **P1** | MUD-01 | MUD 怪物 AI、擊殺升級閉環、Buff 引擎與規則補齊 | 世界規則與 AI | §3.1~3.4 | ✅ 已完成 |
 | **P1** | UI-01 | 全域佈局重構、三種資訊密度 (字級 $\ge 13\text{px}$) 與雙軌契約 | 介面佈局與資源呈現 | §4.1~4.3 | ✅ 已完成 |
 | **P1** | ARCH-01 | Domain 層反向依賴反轉 (Phase 10 Clean Architecture) | 六角形純淨架構 | §5.1 | ✅ 已完成 |
-| **P1** | ACT-01 | 收斂 Room Actor 狀態修改通道 (修復 `removePlayer` 雙軌修改) | Actor 狀態單一所有 | §7.1 | 🔲 待執行 |
-| **P1** | ACT-02 | 戰鬥虛擬執行緒 Executor 治理與 5 分鐘逾時斷路器 | 執行緒防洩漏 | §7.2 | 🔲 待執行 |
+| **P1** | ACT-01 | 收斂 Room Actor 狀態修改通道 (修復 `removePlayer` 雙軌修改) | Actor 狀態單一所有 | §7.1 | ✅ 已完成 |
+| **P1** | ACT-02 | 戰鬥虛擬執行緒 Executor 治理與 5 分鐘逾時斷路器 | 執行緒防洩漏 | §7.2 | ✅ 已完成 |
 | **P1** | SAVE-01 | 檔案式存檔引入 `schemaVersion` 與版本遷移適配器 | 存檔平滑相容升級 | §8.1 | ✅ 已完成 |
 | **P1** | SAVE-02 | 壞檔防禦標記與防覆寫保護 (區分 `empty` 與 `corrupted`) | 進度防毀損保護 | §8.2 | ✅ 已完成 |
 | **P1** | DATA-01 | 消除職業反擊特例、陣型比對與技能別名硬編碼 | 100% 資料驅動 | §9.1 | ✅ 已完成 |

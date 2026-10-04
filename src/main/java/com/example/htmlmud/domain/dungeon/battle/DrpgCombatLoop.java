@@ -2,9 +2,13 @@ package com.example.htmlmud.domain.dungeon.battle;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
@@ -31,33 +35,46 @@ public class DrpgCombatLoop {
   private final DefenseResolver defenseResolver;
   private final BuffSettlementService buffSettlementService;
   private final com.example.htmlmud.domain.party.service.FormationEngine formationEngine;
+  private final ExecutorService combatExecutor;
 
   @Autowired
-  public DrpgCombatLoop(DrpgEnemyTacticsService tacticsService, DrpgRewardService rewardService,
-      DefenseResolver defenseResolver, BuffSettlementService buffSettlementService,
-      com.example.htmlmud.domain.party.service.FormationEngine formationEngine) {
+  public DrpgCombatLoop(
+      DrpgEnemyTacticsService tacticsService,
+      DrpgRewardService rewardService,
+      DefenseResolver defenseResolver,
+      BuffSettlementService buffSettlementService,
+      com.example.htmlmud.domain.party.service.FormationEngine formationEngine,
+      @Qualifier("combatExecutor") @Autowired(required = false) ExecutorService combatExecutor) {
     this.tacticsService = tacticsService != null ? tacticsService : new DrpgEnemyTacticsService();
     this.rewardService = rewardService != null ? rewardService : new DrpgRewardService();
     this.defenseResolver = defenseResolver != null ? defenseResolver : new DefenseResolver();
     this.buffSettlementService = buffSettlementService != null ? buffSettlementService : new BuffSettlementService();
     this.formationEngine = formationEngine != null ? formationEngine : new com.example.htmlmud.domain.party.service.FormationEngine();
+    this.combatExecutor = combatExecutor != null ? combatExecutor
+        : Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("drpg-combat-fallback-", 0).factory());
+  }
+
+  public DrpgCombatLoop(DrpgEnemyTacticsService tacticsService, DrpgRewardService rewardService,
+      DefenseResolver defenseResolver, BuffSettlementService buffSettlementService,
+      com.example.htmlmud.domain.party.service.FormationEngine formationEngine) {
+    this(tacticsService, rewardService, defenseResolver, buffSettlementService, formationEngine, null);
   }
 
   public DrpgCombatLoop(DrpgEnemyTacticsService tacticsService, DrpgRewardService rewardService,
       DefenseResolver defenseResolver, BuffSettlementService buffSettlementService) {
-    this(tacticsService, rewardService, defenseResolver, buffSettlementService, new com.example.htmlmud.domain.party.service.FormationEngine());
+    this(tacticsService, rewardService, defenseResolver, buffSettlementService, new com.example.htmlmud.domain.party.service.FormationEngine(), null);
   }
 
   public DrpgCombatLoop(DrpgEnemyTacticsService tacticsService, DrpgRewardService rewardService, DefenseResolver defenseResolver) {
-    this(tacticsService, rewardService, defenseResolver, new BuffSettlementService(), new com.example.htmlmud.domain.party.service.FormationEngine());
+    this(tacticsService, rewardService, defenseResolver, new BuffSettlementService(), new com.example.htmlmud.domain.party.service.FormationEngine(), null);
   }
 
   public DrpgCombatLoop(DrpgEnemyTacticsService tacticsService, DrpgRewardService rewardService) {
-    this(tacticsService, rewardService, new DefenseResolver(), new BuffSettlementService(), new com.example.htmlmud.domain.party.service.FormationEngine());
+    this(tacticsService, rewardService, new DefenseResolver(), new BuffSettlementService(), new com.example.htmlmud.domain.party.service.FormationEngine(), null);
   }
 
   public DrpgCombatLoop() {
-    this(new DrpgEnemyTacticsService(), new DrpgRewardService(), new DefenseResolver(), new BuffSettlementService(), new com.example.htmlmud.domain.party.service.FormationEngine());
+    this(new DrpgEnemyTacticsService(), new DrpgRewardService(), new DefenseResolver(), new BuffSettlementService(), new com.example.htmlmud.domain.party.service.FormationEngine(), null);
   }
 
   public BuffSettlementService getBuffSettlementService() {
@@ -76,15 +93,22 @@ public class DrpgCombatLoop {
     return defenseResolver;
   }
 
+  public ExecutorService getCombatExecutor() {
+    return combatExecutor;
+  }
+
   /**
-   * 啟動虛擬執行緒戰鬥循環
+   * 啟動受治理的虛擬執行緒戰鬥循環
    */
-  public void startBattleLoop(Player player, BattleContext ctx, DungeonPosition pos,
+  public Future<?> startBattleLoop(Player player, BattleContext ctx, DungeonPosition pos,
       Map<String, BattleContext> activeBattles, Consumer<Player> stateBroadcaster) {
-    String threadName = "BattleLoop-" + (player != null ? player.getName() : "anon");
-    Thread.ofVirtual().name(threadName).start(() -> {
+    Future<?> future = combatExecutor.submit(() -> {
       runBattleLoop(player, ctx, pos, activeBattles, stateBroadcaster);
     });
+    if (ctx != null) {
+      ctx.setCombatFuture(future);
+    }
+    return future;
   }
 
   /**
@@ -94,7 +118,26 @@ public class DrpgCombatLoop {
       Map<String, BattleContext> activeBattles, Consumer<Player> stateBroadcaster) {
     try {
       while (!ctx.isOver() && (player == null || player.isValid())) {
+        if (Thread.currentThread().isInterrupted()) {
+          log.info("Battle loop thread interrupted for player {}", (player != null ? player.getName() : "anon"));
+          break;
+        }
+
+        ctx.setRoundCount(ctx.getRoundCount() + 1);
+
+        // 逾時或回合上限熔斷斷路器 (ACT-02)
+        if (ctx.isTimedOut() || ctx.isMaxRoundsExceeded()) {
+          ctx.setState(BattleState.TIMEOUT);
+          String reason = ctx.isTimedOut()
+              ? "戰鬥超時 (超過 " + (ctx.getMaxDurationMs() / 1000) + " 秒)"
+              : "戰鬥超過最大回合上限 (" + ctx.getMaxRounds() + " 回合)";
+          log.warn("戰鬥熔斷斷路器觸發: {} for player {}", reason, (player != null ? player.getName() : "anon"));
+          broadcastLog(player, ctx, "\n\u001B[1;31m⚡【戰鬥熔斷】" + reason + "，天地靈氣劇烈震盪，雙方被迫脫離戰鬥！\u001B[0m\n");
+          break;
+        }
+
         long now = System.currentTimeMillis();
+        ctx.setLastHeartbeat(now);
 
         // 0. 狀態生命週期結算 (1 Heartbeat = 1 Tick, 結算持續時間、HoT 跳血、DoT 扣血與過期移除)
         for (PartyMember member : ctx.getParty().getMembers()) {
@@ -375,15 +418,27 @@ public class DrpgCombatLoop {
         rewardService.resolveVictory(player, ctx, pos, activeBattles, stateBroadcaster);
       } else if (ctx.getState() == BattleState.DEFEAT) {
         rewardService.resolveDefeat(player, ctx, pos, activeBattles, stateBroadcaster);
+      } else if (ctx.getState() == BattleState.TIMEOUT) {
+        rewardService.postBattleCleanup(player, ctx);
+        if (player != null) {
+          player.reply("戰鬥因時限已至或靈氣枯竭而終止。");
+        }
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
+      log.info("Battle loop thread interrupted for player {}", (player != null ? player.getName() : "anon"));
     } catch (Exception e) {
       log.error("Battle loop error for player {}", (player != null ? player.getName() : "anon"), e);
     } finally {
-      if (player != null && activeBattles != null) {
-        if (player.getName() != null) activeBattles.remove(player.getName());
-        if (player.getId() != null) activeBattles.remove(player.getId());
+      if (activeBattles != null) {
+        if (player != null) {
+          if (player.getName() != null) activeBattles.remove(player.getName());
+          if (player.getId() != null) activeBattles.remove(player.getId());
+        }
+        if (ctx != null) {
+          if (ctx.getPlayerId() != null) activeBattles.remove(ctx.getPlayerId());
+          if (ctx.getBattleId() != null) activeBattles.remove(ctx.getBattleId());
+        }
       }
       if (stateBroadcaster != null && player != null) {
         stateBroadcaster.accept(player);

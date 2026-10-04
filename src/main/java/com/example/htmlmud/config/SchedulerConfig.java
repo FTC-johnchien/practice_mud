@@ -16,4 +16,11 @@ public class SchedulerConfig {
     // 所以這個 Scheduler 幾乎不會被卡住，不需要太多執行緒。
     return Executors.newScheduledThreadPool(4, Thread.ofPlatform().factory());
   }
+
+  @Bean(name = "combatExecutor", destroyMethod = "shutdown")
+  public java.util.concurrent.ExecutorService combatExecutor() {
+    return Executors.newThreadPerTaskExecutor(
+        Thread.ofVirtual().name("drpg-combat-", 0).factory()
+    );
+  }
 }

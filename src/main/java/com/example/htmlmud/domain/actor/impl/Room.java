@@ -109,17 +109,31 @@ public class Room extends VirtualActor<RoomMessage> {
   }
 
   public void addPlayer(Player player) {
-    if (player != null && !players.contains(player)) {
-      players.add(player);
-      player.setCurrentRoomId(this.id);
+    if (player == null) {
+      return;
     }
+    if (isActorThread()) {
+      if (!players.contains(player)) {
+        players.add(player);
+        player.setCurrentRoomId(this.id);
+      }
+      return;
+    }
+    enter(player, null);
   }
 
   public void addMob(Mob mob) {
-    if (mob != null && !mobs.contains(mob)) {
-      mobs.add(mob);
-      mob.setCurrentRoomId(this.id);
+    if (mob == null) {
+      return;
     }
+    if (isActorThread()) {
+      if (!mobs.contains(mob)) {
+        mobs.add(mob);
+        mob.setCurrentRoomId(this.id);
+      }
+      return;
+    }
+    enter(mob, null);
   }
 
 
@@ -168,28 +182,51 @@ public class Room extends VirtualActor<RoomMessage> {
       case RoomMessage.GetPlayers(var future) -> {
         future.complete(players.stream().filter(Player::isValid).toList());
       }
-      case RoomMessage.RemovePlayer(var playerId) -> {
-        players.removeIf(player -> player.getId().equals(playerId));
+      case RoomMessage.RemovePlayer(var playerId, var future) -> {
+        boolean removed = false;
+        if (playerId != null) {
+          removed = players.removeIf(player -> player.getId().equals(playerId));
+        }
+        if (future != null) {
+          future.complete(removed);
+        }
       }
       case RoomMessage.GetMobs(var future) -> {
         future.complete(mobs.stream().filter(Mob::isValid).toList());
       }
-      case RoomMessage.RemoveMob(var mobId) -> {
-        mobs.removeIf(mob -> mob.getId().equals(mobId));
+      case RoomMessage.RemoveMob(var mobId, var future) -> {
+        boolean removed = false;
+        if (mobId != null) {
+          removed = mobs.removeIf(mob -> mob.getId().equals(mobId));
+        }
+        if (future != null) {
+          future.complete(removed);
+        }
       }
       case RoomMessage.GetItems(var future) -> {
         future.complete(items);
       }
-      case RoomMessage.RemoveItem(var itemId) -> {
-        boolean removed = items.removeIf(item -> item.getId().equals(itemId));
-        if (removed) {
-          roomService.record(this.getId(), items);
+      case RoomMessage.RemoveItem(var itemId, var future) -> {
+        boolean removed = false;
+        if (itemId != null) {
+          removed = items.removeIf(item -> item.getId().equals(itemId));
+          if (removed) {
+            roomService.record(this.getId(), items);
+          }
+        }
+        if (future != null) {
+          future.complete(removed);
         }
       }
-      case RoomMessage.DropItem(var item) -> {
+      case RoomMessage.DropItem(var item, var future) -> {
+        boolean added = false;
         if (item != null && !items.contains(item)) {
           items.add(item);
           roomService.record(this.getId(), items);
+          added = true;
+        }
+        if (future != null) {
+          future.complete(added);
         }
       }
       case RoomMessage.Record() -> {
@@ -339,32 +376,108 @@ public class Room extends VirtualActor<RoomMessage> {
     this.send(new RoomMessage.Record());
   }
 
+  public CompletableFuture<Boolean> removePlayerAsync(String playerId) {
+    if (playerId == null) {
+      return CompletableFuture.completedFuture(false);
+    }
+    if (isActorThread()) {
+      boolean removed = players.removeIf(player -> player.getId().equals(playerId));
+      return CompletableFuture.completedFuture(removed);
+    }
+    CompletableFuture<Boolean> future = new CompletableFuture<>();
+    this.send(new RoomMessage.RemovePlayer(playerId, future));
+    return future;
+  }
+
   public void removePlayer(String playerId) {
-    if (playerId != null) {
+    if (playerId == null) {
+      return;
+    }
+    if (isActorThread()) {
       players.removeIf(player -> player.getId().equals(playerId));
+      return;
     }
     this.send(new RoomMessage.RemovePlayer(playerId));
   }
 
+  public CompletableFuture<Boolean> removeMobAsync(String mobId) {
+    if (mobId == null) {
+      return CompletableFuture.completedFuture(false);
+    }
+    if (isActorThread()) {
+      boolean removed = mobs.removeIf(mob -> mob.getId().equals(mobId));
+      return CompletableFuture.completedFuture(removed);
+    }
+    CompletableFuture<Boolean> future = new CompletableFuture<>();
+    this.send(new RoomMessage.RemoveMob(mobId, future));
+    return future;
+  }
+
   public void removeMob(String mobId) {
-    if (mobId != null) {
+    if (mobId == null) {
+      return;
+    }
+    if (isActorThread()) {
       mobs.removeIf(mob -> mob.getId().equals(mobId));
+      return;
     }
     this.send(new RoomMessage.RemoveMob(mobId));
   }
 
-  public void removeItem(String itemId) {
-    if (itemId != null) {
-      items.removeIf(item -> item.getId().equals(itemId));
+  public CompletableFuture<Boolean> removeItemAsync(String itemId) {
+    if (itemId == null) {
+      return CompletableFuture.completedFuture(false);
     }
-    this.send(new RoomMessage.RemoveItem(itemId));
+    if (isActorThread()) {
+      boolean removed = items.removeIf(item -> item.getId().equals(itemId));
+      if (removed) {
+        roomService.record(this.getId(), items);
+      }
+      return CompletableFuture.completedFuture(removed);
+    }
+    CompletableFuture<Boolean> future = new CompletableFuture<>();
+    this.send(new RoomMessage.RemoveItem(itemId, future));
+    return future;
+  }
+
+  public void removeItem(String itemId) {
+    if (itemId == null) {
+      return;
+    }
+    try {
+      removeItemAsync(itemId).orTimeout(1, TimeUnit.SECONDS).join();
+    } catch (Exception e) {
+      log.error("Room removeItem 失敗 roomId:{}", id, e);
+    }
+  }
+
+  public CompletableFuture<Boolean> dropItemAsync(GameItem item) {
+    if (item == null) {
+      return CompletableFuture.completedFuture(false);
+    }
+    if (isActorThread()) {
+      boolean added = false;
+      if (!items.contains(item)) {
+        items.add(item);
+        roomService.record(this.getId(), items);
+        added = true;
+      }
+      return CompletableFuture.completedFuture(added);
+    }
+    CompletableFuture<Boolean> future = new CompletableFuture<>();
+    this.send(new RoomMessage.DropItem(item, future));
+    return future;
   }
 
   public void dropItem(GameItem item) {
-    if (item != null && !items.contains(item)) {
-      items.add(item);
+    if (item == null) {
+      return;
     }
-    this.send(new RoomMessage.DropItem(item));
+    try {
+      dropItemAsync(item).orTimeout(1, TimeUnit.SECONDS).join();
+    } catch (Exception e) {
+      log.error("Room dropItem 失敗 roomId:{}", id, e);
+    }
   }
 
   public String lookAtRoom(Player player) {

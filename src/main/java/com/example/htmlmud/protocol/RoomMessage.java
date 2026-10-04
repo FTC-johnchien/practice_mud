@@ -80,22 +80,34 @@ public sealed interface RoomMessage permits RoomMessage.Enter, RoomMessage.Leave
   record GetPlayers(CompletableFuture<List<Player>> future) implements RoomMessage {
   }
 
-  record RemovePlayer(String playerId) implements RoomMessage {
+  record RemovePlayer(String playerId, CompletableFuture<Boolean> future) implements RoomMessage {
+    public RemovePlayer(String playerId) {
+      this(playerId, null);
+    }
   }
 
   record GetMobs(CompletableFuture<List<Mob>> future) implements RoomMessage {
   }
 
-  record RemoveMob(String mobId) implements RoomMessage {
+  record RemoveMob(String mobId, CompletableFuture<Boolean> future) implements RoomMessage {
+    public RemoveMob(String mobId) {
+      this(mobId, null);
+    }
   }
 
   record GetItems(CompletableFuture<List<GameItem>> future) implements RoomMessage {
   }
 
-  record RemoveItem(String itemId) implements RoomMessage {
+  record RemoveItem(String itemId, CompletableFuture<Boolean> future) implements RoomMessage {
+    public RemoveItem(String itemId) {
+      this(itemId, null);
+    }
   }
 
-  record DropItem(GameItem item) implements RoomMessage {
+  record DropItem(GameItem item, CompletableFuture<Boolean> future) implements RoomMessage {
+    public DropItem(GameItem item) {
+      this(item, null);
+    }
   }
 
   record LookAtRoom(String playerId, CompletableFuture<String> future) implements RoomMessage {
