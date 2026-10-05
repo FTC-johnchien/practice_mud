@@ -340,6 +340,30 @@ public class DrpgCombatLoop {
 
               broadcastLog(player, ctx, icon + " " + member.getName() + " 施展【" + moveName + "】，擊中【" + target.getName() + "】造成 " + dmg + " 點傷害！");
 
+              int targetIdx = ctx.getEnemies().indexOf(target);
+              int memberIdx = ctx.getParty().getMembers().indexOf(member);
+              boolean isKilled = !target.isAlive();
+              com.example.htmlmud.domain.dungeon.battle.event.BattleEvent atkEvent = new com.example.htmlmud.domain.dungeon.battle.event.BattleEvent(
+                  ctx.nextEventSeq(),
+                  now,
+                  com.example.htmlmud.domain.dungeon.battle.event.BattleEventType.ATTACK,
+                  new com.example.htmlmud.domain.dungeon.battle.event.UnitRef(com.example.htmlmud.domain.dungeon.battle.event.UnitRef.Side.PARTY, member.getId(), memberIdx),
+                  null,
+                  moveName,
+                  wt.name(),
+                  "PHYSICAL",
+                  com.example.htmlmud.domain.dungeon.battle.event.FxShape.SINGLE,
+                  null,
+                  java.util.List.of(new com.example.htmlmud.domain.dungeon.battle.event.BattleHit(
+                      new com.example.htmlmud.domain.dungeon.battle.event.UnitRef(com.example.htmlmud.domain.dungeon.battle.event.UnitRef.Side.ENEMY, target.getId(), targetIdx >= 0 ? targetIdx : 0),
+                      com.example.htmlmud.domain.dungeon.battle.event.HitOutcome.HIT,
+                      dmg,
+                      0,
+                      isKilled
+                  ))
+              );
+              ctx.emit(atkEvent);
+
               if (!target.isAlive()) {
                 broadcastLog(player, ctx, "\u001B[1;32m💥【" + target.getName() + "】被斬殺倒地！\u001B[0m");
                 ctx.checkEnemyRowAdvancement();
@@ -396,6 +420,63 @@ public class DrpgCombatLoop {
                 broadcastLog(player, ctx, defenseRes.combatLog());
               }
 
+              // 敵方攻擊事件發佈 (帶入 DefenseResolver 判定結果)
+              int enemyIdx = ctx.getEnemies().indexOf(enemy);
+              int mIdx = ctx.getParty().getMembers().indexOf(targetMember);
+              com.example.htmlmud.domain.dungeon.battle.event.HitOutcome hitOutcome = switch (defenseRes.outcome()) {
+                case CRIT -> com.example.htmlmud.domain.dungeon.battle.event.HitOutcome.CRIT;
+                case BLOCKED -> com.example.htmlmud.domain.dungeon.battle.event.HitOutcome.BLOCKED;
+                case PARRIED -> com.example.htmlmud.domain.dungeon.battle.event.HitOutcome.PARRIED;
+                case DODGED -> com.example.htmlmud.domain.dungeon.battle.event.HitOutcome.DODGED;
+                case MISS -> com.example.htmlmud.domain.dungeon.battle.event.HitOutcome.MISS;
+                default -> com.example.htmlmud.domain.dungeon.battle.event.HitOutcome.HIT;
+              };
+
+              com.example.htmlmud.domain.dungeon.battle.event.BattleEvent enemyAtkEvent = new com.example.htmlmud.domain.dungeon.battle.event.BattleEvent(
+                  ctx.nextEventSeq(),
+                  now,
+                  com.example.htmlmud.domain.dungeon.battle.event.BattleEventType.ATTACK,
+                  new com.example.htmlmud.domain.dungeon.battle.event.UnitRef(com.example.htmlmud.domain.dungeon.battle.event.UnitRef.Side.ENEMY, enemy.getId(), enemyIdx >= 0 ? enemyIdx : 0),
+                  null,
+                  moveName,
+                  "NATURAL",
+                  enemy.getId().startsWith("aberration-") ? "DARK" : "PHYSICAL",
+                  com.example.htmlmud.domain.dungeon.battle.event.FxShape.SINGLE,
+                  null,
+                  java.util.List.of(new com.example.htmlmud.domain.dungeon.battle.event.BattleHit(
+                      new com.example.htmlmud.domain.dungeon.battle.event.UnitRef(com.example.htmlmud.domain.dungeon.battle.event.UnitRef.Side.PARTY, targetMember.getId(), mIdx >= 0 ? mIdx : 0),
+                      hitOutcome,
+                      defenseRes.finalDamage(),
+                      0,
+                      !targetMember.isAlive()
+                  ))
+              );
+              ctx.emit(enemyAtkEvent);
+
+              // 破招突刺反擊事件
+              if (defenseRes.riposteTriggered() && defenseRes.riposteDamage() > 0) {
+                com.example.htmlmud.domain.dungeon.battle.event.BattleEvent riposteEvent = new com.example.htmlmud.domain.dungeon.battle.event.BattleEvent(
+                    ctx.nextEventSeq(),
+                    now,
+                    com.example.htmlmud.domain.dungeon.battle.event.BattleEventType.RIPOSTE,
+                    new com.example.htmlmud.domain.dungeon.battle.event.UnitRef(com.example.htmlmud.domain.dungeon.battle.event.UnitRef.Side.PARTY, targetMember.getId(), mIdx >= 0 ? mIdx : 0),
+                    null,
+                    "破招反擊",
+                    "SWORD",
+                    "PHYSICAL",
+                    com.example.htmlmud.domain.dungeon.battle.event.FxShape.SINGLE,
+                    null,
+                    java.util.List.of(new com.example.htmlmud.domain.dungeon.battle.event.BattleHit(
+                        new com.example.htmlmud.domain.dungeon.battle.event.UnitRef(com.example.htmlmud.domain.dungeon.battle.event.UnitRef.Side.ENEMY, enemy.getId(), enemyIdx >= 0 ? enemyIdx : 0),
+                        com.example.htmlmud.domain.dungeon.battle.event.HitOutcome.HIT,
+                        defenseRes.riposteDamage(),
+                        0,
+                        !enemy.isAlive()
+                    ))
+                );
+                ctx.emit(riposteEvent);
+              }
+
               if (!targetMember.isAlive()) {
                 handlePartyMemberDeath(player, ctx, targetMember);
                 if (ctx.isAllPartyDead()) {
@@ -405,6 +486,12 @@ public class DrpgCombatLoop {
               }
             }
           }
+        }
+
+        // 推送戰鬥演出事件 (先送事件、後送快照)
+        java.util.List<com.example.htmlmud.domain.dungeon.battle.event.BattleEvent> events = ctx.drainEvents();
+        if (!events.isEmpty() && player != null && player.isValid()) {
+          player.sendJson(new com.example.htmlmud.domain.dungeon.dto.BattleEventsDto(ctx.getBattleId(), events));
         }
 
         // 推送戰鬥進度
@@ -432,6 +519,12 @@ public class DrpgCombatLoop {
     } catch (Exception e) {
       log.error("Battle loop error for player {}", (player != null ? player.getName() : "anon"), e);
     } finally {
+      if (ctx != null && player != null && player.isValid()) {
+        java.util.List<com.example.htmlmud.domain.dungeon.battle.event.BattleEvent> finalEvents = ctx.drainEvents();
+        if (!finalEvents.isEmpty()) {
+          player.sendJson(new com.example.htmlmud.domain.dungeon.dto.BattleEventsDto(ctx.getBattleId(), finalEvents));
+        }
+      }
       if (activeBattles != null) {
         if (player != null) {
           if (player.getName() != null) activeBattles.remove(player.getName());

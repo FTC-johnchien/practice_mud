@@ -32,6 +32,10 @@ public class BattleContext {
   @Builder.Default
   private ConcurrentLinkedQueue<String> battleLogs = new ConcurrentLinkedQueue<>();
   @Builder.Default
+  private ConcurrentLinkedQueue<com.example.htmlmud.domain.dungeon.battle.event.BattleEvent> pendingEvents = new ConcurrentLinkedQueue<>();
+  @Builder.Default
+  private java.util.concurrent.atomic.AtomicLong eventSeq = new java.util.concurrent.atomic.AtomicLong(0);
+  @Builder.Default
   private long startTime = System.currentTimeMillis();
   @Builder.Default
   private long lastActivityTime = System.currentTimeMillis(); // 玩家最後操作時間戳記
@@ -145,6 +149,27 @@ public class BattleContext {
 
   public boolean isTaunted() {
     return tauntedByMemberId != null && tauntedUntil > System.currentTimeMillis();
+  }
+
+  public void emit(com.example.htmlmud.domain.dungeon.battle.event.BattleEvent event) {
+    if (event == null) return;
+    pendingEvents.add(event);
+    while (pendingEvents.size() > 200) {
+      pendingEvents.poll();
+    }
+  }
+
+  public long nextEventSeq() {
+    return eventSeq.incrementAndGet();
+  }
+
+  public List<com.example.htmlmud.domain.dungeon.battle.event.BattleEvent> drainEvents() {
+    List<com.example.htmlmud.domain.dungeon.battle.event.BattleEvent> list = new ArrayList<>();
+    com.example.htmlmud.domain.dungeon.battle.event.BattleEvent e;
+    while ((e = pendingEvents.poll()) != null) {
+      list.add(e);
+    }
+    return list;
   }
 
   public void setTaunt(String memberId, long durationMs) {

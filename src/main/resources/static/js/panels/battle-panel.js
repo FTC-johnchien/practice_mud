@@ -114,6 +114,8 @@ export function renderBattleArena(battle) {
   function createEnemyCard(e) {
     const card = document.createElement('div');
     card.dataset.enemyIndex = String(e.index);
+    if (e.id) card.dataset.unitId = String(e.id);
+    card.dataset.unitSide = 'ENEMY';
     const isTarget = (selectedEnemy && selectedEnemy.index === e.index) || e.isTarget || (battle.selectedTargetIndex === e.index);
     const w = Number(e.width) || Number(e.size) || 1;
     const h = Number(e.height) || Number(e.size) || 1;
@@ -398,6 +400,8 @@ export function renderBattlePartyQuickBar(party) {
 
     const card = document.createElement('div');
     card.dataset.memberIdx = String(idx);
+    if (m.id) card.dataset.memberId = String(m.id);
+    card.dataset.unitSide = 'PARTY';
     card.className = `battle-party-grid-card ${isSelected ? 'active-selected' : ''} ${!isAlive ? 'is-dead' : ''}`;
     card.onclick = () => selectCombatMember(idx);
     card.title = isAlive ? `點選 #${idx + 1} ${safeMemberName} 切換戰備指揮台` : `點選 #${idx + 1} ${safeMemberName} (已陣亡，保留站位)`;

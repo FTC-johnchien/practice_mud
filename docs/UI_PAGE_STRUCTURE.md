@@ -240,18 +240,24 @@ export const UiUtils = {
 ### 3.3 戰鬥交鋒主舞台 (Combat / Battle Arena)
 
 - **模組路徑**：`static/js/panels/battle-panel.js`
-  - 子模組拆分：`battle-enemies-view.js`、`battle-command-dock.js`、`battle-party-deck.js`
+  - 建議演進子模組：`battle-fx-director.js`（戰鬥演出指揮與浮字）、`battle-enemies-view.js`（敵陣渲染）、`battle-command-dock.js`（戰備指揮台）
 - **對應 HTML 節點**：`<section id="battle-arena-panel" class="battle-arena-panel">`
+  - 覆蓋式特效層：`<div id="battle-fx-layer" class="battle-fx-layer" aria-hidden="true"></div>`（`pointer-events: none`）
 - **主要職責**：
-  1. **敵方 5x5 陣列區**：動態排布怪物卡片、血條、目標選取框、集火標記 (Focus)、Buff/Debuff 狀態圖示。
+  1. **敵方 5x5 陣列區**：動態排布怪物卡片、血條、目標選取框、集火標記 (Focus)、Buff/Debuff 狀態圖示，敵方蓄力意圖與危險警示。
   2. **純粹交鋒線 (Clash Divider)**：2px 微光視覺隔斷，無多餘文字干擾。
   3. **我方戰備甲板 (Combat Deck - 三欄式佈局)**：
      - **左欄**：所選隊員名稱與動作分類按鈕（基礎攻防、武道絕技、仙道符法）。
      - **中欄**：我方 5x3 戰陣站位幾何網格（嚴格 >= 13px，原位陣亡標記 💀）。
      - **右欄**：所選隊員之四維狀態數值或當前可施放技能網格（含冷卻與消耗）。
+  4. **戰鬥動態表現與特效層 (Battle Presentation FX)**：
+     - 浮動傷害/治療數字（正交色彩編碼：屬性定色、判定定型，完全閃避不跳 `-0`）。
+     - 卡片受擊/暴擊/格擋/招架/閃避動態 class 反饋，殘血倒下過渡動畫。
+     - 支援 `@media (prefers-reduced-motion)` 降級。
 - **Data-Driven 規範**：
   - 敵我雙方技能圖示、名稱、真元消耗、戰氣消耗、CD 倒數全數取自 `drpgState.battle` 與 `skill` DTO。
   - 嚴禁依怪物名稱判斷是否為 BOSS，一律讀取 `enemy.rank === 'BOSS'` 樣式標籤。
+  - 攻擊範圍、命中對象與最終傷害以伺服器結算之 `hits` 陣列為唯一真相來源，前端不可自行推論判定。
 
 ---
 
@@ -394,19 +400,18 @@ timeline
 2. 建立 [`src/main/resources/static/js/core/ui-utils.js`](../src/main/resources/static/js/core/ui-utils.js)，實裝高強度 `escapeHtml()`、資源百分比換算與品質色彩對映，並雙向掛載至 `window`。
 3. 全面治理並消除 `town-panel.js`、`party-hud-panel.js`、`battle-panel.js`、`bag-drawer.js`、`shop-modal.js`、`skill-drawer.js`、`save-modal.js`、`party-modal.js`、`message-log-panel.js` 中的高危 DOM XSS 拼接漏洞。
 
-### 階段二：樣式庫模組化拆分 (Phase UI-2) — Priority: P1
-將 4,180+ 行的 `style.css` 拆分為獨立模組並由 `style.css` 透過 `@import`（或 HTML 按需引入）：
-- `css/tokens.css`（色彩、字體、陰影變數）
-- `css/layout.css`（主舞台雙欄、視口尺寸）
-- `css/header-footer.css`（頂部導航與 48px footer）
-- `css/town.css`（城鎮舞台、3x3 羅盤）
-- `css/dungeon.css`（10x10 雷達網格）
-- `css/battle.css`（5x5 敵陣、5x3 戰陣甲板）
-- `css/menu.css`（1600x900 主選單、裝備比對、Gambit）
+### 階段二：樣式庫模組化拆分 (Phase UI-2) — Priority: P1 — ✅ 已於 2026-10-05 完成落地
+將原巨石 `style.css` 安全依順序拆分為 6 個連續模組，由 `index.html` 按序載入：
+- `css/style-01-tokens-and-shell.css`（色彩、字體、全域 Tokens 與基礎骨架）
+- `css/style-02-combat-arena.css`（戰鬥 5x5 敵陣、5x3 戰陣盤）
+- `css/style-03-battle-actions.css`（戰鬥按鈕列、技能冷卻）
+- `css/style-04-main-menu.css`（1600x900 主選單外框與分頁）
+- `css/style-05-town-and-hub.css`（城鎮生活舞台、3x3 羅盤導航）
+- `css/style-06-shop-and-responsive.css`（商店彈窗與 `@media` 響應式佈局）
 
-### 階段三：視圖事件委派與內聯清理 (Phase UI-3) — Priority: P1
+### 階段三：視圖事件委派與內聯清理 (Phase UI-3) — Priority: P1 — ✅ 已於 2026-10-02 完成落地
 1. 清除 `index.html` 中全部 `onclick="..."`。
-2. 在 `app.js` 或各模組 `init()` 中透過主容器統一監聽 `click`、`keydown`，依 `data-action` 觸發相應的 command dispatcher。
+2. 在 `app.js` 實作全局集中式事件委派 (`initEventDelegation()`)，依 `data-action` 觸發相應的 command dispatcher。
 
 ### 階段四：7 大區塊生命週期標準化 (Phase UI-4) — Priority: P1
 為每個區塊模組定義一致的公開介面契約：
@@ -418,16 +423,13 @@ export const TownPanel = {
 };
 ```
 
-### 階段五：選單單體解耦 (Phase UI-5) — Priority: P2
-將 158KB 的 `party-modal.js` 拆分為：
-- `modals/main-menu/menu-shell.js`（外框、分頁導航切換）
-- `modals/main-menu/tab-items.js`（背包與道具）
-- `modals/main-menu/tab-equip.js`（5 人直排裝備與兩欄式比對）
-- `modals/main-menu/tab-skills.js`（武道與法術）
-- `modals/main-menu/tab-status.js`（四維屬性與潛能點加點）
-- `modals/main-menu/tab-formation.js`（戰陣盤與典籍）
-- `modals/main-menu/tab-tactics.js`（Gambit 規則鏈）
-- `modals/main-menu/tab-system.js`（存讀檔）
+### 階段五：選單單體解耦 (Phase UI-5) — Priority: P2 — ✅ 已於 2026-10-05 完成落地
+將原 159 KB 的 `party-modal.js` 垂直切片拆解為 4 大子頁籤模組與 1 個精簡 Coordinator：
+- `modals/party-equipment-tab.js`（裝備穿脫與 Diff 比對）
+- `modals/party-skills-tab.js`（武道法術典籍與技能挑選）
+- `modals/party-formation-tab.js`（戰術站位盤與陣法庫）
+- `modals/party-tactics-tab.js`（Gambit 規則鏈）
+- `modals/party-modal.js`（路由導航、生命週期與存讀檔）
 
 ---
 

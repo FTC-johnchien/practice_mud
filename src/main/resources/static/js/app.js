@@ -14,6 +14,14 @@ import { renderMinimap, applyRadarPosition, updateRadarModeBtn, toggleRadarPosit
 import { renderPartyHud, selectPartyMember } from './panels/party-hud-panel.js';
 import { renderBattleArena, renderBattlePartyQuickBar, hideBattleArena, selectBattleTarget, toggleBattleMode, selectPartyMemberForSkill } from './panels/battle-panel.js';
 import { appendLog, clearLog } from './panels/message-log-panel.js';
+import { fxDirector } from './fx/battle-fx-director.js';
+
+window.fxDirector = fxDirector;
+window.onBattleEvents = function(data) {
+  if (data && data.events) {
+    fxDirector.enqueue(data.battleId || 'current', data.events);
+  }
+};
 
 import { renderSkillDrawer, closeSkillDrawer, onSkillBtnClick, castPartySkill } from './modals/skill-drawer.js';
 import { toggleBagDrawer, renderBagDrawer } from './modals/bag-drawer.js';
@@ -275,6 +283,7 @@ export function updateDrpgView(payload) {
     if (battlePanel) battlePanel.classList.add('hidden');
     store.setState({ lastBattle: null });
     toggleBattleMode(false);
+    fxDirector.clear();
     if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'BUTTON')) {
       document.activeElement.blur();
     }
