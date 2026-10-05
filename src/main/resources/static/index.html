@@ -216,7 +216,7 @@
 
         <div class="radar-grid-container">
           <div id="drpg-grid" class="radar-grid">
-            <!-- 由 drpg-view.js 動態渲染地塊 -->
+            <!-- 由 dungeon-view-panel.js 動態渲染地塊 -->
           </div>
         </div>
 
@@ -277,7 +277,7 @@
             <div class="town-npcs-section">
               <div class="town-section-title">👥 當前環境人物與生靈 <span id="town-npc-count" class="entity-count-badge"></span></div>
               <div id="town-npcs-list" class="town-npcs-list">
-                <!-- 由 drpg-view.js 動態渲染 NPC 卡片與互動能力標籤 -->
+                <!-- 由 town-view-panel.js 動態渲染 NPC 卡片與互動能力標籤 -->
               </div>
             </div>
 
@@ -285,7 +285,7 @@
             <div class="town-items-section">
               <div class="town-section-title">📦 地面散落靈物 <span id="town-item-count" class="entity-count-badge"></span></div>
               <div id="town-items-list" class="town-items-list">
-                <!-- 由 drpg-view.js 動態渲染 -->
+                <!-- 由 town-view-panel.js 動態渲染地面散落物 -->
               </div>
             </div>
           </div>
@@ -359,7 +359,7 @@
 
     <!-- 隊員專屬技能盤 / 抽屜 (點選隊員卡片滑出) -->
     <section id="skill-drawer" class="skill-drawer hidden">
-      <!-- 由 drpg-view.js 動態渲染所選隊員的技能按鈕、能量消耗與 CD 倒數 -->
+      <!-- 由 party-hud-panel.js 動態渲染所選隊員的技能按鈕、能量消耗與 CD 倒數 -->
     </section>
 
     <!-- 隊伍公共行囊抽屜 (可隨時點擊或按 B 開關) -->
@@ -372,7 +372,7 @@
         <button class="drawer-close-btn" data-action="close-bag">✕ 關閉 (B)</button>
       </div>
       <div id="bag-items-list" class="bag-items-list">
-        <!-- 由 drpg-view.js 動態渲染 -->
+        <!-- 由 inventory-modal.js 動態渲染 -->
       </div>
     </section>
 
@@ -393,7 +393,7 @@
         </div>
 
         <div id="save-slots-list" class="save-slots-list">
-          <!-- 由 drpg-view.js 動態渲染 Slot 0..5 -->
+          <!-- 由 save-modal.js 動態渲染 Slot 0..5 -->
         </div>
       </div>
     </div>
@@ -464,7 +464,7 @@
           掌櫃笑吟吟地招呼：「客官要進墨竹山吧？帶足乾糧和清心靈茶才是保命上策！」
         </div>
         <div id="shop-modal-goods-list" class="shop-modal-goods-list">
-          <!-- 由 drpg-view.js 動態渲染商品卡片清單 -->
+          <!-- 由 shop-modal.js 動態渲染商品卡片清單 -->
         </div>
         <div class="shop-modal-footer">
           <span>💡 購買後物品將自動收納至隊伍公共行囊 (B)，按 Esc 可隨時返回旅程。</span>

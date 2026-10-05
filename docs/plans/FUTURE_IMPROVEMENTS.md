@@ -319,21 +319,22 @@
 - 若無法在目前環境開啟瀏覽器做畫面驗收，必須明確列出未驗收項目，並將 CSS-01 保持為未完成；不得宣稱視覺完全一致。
 - 最終回報需列出新增檔案與載入順序、原始區塊對照、完成的檢查、尚未完成的驗收及任何偏離純搬移原則的變更。
 
-### 10.2 `party-modal.js` 垂直切片拆解 (3,141 行拆解) (P2)
-- **現狀**：[party-modal.js](file:///c:/Workspace/my_practice/practice_mud/src/main/resources/static/js/modals/party-modal.js) 達 3,141 行（159 KB），承載了隊員卡片、裝備穿脫、技能典籍、Gambit 戰術方針與陣法切換等多重責任。
-- **改善方案**：拆解為清晰的職責子模組：
-  - `party-equipment-tab.js`：裝備槽位切換與穿脫。
-  - `party-tactics-tab.js`：Gambit 戰術方針設定與驗證。
-  - `party-formation-tab.js`：陣型選取與角色站位拖曳。
-  - `party-skills-tab.js`：技能熟練度展示與快捷鍵配置。
-  - `party-modal.js` 僅作為外層選單標籤頁協調者。
+### 10.2 ✅ [已完成] `party-modal.js` 垂直切片拆解 (FE-01) (P2)
+> **落地進度**：已於 2026-10-05 完成。
+> 1. **垂直切片拆解**：將原 3,142 行 (159 KB) 的巨石單體 `party-modal.js` 依單一職責拆分為 4 大功能子模組：
+>    - [party-equipment-tab.js](file:///c:/Workspace/my_practice/practice_mud/src/main/resources/static/js/modals/party-equipment-tab.js) (64 KB)：7 槽位裝備穿脫、屬性道基面板、行囊道具篩選分頁與裝備 Diff 挑選比對。
+>    - [party-skills-tab.js](file:///c:/Workspace/my_practice/practice_mud/src/main/resources/static/js/modals/party-skills-tab.js) (33 KB)：武學法術典籍 (Spellbook)、功法套路挑選 (Skill Picker) 與主動/被動/探索可用道法。
+>    - [party-formation-tab.js](file:///c:/Workspace/my_practice/practice_mud/src/main/resources/static/js/modals/party-formation-tab.js) (21 KB)：浪漫沙加式 5×3 戰術站位盤與道門陣法典籍庫 (2/3/4/5人篩選與分頁)。
+>    - [party-tactics-tab.js](file:///c:/Workspace/my_practice/practice_mud/src/main/resources/static/js/modals/party-tactics-tab.js) (9.9 KB)：FFXII Gambit 戰術方針 AI 規則鏈、動態條件閥值與規則建構器。
+> 2. **協調者重構**：[party-modal.js](file:///c:/Workspace/my_practice/practice_mud/src/main/resources/static/js/modals/party-modal.js) 瘦身至 29.5 KB，專職負責主選單 Tab 路由、視窗生命週期、系統存讀檔列表與隊伍出戰名冊。
+> 3. **100% 向後相容**：`party-modal.js` 完整重新匯出所有子模組函式並掛載於 `window` 物件，既有 HTML 內聯事件與 `app.js` 匯入皆無縫維持相容。
+> 4. **代碼語法校驗**：經 Node.js 嚴格語法校驗 (`node -c`)，5 大模組零語法錯誤。
 
-### 10.3 歷史 Legacy 前端檔案盤查與正式除役 (P2)
-- **現狀**：`static/legacy/drpg-view.js` 仍保留 126 KB (2,835 行) 的舊代碼，且 `index.html` 中仍有 7 處註解提及此檔案。
-- **改善方案**：
-  1. 確認現代模組（`town-view-panel.js`、`battle-panel.js`、`party-modal.js`）已 100% 接管所有渲染職責。
-  2. 清理 `index.html` 中提及 `drpg-view.js` 的過期註解。
-  3. 將 `static/legacy/` 目錄正式封存或從生產部署資源中排除，消除維護者的認知混淆。
+### 10.3 ✅ [已完成] 歷史 Legacy 前端檔案盤查與正式除役 (LEG-01) (P2)
+> **落地進度**：已於 2026-10-05 完成。
+> 1. **全域依賴清查**：確認現代模組（`town-view-panel.js`、`battle-panel.js`、`party-modal.js`、`dungeon-view-panel.js`、`party-hud-panel.js`、`save-modal.js`、`shop-modal.js`）已 100% 接管所有渲染職責，無任何程式碼依賴 `drpg-view.js`。
+> 2. **清理 HTML 過期註解**：在 `index.html` 移除 7 處提及 `drpg-view.js` 的過期註解，校準為實際負責之模組。
+> 3. **除役 Legacy 檔案**：正式自倉庫移除 128 KB (2,835 行) 的 `static/legacy/drpg-view.js`。
 
 ### 10.4 探索舞台雙欄化與控制回歸羅盤 (P2)
 - 左欄佔比約 60%（場景資訊 + 3x3 方向羅盤 + NPC 網格卡片 + 地面物品）。
@@ -355,7 +356,7 @@
      - **Spring Integration Tests**：資料庫持久化、Actor 訊息信箱、WebSocket 通訊保留 `@SpringBootTest`。
   2. **快取自動隔離**：建立 `BaseIntegrationTest`，於 `@AfterEach` 自動重置各類別單例與暫存快取，杜絕跨測試污染。
 
-### 11.2 系統可觀測性與指標度量 (P3)
+### 11.2 系統可觀測性與指標度度量 (P3)
 - 透過 `DomainMetricsPort` 擴充指標收集：
   - 活躍連線數、活躍房間 Actor 數、戰鬥迴圈進行中數量。
   - 指令限流與拒絕次數。
@@ -402,9 +403,9 @@
 | **P1** | ASYNC-02 | Write-Behind worker 停機排空協定 (drain protocol) 與拒收通知 | 資料持久化邊界安全 | §6.3 | ✅ 已完成 |
 | **P1** | NET-01 | WebSocket 本機綁定模式與公開模式票證驗證 | 網路安全邊界 | §6.1, §6.2 | ✅ 已完成 |
 | **P1** | NET-02 | WebSocket 64KB 訊息長度上限與每秒 20 次指令限流 | 資源保護與抗洪水 | §6.2 | ✅ 已完成 |
-| **P2** | CSS-01 | 以保留原始順序的純搬移方式拆分大型 `style.css`，逐批驗收 | 前端可維護性與視覺回歸風險 | §10.1 | 🔲 待執行 |
-| **P2** | FE-01 | 3,141 行 `party-modal.js` 垂直切片模組化拆分 | 前端複雜度解耦 | §10.2 | 🔲 待執行 |
-| **P2** | LEG-01 | `static/legacy/drpg-view.js` 正式除役與註解清理 | 代碼庫整潔度 | §10.3 | 🔲 待執行 |
+| **P2** | CSS-01 | 以保留原始順序的純搬移方式拆分大型 `style.css`，逐批驗收 | 前端可維護性與視覺回歸風險 | §10.1 | ✅ 已完成 |
+| **P2** | FE-01 | 3,141 行 `party-modal.js` 垂直切片模組化拆分 | 前端複雜度解耦 | §10.2 | ✅ 已完成 |
+| **P2** | LEG-01 | `static/legacy/drpg-view.js` 正式除役與註解清理 | 代碼庫整潔度 | §10.3 | ✅ 已完成 |
 | **P2** | UI-02 | 探索舞台雙欄化與控制回歸羅盤 | 操作流暢度 | §10.4 | 🔲 待執行 |
 | **P2** | DATA-02 | 徹底清除 5 大殘存硬編碼 (招式篩選/橋接備用表/夥伴比對/NPC能力/開局物資) | 100% 資料驅動純度 | §9.3 | ✅ 已完成 |
 | **P3** | TEST-01 | 核心數值與領域規則下沉為純單元測試 (加速 CI) | 測試工程效能 | §11.1 | 🔲 待執行 |
