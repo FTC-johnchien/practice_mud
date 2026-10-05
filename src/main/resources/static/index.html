@@ -214,14 +214,58 @@
           <span class="facing-tag">朝向: <strong class="arrow-glow">▲</strong> 北</span>
         </div>
 
-        <div class="radar-grid-container">
-          <div id="drpg-grid" class="radar-grid">
-            <!-- 由 dungeon-view-panel.js 動態渲染地塊 -->
+        <div class="dungeon-stage-content">
+          <div class="radar-grid-container">
+            <div id="drpg-grid" class="radar-grid">
+              <!-- 由 dungeon-view-panel.js 動態渲染地塊 -->
+            </div>
           </div>
-        </div>
 
-        <div id="drpg-forward-inspect" class="forward-inspect-card">
-          【正前方】凝神探查中...
+          <div class="dungeon-stage-controls">
+            <div id="drpg-forward-inspect" class="forward-inspect-card">
+              【正前方】凝神探查中...
+            </div>
+
+            <div class="dungeon-compass-section">
+              <div class="compass-grid">
+                <button class="compass-corner-btn compass-corner-nw" data-action="trigger-inspect" title="凝神探查正前方地塊 (I)">
+                  <span class="compass-dir">👁️ 探查</span>
+                  <span class="compass-target">(I)</span>
+                </button>
+                <button class="compass-btn compass-north" data-action="step" data-step="w" title="前進 (W / 步進)">
+                  <span class="compass-dir">▲ 前進</span>
+                  <span class="compass-target">(W)</span>
+                </button>
+                <button class="compass-corner-btn compass-corner-ne" data-action="trigger-rest" title="凝神調息回復氣血 (R)">
+                  <span class="compass-dir">🌿 調息</span>
+                  <span class="compass-target">(R)</span>
+                </button>
+                <button class="compass-btn compass-west" data-action="step" data-step="a" title="左移 (A / 轉向)">
+                  <span class="compass-dir">◀ 左移</span>
+                  <span class="compass-target">(A)</span>
+                </button>
+                <div id="dungeon-compass-center" class="compass-center" title="凝神環顧 (look)" data-action="send-cmd" data-cmd="look" style="cursor: pointer;">
+                  🧭
+                </div>
+                <button class="compass-btn compass-east" data-action="step" data-step="d" title="右移 (D / 轉向)">
+                  <span class="compass-dir">右移 ▶</span>
+                  <span class="compass-target">(D)</span>
+                </button>
+                <button class="compass-corner-btn compass-corner-sw" data-action="toggle-bag" title="開啟隊伍公共行囊 (B)">
+                  <span class="compass-dir">🎒 行囊</span>
+                  <span class="compass-target">(B)</span>
+                </button>
+                <button class="compass-btn compass-south" data-action="step" data-step="s" title="後退 (S / 退步)">
+                  <span class="compass-dir">▼ 後退</span>
+                  <span class="compass-target">(S)</span>
+                </button>
+                <button class="compass-corner-btn compass-corner-se" data-action="toggle-party" title="開啟仙道總覽・功能選單 (C)">
+                  <span class="compass-dir">📜 選單</span>
+                  <span class="compass-target">(C)</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </aside>
 
@@ -249,22 +293,38 @@
             <div class="town-compass-section">
               <div class="town-section-title">🧭 道路方位 (WASD / 點擊移動)</div>
               <div class="compass-grid">
+                <button class="compass-corner-btn compass-corner-nw" data-action="trigger-rest" title="凝神打坐吐納回復氣血 (rest / R)">
+                  <span class="compass-dir">🌿 打坐</span>
+                  <span class="compass-target">調息 (R)</span>
+                </button>
                 <button id="exit-btn-north" class="compass-btn compass-north disabled" data-action="town-move" data-dir="north">
                   <span class="compass-dir">▲ 北</span>
                   <span class="compass-target" id="exit-name-north">無出路</span>
+                </button>
+                <button class="compass-corner-btn compass-corner-ne" data-action="send-cmd" data-cmd="look" title="仔細環視當前客棧街道與生靈 (look / L)">
+                  <span class="compass-dir">👀 環顧</span>
+                  <span class="compass-target">查探 (L)</span>
                 </button>
                 <button id="exit-btn-west" class="compass-btn compass-west disabled" data-action="town-move" data-dir="west">
                   <span class="compass-dir">◀ 西</span>
                   <span class="compass-target" id="exit-name-west">無出路</span>
                 </button>
-                <div class="compass-center">🧭</div>
+                <div class="compass-center" title="當前客棧街道 (look)" data-action="send-cmd" data-cmd="look" style="cursor: pointer;">🧭</div>
                 <button id="exit-btn-east" class="compass-btn compass-east disabled" data-action="town-move" data-dir="east">
                   <span class="compass-dir">東 ▶</span>
                   <span class="compass-target" id="exit-name-east">無出路</span>
                 </button>
+                <button class="compass-corner-btn compass-corner-sw" data-action="toggle-bag" title="開啟隊伍公共行囊 (B)">
+                  <span class="compass-dir">🎒 行囊</span>
+                  <span class="compass-target">背包 (B)</span>
+                </button>
                 <button id="exit-btn-south" class="compass-btn compass-south disabled" data-action="town-move" data-dir="south">
                   <span class="compass-dir">▼ 南</span>
                   <span class="compass-target" id="exit-name-south">無出路</span>
+                </button>
+                <button class="compass-corner-btn compass-corner-se" data-action="send-cmd" data-cmd="get all" title="拾取當前地面所有散落靈物 (get all)">
+                  <span class="compass-dir">📦 拾取</span>
+                  <span class="compass-target">全取 (G)</span>
                 </button>
               </div>
               <div id="town-special-exits" class="town-special-exits"></div>
@@ -494,21 +554,11 @@
 
     <!-- 底部情境操作列 (Context Action Bar)：依模式動態切換情境動作與操作指引 -->
     <footer class="bottom-control-panel context-action-bar">
-      <!-- 1. 城鎮情境操作群組 -->
-      <div id="context-actions-town" class="context-actions-group hidden">
-        <button class="act-btn context-btn" data-action="send-cmd" data-cmd="rest" title="凝神打坐吐納，加快氣血與真元回復">🌿 打坐 (rest)</button>
-        <button class="act-btn context-btn" data-action="send-cmd" data-cmd="look" title="仔細環視當前客棧街道與生靈">👀 環顧 (look)</button>
-        <button class="act-btn context-btn" data-action="send-cmd" data-cmd="get all" title="拾取當前地面所有散落靈物">📦 拾取 (get all)</button>
-        <button class="act-btn context-btn" data-action="toggle-cmd-input" title="開啟或隱藏 MUD 指令輸入框">💬 指令 (/)</button>
-      </div>
+      <!-- 1. 城鎮情境操作群組 (已收納於羅盤周邊，杜絕 footer 重複佔位) -->
+      <div id="context-actions-town" class="context-actions-group hidden"></div>
 
-      <!-- 2. 地牢探索情境操作群組 -->
-      <div id="context-actions-dungeon" class="context-actions-group">
-        <button class="act-btn context-btn" data-action="trigger-inspect" title="凝神探查正前方地塊 (I)">👁️ 探查 (I)</button>
-        <button class="act-btn context-btn" data-action="trigger-rest" title="凝神調息 (R)">🌿 調息 (R)</button>
-        <button class="act-btn context-btn btn-bag" data-action="toggle-bag" title="開啟隊伍公共行囊 (B)">🎒 行囊 (B)</button>
-        <button class="act-btn context-btn" data-action="toggle-party" title="開啟仙道總覽・功能選單 (C / P)">📜 選單 (C)</button>
-      </div>
+      <!-- 2. 地牢探索情境操作群組 (已收納於羅盤周邊，杜絕 footer 重複佔位) -->
+      <div id="context-actions-dungeon" class="context-actions-group hidden"></div>
 
       <!-- 3. 戰鬥交鋒情境操作群組 -->
       <div id="context-actions-battle" class="context-actions-group hidden">
@@ -519,7 +569,7 @@
 
       <!-- 中段：情境指引與狀態標籤 -->
       <div id="footer-hint-bar" class="footer-hint-bar">
-        <span id="footer-hint-text" class="footer-hint-text">💡 WASD: 移動 ‧ I: 探查 ‧ R: 調息 ‧ B: 行囊 ‧ C: 選單 ‧ 1~5: 招式</span>
+        <span id="footer-hint-text" class="footer-hint-text">💡 WASD: 移動 ‧ 羅盤點擊 ‧ I: 探查 ‧ R: 調息 ‧ B: 行囊 ‧ C: 選單 ‧ 1~5: 招式</span>
       </div>
 
       <!-- 右段：指令輸入框開關與常駐按鈕 -->

@@ -221,7 +221,7 @@ body, html {
 }
 
 .stage-left-container {
-  flex: 1.4;
+  flex: 3;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -237,7 +237,7 @@ body, html {
 }
 
 .log-and-battle-area {
-  flex: 1;
+  flex: 2;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -515,6 +515,62 @@ body, html {
   display: flex;
   align-items: center;
 }
+
+/* 地牢主舞台內容雙列/自適應流式佈局 */
+.dungeon-stage-content {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.dungeon-stage-controls {
+  flex: 1;
+  min-width: 220px;
+  max-width: 290px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dungeon-compass-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* 羅盤 3x3 隅角快捷操作按鈕 (探查、調息、行囊、選單/拾取) */
+.compass-corner-btn {
+  background: #141c2b;
+  border: 1px solid #233148;
+  color: #cbd5e1;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-xs);
+  padding: 4px;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.compass-corner-btn:hover {
+  background: #1e293b;
+  border-color: #38bdf8;
+  color: #f8fafc;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(56, 189, 248, 0.25);
+}
+
+.compass-corner-nw { grid-column: 1; grid-row: 1; }
+.compass-corner-ne { grid-column: 3; grid-row: 1; }
+.compass-corner-sw { grid-column: 1; grid-row: 3; }
+.compass-corner-se { grid-column: 3; grid-row: 3; }
 
 /* 右側：冒險與戰鬥文字日誌 */
 #log {

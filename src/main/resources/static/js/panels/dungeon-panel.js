@@ -148,6 +148,12 @@ export function renderMinimap(dungeon) {
     forwardInspect.innerText = dungeon.forwardInspection || '【前方無障礙】';
   }
 
+  const compassCenter = document.getElementById('dungeon-compass-center');
+  if (compassCenter) {
+    const arrow = dungeon.directionArrow || '🧭';
+    compassCenter.innerHTML = `<span class="arrow-glow" style="font-size: 18px;">${escapeHtml(arrow)}</span>`;
+  }
+
   gridContainer.innerHTML = '';
   const w = dungeon.width || 10;
   const h = dungeon.height || 10;

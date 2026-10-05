@@ -221,7 +221,7 @@ body, html {
 }
 
 .stage-left-container {
-  flex: 1.4;
+  flex: 3;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -237,7 +237,7 @@ body, html {
 }
 
 .log-and-battle-area {
-  flex: 1;
+  flex: 2;
   min-width: 0;
   display: flex;
   flex-direction: column;

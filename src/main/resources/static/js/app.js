@@ -232,14 +232,14 @@ export function updateContextActionBar(mode, inBattle) {
     if (dungeonActions) dungeonActions.classList.add('hidden');
     if (townActions) townActions.classList.remove('hidden');
     if (hintText) {
-      hintText.innerText = '🏮 城鎮休整中 ‧ 點擊道路/NPC 互動 ‧ rest: 調息 ‧ look: 環顧 ‧ C: 選單 ‧ B: 行囊';
+      hintText.innerText = '🏮 城鎮休整中 ‧ WASD/羅盤移動 ‧ 點擊生靈交談 ‧ rest: 打坐 ‧ look: 環顧 ‧ C: 選單 ‧ B: 行囊';
     }
   } else {
     if (battleActions) battleActions.classList.add('hidden');
     if (townActions) townActions.classList.add('hidden');
     if (dungeonActions) dungeonActions.classList.remove('hidden');
     if (hintText) {
-      hintText.innerText = '🧭 靈境探索中 ‧ WASD: 步進 ‧ I: 探查 ‧ R: 調息 ‧ B: 行囊 ‧ C: 選單 ‧ 1~5: 招式';
+      hintText.innerText = '🧭 靈境探索中 ‧ WASD/羅盤步進 ‧ I: 探查 ‧ R: 調息 ‧ B: 行囊 ‧ C: 選單 ‧ 1~5: 招式';
     }
   }
 }
@@ -634,6 +634,11 @@ export function initEventDelegation() {
       case 'town-move':
         sendTownMove(target.getAttribute('data-dir'));
         break;
+      case 'step': {
+        const stepDir = target.getAttribute('data-step');
+        if (stepDir) sendStep(stepDir);
+        break;
+      }
       case 'party-formation-header':
         if (window.triggerFormationAction) window.triggerFormationAction();
         else sendCmd('formation');
