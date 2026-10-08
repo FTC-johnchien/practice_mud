@@ -13,7 +13,7 @@ import { renderTownNav, normalizeTownCapability } from './panels/town-panel.js';
 import { renderMinimap, applyRadarPosition, updateRadarModeBtn, toggleRadarPosition, toggleRadarViewMode } from './panels/dungeon-panel.js';
 import { renderPartyHud, selectPartyMember } from './panels/party-hud-panel.js';
 import { renderBattleArena, renderBattlePartyQuickBar, hideBattleArena, selectBattleTarget, toggleBattleMode, selectPartyMemberForSkill } from './panels/battle-panel.js';
-import { appendLog, clearLog } from './panels/message-log-panel.js';
+import { appendLog, clearLog, filterLog, toggleLogCollapse, initMessageLogControls, updateTicker } from './panels/message-log-panel.js';
 import { fxDirector } from './fx/battle-fx-director.js';
 
 window.fxDirector = fxDirector;
@@ -90,6 +90,17 @@ import {
   closeGuideModal,
   updateContinueButtonLabel
 } from './modals/save-modal.js';
+
+import {
+  showVictoryModal,
+  closeVictoryModal,
+  flipAllLoots,
+  isVictoryModalOpen
+} from './modals/victory-modal.js';
+
+window.onBattleVictory = function(data) {
+  showVictoryModal(data);
+};
 
 const drpgState = store.getState();
 
@@ -457,6 +468,14 @@ export function initKeyboardControls() {
     const key = e.key.toLowerCase();
 
     // 3. 快捷鍵轉至文字指令輸入 (開啟開發者終端)
+    if (isVictoryModalOpen()) {
+      if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter' || e.code === 'Space') {
+        e.preventDefault();
+        closeVictoryModal();
+        return;
+      }
+    }
+
     if (key === '/' || e.key === 'Enter') {
       e.preventDefault();
       toggleDevConsole(true);
@@ -465,6 +484,10 @@ export function initKeyboardControls() {
 
     // 4. 戰鬥中與非戰鬥共通快捷鍵
     if (e.key === 'Escape') {
+      if (isVictoryModalOpen()) {
+        closeVictoryModal();
+        return;
+      }
       if (store.get('isDevConsoleOpen')) {
         toggleDevConsole(false);
         return;
@@ -522,6 +545,23 @@ export function initKeyboardControls() {
       return;
     }
 
+export function triggerFormationUltimate() {
+  const lastParty = store.get('lastParty');
+  const energy = lastParty ? (lastParty.formationEnergy || 0) : 0;
+  const btn = document.getElementById('footer-ult-btn');
+  if (energy < 100) {
+    if (btn) {
+      btn.classList.remove('react-shake');
+      void btn.offsetWidth;
+      btn.classList.add('react-shake');
+      setTimeout(() => btn.classList.remove('react-shake'), 400);
+    }
+    updateTicker(`⚠️ 陣法靈威不足 (${energy}/100)，戰鬥中交鋒命中或受創蓄滿 100 方可施展奧義！`);
+    return;
+  }
+  sendCmd('formation cast');
+}
+
     // 6. 戰鬥中快捷鍵
     const lastBattle = store.get('lastBattle');
     if (lastBattle && lastBattle.inBattle) {
@@ -530,7 +570,7 @@ export function initKeyboardControls() {
         sendCmd('battle fight');
       } else if (key === 'u') {
         e.preventDefault();
-        sendCmd('formation cast');
+        triggerFormationUltimate();
       } else if (key === 't') {
         e.preventDefault();
         sendCmd('battle target 0');
@@ -571,7 +611,7 @@ export function initKeyboardControls() {
       triggerRestAction();
     } else if (key === 'u') {
       e.preventDefault();
-      sendCmd('formation cast');
+      triggerFormationUltimate();
     }
   });
 
@@ -682,7 +722,11 @@ export function initEventDelegation() {
         break;
       case 'send-cmd': {
         const cmd = target.getAttribute('data-cmd');
-        if (cmd) sendCmd(cmd);
+        if (cmd === 'formation cast') {
+          triggerFormationUltimate();
+        } else if (cmd) {
+          sendCmd(cmd);
+        }
         break;
       }
       case 'trigger-inspect':
@@ -692,6 +736,17 @@ export function initEventDelegation() {
       case 'trigger-rest':
         if (window.triggerRestAction) window.triggerRestAction();
         else sendCmd('rest');
+        break;
+      case 'filter-log': {
+        const cat = target.getAttribute('data-cat');
+        if (cat) filterLog(cat);
+        break;
+      }
+      case 'toggle-log-collapse':
+        toggleLogCollapse();
+        break;
+      case 'clear-log':
+        clearLog();
         break;
       case 'toggle-cmd-input': {
         const wrap = document.getElementById('cmd-input-container');
@@ -706,6 +761,12 @@ export function initEventDelegation() {
       }
       case 'handle-enter':
         if (window.handleEnter) window.handleEnter();
+        break;
+      case 'close-victory-modal':
+        closeVictoryModal();
+        break;
+      case 'flip-all-loots':
+        flipAllLoots();
         break;
     }
   });
@@ -745,6 +806,7 @@ if (typeof window !== 'undefined') {
 function setupApp() {
   initKeyboardControls();
   initEventDelegation();
+  initMessageLogControls();
   applyRadarPosition();
   updateRadarModeBtn();
   setTimeout(() => {

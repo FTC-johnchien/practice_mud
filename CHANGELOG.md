@@ -8,6 +8,52 @@
 
 ## 📌 最新里程碑 (Latest Releases)
 
+### [2026-10-08] 修復選單文字溢出、實裝防禦判定動態差異化、陣法奧義全場演出與金剛怒目嘲諷光環
+- **修復點選選單文字溢出左側舞台問題 (圖 1 Bug 修復)**：
+  - 原因：在城鎮點擊「選單 (C)」時，前端同時彈出圖形化選單並發送了向後端請求純文字 `party` 的指令；後端回傳 50 行長 ASCII 文本，且因右側日誌欄位 flex 項目缺少 `overflow: hidden` 與 `min-width: 0`，長字元跨越溢出高達 500px，覆蓋了左側客棧舞台與 NPC 按鈕。
+  - 修正：[`style-01-tokens-and-shell.css`](./src/main/resources/static/css/style-01-tokens-and-shell.css) 為 `.log-and-battle-area` 加上 `min-width: 0; width: 25%; overflow: hidden;`，`#log` 加上 `overflow-x: hidden; overflow-wrap: anywhere; word-break: break-word;`；並在 [`party-modal.js`](./src/main/resources/static/js/modals/party-modal.js) 移除多餘的 `send('party')`，點選選單直接彈出沉浸式圖形化模態視窗，徹底消除純文字覆蓋舞台。
+- **戰鬥防禦判定動態差異化（被擊中 / 閃避 / 招架 / 格擋）(圖 2 視覺增強)**：
+  - **格擋 (BLOCKED)**：實裝 `.fx-shield-block`，目標面前升起玄鐵金光護盾光環，吸收衝擊波紋；卡片觸發縮放沉穩脈衝。
+  - **招架 (PARRIED)**：實裝 `.fx-parry-sparks`，雙刃拼刀金鐵交鳴四濺火星；卡片觸發左右傾斜回架動態。
+  - **閃避 (DODGED)**：實裝 `.fx-dodge-mist`，觸發太極殘影步法與流雲青煙；卡片觸發向側方快速位移滑動。
+  - **暴擊 (CRIT)**：實裝 `.fx-crit-burst`，目標遭受猩紅撕裂血煞爆裂衝擊；卡片觸發劇烈震顫。
+  - 整合至 [`style-07-battle-fx.css`](./src/main/resources/static/css/style-07-battle-fx.css)、[`fx-presets.js`](./src/main/resources/static/js/fx/fx-presets.js) 與 [`battle-fx-director.js`](./src/main/resources/static/js/fx/battle-fx-director.js)。
+- **陣法奧義（U）狀態視覺化與全場大招演出 (圖 2 體驗修復)**：
+  - 原因：陣法奧義需滿 100 靈威方可施放，截圖中靈威為 50/100，原先按鈕固定顯示可按且無進度提示，點擊後僅在日誌回傳一行文字，在淡化日誌模式下易被誤解為「沒有效果 / 未實作」；且原後端釋放時未發送結構化 `BattleEvent`。
+  - 修正：
+    1. 後端 [`DrpgBattleService.java`](./src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgBattleService.java) 於施展陣法奧義時發布全場 `BattleEvent`（辟邪金光橫掃 / 暗蝕星蝕覆蓋），並廣播 `BattleEventsDto`。
+    2. 前端 [`battle-panel.js`](./src/main/resources/static/js/panels/battle-panel.js) 連動底欄 `#footer-ult-btn`：靈威未滿 100 時顯示置灰與蓄力進度 `⚡ 陣法奧義 [X/100] (U)`；滿 100 靈威時切換為金色流光呼吸脈衝 `⚡ 陣法奧義【就緒!】(U)`。
+    3. 前端 [`app.js`](./src/main/resources/static/js/app.js) 在按快捷鍵 `U` 或點擊按鈕時增加攔截：若靈威不足，按鈕抖動並在 Ticker 提示「⚠️ 陣法靈威不足 (X/100)，戰鬥中交鋒蓄滿 100 方可施展奧義！」，反饋清晰明瞭。
+- **金剛怒目轉型全體嘲諷震懾光環**：
+  - 原因：金剛怒目本質為群體吸引仇恨技能，但此前後端發送了 `damage: 0` 的打擊事件，前端對全體怪物播放了普通武器切口與受傷晃動，看似全體傷害攻擊。
+  - 修正：後端 [`DrpgCombatLoop.java`](./src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java) 將事件 `damageType` 設為 `"TAUNT"`、`fxKey` 設為 `"taunt_roar"`；前端特效導演 [`battle-fx-director.js`](./src/main/resources/static/js/fx/battle-fx-director.js) 與 [`floating-text.js`](./src/main/resources/static/js/fx/floating-text.js) 改為在施法者周圍爆發金剛獅子吼金色震懾光環，怪物頭頂彈出「💢 仇恨鎖定」警示並觸發挑釁紅光邊框微晃，不播放傷害刀光。
+- **後端狀態機與 Telegraph 階段 (`BattleEnemy`, `DrpgCombatLoop`)**：
+  - 擴充 [`BattleEnemy.java`](./src/main/java/com/example/htmlmud/domain/dungeon/battle/BattleEnemy.java) 新增 `currentIntentIcon`、`currentIntentName`、`currentIntentType`、`isCasting`、`castDurationMs`、`castRemainingMs`、`isInterruptible` 等意圖管理欄位，支援 `startIntent(...)`、`clearIntent()` 與 `getCastRemainingMs()`。
+  - 重構 [`DrpgCombatLoop.java`](./src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java)，引入攻擊前 1500ms **Telegraph 預告視窗**：敵人在攻擊前預先決定攻擊招式與目標隊員，並啟動蓄力倒數；遭眩暈時立即中斷吟唱並廣播打斷事件；普通命中時清除意圖並無縫進入下個行動循環。
+- **視圖數據傳遞向後相容 (`BattleEnemyViewDto`)**：
+  - 於 [`BattleEnemyViewDto.java`](./src/main/java/com/example/htmlmud/domain/dungeon/dto/BattleEnemyViewDto.java) 擴充意圖欄位，並保留現有所有過載建構子，委派全參建構子，確保 100% 舊代碼與測試相容。
+  - 於 [`DrpgBattleService.java`](./src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgBattleService.java) 的 `createBattleView` 精確映射敵方意圖與即時剩餘蓄力毫秒。
+- **前端敵方卡片視覺呈現 (`battle-panel.js`, `style-07-battle-fx.css`)**：
+  - 各規格怪物卡片（1x1、2x2、3x3、1x3、1x5）新增專屬意圖容器 `.enemy-intent-container`，即時渲染意圖圖示、招式名稱、鎖定目標標籤（`➔ 隊員名`）與可斷招標籤（`可斷`）。
+  - 新增動態蓄力進度條 `.enemy-cast-track` 與 `.enemy-cast-fill`，區分普通物理 (`intent-bar-physical`)、重擊危險 (`intent-bar-heavy`)、法術咒道 (`intent-bar-spell`)、深淵暗蝕 (`intent-bar-aberration`) 等炫彩流光與呼吸動態。
+  - 重擊與深淵蓄力時自動觸發怪物卡片危險紅色脈衝光暈（`.intent-danger-telegraph`）。
+  - 前端 In-place 更新循環保持零閃爍，動態平滑更新意圖與蓄力寬度。
+- **單元測試驗證**：新增專屬單元測試 [`EnemyIntentTest.java`](./src/test/java/com/example/htmlmud/EnemyIntentTest.java)，全專案 252 個單元測試 100% 綠燈通過。
+
+### [2026-10-08] 實裝戰鬥大捷翻牌視窗、經驗長條充能與境界突破特效 (BATTLE-RESULT-01, P2)
+- **結構化大捷事件載荷 (`BattleVictoryDto`)**：後端 [`DrpgRewardService.java`](./src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java) 於大捷時發送結構化 `BattleVictoryDto`，攜帶戰鬥 ID、全員修為、靈石獲得、隊員突破明細 (`MemberLevelUpDto`) 與掉落物清單 (`BattleLootDto`)，純文字 Log 收斂為單行摘要，杜絕洗版。
+- **戰後結算模態視窗 (`#battle-victory-modal`)**：於 [`index.html`](./src/main/resources/static/index.html) 與 [`style-07-battle-fx.css`](./src/main/resources/static/css/style-07-battle-fx.css) 打造暗色仙俠金光橫幅視覺視窗，支援自適應光暈呼吸動畫與 Space / Enter / Esc 便捷關閉。
+- **全員修為長條充能與境界突破光圈**：[`victory-modal.js`](./src/main/resources/static/js/modals/victory-modal.js) 動態渲染全隊成員修為增長，進度條帶平滑 CSS 動畫；升級成員浮現「✨ 境界突破！」金光閃爍標籤與數值成長明細。
+- **戰利品 3D 翻牌動態 (3D Card Flip)**：戰利品初始為太極道紋「☯️ 秘寶封印」背面，支援 200ms 階梯式自動翻牌與點擊翻面，依品質（凡品/下品/中品/上品/極品）展現對應光暈流光（Common 到 Legendary）。
+- **無障礙降級與系統穩固**：支援 `prefers-reduced-motion` 動畫降級；完善後端戰鬥生命週期與虛擬執行緒隔離，全專案 250 項單元測試 100% 綠燈通過。
+
+### [2026-10-08] 落地純文字日誌淡化與主舞台空間解放 (LOG-DIM-01, P1)
+- **主舞台空間釋放 (75% vs 25%)**：重構 [`style-01-tokens-and-shell.css`](./src/main/resources/static/css/style-01-tokens-and-shell.css)，將 `.stage-left-container`（城鎮/地牢/戰場主舞台）擴增至 75% 佔比，`.log-and-battle-area`（文字日誌）收斂至 25% 輔助資訊欄（限制 max-width: 380px），徹底扭轉純文字 MUD 視覺權重。
+- **一鍵摺疊日誌模式 (`.log-collapsed`)**：支援一鍵摺疊日誌面板，主舞台即刻擴展至 **100% 滿版沉浸畫面**，並記住使用者偏好至 `localStorage`。
+- **底部單行水墨跑馬燈 (`#hud-event-ticker`)**：於主舞台小隊 HUD 上方新增單行事件跑馬燈，日誌即使摺疊，也能即時呈現最新一筆戰報或劇情動態，點擊跑馬燈可秒速展開日誌。
+- **日誌工具列與分類過濾 Tab**：日誌頂部新增【全部】、【⚔️ 戰鬥】、【💬 劇情】、【⚙️ 系統】篩選按鈕與清空日誌按鈕，避免戰鬥跳字刷屏淹沒劇情。
+- **前端代碼安全**：[`message-log-panel.js`](./src/main/resources/static/js/panels/message-log-panel.js) 與 [`app.js`](./src/main/resources/static/js/app.js) 實裝自動類別偵測與 CSP 事件委派，Node.js 語法校驗零錯誤，全單元測試 100% 綠燈通過。
+
 ### [2026-10-02] 落地戰鬥「一次擲骰圓桌判定 (One-Roll Combat Table)」(Phase 3.1, P1)
 - **一次擲骰連續累積圓桌**：重構 [`DefenseResolver.java`](./src/main/java/com/example/htmlmud/domain/dungeon/battle/DefenseResolver.java)，消除傳統 `if-else` 鏈之優先序偏倚，採用單一隨機浮點數 $R \in [0.0, 1.0)$，依標準圓桌扇區結算：
   $$\text{[Miss]} \to \text{[Dodge]} \to \text{[Parry]} \to \text{[Block]} \to \text{[Crit]} \to \text{[Normal Hit]}$$

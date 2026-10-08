@@ -21,6 +21,14 @@ import com.example.htmlmud.domain.party.model.TacticsRule;
 import com.example.htmlmud.domain.party.model.TacticsTarget;
 import com.example.htmlmud.domain.model.enums.BuffCategory;
 import com.example.htmlmud.domain.model.enums.BuffType;
+import com.example.htmlmud.domain.model.enums.MobRank;
+import com.example.htmlmud.domain.model.enums.WeaponType;
+import com.example.htmlmud.domain.dungeon.battle.event.BattleEvent;
+import com.example.htmlmud.domain.dungeon.battle.event.BattleEventType;
+import com.example.htmlmud.domain.dungeon.battle.event.BattleHit;
+import com.example.htmlmud.domain.dungeon.battle.event.FxShape;
+import com.example.htmlmud.domain.dungeon.battle.event.HitOutcome;
+import com.example.htmlmud.domain.dungeon.battle.event.UnitRef;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -351,9 +359,9 @@ public class DrpgCombatLoop {
                   null,
                   moveName,
                   wt.name(),
-                  "PHYSICAL",
+                  resolveWeaponDamageType(wt),
                   com.example.htmlmud.domain.dungeon.battle.event.FxShape.SINGLE,
-                  null,
+                  "weapon_" + wt.name().toLowerCase(),
                   java.util.List.of(new com.example.htmlmud.domain.dungeon.battle.event.BattleHit(
                       new com.example.htmlmud.domain.dungeon.battle.event.UnitRef(com.example.htmlmud.domain.dungeon.battle.event.UnitRef.Side.ENEMY, target.getId(), targetIdx >= 0 ? targetIdx : 0),
                       com.example.htmlmud.domain.dungeon.battle.event.HitOutcome.HIT,
@@ -378,17 +386,63 @@ public class DrpgCombatLoop {
 
         if (ctx.isOver()) break;
 
-        // 2. 敵方怪物自動攻擊 (包含深淵畸變體)
+        // 2. 敵方怪物自動攻擊 (包含深淵畸變體) 與行為預告 (ENEMY-INTENT-01)
         for (BattleEnemy enemy : ctx.getEnemies()) {
-          if (!enemy.isAlive() || enemy.isStunned() || ctx.isOver()) continue;
+          if (!enemy.isAlive() || ctx.isOver()) continue;
+
+          // 眩暈狀態檢查：若正在蓄力則打斷
+          if (enemy.isStunned()) {
+            if (enemy.isCasting()) {
+              enemy.clearIntent();
+              broadcastLog(player, ctx, "\u001B[1;33m💫 " + enemy.getName() + " 陷入眩暈，蓄力打擊被迫中斷！\u001B[0m");
+            }
+            continue;
+          }
+
+          // 初始化初始攻擊倒數
+          if (enemy.getNextAttackTime() == 0) {
+            enemy.setNextAttackTime(now + Math.min(enemy.getAttackIntervalMs(), ThreadLocalRandom.current().nextLong(800, 1600)));
+          }
+
+          // Telegraph 行為預告階段：在攻擊前 1500ms 預告意圖、鎖定目標、啟動蓄力條
+          long timeUntilAttack = enemy.getNextAttackTime() - now;
+          if (enemy.getCurrentIntentName() == null && timeUntilAttack <= 1500) {
+            PartyMember prospectiveTarget = tacticsService.selectPartyTarget(ctx, enemy);
+            if (prospectiveTarget != null && prospectiveTarget.isAlive()) {
+              String prospectiveMove = tacticsService.selectEnemyMove(enemy);
+              String icon = "🗡️";
+              String type = "PHYSICAL";
+              String moveDisplayName = prospectiveMove != null ? prospectiveMove : "揮砍攻擊";
+
+              if (enemy.getId() != null && enemy.getId().startsWith("aberration-")) {
+                icon = "👁️";
+                type = "ABERRATION";
+                moveDisplayName = "不可名狀凝視";
+              } else if (enemy.isLarge() || (enemy.getRank() != null && enemy.getRank() != MobRank.NORMAL)) {
+                icon = "⚔️";
+                type = "HEAVY";
+                if (prospectiveMove == null) moveDisplayName = "狂暴猛擊";
+              } else if (prospectiveMove != null && (prospectiveMove.contains("咒") || prospectiveMove.contains("法") || prospectiveMove.contains("雷") || prospectiveMove.contains("火"))) {
+                icon = prospectiveMove.contains("雷") ? "⚡" : "🔥";
+                type = "SPELL";
+              } else if (prospectiveMove != null && (prospectiveMove.contains("撕咬") || prospectiveMove.contains("爪") || prospectiveMove.contains("毒"))) {
+                icon = "🐾";
+                type = "PHYSICAL";
+              }
+
+              enemy.startIntent(icon, moveDisplayName, type, "SINGLE", Math.max(500, timeUntilAttack), true);
+            }
+          }
 
           if (now >= enemy.getNextAttackTime()) {
+            String preparedMove = enemy.getCurrentIntentName();
+            enemy.clearIntent();
             enemy.setNextAttackTime(now + enemy.getAttackIntervalMs());
 
             PartyMember targetMember = tacticsService.selectPartyTarget(ctx, enemy);
             if (targetMember != null && targetMember.isAlive()) {
               int rawDmg = tacticsService.calculateEnemyDamage(enemy, targetMember);
-              String moveName = tacticsService.selectEnemyMove(enemy);
+              String moveName = preparedMove != null ? preparedMove : tacticsService.selectEnemyMove(enemy);
 
               // 透過 DefenseResolver 執行被動心法檢定 (DODGE / PARRY / FORCE)
               var defenseRes = defenseResolver.resolveEnemyAttack(enemy, targetMember, rawDmg, moveName);
@@ -611,6 +665,47 @@ public class DrpgCombatLoop {
     return false;
   }
 
+  public static String resolveWeaponDamageType(WeaponType wt) {
+    if (wt == null) return "PHYSICAL";
+    return switch (wt) {
+      case SWORD, BLADE, AXE, POLEAXE, KATANA, SABER, SCIMITAR -> "SLASH";
+      case SPEAR, POLEARM, HALBERD, DAGGER, DIRK, KNIFE, STILETTO, BOW, CROSSBOW, JAVELIN, DART, SHURIKEN -> "PIERCE";
+      case BLUNT, HAMMER, MACE, MAUL, CLUB, FLAIL, STONE -> "BLUNT";
+      case STAFF, WAND, ROD, SCEPTER -> "MAGIC";
+      default -> "PHYSICAL";
+    };
+  }
+
+  public static String resolveSkillDamageType(PartyMemberSkill skill, PartyMember member) {
+    if (skill == null) return "PHYSICAL";
+    if (skill.getDamageType() != null && !skill.getDamageType().isBlank() && !"PHYSICAL".equalsIgnoreCase(skill.getDamageType())) {
+      return skill.getDamageType().toUpperCase();
+    }
+    if (skill.getTags() != null) {
+      for (String tag : skill.getTags()) {
+        String upper = tag.toUpperCase();
+        if (upper.equals("FIRE") || upper.equals("ICE") || upper.equals("LIGHTNING")
+            || upper.equals("POISON") || upper.equals("HOLY") || upper.equals("DARK")
+            || upper.equals("MAGIC") || upper.equals("SONIC") || upper.equals("SLASH")
+            || upper.equals("PIERCE") || upper.equals("BLUNT")) {
+          return upper;
+        }
+      }
+    }
+    String combined = ((skill.getId() != null ? skill.getId() : "") + " " + (skill.getName() != null ? skill.getName() : "")).toLowerCase();
+    if (combined.contains("fire") || combined.contains("炎") || combined.contains("火")) return "FIRE";
+    if (combined.contains("ice") || combined.contains("frost") || combined.contains("冰") || combined.contains("寒")) return "ICE";
+    if (combined.contains("thunder") || combined.contains("lightning") || combined.contains("雷") || combined.contains("電")) return "LIGHTNING";
+    if (combined.contains("holy") || combined.contains("聖") || combined.contains("光") || combined.contains("甘露")) return "HOLY";
+    if (combined.contains("dark") || combined.contains("shadow") || combined.contains("暗") || combined.contains("煞") || combined.contains("魔")) return "DARK";
+    if (combined.contains("poison") || combined.contains("毒")) return "POISON";
+
+    if (member != null && member.getMainHandWeaponType() != null) {
+      return resolveWeaponDamageType(member.getMainHandWeaponType());
+    }
+    return "PHYSICAL";
+  }
+
   /**
    * 執行主動技能效果 (支援單體/AOE、治療、護盾、Buff、嘲諷、暈眩及傷害加成)
    */
@@ -625,18 +720,45 @@ public class DrpgCombatLoop {
     ctx.getParty().addFormationEnergy(8);
 
     String tag = (prefixTag != null && !prefixTag.isEmpty()) ? prefixTag + " " : "";
+    long now = System.currentTimeMillis();
+    int memberIdx = ctx.getParty().getMembers().indexOf(member);
+    String weaponType = member.getMainHandWeaponType() != null ? member.getMainHandWeaponType().name() : "UNARMED";
+    String skillDmgType = resolveSkillDamageType(skill, member);
 
     if (skill.isHeal()) {
       if (skill.isAoe()) {
+        List<BattleHit> hits = new java.util.ArrayList<>();
         for (PartyMember m : ctx.getParty().getMembers()) {
           if (m.isAlive()) {
             m.heal(skill.getHealAmount());
             if (skill.getSanRestore() > 0) m.restoreSan(skill.getSanRestore());
+            int mIdx = ctx.getParty().getMembers().indexOf(m);
+            hits.add(new BattleHit(
+                new UnitRef(UnitRef.Side.PARTY, m.getId(), mIdx >= 0 ? mIdx : 0),
+                HitOutcome.HIT,
+                skill.getHealAmount(),
+                0,
+                false
+            ));
           }
         }
         member.addThreat(skill.getHealAmount());
         distributeHealingThreatToAllEnemies(ctx, member.getId(), skill.getHealAmount());
         broadcastLog(player, ctx, "\u001B[1;32m" + tag + "✨ " + member.getName() + " 施展【" + skill.getName() + "】，甘露靈泉籠罩全隊！氣血恢復，道心安穩！\u001B[0m");
+        BattleEvent healEvent = new BattleEvent(
+            ctx.nextEventSeq(),
+            now,
+            BattleEventType.HEAL,
+            new UnitRef(UnitRef.Side.PARTY, member.getId(), memberIdx >= 0 ? memberIdx : 0),
+            skill.getId(),
+            skill.getName(),
+            weaponType,
+            "HOLY",
+            FxShape.ALLY_ALL,
+            skill.getFxKey() != null ? skill.getFxKey() : "heal_aoe",
+            hits
+        );
+        ctx.emit(healEvent);
       } else {
         PartyMember targetAlly = tacticsService.resolveAllyTarget(ctx, member,
             (tacticsTarget != null ? tacticsTarget : TacticsTarget.LOWEST_HP_ALLY), targetIdx);
@@ -645,6 +767,27 @@ public class DrpgCombatLoop {
         member.addThreat(skill.getHealAmount() / 2);
         distributeHealingThreatToAllEnemies(ctx, member.getId(), skill.getHealAmount() / 2);
         broadcastLog(player, ctx, "\u001B[1;32m" + tag + "🌿 " + member.getName() + " 運轉【" + skill.getName() + "】，一道春生靈氣注入 " + targetAlly.getName() + "，恢復 " + skill.getHealAmount() + " 點氣血！\u001B[0m");
+        int targetMemberIdx = ctx.getParty().getMembers().indexOf(targetAlly);
+        BattleEvent healEvent = new BattleEvent(
+            ctx.nextEventSeq(),
+            now,
+            BattleEventType.HEAL,
+            new UnitRef(UnitRef.Side.PARTY, member.getId(), memberIdx >= 0 ? memberIdx : 0),
+            skill.getId(),
+            skill.getName(),
+            weaponType,
+            "HOLY",
+            FxShape.ALLY_SINGLE,
+            skill.getFxKey() != null ? skill.getFxKey() : "heal_single",
+            List.of(new BattleHit(
+                new UnitRef(UnitRef.Side.PARTY, targetAlly.getId(), targetMemberIdx >= 0 ? targetMemberIdx : 0),
+                HitOutcome.HIT,
+                skill.getHealAmount(),
+                0,
+                false
+            ))
+        );
+        ctx.emit(healEvent);
       }
     } else if (skill.isShield()) {
       // 護盾防護技能 (如 金光辟邪護體)
@@ -677,15 +820,60 @@ public class DrpgCombatLoop {
       broadcastLog(player, ctx, "\u001B[1;36m" + tag + "🛡️ " + member.getName() + " 施展【" + skill.getName() + "】，為 "
           + targetAlly.getName() + " 加持辟邪護盾，凝聚 " + activeBuff.getValue() + " 點玄罡金光！（持續 " + activeBuff.getRemainingSeconds() + " 秒）\u001B[0m");
 
+      int targetMemberIdx = ctx.getParty().getMembers().indexOf(targetAlly);
+      BattleEvent shieldEvent = new BattleEvent(
+          ctx.nextEventSeq(),
+          now,
+          BattleEventType.SHIELD,
+          new UnitRef(UnitRef.Side.PARTY, member.getId(), memberIdx >= 0 ? memberIdx : 0),
+          skill.getId(),
+          skill.getName(),
+          weaponType,
+          "HOLY",
+          FxShape.ALLY_SINGLE,
+          skill.getFxKey() != null ? skill.getFxKey() : "shield",
+          List.of(new BattleHit(
+              new UnitRef(UnitRef.Side.PARTY, targetAlly.getId(), targetMemberIdx >= 0 ? targetMemberIdx : 0),
+              HitOutcome.HIT,
+              activeBuff.getValue(),
+              0,
+              false
+          ))
+      );
+      ctx.emit(shieldEvent);
+
     } else if (skill.isTaunt()) {
       ctx.setTaunt(member.getId(), 5000);
       member.addThreat(600);
+      List<BattleHit> hits = new java.util.ArrayList<>();
       for (BattleEnemy e : ctx.getEnemies()) {
         if (e.isAlive()) {
           e.setTaunt(member.getId(), 5000);
+          int eIdx = ctx.getEnemies().indexOf(e);
+          hits.add(new BattleHit(
+              new UnitRef(UnitRef.Side.ENEMY, e.getId(), eIdx >= 0 ? eIdx : 0),
+              HitOutcome.HIT,
+              0,
+              0,
+              false
+          ));
         }
       }
       broadcastLog(player, ctx, "\u001B[1;33m" + tag + "🛡️ " + member.getName() + " 爆發【" + skill.getName() + "】，金剛威儀震懾全場！所有怪物仇恨被強行吸引！\u001B[0m");
+      BattleEvent tauntEvent = new BattleEvent(
+          ctx.nextEventSeq(),
+          now,
+          BattleEventType.SKILL,
+          new UnitRef(UnitRef.Side.PARTY, member.getId(), memberIdx >= 0 ? memberIdx : 0),
+          skill.getId(),
+          skill.getName(),
+          weaponType,
+          "TAUNT",
+          FxShape.ALL,
+          "taunt_roar",
+          hits
+      );
+      ctx.emit(tauntEvent);
     } else if (skill.isBuff() || skill.isDefense()) {
       // 自身減傷或防禦 Buff (如 不動明王)
       PartyMember targetAlly = (tacticsTarget == TacticsTarget.SELF || tacticsTarget == null)
@@ -715,10 +903,33 @@ public class DrpgCombatLoop {
       distributeHealingThreatToAllEnemies(ctx, member.getId(), activeBuff.getValue() / 3);
       broadcastLog(player, ctx, "\u001B[1;33m" + tag + "⚡ " + member.getName() + " 施展【" + skill.getName() + "】，運起不動明王暗金罡氣，周身金芒流轉，生成 "
           + activeBuff.getValue() + " 點不滅金身護體！（持續 " + activeBuff.getRemainingSeconds() + " 秒）\u001B[0m");
+
+      int targetMemberIdx = ctx.getParty().getMembers().indexOf(targetAlly);
+      BattleEvent buffEvent = new BattleEvent(
+          ctx.nextEventSeq(),
+          now,
+          BattleEventType.BUFF,
+          new UnitRef(UnitRef.Side.PARTY, member.getId(), memberIdx >= 0 ? memberIdx : 0),
+          skill.getId(),
+          skill.getName(),
+          weaponType,
+          "HOLY",
+          (targetAlly == member) ? FxShape.SELF : FxShape.ALLY_SINGLE,
+          skill.getFxKey() != null ? skill.getFxKey() : "buff",
+          List.of(new BattleHit(
+              new UnitRef(UnitRef.Side.PARTY, targetAlly.getId(), targetMemberIdx >= 0 ? targetMemberIdx : 0),
+              HitOutcome.HIT,
+              activeBuff.getValue(),
+              0,
+              false
+          ))
+      );
+      ctx.emit(buffEvent);
     } else {
       // 傷害技能
       if (skill.isAoe()) {
         broadcastLog(player, ctx, "\u001B[1;36m" + tag + "🌩️ " + member.getName() + " 祭出【" + skill.getName() + "】，排山倒海的威能橫掃敵方全體！\u001B[0m");
+        List<BattleHit> hits = new java.util.ArrayList<>();
         for (BattleEnemy e : ctx.getEnemies()) {
           if (e.isAlive()) {
             int dmg = (int) (tacticsService.calculatePlayerDamage(member, e) * skill.getDamageMultiplier());
@@ -727,11 +938,36 @@ public class DrpgCombatLoop {
             e.addThreat(member.getId(), dmg + skill.getThreatBonus());
             broadcastLog(player, ctx, "\u001B[1;36m   ↳ 擊中【" + e.getName() + "】造成 " + dmg + " 點傷害！\u001B[0m");
             if (skill.isStun()) e.applyStun(skill.getStunDurationSeconds() * 1000L);
-            if (!e.isAlive()) {
+            boolean isKilled = !e.isAlive();
+            int eIdx = ctx.getEnemies().indexOf(e);
+            hits.add(new BattleHit(
+                new UnitRef(UnitRef.Side.ENEMY, e.getId(), eIdx >= 0 ? eIdx : 0),
+                HitOutcome.HIT,
+                dmg,
+                0,
+                isKilled
+            ));
+            if (isKilled) {
               broadcastLog(player, ctx, "\u001B[1;32m💥【" + e.getName() + "】在靈力轟擊下灰飛煙滅！\u001B[0m");
               ctx.checkEnemyRowAdvancement();
             }
           }
+        }
+        if (!hits.isEmpty()) {
+          BattleEvent aoeEvent = new BattleEvent(
+              ctx.nextEventSeq(),
+              now,
+              BattleEventType.SKILL,
+              new UnitRef(UnitRef.Side.PARTY, member.getId(), memberIdx >= 0 ? memberIdx : 0),
+              skill.getId(),
+              skill.getName(),
+              weaponType,
+              skillDmgType,
+              FxShape.ALL,
+              skill.getFxKey() != null ? skill.getFxKey() : "aoe_" + skillDmgType.toLowerCase(),
+              hits
+          );
+          ctx.emit(aoeEvent);
         }
         if (ctx.isAllEnemiesDead()) ctx.setState(BattleState.VICTORY);
       } else {
@@ -748,7 +984,29 @@ public class DrpgCombatLoop {
           target.addThreat(member.getId(), dmg + skill.getThreatBonus());
           if (skill.isStun()) target.applyStun(skill.getStunDurationSeconds() * 1000L);
           broadcastLog(player, ctx, "\u001B[1;33m" + tag + "🔥 " + member.getName() + " 施展【" + skill.getName() + "】，直取【" + target.getName() + "】要害，造成 " + dmg + " 點毀滅打擊！\u001B[0m");
-          if (!target.isAlive()) {
+          boolean isKilled = !target.isAlive();
+          int eIdx = ctx.getEnemies().indexOf(target);
+          BattleEvent singleSkillEvent = new BattleEvent(
+              ctx.nextEventSeq(),
+              now,
+              BattleEventType.SKILL,
+              new UnitRef(UnitRef.Side.PARTY, member.getId(), memberIdx >= 0 ? memberIdx : 0),
+              skill.getId(),
+              skill.getName(),
+              weaponType,
+              skillDmgType,
+              FxShape.SINGLE,
+              skill.getFxKey() != null ? skill.getFxKey() : "skill_" + skillDmgType.toLowerCase(),
+              List.of(new BattleHit(
+                  new UnitRef(UnitRef.Side.ENEMY, target.getId(), eIdx >= 0 ? eIdx : 0),
+                  HitOutcome.HIT,
+                  dmg,
+                  0,
+                  isKilled
+              ))
+          );
+          ctx.emit(singleSkillEvent);
+          if (isKilled) {
             broadcastLog(player, ctx, "\u001B[1;32m💥【" + target.getName() + "】慘叫倒地氣絕！\u001B[0m");
             ctx.checkEnemyRowAdvancement();
             if (ctx.isAllEnemiesDead()) ctx.setState(BattleState.VICTORY);

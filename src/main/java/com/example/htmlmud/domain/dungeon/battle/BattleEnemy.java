@@ -88,6 +88,50 @@ public class BattleEnemy implements Buffable {
   private String dodgeSkillId;
   private String parrySkillId;
 
+  // Telegraph / Intent 欄位 (ENEMY-INTENT-01)
+  private String currentIntentIcon;
+  private String currentIntentName;
+  @Builder.Default
+  private String currentIntentType = "PHYSICAL";
+  @Builder.Default
+  private String intentTargetScope = "SINGLE";
+  @Builder.Default
+  private boolean isCasting = false;
+  @Builder.Default
+  private long castStartTime = 0;
+  @Builder.Default
+  private long castDurationMs = 0;
+  @Builder.Default
+  private boolean interruptible = true;
+
+  public void startIntent(String icon, String name, String type, String scope, long durationMs, boolean interruptible) {
+    this.currentIntentIcon = icon;
+    this.currentIntentName = name;
+    this.currentIntentType = (type != null && !type.isBlank()) ? type : "PHYSICAL";
+    this.intentTargetScope = (scope != null && !scope.isBlank()) ? scope : "SINGLE";
+    this.castDurationMs = Math.max(0, durationMs);
+    this.castStartTime = System.currentTimeMillis();
+    this.isCasting = this.castDurationMs > 0;
+    this.interruptible = interruptible;
+  }
+
+  public void clearIntent() {
+    this.currentIntentIcon = null;
+    this.currentIntentName = null;
+    this.currentIntentType = "PHYSICAL";
+    this.intentTargetScope = "SINGLE";
+    this.isCasting = false;
+    this.castDurationMs = 0;
+    this.castStartTime = 0;
+    this.interruptible = true;
+  }
+
+  public long getCastRemainingMs() {
+    if (!isCasting || castDurationMs <= 0) return 0;
+    long elapsed = System.currentTimeMillis() - castStartTime;
+    return Math.max(0, castDurationMs - elapsed);
+  }
+
   public static BattleEnemy fromTemplate(String id, MobTemplate tpl, RowPosition row, String dropId,
       TemplateReader templateReader) {
     if (tpl == null) return null;

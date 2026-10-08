@@ -63,18 +63,63 @@ function parseAnsiText(text) {
   return html;
 }
 
-export function appendLog(rawText, color) {
+// 智慧分析文本所屬分類 (戰鬥、劇情、系統)
+function detectCategory(rawText) {
+  if (!rawText) return 'system';
+  if (/造成|受創|命中|暴擊|致命|閃避|招架|格擋|氣血|真元|絕學|陣法|劍氣|撕咬|爪擊|撲咬|施展|倒下|陣亡|戰鬥/i.test(rawText)) {
+    return 'combat';
+  }
+  if (/說道|笑道|問道|嘆道|喃喃|掌櫃|客棧|福伯|老人|交談|對話|言道|低語|回覆/i.test(rawText)) {
+    return 'story';
+  }
+  return 'system';
+}
+
+// 剝除 ANSI 與 HTML 標籤取得純文字
+function stripTags(htmlOrAnsi) {
+  if (!htmlOrAnsi) return '';
+  return htmlOrAnsi
+    .replace(/\u001B\[[0-9;]*m/g, '')
+    .replace(/\[[0-9;]{1,5}m/g, '')
+    .replace(/<[^>]*>/g, '')
+    .trim();
+}
+
+let currentFilter = 'all';
+
+export function updateTicker(plainText) {
+  const tickerText = document.getElementById('hud-ticker-text');
+  if (tickerText && plainText) {
+    tickerText.innerText = plainText;
+  }
+}
+
+export function appendLog(rawText, color, explicitCat) {
   if (!rawText) return;
   const logDiv = getLogContainer();
   if (!logDiv) return;
 
+  const cat = explicitCat || detectCategory(rawText);
   const div = document.createElement('div');
+  div.className = 'log-entry';
+  div.dataset.category = cat;
   if (color) div.style.color = color;
+
+  // 檢查是否符合當前過濾規則
+  if (currentFilter !== 'all' && currentFilter !== cat) {
+    div.classList.add('filtered-out');
+  }
 
   try {
     div.innerHTML = parseAnsiText(rawText);
     logDiv.appendChild(div);
     logDiv.scrollTop = logDiv.scrollHeight;
+
+    // 同步更新底部 HUD 跑馬燈
+    const cleanText = stripTags(rawText);
+    if (cleanText) {
+      updateTicker(cleanText);
+    }
 
     // 限制行數防止記憶體溢出
     if (logDiv.childNodes.length > MAX_LOG_LINES) {
@@ -85,6 +130,53 @@ export function appendLog(rawText, color) {
   }
 }
 
+export function filterLog(category) {
+  currentFilter = category || 'all';
+  const logDiv = getLogContainer();
+  if (!logDiv) return;
+
+  // 更新所有按鈕 active 樣式
+  const btns = document.querySelectorAll('.log-filter-btn');
+  btns.forEach(btn => {
+    if (btn.dataset.cat === currentFilter) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  // 逐筆條目切換過濾
+  const entries = logDiv.querySelectorAll('.log-entry');
+  entries.forEach(entry => {
+    if (currentFilter === 'all' || entry.dataset.category === currentFilter) {
+      entry.classList.remove('filtered-out');
+    } else {
+      entry.classList.add('filtered-out');
+    }
+  });
+  logDiv.scrollTop = logDiv.scrollHeight;
+}
+
+export function toggleLogCollapse() {
+  const viewport = document.querySelector('.main-viewport');
+  if (!viewport) return;
+
+  const isCollapsed = viewport.classList.toggle('log-collapsed');
+  
+  // 更新跑馬燈切換按鈕文字
+  const tickerBtn = document.querySelector('.hud-event-ticker .ticker-toggle-btn');
+  if (tickerBtn) {
+    tickerBtn.innerText = isCollapsed ? '展開 ▴' : '收合 ▾';
+  }
+
+  // 儲存偏好至 localStorage
+  try {
+    localStorage.setItem('drpg_log_collapsed', isCollapsed ? 'true' : 'false');
+  } catch (e) {
+    // ignore
+  }
+}
+
 export function clearLog() {
   const logDiv = getLogContainer();
   if (logDiv) {
@@ -92,7 +184,27 @@ export function clearLog() {
   }
 }
 
+// 初始化日誌狀態與事件綁定
+export function initMessageLogControls() {
+  // 恢復 localStorage 偏好設定
+  try {
+    const saved = localStorage.getItem('drpg_log_collapsed');
+    if (saved === 'true') {
+      const viewport = document.querySelector('.main-viewport');
+      if (viewport) viewport.classList.add('log-collapsed');
+      const tickerBtn = document.querySelector('.hud-event-ticker .ticker-toggle-btn');
+      if (tickerBtn) tickerBtn.innerText = '展開 ▴';
+    }
+  } catch (e) {
+    // ignore
+  }
+}
+
 // 相容掛載至 window
 if (typeof window !== 'undefined') {
   window.appendHtml = appendLog;
+  window.filterLog = filterLog;
+  window.toggleLogCollapse = toggleLogCollapse;
+  window.clearLog = clearLog;
 }
+

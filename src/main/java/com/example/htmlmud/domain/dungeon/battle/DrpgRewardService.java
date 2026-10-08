@@ -126,12 +126,21 @@ public class DrpgRewardService {
 
     // 發放戰鬥修為與判定升級
     List<String> levelUpAnnouncements = new ArrayList<>();
+    List<com.example.htmlmud.domain.dungeon.dto.BattleVictoryDto.MemberLevelUpDto> levelUpDtos = new ArrayList<>();
     var xpService = getXpProgressionService();
     for (PartyMember m : ctx.getParty().getMembers()) {
       if (m.isAlive() && m.getMadnessState() != PartyMember.MadnessState.DEAD_MEAT) {
+        int oldLvl = m.getLevel();
         var res = xpService.awardExp(m, totalXp);
         if (res.isLeveledUp()) {
           levelUpAnnouncements.add(res.formatAnnouncement());
+          levelUpDtos.add(new com.example.htmlmud.domain.dungeon.dto.BattleVictoryDto.MemberLevelUpDto(
+              m.getId() != null ? m.getId() : m.getName(),
+              m.getName(),
+              oldLvl,
+              m.getLevel(),
+              res.formatAnnouncement()
+          ));
         }
       }
     }
@@ -144,6 +153,7 @@ public class DrpgRewardService {
     }
 
     List<String> droppedItemNames = new ArrayList<>();
+    List<com.example.htmlmud.domain.dungeon.dto.BattleVictoryDto.BattleLootDto> lootDtos = new ArrayList<>();
 
     // 1. 檢查是否有被擊殺的深淵畸變體，掉落【血肉道核】
     for (BattleEnemy e : ctx.getEnemies()) {
@@ -167,6 +177,10 @@ public class DrpgRewardService {
         boolean added = ctx.getParty().getInventory().addSlot(coreSlot);
         if (added) {
           droppedItemNames.add("【血肉道核・" + e.getDroppedDaoMemberName() + "】(遺留絕學: " + e.getDroppedDaoSkillName() + ")");
+          lootDtos.add(new com.example.htmlmud.domain.dungeon.dto.BattleVictoryDto.BattleLootDto(
+              coreSlot.getItemId(), coreSlot.getName(), coreSlot.getIcon(), coreSlot.getQuality(),
+              coreSlot.getCount(), coreSlot.getDescription()
+          ));
         }
       }
     }
@@ -190,6 +204,12 @@ public class DrpgRewardService {
         ctx.getParty().getInventory().addItem("mozhu_mines:elder_token", 1);
         droppedItemNames.add("【黑曜骨鐮】");
         droppedItemNames.add("【長老黑話玉牌】");
+        lootDtos.add(new com.example.htmlmud.domain.dungeon.dto.BattleVictoryDto.BattleLootDto(
+            "mozhu_mines:black_obsidian_scythe", "【黑曜骨鐮】", "⚔️", "RARE", 1, "自宋天衡異變殘軀奪得的凶煞兵刃。"
+        ));
+        lootDtos.add(new com.example.htmlmud.domain.dungeon.dto.BattleVictoryDto.BattleLootDto(
+            "mozhu_mines:elder_token", "【長老黑話玉牌】", "🏷️", "UNCOMMON", 1, "刻著晦澀道紋的長老信物。"
+        ));
       }
     }
 
@@ -198,36 +218,53 @@ public class DrpgRewardService {
       if (!e.isAlive() && e.getDropItemId() != null && (e.getTemplateId() == null || !e.getTemplateId().contains("boss_song_tianheng"))) {
         String dropItemId = e.getDropItemId();
         var opt = templateReader.findItem(dropItemId);
-        String dropName = opt.map(ItemTemplate::name).orElse(dropItemId);
+        var def = opt.map(ItemTemplate::toDefinition).orElse(null);
+        String dropName = def != null ? def.name() : dropItemId;
+        String dropIcon = def != null && def.icon() != null ? def.icon() : "📦";
+        String dropQuality = def != null && def.quality() != null ? def.quality() : "COMMON";
+        String dropDesc = def != null && def.description() != null ? def.description() : "戰鬥中繳獲的戰利品。";
         boolean added = ctx.getParty().getInventory().addItem(dropItemId, 1);
         if (added) {
           droppedItemNames.add(dropName);
+          lootDtos.add(new com.example.htmlmud.domain.dungeon.dto.BattleVictoryDto.BattleLootDto(
+              dropItemId, dropName, dropIcon, dropQuality, 1, dropDesc
+          ));
         }
       }
     }
     if (droppedItemNames.isEmpty()) {
       String fallbackId = TOMB_ITEMS.get(ThreadLocalRandom.current().nextInt(TOMB_ITEMS.size()));
       var opt = templateReader.findItem(fallbackId);
-      String dropName = opt.map(ItemTemplate::name).orElse("靈石碎片");
+      var def = opt.map(ItemTemplate::toDefinition).orElse(null);
+      String dropName = def != null ? def.name() : "靈石碎片";
+      String dropIcon = def != null && def.icon() != null ? def.icon() : "💎";
+      String dropQuality = def != null && def.quality() != null ? def.quality() : "COMMON";
+      String dropDesc = def != null && def.description() != null ? def.description() : "散落的靈性碎片。";
       if (ctx.getParty().getInventory().addItem(fallbackId, 1)) {
         droppedItemNames.add(dropName);
+        lootDtos.add(new com.example.htmlmud.domain.dungeon.dto.BattleVictoryDto.BattleLootDto(
+            fallbackId, dropName, dropIcon, dropQuality, 1, dropDesc
+        ));
       }
     }
 
     // 4. 戰後清理 (解開封印 / 移除永久死肉與異變者)
     postBattleCleanup(player, ctx);
 
-    String lootSummary = droppedItemNames.isEmpty() ? "（行囊已滿，未能裝入物品）" : String.join("、", droppedItemNames);
-
-    StringBuilder victorySb = new StringBuilder();
-    victorySb.append("\n\u001B[1;32m═══════════════════【戰鬥大捷】═══════════════════\n");
-    victorySb.append("  小隊合力斬除太陰妖邪！全員獲得修為 ").append(totalXp).append(" 點！\n");
-    for (String ann : levelUpAnnouncements) {
-      victorySb.append("  \u001B[1;33m").append(ann).append("\u001B[1;32m\n");
+    // 5. 推送結構化大捷事件給客戶端，用於渲染視覺化結算視窗
+    if (player != null) {
+      var victoryDto = new com.example.htmlmud.domain.dungeon.dto.BattleVictoryDto(
+          ctx.getBattleId(), totalXp, 0, levelUpDtos, lootDtos
+      );
+      player.sendJson(victoryDto);
     }
-    victorySb.append("  戰利品已收納入隊伍行囊：【").append(lootSummary).append("】！\n");
-    victorySb.append("══════════════════════════════════════════════════\u001B[0m\n");
-    broadcastLog(player, ctx, victorySb.toString());
+
+    // 6. 文字日誌純粹單行化 (遵守第 10 條鐵律)
+    String lootSummary = droppedItemNames.isEmpty() ? "無特殊靈物" : String.join("、", droppedItemNames);
+    broadcastLog(player, ctx, "🏆 \u001B[1;32m【戰鬥大捷】小隊合力斬除妖邪！全員獲得修為 " + totalXp + " 點，獲取戰利品：【" + lootSummary + "】！\u001B[0m");
+    for (String ann : levelUpAnnouncements) {
+      broadcastLog(player, ctx, "✨ \u001B[1;33m" + ann + "\u001B[0m");
+    }
 
     if (stateBroadcaster != null && player != null) {
       stateBroadcaster.accept(player);

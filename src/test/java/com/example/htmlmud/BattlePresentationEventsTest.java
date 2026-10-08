@@ -16,6 +16,8 @@ import com.example.htmlmud.domain.dungeon.battle.event.UnitRef;
 import com.example.htmlmud.domain.dungeon.dto.BattleEventsDto;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
+import com.example.htmlmud.domain.party.model.PartyMemberSkill;
+import com.example.htmlmud.domain.model.entity.LivingStats;
 
 class BattlePresentationEventsTest {
 
@@ -98,5 +100,62 @@ class BattlePresentationEventsTest {
     assertEquals(1, dto.events().size());
     assertEquals(HitOutcome.CRIT, dto.events().get(0).hits().get(0).outcome());
     assertTrue(dto.events().get(0).hits().get(0).killed());
+  }
+
+  @Test
+  @DisplayName("驗證全體攻擊 (AOE Skill) 正確派發多目標 BattleEvent 與 hits 清單")
+  void testAoeSkillEmitsBattleEventWithAllHits() {
+    com.example.htmlmud.domain.dungeon.battle.DrpgEnemyTacticsService tacticsService =
+        new com.example.htmlmud.domain.dungeon.battle.DrpgEnemyTacticsService();
+    com.example.htmlmud.domain.dungeon.battle.DrpgCombatLoop combatLoop =
+        new com.example.htmlmud.domain.dungeon.battle.DrpgCombatLoop(tacticsService, null, null, null, null, null);
+
+    LivingStats heroStats = new LivingStats();
+    heroStats.setMaxHp(200);
+    heroStats.setHp(200);
+
+    PartyMember hero = PartyMember.builder()
+        .id("hero-1")
+        .name("凌霜")
+        .stats(heroStats)
+        .baseMinDamage(20)
+        .baseMaxDamage(30)
+        .build();
+
+    Party party = new Party();
+    party.getMembers().add(hero);
+
+    BattleEnemy enemy1 = BattleEnemy.builder().id("e-1").name("狼怪甲").hp(50).maxHp(50).alive(true).build();
+    BattleEnemy enemy2 = BattleEnemy.builder().id("e-2").name("狼怪乙").hp(60).maxHp(60).alive(true).build();
+
+    BattleContext ctx = BattleContext.builder()
+        .battleId("b-aoe-test")
+        .party(party)
+        .enemies(new java.util.ArrayList<>(List.of(enemy1, enemy2)))
+        .build();
+
+    PartyMemberSkill aoeSkill = PartyMemberSkill.builder()
+        .id("thunder_aoe")
+        .name("九天神雷")
+        .aoe(true)
+        .damageMultiplier(1.5)
+        .tags(List.of("LIGHTNING"))
+        .build();
+
+    combatLoop.applySkillEffects(null, ctx, hero, aoeSkill, -1, "");
+
+    List<BattleEvent> events = ctx.drainEvents();
+    assertEquals(1, events.size(), "AOE 攻擊應產生 1 個包含多個 hits 的 BattleEvent");
+    BattleEvent ev = events.get(0);
+    assertEquals(BattleEventType.SKILL, ev.type());
+    assertEquals("thunder_aoe", ev.skillId());
+    assertEquals("九天神雷", ev.skillName());
+    assertEquals("LIGHTNING", ev.damageType());
+    assertEquals(FxShape.ALL, ev.shape());
+    assertEquals(2, ev.hits().size(), "hits 清單應涵蓋敵方全體 2 個存活目標");
+    assertEquals("e-1", ev.hits().get(0).target().id());
+    assertEquals("e-2", ev.hits().get(1).target().id());
+    assertTrue(ev.hits().get(0).amount() > 0);
+    assertTrue(ev.hits().get(1).amount() > 0);
   }
 }

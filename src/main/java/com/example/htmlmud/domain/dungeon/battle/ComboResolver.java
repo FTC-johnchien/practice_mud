@@ -10,6 +10,12 @@ import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
 import com.example.htmlmud.domain.party.model.CombatResourceType;
+import com.example.htmlmud.domain.dungeon.battle.event.BattleEvent;
+import com.example.htmlmud.domain.dungeon.battle.event.BattleEventType;
+import com.example.htmlmud.domain.dungeon.battle.event.BattleHit;
+import com.example.htmlmud.domain.dungeon.battle.event.FxShape;
+import com.example.htmlmud.domain.dungeon.battle.event.HitOutcome;
+import com.example.htmlmud.domain.dungeon.battle.event.UnitRef;
 
 /**
  * 小隊多人合擊技能解算器 (Party Combo / Synergy Resolver)
@@ -141,28 +147,77 @@ public class ComboResolver {
     String participantNames = String.join(" 與 ", names);
 
     // 4. 傷害結算
+    long now = System.currentTimeMillis();
+    PartyMember primary = participants.get(0);
+    int primaryIdx = party.getMembers().indexOf(primary);
+    String weaponType = primary.getMainHandWeaponType() != null ? primary.getMainHandWeaponType().name() : "SWORD";
+
     if (skill.isHeal()) {
       int healAmt = Math.max(80, (int) (skill.getHealAmount() > 0 ? skill.getHealAmount() : totalAtk * 1.5));
+      List<BattleHit> hits = new ArrayList<>();
       for (PartyMember m : party.getMembers()) {
         if (m.isAlive()) {
           m.heal(healAmt);
           if (skill.getSanRestore() > 0) {
             m.restoreSan(skill.getSanRestore());
           }
+          int mIdx = party.getMembers().indexOf(m);
+          hits.add(new BattleHit(
+              new UnitRef(UnitRef.Side.PARTY, m.getId(), mIdx >= 0 ? mIdx : 0),
+              HitOutcome.HIT,
+              healAmt,
+              0,
+              false
+          ));
         }
       }
       logBroadcaster.accept(player, "\u001B[1;36m🌟🌟【多人合擊】" + participantNames + " 攜手引動【" + skill.getName() + "】！神光普照，全隊恢復 " + healAmt + " 氣血與 " + skill.getSanRestore() + " 點道心！\u001B[0m");
+      ctx.emit(new BattleEvent(
+          ctx.nextEventSeq(),
+          now,
+          BattleEventType.HEAL,
+          new UnitRef(UnitRef.Side.PARTY, primary.getId(), primaryIdx >= 0 ? primaryIdx : 0),
+          skill.getId(),
+          skill.getName(),
+          weaponType,
+          "HOLY",
+          FxShape.ALLY_ALL,
+          "combo_heal",
+          hits
+      ));
     } else {
       if (skill.isAoe()) {
+        List<BattleHit> hits = new ArrayList<>();
         for (BattleEnemy e : ctx.getEnemies()) {
           if (e.isAlive()) {
             e.takeDamage(baseDmg);
             if (skill.isStun()) {
               e.applyStun(skill.getStunDurationSeconds() > 0 ? skill.getStunDurationSeconds() * 1000L : 4000L);
             }
+            int eIdx = ctx.getEnemies().indexOf(e);
+            hits.add(new BattleHit(
+                new UnitRef(UnitRef.Side.ENEMY, e.getId(), eIdx >= 0 ? eIdx : 0),
+                HitOutcome.HIT,
+                baseDmg,
+                0,
+                !e.isAlive()
+            ));
           }
         }
         logBroadcaster.accept(player, "\u001B[1;33m⚔️⚔️【小隊合擊】" + participantNames + " 氣機相融，聯手爆發【" + skill.getName() + "】！全體敵怪遭受 " + baseDmg + " 點毀滅打擊！\u001B[0m");
+        ctx.emit(new BattleEvent(
+            ctx.nextEventSeq(),
+            now,
+            BattleEventType.SKILL,
+            new UnitRef(UnitRef.Side.PARTY, primary.getId(), primaryIdx >= 0 ? primaryIdx : 0),
+            skill.getId(),
+            skill.getName(),
+            weaponType,
+            "PHYSICAL",
+            FxShape.ALL,
+            "combo_aoe",
+            hits
+        ));
       } else {
         BattleEnemy target = ctx.getTargetEnemy();
         if (target != null && target.isAlive()) {
@@ -170,7 +225,27 @@ public class ComboResolver {
           if (skill.isStun()) {
             target.applyStun(skill.getStunDurationSeconds() > 0 ? skill.getStunDurationSeconds() * 1000L : 4000L);
           }
+          int eIdx = ctx.getEnemies().indexOf(target);
           logBroadcaster.accept(player, "\u001B[1;33m⚔️⚔️【小隊合擊】" + participantNames + " 凌空合擊，聯手發動【" + skill.getName() + "】！直貫【" + target.getName() + "】造成 " + baseDmg + " 點貫穿巨創！\u001B[0m");
+          ctx.emit(new BattleEvent(
+              ctx.nextEventSeq(),
+              now,
+              BattleEventType.SKILL,
+              new UnitRef(UnitRef.Side.PARTY, primary.getId(), primaryIdx >= 0 ? primaryIdx : 0),
+              skill.getId(),
+              skill.getName(),
+              weaponType,
+              "PHYSICAL",
+              FxShape.SINGLE,
+              "combo_single",
+              List.of(new BattleHit(
+                  new UnitRef(UnitRef.Side.ENEMY, target.getId(), eIdx >= 0 ? eIdx : 0),
+                  HitOutcome.HIT,
+                  baseDmg,
+                  0,
+                  !target.isAlive()
+              ))
+          ));
         }
       }
     }

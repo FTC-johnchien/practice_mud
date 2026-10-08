@@ -38,8 +38,10 @@ class DrpgBattleServiceTest {
   void setUp() {
     BattleContext oldCtx = battleService.getBattle("tester");
     if (oldCtx != null) {
+      oldCtx.cancelBattle();
       oldCtx.setState(BattleState.VICTORY);
     }
+    battleService.getActiveBattles().remove("tester");
     partyService.clearCache();
     dummyPlayer = mock(Player.class);
     when(dummyPlayer.getName()).thenReturn("tester");
@@ -52,8 +54,10 @@ class DrpgBattleServiceTest {
   void tearDown() {
     BattleContext ctx = battleService.getBattle("tester");
     if (ctx != null) {
+      ctx.cancelBattle();
       ctx.setState(BattleState.VICTORY);
     }
+    battleService.getActiveBattles().remove("tester");
   }
 
   @Test
@@ -90,7 +94,11 @@ class DrpgBattleServiceTest {
     PartyMember iron = ctx.getParty().getMembers().get(1);
     PartyMember ling = ctx.getParty().getMembers().get(3);
     ctx.getParty().getMembers().forEach(m -> m.setNextAttackTime(System.currentTimeMillis() + 600000L));
-    ctx.getEnemies().forEach(e -> e.setNextAttackTime(System.currentTimeMillis() + 600000L));
+    ctx.getEnemies().forEach(e -> {
+      e.setNextAttackTime(System.currentTimeMillis() + 600000L);
+      e.setHp(5000);
+      e.setMaxHp(5000);
+    });
 
     // 1. 燕青/主角 COMBO 技能 (先裝備劍)
     leader.getEquipment().put(com.example.htmlmud.domain.model.enums.EquipmentSlot.MAIN_HAND,
@@ -135,6 +143,10 @@ class DrpgBattleServiceTest {
   void testPartyUltimate() {
     battleService.startBattle(dummyPlayer, dungeonPos, List.of("taiyin_tomb:corpse_doll"));
     BattleContext ctx = battleService.getBattle("tester");
+    for (var enemy : ctx.getEnemies()) {
+      enemy.setMaxHp(9999);
+      enemy.setHp(9999);
+    }
 
     Party party = ctx.getParty();
     party.setFormationEnergy(100);
@@ -147,6 +159,11 @@ class DrpgBattleServiceTest {
   @DisplayName("測試主動迎戰與戰鬥視圖持久化建立")
   void testFightActionAndBattleView() {
     battleService.startBattle(dummyPlayer, dungeonPos, List.of("taiyin_tomb:corpse_doll"));
+    BattleContext ctx = battleService.getBattle("tester");
+    for (var enemy : ctx.getEnemies()) {
+      enemy.setMaxHp(9999);
+      enemy.setHp(9999);
+    }
     var view = battleService.createBattleView("tester");
     assertThat(view).isNotNull();
     assertThat(view.inBattle()).isTrue();

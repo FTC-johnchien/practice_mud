@@ -220,6 +220,7 @@ body, html {
   transition: flex-direction 0.2s ease;
 }
 
+/* 主舞台容器：釋放至 70%~75% 寬度，以生動 DRPG 畫面為絕對核心 */
 .stage-left-container {
   flex: 3;
   min-width: 0;
@@ -229,6 +230,7 @@ body, html {
   border-right: 2px solid var(--border-color);
   position: relative;
   overflow: hidden;
+  transition: flex 0.25s ease;
 }
 
 .main-viewport.layout-radar-right .stage-left-container {
@@ -236,13 +238,18 @@ body, html {
   border-left: 2px solid var(--border-color);
 }
 
+/* 訊息日誌區：收斂至 25%~30% 輔助資訊欄，具備最大寬度限制與絕對防溢出隔離 */
 .log-and-battle-area {
-  flex: 2;
+  flex: 1;
   min-width: 0;
+  width: 25%;
+  max-width: 380px;
   display: flex;
   flex-direction: column;
   background: #050608;
   position: relative;
+  overflow: hidden;
+  transition: all 0.25s ease;
 }
 
 .main-viewport.layout-radar-right {
@@ -252,6 +259,153 @@ body, html {
 .main-viewport.layout-radar-right .dungeon-radar-panel {
   border-right: none;
   border-left: 2px solid var(--border-color);
+}
+
+/* ═══ LOG-DIM-01: 純文字日誌摺疊收合模式 (Collapsible Mode) ═══ */
+.main-viewport.log-collapsed .stage-left-container {
+  flex: 1 1 100%;
+  width: 100%;
+  border-right: none;
+  border-left: none;
+}
+
+.main-viewport.log-collapsed .log-and-battle-area {
+  display: none !important;
+}
+
+/* 底部單行水墨跑馬燈 (HUD Event Ticker) */
+.hud-event-ticker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 10px;
+  background: rgba(15, 23, 42, 0.85);
+  border-top: 1px solid rgba(56, 189, 248, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 13px;
+  color: #cbd5e1;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.hud-event-ticker:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-top-color: rgba(56, 189, 248, 0.5);
+}
+
+.hud-event-ticker .ticker-badge {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: bold;
+  color: #38bdf8;
+  padding: 1px 6px;
+  background: rgba(56, 189, 248, 0.15);
+  border-radius: 3px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.hud-event-ticker .ticker-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #e2e8f0;
+  font-size: 13px;
+}
+
+.hud-event-ticker .ticker-toggle-btn {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #94a3b8;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.hud-event-ticker:hover .ticker-toggle-btn {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: #38bdf8;
+  color: #f0f9ff;
+}
+
+/* 訊息日誌頂部工具列 */
+.log-panel-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: #090d16;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  gap: 6px;
+}
+
+.log-toolbar-left .log-title {
+  font-size: 13px;
+  font-weight: bold;
+  color: #e2e8f0;
+  white-space: nowrap;
+}
+
+.log-filter-tabs {
+  display: flex;
+  gap: 3px;
+}
+
+.log-filter-btn {
+  padding: 2px 6px;
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.log-filter-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+}
+
+.log-filter-btn.active {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: #38bdf8;
+  color: #38bdf8;
+  font-weight: bold;
+}
+
+.log-toolbar-right {
+  display: flex;
+  gap: 4px;
+}
+
+.log-tool-btn {
+  padding: 2px 6px;
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.log-tool-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #fca5a5;
+}
+
+/* 分類日誌條目隱藏機制 */
+.log-entry.filtered-out {
+  display: none !important;
 }
 
 /* 地牢雷達頂部切換按鈕組 */
@@ -572,16 +726,24 @@ body, html {
 .compass-corner-sw { grid-column: 1; grid-row: 3; }
 .compass-corner-se { grid-column: 3; grid-row: 3; }
 
-/* 右側：冒險與戰鬥文字日誌 */
+/* 右側：冒險與戰鬥文字日誌 (強制水平無溢出、長文本折行防護) */
 #log {
   flex: 1;
-  padding: 16px;
+  padding: 12px 14px;
   overflow-y: auto;
+  overflow-x: hidden;
   font-size: var(--font-base);
   line-height: 1.6;
   background: #050608;
   white-space: pre-wrap;
-  word-break: break-all;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.log-entry {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* 下部：6 人小隊狀態列 */

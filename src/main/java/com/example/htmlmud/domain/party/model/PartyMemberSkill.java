@@ -79,6 +79,9 @@ public class PartyMemberSkill {
   private boolean interruptible = true;
   @Builder.Default
   private int threatBonus = 0;
+  @Builder.Default
+  private String damageType = "PHYSICAL";
+  private String fxKey;
 
   public boolean isInstant() {
     return castTimeMs <= 0;

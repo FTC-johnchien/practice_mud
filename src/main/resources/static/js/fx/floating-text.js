@@ -42,46 +42,51 @@ export function spawnFloatingText(layer, rect, hit, ev) {
   let text = '';
 
   const outcome = hit.outcome || 'HIT';
-  switch (outcome) {
-    case 'MISS':
-      cls.push('ft-miss');
-      text = '未命中';
-      break;
-    case 'DODGED':
-      cls.push('ft-dodge');
-      text = '身法閃避';
-      break;
-    case 'BLOCKED':
-      cls.push('ft-block');
-      text = hit.amount > 0 ? `🛡️ 格擋 -${hit.amount}` : '🛡️ 完全格擋';
-      break;
-    case 'PARRIED':
-      cls.push('ft-parry');
-      text = hit.amount > 0 ? `⚔️ 招架 -${hit.amount}` : '⚔️ 招架';
-      break;
-    case 'ABSORBED':
-      cls.push('ft-block');
-      text = '護盾吸收';
-      break;
-    default:
-      if (ev.type === 'HEAL' || ev.type === 'HOT_TICK') {
-        cls.push('ft-heal');
-        text = `+${hit.amount}`;
-      } else {
-        const dmgType = (ev.damageType || 'PHYSICAL').toUpperCase();
-        cls.push(DMG_COLORS[dmgType] || 'dmg-phys');
-
-        if (outcome === 'CRIT') {
-          cls.push('ft-crit');
-          text = `暴擊！-${hit.amount}`;
+  if (ev.damageType === 'TAUNT' || ev.fxKey === 'taunt_roar' || outcome === 'TAUNT') {
+    cls.push('ft-taunt');
+    text = '💢 仇恨鎖定';
+  } else {
+    switch (outcome) {
+      case 'MISS':
+        cls.push('ft-miss');
+        text = '未命中';
+        break;
+      case 'DODGED':
+        cls.push('ft-dodge');
+        text = '身法閃避';
+        break;
+      case 'BLOCKED':
+        cls.push('ft-block');
+        text = hit.amount > 0 ? `🛡️ 格擋 -${hit.amount}` : '🛡️ 完全格擋';
+        break;
+      case 'PARRIED':
+        cls.push('ft-parry');
+        text = hit.amount > 0 ? `⚔️ 招架 -${hit.amount}` : '⚔️ 招架';
+        break;
+      case 'ABSORBED':
+        cls.push('ft-block');
+        text = '護盾吸收';
+        break;
+      default:
+        if (ev.type === 'HEAL' || ev.type === 'HOT_TICK') {
+          cls.push('ft-heal');
+          text = `+${hit.amount}`;
         } else {
-          text = `-${hit.amount}`;
-        }
+          const dmgType = (ev.damageType || 'PHYSICAL').toUpperCase();
+          cls.push(DMG_COLORS[dmgType] || 'dmg-phys');
 
-        if (ev.type === 'DOT_TICK') {
-          cls.push('ft-small');
+          if (outcome === 'CRIT') {
+            cls.push('ft-crit');
+            text = `暴擊！-${hit.amount}`;
+          } else {
+            text = `-${hit.amount}`;
+          }
+
+          if (ev.type === 'DOT_TICK') {
+            cls.push('ft-small');
+          }
         }
-      }
+    }
   }
 
   // 我方隊友受創時，外加紅色警戒描邊

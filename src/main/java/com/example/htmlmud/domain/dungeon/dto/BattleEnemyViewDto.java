@@ -19,8 +19,39 @@ public record BattleEnemyViewDto(
     int rowIdx,
     int colIdx,
     int width,
-    int height
+    int height,
+    String intentIcon,
+    String intentName,
+    String intentType,
+    String intentTargetScope,
+    boolean isCasting,
+    long castDurationMs,
+    long castRemainingMs,
+    boolean isInterruptible
 ) {
+  public BattleEnemyViewDto(
+      int index,
+      String id,
+      String name,
+      int hp,
+      int maxHp,
+      String row,
+      boolean alive,
+      boolean isTarget,
+      boolean isStunned,
+      String targetMemberId,
+      String targetMemberName,
+      int threat,
+      boolean isLarge,
+      int size,
+      String slot,
+      int rowIdx,
+      int colIdx,
+      int width,
+      int height
+  ) {
+    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, targetMemberId, targetMemberName, threat, isLarge, size, slot, rowIdx, colIdx, width, height, null, null, "PHYSICAL", "SINGLE", false, 0L, 0L, true);
+  }
   public BattleEnemyViewDto(
       int index,
       String id,

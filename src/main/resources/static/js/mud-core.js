@@ -93,6 +93,10 @@ function handleServerMessage(data) {
         if (typeof window.onBattleEvents === 'function') {
             window.onBattleEvents(data);
         }
+    } else if (data.type === 'BATTLE_VICTORY') {
+        if (typeof window.onBattleVictory === 'function') {
+            window.onBattleVictory(data);
+        }
     } else if (data.type === 'SAVE_SLOTS') {
         if (typeof updateSaveSlotsView === 'function') {
             updateSaveSlotsView(data.slots);

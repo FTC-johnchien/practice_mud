@@ -161,6 +161,10 @@ public class DrpgBattleService {
     return activeBattles.get(playerId);
   }
 
+  public Map<String, BattleContext> getActiveBattles() {
+    return this.activeBattles;
+  }
+
   public BattleContext getBattle(CharacterId characterId) {
     return characterId != null ? getBattle(characterId.value()) : null;
   }
@@ -680,6 +684,10 @@ public class DrpgBattleService {
         member.triggerGcd(skill.getGcdMs());
       }
     }
+    List<com.example.htmlmud.domain.dungeon.battle.event.BattleEvent> immediateEvents = ctx.drainEvents();
+    if (!immediateEvents.isEmpty() && player.isValid()) {
+      player.sendJson(new com.example.htmlmud.domain.dungeon.dto.BattleEventsDto(ctx.getBattleId(), immediateEvents));
+    }
     pushDrpgState(player, pos, ctx);
   }
 
@@ -699,13 +707,26 @@ public class DrpgBattleService {
     party.setFormationEnergy(0);
     String formId = party.getEquippedFormation() != null ? party.getEquippedFormation().getId() : "";
 
-    if ("formation_xuan_yin".equals(formId)) {
+    long now = System.currentTimeMillis();
+    boolean isXuanYin = "formation_xuan_yin".equals(formId);
+    int damageAmount = isXuanYin ? 240 : 120;
+    List<com.example.htmlmud.domain.dungeon.battle.event.BattleHit> hits = new ArrayList<>();
+
+    if (isXuanYin) {
       for (PartyMember m : party.getMembers()) {
         m.consumeSan(8);
       }
       for (BattleEnemy e : ctx.getEnemies()) {
         if (e.isAlive()) {
-          e.takeDamage(240);
+          e.takeDamage(damageAmount);
+          int eIdx = ctx.getEnemies().indexOf(e);
+          hits.add(new com.example.htmlmud.domain.dungeon.battle.event.BattleHit(
+              new com.example.htmlmud.domain.dungeon.battle.event.UnitRef(com.example.htmlmud.domain.dungeon.battle.event.UnitRef.Side.ENEMY, e.getId(), eIdx >= 0 ? eIdx : 0),
+              com.example.htmlmud.domain.dungeon.battle.event.HitOutcome.CRIT,
+              damageAmount,
+              e.getHp(),
+              true
+          ));
         }
       }
       broadcastLog(player, ctx, "\u001B[1;35m⚡⚡【陣法奧義・不可名狀星蝕】虛空被撕裂成深邃盲目之眼！狂亂囈語灌入心神 (-8 SAN)！全體敵方遭受 240 點暗蝕滅頂之災！\u001B[0m");
@@ -718,10 +739,38 @@ public class DrpgBattleService {
       }
       for (BattleEnemy e : ctx.getEnemies()) {
         if (e.isAlive()) {
-          e.takeDamage(120);
+          e.takeDamage(damageAmount);
+          int eIdx = ctx.getEnemies().indexOf(e);
+          hits.add(new com.example.htmlmud.domain.dungeon.battle.event.BattleHit(
+              new com.example.htmlmud.domain.dungeon.battle.event.UnitRef(com.example.htmlmud.domain.dungeon.battle.event.UnitRef.Side.ENEMY, e.getId(), eIdx >= 0 ? eIdx : 0),
+              com.example.htmlmud.domain.dungeon.battle.event.HitOutcome.CRIT,
+              damageAmount,
+              e.getHp(),
+              true
+          ));
         }
       }
       broadcastLog(player, ctx, "\u001B[1;33m⚡⚡【陣法奧義・四象辟邪聖光】青龍白虎朱雀玄武四聖法相齊現！聖光普照全員氣血大盛 (+50 HP, +15 SAN)，敵方遭受 120 點灼魂傷害！\u001B[0m");
+    }
+
+    com.example.htmlmud.domain.dungeon.battle.event.BattleEvent ultEvent = new com.example.htmlmud.domain.dungeon.battle.event.BattleEvent(
+        ctx.nextEventSeq(),
+        now,
+        com.example.htmlmud.domain.dungeon.battle.event.BattleEventType.SKILL,
+        new com.example.htmlmud.domain.dungeon.battle.event.UnitRef(com.example.htmlmud.domain.dungeon.battle.event.UnitRef.Side.PARTY, party.getLeader() != null ? party.getLeader().getId() : "leader", 0),
+        "formation_ultimate",
+        isXuanYin ? "陣法奧義・不可名狀星蝕" : "陣法奧義・四象辟邪聖光",
+        "MAGIC",
+        isXuanYin ? "DARK" : "HOLY",
+        com.example.htmlmud.domain.dungeon.battle.event.FxShape.ALL,
+        isXuanYin ? "ult_abyss" : "ult_holy",
+        hits
+    );
+    ctx.emit(ultEvent);
+
+    List<com.example.htmlmud.domain.dungeon.battle.event.BattleEvent> immediateEvents = ctx.drainEvents();
+    if (!immediateEvents.isEmpty() && player.isValid()) {
+      player.sendJson(new com.example.htmlmud.domain.dungeon.dto.BattleEventsDto(ctx.getBattleId(), immediateEvents));
     }
 
     if (ctx.isAllEnemiesDead()) {
@@ -747,6 +796,11 @@ public class DrpgBattleService {
     if (!success) {
       player.reply("【小隊合擊】當前條件不滿足（需特定職業全員存活、無失控且具備足夠戰氣/法力/陣法靈威）！");
       return;
+    }
+
+    List<com.example.htmlmud.domain.dungeon.battle.event.BattleEvent> immediateEvents = ctx.drainEvents();
+    if (!immediateEvents.isEmpty() && player.isValid()) {
+      player.sendJson(new com.example.htmlmud.domain.dungeon.dto.BattleEventsDto(ctx.getBattleId(), immediateEvents));
     }
 
     pushDrpgState(player, pos, ctx);
@@ -947,7 +1001,15 @@ public class DrpgBattleService {
           e.getRowIdx() > 0 ? e.getRowIdx() : 1,
           e.getColIdx() > 0 ? e.getColIdx() : 2,
           e.getWidth() > 0 ? e.getWidth() : (e.getSize() > 0 ? e.getSize() : 1),
-          e.getHeight() > 0 ? e.getHeight() : (e.getSize() > 0 ? e.getSize() : 1)
+          e.getHeight() > 0 ? e.getHeight() : (e.getSize() > 0 ? e.getSize() : 1),
+          e.getCurrentIntentIcon(),
+          e.getCurrentIntentName(),
+          e.getCurrentIntentType(),
+          e.getIntentTargetScope(),
+          e.isCasting(),
+          e.getCastDurationMs(),
+          e.getCastRemainingMs(),
+          e.isInterruptible()
       ));
     }
     return new BattleViewDto(

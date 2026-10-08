@@ -77,6 +77,19 @@
   animation: react-block-pulse 260ms ease-out;
 }
 
+.enemy-card.react-taunt,
+.battle-party-grid-card.react-taunt {
+  animation: react-taunt-pulse 400ms ease-out;
+  box-shadow: 0 0 16px 3px rgba(249, 115, 22, 0.9) !important;
+  border-color: #f97316 !important;
+}
+
+@keyframes react-taunt-pulse {
+  0% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.04); filter: brightness(1.3) drop-shadow(0 0 8px #f97316); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
 /* 3. 出手者短促突進動態 */
 @keyframes actor-lunge-up {
   0%, 100% { transform: translateY(0); }
@@ -208,7 +221,831 @@
   font-weight: 800;
 }
 
-/* 6. 無障礙降級支援 (prefers-reduced-motion) */
+.ftext.ft-taunt {
+  color: #fb923c;
+  font-size: 20px;
+  font-weight: 900;
+  -webkit-text-stroke: 1.5px #7c2d12;
+  filter: drop-shadow(0 0 10px rgba(249, 115, 22, 0.9));
+  animation: ft-crit-pop 1000ms cubic-bezier(0.18, 1.3, 0.3, 1) forwards;
+}
+
+/* 6. 戰鬥視覺特效 (Weapon Impacts, Spells, AOE & Arena Shake) */
+.fx {
+  position: absolute;
+  pointer-events: none;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 45;
+}
+
+/* --- 6.1 武器打擊特效 (Weapon Impacts) --- */
+/* 劍刃弧光斬擊 (SWORD) */
+.fx-slash::before {
+  content: '';
+  position: absolute;
+  width: 140%;
+  height: 4px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.95) 50%, #38bdf8 80%, transparent 100%);
+  box-shadow: 0 0 12px 2px rgba(56, 189, 248, 0.85), 0 0 20px 4px rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  transform: rotate(-35deg) scaleX(0.2);
+  animation: fx-slash-anim 280ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+@keyframes fx-slash-anim {
+  0% { transform: rotate(-35deg) scaleX(0.1) translateY(-10px); opacity: 0; }
+  30% { transform: rotate(-35deg) scaleX(1.1) translateY(0); opacity: 1; }
+  100% { transform: rotate(-35deg) scaleX(1.3) translateY(8px); opacity: 0; }
+}
+
+/* 重刀/巨斧狂斬 (BLADE, AXE) */
+.fx-heavy-slash::before {
+  content: '';
+  position: absolute;
+  width: 150%;
+  height: 8px;
+  background: linear-gradient(90deg, transparent 0%, #fff 40%, #f97316 75%, transparent 100%);
+  box-shadow: 0 0 16px 4px rgba(249, 115, 22, 0.95), 0 0 26px 6px rgba(239, 68, 68, 0.6);
+  border-radius: 50%;
+  transform: rotate(-45deg) scaleX(0.2);
+  animation: fx-heavy-slash-anim 320ms cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+}
+@keyframes fx-heavy-slash-anim {
+  0% { transform: rotate(-45deg) scaleX(0.2); opacity: 0; }
+  35% { transform: rotate(-45deg) scaleX(1.2); opacity: 1; }
+  100% { transform: rotate(-45deg) scaleX(1.4); opacity: 0; }
+}
+
+/* 槍矛長兵突刺 (SPEAR, POLEARM) */
+.fx-thrust::before {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 140%;
+  background: linear-gradient(180deg, transparent 0%, #fff 50%, #facc15 85%, transparent 100%);
+  box-shadow: 0 0 14px 3px rgba(250, 204, 21, 0.95);
+  border-radius: 4px;
+  animation: fx-thrust-anim 260ms ease-out forwards;
+}
+.fx-thrust::after {
+  content: '';
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 20%, #facc15 60%, transparent 80%);
+  animation: fx-burst-anim 260ms ease-out forwards;
+}
+@keyframes fx-thrust-anim {
+  0% { transform: scaleY(0.1); opacity: 0; }
+  40% { transform: scaleY(1.1); opacity: 1; }
+  100% { transform: scaleY(1.3); opacity: 0; }
+}
+@keyframes fx-burst-anim {
+  0% { transform: scale(0.2); opacity: 0; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+/* 鈍器重錘震波 (BLUNT, HAMMER) */
+.fx-blunt::before {
+  content: '';
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 4px solid rgba(251, 191, 36, 0.9);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.8), inset 0 0 12px rgba(245, 158, 11, 0.5);
+  animation: fx-shockwave-anim 320ms cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+@keyframes fx-shockwave-anim {
+  0% { transform: scale(0.2); opacity: 1; }
+  100% { transform: scale(1.6); opacity: 0; border-width: 1px; }
+}
+
+/* 短刃雙重疾切 (DAGGER) */
+.fx-dagger::before, .fx-dagger::after {
+  content: '';
+  position: absolute;
+  width: 110%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #ef4444 40%, #fff 70%, transparent);
+  box-shadow: 0 0 8px #ef4444;
+}
+.fx-dagger::before {
+  transform: rotate(-30deg);
+  animation: fx-dagger-anim 220ms ease-out forwards;
+}
+.fx-dagger::after {
+  transform: rotate(30deg);
+  animation: fx-dagger-anim 220ms ease-out 40ms forwards;
+}
+@keyframes fx-dagger-anim {
+  0% { transform: scaleX(0.2); opacity: 0; }
+  40% { transform: scaleX(1.1); opacity: 1; }
+  100% { transform: scaleX(1.3); opacity: 0; }
+}
+
+/* 拳腳氣勁爆裂 (UNARMED) */
+.fx-fist::before {
+  content: '';
+  position: absolute;
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(148, 163, 184, 0.6) 40%, transparent 75%);
+  box-shadow: 0 0 16px rgba(255,255,255,0.85);
+  animation: fx-burst-anim 240ms ease-out forwards;
+}
+
+/* --- 6.2 屬性與法術特效 (Spell & Elemental Impacts) --- */
+/* 烈火 (FIRE) */
+.fx-fire::before {
+  content: '';
+  position: absolute;
+  width: 95px;
+  height: 95px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0%, #f97316 45%, #dc2626 70%, transparent 85%);
+  box-shadow: 0 0 25px 8px rgba(234, 88, 12, 0.85);
+  animation: fx-magic-burst 320ms ease-out forwards;
+}
+@keyframes fx-magic-burst {
+  0% { transform: scale(0.3); opacity: 0; }
+  35% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+/* 霜冰 (ICE) */
+.fx-ice::before {
+  content: '';
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  background: radial-gradient(circle, #fff 10%, #38bdf8 50%, #0284c7 80%, transparent);
+  box-shadow: 0 0 22px 6px rgba(56, 189, 248, 0.9);
+  clip-path: polygon(50% 0%, 65% 35%, 100% 50%, 65% 65%, 50% 100%, 35% 65%, 0% 50%, 35% 35%);
+  animation: fx-magic-burst 320ms ease-out forwards;
+}
+
+/* 狂雷 (LIGHTNING) */
+.fx-lightning::before {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 160%;
+  background: linear-gradient(180deg, #fff 0%, #facc15 50%, #eab308 100%);
+  box-shadow: 0 0 20px 6px rgba(250, 204, 21, 0.95), 0 0 35px rgba(255,255,255,0.85);
+  clip-path: polygon(40% 0%, 60% 0%, 80% 30%, 40% 32%, 75% 65%, 30% 68%, 60% 100%, 40% 100%, 15% 70%, 55% 67%, 20% 35%, 60% 33%);
+  animation: fx-lightning-anim 280ms ease-out forwards;
+}
+@keyframes fx-lightning-anim {
+  0% { opacity: 0; transform: translateY(-20px) scale(0.6); }
+  25% { opacity: 1; transform: translateY(0) scale(1.15); filter: brightness(2.5); }
+  60% { opacity: 0.9; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.9); }
+}
+
+/* 聖光 / 治療 (HOLY) */
+.fx-holy::before {
+  content: '';
+  position: absolute;
+  width: 75px;
+  height: 180%;
+  background: linear-gradient(180deg, rgba(254, 240, 138, 0.95), rgba(253, 224, 71, 0.5) 70%, transparent);
+  box-shadow: 0 0 25px rgba(253, 224, 71, 0.85);
+  border-radius: 35px;
+  animation: fx-holy-anim 400ms ease-out forwards;
+}
+@keyframes fx-holy-anim {
+  0% { opacity: 0; transform: translateY(-30px) scaleX(0.5); }
+  35% { opacity: 1; transform: translateY(0) scaleX(1); }
+  100% { opacity: 0; transform: scaleX(1.2); }
+}
+
+/* 暗蝕 (DARK) */
+.fx-dark::before {
+  content: '';
+  position: absolute;
+  width: 95px;
+  height: 95px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #581c87 10%, #7e22ce 50%, transparent 80%);
+  box-shadow: 0 0 25px 8px rgba(126, 34, 206, 0.85);
+  animation: fx-dark-anim 350ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+@keyframes fx-dark-anim {
+  0% { transform: scale(1.5) rotate(0deg); opacity: 0; }
+  40% { transform: scale(1) rotate(90deg); opacity: 1; }
+  100% { transform: scale(0.2) rotate(180deg); opacity: 0; }
+}
+
+/* 劇毒 (POISON) */
+.fx-poison::before {
+  content: '';
+  position: absolute;
+  width: 85px;
+  height: 85px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(74, 222, 128, 0.85) 0%, rgba(34, 197, 94, 0.5) 50%, transparent 80%);
+  box-shadow: 0 0 22px rgba(34, 197, 94, 0.75);
+  animation: fx-burst-anim 350ms ease-out forwards;
+}
+
+/* --- 6.3 全體攻擊與範圍震撼 (AOE Area & Shakes) --- */
+/* 全場劍氣橫掃 (Area Blade Sweep) */
+.fx-area-sweep::before {
+  content: '';
+  position: absolute;
+  width: 120%;
+  height: 14px;
+  background: linear-gradient(90deg, transparent 0%, #fff 40%, #38bdf8 70%, transparent 100%);
+  box-shadow: 0 0 25px 6px rgba(56, 189, 248, 0.95), 0 0 50px rgba(255,255,255,0.75);
+  border-radius: 50%;
+  transform: rotate(-6deg);
+  animation: fx-area-sweep-anim 400ms cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+}
+@keyframes fx-area-sweep-anim {
+  0% { transform: rotate(-6deg) translateX(-60px) scaleX(0.2); opacity: 0; }
+  35% { transform: rotate(-6deg) translateX(0) scaleX(1.1); opacity: 1; }
+  100% { transform: rotate(-6deg) translateX(40px) scaleX(1.2); opacity: 0; }
+}
+
+/* 全場天雷暴擊 (Area Lightning) */
+.fx-area-lightning {
+  background: radial-gradient(circle, rgba(250, 204, 21, 0.25) 0%, transparent 75%);
+  animation: fx-area-flash-anim 360ms ease-out forwards;
+}
+.fx-area-lightning::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  background: repeating-linear-gradient(90deg, transparent, transparent 35px, rgba(255,255,255,0.85) 40px, rgba(250, 204, 21, 0.9) 45px, transparent 55px);
+  filter: drop-shadow(0 0 12px #facc15);
+  animation: fx-area-lightning-stripes 320ms ease-out forwards;
+}
+@keyframes fx-area-flash-anim {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes fx-area-lightning-stripes {
+  0% { opacity: 0; transform: translateY(-30px); }
+  30% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; }
+}
+
+/* 全場烈焰焚原 (Area Fire) */
+.fx-area-fire {
+  background: radial-gradient(ellipse at center, rgba(249, 115, 22, 0.45) 0%, rgba(220, 38, 38, 0.2) 60%, transparent 80%);
+  animation: fx-area-flash-anim 400ms ease-out forwards;
+}
+
+/* 全隊甘露沐浴 (Area Heal) */
+.fx-area-heal {
+  background: radial-gradient(ellipse at center, rgba(34, 197, 94, 0.35) 0%, rgba(16, 185, 129, 0.15) 60%, transparent 80%);
+  animation: fx-area-flash-anim 450ms ease-out forwards;
+}
+
+/* 全場震動效果 (Arena Shake) */
+@keyframes arena-shake-anim {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-6px, 3px); }
+  40% { transform: translate(6px, -3px); }
+  60% { transform: translate(-4px, -2px); }
+  80% { transform: translate(4px, 2px); }
+}
+.arena-shake {
+  animation: arena-shake-anim 260ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both !important;
+}
+
+/* --- 6.4 絕招與招式浮動橫幅 (Skill Banner) --- */
+.fx-skill-banner {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 6px 24px;
+  background: linear-gradient(90deg, transparent, rgba(15, 23, 42, 0.94) 20%, rgba(15, 23, 42, 0.94) 80%, transparent);
+  border-top: 1.5px solid rgba(250, 204, 21, 0.8);
+  border-bottom: 1.5px solid rgba(250, 204, 21, 0.8);
+  color: #fef08a;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-shadow: 0 0 12px rgba(250, 204, 21, 0.85), 0 2px 4px rgba(0,0,0,0.95);
+  pointer-events: none;
+  z-index: 60;
+  white-space: nowrap;
+  animation: fx-skill-banner-anim 750ms cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+@keyframes fx-skill-banner-anim {
+  0% { opacity: 0; transform: translate(-50%, -65%) scale(0.8); }
+  20% { opacity: 1; transform: translate(-50%, -50%) scale(1.06); }
+  70% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -35%) scale(0.95); }
+}
+
+/* 8. 戰鬥大捷結算視窗與戰利品翻牌 (Battle Victory Modal - BATTLE-RESULT-01) */
+.victory-modal-card {
+  position: relative;
+  background: linear-gradient(180deg, #0f172a 0%, #070b14 100%);
+  border: 2px solid rgba(245, 158, 11, 0.55);
+  border-radius: 14px;
+  width: 95%;
+  max-width: 660px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 45px rgba(245, 158, 11, 0.25);
+  overflow: hidden;
+  animation: victory-card-pop 320ms cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+}
+
+@keyframes victory-card-pop {
+  0% { opacity: 0; transform: scale(0.9) translateY(20px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* 8.1 頂部金色大捷橫幅 */
+.victory-banner-wrap {
+  position: relative;
+  padding: 20px 16px 14px;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.16) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.35);
+  overflow: hidden;
+}
+
+.victory-banner-glow {
+  position: absolute;
+  top: -40%;
+  left: 20%;
+  width: 60%;
+  height: 120%;
+  background: radial-gradient(ellipse at center, rgba(245, 158, 11, 0.35) 0%, transparent 70%);
+  pointer-events: none;
+  animation: banner-glow-breathe 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes banner-glow-breathe {
+  0% { transform: scale(0.85); opacity: 0.6; }
+  100% { transform: scale(1.15); opacity: 1; }
+}
+
+.victory-banner-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.victory-banner-icon {
+  font-size: 32px;
+  filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.8));
+  animation: icon-float 2s ease-in-out infinite alternate;
+}
+
+@keyframes icon-float {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-4px); }
+}
+
+.victory-banner-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 5px;
+  color: #fef08a;
+  text-shadow: 0 0 16px rgba(245, 158, 11, 0.95), 0 2px 4px rgba(0, 0, 0, 0.9);
+}
+
+.victory-banner-subtitle {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: rgba(254, 240, 138, 0.75);
+}
+
+/* 8.2 結算數值徽章列 */
+.victory-summary-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: rgba(15, 23, 42, 0.6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.victory-summary-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  font-size: 13px;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.victory-summary-pill.xp-pill {
+  color: #fef08a;
+  box-shadow: inset 0 0 10px rgba(245, 158, 11, 0.2);
+}
+
+.victory-summary-pill.coins-pill {
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: inset 0 0 10px rgba(56, 189, 248, 0.2);
+}
+
+.pill-val {
+  font-size: 15px;
+  font-weight: 900;
+}
+
+/* 8.3 模態視窗區段標題 */
+.victory-section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 18px 4px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.btn-flip-all {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  color: #fef08a;
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 180ms ease;
+}
+
+.btn-flip-all:hover {
+  background: rgba(245, 158, 11, 0.35);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+  transform: translateY(-1px);
+}
+
+/* 8.4 隊員修為增長與突破清單 */
+.victory-members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 6px 18px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.victory-member-row {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  transition: all 220ms ease;
+}
+
+.victory-member-row.is-breakthrough {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.18) 0%, rgba(30, 41, 59, 0.7) 100%);
+  border-color: rgba(245, 158, 11, 0.75);
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.3), inset 0 0 10px rgba(245, 158, 11, 0.15);
+  animation: breakthrough-row-pulse 2s infinite alternate;
+}
+
+@keyframes breakthrough-row-pulse {
+  0% { border-color: rgba(245, 158, 11, 0.5); }
+  100% { border-color: rgba(254, 240, 138, 0.95); }
+}
+
+.vm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.vm-identity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vm-name {
+  font-weight: 800;
+  font-size: 13px;
+  color: #f1f5f9;
+}
+
+.vm-role-tag {
+  font-size: 11px;
+  color: #94a3b8;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.vm-level-badge {
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+.vm-breakthrough-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #fef08a;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.badge-sparkle {
+  animation: sparkle-rotate 1.6s linear infinite;
+}
+
+@keyframes sparkle-rotate {
+  0% { transform: rotate(0deg) scale(0.9); }
+  50% { transform: rotate(180deg) scale(1.2); }
+  100% { transform: rotate(360deg) scale(0.9); }
+}
+
+.vm-growth-desc {
+  font-size: 11px;
+  color: #fbbf24;
+  margin-top: -2px;
+  text-align: right;
+}
+
+.vm-bar-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(15, 23, 42, 0.8);
+  border-radius: 9999px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.vm-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
+  border-radius: 9999px;
+  transition: width 0.85s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.vm-bar-fill.fill-breakthrough {
+  background: linear-gradient(90deg, #f59e0b 0%, #fef08a 100%);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.9);
+}
+
+/* 8.5 戰利品 3D 翻牌網格 */
+.victory-loots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+  padding: 10px 18px 16px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.no-loots-placeholder {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 24px 12px;
+  color: #64748b;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.no-loots-placeholder .placeholder-icon {
+  font-size: 26px;
+}
+
+/* 8.6 3D 翻牌結構 */
+.loot-card-flipper {
+  perspective: 900px;
+  height: 140px;
+  cursor: pointer;
+  outline: none;
+}
+
+.loot-card-flipper:focus-visible .loot-card-face {
+  outline: 2px solid #f59e0b;
+}
+
+.loot-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.loot-card-flipper.is-flipped .loot-card-inner {
+  transform: rotateY(180deg);
+}
+
+.loot-card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  user-select: none;
+}
+
+/* 背面 (封印狀態) */
+.loot-card-back {
+  background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+  border: 1.5px solid rgba(245, 158, 11, 0.35);
+  box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 0, 0, 0.4);
+}
+
+.loot-card-back:hover {
+  border-color: rgba(245, 158, 11, 0.7);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+}
+
+.card-seal-icon {
+  font-size: 28px;
+  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.6));
+}
+
+.card-seal-text {
+  font-size: 12px;
+  font-weight: 800;
+  color: #fef08a;
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+
+.card-seal-sub {
+  font-size: 10px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+/* 正面 (展現物品) */
+.loot-card-front {
+  transform: rotateY(180deg);
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  border: 1.5px solid #64748b;
+  overflow: hidden;
+}
+
+.loot-quality-ribbon {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 9px;
+  font-weight: 900;
+  padding: 1px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.loot-card-icon {
+  font-size: 28px;
+  margin-top: 8px;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.8));
+}
+
+.loot-card-name {
+  font-size: 11px;
+  font-weight: 800;
+  color: #f8fafc;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.loot-card-count {
+  font-size: 11px;
+  font-weight: 900;
+  color: #fef08a;
+}
+
+.loot-card-desc {
+  font-size: 9px;
+  color: #94a3b8;
+  margin-top: 3px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.25;
+}
+
+/* 8.7 戰利品品質階級色彩 (Common ~ Legendary) */
+.loot-card-flipper.quality-common .loot-card-front {
+  border-color: #64748b;
+  box-shadow: 0 0 10px rgba(100, 116, 139, 0.25);
+}
+.loot-card-flipper.quality-common .loot-quality-ribbon {
+  background: rgba(100, 116, 139, 0.4);
+  color: #cbd5e1;
+}
+
+.loot-card-flipper.quality-uncommon .loot-card-front {
+  border-color: #10b981;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.35);
+}
+.loot-card-flipper.quality-uncommon .loot-quality-ribbon {
+  background: rgba(16, 185, 129, 0.35);
+  color: #6ee7b7;
+}
+
+.loot-card-flipper.quality-rare .loot-card-front {
+  border-color: #38bdf8;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.45);
+}
+.loot-card-flipper.quality-rare .loot-quality-ribbon {
+  background: rgba(56, 189, 248, 0.35);
+  color: #bae6fd;
+}
+
+.loot-card-flipper.quality-epic .loot-card-front {
+  border-color: #c084fc;
+  box-shadow: 0 0 16px rgba(192, 132, 252, 0.55);
+}
+.loot-card-flipper.quality-epic .loot-quality-ribbon {
+  background: rgba(192, 132, 252, 0.35);
+  color: #f3e8ff;
+}
+
+.loot-card-flipper.quality-legendary .loot-card-front {
+  border-color: #f59e0b;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.75);
+  animation: legendary-glow 2s infinite alternate;
+}
+.loot-card-flipper.quality-legendary .loot-quality-ribbon {
+  background: rgba(245, 158, 11, 0.45);
+  color: #fef08a;
+}
+
+@keyframes legendary-glow {
+  0% { box-shadow: 0 0 12px rgba(245, 158, 11, 0.5); }
+  100% { box-shadow: 0 0 24px rgba(254, 240, 138, 0.9); }
+}
+
+/* 8.8 結算視窗底部按鈕 */
+.victory-footer-actions {
+  padding: 12px 18px 16px;
+  background: rgba(15, 23, 42, 0.8);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-victory-confirm {
+  width: 100%;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #0f172a;
+  border: 1px solid #fef08a;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 180ms ease;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+}
+
+.btn-victory-confirm:hover,
+.btn-victory-confirm:focus-visible {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6);
+  outline: none;
+}
+
+/* 7. 無障礙降級支援 (prefers-reduced-motion) */
 @media (prefers-reduced-motion: reduce) {
   .enemy-card.react-hit,
   .battle-party-grid-card.react-hit,
@@ -225,6 +1062,10 @@
     animation: react-flash 120ms ease-out;
   }
 
+  .arena-shake {
+    animation: none !important;
+  }
+
   .ftext,
   .ftext.ft-crit {
     animation: none;
@@ -232,4 +1073,433 @@
     transform: translate(-50%, -20px);
     transition: opacity 600ms ease-out;
   }
+
+  .victory-modal-card {
+    animation: none !important;
+  }
+
+  .victory-banner-glow,
+  .victory-banner-icon,
+  .victory-member-row.is-breakthrough,
+  .badge-sparkle,
+  .loot-card-flipper.quality-legendary .loot-card-front {
+    animation: none !important;
+  }
+
+  .loot-card-inner {
+    transition: none !important;
+  }
+
+  .vm-bar-fill {
+    transition: none !important;
+  }
 }
+
+/* ========================================================
+   ENEMY-INTENT-01: 敵方意圖預告、吟唱進度條與危險脈衝光效
+   ======================================================== */
+.enemy-intent-container {
+  width: 100%;
+  margin-top: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.enemy-intent-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 4px;
+  padding: 2px 4px;
+  backdrop-filter: blur(2px);
+  transition: all 0.2s ease;
+}
+
+.enemy-intent-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.intent-icon {
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.intent-title {
+  font-weight: 600;
+  color: #e2e8f0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.intent-target-member {
+  color: #f87171;
+  font-weight: bold;
+  font-size: 10.5px;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.intent-interrupt-tag {
+  background: rgba(234, 179, 8, 0.2);
+  color: #facc15;
+  border: 1px solid rgba(234, 179, 8, 0.5);
+  border-radius: 3px;
+  font-size: 9.5px;
+  padding: 0 3px;
+  line-height: 14px;
+  margin-left: 2px;
+  flex-shrink: 0;
+}
+
+/* 意圖類型色彩 */
+.intent-type-heavy .enemy-intent-wrap {
+  background: rgba(88, 28, 28, 0.7);
+  border-color: rgba(239, 68, 68, 0.6);
+}
+.intent-type-heavy .intent-title {
+  color: #fca5a5;
+}
+
+.intent-type-spell .enemy-intent-wrap {
+  background: rgba(49, 27, 88, 0.7);
+  border-color: rgba(168, 85, 247, 0.6);
+}
+.intent-type-spell .intent-title {
+  color: #d8b4fe;
+}
+
+.intent-type-aberration .enemy-intent-wrap {
+  background: rgba(67, 20, 80, 0.8);
+  border-color: rgba(217, 70, 239, 0.7);
+}
+.intent-type-aberration .intent-title {
+  color: #f0abfc;
+}
+
+.intent-type-physical .enemy-intent-wrap {
+  background: rgba(30, 41, 59, 0.7);
+  border-color: rgba(100, 116, 139, 0.4);
+}
+.intent-type-physical .intent-title {
+  color: #cbd5e1;
+}
+
+/* 蓄力進度條 (Cast Track) */
+.enemy-cast-track {
+  width: 100%;
+  height: 5px;
+  background: rgba(15, 23, 42, 0.9);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.enemy-cast-fill {
+  height: 100%;
+  transition: width 0.2s linear;
+  border-radius: 3px;
+}
+
+.intent-bar-physical {
+  background: linear-gradient(90deg, #94a3b8, #cbd5e1);
+  box-shadow: 0 0 6px rgba(203, 213, 225, 0.6);
+}
+
+.intent-bar-heavy {
+  background: linear-gradient(90deg, #dc2626, #f87171);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
+  animation: cast-heavy-pulse 0.8s ease-in-out infinite alternate;
+}
+
+.intent-bar-spell {
+  background: linear-gradient(90deg, #7c3aed, #38bdf8);
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.8);
+  animation: cast-spell-pulse 0.8s ease-in-out infinite alternate;
+}
+
+.intent-bar-aberration {
+  background: linear-gradient(90deg, #9333ea, #ec4899);
+  box-shadow: 0 0 10px rgba(236, 72, 153, 0.9);
+  animation: cast-heavy-pulse 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes cast-heavy-pulse {
+  from { filter: brightness(1); }
+  to { filter: brightness(1.4); }
+}
+
+@keyframes cast-spell-pulse {
+  from { filter: hue-rotate(0deg); }
+  to { filter: hue-rotate(30deg); }
+}
+
+.enemy-cast-rem {
+  position: absolute;
+  right: 2px;
+  top: -7px;
+  font-size: 8px;
+  color: #f1f5f9;
+  text-shadow: 0 1px 2px #000;
+  display: none;
+}
+
+/* 怪物卡片危險蓄力脈衝邊框 */
+.enemy-card.intent-danger-telegraph {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.6), inset 0 0 8px rgba(220, 38, 38, 0.4) !important;
+  animation: enemy-telegraph-danger-glow 1s ease-in-out infinite alternate !important;
+}
+
+@keyframes enemy-telegraph-danger-glow {
+  0% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.4), inset 0 0 4px rgba(220, 38, 38, 0.2); }
+  100% { box-shadow: 0 0 18px rgba(239, 68, 68, 0.9), inset 0 0 12px rgba(220, 38, 38, 0.6); }
+}
+
+/* ========================================================
+   DEFENSIVE & ULTIMATE FX: 格擋舉盾、招架拼刀、殘影閃避、暴擊爆裂與陣法奧義
+   ======================================================== */
+
+/* 1. 格擋舉盾 (BLOCKED): 玄鐵金光八卦大盾展開 + 震波 */
+.fx-shield-block::before {
+  content: '🛡️';
+  position: absolute;
+  font-size: 38px;
+  filter: drop-shadow(0 0 16px rgba(250, 204, 21, 0.95)) drop-shadow(0 0 30px rgba(234, 179, 8, 0.8));
+  animation: fx-shield-pop 420ms cubic-bezier(0.18, 1.25, 0.3, 1) forwards;
+  z-index: 10;
+}
+.fx-shield-block::after {
+  content: '';
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 3px solid rgba(250, 204, 21, 0.85);
+  box-shadow: 0 0 20px 4px rgba(234, 179, 8, 0.7), inset 0 0 15px rgba(250, 204, 21, 0.5);
+  animation: fx-shield-ring 380ms ease-out forwards;
+}
+@keyframes fx-shield-pop {
+  0% { transform: scale(0.3) translateY(10px); opacity: 0; }
+  30% { transform: scale(1.3) translateY(0); opacity: 1; }
+  70% { transform: scale(1.1); opacity: 0.95; }
+  100% { transform: scale(0.9); opacity: 0; }
+}
+@keyframes fx-shield-ring {
+  0% { transform: scale(0.4); opacity: 1; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* 2. 招架拼刀 (PARRIED): 雙刃相撞金鐵交鳴火星四射 */
+.fx-parry-sparks::before {
+  content: '⚔️';
+  position: absolute;
+  font-size: 32px;
+  filter: drop-shadow(0 0 12px #38bdf8) drop-shadow(0 0 20px #fff);
+  animation: fx-parry-clash 350ms ease-out forwards;
+  z-index: 10;
+}
+.fx-parry-sparks::after {
+  content: '';
+  position: absolute;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 10%, #f59e0b 45%, #ef4444 70%, transparent 85%);
+  box-shadow: 0 0 25px 8px #fbbf24, 0 0 40px 12px rgba(245, 158, 11, 0.7);
+  animation: fx-parry-burst 320ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+@keyframes fx-parry-clash {
+  0% { transform: scale(0.5) rotate(-20deg); opacity: 0; }
+  35% { transform: scale(1.35) rotate(0deg); opacity: 1; }
+  100% { transform: scale(1.1) rotate(15deg); opacity: 0; }
+}
+@keyframes fx-parry-burst {
+  0% { transform: scale(0.2); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.9; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+/* 3. 閃避步法 (DODGED / MISS): 太極殘影遁形氣浪 */
+.fx-dodge-mist::before {
+  content: '💨';
+  position: absolute;
+  font-size: 30px;
+  filter: drop-shadow(0 0 10px #67e8f9);
+  animation: fx-dodge-fade 360ms ease-out forwards;
+}
+.fx-dodge-mist::after {
+  content: '';
+  position: absolute;
+  width: 80px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(103, 232, 249, 0.6) 0%, transparent 70%);
+  animation: fx-dodge-sweep 380ms ease-out forwards;
+}
+@keyframes fx-dodge-fade {
+  0% { transform: translateX(0) scale(0.7); opacity: 0; }
+  40% { transform: translateX(18px) scale(1.2); opacity: 0.9; }
+  100% { transform: translateX(35px) scale(0.9); opacity: 0; }
+}
+@keyframes fx-dodge-sweep {
+  0% { transform: scaleX(0.5); opacity: 0.8; }
+  100% { transform: scaleX(1.8) translateX(25px); opacity: 0; }
+}
+
+/* 4. 暴擊爆裂 (CRIT): 猩紅撕裂血煞爆散 */
+.fx-crit-burst::before {
+  content: '';
+  position: absolute;
+  width: 130px;
+  height: 6px;
+  background: linear-gradient(90deg, transparent, #fff 40%, #ef4444 70%, transparent);
+  box-shadow: 0 0 18px 4px #ef4444, 0 0 35px 8px rgba(220, 38, 38, 0.8);
+  transform: rotate(45deg);
+  animation: fx-crit-slash-a 340ms ease-out forwards;
+}
+.fx-crit-burst::after {
+  content: '';
+  position: absolute;
+  width: 130px;
+  height: 6px;
+  background: linear-gradient(90deg, transparent, #fff 40%, #ef4444 70%, transparent);
+  box-shadow: 0 0 18px 4px #ef4444, 0 0 35px 8px rgba(220, 38, 38, 0.8);
+  transform: rotate(-45deg);
+  animation: fx-crit-slash-b 340ms ease-out forwards;
+}
+@keyframes fx-crit-slash-a {
+  0% { transform: rotate(45deg) scaleX(0.2); opacity: 0; }
+  35% { transform: rotate(45deg) scaleX(1.2); opacity: 1; }
+  100% { transform: rotate(45deg) scaleX(1.4); opacity: 0; }
+}
+@keyframes fx-crit-slash-b {
+  0% { transform: rotate(-45deg) scaleX(0.2); opacity: 0; }
+  35% { transform: rotate(-45deg) scaleX(1.2); opacity: 1; }
+  100% { transform: rotate(-45deg) scaleX(1.4); opacity: 0; }
+}
+
+/* 5. 陣法奧義・四象辟邪聖光 (全場金色四象聖柱貫穿) */
+.fx-area-ultimate-holy {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 50%, rgba(254, 240, 138, 0.45) 0%, rgba(250, 204, 21, 0.25) 50%, transparent 80%);
+  animation: fx-ult-holy-glow 850ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+  pointer-events: none;
+}
+.fx-area-ultimate-holy::before {
+  content: '☯️ 四象聖光 ‧ 辟邪破煞';
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  transform: translate(-50%, -50%);
+  font-size: 26px;
+  font-weight: 900;
+  color: #fef08a;
+  text-shadow: 0 0 20px #f59e0b, 0 0 40px #fbbf24;
+  letter-spacing: 4px;
+  animation: fx-ult-banner-pop 800ms ease-out forwards;
+}
+@keyframes fx-ult-holy-glow {
+  0% { opacity: 0; filter: brightness(2); }
+  25% { opacity: 1; filter: brightness(2.8); }
+  70% { opacity: 0.85; filter: brightness(1.5); }
+  100% { opacity: 0; filter: brightness(1); }
+}
+@keyframes fx-ult-banner-pop {
+  0% { transform: translate(-50%, -40%) scale(0.6); opacity: 0; }
+  25% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+  80% { transform: translate(-50%, -50%) scale(1); opacity: 0.9; }
+  100% { transform: translate(-50%, -60%) scale(0.9); opacity: 0; }
+}
+
+/* 6. 陣法奧義・不可名狀星蝕 (全場暗蝕盲目之眼撕裂) */
+.fx-area-ultimate-abyss {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 50%, rgba(147, 51, 234, 0.5) 0%, rgba(217, 70, 239, 0.3) 50%, transparent 80%);
+  animation: fx-ult-abyss-glow 850ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+  pointer-events: none;
+}
+.fx-area-ultimate-abyss::before {
+  content: '👁️ 盲目之眼 ‧ 星蝕滅頂';
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  transform: translate(-50%, -50%);
+  font-size: 26px;
+  font-weight: 900;
+  color: #f0abfc;
+  text-shadow: 0 0 20px #9333ea, 0 0 40px #d946ef;
+  letter-spacing: 4px;
+  animation: fx-ult-banner-pop 800ms ease-out forwards;
+}
+@keyframes fx-ult-abyss-glow {
+  0% { opacity: 0; filter: brightness(2.2); }
+  25% { opacity: 1; filter: brightness(2.6); }
+  70% { opacity: 0.85; filter: brightness(1.4); }
+  100% { opacity: 0; filter: brightness(1); }
+}
+
+/* 7. 金剛怒目・獅子吼全屏震盪波 (TAUNT ROAR) */
+.fx-area-taunt-roar {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 65%, rgba(245, 158, 11, 0.35) 0%, transparent 75%);
+  animation: fx-taunt-roar-anim 550ms ease-out forwards;
+  pointer-events: none;
+}
+.fx-area-taunt-roar::before {
+  content: '🦁 金剛獅子吼 ‧ 全場震懾';
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  transform: translate(-50%, -50%);
+  font-size: 22px;
+  font-weight: 900;
+  color: #fef08a;
+  text-shadow: 0 0 15px #f59e0b, 0 0 30px #d97706;
+  letter-spacing: 3px;
+  animation: fx-ult-banner-pop 550ms ease-out forwards;
+}
+@keyframes fx-taunt-roar-anim {
+  0% { opacity: 0; transform: scale(0.6); }
+  30% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0; transform: scale(1.3); }
+}
+
+/* 8. 奧義按鈕就緒 vs 未滿狀態 */
+.battle-act-btn.ult-btn.ult-ready-pulse {
+  background: linear-gradient(135deg, #b45309 0%, #f59e0b 50%, #facc15 100%) !important;
+  color: #000 !important;
+  font-weight: 900 !important;
+  border-color: #fef08a !important;
+  box-shadow: 0 0 14px rgba(250, 204, 21, 0.85), inset 0 0 8px #fff !important;
+  animation: ult-btn-glow 1.2s infinite alternate !important;
+}
+.battle-act-btn.ult-btn.ult-disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  filter: grayscale(0.5) !important;
+}
+@keyframes ult-btn-glow {
+  0% { box-shadow: 0 0 8px rgba(250, 204, 21, 0.6); transform: scale(1); }
+  100% { box-shadow: 0 0 20px rgba(250, 204, 21, 1), 0 0 30px rgba(245, 158, 11, 0.8); transform: scale(1.03); }
+}
+

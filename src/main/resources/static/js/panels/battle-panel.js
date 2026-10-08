@@ -154,6 +154,11 @@ export function renderBattleArena(battle) {
       buffsHtml = e.activeBuffs.map(b => `<span class="enemy-buff-badge" style="background:#172554; color:#93c5fd; border:1px solid #1e3a8a; padding:1px 4px; border-radius:3px; font-size:12px;">${escapeHtml(b.icon || '✨')}${escapeHtml(b.name || '')}</span>`).join('');
     }
 
+    const isDanger = (e.isCasting && (e.intentType === 'HEAVY' || e.intentType === 'ABERRATION'));
+    if (isDanger) card.classList.add('intent-danger-telegraph');
+
+    const intentHtml = renderEnemyIntentAndCast(e);
+
     if (w === 1 && h === 5) {
       // 1x5 貫通陣柱
       card.innerHTML = `
@@ -168,6 +173,7 @@ export function renderBattleArena(battle) {
           <div style="writing-mode:vertical-rl; font-size:14px; font-weight:bold; letter-spacing:4px; color:#60a5fa;" title="${safeEnemyName}">${safeEnemyName}</div>
           <div style="font-size:11px; color:#93c5fd; background:rgba(30,58,138,0.4); padding:2px 4px; border-radius:3px; text-align:center;">天罡通天</div>
         </div>
+        <div class="enemy-intent-container">${intentHtml}</div>
         <div class="enemy-hp-wrap large-hp-wrap" style="height:22px; border-radius:4px; overflow:hidden;" title="生命 HP: ${e.hp}/${e.maxHp}">
           <div class="enemy-hp-bar" style="width: ${hpPct}%; background: linear-gradient(90deg, #2563eb, #38bdf8);"></div>
           <span class="enemy-hp-text" style="font-size:12px; font-weight:bold; text-shadow:0 1px 2px #000;">${e.hp}/${e.maxHp}</span>
@@ -187,6 +193,7 @@ export function renderBattleArena(battle) {
           <div style="writing-mode:vertical-rl; font-size:13px; font-weight:bold; letter-spacing:2px; color:#d8b4fe;" title="${safeEnemyName}">${safeEnemyName}</div>
           <div style="font-size:11px; color:#c084fc; text-align:center;">紫電雷罡</div>
         </div>
+        <div class="enemy-intent-container">${intentHtml}</div>
         <div class="enemy-hp-wrap large-hp-wrap" style="height:20px; border-radius:4px; overflow:hidden;" title="生命 HP: ${e.hp}/${e.maxHp}">
           <div class="enemy-hp-bar" style="width: ${hpPct}%; background: linear-gradient(90deg, #7c3aed, #c084fc);"></div>
           <span class="enemy-hp-text" style="font-size:12px; font-weight:bold; text-shadow:0 1px 2px #000;">${e.hp}/${e.maxHp}</span>
@@ -209,9 +216,7 @@ export function renderBattleArena(battle) {
         <div class="large-enemy-info" style="font-size:13px; color:#f0abfc; display:flex; align-items:center; gap:6px; background:rgba(236,72,153,0.1); padding:2px 6px; border-radius:4px;">
           <span>🛡️ 四倍玄罡 • 太陰巨樁 (3x3 佔位)</span>
         </div>
-        <div style="font-size:13px; color:#c084fc; display:flex; align-items:center; gap:6px;">
-          <span>⚡ 核心靈威共振 • 巍然撼嶽</span>
-        </div>
+        <div class="enemy-intent-container">${intentHtml}</div>
         <div class="enemy-hp-wrap large-hp-wrap" style="height:26px; border-radius:4px; overflow:hidden;" title="生命 HP: ${e.hp}/${e.maxHp}">
           <div class="enemy-hp-bar" style="width: ${hpPct}%; background: linear-gradient(90deg, #db2777, #f59e0b);"></div>
           <span class="enemy-hp-text" style="font-size:14px; font-weight:bold; text-shadow:0 1px 3px #000;">HP ${e.hp}/${e.maxHp}</span>
@@ -234,6 +239,7 @@ export function renderBattleArena(battle) {
         <div class="large-enemy-info" style="font-size:13px; color:#c084fc; display:flex; align-items:center; gap:6px;">
           <span>🛡️ 雙倍防禦 • 巨型陣樁 (2x2 佔位)</span>
         </div>
+        <div class="enemy-intent-container">${intentHtml}</div>
         <div class="enemy-hp-wrap large-hp-wrap" style="height:22px; border-radius:4px; overflow:hidden;" title="生命 HP: ${e.hp}/${e.maxHp}">
           <div class="enemy-hp-bar" style="width: ${hpPct}%; background: linear-gradient(90deg, #dc2626, #f97316);"></div>
           <span class="enemy-hp-text" style="font-size:13px; font-weight:bold; text-shadow:0 1px 2px #000;">HP ${e.hp}/${e.maxHp}</span>
@@ -254,6 +260,7 @@ export function renderBattleArena(battle) {
           <div class="enemy-hp-bar" style="width: ${hpPct}%"></div>
           <span class="enemy-hp-text" style="font-size:13px; font-weight:bold; text-shadow:0 1px 2px #000; white-space:nowrap;">HP ${e.hp}/${e.maxHp}</span>
         </div>
+        <div class="enemy-intent-container">${intentHtml}</div>
       `;
     }
     return card;
@@ -283,6 +290,9 @@ export function renderBattleArena(battle) {
       const isTarget = (selectedEnemy && selectedEnemy.index === idx);
       card.classList.toggle('selected-target', isTarget);
 
+      const isDanger = (e.isCasting && (e.intentType === 'HEAVY' || e.intentType === 'ABERRATION'));
+      card.classList.toggle('intent-danger-telegraph', Boolean(isDanger));
+
       const hpPct = Math.min(100, Math.max(0, (e.hp / e.maxHp) * 100));
       const hpBar = card.querySelector('.enemy-hp-bar');
       if (hpBar) hpBar.style.width = `${hpPct}%`;
@@ -301,6 +311,14 @@ export function renderBattleArena(battle) {
         const buffsHtml = renderBuffBadges(e.activeBuffs);
         badgesRight.innerHTML = `${targetBadge}${stunBadge}${buffsHtml}`;
       }
+
+      let intentContainer = card.querySelector('.enemy-intent-container');
+      if (!intentContainer) {
+        intentContainer = document.createElement('div');
+        intentContainer.className = 'enemy-intent-container';
+        card.appendChild(intentContainer);
+      }
+      intentContainer.innerHTML = renderEnemyIntentAndCast(e);
     });
   }
 
@@ -337,11 +355,85 @@ function renderBuffBadges(activeBuffs) {
 }
 
 /**
+ * ENEMY-INTENT-01: 渲染敵方意圖預告與吟唱進度條
+ */
+function renderEnemyIntentAndCast(e) {
+  if (!e) return '';
+  const intentName = escapeHtml(e.intentName || '');
+  const isCasting = Boolean(e.isCasting);
+
+  if (!intentName && !isCasting) {
+    return '';
+  }
+
+  const intentType = (e.intentType || 'PHYSICAL').toLowerCase();
+  const intentIcon = escapeHtml(e.intentIcon || '🗡️');
+  const targetMember = escapeHtml(e.targetMemberName || '');
+
+  const castPct = (e.castDurationMs > 0 && e.castRemainingMs !== undefined)
+    ? Math.max(0, Math.min(100, Math.round((1 - (e.castRemainingMs / e.castDurationMs)) * 100)))
+    : 100;
+
+  const remSec = (e.castRemainingMs && e.castRemainingMs > 0)
+    ? (e.castRemainingMs / 1000).toFixed(1)
+    : '';
+
+  const interruptTag = (isCasting && e.isInterruptible)
+    ? `<span class="intent-interrupt-tag" title="可被眩暈或破招打斷">可斷</span>`
+    : '';
+
+  const targetTag = targetMember
+    ? `<span class="intent-target-member" title="鎖定目標：${targetMember}">➔ ${targetMember}</span>`
+    : '';
+
+  const castBarHtml = isCasting ? `
+    <div class="enemy-cast-track" title="蓄力施法中：剩餘 ${remSec}s">
+      <div class="enemy-cast-fill intent-bar-${intentType}" style="width: ${castPct}%;"></div>
+      <span class="enemy-cast-rem">${remSec ? remSec + 's' : '蓄力'}</span>
+    </div>
+  ` : '';
+
+  return `
+    <div class="enemy-intent-wrap intent-type-${intentType}">
+      <div class="enemy-intent-badge">
+        <span class="intent-icon">${intentIcon}</span>
+        <span class="intent-title">${intentName}</span>
+        ${targetTag}
+        ${interruptTag}
+      </div>
+      ${castBarHtml}
+    </div>
+  `;
+}
+
+/**
+ * 更新戰鬥底部陣法奧義按鈕的靈威充能狀態與動態視覺
+ * @param {Object} party 隊伍快照
+ */
+export function updateFooterUltButton(party) {
+  const footerUltBtn = document.getElementById('footer-ult-btn');
+  if (!footerUltBtn) return;
+  const energy = party ? (party.formationEnergy || 0) : 0;
+  if (energy >= 100) {
+    footerUltBtn.classList.remove('ult-disabled');
+    footerUltBtn.classList.add('ult-ready-pulse');
+    footerUltBtn.innerHTML = '⚡ 陣法奧義【就緒!】(U)';
+    footerUltBtn.title = '【靈威 100/100】點擊或按 U 施展陣法奧義！';
+  } else {
+    footerUltBtn.classList.remove('ult-ready-pulse');
+    footerUltBtn.classList.add('ult-disabled');
+    footerUltBtn.innerHTML = `⚡ 陣法奧義 [${energy}/100] (U)`;
+    footerUltBtn.title = `【靈威 ${energy}/100】尚未充能完畢，命中或受創蓄滿 100 方可施展`;
+  }
+}
+
+/**
  * 渲染戰場我方隊員快速資訊列 (雙層前後排、居中、陣法孔位與換位按鈕，支援 In-place 更新防閃爍)
  * @param {Object} party 小隊狀態
  */
 export function renderBattlePartyQuickBar(party) {
   const bar = document.getElementById('battle-party-grid-5x3') || document.getElementById('battle-party-quick-bar');
+  updateFooterUltButton(party);
   if (!bar || !party || !party.members) return;
 
   let selectedMemberIdx = store.get('selectedMemberIdx');

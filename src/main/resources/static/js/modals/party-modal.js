@@ -72,7 +72,6 @@ export function triggerPartyAction() {
     list.classList.add('party-pulse');
   }
   togglePartyModal();
-  send('party');
 }
 
 /**

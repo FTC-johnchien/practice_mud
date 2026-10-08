@@ -178,6 +178,55 @@
     </div>
   </div>
 
+  <!-- 戰鬥大捷結算視窗 (Battle Victory Modal - BATTLE-RESULT-01) -->
+  <div id="battle-victory-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="victory-modal-title">
+    <div class="victory-modal-card">
+      <div class="victory-banner-wrap">
+        <div class="victory-banner-glow"></div>
+        <div class="victory-banner-content">
+          <span class="victory-banner-icon">🏆</span>
+          <h2 id="victory-modal-title" class="victory-banner-title">戰鬥大捷</h2>
+          <span class="victory-banner-subtitle">BATTLE VICTORY ‧ 斬妖伏魔</span>
+        </div>
+      </div>
+
+      <div class="victory-summary-row">
+        <div class="victory-summary-pill xp-pill">
+          <span class="pill-icon">✨</span>
+          <span class="pill-label">修為獲得：</span>
+          <strong id="victory-xp-val" class="pill-val">+0</strong>
+          <span class="pill-unit">XP</span>
+        </div>
+        <div id="victory-coins-pill" class="victory-summary-pill coins-pill hidden">
+          <span class="pill-icon">💰</span>
+          <span class="pill-label">收穫靈石：</span>
+          <strong id="victory-coins-val" class="pill-val">+0</strong>
+        </div>
+      </div>
+
+      <div class="victory-section-title">
+        <span>👥 全員修為精進 (EXP &amp; BREAKTHROUGH)</span>
+      </div>
+      <div id="victory-members-list" class="victory-members-list">
+        <!-- 由 victory-modal.js 動態渲染隊員修為與境界突破 -->
+      </div>
+
+      <div class="victory-section-title">
+        <span>🎁 繳獲戰利品 (BATTLE LOOTS)</span>
+        <button id="btn-flip-all-loots" class="btn-flip-all" data-action="flip-all-loots" title="一次翻開所有戰利品">🎴 全部翻開</button>
+      </div>
+      <div id="victory-loots-grid" class="victory-loots-grid">
+        <!-- 由 victory-modal.js 動態渲染翻牌卡片 -->
+      </div>
+
+      <div class="modal-footer-actions victory-footer-actions">
+        <button id="btn-confirm-victory" class="btn-modal-confirm btn-victory-confirm" data-action="close-victory-modal" title="關閉大捷視窗 (Space / Enter / Esc)">
+          ⚔️ 納入囊中 ‧ 繼續探索 (Space)
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="game-container">
     <!-- 頂部資訊列：Global Header 全域狀態 (道號、盤纏靈石、時辰天候、區域探索度、快捷導航) -->
     <header class="top-nav-bar global-header">
@@ -398,6 +447,13 @@
         </div>
       </section>
 
+        <!-- 底部單行水墨跑馬燈 (日誌摺疊或常態輕量提示，點擊可快速展開/收合側邊日誌) -->
+        <div id="hud-event-ticker" class="hud-event-ticker" data-action="toggle-log-collapse" title="最新歷程動態 ‧ 點擊展開/摺疊日誌面板">
+          <span class="ticker-badge">📜 歷程</span>
+          <span id="hud-ticker-text" class="ticker-text">太陰幽冥，仙道長存。探索地宮與城鎮之歷程將即時映現於此...</span>
+          <button class="ticker-toggle-btn" data-action="toggle-log-collapse" title="切換日誌展開/收合">展開 ▴</button>
+        </div>
+
         <!-- 下部：隊伍狀態 HUD (吸附於左舞台底部) -->
         <section class="party-hud-panel">
           <div class="party-formation-header" data-action="party-formation-header" title="點擊切換結成之道門陣法 (F)">
@@ -415,8 +471,23 @@
         </section>
       </div>
 
-      <!-- 右側主體：全高戰鬥/冒險情報日誌 (100% 全高貫通，不再被小隊狀態條截斷) -->
-      <div class="log-and-battle-area">
+      <!-- 右側主體：全高戰鬥/冒險情報日誌 (可收合、支援分類過濾) -->
+      <div id="log-and-battle-area" class="log-and-battle-area">
+        <div class="log-panel-toolbar">
+          <div class="log-toolbar-left">
+            <span class="log-title">📜 歷程紀事</span>
+          </div>
+          <div class="log-filter-tabs">
+            <button class="log-filter-btn active" data-action="filter-log" data-cat="all">全部</button>
+            <button class="log-filter-btn" data-action="filter-log" data-cat="combat">⚔️ 戰鬥</button>
+            <button class="log-filter-btn" data-action="filter-log" data-cat="story">💬 劇情</button>
+            <button class="log-filter-btn" data-action="filter-log" data-cat="system">⚙️ 系統</button>
+          </div>
+          <div class="log-toolbar-right">
+            <button class="log-tool-btn" data-action="clear-log" title="清空當前日誌">🗑️</button>
+            <button class="log-tool-btn" data-action="toggle-log-collapse" title="摺疊收合日誌面板，最大化主舞台">▾ 收合</button>
+          </div>
+        </div>
         <section id="log"></section>
       </div>
     </main>

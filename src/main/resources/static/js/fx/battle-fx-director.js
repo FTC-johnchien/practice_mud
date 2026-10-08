@@ -1,9 +1,10 @@
 import { spawnFloatingText } from './floating-text.js';
-import { getUnitRect } from './fx-geometry.js';
+import { getUnitRect, getUnionRect } from './fx-geometry.js';
+import { resolvePreset } from './fx-presets.js';
 
 /**
  * 戰鬥動態表現指揮官 (Battle FX Director)
- * 負責消費 BATTLE_EVENTS，排程時間軸播放出手微位移、受擊反應 class 與浮動飄字
+ * 負責消費 BATTLE_EVENTS，排程時間軸播放出手微位移、受擊反應 class、武器/法術視覺特效、全場橫掃與浮動飄字
  */
 class BattleFxDirector {
   constructor() {
@@ -47,10 +48,12 @@ class BattleFxDirector {
   }
 
   /**
-   * 播放單一戰鬥事件
+   * 播放單一戰鬥事件 (包含武器/法術特效、全體 AOE 橫掃與受擊卡片反應)
    */
   playEvent(ev) {
     if (!ev || !this.layer) return;
+
+    const preset = resolvePreset(ev);
 
     // 1. 出手者短促突進動態 (Actor Animation)
     if (ev.actor) {
@@ -61,7 +64,25 @@ class BattleFxDirector {
       }
     }
 
-    // 2. 目標命中受擊反應與浮動文字 (Hits)
+    // 2. 全體 AOE / 絕招演出 (Area FX, Shake & Skill Banner)
+    if (preset.isAoe) {
+      this.shakeArena();
+
+      const targetEls = (ev.hits || [])
+        .map(h => this.findUnitEl(h.target))
+        .filter(Boolean);
+
+      if (preset.areaFx && targetEls.length > 0) {
+        const unionRect = getUnionRect(targetEls, this.layer);
+        this.spawnFx(preset.areaFx, unionRect);
+      }
+    }
+
+    if (preset.showBanner && preset.skillName) {
+      this.showSkillBanner(preset.skillName);
+    }
+
+    // 3. 目標命中受擊反應、武器/法術光效與浮動文字 (Hits)
     const hits = ev.hits || [];
     hits.forEach((hit, hitIdx) => {
       this.later(() => {
@@ -70,17 +91,80 @@ class BattleFxDirector {
 
         const rect = getUnitRect(targetEl, this.layer);
         const outcome = hit.outcome || 'HIT';
+        const isTaunt = ev.damageType === 'TAUNT' || ev.fxKey === 'taunt_roar' || outcome === 'TAUNT';
 
-        // 觸發受擊/防禦動態 class
-        const reactCls = this.resolveReactionClass(outcome);
-        if (reactCls) {
-          this.flashClass(targetEl, reactCls, 400);
+        if (isTaunt) {
+          // 嘲諷不生成武器傷害光效，只觸發受挑釁怒氣光環微晃
+          this.flashClass(targetEl, 'react-taunt', 450);
+        } else {
+          // 1. 生成判定專屬防禦/受擊光效 (格擋舉盾、招架拼刀、殘影閃避、暴擊爆裂)
+          if (outcome === 'BLOCKED') {
+            this.spawnFx('fx-shield-block', rect);
+          } else if (outcome === 'PARRIED') {
+            this.spawnFx('fx-parry-sparks', rect);
+          } else if (outcome === 'DODGED' || outcome === 'MISS') {
+            this.spawnFx('fx-dodge-mist', rect);
+          } else if (outcome === 'CRIT') {
+            this.spawnFx('fx-crit-burst', rect);
+            if (preset.impactFx) this.spawnFx(preset.impactFx, rect);
+          } else if (preset.impactFx) {
+            this.spawnFx(preset.impactFx, rect);
+          }
+
+          // 2. 觸發受擊/防禦動態 class (抖動、格擋、閃避、暴擊)
+          const reactCls = this.resolveReactionClass(outcome);
+          if (reactCls) {
+            this.flashClass(targetEl, reactCls, 400);
+          }
         }
 
         // 生成浮動數字
         spawnFloatingText(this.layer, rect, hit, ev);
       }, 100 + hitIdx * 50);
     });
+  }
+
+  /**
+   * 生成幾何覆蓋式戰鬥光效節點
+   */
+  spawnFx(fxClass, rect) {
+    if (!this.layer || !fxClass || !rect) return;
+    const el = document.createElement('div');
+    el.className = `fx ${fxClass}`;
+    el.style.left = `${rect.x}px`;
+    el.style.top = `${rect.y}px`;
+    el.style.width = `${Math.max(20, rect.w)}px`;
+    el.style.height = `${Math.max(20, rect.h)}px`;
+
+    el.addEventListener('animationend', () => el.remove(), { once: true });
+    this.later(() => el.remove(), 650);
+    this.layer.appendChild(el);
+  }
+
+  /**
+   * 彈出招式與絕技橫幅光效
+   */
+  showSkillBanner(name) {
+    if (!this.layer || !name) return;
+    const existing = this.layer.querySelector('.fx-skill-banner');
+    if (existing) existing.remove();
+
+    const banner = document.createElement('div');
+    banner.className = 'fx-skill-banner';
+    banner.textContent = `【${name}】`;
+    banner.addEventListener('animationend', () => banner.remove(), { once: true });
+    this.later(() => banner.remove(), 850);
+    this.layer.appendChild(banner);
+  }
+
+  /**
+   * 震動整個戰鬥主舞台
+   */
+  shakeArena() {
+    const arena = document.getElementById('battle-arena-panel') || document.querySelector('.battle-arena-body');
+    if (arena) {
+      this.flashClass(arena, 'arena-shake', 280);
+    }
   }
 
   /**
