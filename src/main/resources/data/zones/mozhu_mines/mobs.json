@@ -72,6 +72,7 @@
     "isUnique": true,
     "level": 15,
     "maxHp": 450,
+    "expReward": 500,
     "str": 38,
     "dex": 28,
     "attackVerb": "揮動泣血巨爪拍下",

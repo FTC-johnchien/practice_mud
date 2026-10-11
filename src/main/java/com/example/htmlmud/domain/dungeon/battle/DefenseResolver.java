@@ -130,7 +130,7 @@ public class DefenseResolver {
     boolean canRiposte = false;
     int riposteAtk = 5;
     if (defender instanceof com.example.htmlmud.domain.actor.impl.Player p) {
-      boolean classCanRiposte = p.getClassTemplate().map(t -> t.hasTrait("canRiposte")).orElse("SWORDSMAN".equalsIgnoreCase(p.getClassId()));
+      boolean classCanRiposte = p.getClassTemplate().map(t -> t.hasTrait("canRiposte")).orElse(false);
       canRiposte = classCanRiposte || parrySkill != null;
       if (p.getStats() != null) {
         riposteAtk = Math.max(5, (int)(p.getStats().getStr() * 1.2 + p.getStats().getDex()));
@@ -201,7 +201,7 @@ public class DefenseResolver {
     boolean canRiposte = false;
     int riposteAtk = 5;
     if (targetMember != null) {
-      boolean classCanRiposte = targetMember.getClassTemplate().map(t -> t.hasTrait("canRiposte")).orElse("SWORDSMAN".equalsIgnoreCase(targetMember.getClassId()));
+      boolean classCanRiposte = targetMember.getClassTemplate().map(t -> t.hasTrait("canRiposte")).orElse(false);
       canRiposte = classCanRiposte || parrySkill != null;
       riposteAtk = Math.max(5, targetMember.getEffectiveMaxDamage());
     }
@@ -256,188 +256,17 @@ public class DefenseResolver {
       boolean canRiposte, int riposteAttackPower,
       com.example.htmlmud.domain.model.entity.LivingStats defStats) {
 
-    // 檢查防禦者精力狀態 (Stamina / Poise Break)
-    int currentStamina = (defStats != null) ? defStats.getStamina() : 100;
-    boolean poiseBroken = (currentStamina <= 0);
-
-    // 1. Miss 閾值 (機率)：BaseMiss(5%) + max(0, (Def.DEX - Atk.DEX) * 0.5%)
-    double missChance = Math.min(0.25, Math.max(0.02, 0.05 + Math.max(0, defDex - atkDex) * 0.005));
-
-    // 2. Dodge 閾值 (機率)：Skill.dodgeRate + (Def.DEX * 0.8%) - (Atk.DEX * 0.3%)
-    // 若處於精力枯竭狀態 (Stamina <= 0)，閃避機率強制歸零
-    double dodgeChance = 0.0;
-    if (!poiseBroken && dodgeSkill != null) {
-      double baseDodge = 0.10;
-      if (dodgeSkill.getMechanics() != null) {
-        if (dodgeSkill.getMechanics().dodgeRate() > 0) {
-          baseDodge = dodgeSkill.getMechanics().dodgeRate();
-        } else if (dodgeSkill.getMechanics().dodgeMod() > 0) {
-          baseDodge = dodgeSkill.getMechanics().dodgeMod();
-        }
-      }
-      dodgeChance = Math.min(0.75, Math.max(0.05, baseDodge + (defDex * 0.008) - (atkDex * 0.003)));
-    }
-
-    // 3. Parry 閾值 (機率)：Skill.parryRate + (Def.STR * 0.4%) + (Def.DEX * 0.4%)
-    // 若處於精力枯竭狀態 (Stamina <= 0)，招架機率強制歸零
-    double parryChance = 0.0;
-    double reduceRatio = 0.50; // 招架傷害承受比率 (預設減免 50%)
-    if (!poiseBroken && parrySkill != null) {
-      double baseParry = 0.15;
-      if (parrySkill != null && parrySkill.getMechanics() != null) {
-        if (parrySkill.getMechanics().parryRate() > 0) {
-          baseParry = parrySkill.getMechanics().parryRate();
-        } else if (parrySkill.getMechanics().parryMod() > 0) {
-          baseParry = parrySkill.getMechanics().parryMod();
-        }
-        if (parrySkill.getMechanics().damageReduce() > 0) {
-          double extraReduce = parrySkill.getMechanics().damageReduce();
-          reduceRatio = Math.max(0.20, 0.50 - extraReduce);
-        }
-      }
-      parryChance = Math.min(0.65, Math.max(0.05, baseParry + (defStr * 0.004) + (defDex * 0.004)));
-    }
-
-    // 4. Block 閾值 (機率)：副手配備盾牌時參與圓桌判定 (基礎 20% + CON * 0.3%)
-    double blockChance = 0.0;
-    if (hasShield) {
-      blockChance = Math.min(0.60, Math.max(0.10, 0.20 + (defCon * 0.003)));
-    }
-
-    // 5. Crit 閾值 (機率)：攻擊者暴擊率 (基礎 5% + Atk.DEX * 0.2%)
-    double critChance = Math.min(0.35, Math.max(0.05, 0.05 + (atkDex * 0.002)));
-
-    // =========================================================================
-    // 圓桌總機率安全收斂與歸一化 (Probability Normalization & Safe Allocation)
-    // 1. 防禦切片總和 (Miss + Dodge + Parry + Block) 不可突破全域上限 (maxTotalDef, 預設 0.75)
-    // 2. 致命一擊 (Crit) 僅分配剩餘機率，且保留至少 minNormalHit (預設 0.05) 作為普通命中窗口
-    // =========================================================================
-    double maxTotalDef = (gameConfig != null && gameConfig.getCombat() != null)
-        ? gameConfig.getCombat().getMaxTotalDefenseChance()
-        : 0.75;
-    double minNormalHit = (gameConfig != null && gameConfig.getCombat() != null)
-        ? gameConfig.getCombat().getMinNormalHitChance()
-        : 0.05;
-
-    double totalDef = missChance + dodgeChance + parryChance + blockChance;
-    if (totalDef > maxTotalDef) {
-      double scale = maxTotalDef / totalDef;
-      missChance *= scale;
-      dodgeChance *= scale;
-      parryChance *= scale;
-      blockChance *= scale;
-      totalDef = maxTotalDef;
-    }
-
-    double remainingPool = Math.max(0.0, 1.0 - totalDef);
-    double maxCritAllowed = Math.max(0.01, remainingPool - minNormalHit);
-    double actualCrit = Math.min(critChance, maxCritAllowed);
-
-    // =========================================================================
-    // 一元一次擲骰圓桌判定 (One-Roll Resolution)
-    // 累積邊界: [0, Miss) -> [Miss, Dodge) -> [Dodge, Parry) -> [Parry, Block) -> [Block, Crit) -> [Crit, 1.0)
-    // =========================================================================
-    double roll = (predeterminedRoll != null)
-        ? predeterminedRoll
-        : ThreadLocalRandom.current().nextDouble();
-
-    double missLimit = missChance;
-    double dodgeLimit = missLimit + dodgeChance;
-    double parryLimit = dodgeLimit + parryChance;
-    double blockLimit = parryLimit + blockChance;
-    double critLimit = blockLimit + actualCrit;
-
-    // 內功護體微調 (FORCE Mitigation)
-    int forceReduction = 0;
-    if (forceSkill != null && forceSkill.getMechanics() != null && forceSkill.getMechanics().defenseMod() > 0) {
-      forceReduction = forceSkill.getMechanics().defenseMod();
-    }
-
-    // 判定 1: 未命中 (MISS)
-    if (roll < missLimit) {
-      String missLog = "\u001B[1;30m💨【未命中】" + attackerName + " 攻勢落空，未能觸及 " + defenderName + "！\u001B[0m";
-      return new DefenseResolution(DefenseOutcome.MISS, 0, 0, 0, missLog, false, 0, 0, poiseBroken);
-    }
-
-    // 判定 2: 身法閃避 (DODGED) - 消耗 2 點 Stamina
-    if (roll < dodgeLimit) {
-      int staminaCost = 2;
-      if (defStats != null) {
-        defStats.setStamina(Math.max(0, defStats.getStamina() - staminaCost));
-      }
-      String msg = extractDodgeMessage(dodgeSkill, attackerName, defenderName, weaponName);
-      String log = "\u001B[1;36m💨【身法閃避】" + msg + "\u001B[0m";
-      return new DefenseResolution(DefenseOutcome.DODGED, 0, 15, 0, log, false, 0, staminaCost, false);
-    }
-
-    // 判定 3: 招架格擋 (PARRIED) - 消耗 3 點 Stamina
-    if (roll < parryLimit) {
-      int staminaCost = 3;
-      if (defStats != null) {
-        defStats.setStamina(Math.max(0, defStats.getStamina() - staminaCost));
-      }
-      int parriedDmg = Math.max(1, (int) Math.round(rawDamage * reduceRatio));
-      String msg = extractParryMessage(parrySkill, attackerName, defenderName, weaponName, defWeapon);
-      String log = "\u001B[1;33m🛡️【招架格擋】" + msg + "（傷害減免至 " + parriedDmg + " 點）\u001B[0m";
-
-      boolean triggeredRiposte = false;
-      int riposteDmg = 0;
-      if (canRiposte) {
-        boolean shouldTrigger = (predeterminedRoll != null) || (ThreadLocalRandom.current().nextDouble() < 0.50);
-        if (shouldTrigger) {
-          triggeredRiposte = true;
-          riposteDmg = Math.max(3, riposteAttackPower);
-          log += "\r\n\u001B[1;36m⚔️【破招反擊】" + defenderName + " 借力打力，反手一記突刺，對 " + attackerName + " 造成了 " + riposteDmg + " 點反擊傷害！\u001B[0m";
-        }
-      }
-
-      return new DefenseResolution(DefenseOutcome.PARRIED, parriedDmg, 5, 5, log, triggeredRiposte, riposteDmg, staminaCost, false);
-    }
-
-    // 判定 4: 盾牌格擋 (BLOCKED)
-    if (roll < blockLimit) {
-      int shieldBlockValue = Math.max(5, (shieldBonusDef * 2) + (defCon / 2));
-      int blockedDmg = Math.max(1, rawDamage - shieldBlockValue);
-      if (poiseBroken) {
-        blockedDmg = Math.max(1, (int) Math.round(blockedDmg * 1.20));
-      }
-      String log = "\u001B[1;33m🛡️【盾牌格擋】" + defenderName + " 舉起【" + shieldName + "】固若金湯，化解了 " + shieldBlockValue + " 點衝擊！（承受 " + blockedDmg + " 點傷害）\u001B[0m";
-      if (poiseBroken) {
-        log += "\r\n\u001B[1;35m⚠️【架勢破防】" + defenderName + " 精力枯竭架勢崩潰，破綻大開！受到額外 20% 傷害！\u001B[0m";
-      }
-      return new DefenseResolution(DefenseOutcome.BLOCKED, blockedDmg, 5, 5, log, false, 0, 0, poiseBroken);
-    }
-
-    // 判定 5: 致命一擊 (CRIT)
-    if (roll < critLimit) {
-      int critDmg = Math.max(1, (int) Math.round(rawDamage * 1.5) - forceReduction);
-      if (poiseBroken) {
-        critDmg = Math.max(1, (int) Math.round(critDmg * 1.20));
-      }
-      String critLog = "\u001B[1;31m💥【致命一擊】" + attackerName + " 破開空隙正中要害，對 " + defenderName + " 爆擊造成 " + critDmg + " 點毀滅傷害！\u001B[0m";
-      if (poiseBroken) {
-        critLog += "\r\n\u001B[1;35m⚠️【架勢破防】" + defenderName + " 精力枯竭架勢崩潰，破綻大開！受到額外 20% 傷害！\u001B[0m";
-      }
-      return new DefenseResolution(DefenseOutcome.CRIT, critDmg, 10, 15, critLog, false, 0, 0, poiseBroken);
-    }
-
-    // 判定 6: 普通命中受創 (HIT)
-    int finalDmg = Math.max(1, rawDamage - forceReduction);
-    if (poiseBroken) {
-      finalDmg = Math.max(1, (int) Math.round(finalDmg * 1.20));
-    }
-    int rage = (resType == CombatResourceType.RAGE) ? 15 : 0;
-    String hitLog;
-    if (enemyMove != null && !enemyMove.isBlank()) {
-      hitLog = "\u001B[1;31m⚡【" + attackerName + "】施展【" + enemyMove + "】，重創 " + defenderName + " 造成 " + finalDmg + " 點傷害！\u001B[0m";
-    } else {
-      hitLog = "\u001B[1;31m⚡【" + attackerName + "】發起猛烈撲擊，重創 " + defenderName + " 造成 " + finalDmg + " 點傷害！\u001B[0m";
-    }
-    if (poiseBroken) {
-      hitLog += "\r\n\u001B[1;35m⚠️【架勢破防】" + defenderName + " 精力枯竭架勢崩潰，破綻大開！受到額外 20% 傷害！\u001B[0m";
-    }
-
-    return new DefenseResolution(DefenseOutcome.HIT, finalDmg, 10, rage, hitLog, false, 0, 0, poiseBroken);
+    com.example.htmlmud.domain.combat.CombatRules.DefenseParams params =
+        new com.example.htmlmud.domain.combat.CombatRules.DefenseParams(
+            attackerName, defenderName, weaponName, defWeapon,
+            atkDex, defDex, defStr, defCon,
+            dodgeSkill, parrySkill, forceSkill,
+            hasShield, shieldBonusDef, shieldName,
+            rawDamage, enemyMove, resType,
+            canRiposte, riposteAttackPower, defStats,
+            this.gameConfig
+        );
+    return com.example.htmlmud.domain.combat.CombatRules.executeCombatTable(params, predeterminedRoll);
   }
 
   /**

@@ -3,7 +3,7 @@ package com.example.htmlmud.domain.event;
 import java.time.Instant;
 
 public sealed interface PlayerEvents extends DomainEvent
-    permits PlayerEvents.LoggedIn, PlayerEvents.LoggedOut, PlayerEvents.LevelUp {
+    permits PlayerEvents.LoggedIn, PlayerEvents.LoggedOut, PlayerEvents.LevelUp, PlayerEvents.ItemAcquired {
 
   // 1. 玩家登入事件
   record LoggedIn(String playerId, String username, String ipAddress, Instant occurredOn)
@@ -24,6 +24,13 @@ public sealed interface PlayerEvents extends DomainEvent
   record LevelUp(String playerId, int newLevel, Instant occurredOn) implements PlayerEvents {
     public LevelUp(String playerId, int newLevel) {
       this(playerId, newLevel, DomainEvent.now());
+    }
+  }
+
+  // 4. 玩家獲得物品 (EVENT-01)
+  record ItemAcquired(String playerId, String itemId, int count, Instant occurredOn) implements PlayerEvents {
+    public ItemAcquired(String playerId, String itemId, int count) {
+      this(playerId, itemId, count, DomainEvent.now());
     }
   }
 }

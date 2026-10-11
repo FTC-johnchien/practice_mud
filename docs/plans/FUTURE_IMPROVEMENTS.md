@@ -43,7 +43,7 @@
 - [ ] **路徑 O: 生動畫面呈現與淡化文字閱讀轉型藍圖 (Visual-First DRPG Transformation)** (§15 全項) — **Priority: P1 / P2**
 - [ ] **路徑 P: 全專案功能與設定資料硬編碼實地盤查與清理藍圖** (§16 全項) — **Priority: P1 / P2**
 - [ ] **路徑 Q: MUD 與 DRPG 雙軌機制割裂深度盤查與大一統融合架構** (§17 全項) — **Priority: P1 / P2**
-- [ ] **路徑 R: §16/§17 第二輪審查校正——護欄先行、移除靜默 fallback、同步正確性、漸進式統一** (§18 全項) — **Priority: P0 / P1（作為路徑 P/Q 的執行前置）**
+- [ ] **路徑 R: §16/§17 第二輪審查校正與漸進落地** (§18 全項) — **Priority: P0 / P1（階段 0: GUARD-01/DEBUG-01 已完成）**
 
 ---
 
@@ -721,20 +721,79 @@ flowchart TD
     D --> Q
 ```
 
-| 階段 | 任務 | 為何排在這裡 | 預估規模 |
-| :---: | :--- | :--- | :---: |
-| 0 | GUARD-01、DEBUG-01 | 成本最低，能防止後續所有重構引入回歸 | S（1~2 天） |
-| 1 | FALLBACK-01 → DATA-03/04/05/06、CONF-01、COMB-03 | 校驗器到位後，fallback 移除即可安全 fail-fast | M（約 1 週） |
-| 2 | SYNC-01、EVENT-01 | 修正現存的 Actor 邊界違規；任務引擎與 UNIFY 都依賴它 | M |
-| 3 | ADR-01 → UNIFY-01/02 → UNIFY-03 → UNIFY-04/05 | 涉及存檔遷移與玩法決策，必須先定案 | L（多週，分 PR） |
-| 4 | 通用任務引擎、TOWN-02 典當 | 建立在事件骨幹與統一背包之上 | M |
+| 階段 | 任務 | 為何排在這裡 | 預估規模 | 狀態 |
+| :---: | :--- | :--- | :---: | :---: |
+| 0 | GUARD-01、DEBUG-01 | 成本最低，能防止後續所有重構引入回歸 | S（1~2 天） | ✅ 已完成 (2026-10-11) |
+| 1 | FALLBACK-01 → DATA-03/04/05/06、CONF-01、COMB-03 | 校驗器到位後，fallback 移除即可安全 fail-fast | M（約 1 週） | ✅ 已完成 (2026-10-11) |
+| 2 | SYNC-01、EVENT-01 | 修正現存的 Actor 邊界違規；任務引擎與 UNIFY 都依賴它 | M | ✅ 已完成 (2026-10-11) |
+| 3 | ADR-01 → UNIFY-01/02 → UNIFY-03 → UNIFY-04/05 | 涉及存檔遷移與玩法決策，必須先定案 | L（多週，分 PR） | 🟡 進行中 (UNIFY-01, UNIFY-02, UNIFY-03 已完成) |
+| 4 | 通用任務引擎、TOWN-02 典當 | 建立在事件骨幹與統一背包之上 | M | 🔲 待執行 |
 
-### 18.5 開工前需要擁有者決策的 ADR 議題 (Decisions Required)
+### 18.5 架構設計決策記錄 (ADR-01: Architecture Decision Records) — ✅ 已定案 (2026-10-11)
 
-1. **城鎮戰鬥模式**：在城鎮輸入 `kill` 時，要維持 MUD 1v1，還是一律進入小隊遭遇戰？（這決定 UNIFY-03 的終點）
-2. **背包所有權**：保留「個人背包 + 小隊倉庫」雙層設計，還是只保留單一小隊行囊？
-3. **持久化真相源**：角色進度以 H2（`CharacterEntity`）為準，還是以 JSON 存檔槽（`SaveData`）為準？單機模式是否還需要 H2？
-4. **MUD 純文字客戶端是否仍為正式支援目標**：若是，UNIFY-03 的「雙模投影」才值得投資；若否，可直接收斂為單一 Web 呈現。
+經過專案擁有人明確決策，統一演進之核心方針定案如下：
+
+| 決策項目 | 決策結果 | 核心架構與實施影響 | 對應後續任務 |
+| :--- | :--- | :--- | :--- |
+| **1. 戰鬥機制統一** | **選項 A：共用同一套機制** | 城鎮輸入 `kill` 與野外地牢探索遭遇戰，全面接入**單一現代戰鬥引擎**。<br>廢除原先 `CombatService` 割裂的 1v1 普攻心跳，進入戰鬥後由虛擬執行緒戰鬥迴圈驅動，支援小隊協同、站位、GCD 唱條、仇恨與戰術反制；MUD 視窗投影同步渲染戰鬥文字敘事。 | UNIFY-03 |
+| **2. 背包所有權模型** | **選項 B：雙層背包模型** | 保留「**個人行囊 (Personal Inventory)**」+「**小隊倉庫/行囊 (Party Storage)**」雙層架構。<br>・**個人行囊**：角色隨身佩掛裝備、當前快捷消耗品（如金丹/靈符），容量緊湊（12 格）。<br>・**小隊倉庫**：團隊戰利品、深淵道核、採集素材與備用裝備，團隊共享（30 格）。<br>徹底消除 `get` / `drop` / `shop` 的雙寫假帳漏洞，明確規範個人與倉庫流轉指令（如 `stash` 存入 / `withdraw` 取出）。 | UNIFY-01 |
+| **3. 持久化真相源** | **優先以單機版收斂為統一的 `SaveData` JSON** | 角色數值、雙層背包、小隊狀態與地牢進度，全面以 **`SaveData` (JSON 槽位存檔)** 作為唯一單一真相源。<br>升級 `schemaVersion: 2` 進行平滑遷移；H2 DB 逐步降級或解耦，單機模式不再雙寫兩套資料庫。 | UNIFY-01, SAVE-01 |
+| **4. 客戶端呈現定位** | **Web 終端視窗 + GUI 混合界面為主** | 聚焦於現行現代 Web 前端（終端文字視窗 + DRPG GUI 面板/卡片/演出特效）。<br>戰鬥引擎以結構化 `BattleEvent` 廣播為主，終端視窗負責將戰鬥事件投影為武俠長篇文字，GUI 視窗負責卡片動態演出，無需為純外部 telnet 客戶端做過度妥協設計。 | UNIFY-03, COMBAT-FX |
+
+### 18.6 UNIFY-01 雙層背包模型與存檔 v2 平滑遷移 (Dual-Tier Inventory & SaveData v2) — ✅ 已完成 (2026-10-11)
+- **1. 消除雙寫假帳 (No Double Accounting)**：
+  - `GetCommand`: 散落於地面的非容器物品拾取至玩家 `player.getInventory()`（個人行囊容量上限 12 格，滿載時自動溢流至小隊倉庫）；容器戰利品（如【散落的儲物袋】、寶箱）搜刮後物品全數進入 `party.getInventory()`（小隊公共倉庫 30 格）。徹底移除過去同時 `addItem` 至兩處的假帳代碼。
+  - `DropCommand`: 預設 `drop <物品>` 自個人隨身行囊丟棄至地面；新增 `drop stash <物品>` / `drop storage <物品>` 自小隊公共倉庫丟棄至地面；當個人行囊無該物品但倉庫存在時，給予友善提示語法。
+  - `StashCommand`: 新建指令處理個人隨身行囊與小隊倉庫之流轉。支援 `stash <物品>` / `store <物品>` 將行囊物品存入小隊倉庫；支援 `withdraw <物品>` / `take <物品>` 將倉庫物品取回個人行囊。
+  - `InventoryCommand`: 升級指令顯示，同步列出【個人隨身行囊】（12 格）與【小隊儲物倉庫】（30 格），並提示 stash / withdraw 快捷用法。
+- **2. 存檔架構升級 (SaveData v2 Migration)**：
+  - `SaveData.CURRENT_SCHEMA_VERSION` 升級為 `2`，新增 `personalInventory: List<PartyItemSlot>` 欄位。
+  - `SaveMigrationPipeline` 實作 `1 -> 2` 自動補齊空 `personalInventory` 陣列，確保舊存檔讀取不中斷。
+  - `SaveGameService` 存檔時自動序列化線上玩家隨身行囊至 `personalInventory`，讀檔時完整還原至 `player.getInventory()`。
+- **3. 自動化測試驗證**：
+  - `DualTierInventoryAndStashTest`: 包含散落物拾取入行囊、容器入倉庫、雙向 stash/withdraw 流轉、雙向 drop 丟棄、存檔還原與雙層 inventory 顯示共 6 項整合測試。
+  - `SaveGameServiceTest`: 擴充舊存檔 v0->v1->v2 平滑遷移測試。
+  - 全專案 274 項測試 100% 綠燈通過。
+
+### 18.7 UNIFY-02 角色與裝備大一統 (7-Slot Canonical Equipment SSoT & Real-Time Projection) — ✅ 已完成 (2026-10-11)
+- **1. 7 槽位裝備單一狀態持有 (Single Source of Truth)**：
+  - `PartyMember`（小隊首位主角隊長，`memberIdx == 0`）為 7 大槽位（`MAIN_HAND`, `OFF_HAND`, `HEAD`, `BODY`, `FEET`, `ACCESSORY_1`, `ACCESSORY_2`）之唯一權威真相持有者。
+  - 終結過去 MUD `Player.stats.equipment`（僅 4 槽位）與 DRPG `PartyMember.equipment`（7 槽位）各自穿脫分裂之歷史遺留。
+- **2. 嚴格遵守 Actor 執行緒邊界的即時單向投影 (Mailbox Projection Protocol)**：
+  - `ActorMessage` 擴充 `record ProjectEquipment(Map<EquipmentSlot, PartyItemSlot> equipment, CompletableFuture<Boolean> future) implements PlayerMessage` 協定。
+  - `Player.handlePlayerMessage` 在 Player Virtual Thread 安全重構 `GameItem` 投影映射，並呼叫 `livingService.recalculateStats(this)` 重算攻擊力與防禦力。
+  - `CharacterSyncService.syncEquipmentFromPartyToPlayer`:
+    - 具備 Actor 執行緒邊界感知：同執行緒或離線測試環境直接同步投影；跨執行緒則將裝備狀態封裝並投遞至 Player Mailbox，避免穿透修改破壞 Single-Writer 原則。
+    - 依據 `TemplateReader` 解析物品定義，對齊屬性加成 (`bonusMinDamage`, `bonusMaxDamage`, `bonusDefense`)。
+- **3. 雙層背包裝備穿脫互通與卸裝重算**：
+  - `DrpgBattleService.equipItem`:
+    - 穿戴裝備時，優先從小隊公共倉庫尋找，若無則自動在主角個人隨身行囊檢索裝備，裝備成功後扣除並將舊裝備卸至倉庫/行囊。
+    - 穿裝與卸裝後，立即觸發 `CharacterSyncService.syncEquipmentFromPartyToPlayer` 即時投影更新主角攻防屬性。
+  - `LivingService.recalculateStats`: 公開為 API 並擴充支援 `ItemDefinition`，卸下裝備時數值立即精確回落。
+- **4. 存檔與開局初始同步**：
+  - `SaveGameService.loadGame` 與 `createNewGame` 中，讀檔與開局後自動執行 `syncEquipmentFromPartyToPlayer`，保證存檔讀取後 MUD 視角立即可見 7 槽位投影數值。
+- **5. MUD 指令介面擴充**：
+  - `EquipCommand`: 支援 `eq` / `equipment` 別名；無參數時以武俠格式格式化輸出 7 槽位穿著狀態、攻擊區間與總防禦力。
+- **6. 整合驗證測試**：
+  - 新增 `CanonicalEquipmentProjectionTest`（5 項整合測試：7 槽位投影、個人行囊穿裝、卸裝數值回落、存檔讀取投影、指令視圖渲染）。
+  - 全專案 279 項測試 100% 綠燈通過。
+
+### 18.8 UNIFY-03 戰鬥引擎收斂與雙模呈現投影 (Single Combat Engine & Dual Presentation) — ✅ 已完成 (2026-10-11)
+- **1. 純函式戰鬥規則與統一數學公式 (CombatRules SSoT)**：
+  - 新建 `CombatRules`：抽離純函式戰鬥演算法，包含基礎傷害計算（`calculateRawDamage`，支援武器浮動與 `MobRank` 傷害倍率）、抗性折減（`applyResistance`）以及一元一次擲骰圓桌判定（`executeCombatTable`: Miss -> Dodge -> Parry -> Block -> Crit -> Hit）。
+  - `CombatService`、`DefenseResolver`、`DrpgEnemyTacticsService` 100% 收斂委託 `CombatRules`，消除兩套戰鬥數學公式的割裂。
+- **2. 大一統戰鬥參與者抽象 (Universal Combatant Interface)**：
+  - 定義 `Combatant` 介面（繼承 `Buffable`），宣告攻防範圍、抗性、屬性與生命週期契約。
+  - `Living` (包括 `Player`, `Mob`)、`PartyMember`、`BattleEnemy` 統一實現 `Combatant`，使戰鬥規則可多態消費任意對決實體。
+- **3. 雙模呈現投影架構 (Dual Presentation Projection)**：
+  - 新建 `CombatPresentation`：
+    - **MUD 模式投影 (`projectMudCombatLog`)**：將戰鬥結果轉化為純淨無時間戳的武俠招式敘事，支援 `$W`/`$w`/`$l`/`$d` 佔位符色彩渲染並廣播至當前房間終端。
+    - **DRPG/Web 模式投影 (`projectGuiCombatEvent`)**：生成標準結構化 `BattleEvent` / `BattleEventsDto`，支援 Web 介面卡片動態演出、血條扣減與浮動數字特效。
+- **4. 城鎮遭遇戰與戰鬥流程統一 (ADR-01 決策落地)**：
+  - `CombatService` 普攻計算與城鎮 `kill` 指令全面接入 `CombatRules` 與 `CombatPresentation`，支援雙模投影並維護狀態機閉環。
+- **5. 整合驗證測試**：
+  - 新增 `UnifiedCombatEngineAndPresentationTest`（涵蓋純函式數學與抗性、Combatant 多態契約、雙模投影生成、城鎮遭遇戰整合廣播 4 項測試）。
+  - 全專案 283 項測試 100% 綠燈通過。
 
 ---
 
@@ -768,18 +827,18 @@ flowchart TD
 | **P1** | COMBAT-FX-PRESETS-03 | 武器類型粗粒度分類、法術粒子骨架與 AOE 掃擊預設庫 | 戰鬥多樣性表現 | §14.3 | ✅ 已完成 |
 | **P1** | ENEMY-INTENT-01 | 敵方行動意圖預告 (Intent Icon) 與卡片蓄力唱條 (Cast Bar) | 戰鬥視覺化反制 | §13.1, §15.1 | ✅ 已完成 |
 | **P1** | LOG-DIM-01 | 純文字日誌淡化、邊界縮限、摺疊跑馬燈與分類過濾 | 淡化文字閱讀負擔 | §15.5 | ✅ 已完成 |
-| **P1** | DATA-03 | 地牢出入口 (`exitRoomId`)、怪池與掉落物 Fallback 硬編碼清理 | 地牢 100% 配置化 | §16.1 | 🔲 待執行 |
-| **P1** | DATA-04 | 技能橋接規則下沉至 JSON 與屬性補正前綴猜測清理 | 技能單一真相源 | §16.2 | 🔲 待執行 |
-| **P1** | COMB-03 | 戰鬥 5 分鐘固定超時與 10 分鐘 AFK 閒置熔斷解耦治理 | 戰鬥守護防誤殺 | §16.2 | 🔲 待執行 |
-| **P1** | UNIFY-01 | 背包大一統：除役雙軌行囊，收斂至 Canonical `ItemInstance` | 行囊資料一致性 | §17.2 | 🔲 待執行 |
-| **P1** | UNIFY-02 | 角色與裝備大一統：7 槽位裝備單一狀態持有與實時同步 | 裝備數值一致性 | §17.2 | 🔲 待執行 |
-| **P1** | UNIFY-03 | 戰鬥引擎收斂與雙模呈現投影（依 §18.2 改為 Strangler 漸進式） | 消除重複戰鬥心跳 | §17.2, §18.2 | 🔲 待執行 |
-| **P0** | GUARD-01 | 校驗器擴充（地塊 drops/eventId、橋接目標、商店、開局物資）+ ArchUnit + 內容 ID 字面值掃描 | 防回歸護欄 | §18.3, §18.4 | 🔲 待執行 |
-| **P1** | FALLBACK-01 | 移除生產碼 `new TemplateCatalog()`、無參建構子、`GameConfig.getInstance()` 與 optional 核心注入 | 消除靜默降級 | §18.3 | 🔲 待執行 |
-| **P1** | SYNC-01 | Outcome 以真實 battleId 冪等並經 Player 信箱套用，刪除 `copyStats` 跨執行緒覆寫 | Actor 邊界正確性 | §18.2 | 🔲 待執行 |
-| **P1** | EVENT-01 | 領域事件骨幹：雙軌發布 MobDead / LevelUp / ItemAcquired / RoomEntered，listener 回 Actor 信箱 | 任務引擎前置 | §18.3 | 🔲 待執行 |
-| **P1** | DATA-06 | §16 遺漏硬編碼：首領固定 dex/xp/掉落、`contains("mozhu")`、道核三種 ID、TOMB_ITEMS 三份複本、SWORDSMAN 殘留 | 資料驅動純度 | §18.1 | 🔲 待執行 |
-| **P1** | ADR-01 | 城鎮戰鬥模式 / 背包所有權 / 持久化真相源 / 純文字客戶端支援範圍決策 | 統一工程前置 | §18.5 | 🔲 待決議 |
+| **P1** | DATA-03 | 地牢出入口 (`exitRoomId`)、怪池與掉落物 Fallback 硬編碼清理 | 地牢 100% 配置化 | §16.1 | ✅ 已完成 |
+| **P1** | DATA-04 | 技能橋接規則下沉至 JSON 與屬性補正前綴猜測清理 | 技能單一真相源 | §16.2 | ✅ 已完成 |
+| **P1** | COMB-03 | 戰鬥 5 分鐘固定超時與 10 分鐘 AFK 閒置熔斷解耦治理 | 戰鬥守護防誤殺 | §16.2 | ✅ 已完成 |
+| **P1** | UNIFY-01 | 背包雙層收斂：個人隨身行囊(12格)+小隊公共倉庫(30格)，stash/withdraw流轉，存檔v2遷移，消除假帳 | 行囊資料一致性 | §17.2, §18.6 | ✅ 已完成 |
+| **P1** | UNIFY-02 | 角色與裝備大一統：7 槽位裝備單一狀態持有與實時同步 | 裝備數值一致性 | §17.2, §18.7 | ✅ 已完成 |
+| **P1** | UNIFY-03 | 戰鬥引擎收斂與雙模呈現投影（依 §18.2 改為 Strangler 漸進式） | 消除重複戰鬥心跳 | §17.2, §18.8 | ✅ 已完成 |
+| **P0** | GUARD-01 | 校驗器擴充（地塊 drops/eventId、橋接目標、商店、開局物資）+ 棘輪防回歸掃描 | 防回歸護欄 | §18.3, §18.4 | ✅ 已完成 |
+| **P1** | FALLBACK-01 | 移除生產碼 `new TemplateCatalog()`、無參建構子、`GameConfig.getInstance()` 與 optional 核心注入 | 消除靜默降級 | §18.3 | ✅ 已完成 |
+| **P1** | SYNC-01 | Outcome 以真實 battleId 冪等並經 Player 信箱套用，刪除 `copyStats` 跨執行緒覆寫 | Actor 邊界正確性 | §18.2 | ✅ 已完成 |
+| **P1** | EVENT-01 | 領域事件骨幹：雙軌發布 MobDead / LevelUp / ItemAcquired / RoomEntered，listener 回 Actor 信箱 | 任務引擎前置 | §18.3 | ✅ 已完成 |
+| **P1** | DATA-06 | §16 遺漏硬編碼：首領固定 dex/xp/掉落、`contains("mozhu")`、道核三種 ID、TOMB_ITEMS 三份複本、SWORDSMAN 殘留 | 資料驅動純度 | §18.1 | ✅ 已完成 |
+| **P1** | ADR-01 | 城鎮戰鬥模式 / 背包所有權 / 持久化真相源 / 純文字客戶端支援範圍決策 | 統一工程前置 | §18.5 | ✅ 已定案 (2026-10-11) |
 | **P1** | COMBAT-VFX-STATUS-02 | 護盾血條疊層 (Shield Bar)、DoT 脈衝與 Buff 倒數光圈 | 戰況狀態動態視覺 | §15.2 | 🔲 待執行 |
 | **P2** | DUNGEON-VIEW-01 | 地城第一人稱擬 3D 廊道視圖與點擊互動熱區 | 探索空間視覺化 | §15.3 | 🔲 待執行 |
 | **P2** | TOWN-UI-01 | 城鎮 NPC 生動對話氣泡、立繪與裝備數值比對浮條 | 劇情與養成視覺化 | §15.4 | 🔲 待執行 |
@@ -789,11 +848,11 @@ flowchart TD
 | **P2** | LEG-01 | `static/legacy/drpg-view.js` 正式除役與註解清理 | 代碼庫整潔度 | §10.3 | ✅ 已完成 |
 | **P2** | UI-02 | 探索舞台雙欄化與控制回歸羅盤 | 操作流暢度 | §10.4 | ✅ 已完成 |
 | **P2** | DATA-02 | 徹底清除 5 大殘存硬編碼 (招式篩選/橋接備用表/夥伴比對/NPC能力/開局物資) | 100% 資料驅動純度 | §9.3 | ✅ 已完成 |
-| **P2** | DATA-05 | 走火入魔 CHAOS 異變數值與宋天衡專屬掉落資料化 | 戰鬥機制配置化 | §16.2 | 🔲 待執行 |
+| **P2** | DATA-05 | 走火入魔 CHAOS 異變數值與宋天衡專屬掉落資料化 | 戰鬥機制配置化 | §16.2 | ✅ 已完成 |
 | **P2** | TOWN-02 | 客棧標籤化 (`SAFE_ZONE`) 與商店台詞動態化、典當支援 | 城鎮設施通用化 | §16.3 | 🔲 待執行 |
-| **P2** | CONF-01 | 開局物資、調息數值與重生房間納入 `GameConfig` 配置 | 全域配置集中化 | §16.3 | 🔲 待執行 |
+| **P2** | CONF-01 | 開局物資、調息數值與重生房間納入 `GameConfig` 配置 | 全域配置集中化 | §16.3 | ✅ 已完成 |
 | **P2** | FE-02 | 地塊 Tooltip 動態化與前端裝備槽位判定純淨化 | 前端健壯性 | §16.4 | 🔲 待執行 |
-| **P2** | UNIFY-04 | 生靈與敵怪生命週期閉環 (`Mob` ↔ `BattleEnemy`) | 世界生態閉環 | §17.2 | 🔲 待執行 |
+| **P2** | UNIFY-04 | 生靈與敵怪生命週期閉狂 (`Mob` ↔ `BattleEnemy`) | 世界生態閉環 | §17.2 | 🔲 待執行 |
 | **P2** | UNIFY-05 | 技能 Single Source of Truth (Canonical 貫穿全流程) | 技能架構收斂 | §17.2 | 🔲 待執行 |
 | **P2** | COMBAT-REACT-01 | 玩家反制、Gambit 意圖協作與首領階段 | 戰術深度與遭遇變化 | §13.2 | 🔲 待執行 |
 | **P2** | COMBAT-DATA-DOC-01 | SAN 異變資料化、文件現況與測試摘要同步 | 資料驅動與文件治理 | §13.3 | 🔲 待執行 |
@@ -801,6 +860,6 @@ flowchart TD
 | **P3** | TEST-01 | 核心數值與領域規則下沉為純單元測試 (加速 CI) | 測試工程效能 | §11.1 | 🔲 待執行 |
 | **P3** | OBS-01 | 系統度量指標擴充與敏感資料日誌審核 | 系統觀測性加固 | §11.2 | 🔲 待執行 |
 | **P3** | CODE-01 | 清理 `PlayerLoginListener` 註解死代碼與空 stub | 代碼庫整潔度 | §16.4 | 🔲 待執行 |
-| **P2** | DEBUG-01 | 試道傀儡等除錯指令以 Profile / 管理員旗標限制 | 防刷資源 | §18.3 | 🔲 待執行 |
+| **P2** | DEBUG-01 | 試道傀儡等除錯指令以 Profile / 管理員旗標限制 | 防刷資源 | §18.3 | ✅ 已完成 |
 | **P3** | CONTENT-01 | 垂直可玩內容閉環 (創角 -> 滄浪城任務 -> 地宮探險 -> 戰鬥 -> 結算存檔) | 遊戲體驗交付 | §12.1 | ✅ 已完成 |
 

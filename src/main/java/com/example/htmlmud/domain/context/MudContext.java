@@ -13,6 +13,11 @@ public class MudContext {
   // 3. 原始輸入字串 (用於判斷指令是透過哪個別名觸發的)
   public static final ScopedValue<String> RAW_INPUT = ScopedValue.newInstance();
 
+  // 輔助方法：判斷當前執行緒是否已綁定玩家
+  public static boolean hasCurrentPlayer() {
+    return CURRENT_PLAYER.isBound();
+  }
+
   // 輔助方法：取得當前玩家，如果沒設定(例如系統背景作業)則拋出異常
   public static Player currentPlayer() {
     return CURRENT_PLAYER

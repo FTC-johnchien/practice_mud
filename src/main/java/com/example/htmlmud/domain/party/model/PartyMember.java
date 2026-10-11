@@ -20,12 +20,14 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import com.example.htmlmud.domain.combat.Combatant;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class PartyMember implements Buffable {
+public class PartyMember implements Combatant {
   private String id;
   private String name;
   private String roleTitle;
@@ -1043,4 +1045,25 @@ public class PartyMember implements Buffable {
       }
     }
   }
+
+  @Override
+  public int getEffectiveDex() {
+    return (this.stats != null) ? this.stats.getDex() : 10;
+  }
+
+  @Override
+  public int getEffectiveStr() {
+    return (this.stats != null) ? this.stats.getStr() : 10;
+  }
+
+  @Override
+  public int getEffectiveCon() {
+    return (this.stats != null) ? this.stats.getCon() : 10;
+  }
+
+  @Override
+  public LivingStats getCombatStats() {
+    return this.stats;
+  }
 }
+

@@ -61,6 +61,33 @@ public class SaveMigrationPipeline {
       });
     }
 
+    // 1 -> 2: 雙層背包模型與個人隨身行囊遷移 (UNIFY-01)
+    if (migrations.stream().noneMatch(m -> m.getFromVersion() == 1 && m.getToVersion() == 2)) {
+      migrations.add(new SaveMigration() {
+        @Override
+        public int getFromVersion() {
+          return 1;
+        }
+
+        @Override
+        public int getToVersion() {
+          return 2;
+        }
+
+        @Override
+        public JsonNode migrate(JsonNode rootNode) {
+          if (rootNode instanceof ObjectNode objNode) {
+            log.info("Migrating save from schemaVersion 1 to 2 (Dual-tier Inventory / UNIFY-01)");
+            objNode.put("schemaVersion", 2);
+            if (!objNode.has("personalInventory")) {
+              objNode.putArray("personalInventory");
+            }
+          }
+          return rootNode;
+        }
+      });
+    }
+
     migrations.sort(Comparator.comparingInt(SaveMigration::getFromVersion));
   }
 

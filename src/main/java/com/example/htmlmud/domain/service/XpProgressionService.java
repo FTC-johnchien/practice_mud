@@ -17,10 +17,18 @@ import com.example.htmlmud.domain.party.model.PartyMember;
 public class XpProgressionService {
 
   private final com.example.htmlmud.domain.repository.TemplateReader templateReader;
+  private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
   @org.springframework.beans.factory.annotation.Autowired
-  public XpProgressionService(com.example.htmlmud.domain.repository.TemplateReader templateReader) {
+  public XpProgressionService(
+      com.example.htmlmud.domain.repository.TemplateReader templateReader,
+      @org.springframework.beans.factory.annotation.Autowired(required = false) org.springframework.context.ApplicationEventPublisher eventPublisher) {
     this.templateReader = templateReader;
+    this.eventPublisher = eventPublisher;
+  }
+
+  public XpProgressionService(com.example.htmlmud.domain.repository.TemplateReader templateReader) {
+    this(templateReader, null);
   }
 
   public static final int DEFAULT_FREE_STAT_POINTS_PER_LEVEL = 2;
@@ -229,8 +237,19 @@ public class XpProgressionService {
     }
 
     LevelUpResult result = new LevelUpResult(player.getName(), oldLevel, currentLevel, true, freePointsEarned, totalStatDeltas);
-    if (result.isLeveledUp() && player.isValid()) {
-      player.reply("\u001B[1;33m" + result.formatAnnouncement() + "\u001B[0m");
+    if (result.isLeveledUp()) {
+      if (player.isValid()) {
+        player.reply("\u001B[1;33m" + result.formatAnnouncement() + "\u001B[0m");
+      }
+      if (eventPublisher != null) {
+        try {
+          eventPublisher.publishEvent(new com.example.htmlmud.domain.event.PlayerEvents.LevelUp(
+              player.getId() != null ? player.getId() : player.getName(),
+              currentLevel
+          ));
+        } catch (Exception ignored) {
+        }
+      }
     }
     return result;
   }
@@ -286,7 +305,17 @@ public class XpProgressionService {
       stats.setMp(stats.getMaxMp());
     }
 
-    return new LevelUpResult(member.getName(), oldLevel, currentLevel, isLeader, freePointsEarned, totalStatDeltas);
+    LevelUpResult result = new LevelUpResult(member.getName(), oldLevel, currentLevel, isLeader, freePointsEarned, totalStatDeltas);
+    if (result.isLeveledUp() && isLeader && eventPublisher != null) {
+      try {
+        eventPublisher.publishEvent(new com.example.htmlmud.domain.event.PlayerEvents.LevelUp(
+            member.getId() != null ? member.getId() : member.getName(),
+            currentLevel
+        ));
+      } catch (Exception ignored) {
+      }
+    }
+    return result;
   }
 
   /**

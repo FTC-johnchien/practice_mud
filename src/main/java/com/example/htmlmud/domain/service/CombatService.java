@@ -149,36 +149,23 @@ public class CombatService {
    * 執行基礎原始傷害計算 (武器物理/法術基值 - 目標護甲防禦，加浮動)
    */
   private int calculateRawBaseDamage(Living attacker, Living defender) {
-    DamageSource weapon = attacker.getCurrentAttackSource();
+    int minDmg = attacker.getEffectiveMinDamage();
+    int maxDmg = attacker.getEffectiveMaxDamage();
     if (attacker instanceof Player player && partyServiceProvider != null) {
       var ps = partyServiceProvider.getIfAvailable();
       if (ps != null) {
         var party = ps.getOrCreateParty(player.getName());
         if (party != null && !party.getMembers().isEmpty()) {
           var leader = party.getMembers().get(0);
-          var equippedWeapon = leader.getEquippedWeapon();
-          String wName = (equippedWeapon != null) ? equippedWeapon.getName() : "徒手";
-          weapon = new DamageSource(wName, "攻擊", leader.getEffectiveMinDamage(), leader.getEffectiveMaxDamage(), 2000, 0, -1);
+          minDmg = leader.getEffectiveMinDamage();
+          maxDmg = leader.getEffectiveMaxDamage();
         }
       }
     }
 
-    int damage = random(weapon.minDamage(), weapon.maxDamage());
-    int rawDmg = damage - defender.defense;
-    if (rawDmg <= 0) {
-      rawDmg = 1; // 至少造成 1 點傷害
-    }
-
-    // 加入浮動 (0.9 ~ 1.1)
     double variance = 0.9 + (ThreadLocalRandom.current().nextDouble() * 0.2);
-    int finalDmg = (int) (rawDmg * variance);
-
-    // 怪物階級 (MobRank) 傷害倍率加成
-    if (attacker instanceof Mob mob && mob.getTemplate() != null && mob.getTemplate().rank() != null) {
-      finalDmg = (int) Math.round(finalDmg * mob.getTemplate().rank().getDamageMultiplier());
-    }
-
-    return Math.max(1, finalDmg);
+    return com.example.htmlmud.domain.combat.CombatRules.calculateRawDamage(
+        minDmg, maxDmg, defender.getEffectiveDefense(), attacker.getRank(), variance);
   }
 
 
@@ -310,27 +297,17 @@ public class CombatService {
         ? skill.template().getMechanics().damageType()
         : com.example.htmlmud.domain.model.enums.DamageType.PHYSICAL;
     double resistance = (target.getStats() != null) ? target.getStats().getResistance(dmgType) : 0.0;
-    if (resistance != 0.0) {
-      rawDmg = Math.max(1, (int) Math.round(rawDmg * Math.max(0.1, 1.0 - resistance)));
-    }
+    rawDmg = com.example.htmlmud.domain.combat.CombatRules.applyResistance(rawDmg, dmgType, resistance);
 
     // 3. 一元一次擲骰圓桌判定 (One-Roll Combat Table: [Miss] -> [Dodge] -> [Parry] -> [Block] -> [Crit] -> [Normal Hit])
     com.example.htmlmud.domain.dungeon.battle.DefenseResolver.DefenseResolution resolution =
         defenseResolver.resolveLivingAttack(self, target, rawDmg);
 
-    if (resolution.outcome() == com.example.htmlmud.domain.dungeon.battle.DefenseResolver.DefenseOutcome.MISS) {
-      msg += "\r\n" + action.msg().miss();
-      for (Player receiver : audiences) {
-        MessageUtil.send(CombineString(msg, sWeapon, tWeapon, part), self, target, receiver);
-      }
-      return;
-    }
-
-    if (resolution.outcome() == com.example.htmlmud.domain.dungeon.battle.DefenseResolver.DefenseOutcome.DODGED) {
-      msg += "\r\n" + resolution.combatLog();
-      for (Player receiver : audiences) {
-        MessageUtil.send(CombineString(msg, sWeapon, tWeapon, part), self, target, receiver);
-      }
+    if (resolution.outcome() == com.example.htmlmud.domain.dungeon.battle.DefenseResolver.DefenseOutcome.MISS
+        || resolution.outcome() == com.example.htmlmud.domain.dungeon.battle.DefenseResolver.DefenseOutcome.DODGED) {
+      com.example.htmlmud.domain.combat.CombatPresentation.projectMudCombatLog(
+          self, target, action, resolution, 0, sWeapon, tWeapon, part);
+      projectGuiEventIfOnline(self, target, skill, resolution, 0);
       return;
     }
 
@@ -368,24 +345,27 @@ public class CombatService {
       afterAttack(attacker, skill);
     }
 
-    if (resolution.outcome() == com.example.htmlmud.domain.dungeon.battle.DefenseResolver.DefenseOutcome.CRIT) {
-      msg += "\r\n" + resolution.combatLog();
-    } else if (resolution.outcome() == com.example.htmlmud.domain.dungeon.battle.DefenseResolver.DefenseOutcome.PARRIED
-        || resolution.outcome() == com.example.htmlmud.domain.dungeon.battle.DefenseResolver.DefenseOutcome.BLOCKED) {
-      msg += "\r\n" + resolution.combatLog();
-    } else {
-      msg += "\r\n" + action.msg().hit();
-      if (resolution.poiseBroken()) {
-        msg += "\r\n\u001B[1;35m⚠️【架勢破防】" + target.getName() + " 精力枯竭架勢崩潰，破綻大開！受到額外 20% 傷害！\u001B[0m";
-      }
+    // 雙模呈現投影：MUD 終端武俠長篇文字日誌 + Web 結構化 BattleEventsDto
+    com.example.htmlmud.domain.combat.CombatPresentation.projectMudCombatLog(
+        self, target, action, resolution, finalDmg, sWeapon, tWeapon, part);
+    projectGuiEventIfOnline(self, target, skill, resolution, finalDmg);
+  }
+
+  private final java.util.concurrent.atomic.AtomicLong eventSeq = new java.util.concurrent.atomic.AtomicLong(1);
+
+  private void projectGuiEventIfOnline(Living self, Living target, ActiveSkillResult skill,
+      com.example.htmlmud.domain.dungeon.battle.DefenseResolver.DefenseResolution resolution, int finalDmg) {
+    Player player = null;
+    if (self instanceof Player p) {
+      player = p;
+    } else if (target instanceof Player p) {
+      player = p;
     }
-
-    msg = CombineString(msg, sWeapon, tWeapon, part);
-    msg = msg.replace("$d", ColorText.damage(finalDmg));
-
-    // 發送純淨無時間戳戰鬥訊息
-    for (Player receiver : audiences) {
-      MessageUtil.send(msg, self, target, receiver);
+    if (player != null && player.isValid()) {
+      String moveName = (skill != null && skill.template() != null) ? skill.template().getName() : "普通攻擊";
+      var event = com.example.htmlmud.domain.combat.CombatPresentation.projectGuiCombatEvent(
+          eventSeq.getAndIncrement(), self, target, moveName, resolution, finalDmg, "MELEE", "PHYSICAL");
+      player.sendJson(new com.example.htmlmud.domain.dungeon.dto.BattleEventsDto("town-combat-" + player.getName(), List.of(event)));
     }
   }
 

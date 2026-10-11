@@ -27,12 +27,13 @@ import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.MudMessage;
 import lombok.Getter;
 import lombok.Setter;
+import com.example.htmlmud.domain.combat.Combatant;
 import lombok.extern.slf4j.Slf4j;
 
 // 泛型 T 讓我們可以在子類別擴充更多 Message 類型
 @Getter
 @Slf4j
-public abstract sealed class Living extends VirtualActor<ActorMessage> implements Buffable permits Player, Mob {
+public abstract sealed class Living extends VirtualActor<ActorMessage> implements Combatant permits Player, Mob {
 
   private LivingService livingService;
 
@@ -661,4 +662,55 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> implement
     handleBuffEffect(null, effectId);
   }
 
+  @Override
+  public int getEffectiveMinDamage() {
+    com.example.htmlmud.domain.model.vo.DamageSource ds = getCurrentAttackSource();
+    return ds != null ? ds.minDamage() : 1;
+  }
+
+  @Override
+  public int getEffectiveMaxDamage() {
+    com.example.htmlmud.domain.model.vo.DamageSource ds = getCurrentAttackSource();
+    return ds != null ? ds.maxDamage() : 2;
+  }
+
+  @Override
+  public int getEffectiveDefense() {
+    return this.defense;
+  }
+
+  @Override
+  public int getEffectiveDex() {
+    return (this.stats != null) ? this.stats.getDex() : 10;
+  }
+
+  @Override
+  public int getEffectiveStr() {
+    return (this.stats != null) ? this.stats.getStr() : 10;
+  }
+
+  @Override
+  public int getEffectiveCon() {
+    return (this.stats != null) ? this.stats.getCon() : 10;
+  }
+
+  @Override
+  public com.example.htmlmud.domain.model.enums.MobRank getRank() {
+    if (this instanceof com.example.htmlmud.domain.actor.impl.Mob mob && mob.getTemplate() != null && mob.getTemplate().rank() != null) {
+      return mob.getTemplate().rank();
+    }
+    return com.example.htmlmud.domain.model.enums.MobRank.NORMAL;
+  }
+
+  @Override
+  public com.example.htmlmud.domain.party.model.RowPosition getRow() {
+    return com.example.htmlmud.domain.party.model.RowPosition.FRONT;
+  }
+
+  @Override
+  public LivingStats getCombatStats() {
+    return this.stats;
+  }
+
 }
+

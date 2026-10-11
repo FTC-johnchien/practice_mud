@@ -25,6 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class GetCommand implements PlayerCommand {
 
+  public static final int PERSONAL_INVENTORY_CAPACITY = 12;
+
   private final PartyService partyService;
   private final GameStateBroadcastService broadcastService;
 
@@ -54,7 +56,7 @@ public class GetCommand implements PlayerCommand {
       GameItem pickItem = opt.get();
       Party party = partyService.getOrCreateParty(player.getName());
 
-      // 1. 戰利品容器 (儲物袋 / 寶箱) 或帶有掉落物的容器實體 -> 一鍵搜刮
+      // 1. 戰利品容器 (儲物袋 / 寶箱) 或帶有掉落物的容器實體 -> 一鍵搜刮進入小隊倉庫 (UNIFY-01)
       boolean isContainer = pickItem.getType() == ItemType.CONTAINER ||
           (pickItem.getContents() != null && !pickItem.getContents().isEmpty());
 
@@ -65,16 +67,15 @@ public class GetCommand implements PlayerCommand {
         } else {
           List<String> lootedNames = new ArrayList<>();
           for (GameItem inner : contents) {
-            player.getInventory().add(inner);
             if (party != null && party.getInventory() != null) {
               party.getInventory().addGameItem(inner);
             }
             lootedNames.add(inner.getDisplayName() + (inner.getAmount() > 1 ? " x" + inner.getAmount() : ""));
           }
           String lootList = String.join("、", lootedNames);
-          player.reply("\u001B[1;32m👝 你打開了 " + pickItem.getName() + "，搜刮獲得了：\u001B[1;33m" + lootList + "\u001B[1;32m！已全數收入隊伍行囊。\u001B[0m");
+          player.reply("\u001B[1;32m👝 你打開了 " + pickItem.getName() + "，搜刮獲得了：\u001B[1;33m" + lootList + "\u001B[1;32m！已全數收入【小隊儲物倉庫】。\u001B[0m");
           room.broadcastToOthers(player.getId(),
-              player.getNickname() + " 搜刮了 " + pickItem.getName() + "，將裡面的戰利品收入行囊。");
+              player.getNickname() + " 搜刮了 " + pickItem.getName() + "，將裡面的戰利品收入小隊倉庫。");
         }
         // 容器已完成搜刮，即刻消散，不存入背包
       } else if (pickItem.getType() == ItemType.CORPSE) {
@@ -82,14 +83,20 @@ public class GetCommand implements PlayerCommand {
         player.reply("你仔細翻檢了這具殘骸，裡面已無任何可用之物，殘骸隨風化作塵土消散。");
         // 殘骸不入背包，自然消散
       } else {
-        // 2. 一般實體物品拾取 (武器、防具、靈石、消耗品、任務道具)
-        player.getInventory().add(pickItem);
-        if (party != null && party.getInventory() != null) {
+        // 2. 一般實體物品拾取 (優先放入個人隨身行囊，滿載則溢出至小隊倉庫 - UNIFY-01)
+        if (player.getInventory().size() < PERSONAL_INVENTORY_CAPACITY) {
+          player.getInventory().add(pickItem);
+          player.reply("📦 你拾起了 " + pickItem.getDisplayName() + "，已妥善收入【個人隨身行囊】！");
+        } else if (party != null && party.getInventory() != null && party.getInventory().getSlots().size() < party.getInventory().getCapacity()) {
           party.getInventory().addGameItem(pickItem);
+          player.reply("📦 個人隨身行囊已滿（上限 12 格），你將 " + pickItem.getDisplayName() + " 轉存入【小隊儲物倉庫】！");
+        } else {
+          room.dropItem(pickItem);
+          player.reply("⚠️ 個人隨身行囊與小隊倉庫皆已滿載，無法拾取 " + pickItem.getDisplayName() + "！");
+          return;
         }
-        player.reply("📦 你撿起了 " + pickItem.getDisplayName() + "，已妥善收入隊伍行囊！");
         room.broadcastToOthers(player.getId(),
-            player.getNickname() + " 撿起了 " + pickItem.getDisplayName());
+            player.getNickname() + " 拾起了 " + pickItem.getDisplayName());
       }
 
       // 即時向全隊/玩家推播最新狀態 (地面物品即時移除)

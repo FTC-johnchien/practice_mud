@@ -18,6 +18,7 @@ public class GameConfig {
   private Defaults defaults = new Defaults();
   private Combat combat = new Combat();
   private Regen regen = new Regen();
+  private Debug debug = new Debug();
 
   public GameConfig() {
     INSTANCE = this;
@@ -64,6 +65,26 @@ public class GameConfig {
 
   public void setRegen(Regen regen) {
     this.regen = regen;
+  }
+
+  public Debug getDebug() {
+    return debug;
+  }
+
+  public void setDebug(Debug debug) {
+    this.debug = debug;
+  }
+
+  public static class Debug {
+    private boolean enabled = false;
+
+    public boolean isEnabled() {
+      return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+      this.enabled = enabled;
+    }
   }
 
   // =========================================================================
@@ -126,6 +147,30 @@ public class GameConfig {
 
     public void setRespawnRoomId(String respawnRoomId) {
       this.respawnRoomId = respawnRoomId;
+    }
+
+    private String defaultClassId = "SWORDSMAN";
+    private java.util.Map<String, Integer> startingSupplies = new java.util.LinkedHashMap<>(java.util.Map.of(
+        "taiyin_pill", 3,
+        "purify_talisman", 2,
+        "steel_blade", 1,
+        "standard_spear", 1
+    ));
+
+    public String getDefaultClassId() {
+      return defaultClassId;
+    }
+
+    public void setDefaultClassId(String defaultClassId) {
+      this.defaultClassId = defaultClassId;
+    }
+
+    public java.util.Map<String, Integer> getStartingSupplies() {
+      return startingSupplies;
+    }
+
+    public void setStartingSupplies(java.util.Map<String, Integer> startingSupplies) {
+      this.startingSupplies = startingSupplies;
     }
   }
 

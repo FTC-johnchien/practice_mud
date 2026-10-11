@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.MobRank;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
@@ -16,6 +17,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.example.htmlmud.domain.combat.Combatant;
 import com.example.htmlmud.domain.model.enums.BuffCategory;
 import java.util.Comparator;
 
@@ -23,7 +25,7 @@ import java.util.Comparator;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BattleEnemy implements Buffable {
+public class BattleEnemy implements Combatant {
   private String id;
   private String templateId;
   private String race;
@@ -67,6 +69,8 @@ public class BattleEnemy implements Buffable {
   private boolean alive = true;
   @Builder.Default
   private int xp = 30;
+  @Builder.Default
+  private List<String> dropItemIds = new ArrayList<>();
   private String dropItemId;
   private String droppedDaoSkillId;
   private String droppedDaoSkillName;
@@ -192,6 +196,17 @@ public class BattleEnemy implements Buffable {
     boolean isUnique = tpl.isUnique();
     String displayName = (rank != MobRank.NORMAL ? rank.getPrefix() : "") + tpl.name();
 
+    List<String> dropList = new ArrayList<>();
+    if (tpl.loot() != null && !tpl.loot().isEmpty()) {
+      for (com.example.htmlmud.domain.model.config.LootEntry entry : tpl.loot()) {
+        if (ThreadLocalRandom.current().nextDouble() <= entry.chance()) {
+          dropList.add(entry.itemId());
+        }
+      }
+    } else if (dropId != null && !dropId.isBlank()) {
+      dropList.add(dropId);
+    }
+
     return BattleEnemy.builder()
         .id(id)
         .templateId(tpl.id())
@@ -211,10 +226,21 @@ public class BattleEnemy implements Buffable {
         .skills(mobSkills)
         .dodgeSkillId(dodgeSkill)
         .parrySkillId(parrySkill)
-        .dropItemId(dropId)
+        .dropItemId(dropList.isEmpty() ? dropId : dropList.get(0))
+        .dropItemIds(dropList)
         .alive(true)
         .xp(tpl.expReward() > 0 ? tpl.expReward() : 30)
         .build();
+  }
+
+  public List<String> getDropItemIds() {
+    if (dropItemIds == null) {
+      dropItemIds = new ArrayList<>();
+    }
+    if (dropItemIds.isEmpty() && dropItemId != null && !dropItemId.isBlank()) {
+      dropItemIds.add(dropItemId);
+    }
+    return dropItemIds;
   }
 
   public static BattleEnemy fromTemplate(String id, MobTemplate tpl, RowPosition row, String dropId) {
@@ -353,4 +379,35 @@ public class BattleEnemy implements Buffable {
   public void clearThreat() {
     threatTable.clear();
   }
+
+  @Override
+  public int getEffectiveMinDamage() {
+    return this.minDamage;
+  }
+
+  @Override
+  public int getEffectiveMaxDamage() {
+    return this.maxDamage;
+  }
+
+  @Override
+  public int getEffectiveDefense() {
+    return this.defense;
+  }
+
+  @Override
+  public int getEffectiveDex() {
+    return this.dex;
+  }
+
+  @Override
+  public int getEffectiveStr() {
+    return 10;
+  }
+
+  @Override
+  public int getEffectiveCon() {
+    return 10;
+  }
 }
+

@@ -23,6 +23,7 @@ import com.example.htmlmud.domain.model.template.MobTemplate;
 import com.example.htmlmud.domain.model.template.RoomExit;
 import com.example.htmlmud.domain.model.template.RoomTemplate;
 import com.example.htmlmud.domain.model.template.ShopTemplate;
+import com.example.htmlmud.domain.dungeon.service.DungeonManager;
 import com.example.htmlmud.domain.party.model.FormationTemplate;
 import com.example.htmlmud.domain.repository.TemplateReader;
 
@@ -44,6 +45,87 @@ class DataIntegrityValidatorTest {
     assertThat(report.getCompanionsChecked()).isGreaterThanOrEqualTo(6);
     assertThat(report.getFormationsChecked()).isGreaterThanOrEqualTo(10);
     assertThat(report.getDungeonsChecked()).isGreaterThanOrEqualTo(2);
+    assertThat(report.getSkillsChecked()).isGreaterThan(0);
+    assertThat(report.getSuppliesChecked()).isGreaterThan(0);
+  }
+
+  @Test
+  @DisplayName("GUARD-01: 模擬地牢地塊掉落物斷鏈，在 failFast=true 下精確攔截")
+  void testDungeonTileBrokenDropsIntercepted() {
+    TemplateReader mockReader = mock(TemplateReader.class);
+    DungeonManager mockDungeonManager = mock(DungeonManager.class);
+    DataIntegrityValidator validator = new DataIntegrityValidator(mockReader);
+    validator.setDungeonManager(mockDungeonManager);
+    validator.setFailFast(true);
+
+    com.example.htmlmud.domain.dungeon.model.DungeonFloor floor =
+        com.example.htmlmud.domain.dungeon.model.DungeonFloor.builder()
+            .id("test_floor")
+            .width(2)
+            .height(2)
+            .startCoord(new com.example.htmlmud.domain.dungeon.model.GridCoord(0, 0))
+            .tiles(new com.example.htmlmud.domain.dungeon.model.DungeonTile[][] {
+                {
+                    com.example.htmlmud.domain.dungeon.model.DungeonTile.floor("起點"),
+                    com.example.htmlmud.domain.dungeon.model.DungeonTile.builder()
+                        .type(com.example.htmlmud.domain.dungeon.model.DungeonTile.TileType.TREASURE)
+                        .drops(List.of("ghost_drop_item"))
+                        .build()
+                },
+                {
+                    com.example.htmlmud.domain.dungeon.model.DungeonTile.wall(),
+                    com.example.htmlmud.domain.dungeon.model.DungeonTile.wall()
+                }
+            })
+            .build();
+
+    when(mockDungeonManager.getAllFloorIds()).thenReturn(List.of("test_floor"));
+    when(mockDungeonManager.getFloor("test_floor")).thenReturn(floor);
+    when(mockReader.findItem("ghost_drop_item")).thenReturn(Optional.empty());
+
+    assertThatThrownBy(validator::validate)
+        .isInstanceOf(DataValidationException.class)
+        .hasMessageContaining("掉落物 [ghost_drop_item] 不存在於物品庫");
+  }
+
+  @Test
+  @DisplayName("GUARD-01: 模擬技能橋接目標 DRPG 技能不存在，精準報告錯誤")
+  void testSkillBrokenBridgeRuleIntercepted() {
+    TemplateReader mockReader = mock(TemplateReader.class);
+    DataIntegrityValidator validator = new DataIntegrityValidator(mockReader);
+    validator.setFailFast(false);
+
+    com.example.htmlmud.domain.model.template.SkillTemplate brokenSkill =
+        new com.example.htmlmud.domain.model.template.SkillTemplate();
+    brokenSkill.setId("custom_sword");
+    brokenSkill.setName("自創劍法");
+    brokenSkill.setBridges(List.of(com.example.htmlmud.domain.model.definition.SkillBridgeRule.of("non_existent_drpg_skill", 1)));
+
+    when(mockReader.getAllSkills()).thenReturn(Map.of("custom_sword", brokenSkill));
+    when(mockReader.findPartySkill("non_existent_drpg_skill")).thenReturn(Optional.empty());
+    when(mockReader.findSkill("non_existent_drpg_skill")).thenReturn(Optional.empty());
+
+    DataIntegrityValidator.ValidationReport report = validator.validate();
+    assertThat(report.isValid()).isFalse();
+    assertThat(report.getErrors()).anyMatch(e -> e.contains("橋接目標 DRPG 技能 [non_existent_drpg_skill] 不存在於技能庫"));
+  }
+
+  @Test
+  @DisplayName("GUARD-01: 模擬開局物資不存在於物品庫，精準報告錯誤")
+  void testBrokenStartingSuppliesIntercepted() {
+    TemplateReader mockReader = mock(TemplateReader.class);
+    com.example.htmlmud.domain.party.service.PartyService mockPartyService =
+        mock(com.example.htmlmud.domain.party.service.PartyService.class);
+    DataIntegrityValidator validator = new DataIntegrityValidator(mockReader);
+    validator.setPartyService(mockPartyService);
+    validator.setFailFast(false);
+
+    when(mockPartyService.getStartingSupplies()).thenReturn(Map.of("ghost_pill", 5));
+    when(mockReader.findItem("ghost_pill")).thenReturn(Optional.empty());
+
+    DataIntegrityValidator.ValidationReport report = validator.validate();
+    assertThat(report.isValid()).isFalse();
+    assertThat(report.getErrors()).anyMatch(e -> e.contains("開局初始物資 [ghost_pill] 不存在於物品庫"));
   }
 
   @Test

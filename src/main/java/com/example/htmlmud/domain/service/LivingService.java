@@ -1,6 +1,7 @@
 package com.example.htmlmud.domain.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.beans.factory.ObjectProvider;
@@ -43,6 +44,9 @@ public class LivingService {
   private final ObjectProvider<WorldManager> worldManagerProvider;
 
   private final ObjectProvider<GameStateBroadcastService> broadcastServiceProvider;
+
+  @org.springframework.beans.factory.annotation.Autowired(required = false)
+  private org.springframework.context.ApplicationEventPublisher eventPublisher;
 
   @org.springframework.beans.factory.annotation.Autowired(required = false)
   private XpProgressionService xpProgressionService;
@@ -229,6 +233,19 @@ public class LivingService {
     // 若為怪物，立即自房間生靈清單移除，並依掉落表決定消散或掉落儲物袋
     if (self instanceof com.example.htmlmud.domain.actor.impl.Mob mob) {
       room.removeMob(mob.getId());
+
+      if (eventPublisher != null) {
+        try {
+          eventPublisher.publishEvent(new com.example.htmlmud.domain.event.MobEvents.MobDead(
+              mob.getTemplateId() != null ? mob.getTemplateId() : mob.getId(),
+              killerName != null ? killerName : killerId,
+              Map.of(),
+              java.time.Instant.now()
+          ));
+        } catch (Exception ex) {
+          log.error("Failed to publish MobDead event for mob {}", mob.getId(), ex);
+        }
+      }
 
       List<GameItem> drops = worldFactory.generateMobDrops(mob);
       if (drops.isEmpty()) {
@@ -522,28 +539,33 @@ public class LivingService {
   /**
    * 【重要】重新計算總屬性 每次穿脫裝備、升級、Buff 改變時呼叫
    */
-  private void recalculateStats(Living self) {
+  public void recalculateStats(Living self) {
+    if (self == null || self.getStats() == null || self.getStats().equipment == null) {
+      return;
+    }
     int minDamage = 0; // 基礎攻擊力 (可從 Level 算)
-    int maxDamage = 0; // 基礎防禦力
+    int maxDamage = 0; // 基礎攻擊力上限
     int def = 0; // 基礎防禦力
 
     // 遍歷所有裝備
     for (GameItem item : self.getStats().equipment.values()) {
+      if (item == null) continue;
       ItemTemplate tpl = item.getTemplate();
-      if (tpl != null) {
+      if (tpl != null && tpl.equipmentProp() != null) {
         minDamage += tpl.equipmentProp().minDamage();
         maxDamage += tpl.equipmentProp().maxDamage();
         def += tpl.equipmentProp().defense();
-
-        // 處理額外屬性 (Bonus Stats)
-        // if (tpl.bonusStats() != null) ...
+      } else if (item.getDefinition() != null) {
+        minDamage += item.getDefinition().bonusMinDamage();
+        maxDamage += item.getDefinition().bonusMaxDamage();
+        def += item.getDefinition().bonusDefense();
       }
     }
 
     self.minDamage = minDamage;
     self.maxDamage = maxDamage;
     self.defense = def;
-    log.info("{} stats updated: minDamage={}, maxDamage={}, Def={}", self.getName(), minDamage,
+    log.debug("{} stats updated: minDamage={}, maxDamage={}, Def={}", self.getName(), minDamage,
         maxDamage, def);
   }
 

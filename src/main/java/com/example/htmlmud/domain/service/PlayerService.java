@@ -48,6 +48,12 @@ public class PlayerService {
 
   private final com.example.htmlmud.config.GameConfig gameConfig;
 
+  private final ObjectProvider<CharacterSyncService> characterSyncServiceProvider;
+
+  public CharacterSyncService getCharacterSyncService() {
+    return characterSyncServiceProvider != null ? characterSyncServiceProvider.getIfAvailable() : null;
+  }
+
   @org.springframework.beans.factory.annotation.Autowired(required = false)
   private XpProgressionService xpProgressionService;
 

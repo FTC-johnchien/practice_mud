@@ -19,6 +19,7 @@ public class AuditLogEventListener {
     String logMsg = switch (event) {
       case PlayerEvents.LoggedIn e -> "使用者登入: " + e.username() + " IP:" + e.ipAddress();
       case PlayerEvents.LevelUp e -> "玩家升級: " + e.newLevel();
+      case PlayerEvents.ItemAcquired e -> "玩家獲取物品: " + e.playerId() + " 獲得 " + e.itemId() + " x" + e.count();
       case MobEvents.MobDead e -> "怪物死亡: " + e.mobId();
       default -> "未知事件: " + event.getClass().getSimpleName();
     };

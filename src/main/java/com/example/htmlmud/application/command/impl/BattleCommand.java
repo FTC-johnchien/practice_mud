@@ -20,6 +20,30 @@ public class BattleCommand implements PlayerCommand {
   private final DrpgBattleService battleService;
   private final DungeonManager dungeonManager;
 
+  @org.springframework.beans.factory.annotation.Autowired(required = false)
+  private com.example.htmlmud.config.GameConfig gameConfig;
+
+  @org.springframework.beans.factory.annotation.Autowired(required = false)
+  private org.springframework.core.env.Environment environment;
+
+  public void setGameConfig(com.example.htmlmud.config.GameConfig gameConfig) {
+    this.gameConfig = gameConfig;
+  }
+
+  public void setEnvironment(org.springframework.core.env.Environment environment) {
+    this.environment = environment;
+  }
+
+  private boolean isDebugAllowed() {
+    if (gameConfig != null && gameConfig.getDebug() != null && gameConfig.getDebug().isEnabled()) {
+      return true;
+    }
+    if (environment != null && (environment.matchesProfiles("dev") || environment.matchesProfiles("test"))) {
+      return true;
+    }
+    return false;
+  }
+
   @Override
   public String getKey() {
     return "battle";
@@ -57,16 +81,27 @@ public class BattleCommand implements PlayerCommand {
       String comboId = input.replaceFirst("^(combo|合擊)\\s+", "").trim();
       battleService.castComboSkill(self, comboId, pos);
     } else if (input.equals("test") || input.equals("dummy") || input.equals("木樁")) {
+      if (!isDebugAllowed()) {
+        self.reply("【仙道戒律】玄鐵試道傀儡演武僅於除錯環境開放，當前已受天道法則封禁。");
+        return;
+      }
       battleService.startTrainingBattle(self, pos);
     } else if (input.equals("charge") || input.equals("充能")) {
+      if (!isDebugAllowed()) {
+        self.reply("【仙道戒律】陣法靈威充能法門僅於除錯環境開放，當前已受天道法則封禁。");
+        return;
+      }
       battleService.chargeCombatResources(self, pos);
     } else if (input.equals("fight") || input.equals("attack") || input.equals("迎戰") || input.isEmpty()) {
       battleService.fight(self, pos);
     } else {
+      String debugSection = isDebugAllowed()
+          ? "  battle test / 木樁        - 開啟玄鐵試道傀儡測試戰鬥 (除錯模式專用)\n"
+              + "  battle charge / 充能      - 陣法靈威充滿 100 點 (除錯模式專用)\n"
+          : "";
       self.reply("【戰鬥指令】\n"
           + "  battle fight / 迎戰       - 全隊凝神迎戰，拔劍直攻目標\n"
-          + "  battle test / 木樁        - 開啟玄鐵試道傀儡測試戰鬥 (攻低血厚試招用)\n"
-          + "  battle charge / 充能      - 陣法靈威充滿 100 點，並補滿全員怒氣/連擊點/真元\n"
+          + debugSection
           + "  battle target <編號>     - 切換集火目標 (0: 前排一號, 1: 前排二號...)\n"
           + "  battle flee / 遁地       - 施展遁地金光脫離戰場 (-5 SAN)\n"
           + "  battle ult / 奧義        - 釋放陣法終極奧義 (需靈威 100)");

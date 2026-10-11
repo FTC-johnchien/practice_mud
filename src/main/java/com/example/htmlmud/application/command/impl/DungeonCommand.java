@@ -31,22 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 @CommandAlias({"dg", "step", "map"})
 public class DungeonCommand implements PlayerCommand {
 
-  private static final List<String> TOMB_MOBS = List.of(
-      "taiyin_tomb:corpse_doll",
-      "taiyin_tomb:blood_python",
-      "taiyin_tomb:bone_bat",
-      "taiyin_tomb:tomb_guard"
-  );
-
-  private static final List<String> TOMB_ITEMS = List.of(
-      "taiyin_tomb:taiyin_pill",
-      "taiyin_tomb:purify_talisman",
-      "taiyin_tomb:bronze_sword",
-      "taiyin_tomb:yin_robe",
-      "taiyin_tomb:ancient_relic",
-      "taiyin_tomb:tomb_key"
-  );
-
   private final DungeonManager dungeonManager;
   private final DungeonNavigator dungeonNavigator;
   private final PartyService partyService;
@@ -54,6 +38,30 @@ public class DungeonCommand implements PlayerCommand {
   private final com.example.htmlmud.domain.service.RoomMovementService roomMovementService;
   private final com.example.htmlmud.domain.service.GameStateBroadcastService broadcastService;
   private final TemplateReader templateReader;
+
+  @org.springframework.beans.factory.annotation.Autowired(required = false)
+  private com.example.htmlmud.config.GameConfig gameConfig;
+
+  @org.springframework.beans.factory.annotation.Autowired(required = false)
+  private org.springframework.core.env.Environment environment;
+
+  public void setGameConfig(com.example.htmlmud.config.GameConfig gameConfig) {
+    this.gameConfig = gameConfig;
+  }
+
+  public void setEnvironment(org.springframework.core.env.Environment environment) {
+    this.environment = environment;
+  }
+
+  private boolean isDebugAllowed() {
+    if (gameConfig != null && gameConfig.getDebug() != null && gameConfig.getDebug().isEnabled()) {
+      return true;
+    }
+    if (environment != null && (environment.matchesProfiles("dev") || environment.matchesProfiles("test"))) {
+      return true;
+    }
+    return false;
+  }
 
   @Override
   public String getKey() {
@@ -205,9 +213,14 @@ public class DungeonCommand implements PlayerCommand {
         broadcastDrpgState(self, floor, pos);
       }
       case "dummy", "test", "testmob" -> {
+        if (!isDebugAllowed()) {
+          self.reply("【仙道戒律】試道演武傀儡僅於除錯環境開放，當前已受天地法則封禁。");
+          return;
+        }
         battleService.startTrainingBattle(self, pos);
       }
       default -> {
+        String debugHelp = isDebugAllowed() ? "  dungeon dummy              - 召喚試道傀儡演練絕學 (除錯模式專用)\n" : "";
         self.reply("【地牢指令】\n"
             + "  dungeon / map              - 展開靈識感應地圖與前方視野\n"
             + "  dungeon ascii              - 印出終端文字版 ASCII 感應地圖\n"
@@ -219,7 +232,7 @@ public class DungeonCommand implements PlayerCommand {
             + "  step a / left              - 向左轉 90 度\n"
             + "  step d / right             - 向右轉 90 度\n"
             + "  dungeon look               - 凝神探查正前方地塊\n"
-            + "  dungeon dummy              - 召喚試道傀儡演練絕學");
+            + debugHelp);
       }
     }
   }
@@ -243,9 +256,11 @@ public class DungeonCommand implements PlayerCommand {
   }
 
   private void triggerRandomEncounter(Player self, DungeonFloor floor, DungeonPosition pos) {
-    List<String> mobs = (floor.getMobPool() != null && !floor.getMobPool().isEmpty())
-        ? floor.getMobPool()
-        : TOMB_MOBS;
+    if (floor.getMobPool() == null || floor.getMobPool().isEmpty()) {
+      log.warn("地牢樓層 [{}] 未設定 mobPool，跳過隨機遇敵檢定", floor.getId());
+      return;
+    }
+    List<String> mobs = floor.getMobPool();
     int count = ThreadLocalRandom.current().nextInt(1, 3);
     List<String> mobIds = new ArrayList<>();
     for (int i = 0; i < count; i++) {
@@ -262,12 +277,14 @@ public class DungeonCommand implements PlayerCommand {
       case TREASURE -> {
         if (!pos.isChestOpened(pos.getX(), pos.getY())) {
           pos.markChestOpened(pos.getX(), pos.getY());
-          List<String> dropPool = (tile.getDrops() != null && !tile.getDrops().isEmpty())
-              ? tile.getDrops()
-              : TOMB_ITEMS;
-          String itemId = dropPool.get(ThreadLocalRandom.current().nextInt(dropPool.size()));
+          if (tile.getDrops() == null || tile.getDrops().isEmpty()) {
+            self.reply("【寶箱】沉重的箱蓋被開啟，但裡面空無一物。");
+            broadcastDrpgState(self, floor, pos);
+            break;
+          }
+          String itemId = tile.getDrops().get(ThreadLocalRandom.current().nextInt(tile.getDrops().size()));
           var opt = templateReader.findItem(itemId);
-          String itemName = opt.map(ItemTemplate::name).orElse("古仙秘寶");
+          String itemName = opt.map(ItemTemplate::name).orElse(itemId);
           String itemDesc = opt.map(ItemTemplate::description).orElse("");
           Party party = partyService.getOrCreateParty(self.getName());
           boolean added = party.getInventory().addItem(itemId, 1);
@@ -286,7 +303,12 @@ public class DungeonCommand implements PlayerCommand {
       case BOSS -> {
         String bossMobId = (tile.getEventId() != null && !tile.getEventId().isBlank())
             ? tile.getEventId()
-            : "mozhu_mines:boss_song_tianheng";
+            : null;
+        if (bossMobId == null) {
+          log.warn("地牢樓層 [{}] 坐標 ({}, {}) 之首領地塊未設定 eventId！", floor.getId(), pos.getX(), pos.getY());
+          self.reply("【煞氣祭壇】此處祭壇空蕩冷寂，似曾有強大生靈盤踞，如今已無蹤跡。");
+          break;
+        }
         battleService.startBossBattle(self, pos, bossMobId);
       }
       case TRAP -> {

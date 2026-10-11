@@ -25,6 +25,8 @@ app:
     allowed-origins: http://localhost:8080,http://127.0.0.1:8080
 
 game:
+  debug:
+    enabled: false
   network:
     mode: local
     bind-address: 127.0.0.1
@@ -35,6 +37,12 @@ game:
       initial-coin: 100
       spawn-room-id: "newbie_village:inn"
       respawn-room-id: "newbie_village:cemetery"
+      default-class-id: "SWORDSMAN"
+      starting-supplies:
+        taiyin_pill: 3
+        purify_talisman: 2
+        steel_blade: 1
+        standard_spear: 1
   combat:
     default-gcd-ms: 1500
     base-hit-chance: 0.80

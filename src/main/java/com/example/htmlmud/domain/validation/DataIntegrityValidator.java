@@ -46,6 +46,9 @@ public class DataIntegrityValidator implements ApplicationRunner {
   @org.springframework.beans.factory.annotation.Autowired(required = false)
   private DungeonManager dungeonManager;
 
+  @org.springframework.beans.factory.annotation.Autowired(required = false)
+  private com.example.htmlmud.domain.party.service.PartyService partyService;
+
   @Value("${game.validation.fail-fast:true}")
   private boolean failFast = true;
 
@@ -55,6 +58,14 @@ public class DataIntegrityValidator implements ApplicationRunner {
 
   public boolean isFailFast() {
     return failFast;
+  }
+
+  public void setDungeonManager(DungeonManager dungeonManager) {
+    this.dungeonManager = dungeonManager;
+  }
+
+  public void setPartyService(com.example.htmlmud.domain.party.service.PartyService partyService) {
+    this.partyService = partyService;
   }
 
   @Override
@@ -74,13 +85,16 @@ public class DataIntegrityValidator implements ApplicationRunner {
     int companionsChecked = validateCompanions(errors, warnings);
     int formationsChecked = validateFormations(errors, warnings);
     int dungeonsChecked = validateDungeons(errors, warnings);
+    int skillsChecked = validateSkills(errors, warnings);
+    int suppliesChecked = validateStartingSupplies(errors, warnings);
 
     ValidationReport report = new ValidationReport(
-        errors, warnings, itemsChecked, mobsChecked, roomsChecked, shopsChecked, companionsChecked, formationsChecked, dungeonsChecked);
+        errors, warnings, itemsChecked, mobsChecked, roomsChecked, shopsChecked,
+        companionsChecked, formationsChecked, dungeonsChecked, skillsChecked, suppliesChecked);
 
     if (report.isValid()) {
-      log.info("=== ✅ 遊戲資料拓撲校驗全部通過！(物品: {}, 怪物: {}, 房間: {}, 商店: {}, 夥伴: {}, 陣法: {}, 地牢: {}) ===",
-          itemsChecked, mobsChecked, roomsChecked, shopsChecked, companionsChecked, formationsChecked, dungeonsChecked);
+      log.info("=== ✅ 遊戲資料拓撲校驗全部通過！(物品: {}, 怪物: {}, 房間: {}, 商店: {}, 夥伴: {}, 陣法: {}, 地牢: {}, 技能: {}, 開局物資: {}) ===",
+          itemsChecked, mobsChecked, roomsChecked, shopsChecked, companionsChecked, formationsChecked, dungeonsChecked, skillsChecked, suppliesChecked);
       if (report.hasWarnings()) {
         log.warn("⚠️ 存在 {} 項次要警示：\n{}", report.warningCount(), String.join("\n", report.getWarnings()));
       }
@@ -319,8 +333,96 @@ public class DataIntegrityValidator implements ApplicationRunner {
           }
         }
       }
+
+      // 深度盤查樓層所有地塊之掉落物、首領與特殊事件怪物 (GUARD-01)
+      for (int y = 0; y < floor.getHeight(); y++) {
+        for (int x = 0; x < floor.getWidth(); x++) {
+          com.example.htmlmud.domain.dungeon.model.DungeonTile tile = floor.getTile(x, y);
+          if (tile == null) continue;
+          if (tile.getDrops() != null) {
+            for (String dropId : tile.getDrops()) {
+              if (dropId != null && !dropId.isBlank()) {
+                if (templateReader.findItem(dropId).isEmpty()) {
+                  errors.add("地牢樓層 [" + floorId + "] 坐標 (" + x + ", " + y + ") 掉落物 [" + dropId + "] 不存在於物品庫！");
+                }
+              }
+            }
+          }
+          if (tile.getType() == com.example.htmlmud.domain.dungeon.model.DungeonTile.TileType.BOSS) {
+            String bossId = (tile.getEventId() != null && !tile.getEventId().isBlank())
+                ? tile.getEventId() : "mozhu_mines:boss_song_tianheng";
+            if (templateReader.findMob(bossId).isEmpty()) {
+              errors.add("地牢樓層 [" + floorId + "] 首領地塊 (" + x + ", " + y + ") 指定首領怪物 [" + bossId + "] 不存在於怪物庫！");
+            }
+          } else if (tile.getEventId() != null && !tile.getEventId().isBlank()) {
+            if (tile.getEventId().contains("boss_") || tile.getEventId().contains(":mob_") || tile.getEventId().contains("corrupted_")) {
+              if (templateReader.findMob(tile.getEventId()).isEmpty()) {
+                errors.add("地牢樓層 [" + floorId + "] 事件地塊 (" + x + ", " + y + ") 指定怪物 [" + tile.getEventId() + "] 不存在於怪物庫！");
+              }
+            }
+          }
+        }
+      }
     }
     return floorIds.size();
+  }
+
+  private int validateSkills(List<String> errors, List<String> warnings) {
+    Map<String, com.example.htmlmud.domain.model.template.SkillTemplate> skills = templateReader.getAllSkills();
+    int count = skills.size();
+    for (com.example.htmlmud.domain.model.template.SkillTemplate skill : skills.values()) {
+      if (skill.getId() == null || skill.getId().isBlank()) {
+        errors.add("發現 ID 為空的技能模板！");
+        continue;
+      }
+      com.example.htmlmud.domain.model.definition.SkillDefinition def = skill.toDefinition();
+      if (def != null && def.hasBridgeRules()) {
+        for (com.example.htmlmud.domain.model.definition.SkillBridgeRule rule : def.bridgeRules()) {
+          String target = rule.targetDrpgSkillId();
+          if (target != null && !target.isBlank()) {
+            if (templateReader.findPartySkill(target).isEmpty() && templateReader.findSkill(target).isEmpty()) {
+              errors.add("技能 [" + skill.getId() + "] 橋接目標 DRPG 技能 [" + target + "] 不存在於技能庫！");
+            }
+          }
+        }
+      }
+      List<com.example.htmlmud.domain.model.definition.SkillBridgeRule> defaultBridges =
+          com.example.htmlmud.domain.model.definition.SkillDefinition.resolveDefaultBridges(skill.getId());
+      if (defaultBridges != null) {
+        for (com.example.htmlmud.domain.model.definition.SkillBridgeRule rule : defaultBridges) {
+          String target = rule.targetDrpgSkillId();
+          if (target != null && !target.isBlank()) {
+            if (templateReader.findPartySkill(target).isEmpty() && templateReader.findSkill(target).isEmpty()) {
+              errors.add("技能 [" + skill.getId() + "] 預設橋接目標 DRPG 技能 [" + target + "] 不存在於技能庫！");
+            }
+          }
+        }
+      }
+    }
+
+    Map<String, com.example.htmlmud.domain.party.model.PartyMemberSkill> partySkills = templateReader.getAllPartySkills();
+    for (var psk : partySkills.values()) {
+      if (psk.getId() == null || psk.getId().isBlank()) {
+        errors.add("發現 ID 為空的小隊技能模板！");
+      }
+    }
+    return count + partySkills.size();
+  }
+
+  private int validateStartingSupplies(List<String> errors, List<String> warnings) {
+    if (partyService == null) return 0;
+    Map<String, Integer> supplies = partyService.getStartingSupplies();
+    if (supplies != null) {
+      for (String itemId : supplies.keySet()) {
+        if (itemId != null && !itemId.isBlank()) {
+          if (templateReader.findItem(itemId).isEmpty()) {
+            errors.add("開局初始物資 [" + itemId + "] 不存在於物品庫！");
+          }
+        }
+      }
+      return supplies.size();
+    }
+    return 0;
   }
 
   @Getter
@@ -335,6 +437,16 @@ public class DataIntegrityValidator implements ApplicationRunner {
     private final int companionsChecked;
     private final int formationsChecked;
     private final int dungeonsChecked;
+    private final int skillsChecked;
+    private final int suppliesChecked;
+
+    public ValidationReport(
+        List<String> errors, List<String> warnings, int itemsChecked, int mobsChecked,
+        int roomsChecked, int shopsChecked, int companionsChecked, int formationsChecked,
+        int dungeonsChecked) {
+      this(errors, warnings, itemsChecked, mobsChecked, roomsChecked, shopsChecked,
+          companionsChecked, formationsChecked, dungeonsChecked, 0, 0);
+    }
 
     public boolean isValid() {
       return errors.isEmpty();

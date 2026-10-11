@@ -151,7 +151,7 @@ class MozhuMinesDungeonIntegrationTest {
     assertThat(boss.getTemplateId()).isEqualTo("mozhu_mines:boss_song_tianheng");
     assertThat(boss.getName()).contains("宋天衡");
     assertThat(boss.getMaxHp()).isGreaterThanOrEqualTo(450);
-    assertThat(boss.getDropItemId()).isEqualTo("mozhu_mines:black_obsidian_scythe");
+    assertThat(boss.getDropItemIds()).contains("black_obsidian_scythe");
 
     // 撤退脫戰以釋放鎖定
     battleService.flee(testPlayer, pos);

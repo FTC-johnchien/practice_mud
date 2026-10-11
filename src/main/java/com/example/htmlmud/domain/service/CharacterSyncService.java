@@ -17,32 +17,77 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class CharacterSyncService {
 
-  @org.springframework.beans.factory.annotation.Autowired(required = false)
-  private SkillBridgeService skillBridgeService;
+  private final SkillBridgeService skillBridgeService;
+  private final BattleOutcomeApplier outcomeApplier;
+  private final com.example.htmlmud.domain.repository.TemplateReader templateReader;
+  private final org.springframework.beans.factory.ObjectProvider<LivingService> livingServiceProvider;
 
-  @org.springframework.beans.factory.annotation.Autowired(required = false)
-  private BattleOutcomeApplier outcomeApplier;
+  @org.springframework.beans.factory.annotation.Autowired
+  public CharacterSyncService(
+      @org.springframework.beans.factory.annotation.Autowired(required = false) SkillBridgeService skillBridgeService,
+      @org.springframework.beans.factory.annotation.Autowired(required = false) BattleOutcomeApplier outcomeApplier,
+      @org.springframework.beans.factory.annotation.Autowired(required = false) com.example.htmlmud.domain.repository.TemplateReader templateReader,
+      @org.springframework.beans.factory.annotation.Autowired(required = false) org.springframework.beans.factory.ObjectProvider<LivingService> livingServiceProvider) {
+    this.skillBridgeService = skillBridgeService != null ? skillBridgeService : new SkillBridgeService();
+    this.outcomeApplier = outcomeApplier != null ? outcomeApplier : new BattleOutcomeApplier();
+    this.templateReader = templateReader;
+    this.livingServiceProvider = livingServiceProvider;
+  }
+
+  public CharacterSyncService() {
+    this(new SkillBridgeService(), new BattleOutcomeApplier(), null, null);
+  }
+
+  public CharacterSyncService(SkillBridgeService skillBridgeService) {
+    this(skillBridgeService, new BattleOutcomeApplier(), null, null);
+  }
+
+  public CharacterSyncService(SkillBridgeService skillBridgeService, BattleOutcomeApplier outcomeApplier) {
+    this(skillBridgeService, outcomeApplier, null, null);
+  }
 
   public SkillBridgeService getSkillBridgeService() {
-    if (skillBridgeService == null) {
-      skillBridgeService = new SkillBridgeService();
-    }
     return skillBridgeService;
   }
 
-  public void setSkillBridgeService(SkillBridgeService skillBridgeService) {
-    this.skillBridgeService = skillBridgeService;
-  }
-
   public BattleOutcomeApplier getOutcomeApplier() {
-    if (outcomeApplier == null) {
-      outcomeApplier = new BattleOutcomeApplier();
-    }
     return outcomeApplier;
   }
 
-  public void setOutcomeApplier(BattleOutcomeApplier outcomeApplier) {
-    this.outcomeApplier = outcomeApplier;
+  /**
+   * 裝備單一擁有者投影：將小隊隊長 (PartyMember) 的 7 大部位裝備單向投影至 Player
+   * 維護不可變邊界與 Actor 線程隔離 (UNIFY-02)
+   */
+  public boolean syncEquipmentFromPartyToPlayer(PartyMember leader, Player player) {
+    if (leader == null || player == null) return false;
+    java.util.Map<com.example.htmlmud.domain.model.enums.EquipmentSlot, com.example.htmlmud.domain.party.model.PartyItemSlot> equipment = leader.getEquipment();
+
+    if (player.isActorThread() || !player.isRunning()) {
+      if (player.getStats() != null && player.getStats().getEquipment() != null) {
+        player.getStats().getEquipment().clear();
+        if (equipment != null) {
+          for (var entry : equipment.entrySet()) {
+            if (entry.getKey() != null && entry.getValue() != null) {
+              player.getStats().getEquipment().put(entry.getKey(), entry.getValue().toGameItem(templateReader));
+            }
+          }
+        }
+        LivingService ls = (livingServiceProvider != null) ? livingServiceProvider.getIfAvailable() : null;
+        if (ls != null) {
+          ls.recalculateStats(player);
+        }
+      }
+      return true;
+    }
+
+    java.util.concurrent.CompletableFuture<Boolean> future = new java.util.concurrent.CompletableFuture<>();
+    player.send(new com.example.htmlmud.protocol.ActorMessage.ProjectEquipment(equipment, future));
+    try {
+      return future.get(5, java.util.concurrent.TimeUnit.SECONDS);
+    } catch (Exception e) {
+      log.error("等待玩家 [{}] 透過 Mailbox 投影裝備超時或異常", player.getName(), e);
+      return false;
+    }
   }
 
   /**
@@ -74,7 +119,12 @@ public class CharacterSyncService {
       getSkillBridgeService().syncSkills(player, leader);
     }
 
-    log.debug("Synced stats and skills from Player [{}] to PartyMember leader [{}] via snapshot",
+    // 裝備單一擁有者投影同步 (UNIFY-02)
+    if (leader.getEquipment() != null && !leader.getEquipment().isEmpty()) {
+      syncEquipmentFromPartyToPlayer(leader, player);
+    }
+
+    log.debug("Synced stats, skills and equipment between Player [{}] and PartyMember leader [{}]",
         player.getName(), leader.getName());
   }
 
@@ -107,9 +157,23 @@ public class CharacterSyncService {
 
   /**
    * 透過 Applier 將戰鬥結果單向套用至 Player
+   * 若 Player Actor 處於運行中且非自身執行緒，自動改走 Actor Mailbox 循序派發 (SYNC-01)
    */
   public boolean applyOutcome(Player player, BattleOutcome outcome) {
-    return getOutcomeApplier().apply(player, outcome);
+    if (player == null || outcome == null) return false;
+    // 若在該 Player 的虛擬執行緒中，或 Actor 尚未啟動 (單元測試/離線)，直接同步套用
+    if (player.isActorThread() || !player.isRunning()) {
+      return getOutcomeApplier().apply(player, outcome);
+    }
+    // 跨線程邊界：投遞至 Player Mailbox 保證 Actor 串行安全執行
+    java.util.concurrent.CompletableFuture<Boolean> future = new java.util.concurrent.CompletableFuture<>();
+    player.send(new com.example.htmlmud.protocol.ActorMessage.ApplyBattleOutcome(outcome, future));
+    try {
+      return future.get(5, java.util.concurrent.TimeUnit.SECONDS);
+    } catch (Exception e) {
+      log.error("等待玩家 [{}] 透過 Mailbox 套用戰鬥結果超時或異常", player.getName(), e);
+      return false;
+    }
   }
 
   /**
@@ -122,6 +186,13 @@ public class CharacterSyncService {
     LivingStats playerStats = player.getStats();
     if (leaderStats == null || playerStats == null) return;
 
+    java.util.Map<String, Integer> statIncreases = new java.util.HashMap<>();
+    if (leaderStats.getStr() > playerStats.getStr()) statIncreases.put("str", leaderStats.getStr() - playerStats.getStr());
+    if (leaderStats.getCon() > playerStats.getCon()) statIncreases.put("con", leaderStats.getCon() - playerStats.getCon());
+    if (leaderStats.getDex() > playerStats.getDex()) statIncreases.put("dex", leaderStats.getDex() - playerStats.getDex());
+    if (leaderStats.getIntelligence() > playerStats.getIntelligence()) statIncreases.put("int", leaderStats.getIntelligence() - playerStats.getIntelligence());
+    if (leaderStats.getWis() > playerStats.getWis()) statIncreases.put("wis", leaderStats.getWis() - playerStats.getWis());
+
     // 建立 Outcome 並套用
     BattleOutcome outcome = BattleOutcome.builder()
         .battleId("sync-" + System.nanoTime())
@@ -133,12 +204,15 @@ public class CharacterSyncService {
         .leveledUp(leaderStats.getLevel() > playerStats.getLevel())
         .expGained(Math.max(0, leaderStats.getExp() - playerStats.getExp()))
         .freeStatPointsGained(Math.max(0, leaderStats.getFreeStatPoints() - playerStats.getFreeStatPoints()))
+        .statIncreases(statIncreases)
         .build();
 
     applyOutcome(player, outcome);
 
-    // 確保其餘自訂屬性完全同步 (深度複製，不共用引用)
-    copyStats(leaderStats, playerStats);
+    // 若處於非並發狀態 (同執行緒或未啟動 Actor)，安全補充覆蓋深層數值
+    if (player.isActorThread() || !player.isRunning()) {
+      copyStats(leaderStats, playerStats);
+    }
     log.debug("Synced stats from PartyMember leader [{}] to Player [{}] via Outcome", leader.getName(), player.getName());
   }
 

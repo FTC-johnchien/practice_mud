@@ -189,21 +189,18 @@ public class DrpgEnemyTacticsService {
   }
 
   /**
-   * 計算怪物對隊員傷害
+   * 計算怪物對隊員傷害 (委託 CombatRules 統一傷害公式)
    */
   public int calculateEnemyDamage(BattleEnemy enemy, PartyMember targetMember) {
-    int rawDmg = ThreadLocalRandom.current().nextInt(enemy.getMinDamage(), enemy.getMaxDamage() + 1);
-    return Math.max(1, rawDmg - targetMember.getEffectiveDefense());
+    return com.example.htmlmud.domain.combat.CombatRules.calculateRawDamage(enemy, targetMember, 1.0);
   }
 
   /**
-   * 計算小隊成員對怪物的基礎普通攻擊傷害
+   * 計算小隊成員對怪物的基礎普通攻擊傷害 (委託 CombatRules 統一傷害公式，支援 7 槽位裝備加成)
    */
   public int calculatePlayerDamage(PartyMember member, BattleEnemy target) {
-    int base = ThreadLocalRandom.current().nextInt(member.getBaseMinDamage(), member.getBaseMaxDamage() + 1);
-    int net = Math.max(1, base - target.getDefense());
     double variance = 0.9 + (ThreadLocalRandom.current().nextDouble() * 0.2);
-    return (int) (net * variance);
+    return com.example.htmlmud.domain.combat.CombatRules.calculateRawDamage(member, target, variance);
   }
 
   /**

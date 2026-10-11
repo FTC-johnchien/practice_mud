@@ -55,10 +55,6 @@ public class DrpgBattleService {
   private final Map<String, BattleContext> activeBattles = new ConcurrentHashMap<>();
   private Consumer<Player> stateBroadcaster;
 
-  private static final List<String> TOMB_ITEMS = List.of(
-      "taiyin_pill", "purify_talisman", "bronze_sword", "yin_robe", "ancient_relic", "tomb_key"
-  );
-
   @Autowired
   public DrpgBattleService(PartyService partyService, DungeonManager dungeonManager,
       DungeonNavigator dungeonNavigator, TemplateReader templateReader,
@@ -471,13 +467,6 @@ public class DrpgBattleService {
           .filter(l -> l != null && !l.isEmpty())
           .map(l -> l.get(ThreadLocalRandom.current().nextInt(l.size())).itemId())
           .orElse(null);
-      if (dropId == null) {
-        if (templateId.contains("mozhu")) {
-          dropId = "mozhu_mines:corrupted_spirit_stone";
-        } else {
-          dropId = TOMB_ITEMS.get(ThreadLocalRandom.current().nextInt(TOMB_ITEMS.size()));
-        }
-      }
 
       RowPosition row = (idx <= 2) ? RowPosition.FRONT : RowPosition.BACK;
       BattleEnemy enemy;
@@ -541,7 +530,17 @@ public class DrpgBattleService {
     int minDmg = opt.map(MobTemplate::minDamage).filter(d -> d > 0).orElse(20);
     int maxDmg = opt.map(MobTemplate::maxDamage).filter(d -> d > 0).orElse(35);
     int def = opt.map(MobTemplate::defense).filter(d -> d > 0).orElse(10);
+    int dex = opt.map(MobTemplate::dex).filter(d -> d > 0).orElse(12);
+    int xp = opt.map(MobTemplate::expReward).filter(x -> x > 0).orElse(500);
     long atkSpeed = opt.map(MobTemplate::attackSpeed).filter(s -> s > 0).orElse(2000);
+    List<String> bossDrops = new ArrayList<>();
+    if (opt.isPresent() && opt.get().loot() != null) {
+      for (com.example.htmlmud.domain.model.config.LootEntry entry : opt.get().loot()) {
+        if (ThreadLocalRandom.current().nextDouble() <= entry.chance()) {
+          bossDrops.add(entry.itemId());
+        }
+      }
+    }
 
     List<BattleEnemy> enemies = new ArrayList<>();
     BattleEnemy boss = BattleEnemy.builder()
@@ -553,13 +552,14 @@ public class DrpgBattleService {
         .minDamage(minDmg)
         .maxDamage(maxDmg)
         .defense(def)
-        .dex(12)
+        .dex(dex)
         .row(RowPosition.FRONT)
         .attackIntervalMs(atkSpeed)
         .nextAttackTime(System.currentTimeMillis() + 1500)
         .alive(true)
-        .xp(500)
-        .dropItemId("mozhu_mines:black_obsidian_scythe")
+        .xp(xp)
+        .dropItemId(bossDrops.isEmpty() ? null : bossDrops.get(0))
+        .dropItemIds(bossDrops)
         .build();
     enemies.add(boss);
 
@@ -921,12 +921,39 @@ public class DrpgBattleService {
     }
 
     String realSlotId = resolveSlotId(party, slotIdOrIndex);
+    // 支援自個人隨身行囊穿戴法寶 (UNIFY-02)
+    if (realSlotId == null && memberIdx == 0 && player != null && player.getInventory() != null) {
+      com.example.htmlmud.domain.model.entity.GameItem personalMatch = null;
+      for (var it : player.getInventory()) {
+        if (it != null && (it.getId().equalsIgnoreCase(slotIdOrIndex)
+            || it.getName().contains(slotIdOrIndex)
+            || (it.getAliases() != null && it.getAliases().contains(slotIdOrIndex)))) {
+          personalMatch = it;
+          break;
+        }
+      }
+      if (personalMatch != null) {
+        PartyItemSlot slot = PartyItemSlot.fromGameItem(personalMatch);
+        if (slot != null && slot.isEquipment()) {
+          player.getInventory().remove(personalMatch);
+          party.getInventory().addSlot(slot);
+          realSlotId = slot.getSlotId();
+        }
+      }
+    }
+
     if (realSlotId == null) {
       player.reply("行囊中找不到該物品！");
       return;
     }
 
     String result = party.equipItemOnMember(realSlotId, memberIdx);
+    if (memberIdx == 0 && !party.getMembers().isEmpty()) {
+      CharacterSyncService sync = getCharacterSyncService();
+      if (sync != null) {
+        sync.syncEquipmentFromPartyToPlayer(party.getMembers().get(0), player);
+      }
+    }
     broadcastLog(player, ctx, result);
     pushDrpgState(player, pos, ctx);
   }
@@ -939,6 +966,12 @@ public class DrpgBattleService {
     }
 
     String result = party.unequipItemFromMember(slotType, memberIdx);
+    if (memberIdx == 0 && !party.getMembers().isEmpty()) {
+      CharacterSyncService sync = getCharacterSyncService();
+      if (sync != null) {
+        sync.syncEquipmentFromPartyToPlayer(party.getMembers().get(0), player);
+      }
+    }
     broadcastLog(player, ctx, result);
     pushDrpgState(player, pos, ctx);
   }

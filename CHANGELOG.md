@@ -8,7 +8,116 @@
 
 ## 📌 最新里程碑 (Latest Releases)
 
-### [2026-10-08] 修復選單文字溢出、實裝防禦判定動態差異化、陣法奧義全場演出與金剛怒目嘲諷光環
+### [2026-10-11] 階段 3 戰鬥引擎收斂與雙模呈現投影 (UNIFY-03: Single Combat Engine & Dual Presentation)
+- **純函式戰鬥規則與統一數學公式 (CombatRules SSoT)**：
+  - 新建 `CombatRules`：抽離純函式戰鬥演算法，包含基礎傷害計算（`calculateRawDamage`，支援武器浮動與 `MobRank` 傷害倍率）、抗性折減（`applyResistance`）以及一元一次擲骰圓桌判定（`executeCombatTable`: Miss -> Dodge -> Parry -> Block -> Crit -> Hit）。
+  - `CombatService`、`DefenseResolver`、`DrpgEnemyTacticsService` 100% 收斂委託 `CombatRules`，消除兩套戰鬥數學公式的割裂。
+- **大一統戰鬥參與者抽象 (Universal Combatant Interface)**：
+  - 定義 `Combatant` 介面（繼承 `Buffable`），宣告攻防範圍、抗性、屬性與生命週期契約。
+  - `Living` (包括 `Player`, `Mob`)、`PartyMember`、`BattleEnemy` 統一實現 `Combatant`，使戰鬥規則可多態消費任意對決實體。
+- **雙模呈現投影架構 (Dual Presentation Projection)**：
+  - 新建 `CombatPresentation`：
+    - **MUD 模式投影 (`projectMudCombatLog`)**：將戰鬥結果轉化為純淨無時間戳的武俠招式敘事，支援 `$W`/`$w`/`$l`/`$d` 佔位符色彩渲染並廣播至當前房間終端。
+    - **DRPG/Web 模式投影 (`projectGuiCombatEvent`)**：生成標準結構化 `BattleEvent` / `BattleEventsDto`，支援 Web 介面卡片動態演出、血條扣減與浮動數字特效。
+- **城鎮遭遇戰與戰鬥流程統一 (ADR-01 決策落地)**：
+  - `CombatService` 普攻計算與城鎮 `kill` 指令全面接入 `CombatRules` 與 `CombatPresentation`，支援雙模投影並維護狀態機閉環。
+- **整合驗證測試**：
+  - 新增 `UnifiedCombatEngineAndPresentationTest`（涵蓋純函式數學與抗性、Combatant 多態契約、雙模投影生成、城鎮遭遇戰整合廣播 4 項測試）。
+  - 全專案 283 項測試 100% 綠燈通過。
+
+### [2026-10-11] 階段 3 角色與裝備大一統 (UNIFY-02: 7-Slot Canonical Equipment SSoT & Real-Time Projection)
+- **7 槽位裝備單一狀態持有 (Single Source of Truth)**：
+  - `PartyMember`（小隊首位主角隊長，`memberIdx == 0`）正式確立為 7 大槽位（`MAIN_HAND`, `OFF_HAND`, `HEAD`, `BODY`, `FEET`, `ACCESSORY_1`, `ACCESSORY_2`）之唯一權威持有者。
+  - 徹底終結過去 MUD `Player.stats.equipment`（4 槽位）與 DRPG `PartyMember.equipment`（7 槽位）各自穿脫、數值分裂之歷史痛點。
+- **Actor Mailbox 執行緒安全單向投影 (Mailbox Projection Protocol)**：
+  - `ActorMessage` 擴充 `ProjectEquipment(Map<EquipmentSlot, PartyItemSlot> equipment, CompletableFuture<Boolean> future)` 訊息協定。
+  - `Player.handlePlayerMessage` 於 Player 虛擬執行緒中安全重構 `GameItem` 投影映射，並呼叫 `livingService.recalculateStats(this)` 重算攻擊力與防禦力。
+  - `CharacterSyncService.syncEquipmentFromPartyToPlayer`:
+    - 具備 Actor 執行緒邊界感知：同執行緒或離線（測試環境）同步套用；跨執行緒投遞至 Mailbox 確保不破壞 Single-Writer 原則。
+    - 依據 `TemplateReader` 解析物品定義，對齊屬性加成 (`bonusMinDamage`, `bonusMaxDamage`, `bonusDefense`)。
+- **雙層背包穿脫互通與即時數值回落**：
+  - `DrpgBattleService.equipItem`:
+    - 穿戴裝備時，優先從小隊公共倉庫尋找，若無則自動在主角個人隨身行囊檢索裝備，裝備成功後扣除並將舊裝備卸至倉庫/行囊。
+    - 穿裝與卸裝後，立即觸發 `CharacterSyncService.syncEquipmentFromPartyToPlayer` 即時投影更新主角攻防屬性。
+  - `LivingService.recalculateStats`: 公開為 API 並擴充支援 `ItemDefinition`，卸下裝備時數值立即精確回落。
+- **存檔與開局初始同步**：
+  - `SaveGameService.loadGame` 與 `createNewGame` 中，讀檔與開局後自動執行 `syncEquipmentFromPartyToPlayer`，保證存檔讀取後 MUD 視角立即可見 7 槽位投影數值。
+- **MUD 指令介面擴充**：
+  - `EquipCommand`: 支援 `eq` / `equipment` 別名；無參數時以武俠格式格式化輸出 7 槽位穿著狀態、攻擊區間與總防禦力。
+- **整合驗證測試**：
+  - 新增 `CanonicalEquipmentProjectionTest`（5 項整合測試：7 槽位投影、個人行囊穿裝、卸裝數值回落、存檔讀取投影、指令視圖渲染）。
+  - 全專案 279 項測試 100% 綠燈通過。
+
+### [2026-10-11] 階段 3 雙層背包收斂與存檔 v2 平滑遷移 (UNIFY-01: Dual-Tier Inventory & SaveData v2)
+- **消除雙寫假帳 (No Double Accounting)**：
+  - `GetCommand`: 地面散落物品拾取至玩家個人隨身行囊 `player.getInventory()`（12 格上限，滿載時自動溢流至小隊倉庫）；容器戰利品（如【散落的儲物袋】、寶箱）搜刮後全數納入 `party.getInventory()`（小隊倉庫 30 格）。徹底消除過去拾取時同時寫入兩處之假帳漏洞。
+  - `DropCommand`: 支援預設 `drop <物品>` 自隨身行囊丟棄至地面；新增 `drop stash <物品>` / `drop storage <物品>` 自小隊倉庫丟棄至地面；若行囊無該物但倉庫存在時，給予友善提示。
+  - `StashCommand`: 新建指令處理個人隨身行囊與小隊倉庫之雙向流轉。支援 `stash <物品>` / `store <物品>` 存入倉庫；支援 `withdraw <物品>` / `take <物品>` 取出回行囊。
+  - `InventoryCommand`: 介面升級，同步分區列出【個人隨身行囊】與【小隊儲物倉庫】，並標註快捷流轉語法提示。
+- **存檔架構升級 (SaveData v2 Migration)**：
+  - `SaveData.CURRENT_SCHEMA_VERSION` 升級為 `2`，新增 `personalInventory: List<PartyItemSlot>`。
+  - `SaveMigrationPipeline`: 實作 `1 -> 2` 自動補齊空行囊陣列，確保舊版存檔完全平滑讀取相容。
+  - `SaveGameService`: 存檔時自動序列化線上玩家行囊至 `personalInventory`；讀檔時完美還原至 `player.getInventory()`。
+- **整合驗證測試**：
+  - 新增 `DualTierInventoryAndStashTest`（6 項雙層背包流轉與存檔還原測試）與 `SaveGameServiceTest.testSaveMigrationFromV1ToV2`。
+  - 全專案 274 項測試 100% 綠燈通過。
+
+### [2026-10-11] 階段 3 架構設計決策定案 (ADR-01: Architecture Decision Records)
+- **1. 戰鬥機制統一 (UNIFY-03)**：定案採用「**共用同一套機制**」。城鎮 `kill` 與地牢探索遇敵統一接入現代小隊戰鬥引擎，MUD 視窗負責長篇文字敘事投影，GUI 負責卡片動態演出。
+- **2. 背包所有權模型 (UNIFY-01)**：定案採用「**個人行囊 + 小隊倉庫**」雙層模型。個人行囊管理隨身裝備與快捷丹藥，小隊倉庫管理團隊戰利品與備用素材，消除 `get/drop/shop` 雙寫假帳。
+- **3. 持久化真相源 (SAVE-01)**：定案以「**單機版 SaveData JSON**」作為唯一單一真相源。升級 `schemaVersion: 2` 進行原子化存檔槽平滑遷移，逐步解耦 H2 DB。
+- **4. 客戶端呈現定位**：定案聚焦於現代「**Web 終端視窗 + GUI 混合介面**」，無需為純外部 telnet 終端過度設計。
+
+### [2026-10-11] 階段 2 Actor 邊界同步正確性與雙軌領域事件主幹打通 (SYNC-01 / EVENT-01)
+- **Actor Mailbox 循序派發與執行緒邊界收斂 (SYNC-01)**：
+  - `ActorMessage` 擴充 `ApplyBattleOutcome(BattleOutcome outcome, CompletableFuture<Boolean> future)` 訊息協定。
+  - `Player.handlePlayerMessage` 增加此訊息的非同步安全派發與結算處理，確保對 `LivingStats` 的修改完全限制在 Player Virtual Thread 串行處理。
+  - `CharacterSyncService.applyOutcome`: 嚴格遵守 Actor 併發模型邊界。若調用方已在 Player 虛擬執行緒內或 Actor 未啟動（單元測試/離線），直接同步套用避免自我等待死鎖；若跨執行緒邊界且 Player 運行中，將不可變 Outcome 投遞至 Mailbox 並等待完成，杜絕併發競態與跨線程穿透修改。
+  - `CharacterSyncService.syncFromPartyToPlayer`: 將戰鬥後的隊長屬性增長包裝為不可變 `BattleOutcome` 並透過 `applyOutcome` 投遞。
+- **雙軌領域事件主幹打通 (EVENT-01)**：
+  - `PlayerEvents` 擴充 `record ItemAcquired(String playerId, String itemId, int count, Instant occurredOn)` 封閉介面成員。
+  - `AuditLogEventListener` 擴充模式匹配，自動審計 `PlayerEvents.ItemAcquired`。
+  - `XpProgressionService`: 在主角及小隊隊長突破境界升級時，統一透過 `ApplicationEventPublisher` 發布 `PlayerEvents.LevelUp`。
+  - `LivingService.onDeath`: MUD 端怪物死亡時，統一發布 `MobEvents.MobDead`。
+  - `DrpgRewardService.resolveVictory`: DRPG 端戰鬥大捷時，敵方戰利品掉落與血肉道核獲取時，統一發布 `PlayerEvents.ItemAcquired`。
+  - `MozhuMinesQuestListener`: 首領宋天衡擊殺判定由模糊 `contains("boss_song_tianheng")` 改為精確命名空間匹配，修正提示文本。
+- **整合驗證測試與架構棘輪穩固**：
+  - 新增 `ActorOutcomeSyncAndEventBackboneTest`：完整涵蓋 Actor Mailbox 執行緒安全投遞、非運行同步退回、MUD 怪物死亡事件廣播、突破升級事件廣播與 DRPG 戰利品獲取事件廣播。
+  - 收斂 `DrpgCombatLoop` 與 `DrpgRewardService` 建構子依賴，消除 `new TemplateCatalog()` 重複調用，嚴格鎖定棘輪上限為 33。
+  - 全套測試套件（267 項測試）100% 綠燈通過。
+
+### [2026-10-11] 階段 1 移除靜默 Fallback 與內容資料化 (FALLBACK-01 / DATA-03~06 / CONF-01)
+- **全面移除硬編碼掉落物與怪物清單 (DATA-04 / DATA-05 / DATA-06)**：
+  - 徹底移除 `DungeonCommand`、`DrpgBattleService`、`DrpgRewardService` 中的 `TOMB_MOBS` 與 `TOMB_ITEMS` 硬編碼常數。
+  - 迷宮隨機遭遇戰 (`triggerRandomEncounter`) 嚴格基於地牢樓層 `mobPool` 生成，空池安全提示；地塊事件 (`handleTileEvent`) 寶箱與首領戰 100% 依賴地塊 `drops` 與 `eventId`，無靜默假資料 fallback。
+  - 重構戰鬥擊殺掉落機制：`BattleEnemy` 支援 `dropItemIds` 多掉落物動態結算，`DrpgBattleService.startBossBattle` 與 `BattleEnemy.fromTemplate` 依照 `MobTemplate.loot()` 掉落表機率擲骰掉落；首領宋天衡擊殺必定掉落 `black_obsidian_scythe` 與 `elder_token`，徹底刪除 `contains("boss_song_tianheng")` 人工寫死物品注入。
+  - 首領宋天衡於 `mobs.json` 補齊 `"expReward": 500`，戰鬥結算動態讀取 (DATA-03)。
+- **清理職業與陣法硬編碼 (DATA-06 / SWORDSMAN)**：
+  - `DefenseResolver` 招架反擊 (`canRiposte`) 改為 100% 依據職業定義 traits (`p.getClassTemplate().map(t -> t.hasTrait("canRiposte")).orElse(false)`)，移除硬編碼 `"SWORDSMAN".equalsIgnoreCase(...)`。
+  - `FormationTemplate` 移除 SWORDSMAN 相容 TANK 的例外旁路判斷，嚴格遵守 `RoleCategory` 職能分類體系。
+  - `Player.getClassId()` 預設職業改由 `GameConfig.getDefaults().getPlayer().getDefaultClassId()` 驅動，取代代碼寫死。
+- **全域遊戲配置驅動 (CONF-01)**：
+  - `GameConfig.PlayerDefaults` 與 `application.yml` 新增 `default-class-id` 與 `starting-supplies`（太陰清靈丹、淨穢符、精鋼佩劍、玄鐵槍）。
+  - `PartyService.getStartingSupplies()` 全面改為讀取 `GameConfig` 設定，支援外置 YAML 定制。
+- **治理靜默 Fallback 反模式 (FALLBACK-01)**：
+  - 移除 `PartyCommand` 的 5 參數冗餘建構子，注入 `XpProgressionService` 與 `TemplateReader`。
+  - 重構 `DrpgRewardService`：以建構子注入替換多個 `@Autowired(required = false)` 與延遲 `new`，道核生成標準化委由 `ItemFactory.createDaoCore(...)`。
+  - 縮緊 `ArchitectureGuardrailsTest` 的 `new TemplateCatalog()` 棘輪上限至 33 處。
+  - 全套測試套件（262 項測試）100% 綠燈通過。
+
+### [2026-10-11] 階段 0 重構護欄就位：校驗器擴充、防刷除錯指令封裝與架構防回歸檢驗 (GUARD-01 / DEBUG-01)
+- **資料拓撲校驗器擴充 (`DataIntegrityValidator` - GUARD-01)**：
+  - 深度盤查地牢樓層所有地塊（`DungeonTile`），校驗地塊掉落物（`drops`）及首領/事件怪物 ID（`eventId`）於物品庫與怪物庫之存在性，杜絕移除 fallback 時發生靜默 NPE。
+  - 擴充全域技能與小隊技能（`SkillTemplate` / `PartyMemberSkill`）橋接規則雙向校驗，確保所有 `bridgeRules` 及預設橋接目標 DRPG 技能（如 `sword_pierce`、`star_warp` 等）均存在於技能庫。
+  - 新增開局物資存在性校驗（`PartyService.getStartingSupplies()`）。
+  - 更新 `ValidationReport` 指標維度（物品 117、怪物 69、房間 40、商店 2、夥伴 6、陣法 10、地牢 2、技能 100、開局物資 4），全部校驗 100% 通過。
+- **除錯指令正式環境封裝 (`BattleCommand` / `DungeonCommand` / `GameConfig` - DEBUG-01)**：
+  - `GameConfig` 與 `application.yml` 新增 `game.debug.enabled` 設定（預設 `false`）。
+  - 封鎖正式環境隨意召喚玄鐵試道傀儡（`battle test/dummy/木樁`、`dungeon dummy/test/testmob`）與瞬間全滿靈威（`battle charge/充能`），防範玩家刷 XP 與掉落資源；僅於除錯環境或管理員旗標下開放。
+- **架構防回歸棘輪與邊界掃描測試 (`ArchitectureGuardrailsTest` / `DebugCommandGuardTest`)**：
+  - 新增 `ArchitectureGuardrailsTest`：為 `new TemplateCatalog()` 與 `GameConfig.getInstance()` 建立上限基準（Ratchet 棘輪模式），嚴禁新代碼新增靜默 fallback；並自動驗證領域層不依賴 Web/Servlet 控制器。
+  - 新增 `DebugCommandGuardTest`：針對正式環境封鎖與除錯模式放行進行 100% 單元測試覆蓋。
+  - 全套測試套件（262 項測試）100% 綠燈通過。
 - **修復點選選單文字溢出左側舞台問題 (圖 1 Bug 修復)**：
   - 原因：在城鎮點擊「選單 (C)」時，前端同時彈出圖形化選單並發送了向後端請求純文字 `party` 的指令；後端回傳 50 行長 ASCII 文本，且因右側日誌欄位 flex 項目缺少 `overflow: hidden` 與 `min-width: 0`，長字元跨越溢出高達 500px，覆蓋了左側客棧舞台與 NPC 按鈕。
   - 修正：[`style-01-tokens-and-shell.css`](./src/main/resources/static/css/style-01-tokens-and-shell.css) 為 `.log-and-battle-area` 加上 `min-width: 0; width: 25%; overflow: hidden;`，`#log` 加上 `overflow-x: hidden; overflow-wrap: anywhere; word-break: break-word;`；並在 [`party-modal.js`](./src/main/resources/static/js/modals/party-modal.js) 移除多餘的 `send('party')`，點選選單直接彈出沉浸式圖形化模態視窗，徹底消除純文字覆蓋舞台。

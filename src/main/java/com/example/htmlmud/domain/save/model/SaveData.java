@@ -3,6 +3,9 @@ package com.example.htmlmud.domain.save.model;
 import java.util.HashSet;
 import java.util.Set;
 import com.example.htmlmud.domain.party.model.Party;
+import java.util.ArrayList;
+import java.util.List;
+import com.example.htmlmud.domain.party.model.PartyItemSlot;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,10 +18,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SaveData {
-  public static final int CURRENT_SCHEMA_VERSION = 1;
+  public static final int CURRENT_SCHEMA_VERSION = 2;
 
   @Builder.Default
   private int schemaVersion = CURRENT_SCHEMA_VERSION;
+  @Builder.Default
+  private List<PartyItemSlot> personalInventory = new ArrayList<>();
   private int slotId; // 0 = autosave, 1..5 = manual saves
   private String title;
   private String playerId;

@@ -54,7 +54,7 @@ public sealed interface ActorMessage
 
 
   sealed interface PlayerMessage extends ActorMessage permits Command, SendText, GainExp, SaveData,
-      QuestUpdate, Reconnect, Disconnect, SendStatUpdate, Relive {
+      QuestUpdate, Reconnect, Disconnect, SendStatUpdate, Relive, ApplyBattleOutcome, ProjectEquipment {
   }
   record Command(String traceId, GameCommand command) implements PlayerMessage {
   }
@@ -73,6 +73,18 @@ public sealed interface ActorMessage
   record SendStatUpdate() implements PlayerMessage {
   }
   record Relive() implements PlayerMessage {
+  }
+  record ApplyBattleOutcome(com.example.htmlmud.domain.dungeon.battle.BattleOutcome outcome,
+      CompletableFuture<Boolean> future) implements PlayerMessage {
+    public ApplyBattleOutcome(com.example.htmlmud.domain.dungeon.battle.BattleOutcome outcome) {
+      this(outcome, null);
+    }
+  }
+  record ProjectEquipment(java.util.Map<EquipmentSlot, com.example.htmlmud.domain.party.model.PartyItemSlot> equipment,
+      CompletableFuture<Boolean> future) implements PlayerMessage {
+    public ProjectEquipment(java.util.Map<EquipmentSlot, com.example.htmlmud.domain.party.model.PartyItemSlot> equipment) {
+      this(equipment, null);
+    }
   }
 
 

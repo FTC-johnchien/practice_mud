@@ -34,73 +34,66 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class DrpgRewardService {
 
-  private static final List<String> TOMB_ITEMS = List.of(
-      "taiyin_pill", "purify_talisman", "bronze_sword", "yin_robe", "ancient_relic", "tomb_key"
-  );
-
   private final TemplateReader templateReader;
   private final DungeonManager dungeonManager;
-
-  @Autowired(required = false)
   private ApplicationEventPublisher eventPublisher;
-
-  @Autowired(required = false)
   private XpProgressionService xpProgressionService;
-
-  @Autowired(required = false)
   private CharacterSyncService characterSyncService;
-
-  @Autowired(required = false)
   private SkillBridgeService skillBridgeService;
-
-  @Autowired(required = false)
-  private com.example.htmlmud.domain.factory.ItemFactory itemFactory;
+  private final com.example.htmlmud.domain.factory.ItemFactory itemFactory;
 
   @Autowired
-  public DrpgRewardService(TemplateReader templateReader, DungeonManager dungeonManager) {
+  public DrpgRewardService(
+      TemplateReader templateReader,
+      DungeonManager dungeonManager,
+      @Autowired(required = false) ApplicationEventPublisher eventPublisher,
+      @Autowired(required = false) XpProgressionService xpProgressionService,
+      @Autowired(required = false) CharacterSyncService characterSyncService,
+      @Autowired(required = false) SkillBridgeService skillBridgeService,
+      @Autowired(required = false) com.example.htmlmud.domain.factory.ItemFactory itemFactory) {
     this.templateReader = templateReader != null ? templateReader : new TemplateCatalog();
     this.dungeonManager = dungeonManager;
+    this.eventPublisher = eventPublisher;
+    this.xpProgressionService = xpProgressionService != null ? xpProgressionService : new XpProgressionService(this.templateReader);
+    this.characterSyncService = characterSyncService != null ? characterSyncService : new CharacterSyncService();
+    this.skillBridgeService = skillBridgeService != null ? skillBridgeService : new SkillBridgeService(this.templateReader);
+    this.itemFactory = itemFactory != null ? itemFactory : new com.example.htmlmud.domain.factory.ItemFactory(this.templateReader);
+  }
+
+  public DrpgRewardService(TemplateReader templateReader, DungeonManager dungeonManager) {
+    this(templateReader, dungeonManager, null, null, null, null, null);
   }
 
   public DrpgRewardService() {
-    this(new TemplateCatalog(), null);
+    this(null, null);
   }
 
   public XpProgressionService getXpProgressionService() {
-    if (xpProgressionService == null) {
-      xpProgressionService = new XpProgressionService();
-    }
     return xpProgressionService;
+  }
+
+  public CharacterSyncService getCharacterSyncService() {
+    return characterSyncService;
+  }
+
+  public SkillBridgeService getSkillBridgeService() {
+    return skillBridgeService;
+  }
+
+  public void setEventPublisher(ApplicationEventPublisher eventPublisher) {
+    this.eventPublisher = eventPublisher;
   }
 
   public void setXpProgressionService(XpProgressionService xpProgressionService) {
     this.xpProgressionService = xpProgressionService;
   }
 
-  public CharacterSyncService getCharacterSyncService() {
-    if (characterSyncService == null) {
-      characterSyncService = new CharacterSyncService();
-    }
-    return characterSyncService;
-  }
-
   public void setCharacterSyncService(CharacterSyncService characterSyncService) {
     this.characterSyncService = characterSyncService;
   }
 
-  public SkillBridgeService getSkillBridgeService() {
-    if (skillBridgeService == null) {
-      skillBridgeService = new SkillBridgeService();
-    }
-    return skillBridgeService;
-  }
-
   public void setSkillBridgeService(SkillBridgeService skillBridgeService) {
     this.skillBridgeService = skillBridgeService;
-  }
-
-  public void setEventPublisher(ApplicationEventPublisher eventPublisher) {
-    this.eventPublisher = eventPublisher;
   }
 
   /**
@@ -157,37 +150,34 @@ public class DrpgRewardService {
 
     // 1. 檢查是否有被擊殺的深淵畸變體，掉落【血肉道核】
     for (BattleEnemy e : ctx.getEnemies()) {
-      if (!e.isAlive() && e.getId().startsWith("aberration-") && e.getDroppedDaoSkillId() != null) {
-        PartyItemSlot coreSlot = (itemFactory != null)
-            ? itemFactory.createDaoCore(e.getDroppedDaoMemberName(), e.getDroppedDaoSkillId(), e.getDroppedDaoSkillName())
-            : PartyItemSlot.builder()
-                .slotId("slot-" + UUID.randomUUID().toString().substring(0, 8))
-                .itemId("dao_core_" + e.getDroppedDaoSkillId())
-                .name("【血肉道核・" + e.getDroppedDaoMemberName() + "】")
-                .icon("🧿")
-                .itemType(ItemType.CONSUMABLE)
-                .subType("SKILL_CORE")
-                .count(1)
-                .quality("EPIC")
-                .description("自異變同伴殘軀中剖出的古神血肉道核，隱隱傳出殘留的道法共鳴。使用後可領悟其生前絕學【" + e.getDroppedDaoSkillName() + "】！")
-                .effectType("LEARN_SKILL")
-                .grantedSkillId(e.getDroppedDaoSkillId())
-                .grantedSkillName(e.getDroppedDaoSkillName())
-                .build();
+      if (!e.isAlive() && e.getId() != null && e.getId().startsWith("aberration-") && e.getDroppedDaoSkillId() != null) {
+        PartyItemSlot coreSlot = itemFactory.createDaoCore(
+            e.getDroppedDaoMemberName(), e.getDroppedDaoSkillId(), e.getDroppedDaoSkillName());
         boolean added = ctx.getParty().getInventory().addSlot(coreSlot);
         if (added) {
-          droppedItemNames.add("【血肉道核・" + e.getDroppedDaoMemberName() + "】(遺留絕學: " + e.getDroppedDaoSkillName() + ")");
+          droppedItemNames.add(coreSlot.getName() + "(遺留絕學: " + e.getDroppedDaoSkillName() + ")");
           lootDtos.add(new com.example.htmlmud.domain.dungeon.dto.BattleVictoryDto.BattleLootDto(
               coreSlot.getItemId(), coreSlot.getName(), coreSlot.getIcon(), coreSlot.getQuality(),
               coreSlot.getCount(), coreSlot.getDescription()
           ));
+          if (eventPublisher != null) {
+            try {
+              eventPublisher.publishEvent(new com.example.htmlmud.domain.event.PlayerEvents.ItemAcquired(
+                  player != null ? player.getName() : "隊伍",
+                  coreSlot.getItemId(),
+                  coreSlot.getCount()
+              ));
+            } catch (Exception ex) {
+              log.error("Failed to publish ItemAcquired event for dao core", ex);
+            }
+          }
         }
       }
     }
 
-    // 2. 檢查首領擊殺並發布 Spring Event (觸發 MozhuMinesQuestListener 等任務監聽器)
+    // 2. 檢查被擊殺怪物並發布 Spring Event (觸發 MozhuMinesQuestListener 等任務監聽器)
     for (BattleEnemy e : ctx.getEnemies()) {
-      if (!e.isAlive() && e.getTemplateId() != null && e.getTemplateId().contains("boss_song_tianheng")) {
+      if (!e.isAlive() && e.getTemplateId() != null) {
         if (eventPublisher != null) {
           try {
             eventPublisher.publishEvent(new MobEvents.MobDead(
@@ -197,54 +187,42 @@ public class DrpgRewardService {
                 Instant.now()
             ));
           } catch (Exception ex) {
-            log.error("Failed to publish boss defeat event", ex);
+            log.error("Failed to publish mob dead event for {}", e.getTemplateId(), ex);
           }
         }
-        ctx.getParty().getInventory().addItem("mozhu_mines:black_obsidian_scythe", 1);
-        ctx.getParty().getInventory().addItem("mozhu_mines:elder_token", 1);
-        droppedItemNames.add("【黑曜骨鐮】");
-        droppedItemNames.add("【長老黑話玉牌】");
-        lootDtos.add(new com.example.htmlmud.domain.dungeon.dto.BattleVictoryDto.BattleLootDto(
-            "mozhu_mines:black_obsidian_scythe", "【黑曜骨鐮】", "⚔️", "RARE", 1, "自宋天衡異變殘軀奪得的凶煞兵刃。"
-        ));
-        lootDtos.add(new com.example.htmlmud.domain.dungeon.dto.BattleVictoryDto.BattleLootDto(
-            "mozhu_mines:elder_token", "【長老黑話玉牌】", "🏷️", "UNCOMMON", 1, "刻著晦澀道紋的長老信物。"
-        ));
       }
     }
 
-    // 3. 普通戰利品掉落入背包
+    // 3. 戰利品掉落入背包 (從被擊殺敵人的 dropItemIds 解析)
     for (BattleEnemy e : ctx.getEnemies()) {
-      if (!e.isAlive() && e.getDropItemId() != null && (e.getTemplateId() == null || !e.getTemplateId().contains("boss_song_tianheng"))) {
-        String dropItemId = e.getDropItemId();
-        var opt = templateReader.findItem(dropItemId);
-        var def = opt.map(ItemTemplate::toDefinition).orElse(null);
-        String dropName = def != null ? def.name() : dropItemId;
-        String dropIcon = def != null && def.icon() != null ? def.icon() : "📦";
-        String dropQuality = def != null && def.quality() != null ? def.quality() : "COMMON";
-        String dropDesc = def != null && def.description() != null ? def.description() : "戰鬥中繳獲的戰利品。";
-        boolean added = ctx.getParty().getInventory().addItem(dropItemId, 1);
-        if (added) {
-          droppedItemNames.add(dropName);
-          lootDtos.add(new com.example.htmlmud.domain.dungeon.dto.BattleVictoryDto.BattleLootDto(
-              dropItemId, dropName, dropIcon, dropQuality, 1, dropDesc
-          ));
+      if (!e.isAlive()) {
+        for (String dropItemId : e.getDropItemIds()) {
+          if (dropItemId == null || dropItemId.isBlank()) continue;
+          var opt = templateReader.findItem(dropItemId);
+          var def = opt.map(ItemTemplate::toDefinition).orElse(null);
+          String dropName = def != null ? def.name() : dropItemId;
+          String dropIcon = def != null && def.icon() != null ? def.icon() : "📦";
+          String dropQuality = def != null && def.quality() != null ? def.quality() : "COMMON";
+          String dropDesc = def != null && def.description() != null ? def.description() : "戰鬥中繳獲的戰利品。";
+          boolean added = ctx.getParty().getInventory().addItem(dropItemId, 1);
+          if (added) {
+            droppedItemNames.add(dropName);
+            lootDtos.add(new com.example.htmlmud.domain.dungeon.dto.BattleVictoryDto.BattleLootDto(
+                dropItemId, dropName, dropIcon, dropQuality, 1, dropDesc
+            ));
+            if (eventPublisher != null) {
+              try {
+                eventPublisher.publishEvent(new com.example.htmlmud.domain.event.PlayerEvents.ItemAcquired(
+                    player != null ? player.getName() : "隊伍",
+                    dropItemId,
+                    1
+                ));
+              } catch (Exception ex) {
+                log.error("Failed to publish ItemAcquired event for drop {}", dropItemId, ex);
+              }
+            }
+          }
         }
-      }
-    }
-    if (droppedItemNames.isEmpty()) {
-      String fallbackId = TOMB_ITEMS.get(ThreadLocalRandom.current().nextInt(TOMB_ITEMS.size()));
-      var opt = templateReader.findItem(fallbackId);
-      var def = opt.map(ItemTemplate::toDefinition).orElse(null);
-      String dropName = def != null ? def.name() : "靈石碎片";
-      String dropIcon = def != null && def.icon() != null ? def.icon() : "💎";
-      String dropQuality = def != null && def.quality() != null ? def.quality() : "COMMON";
-      String dropDesc = def != null && def.description() != null ? def.description() : "散落的靈性碎片。";
-      if (ctx.getParty().getInventory().addItem(fallbackId, 1)) {
-        droppedItemNames.add(dropName);
-        lootDtos.add(new com.example.htmlmud.domain.dungeon.dto.BattleVictoryDto.BattleLootDto(
-            fallbackId, dropName, dropIcon, dropQuality, 1, dropDesc
-        ));
       }
     }
 

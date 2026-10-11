@@ -41,13 +41,20 @@ public class PartyService {
 
   private final Map<String, Party> partyCache = new java.util.concurrent.ConcurrentHashMap<>();
 
+  private final com.example.htmlmud.config.GameConfig gameConfig;
+
   @org.springframework.beans.factory.annotation.Autowired
-  public PartyService(TemplateReader templateReader) {
+  public PartyService(TemplateReader templateReader, com.example.htmlmud.config.GameConfig gameConfig) {
     this.templateReader = templateReader;
+    this.gameConfig = gameConfig != null ? gameConfig : com.example.htmlmud.config.GameConfig.getInstance();
+  }
+
+  public PartyService(TemplateReader templateReader) {
+    this(templateReader, null);
   }
 
   public PartyService() {
-    this(new TemplateCatalog());
+    this(new TemplateCatalog(), null);
   }
 
   public Party getOrCreateParty(com.example.htmlmud.domain.model.vo.CharacterId characterId) {
@@ -545,9 +552,15 @@ public class PartyService {
   }
 
   /**
-   * 取得開局贈送之應急物資 (可擴充由 GameConfig 或資料庫配置)
+   * 取得開局贈送之應急物資 (由 GameConfig 配置驅動)
    */
   public Map<String, Integer> getStartingSupplies() {
+    if (gameConfig != null && gameConfig.getDefaults() != null && gameConfig.getDefaults().getPlayer() != null) {
+      var supplies = gameConfig.getDefaults().getPlayer().getStartingSupplies();
+      if (supplies != null && !supplies.isEmpty()) {
+        return supplies;
+      }
+    }
     return Map.of(
         "taiyin_pill", 3,
         "purify_talisman", 2,

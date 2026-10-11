@@ -187,6 +187,41 @@ class SaveGameServiceTest {
       assertNotNull(loaded);
       assertThat(loaded.getSchemaVersion()).isEqualTo(SaveData.CURRENT_SCHEMA_VERSION);
       assertThat(loaded.getProtagonistName()).isEqualTo("古修殘魂");
+      assertThat(loaded.getPersonalInventory()).isNotNull();
+    } finally {
+      saveGameService.deleteSave(slotId);
+    }
+  }
+
+  @Test
+  @DisplayName("驗證 v1 存檔平滑遷移至 v2 並補齊 personalInventory")
+  void testSaveMigrationFromV1ToV2() throws Exception {
+    int slotId = 5;
+    java.io.File saveFile = new java.io.File("saves", "slot_" + slotId + ".json");
+    if (!saveFile.getParentFile().exists()) {
+      saveFile.getParentFile().mkdirs();
+    }
+
+    String v1Json = """
+        {
+          "schemaVersion": 1,
+          "slotId": 5,
+          "title": "v1太陰古塚存檔",
+          "playerId": "test_player",
+          "protagonistName": "玄靈子",
+          "floorId": "mozhu_mines_b1f",
+          "floorX": 2,
+          "floorY": 2
+        }
+        """;
+    java.nio.file.Files.writeString(saveFile.toPath(), v1Json);
+
+    try {
+      SaveData loaded = saveGameService.loadGame(testPlayerId, slotId);
+      assertNotNull(loaded);
+      assertThat(loaded.getSchemaVersion()).isEqualTo(2);
+      assertThat(loaded.getPersonalInventory()).isNotNull();
+      assertThat(loaded.getPersonalInventory()).isEmpty();
     } finally {
       saveGameService.deleteSave(slotId);
     }

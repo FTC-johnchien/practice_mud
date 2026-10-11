@@ -23,7 +23,9 @@ public class MozhuMinesQuestListener {
   @Async
   @EventListener
   public void onBossDefeated(MobEvents.MobDead event) {
-    if (event.mobId() != null && event.mobId().contains("boss_song_tianheng")) {
+    boolean isBossSong = event.mobId() != null &&
+        ("boss_song_tianheng".equals(event.mobId()) || "mozhu_mines:boss_song_tianheng".equals(event.mobId()));
+    if (isBossSong) {
       log.info("【墨竹山·道祖是克蘇魯】畸變大師兄·宋天衡已被擊倒！觸發現代思維錨點格式化劇情！Killer: {}", event.killerId());
 
       if (event.killerId() != null) {
@@ -45,7 +47,7 @@ public class MozhuMinesQuestListener {
           player.reply("「這名雜役……你這波『底層邏輯』的閉環相當激進啊。大師兄這點架構缺陷，硬生生被你重構掉了？」");
           player.reply("秦劍師隨手擲下一枚沉甸甸的玉牌：");
           player.reply("「拿著這塊長老玉牌，去外門劍閣找望舒真人報到。墨竹山如今各處都在抓『抓手』，正缺你這種懂『賦能』的人才。」");
-          player.reply("【系統提示】你獲得了戰利品：[mozhu_mines:black_obsidian_scythe] 與 [mozhu_mines:elder_token]！");
+          player.reply("【系統提示】你獲得了戰利品：【黑曜骨鐮】 與 【長老黑話玉牌】！");
           player.reply("【出口解鎖】北方的古老通風豎井已開啟，可通往外界！\n");
         });
       }

@@ -23,11 +23,17 @@ import com.example.htmlmud.domain.save.exception.SaveCorruptedException;
 import com.example.htmlmud.domain.save.migration.SaveMigrationPipeline;
 import com.example.htmlmud.domain.save.model.SaveData;
 import com.example.htmlmud.domain.service.GameStateBroadcastService;
+import com.example.htmlmud.domain.service.WorldManager;
+import com.example.htmlmud.domain.actor.impl.Player;
+import com.example.htmlmud.domain.party.model.PartyItemSlot;
+import com.example.htmlmud.domain.context.MudContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 @Service
@@ -42,10 +48,16 @@ public class SaveGameService {
   private final DungeonManager dungeonManager;
 
   @Autowired(required = false)
+  private ObjectProvider<WorldManager> worldManagerProvider;
+
+  @Autowired(required = false)
   private SaveMigrationPipeline migrationPipeline;
 
   @Autowired(required = false)
   private GameStateBroadcastService broadcastService;
+
+  @Autowired(required = false)
+  private ObjectProvider<com.example.htmlmud.domain.service.CharacterSyncService> characterSyncServiceProvider;
 
   private File savesDir;
 
@@ -216,6 +228,26 @@ public class SaveGameService {
       }
     }
 
+    // 收集主角個人隨身行囊 (UNIFY-01)
+    List<PartyItemSlot> personalSlots = new ArrayList<>();
+    Player onlinePlayer = null;
+    if (worldManagerProvider != null && worldManagerProvider.getIfAvailable() != null) {
+      onlinePlayer = worldManagerProvider.getIfAvailable().findPlayerActor(playerId).orElse(null);
+    }
+    if (onlinePlayer == null && MudContext.hasCurrentPlayer()) {
+      Player current = MudContext.currentPlayer();
+      if (playerId.equals(current.getName()) || playerId.equals(current.getId())) {
+        onlinePlayer = current;
+      }
+    }
+    if (onlinePlayer != null && onlinePlayer.getInventory() != null) {
+      for (com.example.htmlmud.domain.model.entity.GameItem item : onlinePlayer.getInventory()) {
+        if (item != null) {
+          personalSlots.add(PartyItemSlot.fromGameItem(item));
+        }
+      }
+    }
+
     SaveData saveData = SaveData.builder()
         .slotId(slotId)
         .title(title)
@@ -230,6 +262,7 @@ public class SaveGameService {
         .visitedTiles(pos.getVisited())
         .openedChests(openedChests)
         .party(party)
+        .personalInventory(personalSlots)
         .savedAt(LocalDateTime.now().format(DATE_FORMATTER))
         .build();
 
@@ -306,7 +339,37 @@ public class SaveGameService {
       partyService.setParty(playerId, data.getParty());
     }
 
-    // 2. 還原地牢坐標與迷霧狀態
+    // 2. 若玩家在線，同步還原個人隨身行囊 (UNIFY-01)
+    Player onlinePlayer = null;
+    if (worldManagerProvider != null && worldManagerProvider.getIfAvailable() != null) {
+      onlinePlayer = worldManagerProvider.getIfAvailable().findPlayerActor(playerId).orElse(null);
+    }
+    if (onlinePlayer == null && MudContext.hasCurrentPlayer()) {
+      Player current = MudContext.currentPlayer();
+      if (playerId.equals(current.getName()) || playerId.equals(current.getId())) {
+        onlinePlayer = current;
+      }
+    }
+    if (onlinePlayer != null && data.getPersonalInventory() != null) {
+      onlinePlayer.getInventory().clear();
+      com.example.htmlmud.domain.repository.TemplateReader reader =
+          (worldManagerProvider != null && worldManagerProvider.getIfAvailable() != null)
+              ? worldManagerProvider.getIfAvailable().getTemplateReader() : null;
+      for (PartyItemSlot slot : data.getPersonalInventory()) {
+        if (slot != null) {
+          onlinePlayer.getInventory().add(slot.toGameItem(reader));
+        }
+      }
+      Party restoredParty = data.getParty();
+      if (restoredParty != null && !restoredParty.getMembers().isEmpty()) {
+        PartyMember leader = restoredParty.getMembers().get(0);
+        if (characterSyncServiceProvider != null && characterSyncServiceProvider.getIfAvailable() != null) {
+          characterSyncServiceProvider.getIfAvailable().syncEquipmentFromPartyToPlayer(leader, onlinePlayer);
+        }
+      }
+    }
+
+    // 3. 還原地牢坐標與迷霧狀態
     String floorId = (data.getFloorId() != null) ? data.getFloorId() : "taiyin_tomb_b1f";
     DungeonFloor floor = dungeonManager.getFloor(floorId);
     int w = (floor != null) ? floor.getWidth() : 10;
@@ -372,6 +435,24 @@ public class SaveGameService {
     try {
       saveGame(playerId, 0, pName + " 踏入修仙道途 (新手村與墨竹礦坑)");
     } catch (Exception ignored) {}
+
+    // 同步初始裝備至線上玩家 (UNIFY-02)
+    Player onlinePlayer = null;
+    if (MudContext.hasCurrentPlayer()) {
+      Player current = MudContext.currentPlayer();
+      if (playerId.equals(current.getName()) || playerId.equals(current.getId())) {
+        onlinePlayer = current;
+      }
+    }
+    if (onlinePlayer == null && worldManagerProvider != null && worldManagerProvider.getIfAvailable() != null) {
+      onlinePlayer = worldManagerProvider.getIfAvailable().findPlayerActor(playerId).orElse(null);
+    }
+    if (onlinePlayer != null && !party.getMembers().isEmpty()) {
+      PartyMember leader = party.getMembers().get(0);
+      if (characterSyncServiceProvider != null && characterSyncServiceProvider.getIfAvailable() != null) {
+        characterSyncServiceProvider.getIfAvailable().syncEquipmentFromPartyToPlayer(leader, onlinePlayer);
+      }
+    }
 
     log.info("Created new single-player adventure for {} (protagonist: {})", playerId, pName);
     return party;

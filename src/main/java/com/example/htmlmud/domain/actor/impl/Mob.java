@@ -74,6 +74,10 @@ public final class Mob extends Living {
     return templateReader;
   }
 
+  public String getTemplateId() {
+    return template != null ? template.id() : null;
+  }
+
   // 處理初期裝備
   private void initEquipment(MobTemplate tpl) {
     if (tpl.equipment() != null) {

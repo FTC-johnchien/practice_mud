@@ -67,10 +67,6 @@ public class FormationTemplate {
       com.example.htmlmud.domain.model.enums.RoleCategory memberCategory =
           com.example.htmlmud.domain.model.enums.RoleCategory.fromClassOrRole(member.getClassId(), member.getRoleTitle());
       if (memberCategory == reqCategory) return true;
-      // 容錯：若需求為 TANK，SWORDSMAN 作為前排亦可相容
-      if (reqCategory == com.example.htmlmud.domain.model.enums.RoleCategory.TANK && "SWORDSMAN".equals(actual)) {
-        return true;
-      }
     }
 
     return actual.contains(req);

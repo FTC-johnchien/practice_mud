@@ -31,8 +31,7 @@ class SkillBridgeIntegrationTest {
   void setUp() {
     templateReader = new TemplateCatalog();
     skillBridgeService = new SkillBridgeService(templateReader);
-    characterSyncService = new CharacterSyncService();
-    characterSyncService.setSkillBridgeService(skillBridgeService);
+    characterSyncService = new CharacterSyncService(skillBridgeService);
   }
 
   @Test

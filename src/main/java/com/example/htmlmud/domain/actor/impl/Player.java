@@ -60,10 +60,14 @@ public final class Player extends Living {
   private String nickname;
 
   @Setter
-  private String classId = "SWORDSMAN";
+  private String classId;
 
   public String getClassId() {
-    return (classId != null && !classId.isBlank()) ? classId : "SWORDSMAN";
+    if (classId != null && !classId.isBlank()) {
+      return classId;
+    }
+    String cfgClass = com.example.htmlmud.config.GameConfig.getInstance().getDefaults().getPlayer().getDefaultClassId();
+    return (cfgClass != null && !cfgClass.isBlank()) ? cfgClass : "SWORDSMAN";
   }
 
   public java.util.Optional<com.example.htmlmud.domain.model.template.ClassTemplate> getClassTemplate() {
@@ -212,8 +216,42 @@ public final class Player extends Living {
       case ActorMessage.QuestUpdate(var questId, var status) -> {
         // TODO
       }
-
-
+      case ActorMessage.ApplyBattleOutcome(var outcome, var future) -> {
+        boolean applied = false;
+        if (this.service != null && this.service.getCharacterSyncService() != null) {
+          applied = this.service.getCharacterSyncService().getOutcomeApplier().apply(this, outcome);
+        } else {
+          applied = new com.example.htmlmud.domain.dungeon.battle.BattleOutcomeApplier().apply(this, outcome);
+        }
+        if (future != null) {
+          future.complete(applied);
+        }
+      }
+      case ActorMessage.ProjectEquipment(var equipmentMap, var future) -> {
+        try {
+          this.stats.equipment.clear();
+          var reader = (this.manager != null) ? this.manager.getTemplateReader() : null;
+          if (equipmentMap != null) {
+            for (var entry : equipmentMap.entrySet()) {
+              if (entry.getKey() != null && entry.getValue() != null) {
+                this.stats.equipment.put(entry.getKey(), entry.getValue().toGameItem(reader));
+              }
+            }
+          }
+          if (this.service != null && this.service.getLivingServiceProvider() != null
+              && this.service.getLivingServiceProvider().getIfAvailable() != null) {
+            this.service.getLivingServiceProvider().getIfAvailable().recalculateStats(this);
+          }
+          if (future != null) {
+            future.complete(true);
+          }
+        } catch (Throwable t) {
+          log.error("ProjectEquipment error for player {}", this.name, t);
+          if (future != null) {
+            future.completeExceptionally(t);
+          }
+        }
+      }
       default -> log.warn("handlePlayerMessage 收到無法處理的訊息: {} {}", this.id, msg);
     }
   }

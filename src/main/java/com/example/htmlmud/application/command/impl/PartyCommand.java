@@ -34,41 +34,34 @@ public class PartyCommand implements PlayerCommand {
   private final com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService;
   private final com.example.htmlmud.domain.service.GameStateBroadcastService broadcastService;
   private final TemplateReader templateReader;
+  private final com.example.htmlmud.domain.service.XpProgressionService xpProgressionService;
 
   @org.springframework.beans.factory.annotation.Autowired
   public PartyCommand(PartyService partyService, DungeonManager dungeonManager,
       DungeonNavigator dungeonNavigator,
       com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService,
       com.example.htmlmud.domain.service.GameStateBroadcastService broadcastService,
-      TemplateReader templateReader) {
+      TemplateReader templateReader,
+      @org.springframework.beans.factory.annotation.Autowired(required = false) com.example.htmlmud.domain.service.XpProgressionService xpProgressionService) {
     this.partyService = partyService;
     this.dungeonManager = dungeonManager;
     this.dungeonNavigator = dungeonNavigator;
     this.battleService = battleService;
     this.broadcastService = broadcastService;
-    this.templateReader = templateReader;
+    this.templateReader = templateReader != null ? templateReader : new TemplateCatalog();
+    this.xpProgressionService = xpProgressionService != null ? xpProgressionService : new com.example.htmlmud.domain.service.XpProgressionService(this.templateReader);
   }
 
   public PartyCommand(PartyService partyService, DungeonManager dungeonManager,
       DungeonNavigator dungeonNavigator,
       com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService,
-      com.example.htmlmud.domain.service.GameStateBroadcastService broadcastService) {
-    this(partyService, dungeonManager, dungeonNavigator, battleService, broadcastService,
-        new TemplateCatalog());
+      com.example.htmlmud.domain.service.GameStateBroadcastService broadcastService,
+      TemplateReader templateReader) {
+    this(partyService, dungeonManager, dungeonNavigator, battleService, broadcastService, templateReader, null);
   }
-
-  @org.springframework.beans.factory.annotation.Autowired(required = false)
-  private com.example.htmlmud.domain.service.XpProgressionService xpProgressionService;
 
   public com.example.htmlmud.domain.service.XpProgressionService getXpProgressionService() {
-    if (xpProgressionService == null) {
-      xpProgressionService = new com.example.htmlmud.domain.service.XpProgressionService();
-    }
     return xpProgressionService;
-  }
-
-  public void setXpProgressionService(com.example.htmlmud.domain.service.XpProgressionService xpProgressionService) {
-    this.xpProgressionService = xpProgressionService;
   }
 
   public Party getOrCreateParty(String playerName) {

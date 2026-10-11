@@ -29,6 +29,7 @@ import com.example.htmlmud.domain.dungeon.battle.event.BattleHit;
 import com.example.htmlmud.domain.dungeon.battle.event.FxShape;
 import com.example.htmlmud.domain.dungeon.battle.event.HitOutcome;
 import com.example.htmlmud.domain.dungeon.battle.event.UnitRef;
+import com.example.htmlmud.domain.service.TemplateCatalog;
 import lombok.extern.slf4j.Slf4j;
 
 /**
