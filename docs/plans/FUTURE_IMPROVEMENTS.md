@@ -41,6 +41,9 @@
 - [ ] **路徑 M: 敵方行動預告、反制窗口與首領階段（先做資料驅動垂直切片）** (§13 全項) — **Priority: P1 / P2**
 - [x] **路徑 N: 戰鬥區塊視覺特效與動態回饋 (Battle Presentation & VFX)** (§14 全項) — **Priority: P1 / P2 (已完成)**
 - [ ] **路徑 O: 生動畫面呈現與淡化文字閱讀轉型藍圖 (Visual-First DRPG Transformation)** (§15 全項) — **Priority: P1 / P2**
+- [ ] **路徑 P: 全專案功能與設定資料硬編碼實地盤查與清理藍圖** (§16 全項) — **Priority: P1 / P2**
+- [ ] **路徑 Q: MUD 與 DRPG 雙軌機制割裂深度盤查與大一統融合架構** (§17 全項) — **Priority: P1 / P2**
+- [ ] **路徑 R: §16/§17 第二輪審查校正——護欄先行、移除靜默 fallback、同步正確性、漸進式統一** (§18 全項) — **Priority: P0 / P1（作為路徑 P/Q 的執行前置）**
 
 ---
 
@@ -473,6 +476,268 @@
 
 ---
 
+## 🔍 16. 全專案功能與設定資料硬編碼實地盤查與清理藍圖 (Hardcoded Features & Data Audit & Purge Blueprint) — Priority: P1 / P2
+
+> **核心目標**：徹底盤查代碼庫中殘留的業務 ID、地牢出入口、掉落物備用清單、技能屬性推算、客棧/商店台詞等硬編碼（Hardcoding），推動全系統 100% 回歸配置化與資料驅動。
+
+### 16.1 地牢與地圖系統硬編碼盤查 (DATA-03) (P1)
+- **現狀問題**：
+  1. **地牢出口房間硬編碼**：[`DungeonCommand.java:L144-150`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L144-L150) 中，玩家在向上階梯執行 `leave` 撤離時，返回的房間透過 Java `if-else` 寫死（`mozhu_mines_b1f` 返回 `mozhu_mines:mine_entrance`；`taiyin_tomb_b1f` 返回 `newbie_village:inn`）。[`DungeonFloor.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/model/DungeonFloor.java) 缺乏 `entranceRoomId` 與 `exitRoomId` 欄位。
+  2. **怪物與掉落物備用池寫死**：[`DungeonCommand.java:L34-48`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L34-L48) 靜態常數寫死 `TOMB_MOBS`（4 種太陰怪）與 `TOMB_ITEMS`（6 種太陰古塚道具），當樓層或寶箱未設定掉落時直接 fallback 至太陰資料。
+  3. **地牢切換別名硬編碼**：[`DungeonCommand.java:L74-83`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L74-L83) 中，`switch taiyin` / `switch mozhu` 以字串比對直接映射為指定樓層。
+  4. **陷阱數值與提示文字硬編碼**：[`DungeonCommand.java:L295-298`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L295-L298) 陷阱扣除固定 15 HP、5 SAN，且提示寫死「菌絲煞氣噴湧」（太陰古塚踩陷阱亦出現礦坑菌絲文字）。
+  5. **殘留 65 行手刻地圖生成器**：[`DungeonManager.java:L136-200`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/service/DungeonManager.java#L136-L200) 中的 `buildTombB1F()` 在 Java 內用二維陣列手工雕刻 10x10 地牢地圖與文字，而 `resources/data/dungeons/taiyin_tomb_b1f.json` 已經存在，此備用代碼為冗餘且未同步的硬編碼。
+  6. **區域載入清單退回硬編碼**：[`WorldManager.java:L100, L104`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/service/WorldManager.java#L100) 於動態掃描失敗時退回硬編碼清單 `List.of("newbie_village", "mozhu_mines", "snow", "silverleaf", "taiyin_tomb")`。
+- **改善方案**：
+  - 在 `DungeonFloor` 與 `dungeons/*.json` 擴充 `entranceRoomId`、`exitRoomId`、`defaultLootPool`、`trapDamage`、`trapSanCost`、`trapMessage`。
+  - 徹底移除 `DungeonManager.buildTombB1F()` 手刻代碼，100% 由 JSON 檔案驅動。
+
+### 16.2 戰鬥與技能數值硬編碼盤查 (DATA-04 / COMB-03) (P1)
+- **現狀問題**：
+  1. **試道傀儡 200+ 行手刻寫死**：[`DrpgBattleService.java:L193-400`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgBattleService.java#L193-L400) 的 `startTrainingBattle()` 用 200 多行代碼手刻 1x1 ~ 3x3 傀儡與陣樁的所有屬性與排位。
+  2. **走火入魔 CHAOS 異變機制寫死**：[`DrpgCombatLoop.java:L225-270`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java#L225-L270) 異變增幅 (`random(15, 30)`)、畸變 Boss 血量 (`HP x10`)、模板 (`taiyin:aberration_boss`)、經驗 (`250`)、背刺機率 (`40%`)、傷害倍率 (`x2.0`)、道核 ID (`"core_" + memberId + "_" + skillId`) 全數寫死在 Java 中。
+  3. **首領專屬掉落物寫死代碼注入**：[`DrpgRewardService.java:L189-214`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java#L189-L214) 擊殺首領 `boss_song_tianheng` 時，直接在代碼中手動建構並塞入戰利品 `【黑曜骨鐮】` 與 `【長老黑話玉牌】`，而非透過怪物模板本身的 `loot` 掉落表。
+  4. **技能橋接規則寫死 switch 查表**：[`SkillDefinition.java:L225-285`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/definition/SkillDefinition.java#L225-L285) 透過 60 行 `switch-case` 寫死 MUD 技能映射至 DRPG 技能的對照關係，並維護靜態字串陣列 `CANONICAL_MUD_SKILLS`。
+  5. **屬性補正依賴 ID 前綴字串比對**：[`SkillBridgeService.java:L156-160`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/service/SkillBridgeService.java#L156-L160) 靠 `base.getId().startsWith("taoist_") || base.getId().startsWith("star_")` 判定是否為法術補正（INT+WIS），而非讀取技能模板的 `scaleStat` 或 tags（`MAGIC` vs `PHYSICAL`）。
+  6. **戰鬥時限政策與閒置熔斷衝突**：[`BattleContext.java:L45, L67`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/BattleContext.java#L45-L67) `maxDurationMs` 固定 5 分鐘熔斷，即使玩家持續積極操作仍會逾時中斷，未與 10 分鐘無操作 AFK 閒置熔斷解耦。
+- **改善方案**：
+  - 將試道傀儡與大型敵怪移入 `mobs.json`，在 `MobTemplate` 支援 `width`、`height`、`rowIdx`、`colIdx`。
+  - 將異變首領規則與掉落抽取至設定檔；首領掉落回歸 `mobs.json` 的 `loot` 陣列。
+  - 技能橋接規則下沉至 `skills.json` 的 `bridgeRules`，技能模板標註 `scaleStat`（STR/DEX/INT/WIS）。
+  - 解開 5 分鐘固定戰鬥時限，全面改為依賴 `lastActivityTime` 的 10 分鐘 AFK 閒置熔斷。
+
+### 16.3 養成、城鎮、商店與物品硬編碼盤查 (TOWN-02 / CONF-01) (P2)
+- **現狀問題**：
+  1. **客棧安全區判定靠字串比對**：[`RestCommand.java:L47`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/RestCommand.java#L47) 以 `currentRoomId.contains("inn")` 判斷是否為客棧回滿狀態，而非檢查房間標籤 `RoomFlag.SAFE_ZONE` 或 `RoomTemplate.canRest`；野外調息值（HP 30, SAN 10, MP 20）與伏擊機率公式（`25 + danger * 0.5`）寫死。
+  2. **商店台詞與身份全域寫死**：[`ShopCommand.java:L133-190`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/ShopCommand.java#L133-L190) 台詞全寫死「掌櫃福伯擦著汗道」、「客官要進墨竹山吧？帶足乾糧和清心靈茶才是保命上策！」，所有城鎮的所有商店皆變成了「福伯」且在賣墨竹山補給；庫存僅放記憶體且無 `sell` 典當收購功能。
+  3. **開局物資與預設心法寫死**：[`PartyService.java:L550-557`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/party/service/PartyService.java#L550-L557) 開局物資寫死 `taiyin_pill: 3`, `purify_talisman: 2` 等；L328-335 缺少心法預設補齊 `basic_dodge` 等；L519 提示訊息寫死可招募夥伴字串。
+  4. **道核領悟技能數值寫死**：[`Party.java:L59-68`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/party/model/Party.java#L59-L68) 使用道核領悟技能時，技能 CD (6000ms)、倍率 (1.8)、資源消耗 (2/30/35) 寫死，未由技能定義反查。
+  5. **重生點與開新遊戲預設房間寫死**：[`SaveGameService.java:L191, L461`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/save/service/SaveGameService.java#L191) 存檔與開闢新遊戲預設房間寫死 `"newbie_village:inn"`，未統一由 `GameConfig.getDefaults().getPlayer().getSpawnRoomId()` 驅動。
+- **改善方案**：
+  - 客棧改以 `RoomFlag.SAFE_ZONE` 判定；商店台詞移入 `ShopTemplate` 或 `MobTemplate`。
+  - 開局物資移入 `application.yml`（`game.defaults.player.starting-supplies`）。
+  - 全域重生房間統一讀取 `GameConfig`。
+
+### 16.4 前端視圖與任務邏輯硬編碼 (FE-02 / CODE-01) (P2 / P3)
+- **現狀問題**：
+  1. **地牢 Tile 懸停文字固定為太陰地貌**：[`dungeon-panel.js:L67-97`](file:///c:/Workspace/my_practice/practice_mud/src/main/resources/static/js/panels/dungeon-panel.js#L67-L97) 符號 `#` 寫死「青岡石壁」，`+` 寫死「封印石門」，`$` 寫死「古仙棺槨寶箱」，`^` 寫死「深淵黏液陷阱」。在墨竹礦坑探索時懸停仍顯示太陰古塚的地貌名。
+  2. **裝備槽位以中文名稱硬編碼模糊推測**：[`party-equipment-tab.js:L54-61`](file:///c:/Workspace/my_practice/practice_mud/src/main/resources/static/js/modals/party-equipment-tab.js#L54-L61) 判斷裝備槽位時，大量使用 `name.includes('冠') || name.includes('盔')`、`name.includes('靴')`、`name.includes('戒')` 等中文關鍵字比對作為 fallback。
+  3. **任務事件為單一特例 Java 監聽器**：[`MozhuMinesQuestListener.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/listener/MozhuMinesQuestListener.java) 以硬編碼監聽 `boss_song_tianheng` 並輸出 20 行台詞，全專案無通用任務資料模型；[`QuestEventListener.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/listener/QuestEventListener.java) 僅有 `System.out.println`。
+  4. **殘留死代碼**：[`PlayerLoginListener.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/listener/PlayerLoginListener.java) 全檔案皆為註解代碼。
+- **改善方案**：
+  - 前端地塊 Tooltip 改由後端 DTO 攜帶動態 `tileName`。
+  - 裝備嚴格依據 `equipSlot` 判定，啟動拓撲校驗器確保所有裝備皆有正確部位。
+  - 清理註解死代碼。
+
+---
+
+## ☯️ 17. MUD 與 DRPG 雙軌機制割裂深度盤查與大一統融合架構 (MUD vs DRPG Dual-System Divergence & Unified Architecture) — Priority: P1 / P2
+
+> **架構背景與核心痛點**：
+> 本專案在演進過程中形成了兩套平行運行的子系統：一端是繼承傳統文字泥巴的 **MUD 端**（`Player` Actor、`Living`、`Room`、`Mob`、`CombatService`、`GameItem`），另一端是現代小隊走格子的 **DRPG 端**（`Party`、`PartyMember`、`BattleContext`、`BattleEnemy`、`DrpgCombatLoop`、`PartyInventory`）。
+> 雖然歷史重構（Phase 2~5、Phase 10 Clean Architecture）建立了部分橋樑（如 `CharacterSyncService`、`DefenseResolver`、`Buffable`），但**這兩套機制在實體層、狀態層與資料流上依然各搞一套，存在嚴重的機制割裂與「兩本假帳」風險**！
+
+### 17.1 六大核心領域雙軌割裂深度盤點 (The 6 Divergent Domains)
+
+```mermaid
+flowchart TD
+    subgraph MUD_Track["傳統 MUD 軌道 (Room / Actor)"]
+        MP["Player (Actor / Living)"]
+        MI["Player.inventory (List<GameItem>)"]
+        ME["Living.equipment (GameItem)"]
+        MM["Mob (Actor / Living)"]
+        MS["SkillTemplate (MoveAction)"]
+        MC["CombatService (WorldPulse Tick)"]
+    end
+
+    subgraph DRPG_Track["現代 DRPG 軌道 (Grid / Virtual Thread)"]
+        DP["PartyMember (Leader in Party)"]
+        DI["Party.inventory (List<PartyItemSlot>)"]
+        DE["PartyMember.equipment (PartyItemSlot)"]
+        DM["BattleEnemy (POJO)"]
+        DS["PartyMemberSkill (Tactical)"]
+        DC["DrpgCombatLoop (Executor Loop)"]
+    end
+
+    MP -. "單向複製屬性 (無裝備/心法)" .-> DP
+    MI -. "雙寫但 drop/shop 漏同步 (兩本假帳)" .-> DI
+    MM -. "雙軌割裂 (擊殺無生態閉環)" .-> DM
+    MS -. "靜態查表 / 前綴猜測" .-> DS
+    MC -.- DC
+```
+
+#### 1. 角色與玩家 (Character: `Player` vs `PartyMember`)
+- **MUD 端**：`Player extends Living`（VirtualActor 訊息郵件信箱模型），擁有自己的 `inventory: List<GameItem>`、裝備、姿勢、GCD。
+- **DRPG 端**：`PartyMember`（POJO），隸屬於 `Party`，擁有 `PartyItemSlot` 裝備、SP/RAGE/COMBO、SAN 值、道心狀態。
+- **割裂現況**：兩者僅靠 [`CharacterSyncService`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/service/CharacterSyncService.java) 在進出戰鬥時單向拷貝 HP/MP/Exp/基礎 5 維數值。**裝備、心法、被動技能、狀態 Buff 完全互不流通！**
+  - 玩家在主選單或 DRPG 背包中換上神兵利器，MUD 端的 `Player` 裝備完全不會變；在 MUD 房間穿上裝備，DRPG 也毫無感知。
+  - 若在 MUD 模式遭到主動怪撲咬，玩家是以過期的 MUD 數值進行戰鬥，同伴也不會拔刀相助。
+
+#### 2. 物品與行囊 (Inventory: `GameItem` vs `PartyItemSlot` vs Canonical `ItemInstance`)
+- **MUD 端**：`Player.inventory`（`List<GameItem>`，個人背包）。
+- **DRPG 端**：`Party.inventory`（`PartyInventory`，由 `List<PartyItemSlot>` 組成的小隊公共背包）。
+- **割裂現況**：雙軌背包完全分裂，存在嚴重的同步漏洞：
+  - [`GetCommand.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/GetCommand.java) 試圖雙寫（`player.getInventory().add()` + `party.getInventory().addGameItem()`）。
+  - 但 [`DropCommand.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DropCommand.java) 僅從 `player.inventory` 移除，`party.inventory` 完全沒動！
+  - [`ShopCommand.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/ShopCommand.java) 購買時僅加到 `party.inventory`，`player.inventory` 完全沒有商品！
+  - 雖然 Phase 2 建立了 Canonical [`ItemDefinition`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/definition/ItemDefinition.java) / [`ItemInstance`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/entity/ItemInstance.java)，但未貫穿全專案，導致兩邊背包數量各算各的，形成「兩本假帳」。
+
+#### 3. 戰鬥迴圈與引擎 (Combat Engine: `CombatService` vs `DrpgCombatLoop`)
+- **MUD 戰鬥**：[`CombatService.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/service/CombatService.java)，由 `WorldPulse` 心跳驅動，在 `Room` 內進行 1v1 普攻與 `MoveAction` 招式文字敘事。同伴在旁邊看戲，陣法孔位無效。
+- **DRPG 戰鬥**：[`DrpgCombatLoop.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java)，由 Spring 託管之虛擬執行緒池驅動，小隊 5 人陣列交鋒，支援 5x5 站位、GCD 唱條、仇恨威脅表、Combo 合擊、Telegraph 意圖預告。
+- **割裂現況**：兩套完全不相容的戰鬥心跳迴圈並存。城鎮打怪用 MUD 邏輯（`kill`），地牢打怪用 DRPG 邏輯（`step` 遇敵），機制、仇恨、連攜技與視覺效果完全脫節。
+
+#### 4. 生靈與敵怪 (Mobs: `Mob` vs `BattleEnemy`)
+- **MUD 端**：`Mob extends Living`（Room Actor，擁有 `MobAi` 與房間對話能力）。
+- **DRPG 端**：`BattleEnemy`（POJO，具備站位、尺寸、意圖預告與蓄力唱條）。
+- **割裂現況**：兩者雖皆源自 `MobTemplate`，但實例完全分離。在地牢或遭遇戰中，系統是重新 new 出 `BattleEnemy` 實例，戰鬥結束擊倒 `BattleEnemy` 後，房間內的 `Mob` Actor 根本毫無所悉，缺乏生態閉環。
+
+#### 5. 武學與招式 (Skills: `SkillTemplate` vs `PartyMemberSkill`)
+- **MUD 端**：`SkillTemplate`，側重文字招式敘事（`MoveAction` 含有發招、命中、閃避語句）。
+- **DRPG 端**：`PartyMemberSkill`，側重戰術參數（冷卻毫秒、資源類型、消耗值、傷害倍率、作用範圍）。
+- **割裂現況**：雖然 Phase 3 提出了 `SkillDefinition`（Canonical Model），但目前實際仍依賴 [`SkillBridgeService`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/service/SkillBridgeService.java) 進行脆弱的橋接，且敵怪在 DRPG 戰鬥中無法直接使用 MUD 定義的招式庫。
+
+#### 6. 狀態與增益 (Buffs: Dual Tick Isolation)
+- **割裂現況**：雖然 `Living` 與 `BattleEnemy` 皆實作了 `Buffable`，但 MUD Buff 由 `WorldPulse` 結算，DRPG Buff 由 `DrpgCombatLoop` 結算。角色脫離戰鬥時，戰鬥中獲得的 Buff 不會帶出到地圖；地圖上的中毒或詛咒也不會帶入戰鬥。
+
+---
+
+### 17.2 大一統融合架構規劃 (The Unified Evolution Blueprint)
+
+為徹底消除雙軌割裂、實現機制大一統，建議依序實施以下 5 大融合任務：
+
+#### 1. UNIFY-01: 背包與物品大一統 (Unified Inventory Single Source of Truth) (P1)
+- **目標**：徹底廢除雙軌背包，建立小隊公共行囊為唯一單一真相源。
+- **作法**：
+  1. 除役 `Player.inventory`（`List<GameItem>`），`Player` 內部背包直通 `Party.getInventory()`。
+  2. 背包底層全面以 Canonical `ItemInstance` / `ItemDefinition` 作為核心儲存單元，`PartyItemSlot` 降級為視圖模型或直接收斂。
+  3. `get`、`drop`、`shop buy`、`use` 全數操作同一份 `PartyInventory`，消除任何雙寫與數量不同步問題。
+
+#### 2. UNIFY-02: 角色與裝備大一統 (Unified Character & Equipment Model) (P1)
+- **目標**：消除 `Player` 與 `PartyMember` 裝備互不相通的缺陷。
+- **作法**：
+  1. 將 7 槽位裝備數據下沉至共享的 `LivingStats` 或 `EquipmentInventory`。
+  2. `Player` 與隊長 `PartyMember` 共享同一份裝備狀態參照；無論透過 MUD 指令 `equip` 還是前端主選單面板穿脫裝備，兩端即時同步生效。
+  3. 戰鬥前後的同步由「欄位淺拷貝」升級為「單一狀態持有」。
+
+#### 3. UNIFY-03: 戰鬥引擎收斂與雙模呈現投影 (Single Combat Engine, Dual Presentation) (P1)
+- **目標**：廢除兩套戰鬥迴圈，核心下沉為統一戰鬥引擎，支援 MUD 敘事與 Web 視覺雙模投影。
+- **作法**：
+  1. 將戰鬥核心邏輯（圓桌判定、Stamina 破防、仇恨威脅表、GCD 唱條、Buff 結算）統一下沉至領域層戰鬥服務。
+  2. 廢除 `CombatService` 獨立的 1v1 普攻迴圈，城鎮與野外戰鬥統一呼叫戰鬥引擎。
+  3. **雙模呈現投影 (Dual Presentation Pattern)**：
+     - **MUD 模式投影**：純終端/文字日誌接收結構化事件，調用 `SkillTemplate.moves` 渲染為生動的長篇武俠對決文學。
+     - **DRPG 模式投影**：Web 前端接收 `BattleEvent` DTO，演繹 5x5 卡片浮動數字、唱條與 VFX 刀光特效。
+
+#### 4. UNIFY-04: 生靈與敵怪生命週期閉環 (Unified Mob Lifecycle) (P2)
+- **目標**：打通房間生靈與戰鬥敵怪的生命週期。
+- **作法**：
+  1. 在城鎮或地牢遭遇戰鬥時，將當前空間中的 `Mob` Actor 映射為戰鬥參與者（`Combatant`）。
+  2. 戰鬥結束時，戰鬥結算的死亡、掉落與傷損透過 Actor 信箱直接回寫至空間內的 `Mob` 實例，完成世界生態閉環。
+
+#### 5. UNIFY-05: 技能全域規範單一模型 (Canonical Skill Single Source of Truth) (P2)
+- **目標**：徹底廢除脆弱的橋接查表與前綴猜測。
+- **作法**：
+  1. 全域技能統一以 `SkillDefinition` 定義，在同一份 JSON 中宣告 `narrative`（敘事招式動詞）與 `tactical`（冷卻/消耗/傷害倍率/範圍）。
+  2. 敵方怪物亦可依據模板直接施放與玩家同等機制的招式，實現對等的攻防反制深度。
+
+---
+
+## 🧪 18. §16/§17 報告第二輪審查：事實校正、方案風險與修正後落地路線 (Second-Opinion Review) — Priority: P0 / P1
+
+> **審查定位**：§16（硬編碼盤查）與 §17（MUD/DRPG 雙軌割裂）方向正確，問題分類也清楚，可以作為藍圖。但經抽樣比對程式碼，報告有**事實遺漏與不精確**、部分**方案與既有架構原則衝突**，也**沒有執行順序、驗收標準與防止回歸的護欄**。本節在不推翻 §16/§17 的前提下補正，並把路徑 P/Q 重排為可安全落地的順序。
+
+### 18.1 事實校正與遺漏的硬編碼 (Accuracy Corrections)
+
+| # | §16/§17 原述 | 實際程式碼狀況 | 影響 |
+| :---: | :--- | :--- | :--- |
+| 1 | DATA-01 已「徹底廢除 `"SWORDSMAN"` 字串硬編碼」 | 仍殘留 5 處：[`DefenseResolver.java:L133, L204`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DefenseResolver.java#L133) 以 `orElse("SWORDSMAN".equalsIgnoreCase(...))` 作 fallback；[`FormationTemplate.java:L71`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/party/model/FormationTemplate.java#L71) 有「TANK 需求可由 SWORDSMAN 滿足」特例；[`RoleCategory.java:L13, L51, L82`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/enums/RoleCategory.java#L13) 以 switch 寫死職業→職能映射；[`Player.java:L63-66`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/actor/impl/Player.java#L63-L66) 預設職業寫死 | DATA-01 狀態為「已完成」但有殘留；新增職業仍須改 Java |
+| 2 | `TOMB_ITEMS` 僅出現在 `DungeonCommand` | **共有 3 份複本**：[`DungeonCommand.java:L41`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L41)（ID 帶 `taiyin_tomb:` 前綴）、[`DrpgBattleService.java:L58`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgBattleService.java#L58)、[`DrpgRewardService.java:L37`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java#L37)（ID **不帶**前綴） | 同一份資料有兩種 ID 寫法，全靠 `TemplateRepository` 的後綴模糊比對才能運作 |
+| 3 | 首領硬編碼只有「宋天衡掉落」 | [`DrpgBattleService.startBossBattle():L547-562`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgBattleService.java#L547-L562) 對**所有**首領都套用固定 `dex(12)`、`xp(500)`、`dropItemId("mozhu_mines:black_obsidian_scythe")`，且忽略 `MobTemplate.expReward/loot`；L475-478 用 `templateId.contains("mozhu")` 決定掉落；[`DungeonCommand.java:L289`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L289) BOSS 地塊 fallback 寫死宋天衡 | 新增任何首領都會掉墨竹山鐮刀，屬功能 Bug，而不只是程式風格問題 |
+| 4 | 道核 ID 為 `"core_" + memberId + "_" + skillId` | 存在**三種**格式與兩套文案：`DrpgCombatLoop` 用 `core_{member}_{skill}`；[`ItemFactory.createDaoCore()`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/factory/ItemFactory.java#L80-L96) 用 `dao_core_{skill}` 且名為「凝煞道核」；`DrpgRewardService` fallback 也用 `dao_core_{skill}`，但名為「血肉道核」 | 同一物品因 Bean 是否注入而名稱不同；存檔與堆疊判斷不穩定 |
+| 5 | 裝備位於 `Living.equipment` | 實際有**三種表示法**：[`LivingStats.equipment`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/entity/LivingStats.java#L53)（`Map<EquipmentSlot, GameItem>`）、[`PartyMember.equipment`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/party/model/PartyMember.java#L107)（`Map<EquipmentSlot, PartyItemSlot>`）、[`BattleEnemy.equipment`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/BattleEnemy.java#L85)（`Map<EquipmentSlot, String>`） | UNIFY-02 必須處理三種表示法，不是兩種 |
+| 6 | `buildTombB1F()` 是「未同步的冗餘」 | 真正的風險不在冗餘：它只在 JSON 全部載入失敗時啟用，會**把資源載入失敗掩蓋成「遊戲照常可玩」** | 應改為 fail-fast，而不只是刪除 |
+
+### 18.2 §17 統一方案的架構風險 (Design Risks in UNIFY-*)
+
+1. **UNIFY-02「`Player` 與 `PartyMember` 共享同一份裝備狀態參照」與既有原則衝突**：
+   - CANON-04（§1.4）明確採用「不可變 Snapshot → Outcome 單向套用」，理由是**避免共享可變參照與併發競態**；ACT-01（§7.1）要求 Actor 狀態只能由其信箱執行緒修改。
+   - 共享參照會讓 Player Actor 執行緒與 `combatExecutor` 戰鬥虛擬執行緒同時讀寫同一個 Map，等於回頭打破這兩項已完成的成果。
+   - **修正**：採用「**單一擁有者 + 投影**」——由 `Party` 聚合（或獨立的 `CharacterSheet` 聚合）作為裝備的唯一擁有者，`Player` 只透過唯讀投影讀取；所有穿脫操作都改成送進擁有者序列化處理的命令。
+2. **現有同步已經違反 Actor 邊界，必須在統一前先修正**：
+   - [`CharacterSyncService.syncFromPartyToPlayer()`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/service/CharacterSyncService.java#L119-L143) 由 `DrpgRewardService` 在戰鬥執行緒呼叫，直接 `copyStats` 修改 `Player.stats`，沒有經過 Player 信箱。
+   - 它每次都以 `battleId = "sync-" + System.nanoTime()` 建立 Outcome，因此 LRU 冪等快取永遠不會命中；最後又無條件 `copyStats` 覆寫。**Outcome 模式名存實亡**。
+   - **修正（SYNC-01）**：Outcome 用真實 `battleId` 作冪等鍵，透過 `ActorMessage` 投遞給 Player 信箱套用，並刪除事後的 `copyStats`。
+3. **UNIFY-01 漏了「雙持久化」問題**：MUD 背包經 [`PlayerRecord`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/entity/PlayerRecord.java#L19) / [`CharacterEntity.inventory`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/infra/persistence/entity/CharacterEntity.java#L61) 寫入 **H2 DB**，DRPG 小隊背包經 `SaveData` 寫入 **JSON 存檔槽**。合併背包前必須先決定以哪一邊為準，並規劃：
+   - `SaveData.CURRENT_SCHEMA_VERSION` 升到 2，以及 v1→v2 遷移（合併兩邊物品、去重）；
+   - H2 端的欄位遷移或棄用策略；
+   - 已分歧玩家資料的合併規則（以哪邊數量為準）。
+4. **UNIFY-03「廢除 `CombatService`」屬於大爆炸式重寫**：兩套迴圈牽動指令、廣播、AI、Buff 心跳與測試，一次替換的回歸風險很高。**修正**：改用 Strangler 漸進式取代——
+   1. 抽出純函式的 `CombatRules`（`DefenseResolver` 已經是半成品），讓兩條迴圈共用同一套數學；
+   2. 定義 `Combatant` 介面，由 `Living`、`PartyMember`、`BattleEnemy` 各自實作適配器；
+   3. 統一 Buff 結算服務；
+   4. 最後才決定是否把城鎮 `kill` 導入小隊遭遇戰。這一步是**遊戲設計決策**，須先寫 ADR（見 §18.5）。
+5. **執行順序有陷阱**：§16 建議直接刪除 fallback（`TOMB_*`、`buildTombB1F`、`newbie_village:inn` 預設），但 [`DataIntegrityValidator`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/validation/DataIntegrityValidator.java#L296-L324) 目前**不檢查**地牢地塊 `drops`/`eventId`、技能橋接目標、商店 `templateId` 與開局物資。若先刪 fallback，資料缺漏會從「靜默降級」變成「執行期 NPE」。**原則：先擴充校驗器，再移除 fallback。**
+
+### 18.3 §16/§17 未涵蓋的系統性問題 (Missed Systemic Issues)
+
+1. **靜默 fallback 反模式（比個別硬編碼更根本）**：
+   - 生產程式碼中有約 30 處 `new TemplateCatalog()`，分布在 Service 無參建構子、DTO（[`DrpgStateDto`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/dto/DrpgStateDto.java#L31)）、領域模型（[`PartyInventory`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/party/model/PartyInventory.java#L25)、`PartyMember`、`ShopTemplate`、`BattleEnemy`）與 `MessageFactory`。空的 Catalog 會讓物品名稱退化成 ID、技能查無資料，卻**不報錯**。
+   - [`GameConfig.getInstance()`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/config/GameConfig.java#L34-L43) 靜態單例被 `Player`、`Living` 直接呼叫，並在建構子內覆寫 `INSTANCE`；在測試或多 Context 情境下，可能拿到未綁定 YAML 的預設值。
+   - 多個核心協作者使用 `@Autowired(required = false)` 加延遲 `new`（`DrpgRewardService`、`CharacterSyncService`、`CombatService.buffSettlementService`），注入失敗時會悄悄改用沒有依賴的實例。
+   - **修正（FALLBACK-01）**：從生產程式碼移除無參建構子與 `new TemplateCatalog()`，測試改用 `TestTemplates` fixture；`GameConfig` 改為建構子注入；必要依賴一律改成必填注入。
+2. **領域事件骨幹幾乎沒有運作**：全專案僅有**一個** `publishEvent`（`DrpgRewardService` 中的宋天衡死亡）。`PlayerEvents.LevelUp`、`SessionEvent` 的發布都被註解掉，MUD 端擊殺怪物不發 `MobDead`，所以 [`QuestEventListener`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/listener/QuestEventListener.java) 永遠不會被觸發。§16 提出的「通用任務引擎」必須以事件骨幹為前提。另外，[`MozhuMinesQuestListener`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/listener/MozhuMinesQuestListener.java) 是 `@Async`，會在非 Actor 執行緒直接 `player.reply`，宣稱「獲得戰利品」的物品實際上也是由 RewardService 發放，兩處各自維護。
+3. **首領身分用子字串比對**：`DrpgRewardService` 與 `MozhuMinesQuestListener` 都用 `contains("boss_song_tianheng")` 判斷，任何 ID 含此字串的怪（例如未來的 `boss_song_tianheng_phase2`）都會重複觸發。應改為精確 ID，或在模板加 `questTriggers` 標籤。
+4. **除錯入口暴露在正式指令**：`dungeon dummy/test/testmob` 與 `battle test/dummy/木樁` 可在正式環境召喚試道傀儡（每隻有 XP 與掉落，可被刷資源）。應以 Spring Profile 或管理員旗標限制。
+5. **缺少防回歸護欄**：DATA-01/DATA-02 宣稱「100% 資料驅動」後仍有殘留（見 §18.1），代表單靠人工審查不夠。需要自動化檢查：
+   - **ArchUnit** 規則：禁止 `src/main` 出現 `new TemplateCatalog()`、禁止 domain 呼叫 `GameConfig.getInstance()`；
+   - **內容 ID 字面值掃描**：CI 以允許清單掃描 `src/main/java`，禁止出現 `taiyin|mozhu|newbie_village|SWORDSMAN` 等內容識別字（`GameConfig` 預設值除外）。
+6. **報告格式**：§16/§17 的 14 個任務沒有驗收標準、測試要求、相依關係與工作量估計，且大量集中在 P1，無法排程。建議每項任務都補上下列 DoD 模板。
+
+```text
+DoD 模板：
+- [ ] 校驗器已覆蓋此資料欄位（缺漏時啟動 fail-fast）
+- [ ] 移除對應 fallback / 字面值，ArchUnit 或字面值掃描通過
+- [ ] 新增或修改的單元測試（優先純單元測試，呼應 TEST-01）
+- [ ] 若變更存檔結構：schemaVersion +1 並附遷移測試
+- [ ] .\test.ps1 全綠，並更新 CHANGELOG.md
+```
+
+### 18.4 修正後的落地順序 (Revised Dependency-Ordered Roadmap)
+
+```mermaid
+flowchart TD
+    G["階段 0 護欄<br>GUARD-01 校驗器擴充 + ArchUnit + 字面值掃描"] --> F["階段 1 移除靜默 fallback<br>FALLBACK-01"]
+    F --> D["階段 1 內容資料化<br>DATA-03 / DATA-04 / DATA-05 / DATA-06 / CONF-01"]
+    G --> S["階段 2 同步正確性<br>SYNC-01 Outcome 經信箱套用"]
+    G --> E["階段 2 事件骨幹<br>EVENT-01 雙軌 MobDead / LevelUp / ItemAcquired"]
+    S --> A["ADR-01 統一設計決策"]
+    A --> U1["UNIFY-01 背包 + SaveData v2 遷移"]
+    A --> U2["UNIFY-02 裝備單一擁有者 + 投影"]
+    U1 --> U3["UNIFY-03 Strangler：CombatRules → Combatant → Buff 統一"]
+    U2 --> U3
+    U3 --> U4["UNIFY-04 / UNIFY-05"]
+    E --> Q["階段 4 通用任務引擎"]
+    D --> Q
+```
+
+| 階段 | 任務 | 為何排在這裡 | 預估規模 |
+| :---: | :--- | :--- | :---: |
+| 0 | GUARD-01、DEBUG-01 | 成本最低，能防止後續所有重構引入回歸 | S（1~2 天） |
+| 1 | FALLBACK-01 → DATA-03/04/05/06、CONF-01、COMB-03 | 校驗器到位後，fallback 移除即可安全 fail-fast | M（約 1 週） |
+| 2 | SYNC-01、EVENT-01 | 修正現存的 Actor 邊界違規；任務引擎與 UNIFY 都依賴它 | M |
+| 3 | ADR-01 → UNIFY-01/02 → UNIFY-03 → UNIFY-04/05 | 涉及存檔遷移與玩法決策，必須先定案 | L（多週，分 PR） |
+| 4 | 通用任務引擎、TOWN-02 典當 | 建立在事件骨幹與統一背包之上 | M |
+
+### 18.5 開工前需要擁有者決策的 ADR 議題 (Decisions Required)
+
+1. **城鎮戰鬥模式**：在城鎮輸入 `kill` 時，要維持 MUD 1v1，還是一律進入小隊遭遇戰？（這決定 UNIFY-03 的終點）
+2. **背包所有權**：保留「個人背包 + 小隊倉庫」雙層設計，還是只保留單一小隊行囊？
+3. **持久化真相源**：角色進度以 H2（`CharacterEntity`）為準，還是以 JSON 存檔槽（`SaveData`）為準？單機模式是否還需要 H2？
+4. **MUD 純文字客戶端是否仍為正式支援目標**：若是，UNIFY-03 的「雙模投影」才值得投資；若否，可直接收斂為單一 Web 呈現。
+
+---
+
 ## 📋 改善項目實施優先序總表 (Execution Priority Matrix)
 
 | 優先序 | 類別代碼 | 改善任務簡述 | 核心影響領域 | 對應章節 | 狀態 |
@@ -493,7 +758,7 @@
 | **P1** | ACT-02 | 戰鬥虛擬執行緒 Executor 治理與時限/閒置熔斷斷路器政策決議 | 執行緒防洩漏與戰鬥守護 | §2.7, §7.2 | 🔲 待決議 |
 | **P1** | SAVE-01 | 檔案式存檔引入 `schemaVersion` 與版本遷移適配器 | 存檔平滑相容升級 | §8.1 | ✅ 已完成 |
 | **P1** | SAVE-02 | 壞檔防禦標記與防覆寫保護 (區分 `empty` 與 `corrupted`) | 進度防毀損保護 | §8.2 | ✅ 已完成 |
-| **P1** | DATA-01 | 消除職業反擊特例、陣型比對與技能別名硬編碼 | 100% 資料驅動 | §9.1 | ✅ 已完成 |
+| **P1** | DATA-01 | 消除職業反擊特例、陣型比對與技能別名硬編碼 | 100% 資料驅動 | §9.1 | ✅ 已完成（殘留見 DATA-06） |
 | **P1** | VAL-01 | 集中式遊戲 JSON 啟動期拓撲校驗 (`DataIntegrityValidator`) | 啟動期 Fail-Fast | §9.2 | ✅ 已完成 |
 | **P1** | ASYNC-02 | Write-Behind worker 停機排空協定 (drain protocol) 與拒收通知 | 資料持久化邊界安全 | §6.3 | ✅ 已完成 |
 | **P1** | NET-01 | WebSocket 本機綁定模式與公開模式票證驗證 | 網路安全邊界 | §6.1, §6.2 | ✅ 已完成 |
@@ -503,6 +768,18 @@
 | **P1** | COMBAT-FX-PRESETS-03 | 武器類型粗粒度分類、法術粒子骨架與 AOE 掃擊預設庫 | 戰鬥多樣性表現 | §14.3 | ✅ 已完成 |
 | **P1** | ENEMY-INTENT-01 | 敵方行動意圖預告 (Intent Icon) 與卡片蓄力唱條 (Cast Bar) | 戰鬥視覺化反制 | §13.1, §15.1 | ✅ 已完成 |
 | **P1** | LOG-DIM-01 | 純文字日誌淡化、邊界縮限、摺疊跑馬燈與分類過濾 | 淡化文字閱讀負擔 | §15.5 | ✅ 已完成 |
+| **P1** | DATA-03 | 地牢出入口 (`exitRoomId`)、怪池與掉落物 Fallback 硬編碼清理 | 地牢 100% 配置化 | §16.1 | 🔲 待執行 |
+| **P1** | DATA-04 | 技能橋接規則下沉至 JSON 與屬性補正前綴猜測清理 | 技能單一真相源 | §16.2 | 🔲 待執行 |
+| **P1** | COMB-03 | 戰鬥 5 分鐘固定超時與 10 分鐘 AFK 閒置熔斷解耦治理 | 戰鬥守護防誤殺 | §16.2 | 🔲 待執行 |
+| **P1** | UNIFY-01 | 背包大一統：除役雙軌行囊，收斂至 Canonical `ItemInstance` | 行囊資料一致性 | §17.2 | 🔲 待執行 |
+| **P1** | UNIFY-02 | 角色與裝備大一統：7 槽位裝備單一狀態持有與實時同步 | 裝備數值一致性 | §17.2 | 🔲 待執行 |
+| **P1** | UNIFY-03 | 戰鬥引擎收斂與雙模呈現投影（依 §18.2 改為 Strangler 漸進式） | 消除重複戰鬥心跳 | §17.2, §18.2 | 🔲 待執行 |
+| **P0** | GUARD-01 | 校驗器擴充（地塊 drops/eventId、橋接目標、商店、開局物資）+ ArchUnit + 內容 ID 字面值掃描 | 防回歸護欄 | §18.3, §18.4 | 🔲 待執行 |
+| **P1** | FALLBACK-01 | 移除生產碼 `new TemplateCatalog()`、無參建構子、`GameConfig.getInstance()` 與 optional 核心注入 | 消除靜默降級 | §18.3 | 🔲 待執行 |
+| **P1** | SYNC-01 | Outcome 以真實 battleId 冪等並經 Player 信箱套用，刪除 `copyStats` 跨執行緒覆寫 | Actor 邊界正確性 | §18.2 | 🔲 待執行 |
+| **P1** | EVENT-01 | 領域事件骨幹：雙軌發布 MobDead / LevelUp / ItemAcquired / RoomEntered，listener 回 Actor 信箱 | 任務引擎前置 | §18.3 | 🔲 待執行 |
+| **P1** | DATA-06 | §16 遺漏硬編碼：首領固定 dex/xp/掉落、`contains("mozhu")`、道核三種 ID、TOMB_ITEMS 三份複本、SWORDSMAN 殘留 | 資料驅動純度 | §18.1 | 🔲 待執行 |
+| **P1** | ADR-01 | 城鎮戰鬥模式 / 背包所有權 / 持久化真相源 / 純文字客戶端支援範圍決策 | 統一工程前置 | §18.5 | 🔲 待決議 |
 | **P1** | COMBAT-VFX-STATUS-02 | 護盾血條疊層 (Shield Bar)、DoT 脈衝與 Buff 倒數光圈 | 戰況狀態動態視覺 | §15.2 | 🔲 待執行 |
 | **P2** | DUNGEON-VIEW-01 | 地城第一人稱擬 3D 廊道視圖與點擊互動熱區 | 探索空間視覺化 | §15.3 | 🔲 待執行 |
 | **P2** | TOWN-UI-01 | 城鎮 NPC 生動對話氣泡、立繪與裝備數值比對浮條 | 劇情與養成視覺化 | §15.4 | 🔲 待執行 |
@@ -512,9 +789,18 @@
 | **P2** | LEG-01 | `static/legacy/drpg-view.js` 正式除役與註解清理 | 代碼庫整潔度 | §10.3 | ✅ 已完成 |
 | **P2** | UI-02 | 探索舞台雙欄化與控制回歸羅盤 | 操作流暢度 | §10.4 | ✅ 已完成 |
 | **P2** | DATA-02 | 徹底清除 5 大殘存硬編碼 (招式篩選/橋接備用表/夥伴比對/NPC能力/開局物資) | 100% 資料驅動純度 | §9.3 | ✅ 已完成 |
+| **P2** | DATA-05 | 走火入魔 CHAOS 異變數值與宋天衡專屬掉落資料化 | 戰鬥機制配置化 | §16.2 | 🔲 待執行 |
+| **P2** | TOWN-02 | 客棧標籤化 (`SAFE_ZONE`) 與商店台詞動態化、典當支援 | 城鎮設施通用化 | §16.3 | 🔲 待執行 |
+| **P2** | CONF-01 | 開局物資、調息數值與重生房間納入 `GameConfig` 配置 | 全域配置集中化 | §16.3 | 🔲 待執行 |
+| **P2** | FE-02 | 地塊 Tooltip 動態化與前端裝備槽位判定純淨化 | 前端健壯性 | §16.4 | 🔲 待執行 |
+| **P2** | UNIFY-04 | 生靈與敵怪生命週期閉環 (`Mob` ↔ `BattleEnemy`) | 世界生態閉環 | §17.2 | 🔲 待執行 |
+| **P2** | UNIFY-05 | 技能 Single Source of Truth (Canonical 貫穿全流程) | 技能架構收斂 | §17.2 | 🔲 待執行 |
 | **P2** | COMBAT-REACT-01 | 玩家反制、Gambit 意圖協作與首領階段 | 戰術深度與遭遇變化 | §13.2 | 🔲 待執行 |
 | **P2** | COMBAT-DATA-DOC-01 | SAN 異變資料化、文件現況與測試摘要同步 | 資料驅動與文件治理 | §13.3 | 🔲 待執行 |
 | **P2** | COMBAT-FX-RULE-04 | 我方暴擊/未命中規則與一排目標範圍規則獨立化 | 戰鬥平衡與機制定義 | §14.4 | 🔲 待決議 |
 | **P3** | TEST-01 | 核心數值與領域規則下沉為純單元測試 (加速 CI) | 測試工程效能 | §11.1 | 🔲 待執行 |
 | **P3** | OBS-01 | 系統度量指標擴充與敏感資料日誌審核 | 系統觀測性加固 | §11.2 | 🔲 待執行 |
+| **P3** | CODE-01 | 清理 `PlayerLoginListener` 註解死代碼與空 stub | 代碼庫整潔度 | §16.4 | 🔲 待執行 |
+| **P2** | DEBUG-01 | 試道傀儡等除錯指令以 Profile / 管理員旗標限制 | 防刷資源 | §18.3 | 🔲 待執行 |
 | **P3** | CONTENT-01 | 垂直可玩內容閉環 (創角 -> 滄浪城任務 -> 地宮探險 -> 戰鬥 -> 結算存檔) | 遊戲體驗交付 | §12.1 | ✅ 已完成 |
+
