@@ -26,7 +26,7 @@ app:
 
 game:
   debug:
-    enabled: false
+    enabled: true
   network:
     mode: local
     bind-address: 127.0.0.1

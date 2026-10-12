@@ -162,6 +162,23 @@ export function triggerFormationAction() {
   sendCmd('formation toggle');
 }
 
+export function triggerFormationUltimate() {
+  const lastParty = store.get('lastParty');
+  const energy = lastParty ? (lastParty.formationEnergy || 0) : 0;
+  const btn = document.getElementById('footer-ult-btn');
+  if (energy < 100) {
+    if (btn) {
+      btn.classList.remove('react-shake');
+      void btn.offsetWidth;
+      btn.classList.add('react-shake');
+      setTimeout(() => btn.classList.remove('react-shake'), 400);
+    }
+    updateTicker(`⚠️ 陣法靈威不足 (${energy}/100)，戰鬥中交鋒命中或受創蓄滿 100 方可施展奧義！`);
+    return;
+  }
+  sendCmd('formation cast');
+}
+
 export function triggerInspectAction() {
   const inspect = document.getElementById('drpg-forward-inspect');
   if (inspect) {
@@ -545,23 +562,6 @@ export function initKeyboardControls() {
       return;
     }
 
-export function triggerFormationUltimate() {
-  const lastParty = store.get('lastParty');
-  const energy = lastParty ? (lastParty.formationEnergy || 0) : 0;
-  const btn = document.getElementById('footer-ult-btn');
-  if (energy < 100) {
-    if (btn) {
-      btn.classList.remove('react-shake');
-      void btn.offsetWidth;
-      btn.classList.add('react-shake');
-      setTimeout(() => btn.classList.remove('react-shake'), 400);
-    }
-    updateTicker(`⚠️ 陣法靈威不足 (${energy}/100)，戰鬥中交鋒命中或受創蓄滿 100 方可施展奧義！`);
-    return;
-  }
-  sendCmd('formation cast');
-}
-
     // 6. 戰鬥中快捷鍵
     const lastBattle = store.get('lastBattle');
     if (lastBattle && lastBattle.inBattle) {
@@ -783,6 +783,7 @@ if (typeof window !== 'undefined') {
   window.triggerMapAction = triggerMapAction;
   window.triggerPartyAction = triggerPartyAction;
   window.triggerFormationAction = triggerFormationAction;
+  window.triggerFormationUltimate = triggerFormationUltimate;
   window.triggerInspectAction = triggerInspectAction;
   window.triggerRestAction = triggerRestAction;
   window.switchMainMenuTab = switchMainMenuTab;
