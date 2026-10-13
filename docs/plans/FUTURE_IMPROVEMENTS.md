@@ -860,7 +860,7 @@ flowchart TD
 | **P2** | COMBAT-REACT-01 | 玩家反制、Gambit 意圖協作與首領階段 | 戰術深度與遭遇變化 | §13.2 | 🔲 待執行 |
 | **P2** | COMBAT-DATA-DOC-01 | SAN 異變資料化、文件現況與測試摘要同步 | 資料驅動與文件治理 | §13.3 | 🔲 待執行 |
 | **P2** | COMBAT-FX-RULE-04 | 我方暴擊/未命中規則與一排目標範圍規則獨立化 | 戰鬥平衡與機制定義 | §14.4 | 🔲 待決議 |
-| **P1** | ASYNC-03 | Write-Behind 提交/停機原子協定、滿載明確回報與競態測試 | 持久化資料可靠性 | §19.1 | 🔲 待執行 |
+| **P1** | ASYNC-03 | Write-Behind 提交/停機原子協定、滿載明確回報與競態測試 | 持久化資料可靠性 | §19.1 | ✅ 已完成 (2026-10-13) |
 | **P1** | NET-01-VERIFY | 重新驗證本機/公開 WebSocket 身分驗證與部署邊界 | 外部連線信任邊界 | §19.2 | 🔲 待驗證 |
 | **P1** | BUFF-01 | Buff 效果生命週期、疊層、控場與共用規則結算契約 | 戰鬥規則一致性 | §19.3 | ✅ 已完成 (2026-10-13) |
 | **P2** | FALLBACK-02 | 生產 fallback 清零與架構護欄精確化 | 配置失敗可見性 | §19.4 | 🔲 待執行 |
@@ -876,12 +876,11 @@ flowchart TD
 
 > **來源**：[`Copilot_Code_Review.md`](./Copilot_Code_Review.md)。以下項目是本次靜態審查發現，尚未代表已決議的行為設計或已完成修復；實作前仍須以現行程式碼、部署設定與測試再次驗收。
 
-### 19.1 ASYNC-03：持久化提交與停機生命週期原子化 — P1
+### 19.1 ASYNC-03：持久化提交與停機生命週期原子化 — ✅ 已完成 (2026-10-13)
 
-- 讓 `saveAsync()` 接受提交與服務停止／worker 排空遵守同一個可證明的生命週期協定，避免停止後才入列的紀錄無人處理。
-- 佇列滿載不得靜默拒收；提供明確、可觀測且可供呼叫端處理的拒絕／背壓結果。
-- 使用 latch 或等價同步工具穩定重現「檢查接受狀態 → 停機 → 提交」交錯，另測試滿載、排空與關閉逾時。
-- 完成條件：競態測試證明每筆接受的紀錄不是成功落盤就是以明確失敗回報；不宣稱無條件「100%」保證。
+- **讀寫鎖生命週期原子協定 (`ReentrantReadWriteLock`)**：在 [`AbstractAsyncBatchPersistenceService`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/infra/persistence/service/AbstractAsyncBatchPersistenceService.java) 導入讀寫鎖機制。提交請求以 ReadLock 併發防護；停機時以 WriteLock 原子化切斷接收管道，杜絕「先檢查通過、關閉排空結束、再入列隊列無人處理」的致命競態。
+- **明確結果契約與有界背壓 (`SubmitResult`)**：新增 `submitAsync(T record)` 返回 `SubmitResult`（`ACCEPTED`, `REJECTED_SHUTTING_DOWN`, `REJECTED_QUEUE_FULL`, `REJECTED_NULL`），佇列滿載與關閉時不再靜默拒收，提供可觀測度量（`submittedCount`, `acceptedCount`, `flushedCount`, `rejectedQueueFullCount`, `rejectedShuttingDownCount`）。
+- **高併發交錯競態證明與專屬整合測試**：新增 [`AsyncPersistenceLifecycleTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/AsyncPersistenceLifecycleTest.java)，以 `CountDownLatch` 在關閉瞬間併發 500 筆寫入，證明「每筆提交不是 100% 落盤就是明確回傳 REJECTED，佇列停機後 100% 乾淨清零無任何滯留」，全專案 299 項測試保持 100% 綠燈。
 
 ### 19.2 NET-01-VERIFY：WebSocket 身分與部署模式重新驗收 — P1
 

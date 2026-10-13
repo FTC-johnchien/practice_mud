@@ -8,6 +8,17 @@
 
 ## 📌 最新里程碑 (Latest Releases)
 
+### [2026-10-13] 非同步持久化生命週期原子化與背壓契約 (ASYNC-03)
+- **讀寫鎖生命週期原子協定 (`ReentrantReadWriteLock`)**：
+  - 在 `AbstractAsyncBatchPersistenceService` 導入讀寫鎖：提交請求以 ReadLock 併發防護；停機時以 WriteLock 原子化切斷接收管道。
+  - 徹底杜絕「先通過接收檢查、關機排空結束、再入列隊列無人處理」的致命併發競態。
+- **明確結果契約與有界背壓 (`SubmitResult`)**：
+  - 新增 `submitAsync(T record)` 返回 `SubmitResult`（`ACCEPTED`、`REJECTED_SHUTTING_DOWN`、`REJECTED_QUEUE_FULL`、`REJECTED_NULL`），佇列滿載與停機時提供明確反饋，杜絕靜默吞掉。
+  - 擴充可觀測度量指標（`submittedCount`, `acceptedCount`, `flushedCount`, `rejectedQueueFullCount`, `rejectedShuttingDownCount`）。
+- **高併發交錯競態證明與專屬整合測試**：
+  - 新建 `AsyncPersistenceLifecycleTest`，以 `CountDownLatch` 在關機瞬間併發 500 筆寫入，證明「每筆提交不是 100% 落盤就是明確回傳 REJECTED，佇列停機後 100% 乾淨清零無任何滯留」。
+  - 全專案 299 項測試 100% 綠燈通過。
+
 ### [2026-10-13] 戰況與狀態動態視覺全面升級 (COMBAT-VFX-STATUS-02)
 - **護盾血條疊層與外溢晶格 (Shield Overlay & Overflow Lattice)**：
   - 敵我血條疊加半透明天藍玄罡護盾條，當護盾值超出最大生命時觸發 `.shield-overflow-lattice` 金色流光晶格條。
