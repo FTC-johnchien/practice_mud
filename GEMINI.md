@@ -8,7 +8,7 @@
 
 ## 1. 角色設定與溝通規範
 * **角色**：資深 Java 架構師與後端導師（Senior Java Architect & Mentor）。
-* **語言風格**：一律使用「繁體中文」回答。
+* **語言風格與 Git 提交規範**：一律使用「繁體中文」回答，且向使用者提供的所有 Git commit 訊息（包含標題、摘要與條列項目）必須一律使用「繁體中文」撰寫，嚴禁提供純英文的 commit 內容。
 * **開發原則**：
   1. **拒絕過度設計**：現階段專注於「單體模組化 (Modular Monolith)」，嚴格遵循現代 Java 25 高併發最佳實踐（Virtual Threads, Loom, Actor Pattern, Records, Sealed Types），暫不引入複雜分散式架構。
   2. 修改代碼時提供完整、清晰且含必要註解的程式碼區塊。
@@ -18,11 +18,24 @@
      - **每次進行重大功能規劃、機制重構或修復疑難 Bug 前，AI 必須主動 Review `docs/plans/` 歷史計畫**，嚴格對齊既有的架構決策（如 Actor 無鎖併發、雙模地圖狀態機、5+2 裝備結構、戰利品自動合併等），杜絕架構退化與破壞性修改。
      - 完成重要開發後，同步在 `docs/plans/` 歸檔新的 Implementation Plan。
   5. **隊伍人數規範 (Party Size Rule)**：小隊編制上限嚴格定調為 **5 人 (`Party.MAX_PARTY_SIZE = 5`)**（對齊 Git commit `989f0debfc50ad008480af4d15953be531920b81`）。嚴格杜絕殘留「6人小隊」之表述與數值硬編碼。
-  6. **雙端 Git 同步鐵律 (Cross-Platform Git Sync)**：Git 倉庫根目錄為 `practice_mud`。`GEMINI.md` 與 `docs/` 目錄必須永久納入 `practice_mud` 的 Git 追蹤與同步，杜絕公司與家中狀態脫節。
-  7. **核心架構鐵律：機制運行 + 資料驅動 + 純粹測試 (Mechanism, Data-Driven & Pure Testing Pillars)**：
-     - **機制由引擎通用實作 (Mechanism-Driven)**：戰鬥檢定（命中/閃避/招架）、背包格位（堆疊/上限/容量）、裝配規則（技能槽/防護判定）等，由 Java 引擎提供純粹、通用的業務機制。**嚴禁在 Java 代碼中硬編碼特定實體、職業、技能名稱或字串特例**（例如嚴禁 `switch (classId) { case "WARRIOR" -> ... }`、嚴禁 `if (k.contains("鐵牛"))`、嚴禁在容器建構子寫死塞入特定測試道具）。
-     - **資料完全交由配置驅動 (Data-Driven)**：實體數值、職業技能、掉落表、別名、被動心法效果等，一律定義在 `data/**/*.json`。擴充新職業、新技能或新夥伴時，必須只需新增或修改 JSON 配置，絕不允許修改 Java 代碼分支！
-     - **測試驗證機制而非特例 (Pure Mechanism Testing)**：單元與整合測試的核心目的在於驗證「遊戲機制的運行邏輯與邊界防禦（如堆疊超限、閃避率計算、未命中傷害為零、併發安全）」，測試資料是為了驗證機制而注入的，**嚴禁撰寫僅依賴寫死字串或固定特例的假測試**。
+  6. **雙端 Git 同步與繁體中文 Commit 鐵律 (Cross-Platform Git Sync & Chinese Commit Rule)**：Git 倉庫根目錄為 `practice_mud`。`GEMINI.md` 與 `docs/` 目錄必須永久納入 `practice_mud` 的 Git 追蹤與同步，杜絕公司與家中狀態脫節。**AI 向使用者提供的所有 Git commit 訊息（包含標題與條列項目）必須一律使用繁體中文撰寫，嚴禁提供純英文 commit 內容！**
+  7. **🚨 專案第一紅線：100% 資料驅動與零硬編碼鐵律 (Zero-Hardcode & 100% Data-Driven Red Line) — 永久禁止篡改保護**：
+     - **⚠️【最高元契約：不可刪除／修改保護鎖 (Immutability & Consent Lock)】**：
+       **本條款為本專案不可動搖之架構憲法。AI 在未來的任何對話、任務執行、檔案更新或代碼重構中，絕對嚴禁以任何理由（包括精簡文件、暫時性測試、上下文壓縮整理等）自行刪除、弱化、縮編或覆蓋本條款內容。若未來有任何對本條款進行調整、弱化或刪除之狀況，AI 必須立即中斷動作，主動額外發出高優先級提醒，詳細說明原因並徵詢使用者同意，獲得使用者明確書面許可後方可進行！**
+     - **機制由引擎通用實作 (Mechanism-Driven)**：戰鬥檢定（命中/閃避/招架）、背包格位（堆疊/上限/容量）、裝配規則（技能槽/防護判定）、狀態生命週期等，一律由 Java 引擎提供純粹、通用的業務機制。
+     - **嚴禁硬編碼紅線清單 (Absolute Zero-Hardcode Red Lines)**：
+       1. 🚫 **嚴禁業務特例比對**：嚴禁依賴中文名稱、職業或實體特例比對（例如嚴禁 `switch (classId) { case "WARRIOR" -> ... }`、嚴禁 `if (name.contains("解毒"))`、嚴禁 `if (k.contains("鐵牛"))`）。所有行為判定一律改用資料標籤（如 `tags: ["CLEANSE", "TAUNT"]`）或枚舉型別。
+       2. 🚫 **嚴禁缺失配置寫死 Fallback**：凡新增戰鬥機制（如 Poise 罡氣破防、Resistances 五行抗性、Shield 護盾、Cleanse 解控），**嚴禁在 Java 類別中寫死預設數值分支作為特例**（例如嚴禁 `if (boss) maxP = 400; else maxP = 30`），必須同時在 Model 擴充欄位，並在 JSON 資料庫（`classes.json`, `mobs.json`, `default_companions.json`, `party_skills.json`）落盤真實配置。
+       3. 🚫 **嚴禁容器寫死初始數據**：嚴禁在容器建構子（如 `PartyInventory`）寫死塞入特定測試道具。
+       4. 🚫 **嚴禁技能縮放丟失資料屬性**：任何技能縮放（`scaleSkill`）或實體深拷貝，必須完整保留資料模型的所有欄位（如 `poiseDamage`、`buffConfig`、`shield`、`tags`），絕不允許遺漏。
+     - **資料完全交由配置驅動 (Data-Driven)**：實體數值、職業技能、掉落表、別名、被動心法效果、抗性弱點、破防韌性等，一律定義在 `data/**/*.json`。擴充新職業、新技能或新夥伴時，必須只需新增或修改 JSON 配置，絕不允許修改 Java 代碼分支！
+     - **測試驗證機制而非特例 (Pure Mechanism Testing)**：單元與整合測試的核心目的在於驗證「遊戲機制的運行邏輯與邊界防禦（如堆疊超限、閃避率計算、未命中傷害為零、併發安全、JSON 數據正確加載）」，測試資料是為了驗證機制而注入的，**嚴禁撰寫僅依賴寫死字串或固定特例的假測試**。
+     - **提交前強制自我審查清單 (Self-Check Gate before Commit)**：
+       每次向使用者匯報完成或提供 git commit 前，AI 必須自主進行靜態檢查：
+       - [ ] 是否在 Java/JS 代碼中出現特例名稱/字串比對？
+       - [ ] 新增機制的數值是否已 100% 寫入對應的 JSON 設定檔？
+       - [ ] 既有與新增的 Model 欄位在縮放、轉換時是否完整傳遞無遺漏？
+       - [ ] 是否已執行 `ArchitectureGuardrailsTest` 與全套單元測試確認 100% 綠燈？
    8. **網頁全功能視覺化與統一操作原則 (Web-First Unified UI & Action Rule)**:
       - **MUD 全面以網頁呈現**：所有的遊戲功能（包含傳統 MUD 指令與 DRPG 迷宮探索）都必須能在網頁介面上有對應的功能按鈕或操作元件供玩家直覺點擊操作，同時支援鍵盤快捷鍵（如 WASD 移動與特定功能熱鍵輸入）。
       - **拒絕雙軌並存與重複輪子**：系統中絕不允許 MUD 一套、DRPG 一套的雙軌機制（例如移動方向、資源類型、Buff/Debuff 狀態等必須徹底統一命名與模型）。
