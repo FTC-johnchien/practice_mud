@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import com.example.htmlmud.domain.model.enums.DamageType;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.MobRank;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
@@ -77,6 +78,8 @@ public class BattleEnemy implements Combatant, Buffable {
   private int poiseBrokenTicksRemaining = 0;
   @Builder.Default
   private int xp = 30;
+  @Builder.Default
+  private Map<String, Double> resistances = new HashMap<>();
   @Builder.Default
   private List<String> dropItemIds = new ArrayList<>();
   private String dropItemId;
@@ -215,11 +218,18 @@ public class BattleEnemy implements Combatant, Buffable {
       dropList.add(dropId);
     }
 
-    int maxP = 30;
-    if (rank == MobRank.BOSS) {
-      maxP = 400;
-    } else if (rank == MobRank.ELITE) {
-      maxP = 100;
+    int maxP = tpl.maxPoise() > 0 ? tpl.maxPoise() : (tpl.poise() > 0 ? tpl.poise() : 30);
+    if (tpl.maxPoise() <= 0 && tpl.poise() <= 0) {
+      if (rank == MobRank.BOSS) {
+        maxP = 400;
+      } else if (rank == MobRank.ELITE) {
+        maxP = 100;
+      }
+    }
+
+    Map<String, Double> resMap = new HashMap<>();
+    if (tpl.resistances() != null) {
+      resMap.putAll(tpl.resistances());
     }
 
     return BattleEnemy.builder()
@@ -233,6 +243,7 @@ public class BattleEnemy implements Combatant, Buffable {
         .maxHp(hp)
         .poise(maxP)
         .maxPoise(maxP)
+        .resistances(resMap)
         .minDamage(minD)
         .maxDamage(maxD)
         .defense(def)
@@ -248,6 +259,16 @@ public class BattleEnemy implements Combatant, Buffable {
         .alive(true)
         .xp(tpl.expReward() > 0 ? tpl.expReward() : 30)
         .build();
+  }
+
+  public double getResistance(DamageType type) {
+    if (type == null || resistances == null) return 0.0;
+    return resistances.getOrDefault(type.name(), 0.0);
+  }
+
+  public void heal(int amount) {
+    if (amount <= 0 || !isAlive()) return;
+    this.hp = Math.min(this.maxHp, this.hp + amount);
   }
 
   public List<String> getDropItemIds() {

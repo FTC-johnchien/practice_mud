@@ -80,7 +80,12 @@ public record MobTemplate(
     List<LootEntry> loot,
 
     // NPC 專屬組件化能力清單 (TALK, SHOP, REST, RECRUIT, TRAIN, QUEST)
-    List<NpcCapability> capabilities
+    List<NpcCapability> capabilities,
+
+    // 罡氣破防條 (Poise / Break Gauge) 與五行抗性表
+    int poise,
+    int maxPoise,
+    Map<String, Double> resistances
 
 ) {
   public MobTemplate {
@@ -132,6 +137,23 @@ public record MobTemplate(
     }
     if (loot == null) {
       loot = List.of();
+    }
+    if (maxPoise <= 0) {
+      if (poise > 0) {
+        maxPoise = poise;
+      } else if (rank == MobRank.BOSS) {
+        maxPoise = 400;
+      } else if (rank == MobRank.ELITE) {
+        maxPoise = 100;
+      } else {
+        maxPoise = 30;
+      }
+    }
+    if (poise <= 0) {
+      poise = maxPoise;
+    }
+    if (resistances == null) {
+      resistances = Map.of();
     }
   }
 

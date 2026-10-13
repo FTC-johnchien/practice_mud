@@ -83,10 +83,17 @@
     "costValue": 2,
     "cooldownMs": 4000,
     "damageMultiplier": 1.8,
+    "damageType": "SLASH",
+    "poiseDamage": 20,
     "aoe": false,
     "heal": false,
     "taunt": false,
     "stun": false,
+    "tags": [
+      "ATTACK",
+      "SWORD",
+      "METAL"
+    ],
     "allowedWeapons": [
       "SWORD"
     ]
@@ -100,10 +107,18 @@
     "costValue": 4,
     "cooldownMs": 8000,
     "damageMultiplier": 1.4,
+    "damageType": "SLASH",
+    "poiseDamage": 12,
     "aoe": true,
     "heal": false,
     "taunt": false,
     "stun": false,
+    "tags": [
+      "ATTACK",
+      "SWORD",
+      "AOE",
+      "METAL"
+    ],
     "allowedWeapons": [
       "SWORD"
     ]
@@ -117,10 +132,15 @@
     "costValue": 30,
     "cooldownMs": 10000,
     "damageMultiplier": 1.0,
+    "damageType": "PHYSICAL",
     "aoe": false,
     "heal": false,
     "taunt": true,
     "stun": false,
+    "tags": [
+      "TAUNT",
+      "BUFF"
+    ],
     "allowedWeapons": [],
     "aliases": ["class_warrior_taunt"]
   },
@@ -133,11 +153,19 @@
     "costValue": 60,
     "cooldownMs": 12000,
     "damageMultiplier": 2.0,
+    "damageType": "BLUNT",
+    "poiseDamage": 45,
     "aoe": false,
     "heal": false,
     "taunt": false,
     "stun": true,
     "stunDurationSeconds": 2,
+    "tags": [
+      "ATTACK",
+      "CONTROL",
+      "EARTH",
+      "BLUNT"
+    ],
     "allowedWeapons": [
       "BLUNT",
       "HAMMER",
@@ -153,11 +181,17 @@
     "costValue": 30,
     "cooldownMs": 5000,
     "damageMultiplier": 1.0,
+    "damageType": "WOOD",
     "aoe": false,
     "heal": true,
     "healAmount": 40,
     "taunt": false,
     "stun": false,
+    "tags": [
+      "HEAL",
+      "WOOD",
+      "SINGLE"
+    ],
     "allowedWeapons": [
       "STAFF",
       "WAND",
@@ -174,12 +208,19 @@
     "costValue": 40,
     "cooldownMs": 12000,
     "damageMultiplier": 1.0,
+    "damageType": "HOLY",
     "aoe": true,
     "heal": true,
     "healAmount": 25,
     "sanRestore": 10,
     "taunt": false,
     "stun": false,
+    "tags": [
+      "HEAL",
+      "CLEANSE",
+      "HOLY",
+      "AOE"
+    ],
     "allowedWeapons": [
       "STAFF",
       "WAND",
@@ -196,10 +237,17 @@
     "costValue": 2,
     "cooldownMs": 3000,
     "damageMultiplier": 2.2,
+    "damageType": "PIERCE",
+    "poiseDamage": 25,
     "aoe": false,
     "heal": false,
     "taunt": false,
     "stun": false,
+    "tags": [
+      "ATTACK",
+      "DAGGER",
+      "CRIT"
+    ],
     "allowedWeapons": [
       "DAGGER"
     ]
@@ -213,10 +261,17 @@
     "costValue": 5,
     "cooldownMs": 10000,
     "damageMultiplier": 4.5,
+    "damageType": "PIERCE",
+    "poiseDamage": 40,
     "aoe": false,
     "heal": false,
     "taunt": false,
     "stun": false,
+    "tags": [
+      "ATTACK",
+      "DAGGER",
+      "BURST"
+    ],
     "allowedWeapons": [
       "DAGGER"
     ]
@@ -230,11 +285,18 @@
     "costValue": 35,
     "cooldownMs": 8000,
     "damageMultiplier": 1.0,
+    "damageType": "DARK",
+    "poiseDamage": 15,
     "aoe": false,
     "heal": false,
     "taunt": false,
     "stun": true,
     "stunDurationSeconds": 4,
+    "tags": [
+      "SPELL",
+      "CONTROL",
+      "DARK"
+    ],
     "allowedWeapons": []
   },
   {
@@ -246,10 +308,17 @@
     "costValue": 50,
     "cooldownMs": 10000,
     "damageMultiplier": 1.6,
+    "damageType": "LIGHTNING",
+    "poiseDamage": 30,
     "aoe": true,
     "heal": false,
     "taunt": false,
     "stun": false,
+    "tags": [
+      "SPELL",
+      "LIGHTNING",
+      "AOE"
+    ],
     "allowedWeapons": []
   },
   {
@@ -261,10 +330,16 @@
     "costValue": 30,
     "cooldownMs": 6000,
     "damageMultiplier": 1.8,
+    "damageType": "DARK",
+    "poiseDamage": 22,
     "aoe": false,
     "heal": false,
     "taunt": false,
     "stun": false,
+    "tags": [
+      "SPELL",
+      "DARK"
+    ],
     "allowedWeapons": [
       "STAFF",
       "WAND"
@@ -279,10 +354,17 @@
     "costValue": 60,
     "cooldownMs": 15000,
     "damageMultiplier": 2.2,
+    "damageType": "DARK",
+    "poiseDamage": 35,
     "aoe": true,
     "heal": false,
     "taunt": false,
     "stun": false,
+    "tags": [
+      "SPELL",
+      "DARK",
+      "AOE"
+    ],
     "allowedWeapons": [
       "STAFF",
       "WAND"

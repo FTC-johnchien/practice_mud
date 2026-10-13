@@ -13,6 +13,11 @@
     "maxHp": 120,
     "maxMp": 60,
     "maxSan": 100,
+    "poise": 100,
+    "maxPoise": 100,
+    "resistances": {
+      "METAL": 0.1
+    },
     "baseMinDamage": 15,
     "baseMaxDamage": 25,
     "baseDefense": 5,
@@ -45,6 +50,12 @@
     "maxHp": 180,
     "maxMp": 20,
     "maxSan": 100,
+    "poise": 180,
+    "maxPoise": 180,
+    "resistances": {
+      "PHYSICAL": 0.15,
+      "EARTH": 0.2
+    },
     "baseMinDamage": 10,
     "baseMaxDamage": 18,
     "baseDefense": 14,
@@ -84,6 +95,11 @@
     "maxHp": 110,
     "maxMp": 40,
     "maxSan": 100,
+    "poise": 80,
+    "maxPoise": 80,
+    "resistances": {
+      "WIND": 0.15
+    },
     "baseMinDamage": 18,
     "baseMaxDamage": 28,
     "baseDefense": 4,
@@ -121,6 +137,12 @@
     "maxHp": 90,
     "maxMp": 120,
     "maxSan": 100,
+    "poise": 40,
+    "maxPoise": 40,
+    "resistances": {
+      "WOOD": 0.2,
+      "HOLY": 0.15
+    },
     "baseMinDamage": 8,
     "baseMaxDamage": 14,
     "baseDefense": 3,
@@ -159,6 +181,12 @@
     "maxHp": 95,
     "maxMp": 110,
     "maxSan": 90,
+    "poise": 45,
+    "maxPoise": 45,
+    "resistances": {
+      "DARK": 0.2,
+      "LIGHTNING": 0.15
+    },
     "baseMinDamage": 12,
     "baseMaxDamage": 20,
     "baseDefense": 4,
@@ -196,6 +224,12 @@
     "maxHp": 85,
     "maxMp": 140,
     "maxSan": 95,
+    "poise": 35,
+    "maxPoise": 35,
+    "resistances": {
+      "WATER": 0.15,
+      "DARK": 0.1
+    },
     "baseMinDamage": 14,
     "baseMaxDamage": 24,
     "baseDefense": 2,

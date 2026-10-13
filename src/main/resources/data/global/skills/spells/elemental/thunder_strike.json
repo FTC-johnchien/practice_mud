@@ -35,7 +35,20 @@
     "hitRate": 0.93,
     "maxLevel": 100,
     "scaleStat": "INT",
-    "scaleFactor": 1.45
+    "scaleFactor": 1.45,
+    "poiseDamage": 30
+  },
+  "buff": {
+    "id": "debuff_stun",
+    "name": "紫霄雷痹",
+    "icon": "💫",
+    "element": "LIGHTNING",
+    "type": "DEBUFF",
+    "category": "CONTROL",
+    "effectType": "STUNED",
+    "durationSeconds": 4,
+    "tickIntervalSeconds": 1,
+    "maxStacks": 1
   },
   "moves": [
     {

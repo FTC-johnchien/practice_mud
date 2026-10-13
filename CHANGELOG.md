@@ -8,6 +8,29 @@
 
 ## 📌 最新里程碑 (Latest Releases)
 
+### [2026-10-14] 罡氣破防、五行抗性與戰鬥機制全面資料驅動落地 (DATA-DRIVEN-COMBAT-01)
+- **修復技能縮放抹消漏洞 (Skill Scaling Defect Fix)**：
+  - 修復 `SkillBridgeService.scaleSkill()` 在動態縮放技能時漏拷貝屬性的重大 Bug；完整保留 `poiseDamage`、`buffConfig`、`shield`、`defense`、`buff`、`tags`、`aliases`、`gcdMs`、`castTimeMs`、`triggersGcd`、`threatBonus`、`damageType`、`fxKey`。
+- **全域九大天道靈氣傷害類型矩陣擴充 (`DamageType`)**：
+  - 依據道門修仙元素體系擴充 `DamageType` 枚舉：補齊 `METAL`（金/金石）、`WOOD`（木/草木）、`WATER`（水）、`EARTH`（土/厚土）、`WIND`（風/神風）、`CORRUPT`（陰煞/混沌）、`LIGHT`（陽/光）。
+  - 在 `CombatRules.resolveResistance()` 中支持以 `type.is(DamageType.PHYSICAL)` 動態識別物理子系，嚴守「物理保底 10% 穿透防死鎖、法術與道法五行抗性 $>100\%$ 逆流回血」之核心法則。
+- **戰鬥模型地基擴充 (Poise / Break Gauge & Resistances)**：
+  - 在 `MobTemplate`、`CompanionTemplate`、`BattleEnemy`、`PartyMember`、`PartyMemberSkill`、`Mechanics` 全面擴充 `poise`、`maxPoise`、`resistances`、`poiseDamage` 欄位與方法。
+  - `Buffable` 介面提供 `heal(int)` 預設實作，`BattleEnemy` 具備完整的生命值回復與抗性查詢能力。
+- **消除寫死中文判斷與打通戰鬥迴圈**：
+  - 移除 `DrpgCombatLoop` 中寫死字串比對（如 `contains("解毒")` 等），改為嚴格資料驅動 `skill.getTags().contains("CLEANSE")`。
+  - 在單體與 AOE 傷害技能結算中，正式串接五行抗性檢定 `CombatRules.resolveResistance()`，支援五行吸收逆流回血 (`healAmt > 0`)、常規抗性折減與 `skill.getPoiseDamage()` 削韌結算。
+- **前端 HUD 枚舉比對雙向相容**：
+  - `buff-hud-helper.js` 擴充支援後端枚舉 `STAT_MODIFIER` 與 `CONTROL`（原僅相容 `STAT_MOD` 與 `CC`）。
+- **全面擴充 JSON 資料驅動配置**：
+  - `classes.json`：為全體 6 大職業補齊基礎破防值（戰士 180、武僧 150、俠客 100、盜賊 80、牧師 40、法師 35）。
+  - `taiyin_tomb/mobs.json`：太陰地宮 4 隻怪物（腐化屍偶 25、邪祟骨蝠 15、陰靈血蟒 45、異化守墓道奴 110）配置專屬破防值與五行弱點/抗性表。
+  - `default_companions.json`：為 6 位初始同伴配置專屬 `poise`、`maxPoise` 與 `resistances`。
+  - `party_skills.json`：全面補齊 `damageType`、`poiseDamage` 與 `tags`（如 `heal_all_purify` 包含 `"CLEANSE"`）。
+- **單元與回歸測試 100% 綠燈**：
+  - 於 `MechanismPurityAndBugfixTest` 新增資料驅動載入與技能縮放保留驗證測試。
+  - 全專案 301 項單元與整合測試 100% 綠燈通過。
+
 ### [2026-10-13] 非同步持久化生命週期原子化與背壓契約 (ASYNC-03)
 - **讀寫鎖生命週期原子協定 (`ReentrantReadWriteLock`)**：
   - 在 `AbstractAsyncBatchPersistenceService` 導入讀寫鎖：提交請求以 ReadLock 併發防護；停機時以 WriteLock 原子化切斷接收管道。

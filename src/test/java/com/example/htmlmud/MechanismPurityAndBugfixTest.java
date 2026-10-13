@@ -18,11 +18,19 @@ import com.example.htmlmud.domain.party.service.PartyService;
 import com.example.htmlmud.domain.save.service.SaveGameService;
 import com.example.htmlmud.domain.service.TemplateCatalog;
 
+import com.example.htmlmud.domain.model.enums.DamageType;
+import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
+import com.example.htmlmud.domain.party.model.PartyMemberSkill;
+import com.example.htmlmud.domain.service.SkillBridgeService;
+
 @SpringBootTest
 public class MechanismPurityAndBugfixTest {
 
   @Autowired
   private PartyService partyService;
+
+  @Autowired
+  private SkillBridgeService skillBridgeService;
 
   @Autowired
   private SaveGameService saveGameService;
@@ -113,5 +121,52 @@ public class MechanismPurityAndBugfixTest {
     // 3. 讀檔驗證
     var loaded = saveGameService.loadGame("tester", 1);
     assertThat(loaded.getTitle()).isEqualTo("機制驗證存檔");
+  }
+
+  @Test
+  @DisplayName("機制驗證：同伴與怪物之罡氣破防值與九大靈氣抗性完全由 JSON 驅動載入")
+  void testDataDrivenPoiseAndResistances() {
+    // 1. 同伴鐵牛：驗證從 default_companions.json 載入之 poise 與 resistances
+    PartyMember tieNiu = partyService.createCompanion("鐵牛");
+    assertThat(tieNiu).isNotNull();
+    assertThat(tieNiu.getPoise()).isEqualTo(180);
+    assertThat(tieNiu.getMaxPoise()).isEqualTo(180);
+    assertThat(tieNiu.getResistance(DamageType.PHYSICAL)).isEqualTo(0.15);
+    assertThat(tieNiu.getResistance(DamageType.EARTH)).isEqualTo(0.2);
+
+    // 2. 怪物腐化屍偶：驗證從 taiyin_tomb/mobs.json 載入之 poise 與 resistances
+    var dollOpt = templateReader.findMob("taiyin_tomb:corpse_doll");
+    assertThat(dollOpt).isPresent();
+    var dollTpl = dollOpt.get();
+    assertThat(dollTpl.poise()).isEqualTo(25);
+    assertThat(dollTpl.resistances()).containsEntry("DARK", 0.3).containsEntry("FIRE", -0.25);
+
+    BattleEnemy enemy = BattleEnemy.fromTemplate("e-1", dollTpl, com.example.htmlmud.domain.party.model.RowPosition.FRONT, null);
+    assertThat(enemy.getPoise()).isEqualTo(25);
+    assertThat(enemy.getMaxPoise()).isEqualTo(25);
+    assertThat(enemy.getResistance(DamageType.DARK)).isEqualTo(0.3);
+    assertThat(enemy.getResistance(DamageType.FIRE)).isEqualTo(-0.25);
+  }
+
+  @Test
+  @DisplayName("機制驗證：SkillBridgeService 技能升級縮放必須完整保留 poiseDamage、shield 與 tags (CLEANSE)")
+  void testSkillScalingPreservesAllCombatAttributes() {
+    var rawSkill = templateReader.findPartySkill("sword_pierce");
+    assertThat(rawSkill).isPresent();
+    PartyMemberSkill base = rawSkill.get();
+    assertThat(base.getPoiseDamage()).isEqualTo(20);
+    assertThat(base.getDamageType()).isEqualTo("SLASH");
+
+    PartyMemberSkill scaled = skillBridgeService.scaleSkill(base, 5, null);
+    assertThat(scaled.getPoiseDamage()).isEqualTo(20);
+    assertThat(scaled.getDamageType()).isEqualTo("SLASH");
+    assertThat(scaled.getDamageMultiplier()).isGreaterThan(base.getDamageMultiplier());
+    assertThat(scaled.getTags()).contains("METAL", "SWORD");
+
+    // 驗證淨化解控技能 CLEANSE 標籤保留
+    var purifySkill = templateReader.findPartySkill("heal_all_purify");
+    assertThat(purifySkill).isPresent();
+    PartyMemberSkill scaledPurify = skillBridgeService.scaleSkill(purifySkill.get(), 3, null);
+    assertThat(scaledPurify.getTags()).contains("CLEANSE");
   }
 }

@@ -47,6 +47,14 @@ public interface Buffable {
    */
   void takeDamage(int dmg);
 
+  /**
+   * 接受生命值回復 (不可超過最大生命值上限)
+   */
+  default void heal(int amount) {
+    if (amount <= 0 || !isAlive()) return;
+    setHp(Math.min(getMaxHp(), getHp() + amount));
+  }
+
   // === 罡氣破防條 (Poise / Break Gauge) 契約 ===
   default int getPoise() { return 100; }
   default int getMaxPoise() { return 100; }

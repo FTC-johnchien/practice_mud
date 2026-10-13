@@ -66,7 +66,7 @@ public final class CombatRules {
     if (rawDamage <= 0) return new ResistanceResult(0, 0);
 
     // 1. 物理傷害：依常規護甲防禦折減 (保底 10% 穿透防止絕對無敵)，不走元素逆流回血
-    if (type == DamageType.PHYSICAL || type == DamageType.SLASH || type == DamageType.PIERCE || type == DamageType.BLUNT) {
+    if (type == DamageType.PHYSICAL || (type != null && type.is(DamageType.PHYSICAL))) {
       int finalDmg = (resistance != 0.0)
           ? Math.max(1, (int) Math.round(rawDamage * Math.max(0.1, 1.0 - resistance)))
           : Math.max(1, rawDamage);

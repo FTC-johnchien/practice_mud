@@ -268,6 +268,12 @@ public class PartyService {
         }
       }
 
+      int pVal = tpl.maxPoise() > 0 ? tpl.maxPoise() : (tpl.poise() > 0 ? tpl.poise() : 100);
+      Map<String, Double> resMap = new java.util.concurrent.ConcurrentHashMap<>();
+      if (tpl.resistances() != null) {
+        resMap.putAll(tpl.resistances());
+      }
+
       PartyMember member = PartyMember.builder()
           .id("m-" + tpl.id())
           .name(tpl.name())
@@ -275,6 +281,9 @@ public class PartyService {
           .classId(tpl.classId())
           .row(tpl.defaultRow())
           .stats(stats)
+          .poise(pVal)
+          .maxPoise(pVal)
+          .resistances(resMap)
           .baseMinDamage(tpl.baseMinDamage())
           .baseMaxDamage(tpl.baseMaxDamage())
           .baseDefense(tpl.baseDefense())

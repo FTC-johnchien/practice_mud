@@ -75,7 +75,7 @@ export function aggregateBuffs(activeBuffs) {
       group.items.push(b);
     } else if (cat === 'SHIELD' || eff === 'SHIELD') {
       shieldItems.push(b);
-    } else if (cat === 'STAT_MOD') {
+    } else if (cat === 'STAT_MODIFIER' || cat === 'STAT_MOD') {
       const statKey = eff || 'ATK';
       if (!statGroups.has(statKey)) {
         statGroups.set(statKey, { statKey, totalVal: 0, isPercent: true, items: [] });
@@ -83,7 +83,7 @@ export function aggregateBuffs(activeBuffs) {
       const group = statGroups.get(statKey);
       group.totalVal += Number(b.value) || 0;
       group.items.push(b);
-    } else if (cat === 'CC') {
+    } else if (cat === 'CONTROL' || cat === 'CC') {
       const ccKey = eff || 'STUN';
       if (!ccGroups.has(ccKey)) {
         ccGroups.set(ccKey, { ccKey, items: [] });

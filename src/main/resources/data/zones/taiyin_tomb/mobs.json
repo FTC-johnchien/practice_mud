@@ -20,6 +20,13 @@
     "attackSpeed": 2200,
     "description": "一具被詭異陰煞操縱的古屍，身上長滿了墨黑色的真菌與肉芽，雙目空洞死寂。",
     "expReward": 25,
+    "poise": 25,
+    "resistances": {
+      "DARK": 0.3,
+      "POISON": 0.5,
+      "FIRE": -0.25,
+      "HOLY": -0.5
+    },
     "loot": [
       {
         "itemId": "global:taiyin_pill",
@@ -48,6 +55,13 @@
     "attackSpeed": 1800,
     "description": "棲息於墓室深水溝壑中的異變巨蟒，鱗片泛著猩紅幽光，信子吐納間傳來陣陣神經麻痺的惡臭。",
     "expReward": 40,
+    "poise": 45,
+    "resistances": {
+      "WATER": 0.3,
+      "POISON": 0.8,
+      "FIRE": -0.3,
+      "HOLY": -0.2
+    },
     "loot": [
       {
         "itemId": "global:purify_talisman",
@@ -76,6 +90,13 @@
     "attackSpeed": 2400,
     "description": "昔年殉葬的古宗護法道奴，身軀與玄鐵甲冑早已因血肉畸變融為一體，散發恐怖的道威殘息。",
     "expReward": 85,
+    "poise": 110,
+    "resistances": {
+      "PHYSICAL": 0.2,
+      "SLASH": 0.25,
+      "DARK": 0.4,
+      "LIGHTNING": -0.2
+    },
     "equipment": {
       "MAIN_HAND": "global:bronze_sword",
       "BODY": "global:yin_robe"
@@ -119,6 +140,12 @@
     "attackSpeed": 1500,
     "description": "倒吊在墓穴甬道穹頂的畸變骨蝠，雙翼無羽無皮，僅由嶙峋骨架與暗紫膜絲構成。",
     "expReward": 15,
+    "poise": 15,
+    "resistances": {
+      "WIND": 0.2,
+      "DARK": 0.2,
+      "BLUNT": -0.3
+    },
     "loot": [
       {
         "itemId": "global:taiyin_pill",

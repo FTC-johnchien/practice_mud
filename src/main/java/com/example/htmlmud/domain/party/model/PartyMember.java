@@ -87,6 +87,8 @@ public class PartyMember implements Combatant {
   @Builder.Default
   private int poiseBrokenTicksRemaining = 0;
   @Builder.Default
+  private java.util.Map<String, Double> resistances = new java.util.concurrent.ConcurrentHashMap<>();
+  @Builder.Default
   private long nextAttackTime = 0;
   @Builder.Default
   private java.util.Map<String, Long> cooldownUntil = new java.util.concurrent.ConcurrentHashMap<>();
@@ -626,6 +628,11 @@ public class PartyMember implements Combatant {
       }
     }
     return null;
+  }
+
+  public double getResistance(com.example.htmlmud.domain.model.enums.DamageType type) {
+    if (type == null || resistances == null) return 0.0;
+    return resistances.getOrDefault(type.name(), 0.0);
   }
 
   @Override

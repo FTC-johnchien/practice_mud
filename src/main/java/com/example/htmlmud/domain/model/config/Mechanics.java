@@ -51,6 +51,7 @@ public record Mechanics(
     double scaleFactor, // scaleStat的倍數 1.0 (有多少力打多少痛)
 
     ResourceType scaleStat, // 吃「屬性 STR, INT, DEX, CON」加成的
+    int poiseDamage, // 削韌值 (破防打擊)
 
     Map<String, String> formulas // 計算公式
 

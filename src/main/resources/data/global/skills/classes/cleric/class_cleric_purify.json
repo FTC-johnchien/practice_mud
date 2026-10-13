@@ -9,7 +9,8 @@
     "HEAL",
     "SAN",
     "AOE",
-    "MANA"
+    "MANA",
+    "CLEANSE"
   ],
   "isHidden": false,
   "usage": {

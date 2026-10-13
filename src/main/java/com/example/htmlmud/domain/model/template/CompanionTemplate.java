@@ -36,7 +36,10 @@ public record CompanionTemplate(
     String lookDescription,
     List<String> dialogues,
     List<String> learnedStances,
-    List<NpcCapability> capabilities
+    List<NpcCapability> capabilities,
+    int poise,
+    int maxPoise,
+    Map<String, Double> resistances
 ) {
   public CompanionTemplate {
     if (gender == null) gender = Gender.MALE;
@@ -48,6 +51,15 @@ public record CompanionTemplate(
     if (dialogues == null) dialogues = List.of();
     if (learnedStances == null) learnedStances = List.of();
     if (capabilities == null) capabilities = List.of();
+    if (maxPoise <= 0) {
+      maxPoise = poise > 0 ? poise : 100;
+    }
+    if (poise <= 0) {
+      poise = maxPoise;
+    }
+    if (resistances == null) {
+      resistances = Map.of();
+    }
   }
 
   public MobTemplate toMobTemplate() {
@@ -87,6 +99,9 @@ public record CompanionTemplate(
         .dialogues(dialogues != null ? dialogues : List.of())
         .equipment(eq)
         .capabilities(capabilities != null ? capabilities : List.of())
+        .poise(poise)
+        .maxPoise(maxPoise)
+        .resistances(resistances)
         .build();
   }
 }

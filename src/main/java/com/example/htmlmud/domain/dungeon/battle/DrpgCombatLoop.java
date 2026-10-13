@@ -21,6 +21,7 @@ import com.example.htmlmud.domain.party.model.TacticsRule;
 import com.example.htmlmud.domain.party.model.TacticsTarget;
 import com.example.htmlmud.domain.model.enums.BuffCategory;
 import com.example.htmlmud.domain.model.enums.BuffType;
+import com.example.htmlmud.domain.model.enums.DamageType;
 import com.example.htmlmud.domain.model.enums.MobRank;
 import com.example.htmlmud.domain.model.enums.WeaponType;
 import com.example.htmlmud.domain.dungeon.battle.event.BattleEvent;
@@ -729,8 +730,7 @@ public class DrpgCombatLoop {
     String skillDmgType = resolveSkillDamageType(skill, member);
 
     if (skill.isHeal()) {
-      boolean isCleanse = (skill.getTags() != null && skill.getTags().contains("CLEANSE"))
-          || (skill.getName() != null && (skill.getName().contains("解毒") || skill.getName().contains("淨化") || skill.getName().contains("清心") || skill.getName().contains("祛毒")));
+      boolean isCleanse = (skill.getTags() != null && skill.getTags().contains("CLEANSE"));
 
       if (skill.isAoe()) {
         List<BattleHit> hits = new java.util.ArrayList<>();
@@ -947,16 +947,42 @@ public class DrpgCombatLoop {
       ctx.emit(buffEvent);
     } else {
       // 傷害技能
+      DamageType dt = DamageType.PHYSICAL;
+      try {
+        dt = DamageType.valueOf(skillDmgType.toUpperCase());
+      } catch (Exception ignored) {}
+
       if (skill.isAoe()) {
         broadcastLog(player, ctx, "\u001B[1;36m" + tag + "🌩️ " + member.getName() + " 祭出【" + skill.getName() + "】，排山倒海的威能橫掃敵方全體！\u001B[0m");
         List<BattleHit> hits = new java.util.ArrayList<>();
         for (BattleEnemy e : ctx.getEnemies()) {
           if (e.isAlive()) {
-            int dmg = (int) (tacticsService.calculatePlayerDamage(member, e) * skill.getDamageMultiplier());
-            e.takeDamage(dmg);
+            int rawDmg = (int) (tacticsService.calculatePlayerDamage(member, e) * skill.getDamageMultiplier());
+            var resResult = com.example.htmlmud.domain.combat.CombatRules.resolveResistance(rawDmg, dt, e.getResistance(dt));
+            int dmg = resResult.damage();
+            int healAmt = resResult.heal();
+
+            if (healAmt > 0) {
+              e.heal(healAmt);
+              broadcastLog(player, ctx, "\u001B[1;36m   ↳ ☯️【靈氣逆流】" + e.getName() + " 吸收 " + dt + " 威能，反獲治療 " + healAmt + " 點氣血！\u001B[0m");
+            } else {
+              e.takeDamage(dmg);
+              broadcastLog(player, ctx, "\u001B[1;36m   ↳ 擊中【" + e.getName() + "】造成 " + dmg + " 點傷害！\u001B[0m");
+            }
+
+            if (skill.getPoiseDamage() > 0) {
+              e.applyPoiseDamage(skill.getPoiseDamage());
+            }
+            if (skill.getBuffConfig() != null && e.isAlive()) {
+              ActiveBuff debuff = buffSettlementService.createActiveBuffFromConfig(skill.getBuffConfig(), e, member.getId(), skill.getId());
+              if (debuff != null) {
+                buffSettlementService.applyBuff(e, debuff);
+                broadcastLog(player, ctx, "\u001B[1;35m   ↳ " + debuff.getIcon() + "【" + e.getName() + "】身中【" + debuff.getName() + "】！（持續 " + debuff.getRemainingSeconds() + " 秒）\u001B[0m");
+              }
+            }
+
             member.addThreat(dmg);
             e.addThreat(member.getId(), dmg + skill.getThreatBonus());
-            broadcastLog(player, ctx, "\u001B[1;36m   ↳ 擊中【" + e.getName() + "】造成 " + dmg + " 點傷害！\u001B[0m");
             if (skill.isStun()) e.applyStun(skill.getStunDurationSeconds() * 1000L);
             boolean isKilled = !e.isAlive();
             int eIdx = ctx.getEnemies().indexOf(e);
@@ -998,12 +1024,33 @@ public class DrpgCombatLoop {
           target = (member.getRow() == RowPosition.FRONT) ? ctx.getFrontTargetEnemy() : ctx.getTargetEnemy();
         }
         if (target != null && target.isAlive()) {
-          int dmg = (int) (tacticsService.calculatePlayerDamage(member, target) * skill.getDamageMultiplier());
-          target.takeDamage(dmg);
+          int rawDmg = (int) (tacticsService.calculatePlayerDamage(member, target) * skill.getDamageMultiplier());
+          var resResult = com.example.htmlmud.domain.combat.CombatRules.resolveResistance(rawDmg, dt, target.getResistance(dt));
+          int dmg = resResult.damage();
+          int healAmt = resResult.heal();
+
+          if (healAmt > 0) {
+            target.heal(healAmt);
+            broadcastLog(player, ctx, "\u001B[1;36m" + tag + "☯️【靈氣逆流】" + target.getName() + " 運轉道體，將【" + skill.getName() + "】之 " + dt + " 威能吸收，反獲治療 " + healAmt + " 點氣血！\u001B[0m");
+          } else {
+            target.takeDamage(dmg);
+            broadcastLog(player, ctx, "\u001B[1;33m" + tag + "🔥 " + member.getName() + " 施展【" + skill.getName() + "】，直取【" + target.getName() + "】要害，造成 " + dmg + " 點打擊！\u001B[0m");
+          }
+
+          if (skill.getPoiseDamage() > 0) {
+            target.applyPoiseDamage(skill.getPoiseDamage());
+          }
+          if (skill.getBuffConfig() != null && target.isAlive()) {
+            ActiveBuff debuff = buffSettlementService.createActiveBuffFromConfig(skill.getBuffConfig(), target, member.getId(), skill.getId());
+            if (debuff != null) {
+              buffSettlementService.applyBuff(target, debuff);
+              broadcastLog(player, ctx, "\u001B[1;35m   ↳ " + debuff.getIcon() + "【" + target.getName() + "】身中【" + debuff.getName() + "】！（持續 " + debuff.getRemainingSeconds() + " 秒）\u001B[0m");
+            }
+          }
+
           member.addThreat(dmg);
           target.addThreat(member.getId(), dmg + skill.getThreatBonus());
           if (skill.isStun()) target.applyStun(skill.getStunDurationSeconds() * 1000L);
-          broadcastLog(player, ctx, "\u001B[1;33m" + tag + "🔥 " + member.getName() + " 施展【" + skill.getName() + "】，直取【" + target.getName() + "】要害，造成 " + dmg + " 點毀滅打擊！\u001B[0m");
           boolean isKilled = !target.isAlive();
           int eIdx = ctx.getEnemies().indexOf(target);
           BattleEvent singleSkillEvent = new BattleEvent(

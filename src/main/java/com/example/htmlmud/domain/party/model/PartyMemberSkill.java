@@ -82,6 +82,8 @@ public class PartyMemberSkill {
   @Builder.Default
   private String damageType = "PHYSICAL";
   private String fxKey;
+  @Builder.Default
+  private int poiseDamage = 0;
 
   public boolean isInstant() {
     return castTimeMs <= 0;
