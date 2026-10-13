@@ -327,36 +327,36 @@
 ## 5. 分階段實施路線圖與驗收標準 (Implementation Roadmap & DoD)
 
 ### Phase 1: 核心契約、生命週期與屬性/吸收機制落地 (P0/P1)
-- [ ] **1.1 修復生命週期契約**：
+- [x] **1.1 修復生命週期契約**：
   - 在 `ActiveBuff` 實裝 `PERMANENT_DURATION = -1`，重構 `isExpired()` 與 `decrementTick()`。
   - 驗證陣法孔位 Buff（`remainingTicks = -1`）歷經 100 Ticks 永不消退。
-- [ ] **1.2 落地 WoW 式刷新策略**：
+- [x] **1.2 落地 WoW 式刷新策略**：
   - 在 `BuffSettlementService.applyBuff` 實裝同名 Buff 重置時間、護盾取較大值、堆疊層數累加。
-- [ ] **1.3 屬性修正、罡氣破防條 (Poise / Break) 與五行吸收結算**：
+- [x] **1.3 屬性修正、罡氣破防條 (Poise / Break) 與五行吸收結算**：
   - 在 `PartyMember.java` 與 `BattleEnemy.java` 串接 `STAT_MODIFIER`（`DEF_PCT`, `ATK_PCT`, `SPEED_PCT`）。
   - 引入【罡氣破防條 (Poise Gauge)】：未破防時傷害折減為 1/4~1/3 且免疫硬控；破防時觸發大招打斷、力竭全額 1:1 爆發與控場生效；力竭後自動復甦。
   - 實裝我方隊友架勢條與破防力竭懲罰，支援隊友補盾/回春瞬間拉滿架勢解除失衡。
   - 實裝五行法術抗性 $>100\%$ 逆流回血機制，支援朝高火抗隊友丟火球補血之戰術套路。
 
 ### Phase 2: 控場門控與技能中斷收斂 (P1)
-- [ ] **2.1 控場介面收斂**：
+- [x] **2.1 控場介面收斂**：
   - 在 `Buffable` 擴充 `isControlled()` 與 `isSilenced()` 便捷查詢。
   - 改造 `BattleEnemy.isStunned()` 委託 `Buffable.isControlled()`。
-- [ ] **2.2 全動作入口中斷**：
+- [x] **2.2 全動作入口中斷**：
   - 在 `DrpgCombatLoop` 攻擊檢定處加入控場阻斷，打斷吟唱並廣播提示。
   - 在敵方意圖預告（1500ms 蓄力）加入眩暈打斷清除機制。
 
 ### Phase 3: DTO 補全、屬性圖示聚合與雙舞台視覺投影 (P1)
-- [ ] **3.1 建立正規化 `ActiveBuffDto`**：
+- [x] **3.1 建立正規化 `ActiveBuffDto`**：
   - 擴充 `element` 靈氣屬性欄位，將活動狀態快照推送至前端。
-- [ ] **3.2 戰鬥卡片「屬性圖示聚合 (Element-Icon Aggregated HUD)」實裝**：
+- [x] **3.2 戰鬥卡片「屬性圖示聚合 (Element-Icon Aggregated HUD)」實裝**：
   - 杜絕長技能名稱，戰鬥卡片以 `[🧪 -54/s x3]`、`[🔥 -28/s x2]`、`[⚔️ +35%]` 極簡圖示展現，同屬性自動加總。
   - 滑鼠懸停顯示明細來源（技能名、各別每跳傷害與剩餘秒數）。
   - 在血條上方呈現半透明天藍色護盾條，破防值以金色/暗藍色能量條呈現。
-- [ ] **3.3 補全 1600×900 角色道基詳細面板**：
+- [x] **3.3 補全 1600×900 角色道基詳細面板**：
   - 在 `party-equipment-tab.js` 補上「☯️ 道身加持與狀態」區塊，字級嚴格 $\ge 13\text{px}$，安全轉義。
-- [ ] **3.4 相應技能資料 JSON 靈氣屬性校準**：
-  - 校準 `thunder_strike.json` 為 `LIGHTNING (⚡)`、`storm_blade.json` 為 `WIND (🌪️)`、`spell_corpse_poison.json` 為 `POISON (🧪)`、`taiyin_sword.json` 為 `DARK (🌑)`，完成資料驅動歸類。
+- [x] **3.4 相應技能資料 JSON 靈氣屬性校準**：
+  - 校準 `thunder_strike.json` 為 `LIGHTNING (⚡)`、`storm_blade.json` 為 `SLASH (⚔️)`、`spell_corpse_poison.json` 為 `POISON / WOOD (🧪)`、`taiyin_sword.json` 為 `DARK (🌑)`，完成資料驅動歸類。
 
 ### Phase 4: Gambit 戰術方針 AI 反制與全自動化測試 (P1/P2)
 - [ ] **4.1 擴充戰術條件 (`TacticsCondition`)**：

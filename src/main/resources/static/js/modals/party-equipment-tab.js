@@ -429,6 +429,115 @@ export function renderMemberStatusDetailHtml(m, selIdx, party) {
         </div>
 
         <div style="font-size:14px;color:#34d399;font-weight:bold;">🧘 道心 SAN: ${m.san}/${m.maxSan} (${m.sanityStatus || '心境平穩'})</div>
+
+        <!-- ☯️ 道身加持與狀態卡片 (Phase 3.3) -->
+        ${renderDaoBaseBuffsHtml(m)}
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * 渲染角色道身加持、架勢與狀態詳情卡片 (Phase 3.3)
+ */
+function renderDaoBaseBuffsHtml(m) {
+  const poiseVal = m.poise !== undefined ? Number(m.poise) : 100;
+  const maxPoiseVal = m.maxPoise ? Number(m.maxPoise) : 100;
+  const isBroken = Boolean(m.isPoiseBroken);
+  const poisePct = Math.min(100, Math.max(0, Math.round((poiseVal / maxPoiseVal) * 100)));
+  const shieldVal = Number(m.shield) || 0;
+
+  const buffs = (m.activeBuffs && Array.isArray(m.activeBuffs)) ? m.activeBuffs : [];
+  const permanentBuffs = buffs.filter(b => b.isPermanent || b.remainingSeconds === -1);
+  const tempBuffs = buffs.filter(b => !b.isPermanent && b.remainingSeconds !== -1);
+
+  const permHtml = permanentBuffs.length > 0
+    ? `<div style="display:flex;flex-direction:column;gap:6px;">
+        ${permanentBuffs.map(b => {
+          const sName = escapeHtml(b.name || '常駐法印');
+          const sIcon = escapeHtml(b.icon || '♾️');
+          const sCat = escapeHtml(b.category || '');
+          const valText = b.value ? ` (${b.value > 0 ? '+' : ''}${b.value})` : '';
+          return `
+            <div style="font-size:13px;display:flex;align-items:center;justify-content:space-between;background:#0f172a;border:1px solid #334155;padding:6px 10px;border-radius:4px;">
+              <span style="color:#e2e8f0;display:flex;align-items:center;gap:6px;">
+                <span>${sIcon}</span>
+                <strong style="color:#38bdf8;">${sName}</strong>
+                <span style="color:#94a3b8;font-size:12px;">[${sCat}]</span>
+              </span>
+              <span style="color:#fde047;font-weight:bold;">${valText} ♾️ 常駐</span>
+            </div>
+          `;
+        }).join('')}
+      </div>`
+    : `<div style="font-size:13px;color:#64748b;padding:4px 0;">暫無常駐道法加持</div>`;
+
+  const tempHtml = tempBuffs.length > 0
+    ? `<div style="display:flex;flex-direction:column;gap:6px;">
+        ${tempBuffs.map(b => {
+          const sName = escapeHtml(b.name || '狀態');
+          const sIcon = escapeHtml(b.icon || '✨');
+          const sCat = escapeHtml(b.category || '');
+          const stackText = (b.stacks && b.stacks > 1) ? ` x${b.stacks}` : '';
+          const valText = b.value ? ` (${b.value > 0 ? '+' : ''}${b.value})` : '';
+          const remSec = b.remainingSeconds !== undefined ? `${b.remainingSeconds}s` : '0s';
+          const isDebuff = (b.category === 'DOT' || b.category === 'CC' || b.type === 'DEBUFF');
+          const color = isDebuff ? '#f87171' : '#34d399';
+          return `
+            <div style="font-size:13px;display:flex;align-items:center;justify-content:space-between;background:#0f172a;border:1px solid #334155;padding:6px 10px;border-radius:4px;">
+              <span style="color:#e2e8f0;display:flex;align-items:center;gap:6px;">
+                <span>${sIcon}</span>
+                <strong style="color:${color};">${sName}</strong>
+                <span style="color:#94a3b8;font-size:12px;">[${sCat}]</span>
+              </span>
+              <span style="color:#fde047;font-weight:bold;">${valText}${stackText} ⏳ 剩餘 ${remSec}</span>
+            </div>
+          `;
+        }).join('')}
+      </div>`
+    : `<div style="font-size:13px;color:#64748b;padding:4px 0;">身無滯礙，氣息通暢</div>`;
+
+  return `
+    <div style="background:#0f172a;border:1px solid #334155;border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:10px;">
+      <div style="font-size:15px;color:#a78bfa;font-weight:bold;border-bottom:1px solid #1e293b;padding-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
+        <span>☯️ 道身加持與狀態</span>
+        <span style="font-size:13px;font-weight:normal;color:#94a3b8;">
+          護盾: <strong style="color:#60a5fa;">${shieldVal}</strong>
+        </span>
+      </div>
+
+      <!-- 架勢 Poise 條 -->
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:#cbd5e1;">
+          <span>
+            🥋 架勢底蘊 (Poise)：
+            <strong style="color:${isBroken ? '#ef4444' : '#fbbf24'};">${poiseVal} / ${maxPoiseVal}</strong>
+          </span>
+          <span>
+            ${isBroken
+              ? '<strong style="color:#ef4444;">⚠️【力竭破防】(受傷 +35%，施法中斷)</strong>'
+              : '<strong style="color:#34d399;">🛡️【罡氣凝定】</strong>'}
+          </span>
+        </div>
+        <div style="width:100%;height:6px;background:#1e293b;border-radius:3px;overflow:hidden;border:1px solid #334155;">
+          <div style="width:${isBroken ? 100 : poisePct}%;height:100%;background:${isBroken ? '#ef4444' : 'linear-gradient(90deg, #f59e0b, #fbbf24)'};"></div>
+        </div>
+      </div>
+
+      <!-- 常駐加持 -->
+      <div style="margin-top:4px;">
+        <div style="font-size:13px;color:#38bdf8;font-weight:bold;margin-bottom:4px;">
+          ♾️ 常駐功法與心法光環
+        </div>
+        ${permHtml}
+      </div>
+
+      <!-- 暫時性狀態 -->
+      <div style="margin-top:4px;">
+        <div style="font-size:13px;color:#fbbf24;font-weight:bold;margin-bottom:4px;">
+          ⏳ 臨時法印與諸般因果
+        </div>
+        ${tempHtml}
       </div>
     </div>
   `;

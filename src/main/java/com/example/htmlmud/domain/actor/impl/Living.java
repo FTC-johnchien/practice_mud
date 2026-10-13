@@ -604,6 +604,7 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> implement
       } else if (newBuff.getMaxStacks() > 1) {
         existing.setStacks(Math.min(existing.getMaxStacks(), existing.getStacks() + 1));
       }
+      existing.resetTickCounter();
     } else {
       activeBuffs.add(newBuff);
     }
@@ -621,7 +622,7 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> implement
     if (activeBuffs != null && !activeBuffs.isEmpty()) {
       var shields = activeBuffs.stream()
           .filter(b -> b.getCategory() == BuffCategory.SHIELD && b.getValue() > 0 && !b.isExpired())
-          .sorted(Comparator.comparingInt(ActiveBuff::getRemainingTicks))
+          .sorted(Comparator.comparingInt(b -> b.isPermanent() ? Integer.MAX_VALUE : b.getRemainingTicks()))
           .toList();
 
       for (ActiveBuff shield : shields) {

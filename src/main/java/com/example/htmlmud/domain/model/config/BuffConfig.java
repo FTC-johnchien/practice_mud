@@ -14,6 +14,7 @@ public record BuffConfig(
     String id,
     String name,
     String icon,
+    String element,
     BuffType type,
     BuffCategory category,
     EffectType effectType,
@@ -27,9 +28,21 @@ public record BuffConfig(
     int maxStacks,
     Map<String, Double> statModifiers
 ) {
+  public BuffConfig(
+      String id, String name, String icon,
+      BuffType type, BuffCategory category, EffectType effectType,
+      int durationSeconds, int tickIntervalSeconds, double percentOfTargetHp,
+      int baseShield, int healPerTick, double healPercentPerTick,
+      int damagePerTick, int maxStacks, Map<String, Double> statModifiers
+  ) {
+    this(id, name, icon, "NONE", type, category, effectType, durationSeconds, tickIntervalSeconds,
+        percentOfTargetHp, baseShield, healPerTick, healPercentPerTick, damagePerTick, maxStacks, statModifiers);
+  }
+
   public BuffConfig {
     if (type == null) type = BuffType.BUFF;
     if (category == null) category = BuffCategory.SHIELD;
     if (maxStacks <= 0) maxStacks = 1;
+    if (element == null) element = "NONE";
   }
 }

@@ -51,15 +51,44 @@ public final class CombatRules {
   }
 
   /**
-   * 傷害類型抗性折減 (DamageType & resistances)
-   * 數值意義：0.0 = 無抗性, 0.5 = 減傷 50%, -0.5 = 增傷 50% (弱點), 1.0 = 免疫。
+   * 抗性折減與逆流回血結算結果 (BUFF-01 & UNIFY-03)
+   */
+  public record ResistanceResult(int damage, int heal) {}
+
+  /**
+   * 傷害類型抗性折減與五行逆流回血契約 (DamageType & resistances)
+   * 1. 物理傷害 (PHYSICAL/SLASH/PIERCE/BLUNT)：不走元素抗性回血，直接回傳傷害。
+   * 2. 五行法術/陰煞傷害：若抗性 > 1.0 (100%)，超額部分轉化為氣血回復 (順成人，逆成仙)。
+   *    例如火抗 1.25 -> 25% 吸收回血，承受 0 點傷害。
+   *    若抗性 <= 1.0，依 (1.0 - resistance) 折減傷害。
+   */
+  public static ResistanceResult resolveResistance(int rawDamage, DamageType type, double resistance) {
+    if (rawDamage <= 0) return new ResistanceResult(0, 0);
+
+    // 1. 物理傷害：依常規護甲防禦折減 (保底 10% 穿透防止絕對無敵)，不走元素逆流回血
+    if (type == DamageType.PHYSICAL || type == DamageType.SLASH || type == DamageType.PIERCE || type == DamageType.BLUNT) {
+      int finalDmg = (resistance != 0.0)
+          ? Math.max(1, (int) Math.round(rawDamage * Math.max(0.1, 1.0 - resistance)))
+          : Math.max(1, rawDamage);
+      return new ResistanceResult(finalDmg, 0);
+    }
+
+    // 2. 五行法術/陰煞傷害：若抗性 > 1.0 (100%)，超額部分轉化為氣血回復 (順成人，逆成仙)
+    if (resistance > 1.0) {
+      double absorbRatio = resistance - 1.0;
+      int healAmount = (int) Math.round(rawDamage * absorbRatio);
+      return new ResistanceResult(0, healAmount);
+    } else {
+      int finalDmg = (int) Math.round(rawDamage * Math.max(0.0, 1.0 - resistance));
+      return new ResistanceResult(Math.max(0, finalDmg), 0);
+    }
+  }
+
+  /**
+   * 傷害類型抗性折減 (向下相容介面)
    */
   public static int applyResistance(int rawDamage, DamageType type, double resistance) {
-    if (rawDamage <= 0) return 1;
-    if (resistance != 0.0) {
-      return Math.max(1, (int) Math.round(rawDamage * Math.max(0.1, 1.0 - resistance)));
-    }
-    return Math.max(1, rawDamage);
+    return resolveResistance(rawDamage, type, resistance).damage();
   }
 
   /**

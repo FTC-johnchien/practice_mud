@@ -1,5 +1,7 @@
 package com.example.htmlmud.domain.dungeon.dto;
 
+import java.util.List;
+
 public record BattleEnemyViewDto(
     int index,
     String id,
@@ -27,8 +29,48 @@ public record BattleEnemyViewDto(
     boolean isCasting,
     long castDurationMs,
     long castRemainingMs,
-    boolean isInterruptible
+    boolean isInterruptible,
+    int poise,
+    int maxPoise,
+    boolean isPoiseBroken,
+    int shield,
+    List<ActiveBuffDto> activeBuffs
 ) {
+  public BattleEnemyViewDto(
+      int index,
+      String id,
+      String name,
+      int hp,
+      int maxHp,
+      String row,
+      boolean alive,
+      boolean isTarget,
+      boolean isStunned,
+      String targetMemberId,
+      String targetMemberName,
+      int threat,
+      boolean isLarge,
+      int size,
+      String slot,
+      int rowIdx,
+      int colIdx,
+      int width,
+      int height,
+      String intentIcon,
+      String intentName,
+      String intentType,
+      String intentTargetScope,
+      boolean isCasting,
+      long castDurationMs,
+      long castRemainingMs,
+      boolean isInterruptible
+  ) {
+    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, targetMemberId, targetMemberName,
+        threat, isLarge, size, slot, rowIdx, colIdx, width, height, intentIcon, intentName, intentType,
+        intentTargetScope, isCasting, castDurationMs, castRemainingMs, isInterruptible,
+        30, 30, false, 0, List.of());
+  }
+
   public BattleEnemyViewDto(
       int index,
       String id,
@@ -50,8 +92,11 @@ public record BattleEnemyViewDto(
       int width,
       int height
   ) {
-    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, targetMemberId, targetMemberName, threat, isLarge, size, slot, rowIdx, colIdx, width, height, null, null, "PHYSICAL", "SINGLE", false, 0L, 0L, true);
+    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, targetMemberId, targetMemberName,
+        threat, isLarge, size, slot, rowIdx, colIdx, width, height, null, null, "PHYSICAL", "SINGLE",
+        false, 0L, 0L, true);
   }
+
   public BattleEnemyViewDto(
       int index,
       String id,
@@ -71,8 +116,10 @@ public record BattleEnemyViewDto(
       int rowIdx,
       int colIdx
   ) {
-    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, targetMemberId, targetMemberName, threat, isLarge, size, slot, rowIdx, colIdx, size, size);
+    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, targetMemberId, targetMemberName,
+        threat, isLarge, size, slot, rowIdx, colIdx, size, size);
   }
+
   public BattleEnemyViewDto(
       int index,
       String id,
@@ -90,8 +137,10 @@ public record BattleEnemyViewDto(
       int size,
       String slot
   ) {
-    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, targetMemberId, targetMemberName, threat, isLarge, size, slot, 1, 2);
+    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, targetMemberId, targetMemberName,
+        threat, isLarge, size, slot, 1, 2);
   }
+
   public BattleEnemyViewDto(
       int index,
       String id,
@@ -108,7 +157,8 @@ public record BattleEnemyViewDto(
       boolean isLarge,
       int size
   ) {
-    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, targetMemberId, targetMemberName, threat, isLarge, size, "CENTER");
+    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, targetMemberId, targetMemberName,
+        threat, isLarge, size, "CENTER");
   }
 
   public BattleEnemyViewDto(
@@ -126,7 +176,8 @@ public record BattleEnemyViewDto(
       int threat,
       boolean isLarge
   ) {
-    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, targetMemberId, targetMemberName, threat, isLarge, isLarge ? 2 : 1, "CENTER");
+    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, targetMemberId, targetMemberName,
+        threat, isLarge, isLarge ? 2 : 1, "CENTER");
   }
 
   public BattleEnemyViewDto(

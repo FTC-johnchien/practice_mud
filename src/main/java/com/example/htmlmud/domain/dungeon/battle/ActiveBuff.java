@@ -35,6 +35,8 @@ public class ActiveBuff {
   @Builder.Default
   private BuffCategory category = BuffCategory.SHIELD;
   private EffectType effectType;        // 語意類型標籤 (如: SHIELD, POISON, STUNED)
+  @Builder.Default
+  private String element = "NONE";      // 靈氣屬性標籤 (如: METAL, WOOD, WATER, FIRE, EARTH, WIND, LIGHTNING, DARK, HOLY)
 
   // 生命週期：心跳計數 (1 Tick = 500ms)
   private int durationTicks;            // 原始總持續 Ticks (如 20s = 40 ticks)
@@ -56,8 +58,18 @@ public class ActiveBuff {
   @Builder.Default
   private Map<String, Double> statModifiers = new HashMap<>();
 
+  public static final int PERMANENT_DURATION = -1;
+
+  @JsonIgnore
+  public boolean isPermanent() {
+    return durationTicks == PERMANENT_DURATION || remainingTicks == PERMANENT_DURATION;
+  }
+
   @JsonIgnore
   public boolean isExpired() {
+    if (isPermanent()) {
+      return (category == BuffCategory.SHIELD && value <= 0);
+    }
     return remainingTicks <= 0 || (category == BuffCategory.SHIELD && value <= 0);
   }
 
@@ -65,7 +77,7 @@ public class ActiveBuff {
    * 每個心跳計數遞減一次
    */
   public void decrementTick() {
-    if (this.remainingTicks > 0) {
+    if (!isPermanent() && this.remainingTicks > 0) {
       this.remainingTicks--;
     }
     this.ticksSinceLastTick++;
@@ -88,10 +100,13 @@ public class ActiveBuff {
   }
 
   /**
-   * 前端顯示用：換算剩餘秒數 (向上取整)
+   * 前端顯示用：換算剩餘秒數 (向上取整；常駐光環為 -1)
    */
   @JsonIgnore
   public int getRemainingSeconds() {
+    if (isPermanent()) {
+      return -1;
+    }
     return (int) Math.ceil(remainingTicks * 0.5);
   }
 }

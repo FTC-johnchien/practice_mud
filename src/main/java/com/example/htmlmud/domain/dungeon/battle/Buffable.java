@@ -46,4 +46,49 @@ public interface Buffable {
    * 承受直接或穿透傷害
    */
   void takeDamage(int dmg);
+
+  // === 罡氣破防條 (Poise / Break Gauge) 契約 ===
+  default int getPoise() { return 100; }
+  default int getMaxPoise() { return 100; }
+  default boolean isPoiseBroken() { return false; }
+  default void applyPoiseDamage(int amount) {}
+  default void recoverPoise() {}
+
+  /**
+   * 心跳遞減破防力竭計數，若力竭結束回傳復甦日誌
+   */
+  default String processPoiseTick() { return null; }
+
+  /**
+   * 累加身上所有未過期 Buff 的特定屬性修正值 (加計層數)
+   */
+  default double getStatModifierSum(String statKey) {
+    if (getActiveBuffs() == null || getActiveBuffs().isEmpty() || statKey == null) return 0.0;
+    return getActiveBuffs().stream()
+        .filter(b -> !b.isExpired() && b.getStatModifiers() != null)
+        .mapToDouble(b -> b.getStatModifiers().getOrDefault(statKey, 0.0) * Math.max(1, b.getStacks()))
+        .sum();
+  }
+
+  /**
+   * 是否處於硬控場狀態 (暈眩、冰凍等無法行動)
+   */
+  default boolean isControlled() {
+    if (getActiveBuffs() == null || getActiveBuffs().isEmpty()) return false;
+    return getActiveBuffs().stream()
+        .anyMatch(b -> !b.isExpired() && (
+            b.getCategory() == com.example.htmlmud.domain.model.enums.BuffCategory.CONTROL ||
+            b.getEffectType() == com.example.htmlmud.domain.model.enums.EffectType.STUNED ||
+            b.getEffectType() == com.example.htmlmud.domain.model.enums.EffectType.FROZEN
+        ));
+  }
+
+  /**
+   * 是否處於封咒禁言狀態 (無法引導念咒)
+   */
+  default boolean isSilenced() {
+    if (getActiveBuffs() == null || getActiveBuffs().isEmpty()) return false;
+    return getActiveBuffs().stream()
+        .anyMatch(b -> !b.isExpired() && b.getEffectType() == com.example.htmlmud.domain.model.enums.EffectType.SILENCE);
+  }
 }

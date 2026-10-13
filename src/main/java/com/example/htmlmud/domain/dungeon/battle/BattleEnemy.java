@@ -25,7 +25,7 @@ import java.util.Comparator;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BattleEnemy implements Combatant {
+public class BattleEnemy implements Combatant, Buffable {
   private String id;
   private String templateId;
   private String race;
@@ -67,6 +67,14 @@ public class BattleEnemy implements Combatant {
   private long stunnedUntil = 0;
   @Builder.Default
   private boolean alive = true;
+  @Builder.Default
+  private int poise = 30;
+  @Builder.Default
+  private int maxPoise = 30;
+  @Builder.Default
+  private boolean poiseBroken = false;
+  @Builder.Default
+  private int poiseBrokenTicksRemaining = 0;
   @Builder.Default
   private int xp = 30;
   @Builder.Default
@@ -207,6 +215,13 @@ public class BattleEnemy implements Combatant {
       dropList.add(dropId);
     }
 
+    int maxP = 30;
+    if (rank == MobRank.BOSS) {
+      maxP = 400;
+    } else if (rank == MobRank.ELITE) {
+      maxP = 100;
+    }
+
     return BattleEnemy.builder()
         .id(id)
         .templateId(tpl.id())
@@ -216,6 +231,8 @@ public class BattleEnemy implements Combatant {
         .isUnique(isUnique)
         .hp(hp)
         .maxHp(hp)
+        .poise(maxP)
+        .maxPoise(maxP)
         .minDamage(minD)
         .maxDamage(maxD)
         .defense(def)
@@ -252,10 +269,53 @@ public class BattleEnemy implements Combatant {
 
   public void takeDamage(int dmg) {
     int remainingDmg = absorbShieldDamage(dmg);
-    this.hp = Math.max(0, this.hp - remainingDmg);
-    if (this.hp <= 0) {
-      this.alive = false;
+    if (remainingDmg > 0) {
+      if (!poiseBroken) {
+        // 未破防階段 (罡氣護體)：傷害折減為 1/3 (約 33% 輸出)
+        remainingDmg = Math.max(1, (int) Math.round(remainingDmg / 3.0));
+        // 受擊削韌：扣減破防條
+        applyPoiseDamage(Math.max(10, dmg / 2));
+      }
+      this.hp = Math.max(0, this.hp - remainingDmg);
+      if (this.hp <= 0) {
+        this.alive = false;
+      }
     }
+  }
+
+  @Override
+  public void applyPoiseDamage(int amount) {
+    if (poiseBroken || poise <= 0) return;
+    this.poise = Math.max(0, this.poise - amount);
+    if (this.poise == 0) {
+      triggerPoiseBreak();
+    }
+  }
+
+  public void triggerPoiseBreak() {
+    this.poiseBroken = true;
+    this.poise = 0;
+    this.poiseBrokenTicksRemaining = 14; // 7 秒 (14 Ticks) 力竭期
+    clearIntent(); // 打斷大招與施法意圖
+  }
+
+  @Override
+  public void recoverPoise() {
+    this.poiseBroken = false;
+    this.poise = this.maxPoise;
+    this.poiseBrokenTicksRemaining = 0;
+  }
+
+  @Override
+  public String processPoiseTick() {
+    if (poiseBroken) {
+      poiseBrokenTicksRemaining--;
+      if (poiseBrokenTicksRemaining <= 0) {
+        recoverPoise();
+        return "⚡【罡氣重聚】" + name + " 罡氣復甦重整旗鼓，重新獲得霸體護身！";
+      }
+    }
+    return null;
   }
 
   @Override
@@ -264,7 +324,7 @@ public class BattleEnemy implements Combatant {
     if (activeBuffs != null && !activeBuffs.isEmpty()) {
       var shields = activeBuffs.stream()
           .filter(b -> b.getCategory() == BuffCategory.SHIELD && b.getValue() > 0 && !b.isExpired())
-          .sorted(Comparator.comparingInt(ActiveBuff::getRemainingTicks))
+          .sorted(Comparator.comparingInt(b -> b.isPermanent() ? Integer.MAX_VALUE : b.getRemainingTicks()))
           .toList();
 
       for (ActiveBuff shield : shields) {
@@ -326,6 +386,7 @@ public class BattleEnemy implements Combatant {
       } else if (newBuff.getMaxStacks() > 1) {
         existing.setStacks(Math.min(existing.getMaxStacks(), existing.getStacks() + 1));
       }
+      existing.resetTickCounter();
     } else {
       activeBuffs.add(newBuff);
     }
@@ -337,11 +398,23 @@ public class BattleEnemy implements Combatant {
     activeBuffs.removeIf(b -> b.getId().equalsIgnoreCase(buffId));
   }
 
+  @Override
+  public boolean isControlled() {
+    if (!poiseBroken) {
+      return false; // 霸體護身：未破防時免疫硬控
+    }
+    return Combatant.super.isControlled();
+  }
+
   public boolean isStunned() {
-    return stunnedUntil > System.currentTimeMillis();
+    if (!poiseBroken) {
+      return false; // 霸體護身：未破防時免疫暈眩
+    }
+    return (stunnedUntil > System.currentTimeMillis()) || isControlled();
   }
 
   public void applyStun(long durationMs) {
+    if (!poiseBroken) return; // 霸體護身：未破防時免疫眩暈施加
     this.stunnedUntil = Math.max(this.stunnedUntil, System.currentTimeMillis() + durationMs);
   }
 
@@ -382,17 +455,40 @@ public class BattleEnemy implements Combatant {
 
   @Override
   public int getEffectiveMinDamage() {
-    return this.minDamage;
+    int base = this.minDamage;
+    double atkPct = getStatModifierSum("ATK_PCT");
+    if (atkPct != 0) {
+      base = (int) Math.round(base * (1.0 + atkPct));
+    }
+    return Math.max(1, base);
   }
 
   @Override
   public int getEffectiveMaxDamage() {
-    return this.maxDamage;
+    int base = this.maxDamage;
+    double atkPct = getStatModifierSum("ATK_PCT");
+    if (atkPct != 0) {
+      base = (int) Math.round(base * (1.0 + atkPct));
+    }
+    return Math.max(1, base);
   }
 
   @Override
   public int getEffectiveDefense() {
-    return this.defense;
+    int base = this.defense;
+    double defPct = getStatModifierSum("DEF_PCT");
+    if (defPct != 0) {
+      base = (int) Math.round(base * (1.0 + defPct));
+    }
+    return Math.max(0, base);
+  }
+
+  public long getEffectiveAttackIntervalMs() {
+    double speedPct = getStatModifierSum("SPEED_PCT");
+    if (speedPct != 0) {
+      return Math.max(500, (long) Math.round(this.attackIntervalMs * Math.max(0.2, 1.0 - speedPct)));
+    }
+    return this.attackIntervalMs;
   }
 
   @Override

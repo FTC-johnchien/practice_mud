@@ -2,6 +2,7 @@ import { store } from '../core/state-store.js';
 import { sendCmd } from '../core/cmd-dispatcher.js';
 import { eventBus } from '../core/event-bus.js';
 import { escapeHtml } from '../core/ui-utils.js';
+import { renderAggregatedBuffBadges, renderShieldOverlayHtml, renderPoiseBarHtml } from '../core/buff-hud-helper.js';
 
 /**
  * 6 人小隊狀態列面板 (Party HUD Panel)
@@ -121,20 +122,10 @@ export function renderPartyHud(party) {
     const sanPct = Math.min(100, Math.max(0, (m.san / m.maxSan) * 100));
     const sanClass = `san-${(m.sanLevel || 'NORMAL').toLowerCase()}`;
 
-    // 精簡 Buff 圖示 (9~10 個小圖示方塊)
-    let buffsHtml = '';
-    const buffs = (m.activeBuffs && Array.isArray(m.activeBuffs)) ? m.activeBuffs : [];
-    buffsHtml = `
-      <div class="card-buffs-grid">
-        ${buffs.slice(0, 10).map(b => {
-          const cat = escapeHtml((b.category || 'SHIELD').toLowerCase());
-          const safeName = escapeHtml(b.name || '');
-          const safeCat = escapeHtml(b.category || '');
-          const safeIcon = escapeHtml(b.icon || '✨');
-          return `<span class="party-buff-chip buff-${cat}" title="${safeName} (${safeCat}): 剩餘 ${b.remainingSeconds || 0}秒">${safeIcon}</span>`;
-        }).join('')}
-      </div>
-    `;
+    // 聚合 Buff 圖示
+    const buffsHtml = renderAggregatedBuffBadges(m.activeBuffs);
+    const shieldOverlayHtml = renderShieldOverlayHtml(m.hp, m.maxHp, m.shield);
+    const poiseBarHtml = renderPoiseBarHtml(m.poise, m.maxPoise, m.isPoiseBroken);
 
     const safeMemberName = escapeHtml(m.name || '無名');
     const safeSanState = escapeHtml(m.sanState || '');
@@ -144,15 +135,18 @@ export function renderPartyHud(party) {
       <div class="card-info-side">
         <div class="card-name-row">
           <span class="member-name" title="${safeMemberName}">${safeMemberName}</span>
+          ${m.isPoiseBroken ? '<span class="poise-broken-label" title="【力竭破防】架勢崩解！受傷 +35%，施法打斷！">破防</span>' : ''}
           <span class="member-level-num" title="修為境界：第 ${m.level || 1} 重">${m.level || 1}</span>
         </div>
-        ${buffsHtml}
+        ${buffsHtml ? `<div class="card-buffs-wrap" style="margin-top:3px;">${buffsHtml}</div>` : ''}
       </div>
       <div class="card-bars-side">
-        <div class="mini-bar-wrap" title="氣血 HP: ${m.hp}/${m.maxHp}">
+        <div class="mini-bar-wrap" style="position:relative;" title="氣血 HP: ${m.hp}/${m.maxHp}${m.shield > 0 ? ' (護盾: ' + m.shield + ')' : ''}">
           <div class="mini-bar hp-fill" style="width: ${hpPct}%"></div>
-          <span class="mini-val">HP ${m.hp}/${m.maxHp}</span>
+          ${shieldOverlayHtml}
+          <span class="mini-val" style="z-index:3;">HP ${m.hp}/${m.maxHp}</span>
         </div>
+        ${poiseBarHtml}
         <div class="mini-bar-wrap" title="真元 MP: ${mpText}">
           <div class="mini-bar ${mpFillClass}" style="width: ${mpPct}%"></div>
           <span class="mini-val">MP ${mpText}</span>

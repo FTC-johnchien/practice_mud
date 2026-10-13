@@ -204,7 +204,7 @@ public class DrpgCombatLoop {
           }
 
           if (now >= member.getNextAttackTime()) {
-            member.setNextAttackTime(now + member.getAttackIntervalMs());
+            member.setNextAttackTime(now + member.getEffectiveAttackIntervalMs());
 
             // 走火入魔檢定 (非主角隊員)
             boolean isLeader = (player != null && member.getName().equals(player.getName()));
@@ -438,7 +438,7 @@ public class DrpgCombatLoop {
           if (now >= enemy.getNextAttackTime()) {
             String preparedMove = enemy.getCurrentIntentName();
             enemy.clearIntent();
-            enemy.setNextAttackTime(now + enemy.getAttackIntervalMs());
+            enemy.setNextAttackTime(now + enemy.getEffectiveAttackIntervalMs());
 
             PartyMember targetMember = tacticsService.selectPartyTarget(ctx, enemy);
             if (targetMember != null && targetMember.isAlive()) {

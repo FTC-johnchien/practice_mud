@@ -2,6 +2,7 @@ import { store } from '../core/state-store.js';
 import { sendCmd } from '../core/cmd-dispatcher.js';
 import { selectPartyMember } from './party-hud-panel.js';
 import { escapeHtml } from '../core/ui-utils.js';
+import { renderAggregatedBuffBadges, renderShieldOverlayHtml, renderPoiseBarHtml } from '../core/buff-hud-helper.js';
 
 /**
  * 戰鬥主舞台與敵方陣列面板 (Battle Arena Panel)
@@ -148,16 +149,18 @@ export function renderBattleArena(battle) {
     const stunBadge = e.isStunned
       ? `<span class="enemy-stun-badge" style="background:#422006; color:#fdba74; border:1px solid #9a3412; padding:1px 4px; border-radius:3px; font-size:12px;">💫 暈</span>`
       : '';
+    const brokenBadge = e.isPoiseBroken
+      ? `<span class="poise-broken-label" title="【力竭破防】架勢崩解！受傷加深 +35%，霸體失效！">破防</span>`
+      : '';
 
-    let buffsHtml = '';
-    if (e.activeBuffs) {
-      buffsHtml = e.activeBuffs.map(b => `<span class="enemy-buff-badge" style="background:#172554; color:#93c5fd; border:1px solid #1e3a8a; padding:1px 4px; border-radius:3px; font-size:12px;">${escapeHtml(b.icon || '✨')}${escapeHtml(b.name || '')}</span>`).join('');
-    }
+    const buffsHtml = renderAggregatedBuffBadges(e.activeBuffs);
 
     const isDanger = (e.isCasting && (e.intentType === 'HEAVY' || e.intentType === 'ABERRATION'));
     if (isDanger) card.classList.add('intent-danger-telegraph');
 
     const intentHtml = renderEnemyIntentAndCast(e);
+    const shieldOverlayHtml = renderShieldOverlayHtml(e.hp, e.maxHp, e.shield);
+    const poiseBarHtml = renderPoiseBarHtml(e.poise, e.maxPoise, e.isPoiseBroken);
 
     if (w === 1 && h === 5) {
       // 1x5 貫通陣柱
@@ -167,6 +170,8 @@ export function renderBattleArena(battle) {
           <div class="enemy-badges-right" style="display:flex; gap:2px;">
             ${targetBadge}
             ${stunBadge}
+            ${brokenBadge}
+            ${buffsHtml}
           </div>
         </div>
         <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:8px;">
@@ -176,8 +181,10 @@ export function renderBattleArena(battle) {
         <div class="enemy-intent-container">${intentHtml}</div>
         <div class="enemy-hp-wrap large-hp-wrap" style="height:22px; border-radius:4px; overflow:hidden;" title="生命 HP: ${e.hp}/${e.maxHp}">
           <div class="enemy-hp-bar" style="width: ${hpPct}%; background: linear-gradient(90deg, #2563eb, #38bdf8);"></div>
+          ${shieldOverlayHtml}
           <span class="enemy-hp-text" style="font-size:12px; font-weight:bold; text-shadow:0 1px 2px #000;">${e.hp}/${e.maxHp}</span>
         </div>
+        ${poiseBarHtml}
       `;
     } else if (w === 1 && h === 3) {
       // 1x3 深處天樁
@@ -187,6 +194,8 @@ export function renderBattleArena(battle) {
           <div class="enemy-badges-right" style="display:flex; gap:2px;">
             ${targetBadge}
             ${stunBadge}
+            ${brokenBadge}
+            ${buffsHtml}
           </div>
         </div>
         <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:6px;">
@@ -196,8 +205,10 @@ export function renderBattleArena(battle) {
         <div class="enemy-intent-container">${intentHtml}</div>
         <div class="enemy-hp-wrap large-hp-wrap" style="height:20px; border-radius:4px; overflow:hidden;" title="生命 HP: ${e.hp}/${e.maxHp}">
           <div class="enemy-hp-bar" style="width: ${hpPct}%; background: linear-gradient(90deg, #7c3aed, #c084fc);"></div>
+          ${shieldOverlayHtml}
           <span class="enemy-hp-text" style="font-size:12px; font-weight:bold; text-shadow:0 1px 2px #000;">${e.hp}/${e.maxHp}</span>
         </div>
+        ${poiseBarHtml}
       `;
     } else if (w === 3 && h === 3) {
       // 3x3 巨霸
@@ -210,6 +221,7 @@ export function renderBattleArena(battle) {
           <div class="enemy-badges-right" style="display:flex; gap:4px;">
             ${targetBadge}
             ${stunBadge}
+            ${brokenBadge}
             ${buffsHtml}
           </div>
         </div>
@@ -219,8 +231,10 @@ export function renderBattleArena(battle) {
         <div class="enemy-intent-container">${intentHtml}</div>
         <div class="enemy-hp-wrap large-hp-wrap" style="height:26px; border-radius:4px; overflow:hidden;" title="生命 HP: ${e.hp}/${e.maxHp}">
           <div class="enemy-hp-bar" style="width: ${hpPct}%; background: linear-gradient(90deg, #db2777, #f59e0b);"></div>
+          ${shieldOverlayHtml}
           <span class="enemy-hp-text" style="font-size:14px; font-weight:bold; text-shadow:0 1px 3px #000;">HP ${e.hp}/${e.maxHp}</span>
         </div>
+        ${poiseBarHtml}
       `;
     } else if (w === 2 && h === 2) {
       // 2x2 巨型
@@ -233,6 +247,7 @@ export function renderBattleArena(battle) {
           <div class="enemy-badges-right" style="display:flex; gap:4px;">
             ${targetBadge}
             ${stunBadge}
+            ${brokenBadge}
             ${buffsHtml}
           </div>
         </div>
@@ -242,8 +257,10 @@ export function renderBattleArena(battle) {
         <div class="enemy-intent-container">${intentHtml}</div>
         <div class="enemy-hp-wrap large-hp-wrap" style="height:22px; border-radius:4px; overflow:hidden;" title="生命 HP: ${e.hp}/${e.maxHp}">
           <div class="enemy-hp-bar" style="width: ${hpPct}%; background: linear-gradient(90deg, #dc2626, #f97316);"></div>
+          ${shieldOverlayHtml}
           <span class="enemy-hp-text" style="font-size:13px; font-weight:bold; text-shadow:0 1px 2px #000;">HP ${e.hp}/${e.maxHp}</span>
         </div>
+        ${poiseBarHtml}
       `;
     } else {
       // 1x1 標準怪
@@ -253,13 +270,16 @@ export function renderBattleArena(battle) {
           <div class="enemy-badges-right" style="display:flex; gap:3px; flex-shrink:0;">
             ${targetBadge}
             ${stunBadge}
+            ${brokenBadge}
             ${buffsHtml}
           </div>
         </div>
         <div class="enemy-hp-wrap" style="height:20px; border-radius:3px; overflow:hidden;" title="生命 HP: ${e.hp}/${e.maxHp}">
           <div class="enemy-hp-bar" style="width: ${hpPct}%"></div>
+          ${shieldOverlayHtml}
           <span class="enemy-hp-text" style="font-size:13px; font-weight:bold; text-shadow:0 1px 2px #000; white-space:nowrap;">HP ${e.hp}/${e.maxHp}</span>
         </div>
+        ${poiseBarHtml}
         <div class="enemy-intent-container">${intentHtml}</div>
       `;
     }
@@ -300,6 +320,47 @@ export function renderBattleArena(battle) {
       const hpText = card.querySelector('.enemy-hp-text');
       if (hpText) hpText.textContent = `HP ${e.hp}/${e.maxHp}`;
 
+      // 護盾疊層 In-place 更新
+      const hpWrap = card.querySelector('.enemy-hp-wrap');
+      let shieldOverlay = card.querySelector('.enemy-shield-overlay');
+      if (e.shield > 0) {
+        if (!shieldOverlay && hpWrap) {
+          shieldOverlay = document.createElement('div');
+          shieldOverlay.className = 'enemy-shield-overlay';
+          hpWrap.appendChild(shieldOverlay);
+        }
+        if (shieldOverlay) {
+          const shieldPct = Math.min(100, Math.max(0, (e.shield / (e.maxHp || 1)) * 100));
+          shieldOverlay.style.width = `${shieldPct}%`;
+          shieldOverlay.title = `玄罡護盾: ${e.shield}`;
+        }
+      } else if (shieldOverlay) {
+        shieldOverlay.remove();
+      }
+
+      // 架勢條 In-place 更新
+      let poiseWrap = card.querySelector('.poise-bar-wrap');
+      if (!poiseWrap && hpWrap) {
+        const dummy = document.createElement('div');
+        dummy.innerHTML = renderPoiseBarHtml(e.poise, e.maxPoise, e.isPoiseBroken);
+        if (dummy.firstElementChild) {
+          hpWrap.after(dummy.firstElementChild);
+          poiseWrap = card.querySelector('.poise-bar-wrap');
+        }
+      }
+      if (poiseWrap) {
+        poiseWrap.classList.toggle('poise-broken', Boolean(e.isPoiseBroken));
+        const pFill = poiseWrap.querySelector('.poise-bar-fill');
+        if (pFill) {
+          const curP = e.poise !== undefined ? Number(e.poise) : 100;
+          const maxP = e.maxPoise ? Number(e.maxPoise) : 100;
+          const pPct = Math.min(100, Math.max(0, (curP / maxP) * 100));
+          pFill.style.width = `${e.isPoiseBroken ? 100 : pPct}%`;
+          pFill.style.background = e.isPoiseBroken ? '#ef4444' : 'linear-gradient(90deg, #f59e0b, #fbbf24)';
+        }
+        poiseWrap.title = e.isPoiseBroken ? '【力竭破防】架勢崩解！受傷加深 +35%，霸體失效！' : `架勢值 (Poise): ${e.poise || 100}/${e.maxPoise || 100}`;
+      }
+
       const badgesRight = card.querySelector('.enemy-badges-right');
       if (badgesRight) {
         const targetBadge = e.targetMemberName
@@ -308,8 +369,11 @@ export function renderBattleArena(battle) {
         const stunBadge = e.isStunned
           ? '<span class="enemy-stun-badge" title="眩暈不可行動">💫 暈</span>'
           : '';
-        const buffsHtml = renderBuffBadges(e.activeBuffs);
-        badgesRight.innerHTML = `${targetBadge}${stunBadge}${buffsHtml}`;
+        const brokenBadge = e.isPoiseBroken
+          ? '<span class="poise-broken-label" title="【力竭破防】架勢崩解！受傷加深 +35%，霸體失效！">破防</span>'
+          : '';
+        const buffsHtml = renderAggregatedBuffBadges(e.activeBuffs);
+        badgesRight.innerHTML = `${targetBadge}${stunBadge}${brokenBadge}${buffsHtml}`;
       }
 
       let intentContainer = card.querySelector('.enemy-intent-container');
@@ -330,28 +394,7 @@ export function renderBattleArena(battle) {
 }
 
 function renderBuffBadges(activeBuffs) {
-  if (!activeBuffs || !Array.isArray(activeBuffs) || activeBuffs.length === 0) return '';
-  return `
-    <div class="buff-badges-row">
-      ${activeBuffs.map(b => {
-        const cat = escapeHtml((b.category || 'SHIELD').toLowerCase());
-        let valText = '';
-        if (cat === 'shield' && b.value > 0) valText = ` ${b.value}`;
-        else if (cat === 'hot' && b.value > 0) valText = ` +${b.value}`;
-        else if (cat === 'dot' && b.value > 0) valText = ` -${b.value}`;
-        else if (b.stacks > 1) valText = ` x${b.stacks}`;
-
-        const secText = b.remainingSeconds !== undefined ? `(${b.remainingSeconds}s)` : '';
-        const title = escapeHtml(`${b.name || ''} [${b.category || ''}]: ${valText || ''} 剩餘 ${b.remainingSeconds || 0}秒`);
-
-        return `
-          <span class="buff-badge buff-${cat}" title="${title}">
-            ${escapeHtml(b.icon || '✨')}${valText} ${secText}
-          </span>
-        `;
-      }).join('')}
-    </div>
-  `;
+  return renderAggregatedBuffBadges(activeBuffs);
 }
 
 /**
@@ -489,6 +532,9 @@ export function renderBattlePartyQuickBar(party) {
     const isAlive = (m.alive !== undefined) ? m.alive : (m.hp > 0);
     const hpPct = isAlive ? Math.min(100, Math.max(0, (m.hp / (m.maxHp || 1)) * 100)) : 0;
     const safeMemberName = escapeHtml(m.name || '無名');
+    const shieldOverlayHtml = renderShieldOverlayHtml(m.hp, m.maxHp, m.shield);
+    const poiseBarHtml = renderPoiseBarHtml(m.poise, m.maxPoise, m.isPoiseBroken);
+    const buffsHtml = renderAggregatedBuffBadges(m.activeBuffs);
 
     const card = document.createElement('div');
     card.dataset.memberIdx = String(idx);
@@ -503,12 +549,16 @@ export function renderBattlePartyQuickBar(party) {
         <span class="bpg-name" style="font-size:13px; font-weight:bold; color:${isAlive ? '#f1f5f9' : '#f87171'}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
           ${safeMemberName}
         </span>
+        ${m.isPoiseBroken ? '<span class="poise-broken-label" title="【力竭破防】架勢崩解！受傷 +35%，打斷施法！">破防</span>' : ''}
         ${!isAlive ? '<span class="bpg-dead-badge" style="font-size:13px; font-weight:bold; color:#ef4444;">💀</span>' : ''}
       </div>
       <div class="bpg-hp-wrap">
         <div class="bpg-hp-bar ${!isAlive ? 'is-dead' : ''}" style="width:${hpPct}%;"></div>
+        ${shieldOverlayHtml}
         <span class="bpg-hp-text">HP ${isAlive ? m.hp : 0}/${m.maxHp}</span>
       </div>
+      ${isAlive ? poiseBarHtml : ''}
+      ${isAlive && buffsHtml ? `<div class="bpg-buffs-wrap" style="margin-top:2px;">${buffsHtml}</div>` : ''}
     `;
     return card;
   }
@@ -557,6 +607,7 @@ export function renderBattlePartyQuickBar(party) {
         nameEl.style.color = isAlive ? '#f1f5f9' : '#f87171';
       }
 
+      const hpWrap = card.querySelector('.bpg-hp-wrap');
       const hpBar = card.querySelector('.bpg-hp-bar');
       if (hpBar) {
         hpBar.style.width = `${hpPct}%`;
@@ -566,6 +617,70 @@ export function renderBattlePartyQuickBar(party) {
       const hpText = card.querySelector('.bpg-hp-text');
       if (hpText) {
         hpText.textContent = `HP ${isAlive ? m.hp : 0}/${m.maxHp}`;
+      }
+
+      // 護盾疊層 In-place 更新
+      let shieldOverlay = card.querySelector('.enemy-shield-overlay');
+      if (m.shield > 0 && isAlive) {
+        if (!shieldOverlay && hpWrap) {
+          shieldOverlay = document.createElement('div');
+          shieldOverlay.className = 'enemy-shield-overlay';
+          hpWrap.appendChild(shieldOverlay);
+        }
+        if (shieldOverlay) {
+          const shieldPct = Math.min(100, Math.max(0, (m.shield / (m.maxHp || 1)) * 100));
+          shieldOverlay.style.width = `${shieldPct}%`;
+          shieldOverlay.title = `玄罡護盾: ${m.shield}`;
+        }
+      } else if (shieldOverlay) {
+        shieldOverlay.remove();
+      }
+
+      // 架勢條 In-place 更新
+      let poiseWrap = card.querySelector('.poise-bar-wrap');
+      if (!poiseWrap && hpWrap && isAlive) {
+        const dummy = document.createElement('div');
+        dummy.innerHTML = renderPoiseBarHtml(m.poise, m.maxPoise, m.isPoiseBroken);
+        if (dummy.firstElementChild) {
+          hpWrap.after(dummy.firstElementChild);
+          poiseWrap = card.querySelector('.poise-bar-wrap');
+        }
+      }
+      if (poiseWrap) {
+        if (!isAlive) {
+          poiseWrap.style.display = 'none';
+        } else {
+          poiseWrap.style.display = '';
+          poiseWrap.classList.toggle('poise-broken', Boolean(m.isPoiseBroken));
+          const pFill = poiseWrap.querySelector('.poise-bar-fill');
+          if (pFill) {
+            const curP = m.poise !== undefined ? Number(m.poise) : 100;
+            const maxP = m.maxPoise ? Number(m.maxPoise) : 100;
+            const pPct = Math.min(100, Math.max(0, (curP / maxP) * 100));
+            pFill.style.width = `${m.isPoiseBroken ? 100 : pPct}%`;
+            pFill.style.background = m.isPoiseBroken ? '#ef4444' : 'linear-gradient(90deg, #f59e0b, #fbbf24)';
+          }
+          poiseWrap.title = m.isPoiseBroken ? '【力竭破防】架勢崩解！受傷 +35%，打斷施法！' : `架勢值 (Poise): ${m.poise || 100}/${m.maxPoise || 100}`;
+        }
+      }
+
+      // 聚合 Buffs 更新
+      let buffsWrap = card.querySelector('.bpg-buffs-wrap');
+      if (isAlive) {
+        const buffsHtml = renderAggregatedBuffBadges(m.activeBuffs);
+        if (buffsHtml) {
+          if (!buffsWrap) {
+            buffsWrap = document.createElement('div');
+            buffsWrap.className = 'bpg-buffs-wrap';
+            buffsWrap.style.marginTop = '2px';
+            card.appendChild(buffsWrap);
+          }
+          buffsWrap.innerHTML = buffsHtml;
+        } else if (buffsWrap) {
+          buffsWrap.remove();
+        }
+      } else if (buffsWrap) {
+        buffsWrap.remove();
       }
     });
   }

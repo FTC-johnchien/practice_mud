@@ -79,6 +79,14 @@ public class PartyMember implements Combatant {
   @Builder.Default
   private long attackIntervalMs = 2000;
   @Builder.Default
+  private int poise = 100;
+  @Builder.Default
+  private int maxPoise = 100;
+  @Builder.Default
+  private boolean poiseBroken = false;
+  @Builder.Default
+  private int poiseBrokenTicksRemaining = 0;
+  @Builder.Default
   private long nextAttackTime = 0;
   @Builder.Default
   private java.util.Map<String, Long> cooldownUntil = new java.util.concurrent.ConcurrentHashMap<>();
@@ -202,19 +210,42 @@ public class PartyMember implements Combatant {
   @JsonIgnore
   public int getEffectiveMinDamage() {
     int bonus = (equipment != null) ? equipment.values().stream().mapToInt(PartyItemSlot::getBonusMinDamage).sum() : 0;
-    return baseMinDamage + bonus;
+    int base = baseMinDamage + bonus;
+    double atkPct = getStatModifierSum("ATK_PCT");
+    if (atkPct != 0) {
+      base = (int) Math.round(base * (1.0 + atkPct));
+    }
+    return Math.max(1, base);
   }
 
   @JsonIgnore
   public int getEffectiveMaxDamage() {
     int bonus = (equipment != null) ? equipment.values().stream().mapToInt(PartyItemSlot::getBonusMaxDamage).sum() : 0;
-    return baseMaxDamage + bonus;
+    int base = baseMaxDamage + bonus;
+    double atkPct = getStatModifierSum("ATK_PCT");
+    if (atkPct != 0) {
+      base = (int) Math.round(base * (1.0 + atkPct));
+    }
+    return Math.max(1, base);
   }
 
   @JsonIgnore
   public int getEffectiveDefense() {
     int bonus = (equipment != null) ? equipment.values().stream().mapToInt(PartyItemSlot::getBonusDefense).sum() : 0;
-    return baseDefense + bonus;
+    int base = baseDefense + bonus;
+    double defPct = getStatModifierSum("DEF_PCT");
+    if (defPct != 0) {
+      base = (int) Math.round(base * (1.0 + defPct));
+    }
+    return Math.max(0, base);
+  }
+
+  public long getEffectiveAttackIntervalMs() {
+    double speedPct = getStatModifierSum("SPEED_PCT");
+    if (speedPct != 0) {
+      return Math.max(500, (long) Math.round(attackIntervalMs * Math.max(0.2, 1.0 - speedPct)));
+    }
+    return attackIntervalMs;
   }
 
   /**
@@ -537,6 +568,13 @@ public class PartyMember implements Combatant {
   public void takeDamage(int damage) {
     int remainingDmg = absorbShieldDamage(damage);
     if (remainingDmg > 0 && stats != null) {
+      if (poiseBroken) {
+        // 破防力竭：受到傷害提升 35%
+        remainingDmg = (int) Math.round(remainingDmg * 1.35);
+      } else {
+        // 受擊削韌
+        applyPoiseDamage(Math.max(8, damage / 2));
+      }
       stats.setHp(Math.max(0, stats.getHp() - remainingDmg));
       if (stats.getHp() <= 0) {
         this.alive = false;
@@ -556,6 +594,41 @@ public class PartyMember implements Combatant {
   }
 
   @Override
+  public void applyPoiseDamage(int amount) {
+    if (poiseBroken || poise <= 0) return;
+    this.poise = Math.max(0, this.poise - amount);
+    if (this.poise == 0) {
+      triggerPoiseBreak();
+    }
+  }
+
+  public void triggerPoiseBreak() {
+    this.poiseBroken = true;
+    this.poise = 0;
+    this.poiseBrokenTicksRemaining = 7; // 3.5 秒 (7 Ticks) 力竭期
+    cancelCast("架勢破防力竭");
+  }
+
+  @Override
+  public void recoverPoise() {
+    this.poiseBroken = false;
+    this.poise = this.maxPoise;
+    this.poiseBrokenTicksRemaining = 0;
+  }
+
+  @Override
+  public String processPoiseTick() {
+    if (poiseBroken) {
+      poiseBrokenTicksRemaining--;
+      if (poiseBrokenTicksRemaining <= 0) {
+        recoverPoise();
+        return "⚡【罡氣重聚】" + name + " 重心重穩，罡氣架勢已重新恢復！";
+      }
+    }
+    return null;
+  }
+
+  @Override
   public int absorbShieldDamage(int incomingDmg) {
     int remaining = incomingDmg;
 
@@ -563,7 +636,7 @@ public class PartyMember implements Combatant {
     if (activeBuffs != null && !activeBuffs.isEmpty()) {
       var shields = activeBuffs.stream()
           .filter(b -> b.getCategory() == BuffCategory.SHIELD && b.getValue() > 0 && !b.isExpired())
-          .sorted(Comparator.comparingInt(ActiveBuff::getRemainingTicks))
+          .sorted(Comparator.comparingInt(b -> b.isPermanent() ? Integer.MAX_VALUE : b.getRemainingTicks()))
           .toList();
 
       for (ActiveBuff shield : shields) {
@@ -671,6 +744,7 @@ public class PartyMember implements Combatant {
       } else if (newBuff.getMaxStacks() > 1) {
         existing.setStacks(Math.min(existing.getMaxStacks(), existing.getStacks() + 1));
       }
+      existing.resetTickCounter();
     } else {
       activeBuffs.add(newBuff);
     }

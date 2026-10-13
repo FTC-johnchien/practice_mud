@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.dungeon.dto.BattleEnemyViewDto;
 import com.example.htmlmud.domain.dungeon.dto.BattleViewDto;
+import com.example.htmlmud.domain.dungeon.dto.ActiveBuffDto;
 import com.example.htmlmud.domain.dungeon.dto.DrpgStateDto;
 import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
 import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
@@ -1015,6 +1016,9 @@ public class DrpgBattleService {
     List<BattleEnemyViewDto> enemyDtos = new ArrayList<>();
     for (int i = 0; i < battleCtx.getEnemies().size(); i++) {
       BattleEnemy e = battleCtx.getEnemies().get(i);
+      List<ActiveBuffDto> buffDtos = (e.getActiveBuffs() != null)
+          ? e.getActiveBuffs().stream().map(ActiveBuffDto::fromActiveBuff).toList()
+          : List.of();
       enemyDtos.add(new BattleEnemyViewDto(
           i,
           e.getId(),
@@ -1042,7 +1046,12 @@ public class DrpgBattleService {
           e.isCasting(),
           e.getCastDurationMs(),
           e.getCastRemainingMs(),
-          e.isInterruptible()
+          e.isInterruptible(),
+          e.getPoise(),
+          e.getMaxPoise(),
+          e.isPoiseBroken(),
+          e.getTotalShield(),
+          buffDtos
       ));
     }
     return new BattleViewDto(

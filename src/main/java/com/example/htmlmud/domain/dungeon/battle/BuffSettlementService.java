@@ -79,6 +79,12 @@ public class BuffSettlementService {
       }
     }
 
+    // 3. 罡氣破防與力竭復甦心跳檢定
+    String poiseLog = target.processPoiseTick();
+    if (poiseLog != null && !poiseLog.isBlank()) {
+      eventLogs.add(poiseLog);
+    }
+
     return eventLogs;
   }
 
@@ -88,8 +94,13 @@ public class BuffSettlementService {
   public ActiveBuff createActiveBuffFromConfig(BuffConfig cfg, Buffable target, String casterId, String skillId) {
     if (cfg == null || target == null) return null;
 
-    int durationSeconds = cfg.durationSeconds() > 0 ? cfg.durationSeconds() : 10;
-    int durationTicks = durationSeconds * 2; // 1s = 2 ticks
+    int durationTicks;
+    if (cfg.durationSeconds() == ActiveBuff.PERMANENT_DURATION) {
+      durationTicks = ActiveBuff.PERMANENT_DURATION;
+    } else {
+      int durationSeconds = cfg.durationSeconds() > 0 ? cfg.durationSeconds() : 10;
+      durationTicks = durationSeconds * 2; // 1s = 2 ticks
+    }
 
     int tickIntervalSeconds = cfg.tickIntervalSeconds();
     int tickIntervalTicks = tickIntervalSeconds > 0 ? tickIntervalSeconds * 2 : 0;
@@ -116,6 +127,7 @@ public class BuffSettlementService {
         .type(cfg.type() != null ? cfg.type() : BuffType.BUFF)
         .category(cfg.category() != null ? cfg.category() : BuffCategory.SHIELD)
         .effectType(cfg.effectType())
+        .element(cfg.element() != null ? cfg.element() : "NONE")
         .durationTicks(durationTicks)
         .remainingTicks(durationTicks)
         .tickIntervalTicks(tickIntervalTicks)
@@ -129,9 +141,20 @@ public class BuffSettlementService {
 
   /**
    * 施加狀態至目標實體（委派至 target.addBuff，滿足 WoW 同名刷新時間、不同名共存疊加原則）
+   * 同時處理「補甲解控 (Armor Cleanse)」：施加護盾時強制震開眩暈控制重整旗鼓。
    */
   public void applyBuff(Buffable target, ActiveBuff buff) {
     if (target != null && buff != null) {
+      if (buff.getCategory() == BuffCategory.SHIELD) {
+        if (target.isPoiseBroken()) {
+          target.recoverPoise();
+        }
+        if (target.getActiveBuffs() != null) {
+          target.getActiveBuffs().removeIf(b -> b.getCategory() == BuffCategory.CONTROL
+              || b.getEffectType() == com.example.htmlmud.domain.model.enums.EffectType.STUNED
+              || b.getEffectType() == com.example.htmlmud.domain.model.enums.EffectType.FROZEN);
+        }
+      }
       target.addBuff(buff);
     }
   }

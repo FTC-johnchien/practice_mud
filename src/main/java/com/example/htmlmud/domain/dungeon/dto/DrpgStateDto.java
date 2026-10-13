@@ -382,7 +382,12 @@ public record DrpgStateDto(
           m.getCurrentRage(),
           m.getMaxRage(),
           m.getCurrentCombo(),
-          m.getMaxCombo()
+          m.getMaxCombo(),
+          m.getPoise(),
+          m.getMaxPoise(),
+          m.isPoiseBroken(),
+          m.getTotalShield(),
+          m.getActiveBuffs() != null ? m.getActiveBuffs().stream().map(ActiveBuffDto::fromActiveBuff).toList() : List.of()
       ));
     }
 
@@ -713,7 +718,12 @@ public record DrpgStateDto(
       int rage,
       int maxRage,
       int combo,
-      int maxCombo
+      int maxCombo,
+      int poise,
+      int maxPoise,
+      boolean isPoiseBroken,
+      int shield,
+      List<ActiveBuffDto> activeBuffs
   ) {
     public PartyMemberViewDto(
         String id, String name, String roleTitle, String row,
@@ -738,7 +748,8 @@ public record DrpgStateDto(
           level, exp, nextLevelExp, freeStatPoints, str, con, dex, intStat, wis,
           isOnGcd, remainingGcdMs, isCasting, castingSkillName, castingDurationMs, castingRemainingMs,
           formationSlotName, formationSlotRequiredRow, formationSlotBonus, formationSlotActive, gridX, gridY,
-          sp, maxSp, Math.min(5, sp / 20), 5);
+          sp, maxSp, Math.min(5, sp / 20), 5,
+          100, 100, false, 0, List.of());
     }
   }
 
