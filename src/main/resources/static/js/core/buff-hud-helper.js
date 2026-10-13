@@ -98,6 +98,16 @@ export function aggregateBuffs(activeBuffs) {
 
   const results = [];
 
+  const checkExpiring = (items) => {
+    if (!items || items.length === 0) return false;
+    const minRem = items.reduce((min, b) => {
+      if (b.isPermanent || b.remainingSeconds === -1) return min;
+      const s = Number(b.remainingSeconds);
+      return !isNaN(s) ? Math.min(min, s) : min;
+    }, 999);
+    return minRem > 0 && minRem <= 3;
+  };
+
   // 1. DoT 聚合
   dotGroups.forEach((group, key) => {
     const meta = ELEMENT_ICONS[key] || ELEMENT_ICONS[group.element] || { icon: '🧪', label: key, color: '#a3e635', border: '#84cc16' };
@@ -115,7 +125,8 @@ export function aggregateBuffs(activeBuffs) {
       tooltip: `【${meta.label}持續傷害】\n${tooltip}`,
       color: meta.color,
       border: meta.border,
-      bg: 'rgba(24, 24, 27, 0.85)'
+      bg: 'rgba(24, 24, 27, 0.85)',
+      isExpiring: checkExpiring(group.items)
     });
   });
 
@@ -133,7 +144,8 @@ export function aggregateBuffs(activeBuffs) {
       tooltip: `【玄罡護盾】\n${tooltip}`,
       color: '#93c5fd',
       border: '#3b82f6',
-      bg: 'rgba(23, 37, 84, 0.85)'
+      bg: 'rgba(23, 37, 84, 0.85)',
+      isExpiring: checkExpiring(shieldItems)
     });
   }
 
@@ -155,7 +167,8 @@ export function aggregateBuffs(activeBuffs) {
       tooltip: `【${meta.label}修持加成】\n${tooltip}`,
       color: meta.color,
       border: meta.border,
-      bg: 'rgba(15, 23, 42, 0.85)'
+      bg: 'rgba(15, 23, 42, 0.85)',
+      isExpiring: checkExpiring(group.items)
     });
   });
 
@@ -175,7 +188,8 @@ export function aggregateBuffs(activeBuffs) {
       tooltip: `【控場狀態】\n${tooltip}`,
       color: meta.color,
       border: meta.border,
-      bg: 'rgba(66, 32, 6, 0.85)'
+      bg: 'rgba(66, 32, 6, 0.85)',
+      isExpiring: checkExpiring(group.items)
     });
   });
 
@@ -193,7 +207,8 @@ export function aggregateBuffs(activeBuffs) {
       tooltip: `【生機滋養】\n${tooltip}`,
       color: '#86efac',
       border: '#22c55e',
-      bg: 'rgba(6, 78, 59, 0.85)'
+      bg: 'rgba(6, 78, 59, 0.85)',
+      isExpiring: checkExpiring(hotItems)
     });
   }
 
@@ -208,7 +223,8 @@ export function aggregateBuffs(activeBuffs) {
       tooltip: `• 【${b.name || '加持'}】 (${b.category || ''}): 剩餘 ${rem}`,
       color: '#cbd5e1',
       border: '#64748b',
-      bg: 'rgba(30, 41, 59, 0.85)'
+      bg: 'rgba(30, 41, 59, 0.85)',
+      isExpiring: checkExpiring([b])
     });
   });
 
@@ -229,8 +245,9 @@ export function renderAggregatedBuffBadges(activeBuffs) {
       ${aggregated.map(item => {
         const safeTooltip = escapeHtml(item.tooltip);
         const safeLabel = escapeHtml(item.htmlText);
+        const warnCls = item.isExpiring ? ' buff-expiring-warning' : '';
         return `
-          <span class="buff-aggregated-chip"
+          <span class="buff-aggregated-chip${warnCls}"
                 style="color:${item.color}; border:1px solid ${item.border}; background:${item.bg};"
                 title="${safeTooltip}">
             ${safeLabel}
@@ -242,7 +259,7 @@ export function renderAggregatedBuffBadges(activeBuffs) {
 }
 
 /**
- * 渲染護盾半透明疊層 (Shield Overlay)
+ * 渲染護盾半透明疊層與外溢晶格 (Shield Overlay & Overflow Lattice)
  * @param {number} hp 當前 HP
  * @param {number} maxHp 最大 HP
  * @param {number} shield 當前護盾值
@@ -252,8 +269,17 @@ export function renderShieldOverlayHtml(hp, maxHp, shield) {
   const safeShield = Number(shield) || 0;
   if (safeShield <= 0 || !maxHp) return '';
   const shieldPct = Math.min(100, Math.max(0, (safeShield / maxHp) * 100));
+
+  let overflowHtml = '';
+  if (safeShield > maxHp) {
+    const overflowVal = safeShield - maxHp;
+    const overflowPct = Math.min(100, Math.max(10, (overflowVal / maxHp) * 100));
+    overflowHtml = `<div class="shield-overflow-lattice" style="width:${overflowPct}%;" title="外溢玄罡: +${overflowVal}"></div>`;
+  }
+
   return `
     <div class="enemy-shield-overlay" style="width:${shieldPct}%;" title="玄罡護盾: ${safeShield}"></div>
+    ${overflowHtml}
   `;
 }
 
@@ -282,4 +308,47 @@ export function renderPoiseBarHtml(poise, maxPoise, isBroken) {
       <div class="poise-bar-fill" style="width:${pct}%; background:linear-gradient(90deg, #f59e0b, #fbbf24);"></div>
     </div>
   `;
+}
+
+/**
+ * 依據單位的 Buff 清單動態推導主導的狀態呼吸光暈 class (COMBAT-VFX-STATUS-02)
+ * 優先級：眩暈控場 > 走火入魔 > 中毒 > 灼燒 > 寒冰
+ * @param {Array} activeBuffs 單位當前所有活動狀態
+ * @returns {string} CSS class 名稱或空字串
+ */
+export function resolveStatusPulseClass(activeBuffs) {
+  if (!activeBuffs || !Array.isArray(activeBuffs) || activeBuffs.length === 0) {
+    return '';
+  }
+
+  let hasStun = false;
+  let hasChaos = false;
+  let hasPoison = false;
+  let hasBurn = false;
+  let hasFrozen = false;
+
+  for (const b of activeBuffs) {
+    const cat = String(b.category || '').toUpperCase();
+    const eff = String(b.effectType || '').toUpperCase();
+    const elem = String(b.element || '').toUpperCase();
+
+    if (cat === 'CONTROL' || cat === 'CC' || eff === 'STUN' || eff === 'SILENCE') {
+      hasStun = true;
+    } else if (elem === 'DARK' || elem === 'CHAOS' || elem === 'CORRUPT') {
+      hasChaos = true;
+    } else if (elem === 'POISON' || elem === 'WOOD' || eff === 'POISON') {
+      hasPoison = true;
+    } else if (elem === 'FIRE' || elem === 'BLEED' || eff === 'FIRE') {
+      hasBurn = true;
+    } else if (elem === 'ICE' || elem === 'WATER' || eff === 'FROZEN') {
+      hasFrozen = true;
+    }
+  }
+
+  if (hasStun) return 'status-pulse-stun';
+  if (hasChaos) return 'status-pulse-chaos';
+  if (hasPoison) return 'status-pulse-poison';
+  if (hasBurn) return 'status-pulse-burn';
+  if (hasFrozen) return 'status-pulse-frozen';
+  return '';
 }

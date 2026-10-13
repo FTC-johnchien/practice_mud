@@ -8,6 +8,19 @@
 
 ## 📌 最新里程碑 (Latest Releases)
 
+### [2026-10-13] 戰況與狀態動態視覺全面升級 (COMBAT-VFX-STATUS-02)
+- **護盾血條疊層與外溢晶格 (Shield Overlay & Overflow Lattice)**：
+  - 敵我血條疊加半透明天藍玄罡護盾條，當護盾值超出最大生命時觸發 `.shield-overflow-lattice` 金色流光晶格條。
+  - 實裝受創護盾抵扣高光震顫（`.react-shield-hit`）與破盾晶格碎裂爆發微動畫（`.react-shield-shatter`）。
+- **五大異常狀態呼吸脈衝邊框 (Status Pulse Border)**：
+  - 依卡片單位活動狀態優先級動態渲染動態呼吸邊框：中毒翡翠脈衝（`.status-pulse-poison`）、烈火流血暗紅炎芒（`.status-pulse-burn`）、寒冰霜晶冷光（`.status-pulse-frozen`）、眩暈定身微震（`.status-pulse-stun`）、暗煞走火入魔紫黑煞氣（`.status-pulse-chaos`）。
+- **Buff 瀕危高頻呼吸閃爍 (<3s Warning Pulse)**：
+  - 聚合 HUD 晶片於狀態剩餘秒數 $<3$ 秒時自動觸發 `.buff-expiring-warning` 高頻赤紅呼吸閃爍，提示即將補盾或解控。
+- **DoT 跳血打擊回饋與屬性浮字**：
+  - 收到 DoT 結算事件時觸發目標卡片 `.react-dot-tick` 微震，浮字對齊屬性圖示（`🧪 -N`、`🔥 -N`、`🛡️ 破盾 -N`、`🛡️ +N`）。
+- **無障礙支援與全專案綠燈**：
+  - 完整相容 `@media (prefers-reduced-motion)` 關閉呼吸動態；全專案 295 項測試 100% 綠燈通過。
+
 ### [2026-10-13] 太陰地宮 Buff/Debuff 狀態系統全面現代化重構 (BUFF-01)
 - **Phase 1: 核心契約、生命週期、Poise 架勢與五行吸收**：
   - 實裝常駐光環契約：`ActiveBuff.PERMANENT_DURATION = -1`，常駐陣法 buff 不會因 tick 遞減而消退。

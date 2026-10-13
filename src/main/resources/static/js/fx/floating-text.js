@@ -65,17 +65,22 @@ export function spawnFloatingText(layer, rect, hit, ev) {
         break;
       case 'ABSORBED':
         cls.push('ft-block');
-        text = '護盾吸收';
+        text = '🛡️ 護盾吸收';
         break;
       default:
-        if (ev.type === 'HEAL' || ev.type === 'HOT_TICK') {
+        if (ev.type === 'SHIELD') {
+          cls.push('ft-heal');
+          text = `🛡️ +${hit.amount || '玄罡護盾'}`;
+        } else if (ev.type === 'HEAL' || ev.type === 'HOT_TICK') {
           cls.push('ft-heal');
           text = `+${hit.amount}`;
         } else {
           const dmgType = (ev.damageType || 'PHYSICAL').toUpperCase();
           cls.push(DMG_COLORS[dmgType] || 'dmg-phys');
 
-          if (outcome === 'CRIT') {
+          if (hit.absorbed > 0 && hit.amount > 0) {
+            text = `🛡️ 破盾 -${hit.amount}`;
+          } else if (outcome === 'CRIT') {
             cls.push('ft-crit');
             text = `暴擊！-${hit.amount}`;
           } else {
@@ -84,6 +89,8 @@ export function spawnFloatingText(layer, rect, hit, ev) {
 
           if (ev.type === 'DOT_TICK') {
             cls.push('ft-small');
+            const elemIcon = dmgType === 'POISON' ? '🧪 ' : (dmgType === 'FIRE' ? '🔥 ' : '');
+            text = `${elemIcon}-${hit.amount}`;
           }
         }
     }

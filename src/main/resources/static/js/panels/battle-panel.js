@@ -2,7 +2,7 @@ import { store } from '../core/state-store.js';
 import { sendCmd } from '../core/cmd-dispatcher.js';
 import { selectPartyMember } from './party-hud-panel.js';
 import { escapeHtml } from '../core/ui-utils.js';
-import { renderAggregatedBuffBadges, renderShieldOverlayHtml, renderPoiseBarHtml } from '../core/buff-hud-helper.js';
+import { renderAggregatedBuffBadges, renderShieldOverlayHtml, renderPoiseBarHtml, resolveStatusPulseClass } from '../core/buff-hud-helper.js';
 
 /**
  * 戰鬥主舞台與敵方陣列面板 (Battle Arena Panel)
@@ -131,7 +131,8 @@ export function renderBattleArena(battle) {
     else if (w === 1 && h === 5) sizeClass = ' size-1x5';
     else if (w === 1 && h === 3) sizeClass = ' size-1x3';
 
-    card.className = `enemy-card${sizeClass}${isTarget ? ' selected-target' : ''}`;
+    const statusPulseCls = resolveStatusPulseClass(e.activeBuffs);
+    card.className = `enemy-card${sizeClass}${isTarget ? ' selected-target' : ''}${statusPulseCls ? ' ' + statusPulseCls : ''}`;
     card.title = `點擊鎖定 ${e.name} 為集火目標`;
     card.onclick = () => selectBattleTarget(e.index);
 
@@ -313,6 +314,12 @@ export function renderBattleArena(battle) {
       const isDanger = (e.isCasting && (e.intentType === 'HEAVY' || e.intentType === 'ABERRATION'));
       card.classList.toggle('intent-danger-telegraph', Boolean(isDanger));
 
+      // 異常狀態呼吸光暈動態切換
+      const allPulseClasses = ['status-pulse-poison', 'status-pulse-burn', 'status-pulse-frozen', 'status-pulse-stun', 'status-pulse-chaos'];
+      allPulseClasses.forEach(cls => card.classList.remove(cls));
+      const currentPulse = resolveStatusPulseClass(e.activeBuffs);
+      if (currentPulse) card.classList.add(currentPulse);
+
       const hpPct = Math.min(100, Math.max(0, (e.hp / e.maxHp) * 100));
       const hpBar = card.querySelector('.enemy-hp-bar');
       if (hpBar) hpBar.style.width = `${hpPct}%`;
@@ -320,9 +327,10 @@ export function renderBattleArena(battle) {
       const hpText = card.querySelector('.enemy-hp-text');
       if (hpText) hpText.textContent = `HP ${e.hp}/${e.maxHp}`;
 
-      // 護盾疊層 In-place 更新
+      // 護盾與外溢晶格疊層 In-place 更新
       const hpWrap = card.querySelector('.enemy-hp-wrap');
       let shieldOverlay = card.querySelector('.enemy-shield-overlay');
+      let overflowLattice = card.querySelector('.shield-overflow-lattice');
       if (e.shield > 0) {
         if (!shieldOverlay && hpWrap) {
           shieldOverlay = document.createElement('div');
@@ -334,8 +342,24 @@ export function renderBattleArena(battle) {
           shieldOverlay.style.width = `${shieldPct}%`;
           shieldOverlay.title = `玄罡護盾: ${e.shield}`;
         }
-      } else if (shieldOverlay) {
-        shieldOverlay.remove();
+        if (e.shield > e.maxHp) {
+          if (!overflowLattice && hpWrap) {
+            overflowLattice = document.createElement('div');
+            overflowLattice.className = 'shield-overflow-lattice';
+            hpWrap.appendChild(overflowLattice);
+          }
+          if (overflowLattice) {
+            const overflowVal = e.shield - e.maxHp;
+            const overflowPct = Math.min(100, Math.max(10, (overflowVal / (e.maxHp || 1)) * 100));
+            overflowLattice.style.width = `${overflowPct}%`;
+            overflowLattice.title = `外溢玄罡: +${overflowVal}`;
+          }
+        } else if (overflowLattice) {
+          overflowLattice.remove();
+        }
+      } else {
+        if (shieldOverlay) shieldOverlay.remove();
+        if (overflowLattice) overflowLattice.remove();
       }
 
       // 架勢條 In-place 更新
@@ -540,7 +564,8 @@ export function renderBattlePartyQuickBar(party) {
     card.dataset.memberIdx = String(idx);
     if (m.id) card.dataset.memberId = String(m.id);
     card.dataset.unitSide = 'PARTY';
-    card.className = `battle-party-grid-card ${isSelected ? 'active-selected' : ''} ${!isAlive ? 'is-dead' : ''}`;
+    const statusPulseCls = isAlive ? resolveStatusPulseClass(m.activeBuffs) : '';
+    card.className = `battle-party-grid-card ${isSelected ? 'active-selected' : ''} ${!isAlive ? 'is-dead' : ''}${statusPulseCls ? ' ' + statusPulseCls : ''}`;
     card.onclick = () => selectCombatMember(idx);
     card.title = isAlive ? `點選 #${idx + 1} ${safeMemberName} 切換戰備指揮台` : `點選 #${idx + 1} ${safeMemberName} (已陣亡，保留站位)`;
 
@@ -602,6 +627,14 @@ export function renderBattlePartyQuickBar(party) {
       card.classList.toggle('active-selected', isSelected);
       card.classList.toggle('is-dead', !isAlive);
 
+      // 隊友異常狀態呼吸光暈動態切換
+      const allPulseClasses = ['status-pulse-poison', 'status-pulse-burn', 'status-pulse-frozen', 'status-pulse-stun', 'status-pulse-chaos'];
+      allPulseClasses.forEach(cls => card.classList.remove(cls));
+      if (isAlive) {
+        const currentPulse = resolveStatusPulseClass(m.activeBuffs);
+        if (currentPulse) card.classList.add(currentPulse);
+      }
+
       const nameEl = card.querySelector('.bpg-name');
       if (nameEl) {
         nameEl.style.color = isAlive ? '#f1f5f9' : '#f87171';
@@ -619,8 +652,9 @@ export function renderBattlePartyQuickBar(party) {
         hpText.textContent = `HP ${isAlive ? m.hp : 0}/${m.maxHp}`;
       }
 
-      // 護盾疊層 In-place 更新
+      // 護盾與外溢晶格疊層 In-place 更新
       let shieldOverlay = card.querySelector('.enemy-shield-overlay');
+      let overflowLattice = card.querySelector('.shield-overflow-lattice');
       if (m.shield > 0 && isAlive) {
         if (!shieldOverlay && hpWrap) {
           shieldOverlay = document.createElement('div');
@@ -632,8 +666,24 @@ export function renderBattlePartyQuickBar(party) {
           shieldOverlay.style.width = `${shieldPct}%`;
           shieldOverlay.title = `玄罡護盾: ${m.shield}`;
         }
-      } else if (shieldOverlay) {
-        shieldOverlay.remove();
+        if (m.shield > m.maxHp) {
+          if (!overflowLattice && hpWrap) {
+            overflowLattice = document.createElement('div');
+            overflowLattice.className = 'shield-overflow-lattice';
+            hpWrap.appendChild(overflowLattice);
+          }
+          if (overflowLattice) {
+            const overflowVal = m.shield - m.maxHp;
+            const overflowPct = Math.min(100, Math.max(10, (overflowVal / (m.maxHp || 1)) * 100));
+            overflowLattice.style.width = `${overflowPct}%`;
+            overflowLattice.title = `外溢玄罡: +${overflowVal}`;
+          }
+        } else if (overflowLattice) {
+          overflowLattice.remove();
+        }
+      } else {
+        if (shieldOverlay) shieldOverlay.remove();
+        if (overflowLattice) overflowLattice.remove();
       }
 
       // 架勢條 In-place 更新

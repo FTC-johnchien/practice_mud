@@ -439,12 +439,14 @@
   4. **敵方蓄力條 (Enemy Cast Bar)**：蓄力招式呈現動態進度條 `.enemy-cast-track` 與 `.enemy-cast-fill`，重擊與深淵蓄力自帶 `.intent-danger-telegraph` 危險紅色脈衝呼吸邊框，打斷或攻擊釋放後即時平滑移除。
   5. **單元測試驗證**：專屬 [`EnemyIntentTest.java`](./src/test/java/com/example/htmlmud/EnemyIntentTest.java) 測試綠燈，全專案 252 項測試 100% 綠燈通過。
 
-### 15.2 戰況與狀態視覺化：護盾血條疊層 (Shield Bar)、DoT 脈衝與 Buff 倒數光圈 (COMBAT-VFX-STATUS-02) (P1)
-- **現狀核對**：目前隊員與怪物卡片已有小型 Buff 圖示，並能以文字顯示剩餘秒數 `(5s)`；但護盾未在血條上直觀可視，DoT 傷害無動態體感，走火入魔無獨立警示儀表盤。
-- **改善方向**：
-  1. **護盾覆蓋條 (Shield Overlay Bar)**：身上有護盾值時，直接在 HP 血條前方疊加青藍色/金色半透明護盾條（超出最大生命值時轉為外溢晶格），受創時優先破碎護盾。
-  2. **異常狀態動態邊框 (Status Pulse Border)**：中毒時卡片泛翠綠色呼吸脈衝；流血泛暗紅滴血；走火入魔 (CHAOS) 與古神異變時卡片周圍升騰暗紫黑煞氣，異變進度百分比以環形儀表盤直接浮現於卡片上。
-  3. **Buff 倒數冷卻光圈 (Cooldown Radial Sweep)**：將靜態文字秒數升級為 CSS 圓形順時針掃描遮罩（Radial Mask），一眼辨識 Buff 剩餘時效。
+### 15.2 ✅ [已完成] 戰況與狀態視覺化：護盾血條疊層 (Shield Bar)、DoT 脈衝與 Buff 倒數光圈 (COMBAT-VFX-STATUS-02) (P1)
+- **現狀核對**：原本卡片僅有靜態文字秒數，護盾缺乏視覺張力，異常狀態缺乏呼吸動態。
+- **落地進度**：已於 2026-10-13 全數完成。
+  1. **護盾覆蓋條與外溢晶格 (Shield Overlay & Overflow Lattice)**：血條疊加半透明天藍護盾條；當護盾容量大於最大生命值時，額外觸發 `.shield-overflow-lattice` 金色流光能量條；受創時優先觸發 `.react-shield-hit`（吸收高光微震）與 `.react-shield-shatter`（破盾晶格爆裂）。
+  2. **五大異常狀態呼吸脈衝邊框 (Status Pulse Border)**：依單位身上狀態優先級動態附掛呼吸光暈——中毒泛翠綠脈衝 (`status-pulse-poison`)、烈火流血泛暗紅炎芒 (`status-pulse-burn`)、寒冰冰凍泛霜晶冷光 (`status-pulse-frozen`)、眩暈定身微震 (`status-pulse-stun`)、暗煞走火入魔升騰紫黑煞氣 (`status-pulse-chaos`)。
+  3. **Buff 瀕危高頻呼吸閃爍 (<3s Warning Pulse)**：當狀態剩餘秒數 $<3$ 秒時，晶片自動附掛 `.buff-expiring-warning` 赤紅呼吸閃爍，提示玩家即將補盾或解控。
+  4. **DoT 每跳扣血打擊微震與浮字**：收到 DoT 結算事件時觸發 `.react-dot-tick` 微震，浮動文字精確顯示屬性圖標（如 `🧪 -14`、`🔥 -28`、`🛡️ 破盾 -N`）。
+  5. **無障礙支援**：完整相容 `@media (prefers-reduced-motion)`，偏好減少動態時自動關閉流光與呼吸動畫。
 
 ### 15.3 探索視覺化：第一人稱擬 3D 視圖與點擊互動熱區 (DUNGEON-VIEW-01) (P2)
 - **現狀核對**：地城探索目前主要為 2D 矩陣雷達，眼前通道、鐵門、寶箱、機關全靠下方一大段 `forwardInspection` 文字描述（如「前方三步遠處有一道斑駁的鐵門...」），玩家必須停下閱讀文字才知前方有何物。
@@ -840,7 +842,7 @@ flowchart TD
 | **P1** | EVENT-01 | 領域事件骨幹：雙軌發布 MobDead / LevelUp / ItemAcquired / RoomEntered，listener 回 Actor 信箱 | 任務引擎前置 | §18.3 | ✅ 已完成 |
 | **P1** | DATA-06 | §16 遺漏硬編碼：首領固定 dex/xp/掉落、`contains("mozhu")`、道核三種 ID、TOMB_ITEMS 三份複本、SWORDSMAN 殘留 | 資料驅動純度 | §18.1 | ✅ 已完成 |
 | **P1** | ADR-01 | 城鎮戰鬥模式 / 背包所有權 / 持久化真相源 / 純文字客戶端支援範圍決策 | 統一工程前置 | §18.5 | ✅ 已定案 (2026-10-11) |
-| **P1** | COMBAT-VFX-STATUS-02 | 護盾血條疊層 (Shield Bar)、DoT 脈衝與 Buff 倒數光圈 | 戰況狀態動態視覺 | §15.2 | 🔲 待執行 |
+| **P1** | COMBAT-VFX-STATUS-02 | 護盾血條疊層 (Shield Bar)、DoT 脈衝與 Buff 倒數光圈 | 戰況狀態動態視覺 | §15.2 | ✅ 已完成 (2026-10-13) |
 | **P2** | DUNGEON-VIEW-01 | 地城第一人稱擬 3D 廊道視圖與點擊互動熱區 | 探索空間視覺化 | §15.3 | 🔲 待執行 |
 | **P2** | TOWN-UI-01 | 城鎮 NPC 生動對話氣泡、立繪與裝備數值比對浮條 | 劇情與養成視覺化 | §15.4 | 🔲 待執行 |
 | **P2** | BATTLE-RESULT-01 | 戰鬥結算翻牌視窗、經驗條充能與修仙境界突破全屏特效 | 養成反饋視覺化 | §15.6 | ✅ 已完成 |

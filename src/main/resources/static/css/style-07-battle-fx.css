@@ -1503,3 +1503,182 @@
   100% { box-shadow: 0 0 20px rgba(250, 204, 21, 1), 0 0 30px rgba(245, 158, 11, 0.8); transform: scale(1.03); }
 }
 
+/* ==========================================================================
+   COMBAT-VFX-STATUS-02: 護盾血條疊層、DoT 脈衝與狀態動態光圈
+   ========================================================================== */
+
+/* 1. 護盾外溢晶格條 (Shield Overflow Lattice) */
+.shield-overflow-lattice {
+  position: absolute;
+  top: -3px;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #38bdf8, #facc15, #38bdf8);
+  background-size: 200% 100%;
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(250, 204, 21, 0.85);
+  animation: shield-lattice-scroll 1.5s linear infinite;
+  pointer-events: none;
+  z-index: 5;
+}
+
+@keyframes shield-lattice-scroll {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* 2. 護盾吸收光效與碎裂微動畫 */
+@keyframes shield-absorb-pulse {
+  0% { filter: brightness(1); }
+  35% { filter: brightness(2.2) drop-shadow(0 0 10px rgba(56, 189, 248, 0.9)); transform: scale(1.02); }
+  100% { filter: brightness(1); transform: scale(1); }
+}
+
+@keyframes shield-shatter-burst {
+  0% { transform: scale(1); filter: brightness(2.5); opacity: 1; }
+  50% { transform: scale(1.06) rotate(1deg); filter: drop-shadow(0 0 14px rgba(96, 165, 250, 1)); opacity: 0.9; }
+  100% { transform: scale(1); filter: brightness(1); opacity: 1; }
+}
+
+.enemy-card.react-shield-hit,
+.battle-party-grid-card.react-shield-hit {
+  animation: shield-absorb-pulse 320ms ease-out;
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.8) !important;
+}
+
+.enemy-card.react-shield-shatter,
+.battle-party-grid-card.react-shield-shatter {
+  animation: shield-shatter-burst 380ms ease-out;
+  border-color: #93c5fd !important;
+  box-shadow: 0 0 20px 4px rgba(147, 197, 253, 0.9) !important;
+}
+
+/* 3. 異常狀態動態呼吸邊框 (Status Pulse Borders) */
+@keyframes status-pulse-poison {
+  0%, 100% {
+    box-shadow: 0 0 6px rgba(74, 222, 128, 0.3), inset 0 0 6px rgba(74, 222, 128, 0.15);
+    border-color: rgba(74, 222, 128, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 14px 2px rgba(74, 222, 128, 0.75), inset 0 0 10px rgba(74, 222, 128, 0.35);
+    border-color: #4ade80;
+  }
+}
+
+@keyframes status-pulse-burn {
+  0%, 100% {
+    box-shadow: 0 0 6px rgba(239, 68, 68, 0.35), inset 0 0 6px rgba(249, 115, 22, 0.2);
+    border-color: rgba(239, 68, 68, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 16px 3px rgba(239, 68, 68, 0.85), inset 0 0 12px rgba(249, 115, 22, 0.45);
+    border-color: #ef4444;
+  }
+}
+
+@keyframes status-pulse-frozen {
+  0%, 100% {
+    box-shadow: 0 0 6px rgba(103, 232, 249, 0.35), inset 0 0 6px rgba(6, 182, 212, 0.2);
+    border-color: rgba(103, 232, 249, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 16px 2px rgba(103, 232, 249, 0.85), inset 0 0 12px rgba(6, 182, 212, 0.4);
+    border-color: #67e8f9;
+  }
+}
+
+@keyframes status-pulse-stun {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(253, 224, 71, 0.45), inset 0 0 6px rgba(234, 179, 8, 0.2);
+    border-color: rgba(253, 224, 71, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 18px 3px rgba(253, 224, 71, 0.9), inset 0 0 12px rgba(234, 179, 8, 0.45);
+    border-color: #fde047;
+    transform: rotate(0.5deg);
+  }
+}
+
+@keyframes status-pulse-chaos {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(192, 132, 252, 0.45), inset 0 0 8px rgba(147, 51, 234, 0.25);
+    border-color: rgba(192, 132, 252, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 20px 4px rgba(192, 132, 252, 0.9), inset 0 0 14px rgba(147, 51, 234, 0.5);
+    border-color: #c084fc;
+    filter: contrast(1.08);
+  }
+}
+
+.status-pulse-poison {
+  animation: status-pulse-poison 2.2s ease-in-out infinite alternate !important;
+}
+
+.status-pulse-burn {
+  animation: status-pulse-burn 1.8s ease-in-out infinite alternate !important;
+}
+
+.status-pulse-frozen {
+  animation: status-pulse-frozen 2.4s ease-in-out infinite alternate !important;
+}
+
+.status-pulse-stun {
+  animation: status-pulse-stun 1.2s ease-in-out infinite alternate !important;
+}
+
+.status-pulse-chaos {
+  animation: status-pulse-chaos 2s ease-in-out infinite alternate !important;
+}
+
+/* 4. DoT 每跳扣血打擊微震 (DoT Tick Micro Reaction) */
+@keyframes react-dot-tick {
+  0%, 100% { transform: scale(1); }
+  30% { transform: scale(0.97) translateY(1px); filter: brightness(1.25); }
+  60% { transform: scale(1.01); }
+}
+
+.enemy-card.react-dot-tick,
+.battle-party-grid-card.react-dot-tick {
+  animation: react-dot-tick 240ms ease-out;
+}
+
+/* 5. Buff 即將結束瀕危呼吸閃爍 (<3s Warning Pulse) */
+@keyframes expiring-chip-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 4px rgba(239, 68, 68, 0.5);
+    border-color: rgba(239, 68, 68, 0.6);
+  }
+  50% {
+    transform: scale(1.06);
+    box-shadow: 0 0 10px 2px rgba(239, 68, 68, 0.95);
+    border-color: #ef4444;
+  }
+}
+
+.buff-aggregated-chip.buff-expiring-warning {
+  animation: expiring-chip-pulse 0.9s ease-in-out infinite !important;
+  color: #fca5a5 !important;
+  border-color: #ef4444 !important;
+}
+
+/* 6. 無障礙偏好相容 (prefers-reduced-motion) */
+@media (prefers-reduced-motion: reduce) {
+  .shield-overflow-lattice {
+    animation: none !important;
+  }
+  .status-pulse-poison,
+  .status-pulse-burn,
+  .status-pulse-frozen,
+  .status-pulse-stun,
+  .status-pulse-chaos,
+  .buff-aggregated-chip.buff-expiring-warning,
+  .enemy-card.react-dot-tick,
+  .battle-party-grid-card.react-dot-tick {
+    animation: none !important;
+  }
+}
+
+

@@ -96,8 +96,16 @@ class BattleFxDirector {
         if (isTaunt) {
           // 嘲諷不生成武器傷害光效，只觸發受挑釁怒氣光環微晃
           this.flashClass(targetEl, 'react-taunt', 450);
+        } else if (ev.type === 'SHIELD') {
+          // 護盾施加或加持光效
+          this.spawnFx('fx-shield-block', rect);
+          this.flashClass(targetEl, 'react-shield-hit', 350);
+        } else if (ev.type === 'DOT_TICK') {
+          // DoT 每跳微震與元素輕光效
+          if (preset.impactFx) this.spawnFx(preset.impactFx, rect);
+          this.flashClass(targetEl, 'react-dot-tick', 260);
         } else {
-          // 1. 生成判定專屬防禦/受擊光效 (格擋舉盾、招架拼刀、殘影閃避、暴擊爆裂)
+          // 1. 生成判定專屬防禦/受擊光效 (格擋舉盾、招架拼刀、殘影閃避、暴擊爆裂、護盾碎裂)
           if (outcome === 'BLOCKED') {
             this.spawnFx('fx-shield-block', rect);
           } else if (outcome === 'PARRIED') {
@@ -107,12 +115,17 @@ class BattleFxDirector {
           } else if (outcome === 'CRIT') {
             this.spawnFx('fx-crit-burst', rect);
             if (preset.impactFx) this.spawnFx(preset.impactFx, rect);
+          } else if (outcome === 'ABSORBED') {
+            this.spawnFx('fx-shield-block', rect);
           } else if (preset.impactFx) {
             this.spawnFx(preset.impactFx, rect);
           }
 
-          // 2. 觸發受擊/防禦動態 class (抖動、格擋、閃避、暴擊)
-          const reactCls = this.resolveReactionClass(outcome);
+          // 2. 觸發受擊/防禦動態 class (抖動、格擋、閃避、暴擊、護盾吸收或破碎)
+          let reactCls = this.resolveReactionClass(outcome);
+          if (hit.absorbed > 0 && hit.amount > 0) {
+            reactCls = 'react-shield-shatter';
+          }
           if (reactCls) {
             this.flashClass(targetEl, reactCls, 400);
           }
@@ -195,7 +208,7 @@ class BattleFxDirector {
       PARRIED: 'react-parry',
       DODGED: 'react-dodge',
       MISS: null,
-      ABSORBED: 'react-block'
+      ABSORBED: 'react-shield-hit'
     }[outcome] || 'react-hit';
   }
 
