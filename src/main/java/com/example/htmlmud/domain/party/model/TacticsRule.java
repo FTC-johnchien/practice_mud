@@ -34,7 +34,11 @@ public class TacticsRule {
       case TARGET_LACKS_BUFF -> "目標缺少狀態";
       case TARGET_HAS_BUFF -> "目標已擁有狀態";
       case BUFF_TIME_LESS_THAN -> "目標狀態剩餘時間 < " + conditionValue + "秒";
+      case ALLY_HAS_DEBUFF -> "隊友身中異常/減益";
+      case ALLY_IS_CONTROLLED -> "隊友處於受控/封咒狀態";
+      case SELF_LACKS_SHIELD -> "自身未具備護盾";
       case ALWAYS -> "總是施展";
+      default -> condition != null ? condition.getLabel() : "未明條件";
     };
     return String.format("#%d [%s] 當【%s】對【%s】施展【%s】",
         priority, enabled ? "啟用" : "停用", condStr, target.getLabel(), sName);

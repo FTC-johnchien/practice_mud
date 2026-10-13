@@ -26,7 +26,7 @@ export function handleTacticsCondChange() {
   const valLabel = document.getElementById('t-builder-val-label');
   if (!condEl || !valEl) return;
   const cond = condEl.value;
-  if (cond === 'ALWAYS' || cond === 'ENEMY_IS_BOSS') {
+  if (cond === 'ALWAYS' || cond === 'ENEMY_IS_BOSS' || cond === 'ALLY_HAS_DEBUFF' || cond === 'ALLY_IS_CONTROLLED' || cond === 'SELF_LACKS_SHIELD') {
     valEl.style.display = 'none';
     if (valLabel) valLabel.style.display = 'none';
   } else {
@@ -120,6 +120,9 @@ export function renderMemberTactics(m, idx) {
           <select id="t-builder-cond" onchange="window.handleTacticsCondChange()" style="font-size:13px;">
             <option value="ALLY_HP_LESS_THAN">隊友氣血低於 (%)</option>
             <option value="SELF_HP_LESS_THAN">自身氣血低於 (%)</option>
+            <option value="ALLY_HAS_DEBUFF">隊友身中異常 (中Debuff/劇毒)</option>
+            <option value="ALLY_IS_CONTROLLED">隊友受控場限制 (眩暈/定身)</option>
+            <option value="SELF_LACKS_SHIELD">自身缺少護盾 (破盾/無盾)</option>
             <option value="RESOURCE_GTE">自身資源 >= (點/怒氣/連擊)</option>
             <option value="ENEMY_COUNT_GTE">敵方存活數量 >= (體)</option>
             <option value="ENEMY_IS_BOSS">敵方存在首領 (Boss)</option>

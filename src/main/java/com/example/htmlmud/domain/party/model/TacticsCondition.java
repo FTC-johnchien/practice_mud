@@ -12,6 +12,9 @@ public enum TacticsCondition {
   TARGET_LACKS_BUFF("目標缺少狀態", ""),
   TARGET_HAS_BUFF("目標擁有狀態", ""),
   BUFF_TIME_LESS_THAN("狀態剩餘時間低於", "秒"),
+  ALLY_HAS_DEBUFF("隊友身中異常", ""),
+  ALLY_IS_CONTROLLED("隊友受控場限制", ""),
+  SELF_LACKS_SHIELD("自身缺少護盾", ""),
   ALWAYS("無條件施展", "");
 
   private final String label;

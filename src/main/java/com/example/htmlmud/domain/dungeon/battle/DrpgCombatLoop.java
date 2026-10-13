@@ -630,16 +630,18 @@ public class DrpgCombatLoop {
         continue;
       }
 
-      // WoW 戰術方針 AI 防呆：若招式附帶 Buff/護盾，且目標隊員身上已存在同 ID 且未過期之狀態，略過該規則防止無效重複連放
+      // WoW 戰術方針 AI 防呆：若招式附帶 Buff/護盾，且目標隊員身上已存在同 ID 且剩餘時效 > 3 秒 (或常駐)，略過該規則防止無效重複連放
       if (skill.getBuffConfig() != null || skill.isShield() || skill.isBuff()) {
-        PartyMember targetAlly = tacticsService.resolveAllyTarget(ctx, member,
-            (rule.getTarget() != null ? rule.getTarget() : (skill.isShield() ? TacticsTarget.FRONT_ROW_ALLY : TacticsTarget.SELF)), -1);
+        PartyMember targetAlly = tacticsService.resolveAllyTarget(ctx, member, rule, -1);
         String targetBuffId = (skill.getBuffConfig() != null && skill.getBuffConfig().id() != null)
             ? skill.getBuffConfig().id()
             : ("buff_" + skill.getId());
-        if (targetAlly != null && targetAlly.hasActiveBuff(targetBuffId)) {
-          // 目標已有同名未過期 Buff，跳過此規則執行下一優先級
-          continue;
+        if (targetAlly != null) {
+          ActiveBuff existing = targetAlly.getActiveBuff(targetBuffId);
+          if (existing != null && (existing.isPermanent() || existing.getRemainingSeconds() > 3)) {
+            // 目標已有同名 Buff 且時效 > 3 秒，跳過此規則執行下一優先級
+            continue;
+          }
         }
       }
 
@@ -727,12 +729,20 @@ public class DrpgCombatLoop {
     String skillDmgType = resolveSkillDamageType(skill, member);
 
     if (skill.isHeal()) {
+      boolean isCleanse = (skill.getTags() != null && skill.getTags().contains("CLEANSE"))
+          || (skill.getName() != null && (skill.getName().contains("解毒") || skill.getName().contains("淨化") || skill.getName().contains("清心") || skill.getName().contains("祛毒")));
+
       if (skill.isAoe()) {
         List<BattleHit> hits = new java.util.ArrayList<>();
         for (PartyMember m : ctx.getParty().getMembers()) {
           if (m.isAlive()) {
             m.heal(skill.getHealAmount());
             if (skill.getSanRestore() > 0) m.restoreSan(skill.getSanRestore());
+            if (isCleanse) {
+              m.getActiveBuffs().removeIf(b -> b.getCategory() == com.example.htmlmud.domain.model.enums.BuffCategory.DOT
+                  || b.getCategory() == com.example.htmlmud.domain.model.enums.BuffCategory.CONTROL
+                  || b.getType() == com.example.htmlmud.domain.model.enums.BuffType.DEBUFF);
+            }
             int mIdx = ctx.getParty().getMembers().indexOf(m);
             hits.add(new BattleHit(
                 new UnitRef(UnitRef.Side.PARTY, m.getId(), mIdx >= 0 ? mIdx : 0),
@@ -765,6 +775,15 @@ public class DrpgCombatLoop {
             (tacticsTarget != null ? tacticsTarget : TacticsTarget.LOWEST_HP_ALLY), targetIdx);
         targetAlly.heal(skill.getHealAmount());
         if (skill.getSanRestore() > 0) targetAlly.restoreSan(skill.getSanRestore());
+        if (isCleanse) {
+          int beforeCount = targetAlly.getActiveBuffs().size();
+          targetAlly.getActiveBuffs().removeIf(b -> b.getCategory() == com.example.htmlmud.domain.model.enums.BuffCategory.DOT
+              || b.getCategory() == com.example.htmlmud.domain.model.enums.BuffCategory.CONTROL
+              || b.getType() == com.example.htmlmud.domain.model.enums.BuffType.DEBUFF);
+          if (targetAlly.getActiveBuffs().size() < beforeCount) {
+            broadcastLog(player, ctx, "\u001B[1;32m✨ " + targetAlly.getName() + " 身中之劇毒與陰煞邪氣被【" + skill.getName() + "】滌蕩一空，重獲清明！\u001B[0m");
+          }
+        }
         member.addThreat(skill.getHealAmount() / 2);
         distributeHealingThreatToAllEnemies(ctx, member.getId(), skill.getHealAmount() / 2);
         broadcastLog(player, ctx, "\u001B[1;32m" + tag + "🌿 " + member.getName() + " 運轉【" + skill.getName() + "】，一道春生靈氣注入 " + targetAlly.getName() + "，恢復 " + skill.getHealAmount() + " 點氣血！\u001B[0m");

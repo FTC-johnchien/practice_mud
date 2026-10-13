@@ -255,6 +255,20 @@ public class DrpgEnemyTacticsService {
         yield ab != null && ab.getRemainingSeconds() <= rule.getConditionValue();
       }
 
+      case ALLY_HAS_DEBUFF -> ctx.getParty().getMembers().stream()
+          .filter(PartyMember::isAlive)
+          .anyMatch(m -> m.getActiveBuffs().stream()
+              .anyMatch(b -> b.getCategory() == com.example.htmlmud.domain.model.enums.BuffCategory.DOT
+                  || b.getType() == com.example.htmlmud.domain.model.enums.BuffType.DEBUFF
+                  || b.getCategory() == com.example.htmlmud.domain.model.enums.BuffCategory.CONTROL));
+
+      case ALLY_IS_CONTROLLED -> ctx.getParty().getMembers().stream()
+          .filter(PartyMember::isAlive)
+          .anyMatch(m -> m.isControlled() || m.isSilenced() || m.getActiveBuffs().stream()
+              .anyMatch(b -> b.getCategory() == com.example.htmlmud.domain.model.enums.BuffCategory.CONTROL));
+
+      case SELF_LACKS_SHIELD -> member.getTotalShield() <= 0;
+
       case ALWAYS -> true;
     };
   }
@@ -303,8 +317,29 @@ public class DrpgEnemyTacticsService {
   }
 
   /**
-   * 根據戰術方針或手動指定，解析小隊中的友方目標 (支援 Tank、隊長、指定成員、血量最低隊友、自身等)
+   * 根據戰術方針或手動指定，解析小隊中的友方目標 (支援 Tank、隊長、指定成員、血量最低隊友、身中異常隊友、自身等)
    */
+  public PartyMember resolveAllyTarget(BattleContext ctx, PartyMember caster, TacticsRule rule, int manualTargetIdx) {
+    if (rule != null && (rule.getTarget() == null || rule.getTarget() == com.example.htmlmud.domain.party.model.TacticsTarget.LOWEST_HP_ALLY || rule.getTarget() == com.example.htmlmud.domain.party.model.TacticsTarget.ALL_ALLIES)) {
+      if (rule.getCondition() == com.example.htmlmud.domain.party.model.TacticsCondition.ALLY_HAS_DEBUFF && ctx != null && ctx.getParty() != null) {
+        var debuffed = ctx.getParty().getMembers().stream()
+            .filter(PartyMember::isAlive)
+            .filter(m -> m.getActiveBuffs().stream().anyMatch(b -> b.getCategory() == com.example.htmlmud.domain.model.enums.BuffCategory.DOT
+                || b.getType() == com.example.htmlmud.domain.model.enums.BuffType.DEBUFF
+                || b.getCategory() == com.example.htmlmud.domain.model.enums.BuffCategory.CONTROL))
+            .findFirst();
+        if (debuffed.isPresent()) return debuffed.get();
+      } else if (rule.getCondition() == com.example.htmlmud.domain.party.model.TacticsCondition.ALLY_IS_CONTROLLED && ctx != null && ctx.getParty() != null) {
+        var controlled = ctx.getParty().getMembers().stream()
+            .filter(PartyMember::isAlive)
+            .filter(m -> m.isControlled() || m.isSilenced() || m.getActiveBuffs().stream().anyMatch(b -> b.getCategory() == com.example.htmlmud.domain.model.enums.BuffCategory.CONTROL))
+            .findFirst();
+        if (controlled.isPresent()) return controlled.get();
+      }
+    }
+    return resolveAllyTarget(ctx, caster, rule != null ? rule.getTarget() : null, manualTargetIdx);
+  }
+
   public PartyMember resolveAllyTarget(BattleContext ctx, PartyMember caster, com.example.htmlmud.domain.party.model.TacticsTarget target, int manualTargetIdx) {
     if (ctx == null || ctx.getParty() == null || ctx.getParty().getMembers() == null) {
       return caster;

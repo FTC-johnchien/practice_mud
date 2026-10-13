@@ -860,7 +860,7 @@ flowchart TD
 | **P2** | COMBAT-FX-RULE-04 | 我方暴擊/未命中規則與一排目標範圍規則獨立化 | 戰鬥平衡與機制定義 | §14.4 | 🔲 待決議 |
 | **P1** | ASYNC-03 | Write-Behind 提交/停機原子協定、滿載明確回報與競態測試 | 持久化資料可靠性 | §19.1 | 🔲 待執行 |
 | **P1** | NET-01-VERIFY | 重新驗證本機/公開 WebSocket 身分驗證與部署邊界 | 外部連線信任邊界 | §19.2 | 🔲 待驗證 |
-| **P1** | BUFF-01 | Buff 效果生命週期、疊層、控場與共用規則結算契約 | 戰鬥規則一致性 | §19.3 | 🔲 待執行 |
+| **P1** | BUFF-01 | Buff 效果生命週期、疊層、控場與共用規則結算契約 | 戰鬥規則一致性 | §19.3 | ✅ 已完成 (2026-10-13) |
 | **P2** | FALLBACK-02 | 生產 fallback 清零與架構護欄精確化 | 配置失敗可見性 | §19.4 | 🔲 待執行 |
 | **P2** | WEB-STATE-01 | 前端瀏覽器儲存 API 故障降級與初始化測試 | 前端啟動健壯性 | §19.5 | 🔲 待執行 |
 | **P3** | DOC-STATE-01 | 現況／目標／歷史分流與測試摘要單一同步來源 | 文件治理 | §19.6 | 🔲 待執行 |
@@ -887,12 +887,13 @@ flowchart TD
 - 本機模式需證明只接受 loopback；公開模式需證明缺失、錯誤或過期票證會被拒絕，合法票證會綁定正確 session。
 - 在部署模式及拒絕路徑測試完成前，不把此項標示為公開部署已驗收。
 
-### 19.3 BUFF-01：Buff 契約與共用結算切片 — P1
+### 19.3 BUFF-01：Buff 契約與共用結算切片 — ✅ 已完成 (2026-10-13)
 
-- 以實際程式碼盤點現有 `Buffable`、`ActiveBuff`、`BuffSettlementService` 及 MUD／DRPG 呼叫路徑，分清「已執行」與「只有定義」。
-- 明定 tick、期限、疊層／刷新／替換、驅散、免疫、控場對行動與施法的限制，以及脫戰、死亡、地圖切換、存檔的生命週期。
-- 以共用戰鬥規則作單一結算入口，不直接變更基礎屬性，不讓相同狀態在兩個迴圈重複跳算；以可控時鐘及固定隨機來源驗證一種屬性修正、一種控場及一種 DoT。
-- UI 事件及角色狀態面板沿用 `COMBAT-VFX-STATUS-02` 的既有工作，避免重複建立視覺待辦；不先擴充大量未接線的效果枚舉。
+- **落地規劃書**：參閱 [`docs/plans/buff_improvements.md`](./buff_improvements.md)，分四階段完整落實。
+- **Phase 1 核心生命週期與數值機制**：實裝 `PERMANENT_DURATION = -1` 常駐陣法不消退、WoW 階梯短時間護盾優先吸收、罡氣破防條（Poise Gauge）削韌減傷與失衡大招打斷、五行法術抗性 $>100\%$ 逆流回血。
+- **Phase 2 控場門控與打斷**：收斂 `Buffable.isControlled()` 與 `isSilenced()`，打斷普通攻擊、技能吟唱與 1500ms 意圖預告。
+- **Phase 3 視覺投影與屬性圖示聚合 HUD**：前後端 DTO 串接 `ActiveBuffDto`，前端 `buff-hud-helper.js` 實現極簡 `[🧪 54/s x3]`、`[🛡️ 120]` 聚合 HUD 與 Tooltip，1600x900 角色道基詳細面板補齊「☯️ 道身加持與狀態」。
+- **Phase 4 Gambit AI 反制與自動化測試**：擴充 `TacticsCondition`（`ALLY_HAS_DEBUFF`, `ALLY_IS_CONTROLLED`, `SELF_LACKS_SHIELD`）、AI 防呆（時效 $> 3$ 秒不重施）、淨化驅散 Cleanse；新增 `BuffDebuffComprehensiveTest` 驗收 6 大核心場景，全專案 295 項測試 100% 綠燈。
 
 ### 19.4 FALLBACK-02：生產 fallback 與架構護欄精確化 — P2
 

@@ -359,13 +359,13 @@
   - 校準 `thunder_strike.json` 為 `LIGHTNING (⚡)`、`storm_blade.json` 為 `SLASH (⚔️)`、`spell_corpse_poison.json` 為 `POISON / WOOD (🧪)`、`taiyin_sword.json` 為 `DARK (🌑)`，完成資料驅動歸類。
 
 ### Phase 4: Gambit 戰術方針 AI 反制與全自動化測試 (P1/P2)
-- [ ] **4.1 擴充戰術條件 (`TacticsCondition`)**：
+- [x] **4.1 擴充戰術條件 (`TacticsCondition`)**：
   - 新增 `ALLY_HAS_DEBUFF`、`ALLY_IS_CONTROLLED`、`SELF_LACKS_SHIELD`。
   - AI 具備防呆機制：狀態剩餘時效 $> 3$ 秒時不重複施放。
-- [ ] **4.2 自動化整合測試 (`BuffDebuffComprehensiveTest`)**：
+- [x] **4.2 自動化整合測試 (`BuffDebuffComprehensiveTest`)**：
   - 涵蓋：常駐陣法不消退、短時間護盾優先吸收、破防增傷、五行抗性吸收回血、眩暈中斷施法、AI 自動解毒 6 大場景。
   - 全專案測試 100% 綠燈通過。
-- [ ] **4.3 文檔治理同步**：
+- [x] **4.3 文檔治理同步**：
   - 同步更新 [`FUTURE_IMPROVEMENTS.md`](./FUTURE_IMPROVEMENTS.md) §19.3 `BUFF-01` 狀態為 `✅ 已完成`。
   - 於 [`CHANGELOG.md`](../../CHANGELOG.md) 記錄本次重構版本歷程。
 

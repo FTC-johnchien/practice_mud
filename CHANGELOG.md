@@ -8,6 +8,26 @@
 
 ## 📌 最新里程碑 (Latest Releases)
 
+### [2026-10-13] 太陰地宮 Buff/Debuff 狀態系統全面現代化重構 (BUFF-01)
+- **Phase 1: 核心契約、生命週期、Poise 架勢與五行吸收**：
+  - 實裝常駐光環契約：`ActiveBuff.PERMANENT_DURATION = -1`，常駐陣法 buff 不會因 tick 遞減而消退。
+  - 落地階梯式護盾模型（WoW-style Priority）：多層護盾依剩餘時效由短至長優先抵扣，同名護盾取較高值刷新。
+  - 引入【罡氣破防條 (Poise / Break Gauge)】：未破防時傷害強制降為 1/3 且免疫硬控；破防失衡時打斷施法吟唱並清除 1500ms 意圖預告，進入力竭全額 100% 輸出，力竭後自動復甦。
+  - 五行法術抗性逆流吸收：法術抗性 $>100\%$ 時（如火抗 130%），超額部分轉化為氣血回復（30 點），支援向隊友丟 AOE 補血套路；物理抗性保底 10% 穿透防死鎖。
+- **Phase 2: 控場門控與全動作入口中斷**：
+  - 收斂 `Buffable.isControlled()` 與 `isSilenced()` 統一查詢介面。
+  - 控場阻斷覆蓋：眩暈打斷普通攻擊輪次、技能吟唱中斷，清除敵方意圖預告；封咒禁止魔法道法念咒。
+- **Phase 3: DTO 補全、屬性圖示聚合 HUD 與雙舞台視覺**：
+  - 前後端 DTO 串接 `ActiveBuffDto`，攜帶 `element` 靈氣屬性。
+  - 戰鬥卡片「屬性圖示聚合 HUD」：以 `[🧪 54/s x3]`、`[🛡️ 120]` 極簡呈現，同屬性 DoT 自動加總，滑鼠懸停顯示明細來源。
+  - 1600×900 角色道基詳細面板追加「☯️ 道身加持與狀態」卡片，安全轉義與響應式排版。
+  - 技能 JSON 資料校準：`thunder_strike` (LIGHTNING ⚡)、`storm_blade` (SLASH ⚔️)、`spell_corpse_poison` (POISON 🧪)、`taiyin_sword` (DARK 🌑)。
+- **Phase 4: Gambit 戰術方針 AI 反制與全自動化整合測試**：
+  - 擴充 `TacticsCondition`（`ALLY_HAS_DEBUFF`、`ALLY_IS_CONTROLLED`、`SELF_LACKS_SHIELD`）。
+  - AI 防呆機制：目標已具備狀態且剩餘時效 $>3$ 秒時跳過不重複施放。
+  - 支援治療與特定技能解毒淨化（Cleanse），自動驅散隊友身上的 DoT 與控場。
+  - 新增 6 大場景全自動整合測試 `BuffDebuffComprehensiveTest`，全專案 295 項測試 100% 綠燈通過。
+
 ### [2026-10-13] Copilot 全專案程式碼與架構文件審查
 - 新增 [`docs/plans/Copilot_Code_Review.md`](docs/plans/Copilot_Code_Review.md)，整理全專案靜態程式碼與五份指定文件的審查發現、Buff 規劃建議及短中長期演進方向。
 - 建立審查後續追蹤項目：Write-Behind 提交／停機競態、WebSocket 身分邊界、fallback 架構護欄、前端儲存故障降級及 Buff 契約。
