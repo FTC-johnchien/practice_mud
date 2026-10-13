@@ -442,14 +442,16 @@
       - 後端實裝 `Party.swapMembers` 與 `party swap` 指令（支援別名 `換位`、`調位`），隊長身份始終由 `isLeader` 錨定。
       - 隊伍與戰場卡片支援直覺 `◀` / `▶` 換位按鈕；即時動態呈現隊員所繼承之陣法孔位（如 `💠 天璇【玄武巨盾】`），站位不符時即時紅字警示。
     - **機制驗證測試**：新增 `PartySwapAndAoeDamageTest`（3 項全通過），全專案 182 個測試 100% 全綠通過。
+  * **2026-10-13（Copilot 全專案程式碼與文件審查）**：
+    - 新增 [`docs/plans/Copilot_Code_Review.md`](./docs/plans/Copilot_Code_Review.md)，記錄可靠性、WebSocket 身分邊界、架構 fallback、前端儲存降級及 Buff 規劃建議。
+    - 審查提出的未決工作已收錄於 [`docs/plans/FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) §19；程式碼尚未修改。
 
 ---
 
 ## 6. 最新測試與健康狀況 (Latest Test Results)
-* **測試時間**：2026-10-08
-* **測試指令**：`.\test.ps1`（或 `mvnw test`）
-* **測試項目**：涵蓋既有 247 項測試，以及最新戰鬥事件模型、AOE 事件派發、Combo 結算與即時 Flush 測試套件。
-* **結果**：`Tests run: 250, Failures: 0, Errors: 0, Skipped: 0` -> **BUILD SUCCESS (250 項測試全數綠燈通過，0 失敗、0 錯誤)**
+* **最近一次成功測試（依 CHANGELOG 歷史紀錄）**：2026-10-11，283 項測試全數通過。
+* **本次審查測試嘗試**：2026-10-13 執行 `.\mvnw.cmd test`，因 `JAVA_HOME` 設定錯誤，在 Maven 啟動前中止；本次沒有測試結果。
+* **注意**：修正 Java 環境後，應重新執行 `.\test.ps1` 並更新此處及 [`CHANGELOG.md`](./CHANGELOG.md) 的實際結果。
 
 ---
 
@@ -470,8 +472,10 @@
 ### 階段二：戰鬥深度與動態機制 (Combat Depth & Scripting)
 - [x] **精力/氣力條 (Stamina) 與破防處決 (Phase 12 / FUTURE §2.5 已完成)**：
   - 閃避扣 2 點、招架扣 3 點精力；精力枯竭時陷入架勢破防，承受 +20% 易傷。
-- [ ] **視覺化戰鬥意圖與反制 (ENEMY-INTENT-01 / COMBAT-REACT-01)**：
-  - 敵人意圖圖標與蓄力條，打斷機制與 Gambit 隊友協同。
+- [x] **敵方行動意圖預告與蓄力視覺化 (ENEMY-INTENT-01 / FUTURE §13.1 已完成)**：
+  - 敵方意圖圖標與蓄力條已落地；玩家反制、打斷與 Gambit 協同仍列為 **COMBAT-REACT-01** 待辦。
+- [ ] **玩家反制窗口與 Gambit 意圖協作 (COMBAT-REACT-01)**：
+  - 以可互動的垂直切片完成打斷／防守反制與隊友協同，再擴充首領階段機制。
 - [ ] **動態腳本 (Lua / GraalVM JS) 與怪物行為樹 (Behavior Tree)**：
   - NPC 對話、陷阱解謎腳本化。
   - Boss 具備轉階段與狂暴機制。

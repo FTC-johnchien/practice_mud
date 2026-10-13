@@ -2,7 +2,7 @@
 
 > **文件定位與目的**：
 > 本文件作為專案所有後續架構演進、機制補完、安全加固與重構任務的**單一權威來源 (Single Source of Truth, SSoT)**。
-> 完整收斂並整合了歷史架構規劃與三大模型之深度代碼審查報告（`Claude_Code_Review.md`、`Copilot_Code_Review.md` 與 `Codex_Code_Review.md`）：
+> 本文件收斂歷史架構規劃與多次代碼審查提出的待辦；舊審查稿僅作為歷史來源，**目前狀態與新發現以本文件的驗收狀態及最新 [`Copilot_Code_Review.md`](./Copilot_Code_Review.md) 為準**：
 > 1. **戰鬥與成長機制** (圓桌判定、魂系精力破防、主角自由潛能點、MUD 生靈閉環)
 > 2. **全實體資料驅動** (去除職業/陣型/反擊/別名硬編碼、集中式 JSON 啟動校驗)
 > 3. **共用規範模型與清潔架構** (Canonical Model、Domain 依賴反向、Actor 狀態邊界單一擁有)
@@ -44,6 +44,7 @@
 - [ ] **路徑 P: 全專案功能與設定資料硬編碼實地盤查與清理藍圖** (§16 全項) — **Priority: P1 / P2**
 - [ ] **路徑 Q: MUD 與 DRPG 雙軌機制割裂深度盤查與大一統融合架構** (§17 全項) — **Priority: P1 / P2**
 - [ ] **路徑 R: §16/§17 第二輪審查校正與漸進落地** (§18 全項) — **Priority: P0 / P1（階段 0: GUARD-01/DEBUG-01 已完成）**
+- [ ] **路徑 S: Buff 契約與可靠性護欄第二輪驗收** (§19 全項) — **Priority: P1 / P2**
 
 ---
 
@@ -172,7 +173,7 @@
 
 ## 🌐 6. ✅ [已完成] 網路邊界安全、WebSocket 部署防護與連線配額 (Network Hardening) — Priority: P1
 
-> **來源**：`Codex_Code_Review.md` (§P1)、`Copilot_Code_Review.md` (§3.4)、`Claude_Code_Review.md` (§五)。
+> **來源**：歷史檢視（Codex／Claude）；最新 WebSocket 與持久化風險見 [`Copilot_Code_Review.md`](./Copilot_Code_Review.md) §二 #1–2。
 > **核心目標**：明確界定「單機本機」與「公開部署」的安全邊界，防止未驗證連線、大封包記憶體攻擊與指令洪水。
 > **落地進度**：已於 2026-10-04 完成。
 > 1. **明確部署模式與環回綁定 (NET-01)**：`application.yml` 明確宣告 `game.network.mode: local`、`game.network.bind-address: 127.0.0.1` 與 `server.address: 127.0.0.1`；`application-prod.yml` 支援動態注入公開綁定，防禦區域網未授權連線。
@@ -208,7 +209,7 @@
 
 ## 🛡️ 8. ✅ [已完成] 檔案式存檔版本治理 (`schemaVersion`) 與壞檔防禦 (Save File Resilience) — Priority: P1
 
-> **來源**：`Codex_Code_Review.md` (§P1)、`Copilot_Code_Review.md` (§3.5)、`Claude_Code_Review.md` (§三)。
+> **來源**：歷史檢視（Codex／Claude）；最新 Write-Behind 風險與驗收建議見 [`Copilot_Code_Review.md`](./Copilot_Code_Review.md) §二 #1、§四。
 > **落地進度**：已於 2026-10-03 完成。
 > 1. **資料模型版本治理 (`CURRENT_SCHEMA_VERSION = 1` / `SaveMigrationPipeline`)**：
 >    - [SaveData.java](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/save/model/SaveData.java) 引入 `CURRENT_SCHEMA_VERSION = 1` 與 `schemaVersion` 欄位（`@Builder.Default`）。
@@ -230,7 +231,7 @@
 
 ## 🏛️ 9. 徹底資料驅動消除硬編碼與集中式 JSON 啟動拓撲校驗 (Data-Driven Purity) — Priority: P1
 
-> **來源**：`Claude_Code_Review.md` (§一)、`Copilot_Code_Review.md` (§3.3)、`Codex_Code_Review.md` (§P2)。
+> **來源**：歷史檢視（Claude／Codex）；最新 fallback 護欄發現見 [`Copilot_Code_Review.md`](./Copilot_Code_Review.md) §二 #3。
 > **核心目標**：拔除底層代碼中殘留的職業名稱、陣法字串比對與技能別名映射；建立啟動期跨檔案資料校驗器。
 
 ### 9.1 ✅ [已完成] 消除職業特例與反擊特性硬編碼 (DATA-01) (P1)
@@ -269,7 +270,7 @@
 
 ## 🎨 10. 前端巨石模組拆分與 Legacy 除役 (Frontend Modularization) — Priority: P2
 
-> **來源**：`Claude_Code_Review.md` (§四)、`Codex_Code_Review.md` (§P2)、`Copilot_Code_Review.md` (§3.2)。
+> **來源**：歷史檢視（Claude／Codex）；前端模組現況與文件治理建議見 [`Copilot_Code_Review.md`](./Copilot_Code_Review.md) §三。
 > **核心目標**：以低風險方式拆解大型 CSS 與 Party 模組；盤查並正式除役 legacy 代碼。行數僅作歷史參考，執行時以實際檔案為準。
 
 ### 10.1 ✅ [已完成] 巨石 `style.css` 安全物理拆分 (CSS-01) (P2)
@@ -311,7 +312,7 @@
 
 ## ⚡ 11. 測試工程分層加速與可觀測性加固 (Testing & Observability) — Priority: P3
 
-> **來源**：`Claude_Code_Review.md` (§六)、`Copilot_Code_Review.md` (§3.6)、`Codex_Code_Review.md` (§P3)。
+> **來源**：歷史檢視（Claude／Codex）；本次測試執行限制與治理建議見 [`Copilot_Code_Review.md`](./Copilot_Code_Review.md) §五、§四。
 > **核心目標**：測試架構下沉為純單元測試提高執行效率；補齊關鍵指標與稽核日誌。
 
 ### 11.1 測試套件分層與純單元測試下沉 (P3)
@@ -334,7 +335,7 @@
 
 ## 🎮 12. ✅ [已完成] 垂直可玩內容閉環 (Playable Baseline) — Priority: P3
 
-> **來源**：`Copilot_Code_Review.md` (§路線四)、`Codex_Code_Review.md` (§長期方向)。
+> **來源**：歷史檢視（Codex）；單機切片與長期演進方向見最新 [`Copilot_Code_Review.md`](./Copilot_Code_Review.md) §四。
 > **核心目標**：避免長期停留在抽象基礎架構重構，打通一條從新手建立角色、滄浪客棧接案、組隊鐵牛、進入太陰地宮探險、遭遇戰鬥、撤退調息至安全存檔的完整端到端可玩迴圈。
 > **落地進度**：已於 2026-10-04 完成。
 > 1. **城鎮開局與隊伍組建**：支援單人創角入局、客棧與掌櫃福伯及鐵牛對話，並透過 `recruit tie_niu` 順利組建雙人陣型小隊。
@@ -346,7 +347,7 @@
 
 ## ⚔️ 13. 敵方行動預告、反制窗口與首領階段 (Readable & Reactive Combat) — Priority: P1 / P2
 
-> **來源**：2026-10-05 專案檢視，完整建議見 [`Copilot_Code_Review.md`](./Copilot_Code_Review.md)。
+> **來源**：2026-10-05 Codex 戰鬥呈現檢視；最新整體發展建議見 [`Copilot_Code_Review.md`](./Copilot_Code_Review.md) §四。
 > **核心目標**：讓玩家能讀懂敵方下一步、使用既有戰鬥資源反制，並將招式／首領階段維持在資料驅動規則內；先完成一個普通敵人與一個首領的垂直切片，不先引入 Lua 或大型行為樹框架。
 
 ### 13.1 敵方技能效果與預告狀態 (ENEMY-ACTION-01) (P1)
@@ -857,9 +858,55 @@ flowchart TD
 | **P2** | COMBAT-REACT-01 | 玩家反制、Gambit 意圖協作與首領階段 | 戰術深度與遭遇變化 | §13.2 | 🔲 待執行 |
 | **P2** | COMBAT-DATA-DOC-01 | SAN 異變資料化、文件現況與測試摘要同步 | 資料驅動與文件治理 | §13.3 | 🔲 待執行 |
 | **P2** | COMBAT-FX-RULE-04 | 我方暴擊/未命中規則與一排目標範圍規則獨立化 | 戰鬥平衡與機制定義 | §14.4 | 🔲 待決議 |
+| **P1** | ASYNC-03 | Write-Behind 提交/停機原子協定、滿載明確回報與競態測試 | 持久化資料可靠性 | §19.1 | 🔲 待執行 |
+| **P1** | NET-01-VERIFY | 重新驗證本機/公開 WebSocket 身分驗證與部署邊界 | 外部連線信任邊界 | §19.2 | 🔲 待驗證 |
+| **P1** | BUFF-01 | Buff 效果生命週期、疊層、控場與共用規則結算契約 | 戰鬥規則一致性 | §19.3 | 🔲 待執行 |
+| **P2** | FALLBACK-02 | 生產 fallback 清零與架構護欄精確化 | 配置失敗可見性 | §19.4 | 🔲 待執行 |
+| **P2** | WEB-STATE-01 | 前端瀏覽器儲存 API 故障降級與初始化測試 | 前端啟動健壯性 | §19.5 | 🔲 待執行 |
+| **P3** | DOC-STATE-01 | 現況／目標／歷史分流與測試摘要單一同步來源 | 文件治理 | §19.6 | 🔲 待執行 |
 | **P3** | TEST-01 | 核心數值與領域規則下沉為純單元測試 (加速 CI) | 測試工程效能 | §11.1 | 🔲 待執行 |
 | **P3** | OBS-01 | 系統度量指標擴充與敏感資料日誌審核 | 系統觀測性加固 | §11.2 | 🔲 待執行 |
 | **P3** | CODE-01 | 清理 `PlayerLoginListener` 註解死代碼與空 stub | 代碼庫整潔度 | §16.4 | 🔲 待執行 |
 | **P2** | DEBUG-01 | 試道傀儡等除錯指令以 Profile / 管理員旗標限制 | 防刷資源 | §18.3 | ✅ 已完成 |
 | **P3** | CONTENT-01 | 垂直可玩內容閉環 (創角 -> 滄浪城任務 -> 地宮探險 -> 戰鬥 -> 結算存檔) | 遊戲體驗交付 | §12.1 | ✅ 已完成 |
 
+## 🧭 19. 2026-10-13 Copilot 審查後續：Buff 契約與可靠性護欄 (Review Follow-ups)
+
+> **來源**：[`Copilot_Code_Review.md`](./Copilot_Code_Review.md)。以下項目是本次靜態審查發現，尚未代表已決議的行為設計或已完成修復；實作前仍須以現行程式碼、部署設定與測試再次驗收。
+
+### 19.1 ASYNC-03：持久化提交與停機生命週期原子化 — P1
+
+- 讓 `saveAsync()` 接受提交與服務停止／worker 排空遵守同一個可證明的生命週期協定，避免停止後才入列的紀錄無人處理。
+- 佇列滿載不得靜默拒收；提供明確、可觀測且可供呼叫端處理的拒絕／背壓結果。
+- 使用 latch 或等價同步工具穩定重現「檢查接受狀態 → 停機 → 提交」交錯，另測試滿載、排空與關閉逾時。
+- 完成條件：競態測試證明每筆接受的紀錄不是成功落盤就是以明確失敗回報；不宣稱無條件「100%」保證。
+
+### 19.2 NET-01-VERIFY：WebSocket 身分與部署模式重新驗收 — P1
+
+- 對照 `MudWebSocketHandler`、WebSocket 設定與實際公開模式，確認在建立玩家 Actor／派發遊戲指令前完成身份驗證。
+- 本機模式需證明只接受 loopback；公開模式需證明缺失、錯誤或過期票證會被拒絕，合法票證會綁定正確 session。
+- 在部署模式及拒絕路徑測試完成前，不把此項標示為公開部署已驗收。
+
+### 19.3 BUFF-01：Buff 契約與共用結算切片 — P1
+
+- 以實際程式碼盤點現有 `Buffable`、`ActiveBuff`、`BuffSettlementService` 及 MUD／DRPG 呼叫路徑，分清「已執行」與「只有定義」。
+- 明定 tick、期限、疊層／刷新／替換、驅散、免疫、控場對行動與施法的限制，以及脫戰、死亡、地圖切換、存檔的生命週期。
+- 以共用戰鬥規則作單一結算入口，不直接變更基礎屬性，不讓相同狀態在兩個迴圈重複跳算；以可控時鐘及固定隨機來源驗證一種屬性修正、一種控場及一種 DoT。
+- UI 事件及角色狀態面板沿用 `COMBAT-VFX-STATUS-02` 的既有工作，避免重複建立視覺待辦；不先擴充大量未接線的效果枚舉。
+
+### 19.4 FALLBACK-02：生產 fallback 與架構護欄精確化 — P2
+
+- 對生產程式碼中的 `TemplateCatalog` 與靜態 `GameConfig` fallback 逐項核對，將必要依賴改為必填注入，將測試建構限制在明確 fixture。
+- 更新 `ArchitectureGuardrailsTest`，禁止未核准的生產 fallback，並提供具體檔案／行號診斷；如保留個別例外，須明列理由與測試。
+- 將 FALLBACK-01 的完成定義補上零違規護欄證據，避免寬鬆數量上限掩蓋回歸。
+
+### 19.5 WEB-STATE-01：瀏覽器儲存失敗降級 — P2
+
+- 將 `localStorage` 存取集中至安全邊界，對可選 UI 偏好提供可診斷的預設值降級，避免模組匯入失敗；核心遊戲狀態錯誤不得被靜默吞掉。
+- 測試 `getItem`／`setItem` 拋出例外時，前端仍可啟動且偏好狀態符合預期。
+
+### 19.6 DOC-STATE-01：文件現況與驗收證據同步 — P3
+
+- 將 `GEMINI.md`、`UI_PAGE_STRUCTURE.md` 的「現況」與 `CHANGELOG.md`、本文件的歷史／待辦資訊對齊，測試摘要記錄最後成功日期、數量及後續失敗的執行嘗試。
+- 每項標為「已完成」的高風險護欄，應連結實際測試、架構檢查或部署條件；失效或寬鬆的檢查需重新開啟驗收。
+- 將文件中的本機絕對 `file:///` 連結改為相對連結，確保跨端 Git 同步後仍可閱讀。

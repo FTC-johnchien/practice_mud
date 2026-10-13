@@ -8,6 +8,11 @@
 
 ## 📌 最新里程碑 (Latest Releases)
 
+### [2026-10-13] Copilot 全專案程式碼與架構文件審查
+- 新增 [`docs/plans/Copilot_Code_Review.md`](docs/plans/Copilot_Code_Review.md)，整理全專案靜態程式碼與五份指定文件的審查發現、Buff 規劃建議及短中長期演進方向。
+- 建立審查後續追蹤項目：Write-Behind 提交／停機競態、WebSocket 身分邊界、fallback 架構護欄、前端儲存故障降級及 Buff 契約。
+- **測試狀態**：本次 `.\mvnw.cmd test` 因 `JAVA_HOME` 設定錯誤，於 Maven 啟動前中止，未產生本次測試結果；最近一次成功測試數字仍以 2026-10-11 歷史紀錄為準。
+
 ### [2026-10-11] 階段 3 戰鬥引擎收斂與雙模呈現投影 (UNIFY-03: Single Combat Engine & Dual Presentation)
 - **純函式戰鬥規則與統一數學公式 (CombatRules SSoT)**：
   - 新建 `CombatRules`：抽離純函式戰鬥演算法，包含基礎傷害計算（`calculateRawDamage`，支援武器浮動與 `MobRank` 傷害倍率）、抗性折減（`applyResistance`）以及一元一次擲骰圓桌判定（`executeCombatTable`: Miss -> Dodge -> Parry -> Block -> Crit -> Hit）。
