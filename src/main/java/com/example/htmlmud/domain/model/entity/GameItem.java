@@ -12,16 +12,15 @@ import com.example.htmlmud.domain.model.template.ItemTemplate;
 import com.example.htmlmud.protocol.MessageFactory;
 import com.example.htmlmud.protocol.MudMessage;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Data // Lombok
-@NoArgsConstructor
-@AllArgsConstructor
 public class GameItem {
+
+  public GameItem() {}
 
   // 1. 唯一識別 (UUID)
   // 每個物品都有獨立 ID，方便追蹤 (例如防止複製 Bug)

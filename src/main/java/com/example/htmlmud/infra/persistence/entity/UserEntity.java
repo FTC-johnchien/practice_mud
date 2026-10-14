@@ -7,20 +7,26 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Table(name = "users")
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class UserEntity {
+
+  public UserEntity() {}
+
+  @Builder
+  public UserEntity(String id, String username, String passwordHash, LocalDateTime createdAt, LocalDateTime lastLoginAt) {
+    this.id = id;
+    this.username = username;
+    this.passwordHash = passwordHash;
+    this.createdAt = createdAt;
+    this.lastLoginAt = lastLoginAt;
+  }
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)

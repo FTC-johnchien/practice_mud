@@ -8,9 +8,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@RequiredArgsConstructor
 // 攻擊行為
 public class AggressiveBehavior implements MobBehavior {
+
+  public AggressiveBehavior() {}
 
   @Override
   public void onEnter(Mob mob) {

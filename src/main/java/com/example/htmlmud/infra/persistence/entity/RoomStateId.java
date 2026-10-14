@@ -1,14 +1,21 @@
 package com.example.htmlmud.infra.persistence.entity;
 
 import java.io.Serializable;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter
+@Setter
+@EqualsAndHashCode
 public class RoomStateId implements Serializable {
   private String roomId;
   private String zoneId;
+
+  public RoomStateId() {}
+
+  public RoomStateId(String roomId, String zoneId) {
+    this.roomId = roomId;
+    this.zoneId = zoneId;
+  }
 }

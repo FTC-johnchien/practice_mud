@@ -118,7 +118,7 @@ com.example.htmlmud/
 │   │
 │   ├── model/                           # 領域模型實體與值物件
 │   │   ├── definition/                  #   不可變標準定義 (ItemDefinition)
-│   │   ├── entity/                      #   可變實體 (LivingStats, GameItem, ItemInstance, SkillEntry)
+│   │   ├── entity/                      #   可變實體 (LivingStats, GameItem, ItemInstance, SkillEntry, PlayerRecord)
 │   │   ├── view/                        #   只讀合成視圖 (ItemView)
 │   │   ├── template/                    #   不可變定義模板 (Record 封裝)
 │   │   │   ├── ItemTemplate.java        #     物品模板
@@ -131,7 +131,7 @@ com.example.htmlmud/
 │   │
 │   ├── dungeon/                         # DRPG 地牢領域子域
 │   │   ├── manager/DungeonManager.java  #   地牢管理器
-│   │   ├── loader/DungeonFloorLoader.java # 地牢地圖載入器
+│   │   ├── service/DungeonFloorLoader.java # 地牢地圖載入器
 │   │   ├── model/                       #   地牢地圖模型 (DungeonFloor, DungeonTile)
 │   │   ├── battle/                      #   DRPG 戰鬥子系統
 │   │   │   ├── DrpgBattleService.java   #     DRPG 戰鬥門面
@@ -146,8 +146,9 @@ com.example.htmlmud/
 │   │   ├── model/                       #   小隊模型 (Party, PartyMember, FormationTemplate)
 │   │   └── service/PartyService.java    #   小隊管理服務
 │   └── save/                            # 存檔領域子域
-│       ├── model/SaveSlotMetadata.java
-│       └── service/SaveSlotService.java
+│       ├── model/SaveData.java          #   存檔聚合根模型 (schemaVersion v2)
+│       ├── dto/SaveSlotDto.java         #   存檔槽位 DTO
+│       └── service/SaveGameService.java #   存讀檔與版本平滑遷移服務
 │
 ├── application/                         # === 應用層 (Application Layer) ===
 │   ├── command/                         # 指令處理模式 (Command Pattern)
@@ -162,12 +163,18 @@ com.example.htmlmud/
 │   ├── persistence/                     # 資料庫持久化 (JPA Repository & Service)
 │   │   ├── service/AbstractAsyncBatchPersistenceService.java # Write-Behind 基類
 │   │   └── repository/TemplateRepository.java # 模板唯讀快取
-│   ├── server/WebSocketSessionManager.java # WebSocket 會話連線管理
+│   ├── server/                          # 網路伺服器與脈衝核心
+│   │   ├── MudWebSocketHandler.java     #   核心 WebSocket 處理器 (限流/長度檢查)
+│   │   ├── SessionRegistry.java         #   會話連線登錄註冊表
+│   │   ├── WorldPulse.java              #   戰鬥與世界 100ms 心跳脈衝
+│   │   └── WorldInitializer.java        #   開機資料庫預載入器
 │   └── util/AnsiColor.java              # ANSI 文本色彩轉義
 │
 ├── protocol/                            # === 通訊協定層 (Protocol Layer) ===
-│   ├── websocket/GameWebSocketHandler.java # WebSocket 處理器
-│   └── web/controller/                  # RESTful 控制器 (ApiController, PageController)
+│   ├── ActorMessage.java                #   Actor 郵箱訊息協定
+│   ├── MessageFactory.java              #   MUD 訊息工廠
+│   ├── MudMessage.java                  #   雙向通訊封包模型
+│   └── WebSocketOutput.java             #   WebSocket 輸出配接器
 │
 └── static/js/                           # === 前端 Web 視圖模組 (Frontend Architecture) ===
     ├── core/                            # 前端核心中樞 (Core Engine)

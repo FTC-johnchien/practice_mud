@@ -169,4 +169,68 @@ public class MechanismPurityAndBugfixTest {
     PartyMemberSkill scaledPurify = skillBridgeService.scaleSkill(purifySkill.get(), 3, null);
     assertThat(scaledPurify.getTags()).contains("CLEANSE");
   }
+
+  @Test
+  @DisplayName("機制驗證：LivingStats.deepCopy() 必須防禦性深拷貝所有數值、抗性、裝備與技能集合 (DEEPCOPY-01)")
+  void testLivingStatsDeepCopyPreservesAllAttributes() {
+    com.example.htmlmud.domain.model.entity.LivingStats original = new com.example.htmlmud.domain.model.entity.LivingStats();
+    original.setLevel(10);
+    original.setHp(500);
+    original.setMaxHp(500);
+    original.setStr(50);
+    original.setResistance(DamageType.FIRE, 0.4);
+    original.setResistance(DamageType.DARK, 0.25);
+    original.modifyCombatResource("charge", 3);
+
+    com.example.htmlmud.domain.model.entity.GameItem testItem = new com.example.htmlmud.domain.model.entity.GameItem();
+    testItem.setId("item-test");
+    original.equipment.put(com.example.htmlmud.domain.model.enums.EquipmentSlot.MAIN_HAND, testItem);
+    original.enabledSkills.put(com.example.htmlmud.domain.model.enums.SkillCategory.SWORD, "taiji_sword");
+    original.learnedSkills.put("taiji_sword", new com.example.htmlmud.domain.model.entity.SkillEntry("taiji_sword", 5));
+
+    com.example.htmlmud.domain.model.entity.LivingStats copy = original.deepCopy();
+
+    // 驗證基本屬性
+    assertThat(copy.getLevel()).isEqualTo(10);
+    assertThat(copy.getHp()).isEqualTo(500);
+    assertThat(copy.getStr()).isEqualTo(50);
+
+    // 驗證集合與抗性完整拷貝
+    assertThat(copy.getResistance(DamageType.FIRE)).isEqualTo(0.4);
+    assertThat(copy.getResistance(DamageType.DARK)).isEqualTo(0.25);
+    assertThat(copy.getCombatResource("charge")).isEqualTo(3);
+    assertThat(copy.equipment).containsEntry(com.example.htmlmud.domain.model.enums.EquipmentSlot.MAIN_HAND, testItem);
+    assertThat(copy.enabledSkills).containsEntry(com.example.htmlmud.domain.model.enums.SkillCategory.SWORD, "taiji_sword");
+    assertThat(copy.learnedSkills).containsKey("taiji_sword");
+
+    // 驗證獨立性 (防禦性拷貝，非共享同一 Map 參照)
+    copy.setResistance(DamageType.FIRE, 0.9);
+    assertThat(original.getResistance(DamageType.FIRE)).isEqualTo(0.4);
+
+    copy.equipment.clear();
+    assertThat(original.equipment).isNotEmpty();
+  }
+
+  @Test
+  @DisplayName("環境與字節碼驗證：所有 com.example.htmlmud 下的 Class 必須能成功載入且無 ClassFormatError")
+  void testAllClasspathClassesLoadSuccessfully() throws Exception {
+    java.io.File classesDir = new java.io.File("target/classes/com/example/htmlmud");
+    if (!classesDir.exists()) {
+      return;
+    }
+    java.nio.file.Files.walk(classesDir.toPath())
+        .filter(p -> p.toString().endsWith(".class"))
+        .forEach(p -> {
+          String relative = classesDir.toPath().relativize(p).toString();
+          String className = "com.example.htmlmud." + relative.replace(java.io.File.separatorChar, '.').replace(".class", "");
+          try {
+            Class<?> clazz = Class.forName(className, true, getClass().getClassLoader());
+            assertNotNull(clazz);
+            clazz.getDeclaredConstructors();
+            clazz.getDeclaredMethods();
+          } catch (Throwable t) {
+            fail("Failed to load/verify class: " + className + ", error: " + t.getMessage(), t);
+          }
+        });
+  }
 }

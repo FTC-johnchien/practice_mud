@@ -458,13 +458,20 @@
   * **2026-10-13（Copilot 全專案程式碼與文件審查）**：
     - 新增 [`docs/plans/Copilot_Code_Review.md`](./docs/plans/Copilot_Code_Review.md)，記錄可靠性、WebSocket 身分邊界、架構 fallback、前端儲存降級及 Buff 規劃建議。
     - 審查提出的未決工作已收錄於 [`docs/plans/FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) §19；程式碼尚未修改。
+  * **2026-10-13 ~ 2026-10-14（Buff/Debuff 狀態系統、持久化原子協定、資料驅動戰鬥機制、看門狗護欄與深拷貝加固完工）**：
+    - **BUFF-01 & COMBAT-VFX-STATUS-02 (Commit: `6b76844`, `bf703be`)**：WoW 風格階梯護盾模型、常駐陣法光環、罡氣破防條（Poise Gauge）、五行抗性吸收逆流回血、Gambit AI 防重複施放與淨化驅散 Cleanse；護盾疊層流光、狀態脈衝呼吸邊框與瀕危閃爍；全專案 295 項測試全綠通過。
+    - **ASYNC-03 (Commit: `db3c470`)**：`AbstractAsyncBatchPersistenceService` 導入讀寫鎖原子化停機生命週期與明確背壓結果契約 (`SubmitResult`)；高併發交錯競態測試驗證通過，全專案 299 項測試全綠通過。
+    - **DATA-DRIVEN-COMBAT-01 (Commit: `66cc3d0`)**：全域 9 大天道傷害類型 (`DamageType`) 矩陣擴充、怪物與同伴數值模型擴充 `poise` 與 `resistances`、修復 `scaleSkill` 屬性丟失漏洞、消除中文特例比對，全專案 301 項測試全綠通過。
+    - **GUARD-02 & 專案第一紅線治理 (Commit: `5e76608`)**：升級 `GEMINI.md` 第 7 條為專案最高元契約紅線、`ArchitectureGuardrailsTest` 新增 `GUARD-02` 嚴禁戰鬥迴圈中文特例比對、強制中文 Git commit 規範。
+    - **DEEPCOPY-01 & JPA 實體規範化**：全面修復 JPA 實體（`CharacterEntity`、`ItemTemplateEntity`、`RoomStateEntity`、`RoomStateId`、`UserEntity`）與核心領域模型（`GameItem`、`LivingStats`），改用標準 Java 原生顯式建構子搭配 `@Getter`/`@Setter`（避免 `@Data` 帶來之 JPA 狀態穿透與 equals/hashCode 缺陷）；清理無欄位之無狀態類別；保留 6 大 Spring 核心服務之簡潔 `@RequiredArgsConstructor` 建構子注入；加固 `LivingStats.deepCopy()` 補齊抗性與技能裝備防禦性拷貝；全專案 304 項測試 100% 綠燈通過。
 
 ---
 
 ## 6. 最新測試與健康狀況 (Latest Test Results)
-* **最近一次成功測試（依 CHANGELOG 歷史紀錄）**：2026-10-11，283 項測試全數通過。
-* **本次審查測試嘗試**：2026-10-13 執行 `.\mvnw.cmd test`，因 `JAVA_HOME` 設定錯誤，在 Maven 啟動前中止；本次沒有測試結果。
-* **注意**：修正 Java 環境後，應重新執行 `.\test.ps1` 並更新此處及 [`CHANGELOG.md`](./CHANGELOG.md) 的實際結果。
+* **最新全量測試結果**：2026-10-14，全專案 **304 項單元與整合測試 100% 綠燈全數通過**（0 失敗、0 錯誤）。
+* **架構看門狗健康狀態**：
+  - `GUARD-01`：`new TemplateCatalog()` 靜默 fallback 數量鎖定在 33 處基準內；`GameConfig.getInstance()` 靜態存取鎖定在 12 處基準內；領域層 Clean Architecture 邊界違規檢查 0 違規。
+  - `GUARD-02`：核心戰鬥迴圈（`DrpgCombatLoop`）中文硬編碼特例檢查 0 違規。
 
 ---
 

@@ -13,9 +13,10 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class FormulaEvaluator {
   private static final ExpressionParser parser = new SpelExpressionParser();
+
+  public FormulaEvaluator() {}
 
   /**
    * 計算公式

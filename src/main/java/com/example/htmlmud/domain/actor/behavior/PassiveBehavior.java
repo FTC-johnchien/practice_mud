@@ -8,9 +8,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@RequiredArgsConstructor
 // 被動行為 (一般 NPC)
 public class PassiveBehavior implements MobBehavior {
+
+  public PassiveBehavior() {}
 
   @Override
   public MobBehavior handle(Mob mob, ActorMessage.MobMessage msg) {

@@ -9,13 +9,17 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "rooms_state")
 @IdClass(RoomStateId.class)
-@Data
+@Getter
+@Setter
 public class RoomStateEntity {
+
+  public RoomStateEntity() {}
 
   @Id
   @Column(name = "room_id", nullable = false)

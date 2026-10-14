@@ -45,6 +45,7 @@
 - [ ] **路徑 Q: MUD 與 DRPG 雙軌機制割裂深度盤查與大一統融合架構** (§17 全項) — **Priority: P1 / P2**
 - [ ] **路徑 R: §16/§17 第二輪審查校正與漸進落地** (§18 全項) — **Priority: P0 / P1（階段 0: GUARD-01/DEBUG-01 已完成）**
 - [ ] **路徑 S: Buff 契約與可靠性護欄第二輪驗收** (§19 全項) — **Priority: P1 / P2**
+- [ ] **路徑 T: 實體深拷貝加固、Fallback 棘輪清零與雙持久化收斂** (§20 全項) — **Priority: P1 / P2 (DEEPCOPY-01 已完成)**
 
 ---
 
@@ -658,7 +659,7 @@ flowchart TD
 | 2 | `TOMB_ITEMS` 僅出現在 `DungeonCommand` | **共有 3 份複本**：[`DungeonCommand.java:L41`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L41)（ID 帶 `taiyin_tomb:` 前綴）、[`DrpgBattleService.java:L58`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgBattleService.java#L58)、[`DrpgRewardService.java:L37`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java#L37)（ID **不帶**前綴） | 同一份資料有兩種 ID 寫法，全靠 `TemplateRepository` 的後綴模糊比對才能運作 |
 | 3 | 首領硬編碼只有「宋天衡掉落」 | [`DrpgBattleService.startBossBattle():L547-562`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgBattleService.java#L547-L562) 對**所有**首領都套用固定 `dex(12)`、`xp(500)`、`dropItemId("mozhu_mines:black_obsidian_scythe")`，且忽略 `MobTemplate.expReward/loot`；L475-478 用 `templateId.contains("mozhu")` 決定掉落；[`DungeonCommand.java:L289`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L289) BOSS 地塊 fallback 寫死宋天衡 | 新增任何首領都會掉墨竹山鐮刀，屬功能 Bug，而不只是程式風格問題 |
 | 4 | 道核 ID 為 `"core_" + memberId + "_" + skillId` | 存在**三種**格式與兩套文案：`DrpgCombatLoop` 用 `core_{member}_{skill}`；[`ItemFactory.createDaoCore()`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/factory/ItemFactory.java#L80-L96) 用 `dao_core_{skill}` 且名為「凝煞道核」；`DrpgRewardService` fallback 也用 `dao_core_{skill}`，但名為「血肉道核」 | 同一物品因 Bean 是否注入而名稱不同；存檔與堆疊判斷不穩定 |
-| 5 | 裝備位於 `Living.equipment` | 實際有**三種表示法**：[`LivingStats.equipment`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/entity/LivingStats.java#L53)（`Map<EquipmentSlot, GameItem>`）、[`PartyMember.equipment`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/party/model/PartyMember.java#L107)（`Map<EquipmentSlot, PartyItemSlot>`）、[`BattleEnemy.equipment`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/BattleEnemy.java#L85)（`Map<EquipmentSlot, String>`） | UNIFY-02 必須處理三種表示法，不是兩種 |
+| 5 | 裝備位於 `Living.equipment` | 實際有**三種表示法**：[`LivingStats.equipment`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/entity/LivingStats.java#L53)（`Map<EquipmentSlot, GameItem>`）、[`PartyMember.equipment`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/party/model/PartyMember.java#L107)（`Map<EquipmentSlot, PartyItemSlot>`）、[`BattleEnemy.equipment`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/BattleEnemy.java#L85)（`Map<EquipmentSlot, String>`） | UNIFY-02 已於 Commit `a18645a` 落地，確立 `PartyMember` 為 SSoT 並透過 Actor 信箱單向投影至 `Player.stats.equipment`（唯讀視圖） |
 | 6 | `buildTombB1F()` 是「未同步的冗餘」 | 真正的風險不在冗餘：它只在 JSON 全部載入失敗時啟用，會**把資源載入失敗掩蓋成「遊戲照常可玩」** | 應改為 fail-fast，而不只是刪除 |
 
 ### 18.2 §17 統一方案的架構風險 (Design Risks in UNIFY-*)
@@ -871,6 +872,8 @@ flowchart TD
 | **P3** | CODE-01 | 清理 `PlayerLoginListener` 註解死代碼與空 stub | 代碼庫整潔度 | §16.4 | 🔲 待執行 |
 | **P2** | DEBUG-01 | 試道傀儡等除錯指令以 Profile / 管理員旗標限制 | 防刷資源 | §18.3 | ✅ 已完成 |
 | **P3** | CONTENT-01 | 垂直可玩內容閉環 (創角 -> 滄浪城任務 -> 地宮探險 -> 戰鬥 -> 結算存檔) | 遊戲體驗交付 | §12.1 | ✅ 已完成 |
+| **P1** | DEEPCOPY-01 | LivingStats.deepCopy() 補齊抗性與技能裝備防禦性拷貝 | 資料完整性與防遺漏 | §20.1 | ✅ 已完成 (2026-10-14) |
+| **P3** | PERSIST-01 | H2 CharacterEntity.inventory 標記棄用與單機存檔收斂 | 持久化架構整潔度 | §20.3 | 🔲 待執行 |
 
 ## 🧭 19. 2026-10-13 Copilot 審查後續：Buff 契約與可靠性護欄 (Review Follow-ups)
 
@@ -912,3 +915,20 @@ flowchart TD
 - 將 `GEMINI.md`、`UI_PAGE_STRUCTURE.md` 的「現況」與 `CHANGELOG.md`、本文件的歷史／待辦資訊對齊，測試摘要記錄最後成功日期、數量及後續失敗的執行嘗試。
 - 每項標為「已完成」的高風險護欄，應連結實際測試、架構檢查或部署條件；失效或寬鬆的檢查需重新開啟驗收。
 - 將文件中的本機絕對 `file:///` 連結改為相對連結，確保跨端 Git 同步後仍可閱讀。
+
+## 🛡️ 20. 2026-10-14 全局架構審查後續與深拷貝加固 (Review Follow-ups: Deep-Copy Hardening, Fallback Ratchet & Dual-Persistence)
+
+> **來源**：2026-10-14 全專案靜態程式碼與規劃文件交叉 Review。
+
+### 20.1 DEEPCOPY-01：LivingStats.deepCopy() 屬性完整拷貝防衛 — ✅ 已完成 (2026-10-14)
+- **問題現況**：`LivingStats.deepCopy()` 原先僅複製等級、五維與氣血，遺漏了 `resistances`、`equipment`、`learnedSkills`、`enabledSkills`、`combatResources`，違反專案第一紅線中「深拷貝不得遺漏任何屬性」之架構準則，導致 `Player.toRecord()` 或測試進行快照時數值丟失。
+- **加固方案**：在 `LivingStats.deepCopy()` 中補齊集合欄位的淺防禦性拷貝（`new HashMap<>(...)`），確保快照資料 100% 完整無遺漏。
+
+### 20.2 FALLBACK-02：持續推進生產碼 33 處 new TemplateCatalog() 歸零 — P2
+- **問題現況**：`ArchitectureGuardrailsTest` 中 `testTemplateCatalogFallbackRatchet` 目前鎖定基準為 33 處。生產程式碼中包括 `MessageFactory`、`DrpgStateDto`、`ShopTemplate`、`PartyInventory` 仍殘留無參建構子與靜默 fallback。
+- **演進路徑**：分批推進 Spring 建構子依賴注入或純參數傳遞，將棘輪門檻自 33 逐步收斂歸零，消除空 Catalog 靜默降級隱患。
+
+### 20.3 PERSIST-01：H2 CharacterEntity.inventory 雙持久化漸進棄用 — P3
+- **問題現況**：`CharacterEntity` 仍持有 `List<GameItem> inventory` 映射至 H2 的 `inventory_json`。
+- **對齊方針**：依據 ADR-01 決策，單機模式以 `SaveData` JSON 為唯一單一真相源。未來應將 `CharacterEntity.inventory` 標記為 `@Deprecated`，並在持久化管線中完全過渡至以 `SaveGameService` 為核心，消除維護雙套持久化實體的認知負擔。
+

@@ -7,16 +7,16 @@ import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.Gender;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 // 這個物件會被序列化存入 players.stats_json 和 mobs.stats_json
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LivingStats {
+
+  public LivingStats() {}
+
   public Gender gender = Gender.MALE;
   public String race = "human";
 
@@ -97,6 +97,22 @@ public class LivingStats {
     copy.dex = this.dex;
     copy.con = this.con;
     copy.wis = this.wis;
+
+    if (this.equipment != null) {
+      copy.equipment = new HashMap<>(this.equipment);
+    }
+    if (this.learnedSkills != null) {
+      copy.learnedSkills = new HashMap<>(this.learnedSkills);
+    }
+    if (this.enabledSkills != null) {
+      copy.enabledSkills = new HashMap<>(this.enabledSkills);
+    }
+    if (this.resistances != null) {
+      copy.resistances = new HashMap<>(this.resistances);
+    }
+    if (this.combatResources != null) {
+      copy.combatResources = new HashMap<>(this.combatResources);
+    }
 
     return copy;
   }

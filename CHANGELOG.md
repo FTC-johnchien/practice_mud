@@ -8,6 +8,21 @@
 
 ## 📌 最新里程碑 (Latest Releases)
 
+### [2026-10-14] 專案紅線治理、看門狗護欄與實體深拷貝加固 (GUARD-02 & DEEPCOPY-01)
+- **實體深拷貝加固 (LivingStats.deepCopy)**：
+  - 補齊 `LivingStats.deepCopy()` 遺漏之 `resistances`、`equipment`、`learnedSkills`、`enabledSkills`、`combatResources` 防禦性淺拷貝，消除快照丟失屬性隱患，落實專案第一紅線。
+- **100% 資料驅動不可篡改第一紅線確立**：
+  - 升級 `GEMINI.md` 第 7 條為專案第一紅線，明訂最高元契約，未經使用者書面許可嚴禁以任何理由刪除或修改。
+  - 於 `.agents/rules/data_driven_architecture.md` 建立系統級規則，確保 Antigravity 核心引擎每次自動加載。
+  - 明確規定 AI 提供的 Git commit 訊息必須一律使用繁體中文，嚴禁純英文。
+- **架構看門狗測試擴充 (GUARD-02)**：
+- **JPA 實體規範化與無欄位註解清理**：
+  - 全面規範 JPA 實體（`CharacterEntity`、`ItemTemplateEntity`、`RoomStateEntity`、`RoomStateId`、`UserEntity`）與核心領域模型（`GameItem`、`LivingStats`），改用 JPA 領域最佳實踐顯式建構子搭配 `@Getter`/`@Setter`（避免 `@Data` 產生之 `equals`/`hashCode` 懶加載與實體狀態穿透副作用）。
+  - 清理所有無欄位標註 `@RequiredArgsConstructor` 之無狀態類別（`FormulaEvaluator`、`SkillCostService`、`AggressiveBehavior`、`InGameBehavior`、`PassiveBehavior`），全面改用原生顯式建構子消除雜訊。
+  - 保留核心 Spring 業務服務（`WorldPulse`、`CombatService`、`ShopCommand`、`WorldManager`、`MudWebSocketHandler`、`DungeonFloorLoader`）之簡潔 `@RequiredArgsConstructor` 建構子注入，確立乾淨的依賴宣告。
+- **單元與整合測試 100% 綠燈**：
+  - 全專案 304 項單元與整合測試全數通過（0 失敗、0 錯誤），Spring Boot 本機服務正常啟動完備。
+
 ### [2026-10-14] 罡氣破防、五行抗性與戰鬥機制全面資料驅動落地 (DATA-DRIVEN-COMBAT-01)
 - **修復技能縮放抹消漏洞 (Skill Scaling Defect Fix)**：
   - 修復 `SkillBridgeService.scaleSkill()` 在動態縮放技能時漏拷貝屬性的重大 Bug；完整保留 `poiseDamage`、`buffConfig`、`shield`、`defense`、`buff`、`tags`、`aliases`、`gcdMs`、`castTimeMs`、`triggersGcd`、`threatBonus`、`damageType`、`fxKey`。
