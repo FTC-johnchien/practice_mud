@@ -100,6 +100,11 @@ com.example.htmlmud/
 │   │   ├── impl/                        #   Actor 實體 (Living, Player, Mob, Room)
 │   │   └── behavior/                    #   行為模式 (PlayerBehavior, MobBehavior, GuestBehavior)
 │   │
+│   ├── combat/                          # 戰鬥核心規則與呈現投影 (UNIFY-03 SSoT)
+│   │   ├── CombatRules.java             #   純函式戰鬥演算法 (基礎傷害/五行抗性/一次擲骰圓桌判定)
+│   │   ├── CombatPresentation.java      #   雙模呈現投影 (MUD 文字敘事 + Web 結構化事件)
+│   │   └── Combatant.java               #   大一統戰鬥參與者介面 (繼承 Buffable)
+│   │
 │   ├── service/                         # 領域服務 (無狀態業務邏輯)
 │   │   ├── WorldManager.java            #   世界管理器 (房間管理與生命週期)
 │   │   ├── CombatService.java           #   MUD 即時戰鬥引擎
@@ -113,12 +118,26 @@ com.example.htmlmud/
 │   │   ├── CharacterSyncService.java    #   角色狀態同步服務
 │   │   └── TemplateCatalog.java         #   模板目錄 (TemplateReader 實作)
 │   │
+│   ├── event/                           # 領域事件骨幹 (EVENT-01)
+│   │   ├── MobEvents.java               #   怪物事件 (MobDead)
+│   │   └── PlayerEvents.java            #   玩家事件 (LevelUp, ItemAcquired)
+│   │
+│   ├── port/                            # 六角形架構輸出埠 (Phase 10 Output Ports)
+│   │   ├── CommandDispatcherPort.java   #   指令分派埠
+│   │   └── ClientSessionManagerPort.java # 客戶端會話管理埠
+│   │
+│   ├── validation/                      # 啟動期拓撲校驗與看門狗
+│   │   └── DataIntegrityValidator.java  #   資料完整性校驗器
+│   │
+│   ├── repository/                      # 領域唯讀介面
+│   │   └── TemplateReader.java          #   模板唯讀抽象契約
+│   │
 │   ├── factory/                         # 領域工廠
 │   │   └── ItemFactory.java             #   標準物品工廠 (ItemInstance / PartyItemSlot 生成)
 │   │
 │   ├── model/                           # 領域模型實體與值物件
 │   │   ├── definition/                  #   不可變標準定義 (ItemDefinition)
-│   │   ├── entity/                      #   可變實體 (LivingStats, GameItem, ItemInstance, SkillEntry, PlayerRecord)
+│   │   ├── entity/                      #   可變實體 (LivingStats, GameItem, ItemInstance, SkillEntry)
 │   │   ├── view/                        #   只讀合成視圖 (ItemView)
 │   │   ├── template/                    #   不可變定義模板 (Record 封裝)
 │   │   │   ├── ItemTemplate.java        #     物品模板
@@ -145,6 +164,7 @@ com.example.htmlmud/
 │   ├── party/                           # 小隊領域子域
 │   │   ├── model/                       #   小隊模型 (Party, PartyMember, FormationTemplate)
 │   │   └── service/PartyService.java    #   小隊管理服務
+│   │
 │   └── save/                            # 存檔領域子域
 │       ├── model/SaveData.java          #   存檔聚合根模型 (schemaVersion v2)
 │       ├── dto/SaveSlotDto.java         #   存檔槽位 DTO
@@ -176,25 +196,45 @@ com.example.htmlmud/
 │   ├── MudMessage.java                  #   雙向通訊封包模型
 │   └── WebSocketOutput.java             #   WebSocket 輸出配接器
 │
-└── static/js/                           # === 前端 Web 視圖模組 (Frontend Architecture) ===
-    ├── core/                            # 前端核心中樞 (Core Engine)
-    │   ├── constants.js                 #   全域常數中樞 (字級、快捷鍵、日誌上限、主選單規格)
-    │   ├── ui-utils.js                  #   純函式工具庫 (escapeHtml 全域防禦、百分比換算)
-    │   ├── state-store.js               #   全域響應式狀態管理 (StateStore)
-    │   ├── event-bus.js                 #   解耦事件匯流排 (EventBus)
-    │   └── cmd-dispatcher.js            #   指令分派與 WebSocket 封包發送
-    ├── panels/                          # 視圖面板模組 (Panels)
-    │   ├── town-panel.js                #   城鎮探索、NPC 互動與羅盤
-    │   ├── dungeon-panel.js             #   地牢迷宮雷達、靈壓與視野
-    │   ├── battle-panel.js              #   戰鬥主舞台、5x5 敵陣與指揮台
-    │   ├── party-hud-panel.js           #   5 人小隊 HUD 狀態列與異變進度 (Party.MAX_PARTY_SIZE = 5)
-    │   └── message-log-panel.js         #   情報文字日誌與 ANSI 色碼解析
-    └── modals/                          # 彈窗與抽屜組件 (Modals & Drawers)
-        ├── party-modal.js               #   小隊整備、裝備比對、Gambit 戰術、主選單
-        ├── shop-modal.js                #   城鎮貨棧交易彈窗
-        ├── save-modal.js                #   存讀檔管理與暗黑仙俠標題畫面
-        ├── skill-drawer.js              #   隊員技能盤抽屜
-        └── bag-drawer.js                #   隊伍公共行囊抽屜
+└── static/                              # === 前端 Web 視圖模組 (Frontend Architecture) ===
+    ├── css/                             # 模組化樣式庫 (Cascade 串流加載)
+    │   ├── style-01-tokens-and-shell.css #   全域 Tokens 與基礎骨架
+    │   ├── style-02-combat-arena.css    #   戰鬥主舞台與 5x5 敵陣
+    │   ├── style-03-battle-actions.css  #   戰備指令台與冷卻唱條
+    │   ├── style-04-main-menu.css       #   1600x900 滿版主選單外框
+    │   ├── style-05-town-and-hub.css    #   城鎮生活舞台與羅盤
+    │   ├── style-06-shop-and-responsive.css # 貨棧交易彈窗與響應式
+    │   └── style-07-battle-fx.css       #   戰鬥 VFX 特效、護盾流光與呼吸邊框
+    └── js/
+        ├── core/                        # 前端核心中樞 (Core Engine)
+        │   ├── constants.js             #   全域常數中樞 (字級 >= 13px、快捷鍵、日誌上限)
+        │   ├── ui-utils.js              #   純函式工具庫 (escapeHtml 全域防禦、百分比換算)
+        │   ├── state-store.js           #   全域響應式狀態管理 (StateStore)
+        │   ├── event-bus.js             #   解耦事件匯流排 (EventBus)
+        │   ├── cmd-dispatcher.js        #   指令分派與 WebSocket 封包發送
+        │   └── buff-hud-helper.js       #   Buff 聚合圖示 HUD 與 Tooltip 輔助器
+        ├── fx/                          # 戰鬥視覺特效引擎 (VFX)
+        │   ├── battle-fx-director.js    #   演出指揮中心
+        │   ├── floating-text.js         #   正交色彩浮動數字
+        │   ├── fx-presets.js            #   武器與法術粒子預設庫
+        │   └── fx-geometry.js           #   命中幾何座標運算
+        ├── panels/                      # 視圖面板模組 (Panels)
+        │   ├── town-panel.js            #   城鎮探索、NPC 互動與羅盤
+        │   ├── dungeon-panel.js         #   地牢迷宮雷達、靈壓與視野
+        │   ├── battle-panel.js          #   戰鬥主舞台、5x5 敵陣與指揮台
+        │   ├── party-hud-panel.js       #   5 人小隊 HUD 狀態列與三色能量條
+        │   └── message-log-panel.js     #   情報文字日誌與 ANSI 色碼解析
+        └── modals/                      # 彈窗與子功能頁籤模組 (Modals & Subtabs)
+            ├── party-modal.js           #   小隊主選單 Coordinator 與路由
+            ├── party-equipment-tab.js   #   5+2 裝備穿脫與數值 Diff 比對
+            ├── party-skills-tab.js      #   WoW 風格武學法術書與被動心法
+            ├── party-formation-tab.js   #   戰術站位盤與道門陣法庫
+            ├── party-tactics-tab.js     #   Gambit 規則鏈配置
+            ├── shop-modal.js            #   城鎮貨棧交易彈窗
+            ├── save-modal.js            #   存讀檔管理與標題畫面
+            ├── victory-modal.js         #   戰鬥大捷翻牌結算彈窗
+            ├── skill-drawer.js          #   隊員技能盤抽屜
+            └── bag-drawer.js            #   隊伍公共行囊抽屜
 ```
 
 ---

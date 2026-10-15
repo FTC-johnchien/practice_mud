@@ -324,18 +324,26 @@ export const UiUtils = {
 
 ---
 
-## 4. 專案畫面實際現況深度盤點 (Current UI State)
+## 4. 專案畫面實際現況深度盤點 (Current UI State - 2026-10-15 最新審查)
 
-經過對現行前端程式庫（`index.html`、`style.css`、`app.js`、`panels/`、`modals/`）之全面審查，當前畫面存在以下架構缺陷：
+經 2026-10-15 全面實地審查，前端歷經 Phase UI-1 ~ UI-5 治理後已大幅現代化，歷史痛點與當前真實狀態盤點如下：
 
-| 檢驗向度 | 現狀數值 / 現象 | 評估風險 | 具體痛點與改進目標 |
-| :--- | :--- | :---: | :--- |
-| **HTML 內聯事件** | `index.html` 存在 25+ 處 `onclick="..."` | 🔴 高危 | 違反 CSP 安全規範，程式碼與視圖高度偶合，無法進行單元測試。 |
-| **CSS 巨石樣式** | 單一 `style.css` 高達 **4,180+ 行 (118 KB)** | 🔴 高危 | 樣式衝突頻繁，特異性 (Specificity) 失控，維護成本極高，亟待按 7 大區塊拆分。 |
-| **JS 巨石單體** | `party-modal.js` 高達 **158 KB**<br>`battle-panel.js` 高達 **40 KB** | 🔴 高危 | 單一檔案承擔過多職責（裝備、技能、Gambit、存檔混在一起），違反單一職責原則。 |
-| **字級過小破版** | 多處出現 `font-size: 10px ~ 11px` | 🟠 中危 | 早期固定高度排版在提升至 13px 時會產生文字截斷或折行破版，需改用流式 Flex/Grid。 |
-| **共用函式混亂** | `mud-core.js` 與 `mud-ui.js` 仍以全域掛載執行 | 🟠 中危 | 未納入 ES6 Modules 管理體系，全域變數污染（如 `window.send`）。 |
-| **資源顯示遮蔽** | HUD 僅能顯示 MP 或 SP 二選一 | 🟡 輕微 | 法力與戰氣無法同時在戰鬥中直觀監控，需落地雙軌資源條規格。 |
+### 4.1 已解決之歷史高危項目 (Resolved Baseline)
+- ✅ **HTML 內聯事件絕大部分已消除 (Phase UI-3)**：主舞台與彈窗全面改採 `data-action` 集中事件委派（`app.js:initEventDelegation`），滿足嚴格 CSP 規範（僅標題封面殘留 4 處備用屬性待清理）。
+- ✅ **CSS 巨石樣式安全模組化 (Phase UI-2)**：原 118 KB 巨石已依串流 Cascade 順序拆解為 `style-01` 至 `style-07`，由 `index.html` 按序載入。
+- ✅ **JS 巨石單體垂直切片解耦 (Phase UI-5)**：原 158 KB `party-modal.js` 已拆分為裝備、法術書、戰術站位盤、Gambit 規則鏈等 4 大子頁籤模組。
+- ✅ **全域字級規範嚴格達標 (Phase UI-1)**：全面落實 `font-size >= 13px`，淘汰 9~11px 破版寫法。
+- ✅ **雙軌與三軌動態資源呈現 (Phase 11.5)**：HUD 隊員卡片已全面同步展示氣血 (HP)、真元 (MP) 與戰氣勢能 (SP) 三色條。
+
+### 4.2 2026-10-15 當前現存真實待改進項目 (Current Real Issues)
+
+| 檢驗向度 | 現狀數值 / 現象 | 評估風險 | 具體痛點與改進目標 | 對應待辦 |
+| :--- | :--- | :---: | :--- | :---: |
+| **裝備槽位判定** | `party-equipment-tab.js` 曾包含中文關鍵字推測 | 🟢 已整治 | 2026-10-15 已徹底拔除 `name.includes(...)`，全面回歸 `equipSlot` 資料驅動。 | §21.2 |
+| **地塊懸停提示** | `dungeon-panel.js` 寫死「青岡石壁/古仙棺槨」 | 🟠 中危 | 墨竹礦坑等地貌顯示太陰地貌名稱，需改由地牢 JSON `legend` 動態讀取。 | §21.3 |
+| **頂底模組未獨立** | `header-panel.js` / `footer-bar.js` 未獨立成檔 | 🟡 輕微 | 頂部導航與底部操作列代碼目前內嵌於 `app.js` 與 `index.html`，待抽離為獨立視圖。 | UI-4 |
+| **歷史備份檔案殘存** | `css/style.css` (122 KB) 與 `static/legacy/` 未除役 | 🟡 輕微 | `index.html` 已改讀模組化 CSS，舊巨石檔案屬於冗餘備份，需擇期清理。 | §21.5 |
+| **共用核心掛載** | `mud-core.js` 與 `mud-ui.js` 仍以全域 script 載入 | 🟡 輕微 | 未完全轉型為 ES6 module import，全域暴露 `window.send`。 | §10.3 |
 
 ---
 

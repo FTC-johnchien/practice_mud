@@ -67,39 +67,44 @@ export function populateTileAppearance(cell, symbol, gx, gy) {
     case '#':
       cell.classList.add('cell-wall');
       cell.innerText = '█';
-      cell.title = `青岡石壁 (${gx}, ${gy})`;
+      cell.title = `玄岩石壁 (${gx}, ${gy})`;
       break;
     case '+':
       cell.classList.add('cell-door');
       cell.innerText = '☩';
-      cell.title = `封印石門 (${gx}, ${gy})`;
+      cell.title = `石門 (${gx}, ${gy})`;
       break;
     case '$':
     case '◆':
       cell.classList.add('cell-chest');
       cell.innerText = '◆';
-      cell.title = `古仙棺槨寶箱 (${gx}, ${gy})`;
+      cell.title = `密封寶箱 (${gx}, ${gy})`;
       break;
     case '◇':
       cell.classList.add('cell-chest-opened');
       cell.innerText = '◇';
-      cell.title = `已開啟棺槨 (${gx}, ${gy})`;
+      cell.title = `已開啟寶箱 (${gx}, ${gy})`;
       break;
     case '^':
       cell.classList.add('cell-trap');
       cell.innerText = '▲';
-      cell.title = `深淵黏液陷阱 (${gx}, ${gy})`;
+      cell.title = `機關陷阱 (${gx}, ${gy})`;
       break;
     case '>':
       cell.classList.add('cell-stairs');
       cell.innerText = '▼';
-      cell.title = `通往下層石階 (${gx}, ${gy})`;
+      cell.title = `向下階梯 (${gx}, ${gy})`;
+      break;
+    case '<':
+      cell.classList.add('cell-stairs-up');
+      cell.innerText = '▲';
+      cell.title = `向上階梯/出口 (${gx}, ${gy})`;
       break;
     case '.':
     default:
       cell.classList.add('cell-path');
       cell.innerText = '·';
-      cell.title = `墓道通路 (${gx}, ${gy})`;
+      cell.title = `通路 (${gx}, ${gy})`;
       break;
   }
 }

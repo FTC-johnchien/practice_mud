@@ -75,16 +75,10 @@ public class ShopCommand implements PlayerCommand {
     Player self = MudContext.currentPlayer();
     String roomId = self.getCurrentRoomId();
 
-    // 解析當前房間的商店，若無則嘗試新手村客棧作為保底
+    // 依當前房間查詢商店配置
     Optional<ShopTemplate> shopOpt = templateReader.findShopByRoomId(roomId);
     if (shopOpt.isEmpty()) {
-      if (roomId != null && roomId.contains("inn")) {
-        shopOpt = templateReader.findShop("newbie_village:inn_shop");
-      }
-    }
-
-    if (shopOpt.isEmpty()) {
-      self.reply("此處荒郊野嶺，並無商販或客棧掌櫃可以交易。（請前往新手村客棧尋找福伯）");
+      self.reply("此處荒郊野嶺，並無商販或客棧掌櫃可以交易。（請前往設有貨棧之處）");
       return;
     }
 

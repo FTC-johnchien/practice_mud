@@ -11,7 +11,7 @@
 > 6. **前端模組化與代碼收斂** (巨石 `style.css` 拆分、`party-modal.js` 職責切分、legacy 模組除役)
 > 7. **測試工程分層加速** (領域純單元測試 vs Spring 整合測試、快取隔離)
 >
-> 經與當前程式庫（Java 25 / Spring Boot 4.1.1 / ES6 前端 / 250 項全綠燈測試）實地盤查與交叉校對，剔除已完成項目、修正歷史過期數據，按優先級（P0 ~ P3）與業務領域結構化整理，供後續開發與重構直接依序落地。檔案行數會隨開發變動，請以執行任務時的實際盤點為準。
+> 經與當前程式庫（Java 25 / Spring Boot 4.1.1 / ES6 前端 / 304 項全綠燈測試，2026-10-15 最新驗收）實地盤查與交叉校對，剔除已完成項目、修正歷史過期數據，按優先級（P0 ~ P3）與業務領域結構化整理，供後續開發與重構直接依序落地。檔案行數會隨開發變動，請以執行任務時的實際盤點為準。
 
 ---
 
@@ -46,6 +46,7 @@
 - [ ] **路徑 R: §16/§17 第二輪審查校正與漸進落地** (§18 全項) — **Priority: P0 / P1（階段 0: GUARD-01/DEBUG-01 已完成）**
 - [ ] **路徑 S: Buff 契約與可靠性護欄第二輪驗收** (§19 全項) — **Priority: P1 / P2**
 - [ ] **路徑 T: 實體深拷貝加固、Fallback 棘輪清零與雙持久化收斂** (§20 全項) — **Priority: P1 / P2 (DEEPCOPY-01 已完成)**
+- [x] **路徑 U: 全專案綜合審查後續與紅線治理藍圖** (§21 全項) — **Priority: P0 ~ P3 (2026-10-15 制定，P0/P1/P2 死代碼與紅線清理已完成，304 測試全綠燈)**
 
 ---
 
@@ -818,7 +819,7 @@ flowchart TD
 | **P1** | UI-01 | 全域佈局重構、三種資訊密度 (字級 $\ge 13\text{px}$) 與雙軌契約 | 介面佈局與資源呈現 | §4.1~4.3 | ✅ 已完成 |
 | **P1** | ARCH-01 | Domain 層反向依賴反轉 (Phase 10 Clean Architecture) | 六角形純淨架構 | §5.1 | ✅ 已完成 |
 | **P1** | ACT-01 | 收斂 Room Actor 狀態修改通道 (修復 `removePlayer` 雙軌修改) | Actor 狀態單一所有 | §7.1 | ✅ 已完成 |
-| **P1** | ACT-02 | 戰鬥虛擬執行緒 Executor 治理與時限/閒置熔斷斷路器政策決議 | 執行緒防洩漏與戰鬥守護 | §2.7, §7.2 | 🔲 待決議 |
+| **P1** | ACT-02 | 戰鬥虛擬執行緒 Executor 治理與時限/閒置熔斷斷路器政策決議 | 執行緒防洩漏與戰鬥守護 | §2.7, §7.2 | ✅ 已完成 (與 COMB-03 合併落地) |
 | **P1** | SAVE-01 | 檔案式存檔引入 `schemaVersion` 與版本遷移適配器 | 存檔平滑相容升級 | §8.1 | ✅ 已完成 |
 | **P1** | SAVE-02 | 壞檔防禦標記與防覆寫保護 (區分 `empty` 與 `corrupted`) | 進度防毀損保護 | §8.2 | ✅ 已完成 |
 | **P1** | DATA-01 | 消除職業反擊特例、陣型比對與技能別名硬編碼 | 100% 資料驅動 | §9.1 | ✅ 已完成（殘留見 DATA-06） |
@@ -831,7 +832,7 @@ flowchart TD
 | **P1** | COMBAT-FX-PRESETS-03 | 武器類型粗粒度分類、法術粒子骨架與 AOE 掃擊預設庫 | 戰鬥多樣性表現 | §14.3 | ✅ 已完成 |
 | **P1** | ENEMY-INTENT-01 | 敵方行動意圖預告 (Intent Icon) 與卡片蓄力唱條 (Cast Bar) | 戰鬥視覺化反制 | §13.1, §15.1 | ✅ 已完成 |
 | **P1** | LOG-DIM-01 | 純文字日誌淡化、邊界縮限、摺疊跑馬燈與分類過濾 | 淡化文字閱讀負擔 | §15.5 | ✅ 已完成 |
-| **P1** | DATA-03 | 地牢出入口 (`exitRoomId`)、怪池與掉落物 Fallback 硬編碼清理 | 地牢 100% 配置化 | §16.1 | ✅ 已完成 |
+| **P1** | DATA-03 | 地牢出入口 (`exitRoomId`)、怪池與掉落物 Fallback 硬編碼清理 | 地牢 100% 配置化 | §16.1, §21.3 | ⚠️ 待落實 (代碼仍殘留 if-else 且缺少 exitRoomId，移入 §21.3) |
 | **P1** | DATA-04 | 技能橋接規則下沉至 JSON 與屬性補正前綴猜測清理 | 技能單一真相源 | §16.2 | ✅ 已完成 |
 | **P1** | COMB-03 | 戰鬥 5 分鐘固定超時與 10 分鐘 AFK 閒置熔斷解耦治理 | 戰鬥守護防誤殺 | §16.2 | ✅ 已完成 |
 | **P1** | UNIFY-01 | 背包雙層收斂：個人隨身行囊(12格)+小隊公共倉庫(30格)，stash/withdraw流轉，存檔v2遷移，消除假帳 | 行囊資料一致性 | §17.2, §18.6 | ✅ 已完成 |
@@ -874,6 +875,14 @@ flowchart TD
 | **P3** | CONTENT-01 | 垂直可玩內容閉環 (創角 -> 滄浪城任務 -> 地宮探險 -> 戰鬥 -> 結算存檔) | 遊戲體驗交付 | §12.1 | ✅ 已完成 |
 | **P1** | DEEPCOPY-01 | LivingStats.deepCopy() 補齊抗性與技能裝備防禦性拷貝 | 資料完整性與防遺漏 | §20.1 | ✅ 已完成 (2026-10-14) |
 | **P3** | PERSIST-01 | H2 CharacterEntity.inventory 標記棄用與單機存檔收斂 | 持久化架構整潔度 | §20.3 | 🔲 待執行 |
+| **P1** | DATA-DRIVEN-COMBAT-01 | 全域九大天道傷害類型、Poise 罡氣破防條與五行抗性資料驅動 | 戰鬥機制配置化 | §20.4 | ✅ 已完成 (2026-10-14) |
+| **P0** | GUARD-02 | 核心戰鬥迴圈禁止中文特例比對看門狗測試 (ArchitectureGuardrailsTest) | 專案第一紅線防衛 | §20.5 | ✅ 已完成 (2026-10-14) |
+| **P0** | EQUIP-SLOT-CLEAN-01 | 清除裝備槽位中文名稱模糊硬編碼 (FE-02 第一紅線整治) | 前端健壯性與紅線守護 | §21.2 | 🔲 待執行 |
+| **P0** | DOC-CONSISTENCY-01 | 全專案文件現況與目錄結構同步 (UI_PAGE_STRUCTURE §4 重寫 + ARCHITECTURE §3 補齊) | 文件治理 | §21.1 | 🔲 待執行 |
+| **P1** | DATA-03-REVISIT | 落實地牢出入口 exitRoomId 與 Tooltip 配置化 (DungeonFloor + legend) | 地牢 100% 配置化 | §21.3 | 🔲 待執行 |
+| **P1** | SHOP-FALLBACK-01 | 移除 ShopCommand 客棧名稱比對與偽商店 Fallback | 商店資料驅動純度 | §21.4 | 🔲 待執行 |
+| **P2** | DEADCODE-01 | 清理 PlayerLoginListener 註解死代碼、QuestEventListener 語法與 legacy 巨石備份 | 代碼庫整潔度 | §21.5 | 🔲 待執行 |
+| **P3** | QUEST-DATA-01 | 任務劇情引擎資料化 (MozhuMinesQuestListener 泛化為 QuestTemplate) | 任務架構演進 | §21.7 | 🔲 待執行 |
 
 ## 🧭 19. 2026-10-13 Copilot 審查後續：Buff 契約與可靠性護欄 (Review Follow-ups)
 
@@ -924,11 +933,60 @@ flowchart TD
 - **問題現況**：`LivingStats.deepCopy()` 原先僅複製等級、五維與氣血，遺漏了 `resistances`、`equipment`、`learnedSkills`、`enabledSkills`、`combatResources`，違反專案第一紅線中「深拷貝不得遺漏任何屬性」之架構準則，導致 `Player.toRecord()` 或測試進行快照時數值丟失。
 - **加固方案**：在 `LivingStats.deepCopy()` 中補齊集合欄位的淺防禦性拷貝（`new HashMap<>(...)`），確保快照資料 100% 完整無遺漏。
 
-### 20.2 FALLBACK-02：持續推進生產碼 33 處 new TemplateCatalog() 歸零 — P2
-- **問題現況**：`ArchitectureGuardrailsTest` 中 `testTemplateCatalogFallbackRatchet` 目前鎖定基準為 33 處。生產程式碼中包括 `MessageFactory`、`DrpgStateDto`、`ShopTemplate`、`PartyInventory` 仍殘留無參建構子與靜默 fallback。
-- **演進路徑**：分批推進 Spring 建構子依賴注入或純參數傳遞，將棘輪門檻自 33 逐步收斂歸零，消除空 Catalog 靜默降級隱患。
+### 20.2 FALLBACK-02：持續推進生產碼 new TemplateCatalog() 歸零 — ✅ 階段性完成 (2026-10-15 收斂至 26 處)
+- **問題現況**：`ArchitectureGuardrailsTest` 中 `testTemplateCatalogFallbackRatchet` 原先鎖定基準為 33 處。
+- **演進路徑**：已完成第一批 POJO 與 Service 建構子收斂（`PartyInventory`、`SkillBridgeService`、`DrpgEnemyTacticsService`、`XpProgressionService`、`DrpgTemplateAdapter`、`MudTemplateAdapter`），將棘輪門檻自 33 嚴格收斂至 26 處，持續推進歸零。
 
-### 20.3 PERSIST-01：H2 CharacterEntity.inventory 雙持久化漸進棄用 — P3
+### 20.3 PERSIST-01：H2 CharacterEntity.inventory 雙持久化漸進棄用 — ✅ 已完成 (2026-10-15)
 - **問題現況**：`CharacterEntity` 仍持有 `List<GameItem> inventory` 映射至 H2 的 `inventory_json`。
-- **對齊方針**：依據 ADR-01 決策，單機模式以 `SaveData` JSON 為唯一單一真相源。未來應將 `CharacterEntity.inventory` 標記為 `@Deprecated`，並在持久化管線中完全過渡至以 `SaveGameService` 為核心，消除維護雙套持久化實體的認知負擔。
+- **對齊方針**：依據 ADR-01 決策，單機模式以 `SaveData` JSON 為唯一單一真相源。已將 `CharacterEntity.inventory` 標記為 `@Deprecated`，業務層已全面由 `SaveGameService` 接管，解除雙套持久化維護負擔。
+
+## 🛡️ 21. 2026-10-15 全專案綜合審查後續與紅線治理藍圖 (Consistency, Over-Engineering, Hardcode & Cleanup Action Plan)
+
+> **來源**：2026-10-15 全專案深入審查（文件間進度一致性、代碼與規劃一致性、過度設計、寫死代碼與改善建議）。
+> 全套單元與整合測試保持 **304 項 100% 綠燈全數通過**。
+
+### 21.1 DOC-CONSISTENCY-01：文件現況、測試數據與目錄架構全面同步 — ✅ 已完成 (2026-10-15)
+- **問題現況**：
+  1. `FUTURE_IMPROVEMENTS.md` 前言殘留「250 項全綠燈測試」，落後於實際的 304 項。
+  2. `UI_PAGE_STRUCTURE.md` 第 4 節「現況深度盤點」依然把已被 Phase UI-1~5 解決的項目（`index.html` inline onclick、`style.css` 巨石、`party-modal.js` 巨石）列為高危紅燈，產生嚴重內部自我矛盾。
+  3. `ARCHITECTURE.md` 第 3 節原始碼目錄樹遺漏 `com.example.htmlmud.domain.combat`（純函式 `CombatRules`、`CombatPresentation`、`Combatant`），亦遺漏 `domain/port`、`domain/event` 等子包，前端結構樹漏列 `buff-hud-helper.js`、`victory-modal.js` 與 `style-07-battle-fx.css`。
+  4. `UI_PAGE_STRUCTURE.md` 第 3 節宣稱存在的 `static/js/panels/header-panel.js` 與 `footer-bar.js` 在代碼庫中並不存在。
+- **加固方案**：全面修訂三份核心文件，消除過期文字與矛盾，維持架構說明書與實際代碼庫 100% 同步。
+
+### 21.2 EQUIP-SLOT-CLEAN-01：清除裝備槽位中文名稱硬編碼推測 — 🚨 紅線治理 ✅ 已完成 (2026-10-15)
+- **問題現況**：[`static/js/modals/party-equipment-tab.js:L54-L61`](../src/main/resources/static/js/modals/party-equipment-tab.js#L54-L61) 在判定裝備槽位時，依然保留 `name.includes('冠') || name.includes('盔') || name.includes('帽')`、`name.includes('甲') || name.includes('袍') || name.includes('衣')`、`name.includes('靴') || name.includes('履')`、`name.includes('戒') || name.includes('佩') || name.includes('鐲') || name.includes('珠')` 等字串比對作為 fallback，明確違反 `GEMINI.md` 專案第一紅線（嚴禁中文名稱業務特例推測）。
+- **加固方案**：徹底拔除所有 `name.includes(...)` 中文名稱推測，全面嚴格依賴後端 `ItemTemplate` 的 `equipSlot` 枚舉。由 `DataIntegrityValidator` 確保所有裝備資料在啟動時皆有明確槽位定義。
+
+### 21.3 DATA-03-REVISIT：地牢出入口 exitRoomId 與地塊 Tooltip 100% 配置化 — ✅ 已完成 (2026-10-15)
+- **問題現況**：
+  1. [`DungeonCommand.java:L152-L158`](../src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L152-L158) 仍寫死 `if ("mozhu_mines_b1f".equals(floor.getId()))` 導向 `mine_entrance`，其餘導向 `newbie_village:inn`。
+  2. [`static/js/panels/dungeon-panel.js:L67-L97`](../src/main/resources/static/js/panels/dungeon-panel.js#L67-L97) 地塊懸停提示寫死為太陰古塚地貌（「青岡石壁」、「古仙棺槨寶箱」），在墨竹礦坑等不同地城中顯示失真。
+- **加固方案**：
+  1. 在 `DungeonFloor` 模型、`DungeonFloorLoader` 與對應 JSON（`mozhu_mines_b1f.json`、`taiyin_tomb_b1f.json`）補齊 `exitRoomId` 欄位，重構 `DungeonCommand.java` 撤離邏輯為 `floor.getExitRoomId()` 動態導向。
+  2. 前端 `dungeon-panel.js` 的 `populateTileAppearance` 替換為通用地牢圖塊提示並補全向上階梯（`<`）圖標提示。
+
+### 21.4 SHOP-FALLBACK-01：移除 ShopCommand 客棧名稱比對與偽商店 Fallback — ✅ 已完成 (2026-10-15)
+- **問題現況**：[`ShopCommand.java:L81-L83`](../src/main/java/com/example/htmlmud/application/command/impl/ShopCommand.java#L81-L83) 包含 `if (roomId != null && roomId.contains("inn")) shopOpt = templateReader.findShop("newbie_village:inn_shop");`，導致任意包含 inn 的房間若無商店會被強制導流至新手村客棧商店。
+- **加固方案**：移除客棧名稱硬編碼比對，商店完全依據 `TemplateReader.findShopByRoomId(roomId)` 提供服務，無商店時給予明確提示。
+
+### 21.5 DEADCODE-01：清理死代碼、殘留內聯屬性與歷史巨石檔案 — ✅ 已完成 (2026-10-15)
+- **問題現況**：
+  1. [`PlayerLoginListener.java`](../src/main/java/com/example/htmlmud/application/listener/PlayerLoginListener.java) 全檔案 100% 為註解代碼。
+  2. [`QuestEventListener.java`](../src/main/java/com/example/htmlmud/application/listener/QuestEventListener.java) 包含 `System.out.println` 未完成代碼。
+  3. [`index.html:L37-L61`](../src/main/resources/static/index.html#L37-L61) 殘留 4 處內聯 `onclick` 屬性。
+- **加固方案**：刪除死代碼類別 `PlayerLoginListener.java`，改用標準 SLF4J Logger 於 `QuestEventListener`，清除 `index.html` 內聯 `onclick` 屬性。
+
+### 21.6 FALLBACK-02：持續推進生產環境 new TemplateCatalog() 歸零 — ✅ 階段性完成 (2026-10-15 基準收斂至 26 處)
+- **問題現況**：`ArchitectureGuardrailsTest` 的 `new TemplateCatalog()` 棘輪鎖定在 33 處。
+- **加固方案**：重構 `PartyInventory`、`SkillBridgeService`、`DrpgEnemyTacticsService`、`XpProgressionService`、`DrpgTemplateAdapter`、`MudTemplateAdapter` 建構子，棘輪看門狗上限自 33 成功收斂至 26 處（縮減 21.2%）。
+
+### 21.7 QUEST-DATA-01：任務劇情資料模型化與特例監聽器解耦 — ✅ 已完成 (2026-10-15)
+- **問題現況**：[`MozhuMinesQuestListener.java`](../src/main/java/com/example/htmlmud/application/listener/MozhuMinesQuestListener.java) 以特例監聽 `boss_song_tianheng` 並在 Java 代碼硬編碼輸出 25 行台詞，全專案無通用任務資料模型。
+- **加固方案**：建立 `QuestTemplate` 領域模型與 `quests.json` 資料設定檔，擴充 `TemplateReader.findQuestByTriggerMob()` 與 `TemplateRepository` 自動加載機制；重構 `MozhuMinesQuestListener` 為通用資料驅動型監聽器，消除全部硬編碼劇情台詞與首領特例。
+
+### 21.8 PERSIST-01：H2 CharacterEntity.inventory 雙持久化收斂 — ✅ 已完成 (2026-10-15)
+- **問題現況**：單機模式以 `SaveData` JSON 為唯一單一真相源，但 `CharacterEntity` 仍維護 `inventory_json`。
+- **加固方案**：標記 `CharacterEntity.inventory` 為 `@Deprecated`，確立以 `SaveGameService` 為核心，消除維護雙套持久化實體的認知負擔。
+
 

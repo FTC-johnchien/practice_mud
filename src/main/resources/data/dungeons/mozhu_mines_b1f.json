@@ -9,6 +9,7 @@
     "y": 8
   },
   "startFacing": "NORTH",
+  "exitRoomId": "mozhu_mines:mine_entrance",
   "layout": [
     "##########",
     "#...B...S#",

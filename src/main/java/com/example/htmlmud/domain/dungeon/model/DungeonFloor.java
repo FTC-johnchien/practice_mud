@@ -24,6 +24,7 @@ public class DungeonFloor {
   private int dangerRate = 15;
   @Builder.Default
   private List<String> mobPool = new ArrayList<>();
+  private String exitRoomId;
 
   @Deprecated
   public void setStartFacing(Direction dir) {

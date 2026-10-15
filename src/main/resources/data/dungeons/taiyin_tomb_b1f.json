@@ -9,6 +9,7 @@
     "y": 8
   },
   "startFacing": "NORTH",
+  "exitRoomId": "taiyin_tomb:entrance",
   "layout": [
     "##########",
     "#.......>#",

@@ -43,7 +43,6 @@ export function isItemMatchingSlot(item, slotKey) {
   const eqSlot = (item.equipSlot || '').toUpperCase();
   const itType = (item.itemType || '').toUpperCase();
   const subType = (item.subType || '').toUpperCase();
-  const name = item.name || '';
 
   switch (slotKey) {
     case 'MAIN_HAND':
@@ -51,14 +50,14 @@ export function isItemMatchingSlot(item, slotKey) {
     case 'OFF_HAND':
       return item.shield || itType === 'SHIELD' || eqSlot === 'OFF_HAND' || subType === 'SHIELD';
     case 'HEAD':
-      return eqSlot === 'HEAD' || itType === 'HEAD' || subType === 'HEAD' || name.includes('冠') || name.includes('盔') || name.includes('帽');
+      return eqSlot === 'HEAD' || itType === 'HEAD' || subType === 'HEAD';
     case 'BODY':
-      return item.armor || itType === 'ARMOR' || eqSlot === 'BODY' || subType === 'ARMOR' || name.includes('甲') || name.includes('袍') || name.includes('衣');
+      return item.armor || itType === 'ARMOR' || eqSlot === 'BODY' || subType === 'ARMOR' || eqSlot === 'ARMOR';
     case 'FEET':
-      return eqSlot === 'FEET' || itType === 'FEET' || subType === 'FEET' || name.includes('靴') || name.includes('履');
+      return eqSlot === 'FEET' || itType === 'FEET' || subType === 'FEET';
     case 'ACCESSORY_1':
     case 'ACCESSORY_2':
-      return eqSlot === 'ACCESSORY_1' || eqSlot === 'ACCESSORY_2' || itType === 'ACCESSORY' || subType === 'ACCESSORY' || name.includes('戒') || name.includes('佩') || name.includes('鐲') || name.includes('珠');
+      return eqSlot === 'ACCESSORY_1' || eqSlot === 'ACCESSORY_2' || eqSlot === 'ACCESSORY' || itType === 'ACCESSORY' || subType === 'ACCESSORY';
     default:
       return false;
   }

@@ -17,6 +17,7 @@ import com.example.htmlmud.domain.model.template.SkillTemplate;
 import com.example.htmlmud.domain.model.template.ZoneTemplate;
 import com.example.htmlmud.domain.model.template.CompanionTemplate;
 import com.example.htmlmud.domain.model.template.ClassTemplate;
+import com.example.htmlmud.domain.model.template.QuestTemplate;
 import com.example.htmlmud.domain.model.template.ShopTemplate;
 import com.example.htmlmud.domain.party.model.FormationTemplate;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
@@ -45,6 +46,7 @@ public class TemplateRepository implements TemplateRegistryPort {
   private final Map<String, String> skillAliasMap = new ConcurrentHashMap<>();
   private final Map<String, ClassTemplate> classTemplates = new ConcurrentHashMap<>();
   private final Map<String, ShopTemplate> shopTemplates = new ConcurrentHashMap<>();
+  private final Map<String, QuestTemplate> questTemplates = new ConcurrentHashMap<>();
 
   // 預先計算基礎技能的 ID (不可變常數映射)
   private static final Map<SkillCategory, String> BASIC_SKILL_IDS = new EnumMap<>(SkillCategory.class);
@@ -87,6 +89,7 @@ public class TemplateRepository implements TemplateRegistryPort {
     partySkillTemplates.clear();
     classTemplates.clear();
     shopTemplates.clear();
+    questTemplates.clear();
     initDefaults();
   }
 
@@ -120,6 +123,16 @@ public class TemplateRepository implements TemplateRegistryPort {
         }
       } catch (Exception e) {
         log.error("Failed to load data/formations/formations.json", e);
+      }
+    }
+    if (questTemplates.isEmpty()) {
+      try (var is = TemplateRepository.class.getClassLoader().getResourceAsStream("data/quests.json")) {
+        if (is != null) {
+          java.util.List<QuestTemplate> quests = mapper.readValue(is, new com.fasterxml.jackson.core.type.TypeReference<java.util.List<QuestTemplate>>() {});
+          for (QuestTemplate q : quests) addQuest(q);
+        }
+      } catch (Exception e) {
+        log.error("Failed to load data/quests.json", e);
       }
     }
   }
@@ -472,8 +485,33 @@ public class TemplateRepository implements TemplateRegistryPort {
             entry.getValue(), entry.getKey());
       }
     }
-    log.info("TemplateRepository validation complete. Loaded: {} zones, {} rooms, {} mobs, {} items, {} skills, {} races, {} classes",
+    log.info("TemplateRepository validation complete. Loaded: {} zones, {} rooms, {} mobs, {} items, {} skills, {} races, {} classes, {} quests",
         zoneTemplates.size(), roomTemplates.size(), mobTemplates.size(), itemTemplates.size(), skillTemplates.size(), raceTemplates.size(),
-        classTemplates.values().stream().map(ClassTemplate::id).distinct().count());
+        classTemplates.values().stream().map(ClassTemplate::id).distinct().count(), questTemplates.size());
+  }
+
+  // --- Quest ---
+  public void addQuest(QuestTemplate tpl) {
+    if (tpl != null && tpl.id() != null) questTemplates.put(tpl.id(), tpl);
+  }
+
+  public Optional<QuestTemplate> getQuest(String id) {
+    return Optional.ofNullable(questTemplates.get(id));
+  }
+
+  @Override
+  public Optional<QuestTemplate> findQuestByTriggerMob(String mobId) {
+    if (mobId == null) return Optional.empty();
+    for (QuestTemplate q : questTemplates.values()) {
+      if (mobId.equals(q.triggerMobId()) || (q.triggerMobId() != null && mobId.endsWith(":" + q.triggerMobId()))) {
+        return Optional.of(q);
+      }
+    }
+    return Optional.empty();
+  }
+
+  @Override
+  public Map<String, QuestTemplate> getAllQuests() {
+    return Collections.unmodifiableMap(questTemplates);
   }
 }

@@ -47,10 +47,10 @@ class ArchitectureGuardrailsTest {
           });
     }
 
-    // 歷史基線已自 35 縮小至 33 處，後續 Phase 1/2 清理時逐步縮小此閾值直至歸零
+    // 歷史基線已自 35 -> 33 處收斂至 26 處，後續 Phase 1/2 清理時逐步縮小此閾值直至歸零
     assertThat(violations.size())
         .as("禁止新增 new TemplateCatalog() 靜默 fallback，發現新增呼叫：\n" + String.join("\n", violations))
-        .isLessThanOrEqualTo(33);
+        .isLessThanOrEqualTo(26);
   }
 
   @Test

@@ -37,7 +37,7 @@ public class SkillBridgeService {
   }
 
   public SkillBridgeService() {
-    this(new TemplateCatalog(), new XpProgressionService());
+    this(null, null);
   }
 
   /**

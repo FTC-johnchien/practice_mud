@@ -24,7 +24,7 @@ public class MudTemplateAdapter {
   }
 
   public MudTemplateAdapter() {
-    this(new TemplateCatalog());
+    this((TemplateReader) null);
   }
 
   public Optional<ItemTemplate> findItem(String itemId) {

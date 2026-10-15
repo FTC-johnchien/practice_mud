@@ -52,9 +52,14 @@ public class CharacterEntity {
   @Column(name = "stats_json", columnDefinition = "CLOB")
   private LivingStats stats;
 
+  /**
+   * @deprecated 依據單機存檔架構決策，存檔單一真相源已收斂至 SaveData JSON 與 SaveGameService。
+   * 此處僅保留供 H2 歷史 Schema 向下相容，業務邏輯不再讀寫此欄位。
+   */
+  @Deprecated
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "inventory_json", columnDefinition = "CLOB")
-  private List<GameItem> inventory; // 背包系統
+  private List<GameItem> inventory; // 背包系統 (已棄用)
 
   // @JdbcTypeCode(SqlTypes.JSON)
   // @Column(name = "skills_json")

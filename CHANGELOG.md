@@ -8,6 +8,35 @@
 
 ## 📌 最新里程碑 (Latest Releases)
 
+### [2026-10-15] 全專案深入審查、紅線清理與地牢出入口配置化 (P0/P1 治理落地)
+- **裝備槽位中文推測硬編碼徹底清零 (`EQUIP-SLOT-CLEAN-01` - P0)**：
+  - 徹底移除 `party-equipment-tab.js` 中 `name.includes('冠')`、`'甲'`、`'靴'`、`'戒'` 等中文名稱推測邏輯，嚴格依賴後端 `ItemTemplate` 的 `equipSlot` 枚舉，落實專案第一紅線。
+- **地牢出入口與地貌通用化 (`DATA-03-REVISIT` - P1)**：
+  - 在 `DungeonFloor`、`DungeonFloorLoader` 與地牢 JSON（`mozhu_mines_b1f.json`、`taiyin_tomb_b1f.json`）新增 `exitRoomId` 欄位配置。
+  - 重構 `DungeonCommand.java` 撤離邏輯，以 `floor.getExitRoomId()` 動態導向取代寫死 `if-else` 分支。
+  - 重構 `dungeon-panel.js` 的 `populateTileAppearance`，去除太陰古塚專屬名稱綁定，支援通用圖塊 Tooltip 並補齊向上階梯（`<`）圖標提示。
+- **商店客棧名稱比對與偽商店 Fallback 移除 (`SHOP-FALLBACK-01` - P1)**：
+  - 移除 `ShopCommand.java` 中 `if (roomId.contains("inn"))` 的硬編碼 fallback，全面由 `TemplateReader.findShopByRoomId(roomId)` 提供資料驅動查詢。
+- **死代碼清理與日誌標準化 (`DEADCODE-01` - P2)**：
+  - 刪除 100% 註解的冗餘類別 `PlayerLoginListener.java`。
+  - 將 `QuestEventListener.java` 的 `System.out.println` 替換為標準 `@Slf4j` `log.debug`。
+  - 移除 `index.html` 標題選單中 4 處過渡期 inline `onclick` 屬性，回歸純 `data-action` 事件委派。
+- **核心架構文件同步修復 (`DOC-CONSISTENCY-01` - P0)**：
+  - 更新 `FUTURE_IMPROVEMENTS.md`：記錄 304 項綠燈基準，補齊路徑 U 與 §21 綜合治理藍圖。
+  - 更新 `UI_PAGE_STRUCTURE.md`：重寫第 4 節盤點，消除與已實裝模組矛盾的歷史紅燈。
+  - 更新 `ARCHITECTURE.md`：目錄樹補齊 `domain.combat`、`domain.port`、`domain.event` 等子包與前端最新模組。
+- **看門狗棘輪門檻收斂 (`FALLBACK-02` - P2)**：
+  - 重構 `PartyInventory`、`SkillBridgeService`、`DrpgEnemyTacticsService`、`XpProgressionService`、`DrpgTemplateAdapter`、`MudTemplateAdapter` 建構子，消除多處冗餘的空 Catalog 實例化。
+  - 將 `ArchitectureGuardrailsTest` 中 `new TemplateCatalog()` 的棘輪上限自 33 處收斂至 26 處（減幅達 21.2%）。
+- **通用任務模型與劇情資料驅動落地 (`QUEST-DATA-01` - P3)**：
+  - 建立通用領域模型 `QuestTemplate` 與設定檔 `quests.json`。
+  - 擴充 `TemplateReader.findQuestByTriggerMob()` 與 `TemplateRepository` 自動加載機制。
+  - 重構 `MozhuMinesQuestListener.java`，徹底消除硬編碼的 25 行台詞與首領特例比對，劇情台詞全面回歸資料驅動解算。
+- **H2 實體雙持久化收斂 (`PERSIST-01` - P3)**：
+  - 將 `CharacterEntity.inventory` 正式標記為 `@Deprecated`，確立單機存檔單一真相源為 `SaveData` JSON 與 `SaveGameService`。
+- **測試套件 100% 綠燈全數通過**：
+  - 全專案 304 項單元與整合測試全數通過（0 失敗、0 錯誤），架構看門狗測試與業務邏輯無任何回歸破壞。
+
 ### [2026-10-14] 專案紅線治理、看門狗護欄與實體深拷貝加固 (GUARD-02 & DEEPCOPY-01)
 - **實體深拷貝加固 (LivingStats.deepCopy)**：
   - 補齊 `LivingStats.deepCopy()` 遺漏之 `resistances`、`equipment`、`learnedSkills`、`enabledSkills`、`combatResources` 防禦性淺拷貝，消除快照丟失屬性隱患，落實專案第一紅線。

@@ -41,6 +41,7 @@ public class DungeonFloorLoader {
     private Map<String, LegendItemJson> legend = new HashMap<>();
     private List<TileOverrideJson> tileOverrides = new ArrayList<>();
     private EncounterJson encounters;
+    private String exitRoomId;
   }
 
   @Data
@@ -205,6 +206,7 @@ public class DungeonFloorLoader {
         .startFacing(facing)
         .dangerRate(dangerRate)
         .mobPool(mobs)
+        .exitRoomId(json.getExitRoomId())
         .build();
   }
 }

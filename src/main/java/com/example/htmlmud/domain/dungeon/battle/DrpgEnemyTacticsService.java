@@ -36,7 +36,7 @@ public class DrpgEnemyTacticsService {
   }
 
   public DrpgEnemyTacticsService() {
-    this(new TemplateCatalog(), new com.example.htmlmud.domain.party.service.FormationEngine());
+    this(null, null);
   }
 
   /**

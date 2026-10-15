@@ -22,11 +22,11 @@ public class PartyInventory {
   private transient TemplateReader templateReader;
 
   public PartyInventory() {
-    this(DEFAULT_CAPACITY, new TemplateCatalog());
+    this(DEFAULT_CAPACITY, (TemplateReader) null);
   }
 
   public PartyInventory(int capacity) {
-    this(capacity, new TemplateCatalog());
+    this(capacity, (TemplateReader) null);
   }
 
   public PartyInventory(int capacity, TemplateReader templateReader) {

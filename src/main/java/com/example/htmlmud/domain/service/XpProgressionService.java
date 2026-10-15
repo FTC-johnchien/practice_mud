@@ -43,7 +43,7 @@ public class XpProgressionService {
   }
 
   public XpProgressionService() {
-    this(new TemplateCatalog());
+    this((com.example.htmlmud.domain.repository.TemplateReader) null);
   }
 
   public java.util.Optional<ClassTemplate> resolveClassTemplate(String classId) {
