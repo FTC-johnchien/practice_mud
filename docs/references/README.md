@@ -1,45 +1,37 @@
-# 遊戲專案架構與設計全景總覽 (Project Reference Index)
+# 外部靈感與原始參考資料庫 (Raw References & Inspirations)
 
-歡迎查閱本專案的核心設計與架構參考文件庫。本系列文件依據系統模組精確劃分，旨在提供清晰、全面且具備前瞻性的設計藍圖，供團隊審視、校對與持續迭代。
-
----
-
-## 一、文件閱讀指引
-
-每一份專題文件均遵循統一的三層結構標準：
-1. **【已完成實作 (Implemented)】**：當前程式庫中已編寫完畢、通過單元測試並穩定運行的核心功能。
-2. **【先前討論・尚未實作 (Planned / Discussed)】**：團隊成員或歷次對話中已達成共識、納入設計藍圖但尚未完成編碼落地的功能（含即將落實的項目）。
-3. **【架構師建議 (Recommendations)】**：技術架構師針對系統擴展性、效能優化、UI/UX 沉浸感及未來演進提出的專業建議與深層架構方案。
+> **目錄定位與歷史演進說明**：  
+> 本目錄原為專案中期（Phase 8 ~ Phase 9）之 12 篇主題式設計稿（`01_` ~ `12_`）。  
+> 隨專案全面推進至四層文檔體系（Phase 11.5），該 12 篇設計稿之實作規格、代碼錨點與未來演進，**已 100% 全面收斂、深化並移轉至 `docs/manual/` 15 本模組深度手冊與 `docs/overview/` 概覽指引**，原 12 篇過渡文件已正式除役。
 
 ---
 
-## 二、全景專題模組導覽
+## 🧭 正式模組手冊導航 (Official Manuals)
 
-| 編號 | 專題領域 | 核心文件連結 | 關鍵主題與涵蓋內容 |
-| :--- | :--- | :--- | :--- |
-| **01** | **玩家角色** | [01_player_characters.md](./01_player_characters.md) | 五維道基、修為境界、HP/MP/SP 動能、理智值 (SAN) 與走火入魔、前端雙向同步 |
-| **02** | **可組隊夥伴** | [02_party_companions.md](./02_party_companions.md) | 四大經典夥伴（鐵牛/燕青/凌霜/墨衍）、招募與離隊、Gambit 戰術方針 AI、好感度 |
-| **03** | **世界與城鎮 NPC** | [03_town_and_world_npcs.md](./03_town_and_world_npcs.md) | 客棧福伯、貨棧錢老九、傳功長老、商店交易協議、對話狀態機與前端 Modal 整合 |
-| **04** | **物品與裝備** | [04_items_and_equipment.md](./04_items_and_equipment.md) | 5+2 槽位裝備欄、去綴比對堆疊、道核領悟、耐久與強化、背包抽屜介面規範 |
-| **05** | **怪物與深淵畸變** | [05_mobs_and_aberrations.md](./05_mobs_and_aberrations.md) | 野生生物、地城妖物、深淵畸變體（SAN 壓迫感）、首領仇恨與階段狂暴 AI |
-| **06** | **任務與冒險** | [06_quests_and_adventure.md](./06_quests_and_adventure.md) | 新手村序章引導、DRPG 地城探索度里程碑、夥伴專屬身世羈絆、委託榜懸賞機制 |
-| **07** | **種族與職業** | [07_races_and_classes.md](./07_races_and_classes.md) | 人/妖/靈三界種族特性、四大基礎職業（戰/法/刺/牧）、無武器限制兵器相性體系 |
-| **08** | **小隊陣法** | [08_formations.md](./08_formations.md) | 四象封魔陣、前後排承傷權重、陣法專屬絕技、靈威能量槽、全隊被動光環 |
-| **09** | **技能與法術** | [09_skills_and_spells.md](./09_skills_and_spells.md) | 三層真相源架構、被動裝配 (Enable) 槽位、2~5 人多人合擊、五行真法、WoW+DQ/FF 介面 |
-| **10** | **戰鬥機制** | [10_combat_dynamics.md](./10_combat_dynamics.md) | 命中/閃避/招架/護甲分層判定鏈、仇恨嘲諷、動能引擎、異常狀態、回合敏捷排序 |
-| **11** | **城鎮與地城** | [11_town_and_dungeon.md](./11_town_and_dungeon.md) | MUD 10向拓撲圖、DRPG 4向網格迷宮、迷霧探索 (Fog of War)、雷達小地圖、雙模切換 |
-| **12** | **畫面 Layout** | [12_ui_ux_layout.md](./12_ui_ux_layout.md) | PC 桌面端優先排版、6 大核心視圖佈局、常用技能快捷列 (1~6)、DQ/FF 階層式抽屜 |
+請移步查閱已全面包含並擴充原 12 篇內容的權威手冊體系：
+
+| 原始主題 | 權威手冊歸屬 (docs/manual/) | 全域概覽對齊 (docs/overview/) |
+| :--- | :--- | :--- |
+| **01. 玩家角色與修為體系** | [`後端_M1_探索與世界模組`](../manual/後端_M1_探索與世界模組_WORLD_AND_EXPLORATION.md) / [`後端_M4_小隊生靈`](../manual/後端_M4_小隊生靈與陣法模組_PARTY_AND_FORMATION.md) / [`後端_M5_技能境界`](../manual/後端_M5_技能境界與修煉模組_SKILL_AND_PROGRESSION.md) | [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md) |
+| **02. 可組隊夥伴 NPC** | [`後端_M4_小隊生靈與陣法模組`](../manual/後端_M4_小隊生靈與陣法模組_PARTY_AND_FORMATION.md) / [`前端_FE5_小隊裝備`](../manual/前端_FE5_小隊裝備與存檔彈窗_PARTY_EQUIPMENT_AND_MODALS.md) | [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md) |
+| **03. 城鎮居民與功能型 NPC** | [`後端_M1_探索與世界模組`](../manual/後端_M1_探索與世界模組_WORLD_AND_EXPLORATION.md) / [`後端_M6_物品與經濟`](../manual/後端_M6_物品背包與經濟模組_ITEM_AND_ECONOMY.md) / [`前端_FE4_城鎮中樞`](../manual/前端_FE4_城鎮中樞與動作列面板_TOWN_HUB_AND_ACTION_BAR.md) | [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md) |
+| **04. 物品、5+2 裝備與行囊** | [`後端_M6_物品背包與經濟模組`](../manual/後端_M6_物品背包與經濟模組_ITEM_AND_ECONOMY.md) / [`前端_FE5_小隊裝備`](../manual/前端_FE5_小隊裝備與存檔彈窗_PARTY_EQUIPMENT_AND_MODALS.md) | [`MODULES_MAP.md`](../overview/MODULES_MAP.md) |
+| **05. 怪物、首領與深淵畸變** | [`後端_M1`](../manual/後端_M1_探索與世界模組_WORLD_AND_EXPLORATION.md) / [`後端_M2_地牢`](../manual/後端_M2_DRPG網格地牢模組_DRPG_DUNGEON.md) / [`後端_M3_戰鬥引擎`](../manual/後端_M3_核心戰鬥引擎模組_COMBAT_ENGINE.md) / [`後端_M7_模板`](../manual/後端_M7_資料驅動模板模組_DATA_DRIVEN_TEMPLATES.md) | [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md) |
+| **06. 任務系統與冒險探索** | [`後端_M1_探索與世界模組`](../manual/後端_M1_探索與世界模組_WORLD_AND_EXPLORATION.md) / [`後端_M7_模板`](../manual/後端_M7_資料驅動模板模組_DATA_DRIVEN_TEMPLATES.md) / [`前端_FE4_城鎮中樞`](../manual/前端_FE4_城鎮中樞與動作列面板_TOWN_HUB_AND_ACTION_BAR.md) | [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md) |
+| **07. 種族與職業體系** | [`後端_M4_小隊生靈`](../manual/後端_M4_小隊生靈與陣法模組_PARTY_AND_FORMATION.md) / [`後端_M5_技能境界`](../manual/後端_M5_技能境界與修煉模組_SKILL_AND_PROGRESSION.md) / [`後端_M7_模板`](../manual/後端_M7_資料驅動模板模組_DATA_DRIVEN_TEMPLATES.md) | [`MODULES_MAP.md`](../overview/MODULES_MAP.md) |
+| **08. 小隊陣法系統** | [`後端_M4_小隊生靈與陣法模組`](../manual/後端_M4_小隊生靈與陣法模組_PARTY_AND_FORMATION.md) / [`前端_FE5_小隊裝備`](../manual/前端_FE5_小隊裝備與存檔彈窗_PARTY_EQUIPMENT_AND_MODALS.md) | [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md) |
+| **09. 技能體系與法術** | [`後端_M3_戰鬥引擎`](../manual/後端_M3_核心戰鬥引擎模組_COMBAT_ENGINE.md) / [`後端_M5_技能境界與修煉模組`](../manual/後端_M5_技能境界與修煉模組_SKILL_AND_PROGRESSION.md) / [`前端_FE4`](../manual/前端_FE4_城鎮中樞與動作列面板_TOWN_HUB_AND_ACTION_BAR.md) | [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md) |
+| **10. 戰鬥機制與動能引擎** | [`後端_M3_核心戰鬥引擎模組`](../manual/後端_M3_核心戰鬥引擎模組_COMBAT_ENGINE.md) / [`前端_FE3_戰鬥擂台`](../manual/前端_FE3_戰鬥擂台與特效引擎_BATTLE_ARENA_AND_FX.md) | [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md) |
+| **11. 世界架構與城鎮地城** | [`後端_M1_探索與世界`](../manual/後端_M1_探索與世界模組_WORLD_AND_EXPLORATION.md) / [`後端_M2_DRPG網格地牢模組`](../manual/後端_M2_DRPG網格地牢模組_DRPG_DUNGEON.md) / [`前端_FE2_DRPG視口`](../manual/前端_FE2_DRPG視口與雷達渲染器_DRPG_VIEWPORT_RENDERER.md) | [`FRONTEND_LAYOUT_GUIDE.md`](../overview/FRONTEND_LAYOUT_GUIDE.md) |
+| **12. 畫面 Layout 與前端 UI/UX** | [`前端_FE1`](../manual/前端_FE1_核心狀態與事件管線_CORE_STATE_AND_PIPELINE.md) ~ [`FE6`](../manual/前端_FE6_七層樣式串流與視覺主題_CSS_TOKENS_AND_THEMES.md) 全六冊 | [`FRONTEND_LAYOUT_GUIDE.md`](../overview/FRONTEND_LAYOUT_GUIDE.md) |
 
 ---
 
-## 三、下次工作銜接與執行路線 (Resume Roadmap)
+## 🎨 本目錄保留之原始靈感與參考素材 (Asset Stash)
 
-當您休息完畢返回工作時，系統將依據已定之整體演進路線：
-```
-Direction C (架構解耦) -> Direction A (被動技能裝配與檢驗) -> Direction C (領域邊界解耦)
-```
-
-- **當前位置**：**Direction C 第一階段已 100% 完成**（156/156 測試全數通過，Git Commit 已提交）。
-- **下次即刻執行目標**：**Direction A (Phase 9) —— 被動技能裝配 (Enable) 與戰鬥檢驗系統**。
-  - 詳細可執行技術方案已完整載明於根目錄之 [`implementation_plan.md`](../../implementation_plan.md) 與 [`FUTURE_IMPROVEMENTS.md`](../../FUTURE_IMPROVEMENTS.md)。
-  - 無需重新梳理上下文，輸入指令即可無縫繼續編碼實作！
+本目錄目前作為遊戲美術概念圖、文字設定靈感與原始參考資料庫保留：
+* `戰鬥畫面.jpg`：經典第一人稱回合戰鬥佈局視覺參考
+* `個人狀態.png`：角色道基屬性面板介面概念參考
+* `畫面佈局.txt`：早期畫面切分思考草稿
+* `賽博龐克技能對應到修仙技能的概念.txt`：技能五行仙俠化設計靈感對照
+* `道祖是克苏鲁_全本.txt`：克蘇魯仙俠世界觀、SAN 異化與道核克系修真原始背景文本

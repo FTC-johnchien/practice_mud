@@ -49,17 +49,20 @@ practice_mud/
 ├── pom.xml                       # Maven 建構配置 (Java 25, Spring Boot 4.1.1)
 ├── run.bat / run.ps1             # 遊戲啟動腳本 (Port 8080)
 ├── test.bat / test.ps1           # 自動化測試腳本
-├── GEMINI.md                     # AI 全局指令與開發守則
-├── ARCHITECTURE.md               # 【本文件】系統與後端架構說明書
-├── CHANGELOG.md                  # 歷史版本演進與變更紀錄
+├── GEMINI.md                     # 📜【專案憲法】最高元契約、第一紅線、技術邊界與按需載入矩陣
+├── ACTIVE_TASKS.md               # 🎯【作戰看板】當前迭代單一真相源，以 [ ] 微任務推進 (AI Agentic Workflow)
+├── README.md                     # 🚀【專案首頁】四層體系全景導覽地圖與極速開始指南
+├── ARCHITECTURE.md               # 🏗️【本文件】系統與後端架構說明書
+├── CHANGELOG.md                  # 📜【歷史紀錄中樞】歷史版本演進與變更紀錄
 ├── saves/                        # 本機 JSON 遊戲存檔 (slot_*.json, autosave.json)
 ├── db/                           # 本機 H2 資料庫檔案 (./db/muddb.mv.db，Git 忽略)
-├── docs/                         # 設計文檔與規格中樞
-│   ├── UI_PAGE_STRUCTURE.md      # 前端頁面結構與 7 大模組化架構規範
-│   ├── plans/                    # 實施計畫中樞
-│   │   └── FUTURE_IMPROVEMENTS.md # 後續架構改善與演化藍圖 (P0~P3 全局待辦)
-│   ├── references/               # 世界觀與原著參考資料
-│   └── templates/                # 靜態資源 JSON 規範範本 (如技能、配置草稿)
+├── docs/                         # 設計文檔與規格中樞 (四層體系)
+│   ├── overview/                 # 🚀【簡要概覽層】MODULES_MAP, FRONTEND_LAYOUT_GUIDE, QUICKSTART
+│   ├── manual/                   # 🔬【深入手冊層】後端 M1~M9 (含 M3-1 戰鬥子模組)、前端 FE-1~FE-6 深度技術手冊
+│   ├── plans/                    # 📈【長遠演化層】FUTURE_IMPROVEMENTS.md (P0~P3 全局待辦)
+│   ├── references/               # 📚【原始靈感與參考素材庫】世界觀文本、概念圖與素材儲備
+│   ├── templates/                # 靜態資源 JSON 規範範本 (如技能、配置草稿)
+│   └── UI_PAGE_STRUCTURE.md      # 前端共用常數、工具庫與歷史視圖規範
 └── src/
     ├── main/
     │   ├── java/com/example/htmlmud/ # 核心 Java 原始碼 (DDD 架構分層)
@@ -315,11 +318,47 @@ resources/data/
 
 ## 8. 文檔治理與關聯索引指針
 
-本專案文檔體系採取嚴格的「四位一體」分工治理原則，各司其職：
+本專案文檔體系採取嚴格的「分層收斂、各司其職」治理原則：
 
-| 文檔名稱 | 檔案路徑 | 定位與職責 |
+| 文檔層級 | 檔案路徑 | 定位與職責 |
 | :--- | :--- | :--- |
-| **系統架構說明書** | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | **【後端與宏觀架構唯一來源】** 系統分層、DDD 模型、並發規範、SOP |
-| **前端頁面架構書** | [`docs/UI_PAGE_STRUCTURE.md`](./docs/UI_PAGE_STRUCTURE.md) | **【前端畫面唯一來源】** 7 大模組化視圖、Data-Driven 規範、UI Tokens |
-| **待辦與演化藍圖** | [`docs/plans/FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) | **【未來待辦唯一來源】** 未決議項目、P0~P3 實施優先序總表 |
+| **憲法核心** | [`GEMINI.md`](./GEMINI.md) | **【專案最高元契約】** 100% 資料驅動第一紅線、不可刪除保護鎖、按需載入矩陣 |
+| **當前作戰看板** | [`ACTIVE_TASKS.md`](./ACTIVE_TASKS.md) | **【當前迭代唯一真相源】** Checkbox 微任務清單、DoD 三位一體交付標準 |
+| **宏觀架構說明** | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | **【後端與系統設計唯一來源】** 潔淨架構、DDD 模型、Actor 併發、SOP |
+| **模組全景與佈局** | [`docs/overview/`](./docs/overview/) | **【高階概覽】** `MODULES_MAP.md`、`FRONTEND_LAYOUT_GUIDE.md`、`QUICKSTART.md` |
+| **16 本模組技術手冊** | [`docs/manual/`](./docs/manual/) | **【前後端模組唯一來源】** 後端 M1~M9 (含 M3-1 戰鬥子模組)、前端 FE-1~FE-6 深度手冊與未來演進規劃 |
+| **未來演化藍圖** | [`docs/plans/FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) | **【長期待辦唯一來源】** 未決議項目、P0~P3 架構改善總庫 |
 | **版本變更紀錄** | [`CHANGELOG.md`](./CHANGELOG.md) | **【過去歷程唯一來源】** 各 Phase 歷史落地、重構與 Bug 修復紀錄 |
+
+---
+
+## 9. 🚀 系統架構演進與現代化擴充願景 (System Architecture Roadmap)
+
+為使本專案由「單體單機原型」平滑演進至「百人同服、萬人線上的高併發高可用現代遊戲伺服器」，確立以下四大宏觀架構演進支柱：
+
+### 1. 現代架構規劃 (Modern Enterprise & Gaming Architecture)
+- **領域事件驅動架構 (Domain Event-Driven Architecture, EDA)**：
+  - 全面解耦服務間的同步呼叫（如戰鬥呼叫背包、升級呼叫廣播）。
+  - 引進基於虛擬執行緒的輕量領域事件匯流排（`DomainEventBus`），各模組以發布-訂閱（Pub-Sub）模式非同步處理後續副作用，保證核心業務邏輯的純粹性與毫秒級響應。
+- **多人地宮實例 Actor 容器 (Multi-Tenant Instance Actor)**：
+  - 將地牢探索與戰鬥解構為獨立生命週期的 `DungeonInstanceActor`。
+  - 每個探索隊伍擁有專屬的計算沙盒，迷霧矩陣與戰況狀態完全隔離；即便單一副本遭遇不可預期的運算異常，亦具備自動崩潰重啟與隔離能力，絕不波及全伺服器。
+
+### 2. 穩定性與併發防禦 (Zero-Trust Stability & Concurrency Guard)
+- **虛擬執行緒 (Loom) 載體排程防禦 (Carrier Thread Exhaustion Defense)**：
+  - 嚴格監控 `synchronized` 關鍵字導致的虛擬執行緒釘選（Pinning）問題，全面改用 JUC `ReentrantLock`、`ReentrantReadWriteLock` 與 `StampedLock`。
+  - 對重度 I/O 操作與 CPU 密集型數值解算進行執行緒池隔離，防止底層 ForkJoinPool 載體耗盡。
+- **架構看門狗 CI 門禁 (Automated ArchUnit & AST Gate)**：
+  - 擴充 `ArchitectureGuardrailsTest`：在 CI 管線中自動化掃描 Clean Architecture 反向依賴、禁止直接讀取內部私有狀態、強行校驗 100% 資料驅動紅線，杜絕架構腐化。
+
+### 3. 系統效能調優 (Performance & Extreme Throughput)
+- **雙軌傳輸協定支援 (Protobuf / JSON Binary Pipeline)**：
+  - 戰鬥與探索狀態廣播支援 Protobuf 二進位序列化，將高頻 WebSocket 訊息吞吐量提升 300%，頻寬開銷降低 60% 以上。
+- **異步批次持久化強一致性保證**：
+  - 固化 `AbstractAsyncBatchPersistenceService` 的讀寫鎖生命週期與 `flushImmediately` 度量計數契約，杜絕任何高併發場景下的停機資料遺失與競態。
+
+### 4. 模組化與多語言動態擴充 (Modular Subpackages & Polyglot Scripting)
+- **領域層 Service 包結構模組化收斂**：
+  - 將 `com.example.htmlmud.domain.service` 下平鋪的 10+ 個服務拆解至獨立子包（`domain.world`、`domain.combat`、`domain.party`、`domain.progression`、`domain.economy`），對外僅開放 Facade 介面與 Output Ports。
+- **GraalVM 多語言動態腳本引擎 (Polyglot Dynamic Scripting)**：
+  - 引入 GraalVM 執行時期，支援使用 JavaScript 或 Python 編寫複雜的 NPC 劇情對話、地牢機關解謎與首領行為樹（Behavior Tree），支援伺服器不停機熱更載入（Hot-Reload）。

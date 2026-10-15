@@ -49,6 +49,8 @@ public abstract class AbstractAsyncBatchPersistenceService<T> {
 
   protected abstract void flushBatch(List<T> batch);
 
+  private final Object flushLock = new Object();
+
   /**
    * 內部安全呼叫批次持久化並維護度量計數
    */
@@ -56,12 +58,14 @@ public abstract class AbstractAsyncBatchPersistenceService<T> {
     if (batch == null || batch.isEmpty()) {
       return;
     }
-    try {
-      flushBatch(batch);
-      flushedCount.addAndGet(batch.size());
-    } catch (Exception e) {
-      log.error("[{}] Error flushing batch of size {}", getWorkerThreadName(), batch.size(), e);
-      throw e;
+    synchronized (flushLock) {
+      try {
+        flushBatch(batch);
+        flushedCount.addAndGet(batch.size());
+      } catch (Exception e) {
+        log.error("[{}] Error flushing batch of size {}", getWorkerThreadName(), batch.size(), e);
+        throw e;
+      }
     }
   }
 
@@ -171,6 +175,17 @@ public abstract class AbstractAsyncBatchPersistenceService<T> {
     saveQueue.drainTo(pending);
     if (!pending.isEmpty()) {
       flushBatchInternal(pending);
+    }
+    // 等待背景 worker 把已取出的 batch 完整落盤，確保強一致性契約
+    long target = acceptedCount.get();
+    long deadline = System.currentTimeMillis() + 3000;
+    while (flushedCount.get() < target && System.currentTimeMillis() < deadline) {
+      try {
+        Thread.sleep(10);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        break;
+      }
     }
   }
 

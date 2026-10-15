@@ -2,8 +2,10 @@
 # (Frontend Page Architecture, 7 Core Modules & Data-Driven Specifications)
 
 > **文件定位**：  
-> 本文件作為專案所有 Web 前端視圖（HTML5 / Vanilla CSS / ES6 模組）的**最高架構規範與頁面結構藍圖**。  
-> 旨在確立**「共用參數與函式抽離」、「7 大功能區塊嚴格模組化」**以及**「100% 資料驅動 (Data-Driven，杜絕前端寫死)」**三大核心鐵律，並詳實記錄專案畫面的現況、缺陷盤點與演化里程碑。
+> 本文件作為專案 Web 前端共用核心參數、工具庫（`constants.js`, `ui-utils.js`）與歷史視圖規範的參考手冊。  
+> **最新前端架構導航**：  
+> - 🖥️ **宏觀佈局與場景狀態機**：請參閱 👉 [`docs/overview/FRONTEND_LAYOUT_GUIDE.md`](./overview/FRONTEND_LAYOUT_GUIDE.md)  
+> - 🎨 **6 大前端模組深度手冊**：請參閱 👉 [`docs/manual/`](./manual/)（`前端_FE1_...` ~ `前端_FE6_...`）  
 
 ---
 

@@ -8,6 +8,13 @@
 
 ## 📌 最新里程碑 (Latest Releases)
 
+### [2026-10-15] 文件體系與現代遊戲規劃審查建議
+- **建立文件審查報告 (`Copilot_Review.md`)**：
+  - 審查 `docs/` 現有 Markdown 文件及指定的 `ACTIVE_TASKS.md`、`ARCHITECTURE.md`、`UI_PAGE_STRUCTURE.md`。
+  - 彙整權威來源、規格狀態、交叉一致性、可驗收遊戲規劃、可擴充性及文件自動檢查建議；本報告屬候選建議，不代表設計已核准。
+- **建立候選治理路徑 W**：
+  - 在 `FUTURE_IMPROVEMENTS.md` 新增文件連結、權責／共同詞彙、roadmap 收斂及文件同步治理待辦，等待後續決議與驗收。
+
 ### [2026-10-15] 全專案深入審查、紅線清理與地牢出入口配置化 (P0/P1 治理落地)
 - **裝備槽位中文推測硬編碼徹底清零 (`EQUIP-SLOT-CLEAN-01` - P0)**：
   - 徹底移除 `party-equipment-tab.js` 中 `name.includes('冠')`、`'甲'`、`'靴'`、`'戒'` 等中文名稱推測邏輯，嚴格依賴後端 `ItemTemplate` 的 `equipSlot` 枚舉，落實專案第一紅線。

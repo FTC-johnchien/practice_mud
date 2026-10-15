@@ -47,6 +47,8 @@
 - [ ] **路徑 S: Buff 契約與可靠性護欄第二輪驗收** (§19 全項) — **Priority: P1 / P2**
 - [ ] **路徑 T: 實體深拷貝加固、Fallback 棘輪清零與雙持久化收斂** (§20 全項) — **Priority: P1 / P2 (DEEPCOPY-01 已完成)**
 - [x] **路徑 U: 全專案綜合審查後續與紅線治理藍圖** (§21 全項) — **Priority: P0 ~ P3 (2026-10-15 制定，P0/P1/P2 死代碼與紅線清理已完成，304 測試全綠燈)**
+- [ ] **路徑 V: 全專案大一統與現代化演進戰略五大戰線** (§22 全項) — **Priority: P1 ~ P3 (2026-10-15 全文件對齊版，當前微任務落地請參閱根目錄 [ACTIVE_TASKS.md](../../ACTIVE_TASKS.md))**
+- [ ] **路徑 W: 文件權威來源、交叉一致性與現代遊戲規劃治理** (§23 全項) — **Priority: P1（審查建議尚待決議；詳見 [Copilot_Review.md](../references/Copilot_Review.md)）**
 
 ---
 
@@ -377,7 +379,7 @@
 
 ## 💥 14. ✅ [已完成] 戰鬥區塊視覺特效與動態回饋 (Battle Presentation & VFX) — Priority: P1 / P2
 
-> **來源**：2026-10-05 戰鬥表現綜合評估，整合 [`Claude_battle_presentation_effects.md`](./Claude_battle_presentation_effects.md)、[`Copilot_battle_presentation_effects.md`](./Copilot_battle_presentation_effects.md)、[`Codex_battle_presentation_effects.md`](./Codex_battle_presentation_effects.md)。
+> **來源**：2026-10-05 戰鬥表現綜合評估，收斂 Claude / Copilot / Codex 三方提案並全面落地，歷史評估稿已收斂除役。
 > **核心目標**：解決戰鬥只有文字日誌顯示的問題；在戰鬥區塊引入結構化戰鬥事件、覆蓋式特效層 (FX Layer)、浮動傷害數值與受擊/防禦動態回饋，並嚴格遵循「事件事實後端結算、前端僅負責投影演繹、不更改數值平衡」三大原則。
 > **落地進度**：已於 2026-10-08 全數完成。
 > 1. 後端 `DrpgCombatLoop` 與 `ComboResolver` 全面派發 `BattleEvent`（含普攻、主動單體/AOE、治療、護盾、Buff、連攜技），並於 `DrpgBattleService` 實裝主動技能即時排空推進（Instant Flush）。
@@ -902,7 +904,7 @@ flowchart TD
 
 ### 19.3 BUFF-01：Buff 契約與共用結算切片 — ✅ 已完成 (2026-10-13)
 
-- **落地規劃書**：參閱 [`docs/plans/buff_improvements.md`](./buff_improvements.md)，分四階段完整落實。
+- **權威手冊**：參閱 [`後端_M3-1_狀態效果與Buff結算模組_BUFF_AND_STATUS_EFFECTS.md`](../manual/後端_M3-1_狀態效果與Buff結算模組_BUFF_AND_STATUS_EFFECTS.md)，歷史規劃書已全面升格為正式模組手冊並收斂除役。
 - **Phase 1 核心生命週期與數值機制**：實裝 `PERMANENT_DURATION = -1` 常駐陣法不消退、WoW 階梯短時間護盾優先吸收、罡氣破防條（Poise Gauge）削韌減傷與失衡大招打斷、五行法術抗性 $>100\%$ 逆流回血。
 - **Phase 2 控場門控與打斷**：收斂 `Buffable.isControlled()` 與 `isSilenced()`，打斷普通攻擊、技能吟唱與 1500ms 意圖預告。
 - **Phase 3 視覺投影與屬性圖示聚合 HUD**：前後端 DTO 串接 `ActiveBuffDto`，前端 `buff-hud-helper.js` 實現極簡 `[🧪 54/s x3]`、`[🛡️ 120]` 聚合 HUD 與 Tooltip，1600x900 角色道基詳細面板補齊「☯️ 道身加持與狀態」。
@@ -989,4 +991,179 @@ flowchart TD
 - **問題現況**：單機模式以 `SaveData` JSON 為唯一單一真相源，但 `CharacterEntity` 仍維護 `inventory_json`。
 - **加固方案**：標記 `CharacterEntity.inventory` 為 `@Deprecated`，確立以 `SaveGameService` 為核心，消除維護雙套持久化實體的認知負擔。
 
+---
+
+## 🚀 22. 全專案大一統與現代化演進戰略總表 (2026-10-15 全文件對齊版)
+
+> **戰略定位與對齊宗旨**：  
+> 本章節為全專案所有未實作項目、技術手冊未來演進（`docs/manual/` 15 本手冊）與概覽層規劃（`docs/overview/`）的**總集成樞紐**。  
+> 徹底消除過往散落於不同文件的規劃脫節，將全專案未來演化嚴格收斂為**五大戰略演進戰線**，並與當前執行看板 [`ACTIVE_TASKS.md`](../../ACTIVE_TASKS.md) 建立動態閉環。
+
+### 📊 全文件溯源與對齊矩陣 (Cross-Document Traceability Matrix)
+
+| 戰線代號 | 核心規劃項目 | 優先級 | 主管後端手冊 (Java 25) | 主管前端手冊 (ES6/CSS) | 全域概覽對齊文件 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **F1-01** | `Player` 與 `PartyMember` 雙軌實體大一統 | **P1** | [`後端_M1`](../manual/後端_M1_探索與世界模組_WORLD_AND_EXPLORATION.md) / [`後端_M4`](../manual/後端_M4_小隊生靈與陣法模組_PARTY_AND_FORMATION.md) | [`前端_FE5`](../manual/前端_FE5_小隊裝備與存檔彈窗_PARTY_EQUIPMENT_AND_MODALS.md) | [`MODULES_MAP.md`](../overview/MODULES_MAP.md) |
+| **F1-02** | 後端領域層 Service 包結構按業務模組拆分 | **P1** | [`後端_M1`](../manual/後端_M1_探索與世界模組_WORLD_AND_EXPLORATION.md) ~ [`M6`](../manual/後端_M6_物品背包與經濟模組_ITEM_AND_ECONOMY.md) | *(無關)* | [`ARCHITECTURE.md`](../../ARCHITECTURE.md) |
+| **F1-03** | 看門狗棘輪全面清零 (26 處 fallback 歸零) | **P1** | [`後端_M7`](../manual/後端_M7_資料驅動模板模組_DATA_DRIVEN_TEMPLATES.md) | *(無關)* | [`ARCHITECTURE_SUMMARY.md`](../overview/ARCHITECTURE_SUMMARY.md) |
+| **F1-04** | 前端歷史樣式巨石 `style.css` (122 KB) 安全除役 | **P2** | *(無關)* | [`前端_FE6`](../manual/前端_FE6_七層樣式串流與視覺主題_CSS_TOKENS_AND_THEMES.md) | [`FRONTEND_LAYOUT_GUIDE.md`](../overview/FRONTEND_LAYOUT_GUIDE.md) |
+| **F2-01** | 敵方行動預告蓄力條與即時反制打斷 (Combat React) | **P1** | [`後端_M3`](../manual/後端_M3_核心戰鬥引擎模組_COMBAT_ENGINE.md) | [`前端_FE3`](../manual/前端_FE3_戰鬥擂台與特效引擎_BATTLE_ARENA_AND_FX.md) | [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md) |
+| **F2-02** | 首領多階段血條與狂暴轉階段機制 (Boss Phases) | **P2** | [`後端_M3`](../manual/後端_M3_核心戰鬥引擎模組_COMBAT_ENGINE.md) | [`前端_FE3`](../manual/前端_FE3_戰鬥擂台與特效引擎_BATTLE_ARENA_AND_FX.md) | [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md) |
+| **F2-03** | 十二時辰更迭與微氣候生態動態遇敵 | **P2** | [`後端_M1`](../manual/後端_M1_探索與世界模組_WORLD_AND_EXPLORATION.md) / [`後端_M2`](../manual/後端_M2_DRPG網格地牢模組_DRPG_DUNGEON.md) | [`前端_FE2`](../manual/前端_FE2_DRPG視口與雷達渲染器_DRPG_VIEWPORT_RENDERER.md) / [`前端_FE4`](../manual/前端_FE4_城鎮中樞與動作列面板_TOWN_HUB_AND_ACTION_BAR.md) | [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md) |
+| **F2-04** | 道心異化深淵靈視 (Sanity Breakdown) | **P2** | [`後端_M4`](../manual/後端_M4_小隊生靈與陣法模組_PARTY_AND_FORMATION.md) | [`前端_FE3`](../manual/前端_FE3_戰鬥擂台與特效引擎_BATTLE_ARENA_AND_FX.md) | [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md) |
+| **F2-05** | 複合靈氣連鎖反應與狀態引爆 (Elemental Reactions & Primer/Detonator) | **P2** | [`後端_M3-1`](../manual/後端_M3-1_狀態效果與Buff結算模組_BUFF_AND_STATUS_EFFECTS.md) | [`前端_FE3`](../manual/前端_FE3_戰鬥擂台與特效引擎_BATTLE_ARENA_AND_FX.md) | [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md) |
+| **F3-01** | 古仙陣法動態連攜合擊技 (Cross Combos) | **P2** | [`後端_M4`](../manual/後端_M4_小隊生靈與陣法模組_PARTY_AND_FORMATION.md) | [`前端_FE5`](../manual/前端_FE5_小隊裝備與存檔彈窗_PARTY_EQUIPMENT_AND_MODALS.md) | [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md) |
+| **F3-02** | 境界突破天道雷劫試煉 (Tribulation Lightning) | **P2** | [`後端_M5`](../manual/後端_M5_技能境界與修煉模組_SKILL_AND_PROGRESSION.md) | [`前端_FE5`](../manual/前端_FE5_小隊裝備與存檔彈窗_PARTY_EQUIPMENT_AND_MODALS.md) | [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md) |
+| **F3-03** | 隨機古神詞綴體系 (Procedural Affixes) | **P2** | [`後端_M6`](../manual/後端_M6_物品背包與經濟模組_ITEM_AND_ECONOMY.md) / [`後端_M7`](../manual/後端_M7_資料驅動模板模組_DATA_DRIVEN_TEMPLATES.md) | [`前端_FE5`](../manual/前端_FE5_小隊裝備與存檔彈窗_PARTY_EQUIPMENT_AND_MODALS.md) | [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md) |
+| **F4-01** | 動態沉浸微粒子氛圍層 (Ambient Canvas) | **P2** | *(無關)* | [`前端_FE2`](../manual/前端_FE2_DRPG視口與雷達渲染器_DRPG_VIEWPORT_RENDERER.md) / [`前端_FE3`](../manual/前端_FE3_戰鬥擂台與特效引擎_BATTLE_ARENA_AND_FX.md) | [`FRONTEND_LAYOUT_GUIDE.md`](../overview/FRONTEND_LAYOUT_GUIDE.md) |
+| **F4-02** | 虛擬滾動情報日誌 (Virtualized Log) | **P2** | *(無關)* | [`前端_FE1`](../manual/前端_FE1_核心狀態與事件管線_CORE_STATE_AND_PIPELINE.md) | [`FRONTEND_LAYOUT_GUIDE.md`](../overview/FRONTEND_LAYOUT_GUIDE.md) |
+| **F4-03** | 原生 Gamepad API 掌機手柄支援與震動回饋 | **P3** | *(無關)* | [`前端_FE1`](../manual/前端_FE1_核心狀態與事件管線_CORE_STATE_AND_PIPELINE.md) / [`前端_FE4`](../manual/前端_FE4_城鎮中樞與動作列面板_TOWN_HUB_AND_ACTION_BAR.md) | [`QUICKSTART.md`](../overview/QUICKSTART.md) |
+| **F5-01** | 領域事件總線 (Domain EventBus EDA) | **P2** | [`後端_M9`](../manual/後端_M9_虛擬執行緒Actor通訊模組_ACTOR_AND_PROTOCOL.md) | *(無關)* | [`ARCHITECTURE.md`](../../ARCHITECTURE.md) |
+| **F5-02** | WebSocket 雙軌傳輸協定 (Protobuf Pipeline) | **P3** | [`後端_M9`](../manual/後端_M9_虛擬執行緒Actor通訊模組_ACTOR_AND_PROTOCOL.md) | [`前端_FE1`](../manual/前端_FE1_核心狀態與事件管線_CORE_STATE_AND_PIPELINE.md) | [`ARCHITECTURE_SUMMARY.md`](../overview/ARCHITECTURE_SUMMARY.md) |
+| **F5-03** | 外部模組擴充 SPI (Plugin SPI Architecture) | **P3** | [`後端_M7`](../manual/後端_M7_資料驅動模板模組_DATA_DRIVEN_TEMPLATES.md) | *(無關)* | [`MODULES_MAP.md`](../overview/MODULES_MAP.md) |
+| **F5-04** | Docker 一鍵容器化與 Dev Container 支援 | **P3** | *(建構運維)* | *(建構運維)* | [`QUICKSTART.md`](../overview/QUICKSTART.md) |
+
+---
+
+### 22.1 戰線一：核心雙軌大一統與領域潔淨治理 (P1)
+
+#### 1. F1-01：`Player` 與 `PartyMember` 雙軌實體大一統 (Unified Character Core)
+- **痛點根因**：
+  - MUD 端 `Player`（繼承 `Living` VirtualActor）與 DRPG 端 `PartyMember`（POJO）雙軌並立，兩套背包、兩套裝備。
+  - 僅在進入/離開地牢戰鬥時透過 `CharacterSyncService` 進行單向屬性拷貝，換裝與 Buff 無法互通。
+- **大一統架構方案**：
+  ```mermaid
+  graph TD
+      subgraph UnifiedModel ["大一統實體架構 (Single Source of Truth)"]
+          PM["PartyMember (唯一真實角色實體)"]
+          PM --> EQ["EquipmentSlots (7大槽位單一持有)"]
+          PM --> INV["PartyInventory (小隊公共行囊單一持有)"]
+          PM --> BF["ActiveBuffList (統一Buff池)"]
+      end
+      
+      subgraph SpatialWorld ["世界空間交互 (World Spatial Layer)"]
+          PL["Player (空間代理 Actor / Spatial Proxy)"]
+          PL -.->|引用隊長實體| PM
+          PL --> Room["Room 空間座標 / 拓撲導航"]
+      end
+  ```
+- **具體實施步驟**：
+  1. `Player` 不再獨立持有 `inventory` 與 `equipment`，內部直接委派給小隊隊長 `party.getLeader()`。
+  2. 徹底廢止 `CharacterSyncService` 的淺拷貝邏輯，消除雙寫與「兩本假帳」。
+  3. MUD 模式遭怪襲擊時，自動召喚當前小隊編制，無縫套用 DRPG 戰鬥引擎與陣法孔位。
+
+#### 2. F1-02：後端領域層 Service 包結構按業務模組拆分
+- **現狀問題**：`com.example.htmlmud.domain.service` 平鋪 10+ 個跨領域服務，缺乏領域邊界。
+- **重構方案**：按業務模組拆分為子包：
+  - `domain.world`：`RoomService`、`WorldManager`、`RoomMovementService`
+  - `domain.combat`：`CombatService`、`DrpgCombatLoop`、`BuffSettlementService`
+  - `domain.party`：`PartyService`、`FormationService`
+  - `domain.progression`：`XpProgressionService`、`SkillBridgeService`
+  - `domain.economy`：`ShopCommand`、`InventoryService`
+
+#### 3. F1-03：看門狗棘輪清零 (26 處 fallback 歸零)
+- 將 `ArchitectureGuardrailsTest` 中目前尚存的 26 處 `new TemplateCatalog()` 靜默 fallback 透過 Spring Bean 建構子必填注入徹底收斂至 0，全面消除反射性潛在缺陷。
+
+#### 4. F1-04：前端歷史樣式巨石 `style.css` (122 KB) 安全除役
+- 驗證 `index.html` 與各視圖完全運行於 `style-01` ~ `style-07` 七層樣式串流，安全封存並刪除 122 KB 死代碼巨石。
+
+---
+
+### 22.2 戰線二：戰鬥深度突破與動態沉浸博弈 (P1 ~ P2)
+
+#### 1. F2-01：敵方行動預告蓄力條與即時反制打斷 (Combat React, COMBAT-REACT-01)
+- **機制設計**：
+  - 怪物強力招式配置 `castTimeMs` 與 `interruptible` 標籤。
+  - 怪物進入 `CASTING` 施法前搖，前端 FE-3 即時展示青藍色/猩紅色蓄力進度條。
+  - 玩家或同伴 Gambit 在吟唱窗口內打出帶有 `STUN`（眩暈）、`SILENCE`（沉默）或 `PARRY`（精準偏架）招式，觸發失衡打斷（`⚡ 打斷!`），造成怪物破防並進入虛弱狀態。
+- **當前落地**：已建立為 [`ACTIVE_TASKS.md`](../../ACTIVE_TASKS.md) 之 **Milestone 1** 進行中任務。
+
+#### 2. F2-02：首領多階段血條與狂暴轉階段機制 (Boss Phases & Enrage)
+- 首領氣血跌至 70%、30% 時觸發轉階段（Phase Transition）：清除當前負面 Debuff、更換狂暴招式池、場景光影異化並召喚護法雜兵。
+
+#### 3. F2-03：十二時辰晝夜更迭與微氣候生態動態遇敵
+- 導入子丑寅卯循環，時辰影響妖邪能力與世界視野；雨、霧、雪等微氣候動態影響五行元素親和與地牢雷達半徑。
+
+#### 4. F2-04：道心異化深淵靈視 (Sanity Breakdown & Eldritch Sight)
+- 突破純負面懲罰思維：SAN 值低於 30% 開啟「不可名狀靈視」，介面產生克系低語視界畸變，但能窺探隱藏維度的遠古古碑與特殊機關。
+
+#### 5. F2-05：複合靈氣連鎖反應與狀態引爆 (Elemental Reactions & Primer/Detonator)
+- 借鑒現代 ARPG 元素反應與引爆機制：冰火蒸汽爆裂（$2.0\times$ 穿透傷害）、雷水感電傳導、陰陽太極混沌湮滅（直接扣除 50 點 Poise 破防值引發破防失衡）；刺客施加裂魂印記 (Primer)，後續隊友施展重錘或飛劍作為引爆技 (Detonator) 瞬間結算剩餘 DoT 並產生全場衝擊波。詳見專屬技術手冊 [`後端_M3-1`](../manual/後端_M3-1_狀態效果與Buff結算模組_BUFF_AND_STATUS_EFFECTS.md)。
+
+---
+
+### 22.3 戰線三：小隊養成、武學演化與動態經濟 (P2)
+
+#### 1. F3-01：古仙陣法動態連攜合擊技 (Cross-Member Combos)
+- 前衛主坦格擋觸發「反震波」，與後衛法修真元聯動施展「九天玄煞天外合擊」，強化小隊協同手感。
+
+#### 2. F3-02：境界突破天道雷劫試煉 (Tribulation Lightning)
+- 等級瓶頸突破時需引動天劫，全隊面臨數波天雷轟擊，考驗防禦減傷、護盾分配與團隊治療能力。
+
+#### 3. F3-03：隨機古神詞綴體系 (Procedural Affixes)
+- 怪物與裝備支援前綴與後綴動態抽取（如 `【腐爛的】+【太陰附骨】+【玄鐵重劍】`），100% 資料驅動配置。
+
+#### 4. F3-04：法寶注靈重鑄與裝備數值對比浮窗 (Stat Diff Tooltip)
+- 換裝介面滑鼠懸停即時展示數值增減對比（綠色提升 / 紅色下降），支援消耗靈石與天材地寶強化注靈。
+
+---
+
+### 22.4 戰線四：現代視覺呈現與跨端互動體驗 (P2)
+
+#### 1. F4-01：動態沉浸微粒子氛圍層 (Ambient Canvas Layer)
+- 60 FPS 輕量 WebGL / Canvas 微粒子覆蓋主舞台：煞氣游絲、磷火明滅、劍氣流光，支援減弱動畫降級。
+
+#### 2. F4-02：虛擬滾動情報日誌 (Virtualized Log Scrolling)
+- 採用 Virtualized List 技術，僅渲染螢幕可視區的 30~40 筆 DOM 節點，突破 200 行截斷限制，記憶體消耗恆定。
+
+#### 3. F4-03：自適應停靠 HUD 與多套主題熱切換 (Dockable HUD & Theme Switching)
+- 隊伍卡牌支援水平/垂直自適應排列；CSS Tokens 支援一鍵熱更切換【暗黑克系】與【太虛水墨】主題。
+
+#### 4. F4-04：原生 Gamepad API 掌機手柄支援與震動回饋 (Steam Deck / Xbox)
+- 完整適配 Gamepad API：雙搖桿探索與鎖定、肩鍵切換隊員、震動回饋受擊與破防。
+
+---
+
+### 22.5 戰線五：高併發通訊、可擴充生態與工程維運 (P2 ~ P3)
+
+#### 1. F5-01：領域事件總線 (Domain EventBus EDA)
+- 構建輕量級 `DomainEventBus`，服務間同步依賴全面轉化為發布-訂閱（Pub-Sub）模式，確保核心心跳超低延遲。
+
+#### 2. F5-02：WebSocket 雙軌傳輸協定 (Protobuf Binary Pipeline)
+- 高頻戰鬥封包支援 Protobuf 二進位串流，網路頻寬開銷縮減 60%，傳輸延遲小於 1ms。
+
+#### 3. F5-03：外部模組擴充 SPI (Plugin SPI Architecture)
+- 定義外掛 SPI 介面，第三方可以獨立 JAR 或動態目錄掛載自製地牢、職業與技能，支援伺服器不停機熱重載。
+
+#### 4. F5-04：Docker 一鍵容器化與 Dev Container 支援
+- 提供 `docker-compose.yml` 實現零環境門檻 60 秒開箱即用，整合 CI/CD 自動化看門狗門禁。
+
+---
+
+## 📝 23. 文件權威來源、交叉一致性與現代遊戲規劃治理 (Documentation & Game Planning Governance) — Priority: P1（待決議）
+
+> **來源**：2026-10-15 全部 `docs/**/*.md` 與指定架構／任務文件審查。細節及具體檔案觀察見 [`docs/references/Copilot_Review.md`](../references/Copilot_Review.md)。本節是候選治理工作，不代表相關設計已核准或已完成。
+
+### 23.1 DOC-LINK-01：修復文件相對連結並建立連結檢查
+- 核對 `FUTURE_IMPROVEMENTS.md` 中失效的審查稿引用及程式碼路徑；依正確來源修復、替換或移除，不將失效引用盲目指向新審查文件。
+- 加入本機或 CI Markdown 相對連結檢查，對無效目標提供檔案與行號。
+- **驗收**：文件相對連結檢查零失效；所有歷史審查來源皆有可讀目標或清楚標示已除役。
+
+### 23.2 DOC-SSOT-01：定義文件權責、內容狀態及遊戲共同詞彙
+- 明確規範憲法、當前任務、架構、模組手冊、概覽、總待辦、變更紀錄及參考稿的權責；每個事實只指定一份權威來源。
+- 定義現行已驗證、已決議待實作、候選提案、歷史／除役等狀態標記，並建立屬性、資源、傷害／元素、Buff、裝備槽位、操作鍵位等共同詞彙表。
+- 核對並對齊心跳週期、schemaVersion、CSS 層數、模組命名、鍵位與測試基準等跨文件資訊。
+- **驗收**：跨文件一致性檢核項皆有單一來源；現況數值具備核對日期及程式／資料／測試證據。
+
+### 23.3 DOC-ROADMAP-01：收斂重複規劃並提升工作可驗收性
+- 將完整待辦集中於本文件；模組手冊的未來方向縮為連結或已決議事項，避免多份 roadmap 狀態分歧。
+- 每項候選工作記錄唯一 ID、玩家或工程問題、優先級、依賴、非目標、驗收條件、測試／量測方法及狀態。
+- 依單機垂直切片與玩家體驗證據排序近期工作；多人分散式、雲同步、腳本熱載入等列為遠期探索，須先具備明確需求與評估門檻。
+- **驗收**：`ACTIVE_TASKS.md` 僅列當前可執行任務；已完成路線均可追溯到實際程式變更及驗收證據。
+
+### 23.4 DOC-SYNC-01：降低易變數據複製與文件維護成本
+- 對測試數、效能百分比、FPS、檔案大小及其他快照數據記錄來源、環境與日期；無實測時標記為目標而非事實。
+- 評估由程式碼／資料自動產生鍵位、DTO、枚舉、JSON 範例及 CSS 載入清單；以測試或檢查器防止文件漂移。
+- 將鍵盤／手把、無障礙、減少動態效果、行動端與弱網恢復需求納入玩法提案的驗收條件。
+- **驗收**：被選定的易變資料有自動驗證或唯一更新流程；不再用未驗證的絕對效能承諾作為 DoD。
 
