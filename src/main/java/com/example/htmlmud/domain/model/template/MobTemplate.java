@@ -85,10 +85,17 @@ public record MobTemplate(
     // 罡氣破防條 (Poise / Break Gauge) 與五行抗性表
     int poise,
     int maxPoise,
-    Map<String, Double> resistances
+    Map<String, Double> resistances,
+
+    // 蓄力前搖與打斷屬性 (Milestone 1 / COMBAT-REACT-01)
+    long castTimeMs,
+    Boolean interruptible
 
 ) {
   public MobTemplate {
+    if (interruptible == null) {
+      interruptible = Boolean.TRUE;
+    }
     if (lookDescription == null) {
       lookDescription = description;
     }

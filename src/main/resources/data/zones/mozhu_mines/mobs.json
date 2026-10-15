@@ -80,6 +80,8 @@
     "minDamage": 16,
     "maxDamage": 26,
     "attackSpeed": 1500,
+    "castTimeMs": 2000,
+    "interruptible": true,
     "hitRate": 16,
     "defense": 6,
     "description": "昔日氣宇軒昂的墨竹山外門首徒宋天衡，如今身軀嚴重膨脹畸變，背後撕裂出兩對巨大骨刺，整條右臂化作滴淌腐蝕濁血的泣血巨爪！",

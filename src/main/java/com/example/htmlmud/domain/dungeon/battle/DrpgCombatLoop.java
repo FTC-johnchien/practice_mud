@@ -45,6 +45,7 @@ public class DrpgCombatLoop {
   private final DefenseResolver defenseResolver;
   private final BuffSettlementService buffSettlementService;
   private final com.example.htmlmud.domain.party.service.FormationEngine formationEngine;
+  private final CombatFsmService combatFsmService;
   private final ExecutorService combatExecutor;
 
   @Autowired
@@ -54,14 +55,26 @@ public class DrpgCombatLoop {
       DefenseResolver defenseResolver,
       BuffSettlementService buffSettlementService,
       com.example.htmlmud.domain.party.service.FormationEngine formationEngine,
+      CombatFsmService combatFsmService,
       @Qualifier("combatExecutor") @Autowired(required = false) ExecutorService combatExecutor) {
     this.tacticsService = tacticsService != null ? tacticsService : new DrpgEnemyTacticsService();
     this.rewardService = rewardService != null ? rewardService : new DrpgRewardService();
     this.defenseResolver = defenseResolver != null ? defenseResolver : new DefenseResolver();
     this.buffSettlementService = buffSettlementService != null ? buffSettlementService : new BuffSettlementService();
     this.formationEngine = formationEngine != null ? formationEngine : new com.example.htmlmud.domain.party.service.FormationEngine();
+    this.combatFsmService = combatFsmService != null ? combatFsmService : new CombatFsmService();
     this.combatExecutor = combatExecutor != null ? combatExecutor
         : Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("drpg-combat-fallback-", 0).factory());
+  }
+
+  public DrpgCombatLoop(
+      DrpgEnemyTacticsService tacticsService,
+      DrpgRewardService rewardService,
+      DefenseResolver defenseResolver,
+      BuffSettlementService buffSettlementService,
+      com.example.htmlmud.domain.party.service.FormationEngine formationEngine,
+      @Qualifier("combatExecutor") @Autowired(required = false) ExecutorService combatExecutor) {
+    this(tacticsService, rewardService, defenseResolver, buffSettlementService, formationEngine, new CombatFsmService(), combatExecutor);
   }
 
   public DrpgCombatLoop(DrpgEnemyTacticsService tacticsService, DrpgRewardService rewardService,
@@ -101,6 +114,10 @@ public class DrpgCombatLoop {
 
   public DefenseResolver getDefenseResolver() {
     return defenseResolver;
+  }
+
+  public CombatFsmService getCombatFsmService() {
+    return combatFsmService;
   }
 
   public ExecutorService getCombatExecutor() {
@@ -392,7 +409,7 @@ public class DrpgCombatLoop {
         for (BattleEnemy enemy : ctx.getEnemies()) {
           if (!enemy.isAlive() || ctx.isOver()) continue;
 
-          // 眩暈狀態檢查：若正在蓄力則打斷
+          // 眩暈/失衡狀態檢查：若正在蓄力則打斷
           if (enemy.isStunned()) {
             if (enemy.isCasting()) {
               enemy.clearIntent();
@@ -406,9 +423,17 @@ public class DrpgCombatLoop {
             enemy.setNextAttackTime(now + Math.min(enemy.getAttackIntervalMs(), ThreadLocalRandom.current().nextLong(800, 1600)));
           }
 
-          // Telegraph 行為預告階段：在攻擊前 1500ms 預告意圖、鎖定目標、啟動蓄力條
+          // 施法與蓄力推進 (Combat Engine FSM)
+          String enemyInterrupt = enemy.popLastInterruptReason();
+          if (enemyInterrupt != null) {
+            broadcastLog(player, ctx, "\u001B[1;31m💥【怪物施法被打斷】" + enemy.getName() + " 蓄力潰散（" + enemyInterrupt + "）！\u001B[0m");
+            continue;
+          }
+
+          // Telegraph 行為預告階段：在攻擊前預告意圖、鎖定目標、啟動蓄力條 (CASTING)
           long timeUntilAttack = enemy.getNextAttackTime() - now;
-          if (enemy.getCurrentIntentName() == null && timeUntilAttack <= 1500) {
+          long triggerWindow = enemy.getCastDurationMs() > 0 ? enemy.getCastDurationMs() : 1500L;
+          if (enemy.getCurrentIntentName() == null && timeUntilAttack <= triggerWindow) {
             PartyMember prospectiveTarget = tacticsService.selectPartyTarget(ctx, enemy);
             if (prospectiveTarget != null && prospectiveTarget.isAlive()) {
               String prospectiveMove = tacticsService.selectEnemyMove(enemy);
@@ -432,7 +457,9 @@ public class DrpgCombatLoop {
                 type = "PHYSICAL";
               }
 
-              enemy.startIntent(icon, moveDisplayName, type, "SINGLE", Math.max(500, timeUntilAttack), true);
+              long castDuration = enemy.getCastDurationMs() > 0 ? enemy.getCastDurationMs() : Math.max(500, timeUntilAttack);
+              boolean interruptible = enemy.isInterruptible();
+              combatFsmService.startEnemyCast(enemy, icon, moveDisplayName, type, "SINGLE", castDuration, interruptible);
             }
           }
 
@@ -981,14 +1008,21 @@ public class DrpgCombatLoop {
               }
             }
 
+            // 蓄力打斷判定 (Milestone 1 / Task 2: Combat Engine FSM)
+            var interruptRes = combatFsmService.resolveSkillInterrupt(e, member, skill);
+            if (interruptRes.interrupted()) {
+              broadcastLog(player, ctx, interruptRes.combatLog());
+            }
+
             member.addThreat(dmg);
             e.addThreat(member.getId(), dmg + skill.getThreatBonus());
             if (skill.isStun()) e.applyStun(skill.getStunDurationSeconds() * 1000L);
             boolean isKilled = !e.isAlive();
             int eIdx = ctx.getEnemies().indexOf(e);
+            HitOutcome hitOutcome = interruptRes.interrupted() ? HitOutcome.INTERRUPTED : HitOutcome.HIT;
             hits.add(new BattleHit(
                 new UnitRef(UnitRef.Side.ENEMY, e.getId(), eIdx >= 0 ? eIdx : 0),
-                HitOutcome.HIT,
+                hitOutcome,
                 dmg,
                 0,
                 isKilled
@@ -1048,11 +1082,18 @@ public class DrpgCombatLoop {
             }
           }
 
+          // 蓄力打斷判定 (Milestone 1 / Task 2: Combat Engine FSM)
+          var interruptRes = combatFsmService.resolveSkillInterrupt(target, member, skill);
+          if (interruptRes.interrupted()) {
+            broadcastLog(player, ctx, interruptRes.combatLog());
+          }
+
           member.addThreat(dmg);
           target.addThreat(member.getId(), dmg + skill.getThreatBonus());
           if (skill.isStun()) target.applyStun(skill.getStunDurationSeconds() * 1000L);
           boolean isKilled = !target.isAlive();
           int eIdx = ctx.getEnemies().indexOf(target);
+          HitOutcome singleOutcome = interruptRes.interrupted() ? HitOutcome.INTERRUPTED : HitOutcome.HIT;
           BattleEvent singleSkillEvent = new BattleEvent(
               ctx.nextEventSeq(),
               now,
@@ -1066,7 +1107,7 @@ public class DrpgCombatLoop {
               skill.getFxKey() != null ? skill.getFxKey() : "skill_" + skillDmgType.toLowerCase(),
               List.of(new BattleHit(
                   new UnitRef(UnitRef.Side.ENEMY, target.getId(), eIdx >= 0 ? eIdx : 0),
-                  HitOutcome.HIT,
+                  singleOutcome,
                   dmg,
                   0,
                   isKilled

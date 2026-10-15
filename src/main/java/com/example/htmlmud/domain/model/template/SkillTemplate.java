@@ -44,6 +44,9 @@ public class SkillTemplate {
   // 效果與數值
   Mechanics mechanics;
 
+  // 施法前搖、冷卻與打斷設定 (Milestone 1 / COMBAT-REACT-01)
+  com.example.htmlmud.domain.model.config.Timing timing;
+
   List<SynergiesConfig> synergies;
 
   List<MoveAction> moves;

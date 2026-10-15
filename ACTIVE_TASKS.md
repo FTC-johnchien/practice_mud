@@ -15,13 +15,13 @@
 
 ### 📋 微任務清單 (Micro-Tasks)
 
-- [ ] **Task 1: 資料模型與設定擴充 (Data Model & Schema)**
+- [x] **Task 1: 資料模型與設定擴充 (Data Model & Schema)**
   - 檢視 `mobs.json` 與技能 JSON，補齊蓄力招式之 `castTimeMs` 與 `interruptible` 標籤。
   - `CombatMobDto` / `BattleEnemyDto` 擴充 `currentAction`、`actionProgressPercent`、`interruptible` 欄位。
-- [ ] **Task 2: 戰鬥迴圈蓄力與打斷狀態解算 (Combat Engine FSM)**
+- [x] **Task 2: 戰鬥迴圈蓄力與打斷狀態解算 (Combat Engine FSM)**
   - 在 `DrpgCombatLoop` 與 `CombatFsmService` 實裝怪物施法階段（`CASTING`）。
   - 當怪物受到帶有 `STUN`、`SILENCE` 標籤的招式時觸發打斷判定，重置蓄力並進入失衡狀態。
-- [ ] **Task 3: 機制單元與整合測試編寫 (Test-Driven Verification)**
+- [x] **Task 3: 機制單元與整合測試編寫 (Test-Driven Verification)**
   - 編寫 `EnemyCastAndInterruptTest.java`，驗證蓄力進度推移、打斷成功率與免疫機制。
   - 執行 `.\test.ps1` 確認全專案 304+ 測試全數綠燈。
 - [ ] **Task 4: 前端戰鬥擂台 FE-3 視覺化呈現 (Frontend Visuals)**

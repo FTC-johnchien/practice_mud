@@ -7,6 +7,7 @@ public enum HitOutcome {
   PARRIED,  // 招架格擋成功 (減免 50%~70%)
   DODGED,   // 身法閃避成功 (0 傷害)
   MISS,     // 未命中 (0 傷害)
-  ABSORBED, // 護盾全額吸收
-  IMMUNE    // 免疫
+  ABSORBED,   // 護盾全額吸收
+  IMMUNE,     // 免疫
+  INTERRUPTED // 施法打斷反制
 }

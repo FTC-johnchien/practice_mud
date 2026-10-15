@@ -9,6 +9,10 @@
     "FIRE",
     "AOE"
   ],
+  "timing": {
+    "castTime": 2000,
+    "interruptible": true
+  },
   "usage": {
     "allowedWeapons": [
       null,

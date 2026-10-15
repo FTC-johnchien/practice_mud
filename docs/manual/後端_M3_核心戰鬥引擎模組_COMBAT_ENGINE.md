@@ -129,21 +129,46 @@ public static ResistanceResult resolveResistance(int rawDamage, DamageType type,
 
 ---
 
-## 🔗 六、代表類別與資料設定檔
+## ⚡ 六、敵方蓄力前搖與打斷反制狀態機 (Combat FSM & Interrupt System)
+
+為實現現代動作 RPG 的「見招拆招」博弈體驗，怪物行動不僅具備攻擊間隔（Action Interval），在釋放特技或強力招式時更引入 **蓄力施法階段（CASTING Phase）** 與 **即時打斷反制（Interrupt System）**：
+
+### 1. 怪物施法階段狀態機（`CombatFsmService.startEnemyCast`）
+- 當怪物普通攻擊或技能觸發蓄力前搖時（由 `MobTemplate.castTimeMs` 或招式 `Timing.castTimeMs` 設定）：
+  - 怪物進入 `isCasting = true` 狀態，初始化 `castDurationMs` 與 `castRemainingMs`。
+  - 當前意圖 `currentAction`、進度百分比 `actionProgressPercent` 與可打斷標識 `interruptible` 同步封裝至 `BattleEnemyViewDto` 傳輸給前端進行青藍/猩紅蓄力條渲染。
+
+### 2. 即時受創打斷與反制判定（`CombatFsmService.resolveSkillInterrupt`）
+- **反制觸發條件**：
+  1. 敵方當前處於蓄力施法狀態（`isCasting() == true`）。
+  2. 敵方該招式具備可打斷屬性（`isInterruptible() == true`）。
+  3. 玩家小隊施放的招式標籤帶有打斷/控場特性（`STUN`、`SILENCE`、`CONTROL`、`SEAL`）。
+- **打斷結算後果**：
+  - 目標觸發 `triggerInterrupt(reason, stunDurationMs)`。
+  - **罡氣崩散**：自動呼叫 `triggerPoiseBreak()` 使怪物進入破防失衡虛弱狀態，清空當前蓄力施法意圖。
+  - **行動鎖定**：賦予短暫暈眩時間鎖（`stunnedUntil`），且推遲下次攻擊間隔（`nextAttackTime`）。
+  - **戰鬥反饋**：派發 `HitOutcome.INTERRUPTED` 事件，戰鬥日誌記錄 `[反制打斷]`，並通知前端觸發打斷震顫與特效。
+
+---
+
+## 🔗 七、代表類別與資料設定檔
 
 | 項目 | 路徑 / 名稱 | 職責 |
 | :--- | :--- | :--- |
 | **純領域規則** | `com.example.htmlmud.domain.combat.CombatRules` | 一元一次圓桌判定、五行抗性與逆流結算 |
-| **戰鬥編排** | `com.example.htmlmud.domain.combat.DrpgBattleService` | 戰鬥初始化、逃跑、指令派發 |
-| **時間線迴圈** | `com.example.htmlmud.domain.combat.DrpgCombatLoop` | 200ms Tick 輪詢推進與攻擊觸發 |
-| **智慧索敵** | `com.example.htmlmud.domain.combat.DrpgEnemyTacticsService` | 前排加成、嘲諷係數與仇恨演算 |
-| **戰果結算** | `com.example.htmlmud.domain.combat.DrpgRewardService` | 經驗派發、掉落物入庫與金幣分配 |
-| **資料設定** | `src/main/resources/data/party/party_skills.json` | 小隊技能傷害、削韌值與冷卻配置 |
-| **資料設定** | `src/main/resources/data/zones/*/mobs.json` | 怪物基礎屬性、五行抗性與攻擊間隔 |
+| **戰鬥編排** | `com.example.htmlmud.domain.dungeon.battle.DrpgBattleService` | 戰鬥初始化、逃跑、指令派發 |
+| **時間線迴圈** | `com.example.htmlmud.domain.dungeon.battle.DrpgCombatLoop` | 200ms Tick 輪詢推進與攻擊觸發 |
+| **狀態機與打斷服務** | `com.example.htmlmud.domain.dungeon.battle.CombatFsmService` | 蓄力前搖管理、標籤比對與即時打斷反制結算 |
+| **智慧索敵** | `com.example.htmlmud.domain.dungeon.battle.DrpgEnemyTacticsService` | 前排加成、嘲諷係數與仇恨演算 |
+| **戰果結算** | `com.example.htmlmud.domain.dungeon.battle.DrpgRewardService` | 經驗派發、掉落物入庫與金幣分配 |
+| **戰況視圖契約** | `com.example.htmlmud.domain.dungeon.dto.BattleEnemyViewDto` | 前端戰況實體 DTO（含 `currentAction`, `actionProgressPercent`, `interruptible`） |
+| **精簡敵方傳輸** | `com.example.htmlmud.domain.dungeon.dto.BattleEnemyDto` / `CombatMobDto` | 敵方蓄力與打斷即時狀態傳輸合約 |
+| **資料設定** | `src/main/resources/data/party/party_skills.json` | 小隊技能傷害、削韌值、蓄力 `castTimeMs` 與打斷 `interruptible` 標籤 |
+| **資料設定** | `src/main/resources/data/zones/*/mobs.json` | 怪物基礎屬性、五行抗性、攻擊間隔與怪物蓄力前搖 `castTimeMs` |
 
 ---
 
-## 🚀 七、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
+## 🚀 八、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
 
 為使核心戰鬥引擎達到現代動作 RPG（如暗黑破壞神、黑神話、魂系）的策略交鋒深度，確立以下四大演進方向：
 

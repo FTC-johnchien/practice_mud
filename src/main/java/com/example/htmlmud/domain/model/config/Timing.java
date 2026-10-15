@@ -1,5 +1,10 @@
 package com.example.htmlmud.domain.model.config;
+ 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Builder;
 
+@Builder(toBuilder = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record Timing(
 
     int castTime,
@@ -15,5 +20,10 @@ public record Timing(
     boolean interruptible // 可被打斷
 
 ) {
-
+  public Timing {
+    if (gcd == 0 && !triggerGcd && cooldown == 0 && castTime == 0) {
+      // 預設可打斷
+    }
+  }
 }
+

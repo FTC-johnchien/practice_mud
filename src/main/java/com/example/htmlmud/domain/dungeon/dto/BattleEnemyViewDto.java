@@ -34,8 +34,58 @@ public record BattleEnemyViewDto(
     int maxPoise,
     boolean isPoiseBroken,
     int shield,
-    List<ActiveBuffDto> activeBuffs
+    List<ActiveBuffDto> activeBuffs,
+    String currentAction,
+    int actionProgressPercent,
+    boolean interruptible
 ) {
+  public BattleEnemyViewDto(
+      int index,
+      String id,
+      String name,
+      int hp,
+      int maxHp,
+      String row,
+      boolean alive,
+      boolean isTarget,
+      boolean isStunned,
+      String targetMemberId,
+      String targetMemberName,
+      int threat,
+      boolean isLarge,
+      int size,
+      String slot,
+      int rowIdx,
+      int colIdx,
+      int width,
+      int height,
+      String intentIcon,
+      String intentName,
+      String intentType,
+      String intentTargetScope,
+      boolean isCasting,
+      long castDurationMs,
+      long castRemainingMs,
+      boolean isInterruptible,
+      int poise,
+      int maxPoise,
+      boolean isPoiseBroken,
+      int shield,
+      List<ActiveBuffDto> activeBuffs
+  ) {
+    this(
+        index, id, name, hp, maxHp, row, alive, isTarget, isStunned,
+        targetMemberId, targetMemberName, threat, isLarge, size, slot,
+        rowIdx, colIdx, width, height, intentIcon, intentName, intentType,
+        intentTargetScope, isCasting, castDurationMs, castRemainingMs, isInterruptible,
+        poise, maxPoise, isPoiseBroken, shield, activeBuffs,
+        intentName != null ? intentName : "",
+        (castDurationMs > 0)
+            ? (int) Math.max(0, Math.min(100, Math.round((1.0 - ((double) castRemainingMs / castDurationMs)) * 100.0)))
+            : 0,
+        isInterruptible
+    );
+  }
   public BattleEnemyViewDto(
       int index,
       String id,

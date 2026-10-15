@@ -227,7 +227,9 @@ public class PartyMemberSkill {
     }
 
     long castTime = 0L;
-    if (rawTags.contains("CAST_1S")) {
+    if (tpl.getTiming() != null && tpl.getTiming().castTime() > 0) {
+      castTime = (long) tpl.getTiming().castTime();
+    } else if (rawTags.contains("CAST_1S")) {
       castTime = 1000L;
     } else if (rawTags.contains("CAST_1_5S")) {
       castTime = 1500L;
@@ -236,6 +238,8 @@ public class PartyMemberSkill {
     } else if (rawTags.contains("CAST_3S")) {
       castTime = 3000L;
     }
+
+    boolean isInterrupt = (tpl.getTiming() != null) ? tpl.getTiming().interruptible() : !rawTags.contains("UNINTERRUPTIBLE");
 
     int threatVal = isTaunt ? 600 : (rawTags.contains("HIGH_THREAT") ? 300 : 0);
 
@@ -269,7 +273,7 @@ public class PartyMemberSkill {
         .gcdMs(gcdTime)
         .triggersGcd(trigGcd)
         .castTimeMs(castTime)
-        .interruptible(!rawTags.contains("UNINTERRUPTIBLE"))
+        .interruptible(isInterrupt)
         .threatBonus(threatVal)
         .build();
   }

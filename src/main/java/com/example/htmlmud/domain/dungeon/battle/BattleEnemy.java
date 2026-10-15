@@ -130,6 +130,10 @@ public class BattleEnemy implements Combatant, Buffable {
     this.interruptible = interruptible;
   }
 
+  public void startIntent(String icon, String name, String type, String scope, long durationMs) {
+    startIntent(icon, name, type, scope, durationMs, this.interruptible);
+  }
+
   public void clearIntent() {
     this.currentIntentIcon = null;
     this.currentIntentName = null;
@@ -145,6 +149,59 @@ public class BattleEnemy implements Combatant, Buffable {
     if (!isCasting || castDurationMs <= 0) return 0;
     long elapsed = System.currentTimeMillis() - castStartTime;
     return Math.max(0, castDurationMs - elapsed);
+  }
+
+  public void setCastRemainingMs(long remainingMs) {
+    if (this.castDurationMs > 0) {
+      this.castStartTime = System.currentTimeMillis() - (this.castDurationMs - Math.max(0, remainingMs));
+    }
+  }
+
+  public String getCurrentAction() {
+    return currentIntentName != null ? currentIntentName : "";
+  }
+
+  public void setCurrentAction(String action) {
+    this.currentIntentName = action;
+  }
+
+  public int getActionProgressPercent() {
+    if (!isCasting || castDurationMs <= 0) return 0;
+    long elapsed = System.currentTimeMillis() - castStartTime;
+    return (int) Math.min(100, Math.max(0, Math.round(((double) elapsed / castDurationMs) * 100.0)));
+  }
+
+  public boolean isInterruptible() {
+    return interruptible;
+  }
+
+  public boolean getInterruptible() {
+    return interruptible;
+  }
+
+  private String lastInterruptReason;
+
+  /**
+   * 觸發施法反制打斷：重置蓄力、破防失衡、進入力竭狀態
+   */
+  public boolean triggerInterrupt(String reason, long stunDurationMs) {
+    if (!isCasting || !interruptible) {
+      return false;
+    }
+    clearIntent();
+    triggerPoiseBreak();
+    if (stunDurationMs > 0) {
+      this.stunnedUntil = Math.max(this.stunnedUntil, System.currentTimeMillis() + stunDurationMs);
+    }
+    this.nextAttackTime = System.currentTimeMillis() + Math.max(1500L, stunDurationMs);
+    this.lastInterruptReason = reason != null ? reason : "反制打斷";
+    return true;
+  }
+
+  public String popLastInterruptReason() {
+    String r = this.lastInterruptReason;
+    this.lastInterruptReason = null;
+    return r;
   }
 
   public static BattleEnemy fromTemplate(String id, MobTemplate tpl, RowPosition row, String dropId,
@@ -232,6 +289,9 @@ public class BattleEnemy implements Combatant, Buffable {
       resMap.putAll(tpl.resistances());
     }
 
+    long configuredCastDuration = tpl.castTimeMs() > 0 ? tpl.castTimeMs() : 0L;
+    boolean isInterruptible = tpl.interruptible() != null ? tpl.interruptible() : true;
+
     return BattleEnemy.builder()
         .id(id)
         .templateId(tpl.id())
@@ -258,6 +318,8 @@ public class BattleEnemy implements Combatant, Buffable {
         .dropItemIds(dropList)
         .alive(true)
         .xp(tpl.expReward() > 0 ? tpl.expReward() : 30)
+        .castDurationMs(configuredCastDuration)
+        .interruptible(isInterruptible)
         .build();
   }
 

@@ -1051,7 +1051,10 @@ public class DrpgBattleService {
           e.getMaxPoise(),
           e.isPoiseBroken(),
           e.getTotalShield(),
-          buffDtos
+          buffDtos,
+          e.getCurrentAction(),
+          e.getActionProgressPercent(),
+          e.isInterruptible()
       ));
     }
     return new BattleViewDto(

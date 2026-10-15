@@ -42,6 +42,13 @@
     "healAmount": 30,
     "sanRestore": 20,
     "allowedWeapons": [],
+    "tags": [
+      "SPELL",
+      "CONTROL",
+      "STUN",
+      "SILENCE",
+      "AOE"
+    ],
     "synergy": true,
     "requiredClasses": [],
     "minPartyAlive": 4,
@@ -65,6 +72,11 @@
     "healAmount": 0,
     "sanRestore": 0,
     "allowedWeapons": [],
+    "tags": [
+      "ATTACK",
+      "BURST",
+      "STUN"
+    ],
     "synergy": true,
     "requiredClasses": [
       "WARRIOR",
@@ -163,6 +175,7 @@
     "tags": [
       "ATTACK",
       "CONTROL",
+      "STUN",
       "EARTH",
       "BLUNT"
     ],
@@ -182,6 +195,8 @@
     "cooldownMs": 5000,
     "damageMultiplier": 1.0,
     "damageType": "WOOD",
+    "castTimeMs": 1500,
+    "interruptible": true,
     "aoe": false,
     "heal": true,
     "healAmount": 40,
@@ -209,6 +224,8 @@
     "cooldownMs": 12000,
     "damageMultiplier": 1.0,
     "damageType": "HOLY",
+    "castTimeMs": 2000,
+    "interruptible": true,
     "aoe": true,
     "heal": true,
     "healAmount": 25,
@@ -295,6 +312,8 @@
     "tags": [
       "SPELL",
       "CONTROL",
+      "STUN",
+      "SILENCE",
       "DARK"
     ],
     "allowedWeapons": []
@@ -309,6 +328,8 @@
     "cooldownMs": 10000,
     "damageMultiplier": 1.6,
     "damageType": "LIGHTNING",
+    "castTimeMs": 1500,
+    "interruptible": true,
     "poiseDamage": 30,
     "aoe": true,
     "heal": false,
@@ -355,6 +376,8 @@
     "cooldownMs": 15000,
     "damageMultiplier": 2.2,
     "damageType": "DARK",
+    "castTimeMs": 2500,
+    "interruptible": true,
     "poiseDamage": 35,
     "aoe": true,
     "heal": false,
