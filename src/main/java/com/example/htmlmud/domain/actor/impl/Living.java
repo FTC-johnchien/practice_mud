@@ -58,7 +58,8 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> implement
 
 
 
-  // 背包
+  // 背包（SP-02 規範：在路徑 X 純單機單體化架構中，玩家道具唯一真實載體為 Party.inventory 小隊公共行囊；
+  // 此處 inventory 僅供 Mob / NPC 掉落物與生靈私有物品暫存，禁止作為 Player 之雙軌業務行囊使用）
   protected List<GameItem> inventory = new ArrayList<>();
 
   protected DamageSource baseDamageSource;

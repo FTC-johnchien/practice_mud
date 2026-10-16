@@ -137,35 +137,35 @@ class DualTierInventoryAndStashTest {
   }
 
   @Test
-  @DisplayName("驗證 stash 與 withdraw 雙向流轉：個人行囊存入倉庫，倉庫取出回行囊")
-  void testStashAndWithdrawWorkflow() {
-    // 給個人行囊放入一件物品
+  @DisplayName("驗證 SP-02: stash 與 withdraw 手動雙向轉存已除役，小隊公共行囊為唯一共享載體")
+  void testStashAndWithdrawDecommissioned() {
+    // 預先在小隊行囊與個人假帳中設定物品
     GameItem potion = new GameItem();
     potion.setId("herb_paste");
     potion.setName("百草金創藥膏");
     potion.setType(ItemType.CONSUMABLE);
     player.getInventory().add(potion);
 
-    assertThat(player.getInventory()).hasSize(1);
-    assertThat(party.getInventory().getSlots()).isEmpty();
+    party.getInventory().addItem("gold_ore", 3);
 
-    // 1. 執行 stash：將個人行囊物品存入小隊倉庫
+    int initialPersonalSize = player.getInventory().size();
+    int initialPartySlots = party.getInventory().getSlots().size();
+
+    // 1. 執行 stash：不再搬動個人行囊物品至倉庫
     ScopedValue.where(MudContext.CURRENT_PLAYER, player)
         .where(MudContext.RAW_INPUT, "stash 藥膏")
         .run(() -> stashCommand.execute("藥膏"));
 
-    assertThat(player.getInventory()).isEmpty();
-    assertThat(party.getInventory().getSlots()).hasSize(1);
-    assertThat(party.getInventory().getSlots().get(0).getName()).isEqualTo("百草金創藥膏");
+    assertThat(player.getInventory()).hasSize(initialPersonalSize);
+    assertThat(party.getInventory().getSlots()).hasSize(initialPartySlots);
 
-    // 2. 執行 withdraw：從小隊倉庫取回個人行囊
+    // 2. 執行 withdraw：亦不再從小隊倉庫搬回個人行囊
     ScopedValue.where(MudContext.CURRENT_PLAYER, player)
-        .where(MudContext.RAW_INPUT, "withdraw 藥膏")
-        .run(() -> stashCommand.execute("藥膏"));
+        .where(MudContext.RAW_INPUT, "withdraw 靈石")
+        .run(() -> stashCommand.execute("靈石"));
 
-    assertThat(player.getInventory()).hasSize(1);
-    assertThat(player.getInventory().get(0).getName()).isEqualTo("百草金創藥膏");
-    assertThat(party.getInventory().getSlots()).isEmpty();
+    assertThat(player.getInventory()).hasSize(initialPersonalSize);
+    assertThat(party.getInventory().getSlots()).hasSize(initialPartySlots);
   }
 
   @Test
