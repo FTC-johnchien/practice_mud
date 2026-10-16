@@ -88,6 +88,50 @@ public class SaveMigrationPipeline {
       });
     }
 
+    // 2 -> 3: 存檔大一統：除役 personalInventory，舊個人背包道具安全合流至 party.inventory (SP-03)
+    if (migrations.stream().noneMatch(m -> m.getFromVersion() == 2 && m.getToVersion() == 3)) {
+      migrations.add(new SaveMigration() {
+        @Override
+        public int getFromVersion() {
+          return 2;
+        }
+
+        @Override
+        public int getToVersion() {
+          return 3;
+        }
+
+        @Override
+        public JsonNode migrate(JsonNode rootNode) {
+          if (rootNode instanceof ObjectNode objNode) {
+            log.info("Migrating save from schemaVersion 2 to 3 (Single-Player Monolith: unify inventory / SP-03)");
+            objNode.put("schemaVersion", 3);
+            if (objNode.has("personalInventory") && objNode.get("personalInventory").isArray()) {
+              JsonNode personalArr = objNode.get("personalInventory");
+              if (personalArr.size() > 0) {
+                JsonNode partyNode = objNode.get("party");
+                if (partyNode instanceof ObjectNode partyObj) {
+                  JsonNode invNode = partyObj.get("inventory");
+                  if (invNode instanceof ObjectNode invObj) {
+                    JsonNode slotsNode = invObj.get("slots");
+                    if (slotsNode instanceof com.fasterxml.jackson.databind.node.ArrayNode slotsArr) {
+                      for (JsonNode itemNode : personalArr) {
+                        slotsArr.add(itemNode);
+                      }
+                      log.info("Merged {} legacy personal items into party.inventory slots during v2 -> v3 migration", personalArr.size());
+                    }
+                  }
+                }
+              }
+              // 合流後自 JSON 中移除冗餘的個人假帳陣列
+              objNode.remove("personalInventory");
+            }
+          }
+          return rootNode;
+        }
+      });
+    }
+
     migrations.sort(Comparator.comparingInt(SaveMigration::getFromVersion));
   }
 

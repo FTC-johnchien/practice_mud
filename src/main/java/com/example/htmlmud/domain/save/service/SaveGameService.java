@@ -30,14 +30,12 @@ import com.example.htmlmud.domain.context.MudContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class SaveGameService {
 
   public static final int TOTAL_MANUAL_SLOTS = 5;
@@ -46,6 +44,12 @@ public class SaveGameService {
   private final ObjectMapper objectMapper;
   private final PartyService partyService;
   private final DungeonManager dungeonManager;
+
+  public SaveGameService(ObjectMapper objectMapper, PartyService partyService, DungeonManager dungeonManager) {
+    this.objectMapper = objectMapper;
+    this.partyService = partyService;
+    this.dungeonManager = dungeonManager;
+  }
 
   @Autowired(required = false)
   private ObjectProvider<WorldManager> worldManagerProvider;
@@ -228,26 +232,6 @@ public class SaveGameService {
       }
     }
 
-    // 收集主角個人隨身行囊 (UNIFY-01)
-    List<PartyItemSlot> personalSlots = new ArrayList<>();
-    Player onlinePlayer = null;
-    if (worldManagerProvider != null && worldManagerProvider.getIfAvailable() != null) {
-      onlinePlayer = worldManagerProvider.getIfAvailable().findPlayerActor(playerId).orElse(null);
-    }
-    if (onlinePlayer == null && MudContext.hasCurrentPlayer()) {
-      Player current = MudContext.currentPlayer();
-      if (playerId.equals(current.getName()) || playerId.equals(current.getId())) {
-        onlinePlayer = current;
-      }
-    }
-    if (onlinePlayer != null && onlinePlayer.getInventory() != null) {
-      for (com.example.htmlmud.domain.model.entity.GameItem item : onlinePlayer.getInventory()) {
-        if (item != null) {
-          personalSlots.add(PartyItemSlot.fromGameItem(item));
-        }
-      }
-    }
-
     SaveData saveData = SaveData.builder()
         .slotId(slotId)
         .title(title)
@@ -262,7 +246,6 @@ public class SaveGameService {
         .visitedTiles(pos.getVisited())
         .openedChests(openedChests)
         .party(party)
-        .personalInventory(personalSlots)
         .savedAt(LocalDateTime.now().format(DATE_FORMATTER))
         .build();
 
@@ -339,7 +322,7 @@ public class SaveGameService {
       partyService.setParty(playerId, data.getParty());
     }
 
-    // 2. 若玩家在線，同步還原個人隨身行囊 (UNIFY-01)
+    // 2. 若玩家在線，同步小隊長裝備鏡像至線上 Player (若存在) (SP-03: 道具由 party.inventory 唯一管理)
     Player onlinePlayer = null;
     if (worldManagerProvider != null && worldManagerProvider.getIfAvailable() != null) {
       onlinePlayer = worldManagerProvider.getIfAvailable().findPlayerActor(playerId).orElse(null);
@@ -350,16 +333,7 @@ public class SaveGameService {
         onlinePlayer = current;
       }
     }
-    if (onlinePlayer != null && data.getPersonalInventory() != null) {
-      onlinePlayer.getInventory().clear();
-      com.example.htmlmud.domain.repository.TemplateReader reader =
-          (worldManagerProvider != null && worldManagerProvider.getIfAvailable() != null)
-              ? worldManagerProvider.getIfAvailable().getTemplateReader() : null;
-      for (PartyItemSlot slot : data.getPersonalInventory()) {
-        if (slot != null) {
-          onlinePlayer.getInventory().add(slot.toGameItem(reader));
-        }
-      }
+    if (onlinePlayer != null) {
       Party restoredParty = data.getParty();
       if (restoredParty != null && !restoredParty.getMembers().isEmpty()) {
         PartyMember leader = restoredParty.getMembers().get(0);

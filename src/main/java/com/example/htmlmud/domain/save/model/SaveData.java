@@ -18,11 +18,19 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SaveData {
-  public static final int CURRENT_SCHEMA_VERSION = 2;
+  public static final int CURRENT_SCHEMA_VERSION = 3;
 
   @Builder.Default
   private int schemaVersion = CURRENT_SCHEMA_VERSION;
+
+  /**
+   * 歷史相容欄位 (v2 雙層背包過渡期產物)。
+   * 在 SP-03 (存檔大一統) 中已徹底除役，所有道具由 party.inventory 唯一管理。
+   * 此處僅保留用於反序列化舊存檔或向下相容，若為空則不輸出至 JSON。
+   */
+  @Deprecated
   @Builder.Default
+  @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
   private List<PartyItemSlot> personalInventory = new ArrayList<>();
   private int slotId; // 0 = autosave, 1..5 = manual saves
   private String title;

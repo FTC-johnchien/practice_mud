@@ -197,37 +197,36 @@ class DualTierInventoryAndStashTest {
   }
 
   @Test
-  @DisplayName("驗證個人隨身行囊可隨單機存檔 v2 正確序列化與還原")
-  void testPersonalInventorySaveAndRestore() {
-    GameItem amulet = new GameItem();
-    amulet.setId("peace_amulet");
-    amulet.setName("辟邪玉佩");
-    amulet.setType(ItemType.ARMOR);
-    player.getInventory().add(amulet);
+  @DisplayName("驗證 SP-03: 存檔大一統 (Party Inventory 單一真相源持久化，徹底除役 personalInventory 雙寫)")
+  void testPartyInventorySaveAndRestoreUnified() {
+    // 將物品放入小隊公共行囊
+    party.getInventory().addItem("peace_amulet", 1);
+    assertThat(party.getInventory().getSlots()).anyMatch(s -> s.getItemId().contains("peace_amulet"));
 
     int slotId = 1;
     saveGameService.deleteSave(slotId);
 
     try {
       SaveData saved = ScopedValue.where(MudContext.CURRENT_PLAYER, player).call(() ->
-          saveGameService.saveGame(player.getId(), slotId, "測試隨身行囊存檔")
+          saveGameService.saveGame(player.getId(), slotId, "測試小隊行囊大一統存檔")
       );
 
-      assertThat(saved.getSchemaVersion()).isEqualTo(2);
-      assertThat(saved.getPersonalInventory()).isNotEmpty();
-      assertThat(saved.getPersonalInventory().get(0).getName()).isEqualTo("辟邪玉佩");
+      assertThat(saved.getSchemaVersion()).isEqualTo(SaveData.CURRENT_SCHEMA_VERSION);
+      // 驗證存檔之小隊公共行囊中包含該物品
+      assertThat(saved.getParty().getInventory().getSlots()).anyMatch(s -> s.getItemId().contains("peace_amulet"));
 
-      // 清空玩家行囊
-      player.getInventory().clear();
-      assertThat(player.getInventory()).isEmpty();
+      // 清空小隊行囊以模擬記憶體重置
+      party.getInventory().getSlots().clear();
+      assertThat(party.getInventory().getSlots()).isEmpty();
 
       // 讀檔還原
       SaveData loaded = ScopedValue.where(MudContext.CURRENT_PLAYER, player).call(() ->
           saveGameService.loadGame(player.getId(), slotId)
       );
 
-      assertThat(loaded.getPersonalInventory()).isNotEmpty();
-      assertThat(player.getInventory()).anyMatch(it -> it.getName().contains("辟邪玉佩"));
+      assertThat(loaded.getSchemaVersion()).isEqualTo(SaveData.CURRENT_SCHEMA_VERSION);
+      // 驗證小隊公共行囊成功完整還原
+      assertThat(loaded.getParty().getInventory().getSlots()).anyMatch(s -> s.getItemId().contains("peace_amulet"));
     } finally {
       saveGameService.deleteSave(slotId);
     }

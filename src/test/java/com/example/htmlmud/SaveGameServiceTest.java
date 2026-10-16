@@ -194,8 +194,8 @@ class SaveGameServiceTest {
   }
 
   @Test
-  @DisplayName("驗證 v1 存檔平滑遷移至 v2 並補齊 personalInventory")
-  void testSaveMigrationFromV1ToV2() throws Exception {
+  @DisplayName("驗證 v1 舊存檔平滑遷移至當前最新版本 (v3)")
+  void testSaveMigrationFromV1ToV3() throws Exception {
     int slotId = 5;
     java.io.File saveFile = new java.io.File("saves", "slot_" + slotId + ".json");
     if (!saveFile.getParentFile().exists()) {
@@ -219,9 +219,55 @@ class SaveGameServiceTest {
     try {
       SaveData loaded = saveGameService.loadGame(testPlayerId, slotId);
       assertNotNull(loaded);
-      assertThat(loaded.getSchemaVersion()).isEqualTo(2);
-      assertThat(loaded.getPersonalInventory()).isNotNull();
-      assertThat(loaded.getPersonalInventory()).isEmpty();
+      assertThat(loaded.getSchemaVersion()).isEqualTo(SaveData.CURRENT_SCHEMA_VERSION);
+    } finally {
+      saveGameService.deleteSave(slotId);
+    }
+  }
+
+  @Test
+  @DisplayName("驗證 SP-03: v2 舊存檔中的 personalInventory 自動安全合流至 party.inventory")
+  void testSaveMigrationV2ToV3PersonalInventoryMergesIntoParty() throws Exception {
+    int slotId = 5;
+    java.io.File saveFile = new java.io.File("saves", "slot_" + slotId + ".json");
+    if (!saveFile.getParentFile().exists()) {
+      saveFile.getParentFile().mkdirs();
+    }
+
+    String v2Json = """
+        {
+          "schemaVersion": 2,
+          "slotId": 5,
+          "title": "v2雙層背包存檔",
+          "playerId": "test_player",
+          "protagonistName": "玄靈子",
+          "party": {
+            "leaderId": "test_player",
+            "inventory": {
+              "capacity": 40,
+              "slots": [
+                { "slotId": "s1", "itemId": "gold_ore", "name": "赤金玄礦", "count": 2 }
+              ]
+            },
+            "members": []
+          },
+          "personalInventory": [
+            { "slotId": "p1", "itemId": "peace_amulet", "name": "辟邪玉佩", "count": 1 }
+          ]
+        }
+        """;
+    java.nio.file.Files.writeString(saveFile.toPath(), v2Json);
+
+    try {
+      SaveData loaded = saveGameService.loadGame(testPlayerId, slotId);
+      assertNotNull(loaded);
+      assertThat(loaded.getSchemaVersion()).isEqualTo(SaveData.CURRENT_SCHEMA_VERSION);
+      // 驗證原 personalInventory 中的物品已安全合流至 party.inventory
+      assertThat(loaded.getParty()).isNotNull();
+      assertThat(loaded.getParty().getInventory().getSlots()).hasSize(2);
+      assertThat(loaded.getParty().getInventory().getSlots())
+          .anyMatch(s -> s.getName().contains("赤金玄礦"))
+          .anyMatch(s -> s.getName().contains("辟邪玉佩"));
     } finally {
       saveGameService.deleteSave(slotId);
     }
