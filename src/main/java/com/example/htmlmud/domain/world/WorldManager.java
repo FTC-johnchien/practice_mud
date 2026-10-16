@@ -567,19 +567,4 @@ public class WorldManager {
 
   // return item;
   // }
-
-  // public ItemTemplate loadItemTemplate(int templateId) {
-  // // 1. DB -> Entity
-  // ItemTemplateEntity entity = itemTemplateRepository.findById(templateId).orElseThrow(
-  // () -> new IllegalArgumentException("ItemTemplate ID not found: " + templateId));
-
-  // // 2. Entity -> Record (MapStruct 自動轉)
-  // // 注意：這裡得到的 Record 內含的 State 是 Entity 裡解序列化出來的
-  // return itemTemplateMapper.toRecord(entity);
-  // }
-
-  public Optional<Player> findPlayerByName(String targetName) {
-    return activeLivings.values().stream().filter(Player.class::isInstance).map(Player.class::cast)
-        .filter(player -> player.getName().equalsIgnoreCase(targetName)).findFirst();
-  }
 }
