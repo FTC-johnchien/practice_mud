@@ -358,10 +358,10 @@ public void decrementTick() {
 
 ---
 
-### 5. 🔌 模組可擴充性：外掛式 SPI 鉤子與資料驅動公式引擎 (Extensibility & Modding)
+### 5. 🔌 模組擴充性：狀態效果處理器介面與資料驅動 (Extensibility & Mechanism)
 
-#### ① 外掛式狀態效果生命週期 SPI (Buff Effect Provider SPI)
-為支援後續 DLC、第三方外掛與社群 MOD，將狀態機抽象為標準 SPI 介面：
+#### ① 內部狀態效果生命週期介面 (Buff Effect Handler)
+為支援後續單機各類首領機制擴充與狀態效果解耦，將特殊狀態機抽象為內部標準 Spring Bean 介面：
 ```java
 public interface BuffEffectHandler {
     String getEffectId(); // 例如: "elemental_vaporize"
@@ -374,7 +374,7 @@ public interface BuffEffectHandler {
     default void onRemoved(Buffable entity, ActiveBuff buff) {}
 }
 ```
-透過 Spring Bean 自動裝配或 Java `ServiceLoader` 動態加載，新增奇門怪術或特殊 Boss 光環無需修改任何核心引擎代碼。
+透過 Spring Bean 自動註冊，新增各類首領道法或特殊光環機制均遵循 Clean Architecture 開閉原則（OCP），完全依賴核心引擎的純粹機制。
 
 #### ② 100% 資料驅動之動態複合公式 (Data-Driven Formula Engine)
 解除固定數值綁定，Buff 的每跳傷害或護盾厚度支援在 JSON 中編寫安全動態表達式：

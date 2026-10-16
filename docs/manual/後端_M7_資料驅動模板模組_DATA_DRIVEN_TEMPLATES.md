@@ -122,10 +122,10 @@ sequenceDiagram
   引入標準 JSON Schema（Draft 2020-12）對每一類設定檔進行語法樹檢查。若缺少關鍵欄位（如 `exitRoomId`、`poiseDamage`）或數值越界，在建構與啟動階段精確指出檔案名稱與行號，將錯誤消滅於執行前。
 - **孤島與環狀引線死鎖防禦**：升級 `DataIntegrityValidator`，增加圖論拓撲環路檢測（Cycle Detection），防止房間出口形成死鎖迷宮或階梯指向循環黑洞。
 
-### 3. ⚡ 效能與冷啟動最佳化 (Performance & Concurrency)
-- **二進位預編譯快取 (Binary Pre-Compiled Cache)**：
-  生產環境打包時，透過 Maven 插件將數百個文字 JSON 預先編譯為高效二進位快取（如 MessagePack / FlatBuffers），開機反序列化吞吐提升 5~10 倍，極速啟動。
+### 3. ⚡ 效能與啟動最佳化 (Performance & Validation)
+- **純記憶體索引與開機自我校驗**：
+  在 `TemplateRepository` 啟動階段完成全量 JSON 拓撲掃描與反序列化，建立雙向別名與索引表，於單元測試中由 `DataIntegrityValidator` 進行完整性防禦，執行期 0 次重複磁碟 I/O。
 
-### 4. 🔌 可擴充性與模組化 (Extensibility & Modding)
-- **階梯式 Mod 載入器 (Layered Mod Loader)**：
-  支援自 `mods/<mod_name>/` 目錄動態讀取擴充資源。外掛模組遵循「增量覆蓋（Deep Merge）」機制，玩家可自由安裝第三方擴充副本、新夥伴與神兵法寶，完全不破壞底層原生代碼。
+### 4. 🚫 過度設計正式除役宣告 (Decommissioned Over-Engineering Scope)
+- ❌ **二進位預編譯快取 (MessagePack / FlatBuffers)**：已除役，維持標準可讀 JSON 檔案驅動。
+- ❌ **第三方動態 Mod 載入器**：已除役，所有資料完全由 `src/main/resources/data/**/*.json` 單一真相源驅動。

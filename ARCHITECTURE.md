@@ -346,35 +346,27 @@ resources/data/
 
 ---
 
-## 9. 🚀 系統架構演進與現代化擴充願景 (System Architecture Roadmap)
+## 9. 🎯 純單機單體遊戲深度演進藍圖 (Single-Player Modular Monolith Deepening Roadmap)
 
-> 💡 **階段邊界提醒 (Architecture Staging Principle)**：  
-> 現階段本專案以**「高品質單體模組化 (Modular Monolith)」**與「單機可玩閉環」為最高優先級核心。  
-> 以下 EDA、多租戶 Actor、Protobuf 二進位流、動態腳本熱更等，均標記為**【遠期探索】**，必須在未來「具備明確多人線上需求、負載壓測數據與維運能力」成立時方可啟動，目前絕不提前引入複雜分散式架構。
+本專案遵循「專注於一個人的純單機單體遊戲」架構決策，所有技術與玩法設計全面圍繞單人小隊沉浸體驗展開：
 
-### 1. 現代架構規劃 (Modern Enterprise & Gaming Architecture)
-- **領域事件驅動架構 (Domain Event-Driven Architecture, EDA) 【遠期探索】**：
-  - 全面解耦服務間的同步呼叫（如戰鬥呼叫背包、升級呼叫廣播）。
-  - 引進基於虛擬執行緒的輕量領域事件匯流排（`DomainEventBus`），各模組以發布-訂閱（Pub-Sub）模式非同步處理後續副作用，保證核心業務邏輯的純粹性與毫秒級響應。
-- **多人地宮實例 Actor 容器 (Multi-Tenant Instance Actor) 【遠期探索】**：
-  - 將地牢探索與戰鬥解構為獨立生命週期的 `DungeonInstanceActor`。
-  - 每個探索隊伍擁有專屬的計算沙盒，迷霧矩陣與戰況狀態完全隔離；即便單一副本遭遇不可預期的運算異常，亦具備自動崩潰重啟與隔離能力，絕不波及全伺服器。
+### 1. 單機探索與沉浸生態 (Rich Single-Player Exploration & Dynamic World)
+- **DRPG 迷宮步進探索手感**：2D 矩陣即時雷達、迷霧開圖、暗雷隨機遭遇、陷阱機關解謎、階梯撤離與地牢生存博弈。
+- **動態生靈與城鎮生態**：世界自主運轉，晝夜動態更迭，城鎮 NPC（客棧掌櫃、鐵匠、貨棧商人）獨立對話、任務線與隊員招募。
 
-### 2. 穩定性與併發防禦 (Zero-Trust Stability & Concurrency Guard)
-- **虛擬執行緒 (Loom) 載體排程防禦 (Carrier Thread Exhaustion Defense)**：
-  - 嚴格監控 `synchronized` 關鍵字導致的虛擬執行緒釘選（Pinning）問題，全面改用 JUC `ReentrantLock`、`ReentrantReadWriteLock` 與 `StampedLock`。
-  - 對重度 I/O 操作與 CPU 密集型數值解算進行執行緒池隔離，防止底層 ForkJoinPool 載體耗盡。
-- **架構看門狗 CI 門禁 (Automated ArchUnit & AST Gate)**：
-  - 擴充 `ArchitectureGuardrailsTest`：在 CI 管線中自動化掃描 Clean Architecture 反向依賴、禁止直接讀取內部私有狀態、強行校驗 100% 資料驅動紅線，杜絕架構腐化。
+### 2. 戰鬥策略深度與隊伍構築 (Tactical Depth & Party Synergy)
+- **浪漫沙加式 5×3 戰術站位盤**：前衛承傷、中衛支援、後衛輸出，配合道門五行陣法光環與隊員陣亡破陣機制。
+- **隊友 Gambit 戰術方針 AI**：深入完善 FFXII 式條件式戰術規則鏈（血量低於閾值治療、弱點屬性集火、危急開盾）。
+- **可讀與反制戰鬥回饋**：敵方蓄力前搖唱條視覺化、即時打斷反制窗口（Stun/Silence）、罡氣削韌（Poise Break）與失衡處決。
+- **道法相生相剋**：九大天道靈氣五行抗性矩陣、逆流回血機制與元素連攜。
 
-### 3. 系統效能調優 (Performance & Extreme Throughput)
-- **雙軌傳輸協定支援 (Protobuf / JSON Binary Pipeline) 【遠期探索】**：
-  - 戰鬥與探索狀態廣播支援 Protobuf 二進位序列化，將高頻 WebSocket 訊息吞吐量提升 300%，頻寬開銷降低 60% 以上。
-- **異步批次持久化強一致性保證**：
-  - 固化 `AbstractAsyncBatchPersistenceService` 的讀寫鎖生命週期與 `flushImmediately` 度量計數契約，杜絕任何高併發場景下的停機資料遺失與競態。
+### 3. 本機存檔防禦與品質工程 (Local Save Resilience & Clean Architecture)
+- **檔案式存檔可靠性**：以 `SaveData` JSON 為唯一單一真相源，多槽位原子替換、自動 `.bak` 備份與 `schemaVersion` 平滑遷移管線。
+- **單體無鎖並發**：延續基於 Java 25 Virtual Threads 的輕量級 Actor 信箱模型，保證單機高頻戰鬥與世界探索的超低延遲與執行緒安全。
+- **架構看門狗門禁**：守護 100% 資料驅動紅線，杜絕硬編碼特例回潮，維持全測試綠燈。
 
-### 4. 模組化與多語言動態擴充 (Modular Subpackages & Polyglot Scripting)
-- **領域層 Service 包結構模組化收斂**：
-  - 將 `com.example.htmlmud.domain.service` 下平鋪的 10+ 個服務拆解至獨立子包（`domain.world`、`domain.combat`、`domain.party`、`domain.progression`、`domain.economy`），對外僅開放 Facade 介面與 Output Ports。
-- **GraalVM 多語言動態腳本引擎 (Polyglot Dynamic Scripting) 【遠期探索】**：
-  - 引入 GraalVM 執行時期，支援使用 JavaScript 或 Python 編寫複雜的 NPC 劇情對話、地牢機關解謎與首領行為樹（Behavior Tree），支援伺服器不停機熱更載入（Hot-Reload）。
+### 4. 🚫 過度設計正式除役宣告 (Decommissioned Over-Engineering Scope)
+為確保團隊與 AI 專注於單機遊戲核心樂趣，以下項目已正式自專案規劃中**全盤除役**：
+- ❌ **多人在線與跨服通訊**：不引入 Redis Pub/Sub、gRPC 跨進程通訊或多人同服房間同步。
+- ❌ **二進位自訂協定**：本機通訊維持簡潔標準的 WebMVC REST API 與 WebSocket JSON，不引入 FlatBuffers / Protobuf 二進位串流。
+- ❌ **外部動態腳本熱更 SPI**：遊戲規則與數值一律由 Java 引擎通用機制與 `src/main/resources/data/**/*.json` 配置驅動，不引入 GraalVM 多語言動態腳本引擎或外掛熱重載。

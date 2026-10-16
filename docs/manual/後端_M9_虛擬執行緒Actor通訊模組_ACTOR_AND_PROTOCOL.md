@@ -166,25 +166,22 @@ public class MudContext {
 
 ---
 
-## 🚀 七、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
+## 🎯 七、純單機單體通訊演進規劃 (Single-Player Monolith Roadmap)
 
-為使基於 Java 21/25 Virtual Threads 的通訊架構具備萬人高併發與跨端極速同步能力，確立以下四大演進方向：
+專案已正式決議專注於**「純單機單體 (Single-Player Modular Monolith)」**，通訊層聚焦於本機極致響應與乾淨的 JSON 契約：
 
-### 1. 🎯 現代遊戲機制深化 (Modern Gameplay & Depth)
+### 1. 🎯 單機狀態同步深化 (Single-Player State Efficiency)
 - **Delta 增量差異同步 (JSON Patch / RFC 6902)**：
-  目前每次狀態變更均推送完整的 `DrpgStateDto`。未來引入差異比對演算，僅在戰鬥結算或位移時推送欄位 Patch（如 `[{"op": "replace", "path": "/party/members/0/hp", "value": 115}]`），網路頻寬消耗削減 80% 以上，行動端弱網環境體驗大幅躍升。
-- **二進位極速傳輸模式 (Binary FlatBuffers / Protobuf)**：
-  為半即時戰鬥（每秒 5 次 Tick）提供二進位 WebSocket 模式，高頻血條與 ATB 數據直接序列化為緊湊位元組，前後端反序列化近乎零 CPU 開銷。
+  目前每次狀態變更均推送完整的 `DrpgStateDto`。未來可引入差異比對演算，僅在戰鬥結算或位移時推送欄位 Patch（如 `[{"op": "replace", "path": "/party/members/0/hp", "value": 115}]`），減少 DOM 重新渲染成本與本機序列化開銷。
+- **本機 WebSocket JSON 乾淨契約**：
+  維持純粹、標準的 JSON 文字通訊，便於瀏覽器 DevTools 排查與單元測試斷言，不引入複雜二進位協定。
 
 ### 2. 🛡️ 穩定性與狀態防禦 (Robustness & Resilience)
 - **Actor 信箱背壓機制 (Mailbox Backpressure & Throttling)**：
-  虛擬執行緒極為輕量，但面對極端網絡抖動可能引發信箱訊息堆積。引入背壓策略（Backpressure Policy）：當信箱積壓超過 50 條廣播時，自動合流丟棄中間渲染影格，始終保障玩家的「逃跑」、「喝藥」等關鍵輸入即時被 Actor 優先響應。
-- **斷線狀態租約保留 (State Lease Session)**：當玩家 WebSocket 短暫斷線時，保留 Actor 上下文 60 秒，重連後無需重新初始化房間或退出戰鬥，實現平滑無感重連。
+  當信箱積壓過多無效高頻廣播時，自動合流丟棄中間渲染影格，始終保障玩家的「逃跑」、「喝藥」等關鍵輸入即時被 Actor 優先響應。
+- **本機狀態生命週期清理**：
+  戰鬥結束或玩家退出時，嚴格清理 Actor 上下文與信箱隊列，杜絕虛擬執行緒或記憶體洩漏。
 
-### 3. ⚡ 效能與高併發最佳化 (Performance & Concurrency)
-- **Netty ByteBuf 零拷貝輸出 (Zero-Copy Broadcast)**：
-  伺服端文字串流向同房間多位修士廣播時，預先編碼為單一共享 `ByteBuf` 引用，透過引用計數進行廣播，消除為每個 WebSocket Session 重複組裝字串的 GC 記憶體分配。
-
-### 4. 🔌 可擴充性與分散式架構 (Extensibility & Modding)
-- **分散式 Actor 房間分片 (Distributed Actor Sharding)**：
-  透過引入 Redis Pub/Sub 或 gRPC 協議，將房間 Actor 動態雜湊分佈至多台虛擬機或容器節點。修士跨越區域（如自桃源村傳送至太陰古塚）實質為 Actor 跨節點訊息路由，輕鬆支撐未來多人聯機或大型跨服天劫仙戰。
+### 3. 🚫 過度設計正式除役宣告 (Decommissioned Over-Engineering Scope)
+- ❌ **二進位 FlatBuffers / Protobuf 串流**：已正式除役，維持標準 WebMVC REST API 與 WebSocket JSON。
+- ❌ **分散式 Actor 房間分片 (Redis Pub/Sub / gRPC)**：已正式除役，所有 Actor 嚴格運行於本機單一 JVM 處理程序，杜絕分散式與跨服網路複雜度。

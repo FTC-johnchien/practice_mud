@@ -284,8 +284,8 @@ static/
 - **Java 25 虛擬執行緒池化精細控制**：
   - 核心排程（WorldPulse）與 I/O 寫入器（DB-Writer）分離獨立 Carrier Thread 資源限制，防止 I/O 阻塞波及戰鬥心跳。
 
-### 4. 可擴充性與外掛生態 (Extensibility & Plugin SPI)
-- **外部外掛擴充介面 (Plugin SPI Architecture)**：
-  - 定義 `GameModulePlugin` SPI 介面。第三方創作者可將自製的地下城（Dungeon Pack）、門派武學（Class Pack）以獨立 JAR 或外部 JSON 目錄形式熱插拔載入，無需修改專案核心原始碼。
-- **模組熱重載能力 (Hot Configuration Reloading)**：
-  - 支援在不重啟伺服器的情況下，動態重載 `skills.json`、`mobs.json` 與 `shops.json`，實現無縫線上熱更平衡性數值。
+### 4. 資料驅動設計與單機擴展 (Data-Driven Configuration)
+- **純靜態資料驅動 (100% Data-Driven)**：
+  - 遵循專案第一紅線，所有門派職業、武學技能、敵怪首領、地下城地圖與掉落表，100% 集中於 `src/main/resources/data/**/*.json`。擴充新內容純靠新增或修改 JSON 配置，絕無代碼特例。
+- **🚫 已正式除役之過度設計**：
+  - 不引入動態 JAR 外部外掛 SPI 或伺服器不停機動態腳本熱更，專注於可測試、穩定的單體模組化架構。

@@ -1,4 +1,4 @@
-﻿# 專案後續架構改善與演化藍圖 (Consolidated Future Improvements & Evolution Roadmap)
+# 專案後續架構改善與演化藍圖 (Consolidated Future Improvements & Evolution Roadmap)
 
 > **文件定位與目的**：
 > 本文件作為專案所有後續架構演進、機制補完、安全加固與重構任務的**單一權威來源 (Single Source of Truth, SSoT)**。
@@ -1124,20 +1124,19 @@ flowchart TD
 
 ---
 
-### 22.5 戰線五：高併發通訊、可擴充生態與工程維運 (P2 ~ P3)
-> 💡 **階段邊界提醒**：以下 F5-01 ~ F5-03 標記為【遠期探索】，需具備明確多人需求、容量測試數據與部署營運能力為觸發條件；現階段專注於單體模組化 (Modular Monolith) 與單機可玩閉環。
+### 22.5 戰線五：純單機工程加固與本機維運 (P2 ~ P3)
+> 💡 **單機單體決策**：已正式決議專注於「純單機單體 (Single-Player Modular Monolith)」，徹底除役過度設計的多人連線、分散式協定與動態外掛熱更。
 
-#### 1. F5-01：領域事件總線 (Domain EventBus EDA) 【遠期探索】
-- 構建輕量級 `DomainEventBus`，服務間同步依賴全面轉化為發布-訂閱（Pub-Sub）模式，確保核心心跳超低延遲。
-
-#### 2. F5-02：WebSocket 雙軌傳輸協定 (Protobuf Binary Pipeline) 【遠期探索】
-- 高頻戰鬥封包支援 Protobuf 二進位串流，網路頻寬開銷縮減 60%，傳輸延遲小於 1ms。
-
-#### 3. F5-03：外部模組擴充 SPI (Plugin SPI Architecture) 【遠期探索】
-- 定義外掛 SPI 介面，第三方可以獨立 JAR 或動態目錄掛載自製地牢、職業與技能，支援伺服器不停機熱重載。
-
-#### 4. F5-04：Docker 一鍵容器化與 Dev Container 支援 (P3)
+#### 1. F5-01：Docker 一鍵容器化與 Dev Container 支援 (P3)
 - 提供 `docker-compose.yml` 實現零環境門檻 60 秒開箱即用，整合 CI/CD 自動化看門狗門禁。
+
+#### 2. F5-02：本機單機可觀測性與健康指標 (Local Observability) (P3)
+- 透過 `DomainMetricsPort` 監控本機虛擬執行緒戰鬥循環活躍數、Write-Behind 批次排空耗時、本機存檔 JSON 寫入延遲。
+
+#### 3. 🚫 歷史過度設計除役項目 (Decommissioned)
+- **F5-EX-01 [已除役] 領域事件總線 (EDA Pub-Sub)**：純單機維持單體內同步呼叫與 Actor 信箱，不引入跨服務非同步事件匯流排。
+- **F5-EX-02 [已除役] Protobuf 二進位串流 (Binary Pipeline)**：本機 WebSocket 維持簡潔標準的 JSON 傳輸，不引入二進位編解碼複雜度。
+- **F5-EX-03 [已除役] 外部模組擴充 SPI (Dynamic Plugin Hot-Reload)**：全規則由 Java 機制與靜態 JSON 配置驅動，不引入動態 JAR 載入或腳本熱更。
 
 ---
 
@@ -1184,7 +1183,8 @@ flowchart TD
 - **鍵位標準規範**：WASD 步進轉向、I/L 探查與撤離、M 地圖、Esc 關閉/退出。
 - **驗收**：手冊與程式庫 enum、DTO、常數 100% 吻合。
 
-### 23.5 DOC-SLICE-01：玩法垂直切片驅動與以玩家體驗為核心之規劃
+### 23.5 DOC-SLICE-01：玩法垂直切片驅動與純單機單體規劃
+- **純單機單體決策**：已正式決議專注於「純單機單體 (Single-Player Modular Monolith)」，徹底全盤除役多人在線、分散式 Actor、Protobuf 二進位串流與動態外掛熱更，專注於「一個人的單機 DRPG 沉浸體驗」。
 - 以「城鎮整備 $\to$ 地牢探索 $\to$ 戰鬥抉擇 $\to$ 戰利品／成長 $\to$ 安全撤離／存檔」為核心垂直切片閉環，每一階段明確玩家目標、選擇風險、反制手段與失敗代價。
 - 玩法提案先回答「玩家面臨什麼問題、核心樂趣何在、如何透過原型驗證」，杜絕純技術名詞堆疊。
 - 驗收條件拒絕模糊詞彙（如「更刺激」、「永遠 60 FPS」），轉化為可觀察、可量測的具體測試（如「可打斷窗口為吟唱前 60%」、「怪物意圖可讀性」）。

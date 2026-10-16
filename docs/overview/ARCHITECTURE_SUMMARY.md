@@ -78,30 +78,30 @@
 
 ---
 
-## 🚀 四、未來高階架構現代化演進規劃 (High-Level Architecture Roadmap)
+## 🎯 四、純單機單體架構深度演進規劃 (Single-Player Monolith Roadmap)
 
-為因應分散式高併發與多人在線合作的長線目標，規劃以下高階架構演化路徑：
+本專案已正式決議專注於**「純單機單體 (Single-Player Modular Monolith)」**，圍繞單人小隊沉浸體驗進行深度演進，徹底除役多人連線、分散式協定與動態腳本熱更：
 
-### 1. 現代架構規劃 (Modern Architectural Patterns)
-- **領域事件溯源 (Event Sourcing & Auditability)**：
-  - 核心戰鬥結算與角色成長逐步引入輕量事件溯源：狀態變更皆由 `EntityDamagedEvent`、`ItemAcquiredEvent`、`LevelAdvancedEvent` 事件序列所驅動，具備 100% 戰況重播與作弊審計回溯能力。
-- **多人地宮實例 Actor 隔離 (Multi-Tenant Instance Actor)**：
-  - 由單機全域狀態升級為多實例容器，每個地下城樓層動態生成獨立的 `DungeonInstanceActor`，隊伍間運算完全隔離，單一副本崩潰不影響其他隊伍。
+### 1. 單機事件與沉浸探索 (Single-Player Exploration & Dynamic World)
+- **輕量領域事件 (Domain Events)**：
+  - 核心戰鬥結算與角色成長引入以虛擬執行緒為基礎的本機輕量事件：狀態變更由 `EntityDamagedEvent`、`ItemAcquiredEvent`、`LevelAdvancedEvent` 事件序列所驅動，具備 100% 戰況重播與本機稽核能力。
+- **DRPG 迷宮步進探索手感**：
+  - 2D 矩陣即時雷達、迷霧開圖、暗雷隨機遭遇、陷阱機關解謎、階梯撤離與地牢生存博弈。
 
-### 2. 穩定性與安全邊界防禦 (Zero-Trust Security & Boundary Guard)
-- **WebSocket 票證驗證與速率限制 (Ticket Auth & Token Bucket Rate Limiting)**：
-  - 登入握手時由 REST API 發放短期一次性簽名票證，連線後由內建令牌桶限制玩家輸入頻率（如指令上限 20 次/秒），徹底杜絕惡意腳本轟炸與連線劫持。
+### 2. 穩定性與單機存檔安全 (Local Save Resilience & Guardrails)
+- **檔案式存檔可靠性與壞檔防禦**：
+  - 以 `SaveData` JSON 為唯一單一真相源，多槽位原子替換、自動 `.bak` 備份與 `schemaVersion` 平滑遷移管線（v0 $\to$ v1 $\to$ v2）。
 - **看門狗棘輪全面清零 (Zero-Tolerance Ratchet Gate)**：
   - 持續推進領域層重構，將當前 26 處 `new TemplateCatalog()` 的棘輪上限逐步清零，全面消除代碼庫中任何潛在的靜默 fallback。
 
-### 3. 極限效能調優 (Extreme Performance & Throughput)
-- **Protobuf / JSON 雙軌傳輸協定支援 (Binary Protocol Option)**：
-  - 針對高頻戰鬥廣播（200ms Tick），支援客戶端協商切換為 Protobuf 二進位串流，封包體積降低 60%，網路序列化延遲壓低至 1ms 內。
+### 3. 本機極速效能與單體無鎖並發 (Local High Performance)
+- **單機虛擬執行緒 Actor 模型**：
+  - 延續基於 Java 25 Virtual Threads 的輕量級 Actor 信箱模型，本機 WebSocket 採用簡潔標準的 JSON 傳輸，確保 200ms ATB 戰鬥與探索毫秒級響應。
 - **異步批次持久化強一致性保證**：
   - 透過 `flushLock` 互斥鎖與 `flushedCount >= acceptedCount` 完成度量契約，確保在任何伺服器重啟或高併發停機瞬間，零資料遺失、零競態崩潰。
 
-### 4. 領域模型可擴充性 (Extensibility & Clean Subpackages)
+### 4. 領域模型清晰化與過度設計除役 (Clean Architecture & Scope Convergence)
 - **領域層 Service 包結構按業務模組拆分 (Domain Subpackages)**：
   - 將目前平鋪在 `domain.service` 的 10+ 個服務，按業務領域重構至子包（`domain.world`、`domain.combat`、`domain.party`、`domain.progression`、`domain.economy`），各子包對外僅暴露精簡的 Facade 介面。
-- **動態腳本熱載入引擎 (GraalVM Polyglot Engine)**：
-  - 引進 GraalVM JavaScript / Python 動態腳本，讓複雜的 NPC 對話樹、任務解謎與副本機關支援免重編譯熱載入。
+- **🚫 已正式除役之過度設計**：
+  - 徹底除役多人在線與跨服通訊（Redis/gRPC）、Protobuf 二進位串流、以及 GraalVM 動態腳本熱載入引擎，回歸純粹的 Java 25 機制與靜態 JSON 資料驅動。
