@@ -27,12 +27,12 @@
 - [x] **Task 3: 廢止 CharacterSyncService 淺拷貝與戰鬥結果雙向同步 (Decommission Sync Copies)**
   - `CharacterSyncService.syncFromPartyToPlayer` 徹底廢除偽裝 `BattleOutcome` 與 5s 超時阻塞，改為同步直接深度數值鏡像。
   - 補足氣血、真元、體力、理智、戰鬥修為、潛力點與五維核心屬性單向同步與 `recalculateStats`，消除狀態分裂。
-- [ ] **Task 4: 測試驅動驗證與舊測試重構 (Test-Driven Verification)**
-  - 盤查並重構 `CharacterSyncServiceTest`、`CanonicalEquipmentProjectionTest`、`OutcomeBasedCharacterSyncTest`、`DualTrackPotentialPointsTest` 等測試，對齊單一真相源規範。
-  - 執行全量 `.\test.ps1`，確保全專案所有測試 100% 綠燈全數通過。
-- [ ] **Task 5: 模組手冊同步與 Git Commit 提交流程 (Documentation & Commit)**
-  - 同步更新 `後端_M1` 與 `後端_M4` 手冊，記錄實體大一統架構圖與單一真相源流向。
-  - 由使用者審查後執行繁體中文 Git Commit。
+- [x] **Task 4: 測試驅動驗證與舊測試重構 (Test-Driven Verification)**
+  - 盤查並確認 `CharacterSyncServiceTest`、`CanonicalEquipmentProjectionTest`、`OutcomeBasedCharacterSyncTest`、`DualTrackPotentialPointsTest`、`DualTierInventoryAndStashTest` 等測試，已完全對齊單一真相源規範。
+  - 執行全量 `.\test.ps1`，確認全專案 315 項測試 100% 綠燈全數通過 (0 Failures, 0 Errors)。
+- [x] **Task 5: 模組手冊同步與 Git Commit 提交流程 (Documentation & Commit)**
+  - 同步更新 `後端_M1` 與 `後端_M4` 手冊，記錄小隊大一統行囊、裝備單一擁有權與零延遲投影架構圖。
+  - 315 項測試 100% 綠燈完成驗證，執行繁體中文結構化 Git Commit。
 
 ---
 

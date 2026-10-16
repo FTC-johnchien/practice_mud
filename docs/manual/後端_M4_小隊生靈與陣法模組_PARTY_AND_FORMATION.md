@@ -69,7 +69,50 @@
 
 ---
 
-## 🔗 四、代表類別與資料設定檔
+## 🏛️ 四、核心雙軌實體大一統 (Unified Entity Architecture)
+
+在單機單體化演進中，徹底消除多人架構殘留之「Player (MUD 空間代理) vs PartyMember (DRPG 角色)」雙軌割裂，確立 **小隊為唯一真實資料源 (Single Source of Truth)**：
+
+```mermaid
+graph LR
+    subgraph SSoT["小隊體系 (唯一真實資料源)"]
+        Party["Party (小隊)"]
+        Leader["PartyMember (隊長/主角)"]
+        Members["PartyMember 1~4 (同伴)"]
+        Bag["小隊公共儲物袋 (40格行囊)"]
+        Party --> Leader
+        Party --> Members
+        Party --> Bag
+    end
+
+    subgraph Mirror["MUD 探索視角 (投影鏡像)"]
+        Player["Player Actor (城鎮/野外代理)"]
+        PlayerStats["LivingStats (裝備與戰鬥屬性鏡像)"]
+        Player --> PlayerStats
+    end
+
+    Bag -->|全域共享無割裂| Player
+    Leader -->|0ms 同步屬性鏡像 copyStats| PlayerStats
+    Leader -->|7 大部位裝備實時投影| PlayerStats
+```
+
+### 1. 行囊大一統 (Unified Party Inventory)
+- 廢除歷史遺留之「個人隨身 12 格」與「小隊公共 40 格」兩套假帳。
+- 城鎮拾取（`get`）、戰鬥掉落入庫、戰術使用（`use`）與整理丟棄（`drop`）全面直接操作 `party.getInventory()`。
+- 徹底消除強迫使用者在個人與公共背包間頻繁存取的繁瑣負擔。
+
+### 2. 裝備單一擁有權與零延遲投影 (Equipment Projection)
+- 7 大部位裝備（武器、衣服、護腕、腰帶、鞋履、護符、法寶）由小隊成員實體真實擁有。
+- `EquipCommand` 支援一鍵檢視與配置全隊 5 名成員的 7 槽裝備。
+- 隊長裝備變更時，透過 [`CharacterSyncService.syncEquipmentFromPartyToPlayer`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/service/CharacterSyncService.java) 進行 0ms 零延遲鏡像投影並即時重算衍生戰鬥屬性，徹底廢止歷史 `CompletableFuture` 5 秒超時阻塞。
+
+### 3. 戰鬥結算與真實屬性同步
+- 戰後經驗值、升級、修為成長直接記入 `PartyMember`。
+- `syncFromPartyToPlayer` 採用同步直接深層數值拷貝，徹底廢除偽裝 `BattleOutcome` 投遞至 Mailbox 的舊阻塞機制。
+
+---
+
+## 🔗 五、代表類別與資料設定檔
 
 | 項目 | 路徑 / 名稱 | 職責 |
 | :--- | :--- | :--- |
@@ -82,7 +125,7 @@
 
 ---
 
-## 🚀 五、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
+## 🚀 六、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
 
 為使小隊生靈與陣法系統達到如《暗黑地牢》、《博德之門3》的隊伍管理與心理博弈高度，確立以下四大演進方向：
 
