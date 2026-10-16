@@ -55,39 +55,28 @@ public class CharacterSyncService {
   }
 
   /**
-   * 裝備單一擁有者投影：將小隊隊長 (PartyMember) 的 7 大部位裝備單向投影至 Player
-   * 維護不可變邊界與 Actor 線程隔離 (UNIFY-02)
+   * 裝備單一擁有者投影：將小隊隊長 (PartyMember) 的 7 大部位裝備實時同步至 Player
+   * 徹底除役 CompletableFuture 與 5 秒超時阻塞，保證單機架構下 0ms 零延遲即時生效 (UNIFY-02)
    */
   public boolean syncEquipmentFromPartyToPlayer(PartyMember leader, Player player) {
     if (leader == null || player == null) return false;
     java.util.Map<com.example.htmlmud.domain.model.enums.EquipmentSlot, com.example.htmlmud.domain.party.model.PartyItemSlot> equipment = leader.getEquipment();
 
-    if (player.isActorThread() || !player.isRunning()) {
-      if (player.getStats() != null && player.getStats().getEquipment() != null) {
-        player.getStats().getEquipment().clear();
-        if (equipment != null) {
-          for (var entry : equipment.entrySet()) {
-            if (entry.getKey() != null && entry.getValue() != null) {
-              player.getStats().getEquipment().put(entry.getKey(), entry.getValue().toGameItem(templateReader));
-            }
+    if (player.getStats() != null && player.getStats().getEquipment() != null) {
+      player.getStats().getEquipment().clear();
+      if (equipment != null) {
+        for (var entry : equipment.entrySet()) {
+          if (entry.getKey() != null && entry.getValue() != null) {
+            player.getStats().getEquipment().put(entry.getKey(), entry.getValue().toGameItem(templateReader));
           }
         }
-        LivingService ls = (livingServiceProvider != null) ? livingServiceProvider.getIfAvailable() : null;
-        if (ls != null) {
-          ls.recalculateStats(player);
-        }
       }
-      return true;
+      LivingService ls = (livingServiceProvider != null) ? livingServiceProvider.getIfAvailable() : null;
+      if (ls != null) {
+        ls.recalculateStats(player);
+      }
     }
-
-    java.util.concurrent.CompletableFuture<Boolean> future = new java.util.concurrent.CompletableFuture<>();
-    player.send(new com.example.htmlmud.protocol.ActorMessage.ProjectEquipment(equipment, future));
-    try {
-      return future.get(5, java.util.concurrent.TimeUnit.SECONDS);
-    } catch (Exception e) {
-      log.error("等待玩家 [{}] 透過 Mailbox 投影裝備超時或異常", player.getName(), e);
-      return false;
-    }
+    return true;
   }
 
   /**

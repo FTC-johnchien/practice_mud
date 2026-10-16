@@ -20,7 +20,7 @@
   - 消除「個人隨身行囊 12 格」與「小隊公共倉庫 40 格」割裂。
   - `GetCommand`、`DropCommand`、`InventoryCommand`、`UseCommand` 全面直接操作 `party.getInventory()`。
   - 廢除強制性 `stash/withdraw` 轉存，`Player.getInventory()` 委派/同步小隊行囊視圖。
-- [ ] **Task 2: 裝備與核心屬性大一統 (Unified Equipment & Stats)**
+- [x] **Task 2: 裝備與核心屬性大一統 (Unified Equipment & Stats)**
   - `Player` 之 `LivingStats.equipment` 與 `party.getLeader().getEquipment()` 保持一致引用或直接委派。
   - 徹底廢止 `syncEquipmentFromPartyToPlayer` 內的 `CompletableFuture` 5 秒超時等待與 Mailbox 轉發。
   - `EquipCommand` 直接穿戴至小隊成員槽位，即時生效。

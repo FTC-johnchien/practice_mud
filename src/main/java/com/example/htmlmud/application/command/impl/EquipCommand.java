@@ -56,8 +56,15 @@ public class EquipCommand implements PlayerCommand {
       return;
     }
 
-    if (input.isEmpty() || input.equalsIgnoreCase("list") || input.equalsIgnoreCase("show")) {
-      self.reply(formatEquipment(self));
+    if (input.isEmpty() || input.equalsIgnoreCase("list") || input.equalsIgnoreCase("show")
+        || input.startsWith("list ") || input.startsWith("show ")) {
+      int memberIdx = 0;
+      if (input.contains(" ")) {
+        try {
+          memberIdx = Integer.parseInt(input.substring(input.indexOf(' ') + 1).trim());
+        } catch (NumberFormatException ignored) {}
+      }
+      self.reply(formatEquipment(self, memberIdx));
       return;
     }
 
@@ -76,15 +83,28 @@ public class EquipCommand implements PlayerCommand {
   }
 
   private String formatEquipment(Player player) {
+    return formatEquipment(player, 0);
+  }
+
+  private String formatEquipment(Player player, int memberIdx) {
     Party party = partyService.getOrCreateParty(player.getName());
-    PartyMember leader = (party != null && !party.getMembers().isEmpty()) ? party.getMembers().get(0) : null;
-    var eq = (leader != null) ? leader.getEquipment() : java.util.Map.<EquipmentSlot, PartyItemSlot>of();
+    PartyMember targetMember = (party != null && memberIdx >= 0 && memberIdx < party.getMembers().size())
+        ? party.getMembers().get(memberIdx)
+        : (party != null && !party.getMembers().isEmpty() ? party.getMembers().get(0) : null);
+    var eq = (targetMember != null) ? targetMember.getEquipment() : java.util.Map.<EquipmentSlot, PartyItemSlot>of();
 
     StringBuilder sb = new StringBuilder();
     sb.append("\n\u001B[1;36m═════════════【道途法寶・裝備佩掛】═════════════\u001B[0m\n");
-    sb.append("  主角道號：").append(player.getName())
-      .append("  防禦力：").append(player.getDefense())
-      .append("  攻擊力：").append(player.getMinDamage()).append("~").append(player.getMaxDamage()).append("\n");
+    if (targetMember != null && !targetMember.isLeader() && memberIdx > 0) {
+      sb.append("  成員：").append(targetMember.getName())
+        .append(" (編號: ").append(memberIdx).append(")")
+        .append("  防禦力：").append(targetMember.getBaseDefense())
+        .append("  攻擊力：").append(targetMember.getBaseMinDamage()).append("~").append(targetMember.getBaseMaxDamage()).append("\n");
+    } else {
+      sb.append("  主角道號：").append(player.getName())
+        .append("  防禦力：").append(player.getDefense())
+        .append("  攻擊力：").append(player.getMinDamage()).append("~").append(player.getMaxDamage()).append("\n");
+    }
     sb.append("──────────────────────────────────────────────\n");
     sb.append("  ⚔️ 【主手武器】: ").append(formatSlot(eq.get(EquipmentSlot.MAIN_HAND))).append("\n");
     sb.append("  🛡️ 【副手裝備】: ").append(formatSlot(eq.get(EquipmentSlot.OFF_HAND))).append("\n");
@@ -94,8 +114,9 @@ public class EquipCommand implements PlayerCommand {
     sb.append("  💍 【靈寶飾品】: ").append(formatSlot(eq.get(EquipmentSlot.ACCESSORY_1))).append("\n");
     sb.append("  📿 【本命法寶】: ").append(formatSlot(eq.get(EquipmentSlot.ACCESSORY_2))).append("\n");
     sb.append("──────────────────────────────────────────────\n");
-    sb.append("  穿戴指令: equip <行囊或倉庫物品序號/名稱> [隊員0-5]\n");
-    sb.append("  卸下指令: unequip <部位> [隊員0-5] (部位: weapon, shield, armor, head, feet, acc1, acc2)\n");
+    sb.append("  穿戴指令: equip <行囊物品序號/名稱> [隊員0-4]\n");
+    sb.append("  卸下指令: unequip <部位> [隊員0-4] (部位: weapon, shield, armor, head, feet, acc1, acc2)\n");
+    sb.append("  查看指令: equip list [隊員0-4]\n");
     sb.append("\u001B[1;36m══════════════════════════════════════════════\u001B[0m\n");
     return sb.toString();
   }
