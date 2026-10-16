@@ -20,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class MudWebSocketHandler extends TextWebSocketHandler implements ClientSessionManagerPort {
   private final PlayerService playerService;
   private final WorldManager worldManager;
@@ -30,9 +29,67 @@ public class MudWebSocketHandler extends TextWebSocketHandler implements ClientS
   private final ObjectMapper objectMapper;
   private final com.example.htmlmud.domain.save.service.SaveGameService saveGameService;
 
+  public MudWebSocketHandler(
+      PlayerService playerService,
+      WorldManager worldManager,
+      SessionRegistry sessionRegistry,
+      GameMetrics gameMetrics,
+      GameCommandService gameCommandService,
+      ObjectMapper objectMapper,
+      com.example.htmlmud.domain.save.service.SaveGameService saveGameService) {
+    this.playerService = playerService;
+    this.worldManager = worldManager;
+    this.sessionRegistry = sessionRegistry;
+    this.gameMetrics = gameMetrics;
+    this.gameCommandService = gameCommandService;
+    this.objectMapper = objectMapper;
+    this.saveGameService = saveGameService;
+  }
+
   @Override
   public void afterConnectionEstablished(WebSocketSession session) {
     try {
+      // 1. 檢查是否已存在運作中的單機唯一主角 (Singleton Protagonist)
+      if (sessionRegistry.hasActiveProtagonist()) {
+        Player protagonist = sessionRegistry.getProtagonist();
+        WebSocketSession oldSession = sessionRegistry.getActiveSession();
+
+        // 多開連線安全接管 (Session Takeover)：關閉舊連線防範多分頁相互干擾
+        if (oldSession != null && oldSession.isOpen() && !oldSession.getId().equals(session.getId())) {
+          log.info("偵測到新連線 {}，接管現有主角會話，關閉舊連線 {}", session.getId(), oldSession.getId());
+          try {
+            oldSession.close(new CloseStatus(4001, "已在另一個視窗或分頁接管會話 (Session Taken Over)"));
+          } catch (Exception ex) {
+            log.debug("關閉舊連線異常 (可忽略): {}", ex.getMessage());
+          }
+          sessionRegistry.remove(oldSession.getId());
+        }
+
+        // 將主角的輸出通道無縫切換至新連線
+        WebSocketOutput newOutput = new WebSocketOutput(session, objectMapper);
+        protagonist.setOutput(newOutput);
+        protagonist.setConnectionState(com.example.htmlmud.protocol.ConnectionState.IN_GAME);
+        protagonist.setLastDisconnectTime(System.currentTimeMillis());
+
+        // 更新註冊表映射
+        sessionRegistry.register(session, protagonist);
+
+        log.info("單機唯一主角會話已由新連線 {} 接管: {}", session.getId(), protagonist.getName());
+
+        // 推送接管提示與即時全景狀態
+        protagonist.reply("💡 【會話接管】已恢復太陰萬劫修仙進度，世界已無縫同步！");
+        protagonist.sendStatUpdate();
+        try {
+          ScopedValue.where(com.example.htmlmud.domain.context.MudContext.CURRENT_PLAYER, protagonist).run(() -> {
+            gameCommandService.execute(new GameRequest(protagonist, "look", "WEB"));
+          });
+        } catch (Exception ex) {
+          log.warn("會話接管時推送全景環境失敗: {}", ex.getMessage());
+        }
+        return;
+      }
+
+      // 2. 首次連線或主角尚未啟動：初始化單機唯一主角實例
       String initialName = "玄靈子";
       try {
         var slots = saveGameService.listSaveSlots();
@@ -44,8 +101,7 @@ public class MudWebSocketHandler extends TextWebSocketHandler implements ClientS
         }
       } catch (Exception ignored) {}
 
-      // 單機/Web模式：建立玩家 Actor，為每個 WebSocket session 分配唯一穩定的 playerId
-      String playerId = "p-" + session.getId();
+      String playerId = (initialName != null && !initialName.isBlank()) ? initialName : "玄靈子";
       Player self = Player.createSinglePlayer(new WebSocketOutput(session, objectMapper), worldManager,
           playerService, initialName, playerId);
 
@@ -55,8 +111,7 @@ public class MudWebSocketHandler extends TextWebSocketHandler implements ClientS
       // 註冊到網路層 SessionRegistry
       sessionRegistry.register(session, self);
 
-      log.info("單機連線建立 (Single Player Actor Created): {}", session.getId());
-      // eventPublisher.publishEvent(new SessionEvent.Established(session.getId(), Instant.now()));
+      log.info("單機主角 Actor 創生並綁定連線: session={}, player={}", session.getId(), playerId);
     } catch (Exception e) {
       log.error("連線初始化失敗", e);
       try {
@@ -123,34 +178,40 @@ public class MudWebSocketHandler extends TextWebSocketHandler implements ClientS
   @Override
   public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
     rateLimitMap.remove(session.getId());
-    log.info("afterConnectionClosed");
-    // 從 Registry 移除並取得 Actor
+    log.info("WebSocket 連線關閉: session={}, status={}", session.getId(), status);
+
+    // 檢查被關閉的 session 是否仍為主角當前活躍連線
+    WebSocketSession currentActiveSession = sessionRegistry.getActiveSession();
+    boolean isCurrentActive = (currentActiveSession != null && currentActiveSession.getId().equals(session.getId()));
+
+    // 從 Registry 移除此 session
     Player actor = sessionRegistry.remove(session.getId());
 
-    if (actor != null) {
-      log.info("連線關閉: {} (Actor: {})", session.getId(), actor.getId());
-
-      // 通知 Actor 執行清理邏輯
-      // (如果是 Guest 則直接停止，如果是正式玩家則觸發存檔與從 WorldManager 移除)
+    if (actor != null && isCurrentActive) {
+      log.info("主角當前活躍連線關閉: {} (Actor: {})", session.getId(), actor.getId());
+      // 觸發自動存檔落盤，防止進度遺失
+      try {
+        actor.saveData();
+      } catch (Exception ex) {
+        log.warn("連線中斷自動存檔失敗: {}", ex.getMessage());
+      }
       actor.disconnect();
+    } else {
+      log.info("已由新會話接管或非當前活躍連線關閉，主角繼續保持運作: {}", session.getId());
     }
   }
 
   // --- 關鍵方法：切換負責人 (Handover) ---
   // 這個方法會被 LoginService 呼叫
   public void promoteToPlayer(WebSocketSession newSession, Player player) {
-
-    // 1. 取得登入產生的 Guest Actor
     Player oldGuest = sessionRegistry.get(newSession.getId());
 
-    // 2. 讓 Player 接管 Session
     player.setOutput(new WebSocketOutput(newSession, objectMapper));
-
-    // 3. 更新 sessionRegistry，之後的訊息直接灌給 Player
     sessionRegistry.register(newSession, player);
 
-    // 4. 【賜死 Guest】 舊的 Guest 任務完成，請他下台
-    oldGuest.stop(); // 停止 Guest 的 VT，釋放資源
+    if (oldGuest != null && oldGuest != player) {
+      oldGuest.stop(); // 停止 Guest 的 VT，釋放資源
+    }
 
     log.info("Session 權限已移交給玩家: {}", player.getName());
   }

@@ -6,27 +6,69 @@ import com.example.htmlmud.domain.actor.impl.Player;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * 網路層會話註冊表 (SessionRegistry)
+ * 支援單機單一主角模型 (Singleton Protagonist) 與多開會話安全接管
+ */
 @Component
 public class SessionRegistry {
 
   private final Map<String, Player> sessions = new ConcurrentHashMap<>();
+  private volatile Player protagonist;
+  private volatile WebSocketSession activeSession;
 
   public void register(WebSocketSession session, Player actor) {
     sessions.put(session.getId(), actor);
+    this.activeSession = session;
+    this.protagonist = actor;
   }
 
   public Player remove(String sessionId) {
-    return sessions.remove(sessionId);
+    Player removed = sessions.remove(sessionId);
+    if (activeSession != null && activeSession.getId().equals(sessionId)) {
+      activeSession = null;
+    }
+    return removed;
   }
 
   public Player get(String sessionId) {
-    return sessions.get(sessionId);
+    if (sessionId == null) {
+      return protagonist;
+    }
+    Player player = sessions.get(sessionId);
+    if (player != null) {
+      return player;
+    }
+    return protagonist;
   }
 
-  // 額外功能：踢掉某個 Session (例如重複登入踢人)
-  // 或是統計當前連線數 (含 Guest)
+  public Player getProtagonist() {
+    return protagonist;
+  }
+
+  public void setProtagonist(Player protagonist) {
+    this.protagonist = protagonist;
+  }
+
+  public WebSocketSession getActiveSession() {
+    return activeSession;
+  }
+
+  public void setActiveSession(WebSocketSession activeSession) {
+    this.activeSession = activeSession;
+  }
+
+  public boolean hasActiveProtagonist() {
+    return protagonist != null && protagonist.isRunning();
+  }
+
   public int getConnectionCount() {
     return sessions.size();
   }
 
+  public void clear() {
+    sessions.clear();
+    protagonist = null;
+    activeSession = null;
+  }
 }

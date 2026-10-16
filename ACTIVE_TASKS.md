@@ -30,11 +30,16 @@
   - 在 SaveGameService 徹底除役 personalInventory 的搜集與還原邏輯，單一真相源為 party.inventory。
   - 在 SaveMigrationPipeline 新增 2 -> 3 遷移：舊存檔個人物品自動安全合流至小隊公共行囊，無物資遺失。
   - 新增專屬遷移測試，全專案 316 項測試 100% 綠燈通過。
-- [ ] **Task 4 (SP-04): `Room` 房間實體改為單一主角引用，除役多玩家廣播遍歷**
-  - `Room.players` 並發列表重構為單一引用 `Player protagonist`。
-  - 除役 `broadcastToOthers`，簡化事件廣播為直接推送房內主角。
-- [ ] **Task 5 (SP-05): WebSocket 多開連線自動接管唯一主角，杜絕存檔覆寫競爭**
-  - 引入單機單一主角實例模型，多分頁連入自動接管現有主角會話。
+- [x] **Task 4 (SP-04): `Room` 房間實體改為單一主角引用，除役多玩家廣播遍歷**
+  - `Room.players` 列表重構為單一引用 `Player protagonist`（並提供基於單一主角的不可變相容視圖）。
+  - 除役多人無差別廣播遍歷，重構 `RoomService`、`LivingService`、`CombatPresentation`、`AggressiveBehavior`、`WorldPulse` 為主角直接推送。
+  - 驗收通過：全專案 316 項測試 100% 綠燈。
+- [x] **Task 5 (SP-05): WebSocket 多開連線自動接管唯一主角，杜絕存檔覆寫競爭**
+  - 引入單機單一主角實例模型（Singleton Protagonist），`SessionRegistry` 升級支援主角與活躍連線治理。
+  - `MudWebSocketHandler` 實裝多開分頁/重連自動接管（Session Takeover）：無縫切換 `WebSocketOutput`，關閉舊分頁避免操作干擾，推送最新全景狀態。
+  - 加固連線關閉隔離：舊會話關閉不干擾現有連線，活躍連線關閉觸發自動存檔防禦進度遺失。
+  - 新增專屬驗收測試 `SessionTakeoverAndSingletonProtagonistTest`，全專案 320 項測試 100% 綠燈通過。
+  - 🎉 **【階段 1：P1 級核心實體與存檔單一真相源】圓滿達成！**
 
 #### 階段 2：P2 級機制大一統與膠水代碼徹底除役 (Deep Convergence)
 - [ ] **Task 6 (SP-06): 技能模型合一 (`UnifiedSkill`)，消除 MUD/DRPG 技能定義割裂**
