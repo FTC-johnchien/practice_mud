@@ -47,7 +47,11 @@
   - 升級 `PartyMemberSkill` 實作 `UnifiedSkill`，實裝內聚的熟練度積累（`addXp`）、境界突破（`levelUp`）與動態威力/冷卻等級縮放。
   - 在 `SkillEntry` 實作與大一統技能雙向無縫互轉（`toUnifiedSkill` / `fromUnifiedSkill`），主角與 4 位小隊隊員統一持有合一技能模型。
   - 新增專屬驗收測試 `UnifiedSkillModelTest`，全專案 324 項測試 100% 綠燈通過。
-- [ ] **Task 7 (SP-07): 徹底除役 `SkillBridgeService` 翻譯縮放膠水代碼**
+- [x] **Task 7 (SP-07): 徹底除役 `SkillBridgeService` 翻譯縮放膠水代碼**
+  - 徹底物理刪除 `SkillBridgeService.java` 膠水代碼。
+  - `CharacterSyncService` 直接以 `UnifiedSkill` / `PartyMemberSkill` 進行同步，不再需要中間層動態縮放與字串比對翻譯。
+  - `DrpgRewardService` 戰鬥後熟練度原地增長給存活小隊成員，主角隊長技能同步回傳，消除反向回饋膠水代碼。
+  - 重構 `CanonicalSkillModelTest`、`MechanismPurityAndBugfixTest` 與 `SkillBridgeIntegrationTest`，全專案 324 項測試 100% 綠燈通過。
 - [ ] **Task 8 (SP-08): 戰鬥引擎大一統，野外戰鬥全面對齊 5 人小隊協同作戰**
 - [ ] **Task 9 (SP-09): 小隊共享金庫與經濟體系大一統**
 
