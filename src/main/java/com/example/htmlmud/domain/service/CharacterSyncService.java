@@ -167,7 +167,7 @@ public class CharacterSyncService {
 
   /**
    * 將小隊隊長的最新數值同步回 Player (戰鬥勝利 / 經驗提升 / 屬性增長)
-   * 透過不可變 BattleOutcome 單向發送結算，維護冪等性與 Actor 線程隔離
+   * 在單機單體大一統架構下，直接同步鏡像實體數值，徹底廢除偽裝 BattleOutcome 與 5s 超時阻塞 (UNIFY-03)
    */
   public void syncFromPartyToPlayer(PartyMember leader, Player player) {
     if (leader == null || player == null) return;
@@ -175,47 +175,35 @@ public class CharacterSyncService {
     LivingStats playerStats = player.getStats();
     if (leaderStats == null || playerStats == null) return;
 
-    java.util.Map<String, Integer> statIncreases = new java.util.HashMap<>();
-    if (leaderStats.getStr() > playerStats.getStr()) statIncreases.put("str", leaderStats.getStr() - playerStats.getStr());
-    if (leaderStats.getCon() > playerStats.getCon()) statIncreases.put("con", leaderStats.getCon() - playerStats.getCon());
-    if (leaderStats.getDex() > playerStats.getDex()) statIncreases.put("dex", leaderStats.getDex() - playerStats.getDex());
-    if (leaderStats.getIntelligence() > playerStats.getIntelligence()) statIncreases.put("int", leaderStats.getIntelligence() - playerStats.getIntelligence());
-    if (leaderStats.getWis() > playerStats.getWis()) statIncreases.put("wis", leaderStats.getWis() - playerStats.getWis());
+    // 1. 直接深度覆蓋同步數值
+    copyStats(leaderStats, playerStats);
 
-    // 建立 Outcome 並套用
-    BattleOutcome outcome = BattleOutcome.builder()
-        .battleId("sync-" + System.nanoTime())
-        .characterId(player.getId())
-        .victory(true)
-        .finalHp(leaderStats.getHp())
-        .finalMp(leaderStats.getMp())
-        .newLevel(leaderStats.getLevel())
-        .leveledUp(leaderStats.getLevel() > playerStats.getLevel())
-        .expGained(Math.max(0, leaderStats.getExp() - playerStats.getExp()))
-        .freeStatPointsGained(Math.max(0, leaderStats.getFreeStatPoints() - playerStats.getFreeStatPoints()))
-        .statIncreases(statIncreases)
-        .build();
-
-    applyOutcome(player, outcome);
-
-    // 若處於非並發狀態 (同執行緒或未啟動 Actor)，安全補充覆蓋深層數值
-    if (player.isActorThread() || !player.isRunning()) {
-      copyStats(leaderStats, playerStats);
+    // 2. 重新計算主角衍生戰鬥數值
+    LivingService ls = (livingServiceProvider != null) ? livingServiceProvider.getIfAvailable() : null;
+    if (ls != null) {
+      ls.recalculateStats(player);
     }
-    log.debug("Synced stats from PartyMember leader [{}] to Player [{}] via Outcome", leader.getName(), player.getName());
+
+    log.debug("Directly mirrored stats from PartyMember leader [{}] to Player [{}]", leader.getName(), player.getName());
   }
 
   /**
-   * 複製等級、經驗、氣血、法力及核心屬性數值
+   * 複製等級、經驗、氣血、法力、理智、體力及核心五維屬性數值
    */
   private void copyStats(LivingStats source, LivingStats target) {
     target.setLevel(source.getLevel());
     target.setExp(source.getExp());
     target.setNextLevelExp(source.getNextLevelExp());
+    target.setCombatExp(source.getCombatExp());
+    target.setPotential(source.getPotential());
     target.setMaxHp(source.getMaxHp());
     target.setHp(source.getHp());
     target.setMaxMp(source.getMaxMp());
     target.setMp(source.getMp());
+    target.setMaxStamina(source.getMaxStamina());
+    target.setStamina(source.getStamina());
+    target.setMaxSan(source.getMaxSan());
+    target.setSan(source.getSan());
     target.setStr(source.getStr());
     target.setCon(source.getCon());
     target.setDex(source.getDex());

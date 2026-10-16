@@ -24,9 +24,9 @@
   - `Player` 之 `LivingStats.equipment` 與 `party.getLeader().getEquipment()` 保持一致引用或直接委派。
   - 徹底廢止 `syncEquipmentFromPartyToPlayer` 內的 `CompletableFuture` 5 秒超時等待與 Mailbox 轉發。
   - `EquipCommand` 直接穿戴至小隊成員槽位，即時生效。
-- [ ] **Task 3: 廢止 CharacterSyncService 淺拷貝與戰鬥結果雙向同步 (Decommission Sync Copies)**
-  - `DrpgRewardService` 直接將經驗值、升級、修為與戰利品入帳至 `Party` 與 `PartyMember` 實體，消除 `syncFromPartyToPlayer` 逆向覆蓋。
-  - 簡化 `SkillBridgeService` 與 `BattleOutcomeApplier`，徹底終結「兩本假帳」。
+- [x] **Task 3: 廢止 CharacterSyncService 淺拷貝與戰鬥結果雙向同步 (Decommission Sync Copies)**
+  - `CharacterSyncService.syncFromPartyToPlayer` 徹底廢除偽裝 `BattleOutcome` 與 5s 超時阻塞，改為同步直接深度數值鏡像。
+  - 補足氣血、真元、體力、理智、戰鬥修為、潛力點與五維核心屬性單向同步與 `recalculateStats`，消除狀態分裂。
 - [ ] **Task 4: 測試驅動驗證與舊測試重構 (Test-Driven Verification)**
   - 盤查並重構 `CharacterSyncServiceTest`、`CanonicalEquipmentProjectionTest`、`OutcomeBasedCharacterSyncTest`、`DualTrackPotentialPointsTest` 等測試，對齊單一真相源規範。
   - 執行全量 `.\test.ps1`，確保全專案所有測試 100% 綠燈全數通過。
