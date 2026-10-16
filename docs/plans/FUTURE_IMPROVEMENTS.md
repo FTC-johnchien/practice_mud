@@ -1239,7 +1239,7 @@ flowchart TD
 
 ### 24.1 階段 0：P0 級速勝清理 — 廢止明顯多人指令與轉存假帳 (Fast Wins & Immediate Decommission)
 
-#### 1. SP-01: 多人密語指令除役與單機世界化 (Decommission TellCommand) — Priority: P0
+#### 1. SP-01: 多人密語指令除役與單機世界化 (Decommission TellCommand) — Priority: P0 [已完成 ✅]
 - **問題現狀**：目前仍註冊 `tell` / `whisper` / `t` 指令，代碼依賴 `worldManager.findPlayerByName(targetName)` 在世界中尋找其他玩家並發送私聊，是典型的多人殘留死代碼。
 - **涉及檔案**：
   - [`TellCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/TellCommand.java)
@@ -1250,9 +1250,9 @@ flowchart TD
   3. 自指令別名與幫助文件中移除 `tell` 相關說明。
 - **非目標**：不影響與 NPC 對話的 `TalkCommand`。
 - **驗收標準 (DoD)**：
-  - 輸入 `tell` 指令提示無此命令；全專案測試無失效引用，315 項測試 100% 綠燈。
+  - 輸入 `tell` 指令提示無此命令；全專案測試無失效引用，315 項測試 100% 綠燈。[已達成 ✅]
 
-#### 2. SP-02: 雙層背包轉存指令徹底除役 (Decommission Stash Dual-Transfer) — Priority: P0
+#### 2. SP-02: 雙層背包轉存指令徹底除役 (Decommission Stash Dual-Transfer) — Priority: P0 [已完成 ✅]
 - **問題現狀**：雖然 `get` 與 `drop` 已操作小隊行囊，但 [`StashCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/StashCommand.java) 內部仍保留將道具自 `player.getInventory()` 存入/取出到 `party.getInventory()` 的雙向轉存邏輯。玩家若輸入 `stash` / `withdraw`，道具會掉入底層已廢止的個人隨身假帳背包中。
 - **涉及檔案**：
   - [`StashCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/StashCommand.java)
@@ -1263,7 +1263,7 @@ flowchart TD
   2. 將 `StashCommand` 簡化為純粹導向 `InventoryCommand` 或友情回應用戶：「道途公共行囊已全面大一統（40格公共儲物袋），所有拾取與獲取物資皆自動納入全隊共享，無需手動轉存！」。
   3. 將 [`Living.java`](../../src/main/java/com/example/htmlmud/domain/actor/impl/Living.java) 中的 `inventory` 限制為僅供 `Mob` 掉落物保管使用，禁止 `Player` 依賴此集合。
 - **驗收標準 (DoD)**：
-  - 玩家輸入 `stash` / `withdraw` 不會發生任何雙軌物品劃撥；小隊行囊為全專案道具流轉唯一真實載體；測試 100% 綠燈。
+  - 玩家輸入 `stash` / `withdraw` 不會發生任何雙軌物品劃撥；小隊行囊為全專案道具流轉唯一真實載體；測試 100% 綠燈。[已達成 ✅]
 
 ---
 
@@ -1373,17 +1373,17 @@ flowchart TD
 
 ### 24.5 執行步驟順序與看板里程碑映射 (Execution Sequence & Milestone Mapping)
 
-| 順序 | 步驟編號 | 核心收斂任務 | 優先級 | 預估風險 |
-| :---: | :---: | :--- | :---: | :---: |
-| **Step 1** | **SP-01** | 刪除 `TellCommand` 多人私聊與 `findPlayerByName` | **P0** | 極低 |
-| **Step 2** | **SP-02** | 廢止 `StashCommand` 雙向轉存，除役個人背包假帳 | **P0** | 低 |
-| **Step 3** | **SP-03** | 存檔寫入與載入徹底除役 `personalInventory` 雙寫 | **P1** | 中（需兼顧舊存檔遷移） |
-| **Step 4** | **SP-04** | `Room` 房間實體改為單一主角引用，除役多玩家廣播遍歷 | **P1** | 中 |
-| **Step 5** | **SP-05** | WebSocket 多開連線自動接管唯一主角，杜絕存檔覆寫競爭 | **P1** | 中 |
-| **Step 6** | **SP-06** | 技能模型合一 (`UnifiedSkill`)，消除 MUD/DRPG 技能定義割裂 | **P2** | 中高 |
-| **Step 7** | **SP-07** | 徹底除役 `SkillBridgeService` 翻譯縮放膠水代碼 | **P2** | 中 |
-| **Step 8** | **SP-08** | 戰鬥引擎大一統，野外戰鬥全面對齊 5 人小隊協同作戰 | **P2** | 高 |
-| **Step 9** | **SP-09** | 小隊共享金庫與經濟體系大一統 | **P2** | 低 |
+| 順序 | 步驟編號 | 核心收斂任務 | 優先級 | 預估風險 | 實裝狀態 |
+| :---: | :---: | :--- | :---: | :---: | :---: |
+| **Step 1** | **SP-01** | 刪除 `TellCommand` 多人私聊與 `findPlayerByName` | **P0** | 極低 | **已完成 (315綠燈) ✅** |
+| **Step 2** | **SP-02** | 廢止 `StashCommand` 雙向轉存，除役個人背包假帳 | **P0** | 低 | **已完成 (315綠燈) ✅** |
+| **Step 3** | **SP-03** | 存檔寫入與載入徹底除役 `personalInventory` 雙寫 | **P1** | 中（需兼顧舊存檔遷移） | **待執行 ⏳** |
+| **Step 4** | **SP-04** | `Room` 房間實體改為單一主角引用，除役多玩家廣播遍歷 | **P1** | 中 | **待執行 ⏳** |
+| **Step 5** | **SP-05** | WebSocket 多開連線自動接管唯一主角，杜絕存檔覆寫競爭 | **P1** | 中 | **待執行 ⏳** |
+| **Step 6** | **SP-06** | 技能模型合一 (`UnifiedSkill`)，消除 MUD/DRPG 技能定義割裂 | **P2** | 中高 | **待執行 ⏳** |
+| **Step 7** | **SP-07** | 徹底除役 `SkillBridgeService` 翻譯縮放膠水代碼 | **P2** | 中 | **待執行 ⏳** |
+| **Step 8** | **SP-08** | 戰鬥引擎大一統，野外戰鬥全面對齊 5 人小隊協同作戰 | **P2** | 高 | **待執行 ⏳** |
+| **Step 9** | **SP-09** | 小隊共享金庫與經濟體系大一統 | **P2** | 低 | **待執行 ⏳** |
 
 
 

@@ -6,38 +6,39 @@
 
 ---
 
-## 📌 當前焦點里程碑：Milestone 3 — 後端領域層 Package 結構按模組收斂 (M1/M4/M5/M6)
+## 📌 當前焦點里程碑：路徑 X — 純單機單體化演進戰略 (Single-Player Monolith Transition)
 
-- **對應模組手冊**：
-  - 後端探索：[`後端_M1_探索與世界模組_WORLD_AND_EXPLORATION.md`](./docs/manual/後端_M1_探索與世界模組_WORLD_AND_EXPLORATION.md)
-  - 後端小隊：[`後端_M4_小隊生靈與陣法模組_PARTY_AND_FORMATION.md`](./docs/manual/後端_M4_小隊生靈與陣法模組_PARTY_AND_FORMATION.md)
-  - 後端技能：[`後端_M5_技能境界與修煉模組_SKILL_AND_PROGRESSION.md`](./docs/manual/後端_M5_技能境界與修煉模組_SKILL_AND_PROGRESSION.md)
-  - 後端戰鬥：[`後端_M3_核心戰鬥引擎模組_COMBAT_ENGINE.md`](./docs/manual/後端_M3_核心戰鬥引擎模組_COMBAT_ENGINE.md)
-  - 長遠藍圖：[`FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) §22.2 M1~M6
-- **核心目標**：解決歷史上 `com.example.htmlmud.domain.service` 平鋪 22 個服務類別之雜糅問題。遵循領域驅動設計（DDD）與模組化規格，將平鋪的 service 依照核心領域進行分拆與收斂，建立職責清晰的高內聚子 package，消除架構模糊地帶，保持全量 315 項測試 100% 綠燈。
+- **長遠藍圖**：[`FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) 第 24 章《純單機單體化演進戰略：多人機制、雙軌架構與膠水代碼全域收斂藍圖》
+- **核心目標**：徹底消除舊有 MUD 多人連線、兩本假帳背包、多玩家廣播遍歷與雙軌膠水代碼，確立小隊 40 格行囊為全專案唯一真實載體，簡化架構並保持全專案 315 項測試 100% 綠燈。
 
-### 📋 微任務清單 (Micro-Tasks)
+### 📋 微任務清單 (Micro-Tasks: SP-01 ~ SP-09)
 
-- [x] **Task 1: 收斂 M1 探索與世界模組 (`domain.world`)**
-  - 建立 `com.example.htmlmud.domain.world` 子 package。
-  - 將 `WorldManager`、`RoomService`、`RoomMovementService`、`GameStateBroadcastService` 遷移至 `domain.world`。
-  - 批次更新全專案 48 個關聯檔案的 import，並修復時間抖動脆弱斷言，全量 315 項測試 100% 綠燈。
-- [ ] **Task 2: 收斂 M5 技能修為與經驗進程模組 (`domain.progression`)**
-  - 建立 `com.example.htmlmud.domain.progression` 子 package。
-  - 遷移 `XpProgressionService`、`XpService`、`SkillService`、`SkillCostService`、`SkillBridgeService` 及 `perform/` 招式邏輯。
-  - 全域更新關聯引用，驗證相關測試綠燈。
-- [ ] **Task 3: 收斂 M4 生靈與角色主體模組 (`domain.living`)**
-  - 建立 `com.example.htmlmud.domain.living` 子 package。
-  - 遷移 `LivingService`、`LivingStateService`、`PlayerService`、`MobService`、`CharacterSyncService`、`HealthStatusUtil`、`MessageUtil`。
-  - 全域更新關聯引用，驗證相關測試綠燈。
-- [ ] **Task 4: 收斂 M3 戰鬥判定與目標選擇模組 (`domain.combat`)**
-  - 整合至既有 `com.example.htmlmud.domain.combat`。
-  - 遷移 `CombatService`、`TargetSelector`、`BodyPartSelector`。
-  - 整理模板適配器 `DrpgTemplateAdapter`、`MudTemplateAdapter`、`TemplateCatalog`。
-  - 全域更新關聯引用，驗證相關測試綠燈。
-- [ ] **Task 5: 全模組手冊對齊、全量 315 項測試回歸驗證與 Git Commit**
-  - 同步更新各後端技術手冊中的路徑與架構圖。
-  - 執行全量 `.\test.ps1`，確保 315 項測試 100% 綠燈，完成結構化 Git Commit。
+#### 階段 0：P0 級速勝清理 (Fast Wins & Immediate Decommission)
+- [x] **Task 1 (SP-01): 刪除 `TellCommand` 多人私聊與 `findPlayerByName`**
+  - 徹底刪除 `TellCommand.java`。
+  - 從 `WorldManager.java` 移除多玩家搜尋方法 `findPlayerByName`。
+  - 驗收通過：315 項測試 100% 綠燈。
+- [x] **Task 2 (SP-02): 廢止 `StashCommand` 雙向轉存，除役個人背包假帳**
+  - 廢除 `handleStash` 與 `handleWithdraw` 跨背包搬移業務邏輯。
+  - `StashCommand` 簡化為全面友善導引大一統小隊公共行囊提示。
+  - 標記 `Living.inventory` 僅限 Mob / 生靈專用，禁止主角使用。
+  - 更新 `DualTierInventoryAndStashTest`，315 項測試 100% 綠燈。
+
+#### 階段 1：P1 級核心實體與存檔單一真相源 (Single Source of Truth)
+- [ ] **Task 3 (SP-03): 存檔寫入與載入徹底除役 `personalInventory` 雙寫**
+  - 移除 `SaveData.personalInventory` 序列化與投影還原邏輯。
+  - 在 `SaveMigrationPipeline` 自動將舊存檔個人行囊合併進小隊公共行囊。
+- [ ] **Task 4 (SP-04): `Room` 房間實體改為單一主角引用，除役多玩家廣播遍歷**
+  - `Room.players` 並發列表重構為單一引用 `Player protagonist`。
+  - 除役 `broadcastToOthers`，簡化事件廣播為直接推送房內主角。
+- [ ] **Task 5 (SP-05): WebSocket 多開連線自動接管唯一主角，杜絕存檔覆寫競爭**
+  - 引入單機單一主角實例模型，多分頁連入自動接管現有主角會話。
+
+#### 階段 2：P2 級機制大一統與膠水代碼徹底除役 (Deep Convergence)
+- [ ] **Task 6 (SP-06): 技能模型合一 (`UnifiedSkill`)，消除 MUD/DRPG 技能定義割裂**
+- [ ] **Task 7 (SP-07): 徹底除役 `SkillBridgeService` 翻譯縮放膠水代碼**
+- [ ] **Task 8 (SP-08): 戰鬥引擎大一統，野外戰鬥全面對齊 5 人小隊協同作戰**
+- [ ] **Task 9 (SP-09): 小隊共享金庫與經濟體系大一統**
 
 ---
 
@@ -53,6 +54,10 @@
 ---
 
 ## 🔮 後續備選里程碑 (Upcoming Milestones)
+
+### 📌 Milestone 3 — 後端領域層 Package 結構按模組收斂 (M1/M4/M5/M6)
+- **已完成 M1**: 探索與世界模組 (`domain.world`)
+- **待執行 M5/M4/M3**: 修為進程、生靈主體、戰鬥模組收斂。
 
 ### 📌 Milestone 4 — 前端歷史樣式巨石除役 (FE-6)
 - **目標**：完成 `static/css/style.css`（122 KB）歷史巨石安全移除，徹底切換至 `style-01` ~ `style-07` 七層樣式流。
