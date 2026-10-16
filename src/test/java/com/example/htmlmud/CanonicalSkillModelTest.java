@@ -21,7 +21,6 @@ import com.example.htmlmud.domain.model.enums.SkillType;
 import com.example.htmlmud.domain.model.template.SkillTemplate;
 import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.service.SkillBridgeService;
 import com.example.htmlmud.domain.service.TemplateCatalog;
 
 public class CanonicalSkillModelTest {
@@ -128,15 +127,20 @@ public class CanonicalSkillModelTest {
   }
 
   @Test
-  @DisplayName("CANON-02: SkillBridgeService maps skills dynamically via SkillDefinition")
-  void testSkillBridgeServiceDynamicMapping() {
-    SkillBridgeService bridgeService = new SkillBridgeService(new TemplateCatalog());
-
+  @DisplayName("CANON-02: SkillDefinition maps skills dynamically via bridge rules")
+  void testSkillDefinitionDynamicMapping() {
     // Basic sword lvl 1 -> sword_pierce; lvl 5 -> sword_pierce + sword_storm
-    List<String> lowLvl = bridgeService.mapMudSkillToDrpgSkills("basic_sword", 1);
+    var rules = SkillDefinition.resolveDefaultBridges("basic_sword");
+    List<String> lowLvl = rules.stream()
+        .filter(r -> 1 >= r.requiredLevel())
+        .map(SkillBridgeRule::targetDrpgSkillId)
+        .toList();
     assertEquals(List.of("sword_pierce"), lowLvl);
 
-    List<String> highLvl = bridgeService.mapMudSkillToDrpgSkills("basic_sword", 5);
+    List<String> highLvl = rules.stream()
+        .filter(r -> 5 >= r.requiredLevel())
+        .map(SkillBridgeRule::targetDrpgSkillId)
+        .toList();
     assertEquals(List.of("sword_pierce", "sword_storm"), highLvl);
   }
 }

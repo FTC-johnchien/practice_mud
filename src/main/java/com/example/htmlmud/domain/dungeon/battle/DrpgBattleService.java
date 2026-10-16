@@ -29,7 +29,6 @@ import com.example.htmlmud.domain.party.model.RowPosition;
 import com.example.htmlmud.domain.party.service.PartyService;
 import com.example.htmlmud.domain.repository.TemplateReader;
 import com.example.htmlmud.domain.service.CharacterSyncService;
-import com.example.htmlmud.domain.service.SkillBridgeService;
 import com.example.htmlmud.domain.service.TemplateCatalog;
 import com.example.htmlmud.domain.service.XpProgressionService;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +49,6 @@ public class DrpgBattleService {
   private final DrpgCombatLoop combatLoop;
   private final DrpgEnemyTacticsService tacticsService;
   private final DrpgRewardService rewardService;
-  private final SkillBridgeService skillBridgeService;
   private final ComboResolver comboResolver;
 
   private final Map<String, BattleContext> activeBattles = new ConcurrentHashMap<>();
@@ -60,7 +58,7 @@ public class DrpgBattleService {
   public DrpgBattleService(PartyService partyService, DungeonManager dungeonManager,
       DungeonNavigator dungeonNavigator, TemplateReader templateReader,
       DrpgCombatLoop combatLoop, DrpgEnemyTacticsService tacticsService,
-      DrpgRewardService rewardService, SkillBridgeService skillBridgeService,
+      DrpgRewardService rewardService,
       ComboResolver comboResolver) {
     this.partyService = partyService;
     this.dungeonManager = dungeonManager;
@@ -69,20 +67,19 @@ public class DrpgBattleService {
     this.tacticsService = tacticsService != null ? tacticsService : new DrpgEnemyTacticsService(this.templateReader);
     this.rewardService = rewardService != null ? rewardService : new DrpgRewardService(this.templateReader, this.dungeonManager);
     this.combatLoop = combatLoop != null ? combatLoop : new DrpgCombatLoop(this.tacticsService, this.rewardService);
-    this.skillBridgeService = skillBridgeService != null ? skillBridgeService : new SkillBridgeService(this.templateReader);
     this.comboResolver = comboResolver != null ? comboResolver : new ComboResolver();
   }
 
   public DrpgBattleService(PartyService partyService, DungeonManager dungeonManager,
       DungeonNavigator dungeonNavigator, TemplateReader templateReader,
       DrpgCombatLoop combatLoop, DrpgEnemyTacticsService tacticsService,
-      DrpgRewardService rewardService, SkillBridgeService skillBridgeService) {
-    this(partyService, dungeonManager, dungeonNavigator, templateReader, combatLoop, tacticsService, rewardService, skillBridgeService, null);
+      DrpgRewardService rewardService) {
+    this(partyService, dungeonManager, dungeonNavigator, templateReader, combatLoop, tacticsService, rewardService, null);
   }
 
   public DrpgBattleService(PartyService partyService, DungeonManager dungeonManager,
       DungeonNavigator dungeonNavigator, TemplateReader templateReader) {
-    this(partyService, dungeonManager, dungeonNavigator, templateReader, null, null, null, null, null);
+    this(partyService, dungeonManager, dungeonNavigator, templateReader, null, null, null, null);
   }
 
   public DrpgBattleService(PartyService partyService, DungeonManager dungeonManager) {
@@ -122,10 +119,6 @@ public class DrpgBattleService {
     if (this.rewardService != null) {
       this.rewardService.setCharacterSyncService(characterSyncService);
     }
-  }
-
-  public SkillBridgeService getSkillBridgeService() {
-    return this.skillBridgeService;
   }
 
   public DrpgCombatLoop getCombatLoop() {

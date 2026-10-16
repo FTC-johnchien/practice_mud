@@ -17,37 +17,26 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class CharacterSyncService {
 
-  private final SkillBridgeService skillBridgeService;
   private final BattleOutcomeApplier outcomeApplier;
   private final com.example.htmlmud.domain.repository.TemplateReader templateReader;
   private final org.springframework.beans.factory.ObjectProvider<LivingService> livingServiceProvider;
 
   @org.springframework.beans.factory.annotation.Autowired
   public CharacterSyncService(
-      @org.springframework.beans.factory.annotation.Autowired(required = false) SkillBridgeService skillBridgeService,
       @org.springframework.beans.factory.annotation.Autowired(required = false) BattleOutcomeApplier outcomeApplier,
       @org.springframework.beans.factory.annotation.Autowired(required = false) com.example.htmlmud.domain.repository.TemplateReader templateReader,
       @org.springframework.beans.factory.annotation.Autowired(required = false) org.springframework.beans.factory.ObjectProvider<LivingService> livingServiceProvider) {
-    this.skillBridgeService = skillBridgeService != null ? skillBridgeService : new SkillBridgeService();
     this.outcomeApplier = outcomeApplier != null ? outcomeApplier : new BattleOutcomeApplier();
     this.templateReader = templateReader;
     this.livingServiceProvider = livingServiceProvider;
   }
 
   public CharacterSyncService() {
-    this(new SkillBridgeService(), new BattleOutcomeApplier(), null, null);
+    this(new BattleOutcomeApplier(), null, null);
   }
 
-  public CharacterSyncService(SkillBridgeService skillBridgeService) {
-    this(skillBridgeService, new BattleOutcomeApplier(), null, null);
-  }
-
-  public CharacterSyncService(SkillBridgeService skillBridgeService, BattleOutcomeApplier outcomeApplier) {
-    this(skillBridgeService, outcomeApplier, null, null);
-  }
-
-  public SkillBridgeService getSkillBridgeService() {
-    return skillBridgeService;
+  public CharacterSyncService(BattleOutcomeApplier outcomeApplier) {
+    this(outcomeApplier, null, null);
   }
 
   public BattleOutcomeApplier getOutcomeApplier() {
@@ -103,9 +92,28 @@ public class CharacterSyncService {
     BattleParticipantSnapshot snapshot = createSnapshot(player);
     applySnapshotToParty(snapshot, leader);
 
-    // 技能與修為橋接同步
-    if (getSkillBridgeService() != null) {
-      getSkillBridgeService().syncSkills(player, leader);
+    // 技能大一統同步 (SP-06 / SP-07)：直接將 Player 的 UnifiedSkill 同步至 PartyMember 隊長
+    if (player.getLearnedSkills() != null && !player.getLearnedSkills().isEmpty()) {
+      var reader = this.templateReader != null ? this.templateReader : new TemplateCatalog();
+      for (var entry : player.getLearnedSkills().values()) {
+        if (entry != null && entry.getSkillId() != null) {
+          boolean updated = false;
+          if (leader.getSkills() != null) {
+            for (var s : leader.getSkills()) {
+              if (s.matchesIdOrAlias(entry.getSkillId())) {
+                s.setLevel(Math.max(s.getLevel(), entry.getLevel()));
+                s.setXp(entry.getXp());
+                if (entry.getMaxXp() > 0) s.setMaxXp(entry.getMaxXp());
+                updated = true;
+                break;
+              }
+            }
+          }
+          if (!updated) {
+            leader.addSkill(entry.toUnifiedSkill(reader));
+          }
+        }
+      }
     }
 
     // 裝備單一擁有者投影同步 (UNIFY-02)

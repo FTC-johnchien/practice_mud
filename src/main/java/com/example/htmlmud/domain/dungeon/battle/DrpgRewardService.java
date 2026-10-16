@@ -22,7 +22,6 @@ import com.example.htmlmud.domain.party.model.PartyItemSlot;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.repository.TemplateReader;
 import com.example.htmlmud.domain.service.CharacterSyncService;
-import com.example.htmlmud.domain.service.SkillBridgeService;
 import com.example.htmlmud.domain.service.TemplateCatalog;
 import com.example.htmlmud.domain.service.XpProgressionService;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +38,6 @@ public class DrpgRewardService {
   private ApplicationEventPublisher eventPublisher;
   private XpProgressionService xpProgressionService;
   private CharacterSyncService characterSyncService;
-  private SkillBridgeService skillBridgeService;
   private final com.example.htmlmud.domain.factory.ItemFactory itemFactory;
 
   @Autowired
@@ -49,19 +47,17 @@ public class DrpgRewardService {
       @Autowired(required = false) ApplicationEventPublisher eventPublisher,
       @Autowired(required = false) XpProgressionService xpProgressionService,
       @Autowired(required = false) CharacterSyncService characterSyncService,
-      @Autowired(required = false) SkillBridgeService skillBridgeService,
       @Autowired(required = false) com.example.htmlmud.domain.factory.ItemFactory itemFactory) {
     this.templateReader = templateReader != null ? templateReader : new TemplateCatalog();
     this.dungeonManager = dungeonManager;
     this.eventPublisher = eventPublisher;
     this.xpProgressionService = xpProgressionService != null ? xpProgressionService : new XpProgressionService(this.templateReader);
     this.characterSyncService = characterSyncService != null ? characterSyncService : new CharacterSyncService();
-    this.skillBridgeService = skillBridgeService != null ? skillBridgeService : new SkillBridgeService(this.templateReader);
     this.itemFactory = itemFactory != null ? itemFactory : new com.example.htmlmud.domain.factory.ItemFactory(this.templateReader);
   }
 
   public DrpgRewardService(TemplateReader templateReader, DungeonManager dungeonManager) {
-    this(templateReader, dungeonManager, null, null, null, null, null);
+    this(templateReader, dungeonManager, null, null, null, null);
   }
 
   public DrpgRewardService() {
@@ -76,10 +72,6 @@ public class DrpgRewardService {
     return characterSyncService;
   }
 
-  public SkillBridgeService getSkillBridgeService() {
-    return skillBridgeService;
-  }
-
   public void setEventPublisher(ApplicationEventPublisher eventPublisher) {
     this.eventPublisher = eventPublisher;
   }
@@ -90,10 +82,6 @@ public class DrpgRewardService {
 
   public void setCharacterSyncService(CharacterSyncService characterSyncService) {
     this.characterSyncService = characterSyncService;
-  }
-
-  public void setSkillBridgeService(SkillBridgeService skillBridgeService) {
-    this.skillBridgeService = skillBridgeService;
   }
 
   /**
@@ -141,8 +129,30 @@ public class DrpgRewardService {
     // 同步主角實體屬性 (透過 CharacterSyncService 維護單一真相源)
     if (player != null && ctx.getParty() != null && ctx.getParty().getLeader() != null) {
       getCharacterSyncService().syncFromPartyToPlayer(ctx.getParty().getLeader(), player);
-      // 技能橋接回饋熟練度
-      getSkillBridgeService().awardCombatSkillXp(player, totalXp);
+    }
+
+    // 大一統技能原地修煉熟練度增長 (SP-06 / SP-07)
+    if (ctx.getParty() != null && totalXp > 0) {
+      long skillGain = Math.max(5, totalXp / 4);
+      for (PartyMember m : ctx.getParty().getAliveMembers()) {
+        if (m != null && m.getSkills() != null) {
+          for (com.example.htmlmud.domain.party.model.PartyMemberSkill s : m.getSkills()) {
+            int oldLevel = s.getLevel();
+            s.addXp(skillGain);
+            if (s.getLevel() > oldLevel && player != null && player.isValid()) {
+              player.reply("\u001B[1;36m💡【武學頓悟】" + m.getName() + " 在太陰死鬥中歷經磨礪，技能【" + s.getName() + "】突破精進至 Lv." + s.getLevel() + "！\u001B[0m");
+            }
+            if (player != null && m == ctx.getParty().getLeader() && player.getLearnedSkills() != null) {
+              var entry = player.getLearnedSkills().get(s.getId());
+              if (entry != null) {
+                entry.setLevel(s.getLevel());
+                entry.setXp(s.getXp());
+                entry.setMaxXp(s.getMaxXp());
+              }
+            }
+          }
+        }
+      }
     }
 
     List<String> droppedItemNames = new ArrayList<>();

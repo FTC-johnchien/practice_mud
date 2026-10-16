@@ -21,16 +21,12 @@ import com.example.htmlmud.domain.service.TemplateCatalog;
 import com.example.htmlmud.domain.model.enums.DamageType;
 import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.service.SkillBridgeService;
 
 @SpringBootTest
 public class MechanismPurityAndBugfixTest {
 
   @Autowired
   private PartyService partyService;
-
-  @Autowired
-  private SkillBridgeService skillBridgeService;
 
   @Autowired
   private SaveGameService saveGameService;
@@ -149,25 +145,27 @@ public class MechanismPurityAndBugfixTest {
   }
 
   @Test
-  @DisplayName("機制驗證：SkillBridgeService 技能升級縮放必須完整保留 poiseDamage、shield 與 tags (CLEANSE)")
+  @DisplayName("機制驗證：PartyMemberSkill 升級縮放必須完整保留 poiseDamage、shield 與 tags (CLEANSE)")
   void testSkillScalingPreservesAllCombatAttributes() {
     var rawSkill = templateReader.findPartySkill("sword_pierce");
     assertThat(rawSkill).isPresent();
     PartyMemberSkill base = rawSkill.get();
     assertThat(base.getPoiseDamage()).isEqualTo(20);
     assertThat(base.getDamageType()).isEqualTo("SLASH");
+    assertThat(base.getTags()).contains("METAL", "SWORD");
 
-    PartyMemberSkill scaled = skillBridgeService.scaleSkill(base, 5, null);
-    assertThat(scaled.getPoiseDamage()).isEqualTo(20);
-    assertThat(scaled.getDamageType()).isEqualTo("SLASH");
-    assertThat(scaled.getDamageMultiplier()).isGreaterThan(base.getDamageMultiplier());
-    assertThat(scaled.getTags()).contains("METAL", "SWORD");
+    base.setLevel(5);
+    assertThat(base.getPoiseDamage()).isEqualTo(20);
+    assertThat(base.getDamageType()).isEqualTo("SLASH");
+    assertThat(base.getEffectiveDamageMultiplier()).isGreaterThan(base.getDamageMultiplier());
+    assertThat(base.getTags()).contains("METAL", "SWORD");
 
     // 驗證淨化解控技能 CLEANSE 標籤保留
     var purifySkill = templateReader.findPartySkill("heal_all_purify");
     assertThat(purifySkill).isPresent();
-    PartyMemberSkill scaledPurify = skillBridgeService.scaleSkill(purifySkill.get(), 3, null);
-    assertThat(scaledPurify.getTags()).contains("CLEANSE");
+    PartyMemberSkill purify = purifySkill.get();
+    purify.setLevel(3);
+    assertThat(purify.getTags()).contains("CLEANSE");
   }
 
   @Test

@@ -12,82 +12,86 @@ import org.junit.jupiter.api.Test;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.entity.SkillEntry;
+import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.model.RowPosition;
+import com.example.htmlmud.domain.model.definition.SkillDefinition;
 import com.example.htmlmud.domain.repository.TemplateReader;
 import com.example.htmlmud.domain.service.CharacterSyncService;
-import com.example.htmlmud.domain.service.SkillBridgeService;
 import com.example.htmlmud.domain.service.TemplateCatalog;
 
+/**
+ * 大一統技能模型與無膠水架構整合測試 (SP-07: 徹底除役 SkillBridgeService 膠水代碼)
+ */
 class SkillBridgeIntegrationTest {
 
-  private SkillBridgeService skillBridgeService;
   private CharacterSyncService characterSyncService;
   private TemplateReader templateReader;
 
   @BeforeEach
   void setUp() {
     templateReader = new TemplateCatalog();
-    skillBridgeService = new SkillBridgeService(templateReader);
-    characterSyncService = new CharacterSyncService(skillBridgeService);
+    characterSyncService = new CharacterSyncService(new com.example.htmlmud.domain.dungeon.battle.BattleOutcomeApplier(), templateReader, null);
   }
 
   @Test
-  @DisplayName("測試 MUD 基礎劍法映射至 DRPG 戰術技能 (破空劍氣)")
+  @DisplayName("測試基礎武學大一統映射至戰鬥技能 (破空劍氣)")
   void testBasicSwordMapping() {
-    List<String> lowLvl = skillBridgeService.mapMudSkillToDrpgSkills("basic_sword", 1);
+    List<String> lowLvl = SkillDefinition.resolveDefaultBridges("basic_sword", 1);
     assertThat(lowLvl).containsExactly("sword_pierce");
 
     // Lv.5 以上應額外解鎖進階群攻「太陰萬劍訣」
-    List<String> highLvl = skillBridgeService.mapMudSkillToDrpgSkills("basic_sword", 5);
+    List<String> highLvl = SkillDefinition.resolveDefaultBridges("basic_sword", 5);
     assertThat(highLvl).containsExactly("sword_pierce", "sword_storm");
   }
 
   @Test
-  @DisplayName("測試 MUD 高級劍法 (太極劍法/太陰劍法) 直接解鎖全套劍系戰術技能")
+  @DisplayName("測試高級劍法 (太極劍法/太陰劍法) 直接解鎖全套劍系戰鬥技能")
   void testAdvancedSwordMapping() {
-    List<String> skills = skillBridgeService.mapMudSkillToDrpgSkills("taiji_sword", 1);
+    List<String> skills = SkillDefinition.resolveDefaultBridges("taiji_sword", 1);
     assertThat(skills).contains("sword_pierce", "sword_storm");
   }
 
   @Test
-  @DisplayName("測試 MUD 醫道、守禦、刺術技能映射")
+  @DisplayName("測試醫道、守禦、刺術技能映射")
   void testDiverseSkillMappings() {
-    assertThat(skillBridgeService.mapMudSkillToDrpgSkills("basic_first_aid", 1))
+    assertThat(SkillDefinition.resolveDefaultBridges("basic_first_aid", 1))
         .containsExactly("heal_single");
-    assertThat(skillBridgeService.mapMudSkillToDrpgSkills("basic_first_aid", 5))
+    assertThat(SkillDefinition.resolveDefaultBridges("basic_first_aid", 5))
         .containsExactly("heal_single", "heal_all_purify");
 
-    assertThat(skillBridgeService.mapMudSkillToDrpgSkills("basic_parry", 1))
+    assertThat(SkillDefinition.resolveDefaultBridges("basic_parry", 1))
         .containsExactly("tank_taunt");
 
-    assertThat(skillBridgeService.mapMudSkillToDrpgSkills("basic_dagger", 1))
+    assertThat(SkillDefinition.resolveDefaultBridges("basic_dagger", 1))
         .containsExactly("rogue_shadow_strike");
-    assertThat(skillBridgeService.mapMudSkillToDrpgSkills("basic_dagger", 5))
+    assertThat(SkillDefinition.resolveDefaultBridges("basic_dagger", 5))
         .containsExactly("rogue_shadow_strike", "rogue_seven_star");
   }
 
   @Test
-  @DisplayName("測試動態數值縮放：高等級 MUD 技能擁有更高傷害倍率與更短 CD")
+  @DisplayName("測試動態數值縮放：UnifiedSkill 內建修煉境界，高等級技能擁有更高傷害倍率與更短 CD")
   void testDynamicSkillScaling() {
-    PartyMemberSkill baseSkill = templateReader.findPartySkill("sword_pierce").orElseThrow();
+    PartyMemberSkill skill = templateReader.findPartySkill("sword_pierce").orElseThrow();
+    try {
+      skill.setLevel(1);
+      double dmgLvl1 = skill.getEffectiveDamageMultiplier();
+      long cdLvl1 = skill.getEffectiveCooldownMs();
 
-    LivingStats stats = new LivingStats();
-    stats.setStr(20);
-    stats.setDex(20);
+      skill.setLevel(10);
+      double dmgLvl10 = skill.getEffectiveDamageMultiplier();
+      long cdLvl10 = skill.getEffectiveCooldownMs();
 
-    PartyMemberSkill lvl1 = skillBridgeService.scaleSkill(baseSkill, 1, stats);
-    PartyMemberSkill lvl10 = skillBridgeService.scaleSkill(baseSkill, 10, stats);
-
-    assertThat(lvl10.getDamageMultiplier()).isGreaterThan(lvl1.getDamageMultiplier());
-    assertThat(lvl10.getCooldownMs()).isLessThan(lvl1.getCooldownMs());
-    assertThat(lvl10.getDescription()).contains("Lv.10");
+      assertThat(dmgLvl10).isGreaterThan(dmgLvl1);
+      assertThat(cdLvl10).isLessThan(cdLvl1);
+    } finally {
+      skill.setLevel(1);
+    }
   }
 
   @Test
-  @DisplayName("測試 CharacterSyncService 整合：從 Player 帶有之 MUD 技能動態注入並縮放至 PartyMember 隊長")
+  @DisplayName("測試 CharacterSyncService 整合：從 Player 帶有之技能直接同步至 PartyMember 隊長大一統模型")
   void testCharacterSyncWithSkills() {
     Player player = mock(Player.class);
     LivingStats stats = new LivingStats();
@@ -97,9 +101,9 @@ class SkillBridgeIntegrationTest {
     stats.setStr(18);
     stats.setDex(18);
 
-    // 玩家習得 basic_sword Lv.6 與 basic_parry Lv.3
-    stats.getLearnedSkills().put("basic_sword", new SkillEntry("basic_sword", 6));
-    stats.getLearnedSkills().put("basic_parry", new SkillEntry("basic_parry", 3));
+    // 玩家習得 sword_pierce Lv.6 與 tank_taunt Lv.3
+    stats.getLearnedSkills().put("sword_pierce", new SkillEntry("sword_pierce", 6));
+    stats.getLearnedSkills().put("tank_taunt", new SkillEntry("tank_taunt", 3));
 
     when(player.getStats()).thenReturn(stats);
     when(player.getLearnedSkills()).thenReturn(stats.getLearnedSkills());
@@ -120,40 +124,38 @@ class SkillBridgeIntegrationTest {
     assertThat(leader.getStats().getMaxHp()).isEqualTo(250);
     assertThat(leader.getStats().getStr()).isEqualTo(18);
 
-    // 隊長技能解鎖與縮放驗證 (應包含 sword_pierce, sword_storm, tank_taunt)
+    // 隊長技能大一統同步驗證
     assertThat(leader.getSkills()).extracting(PartyMemberSkill::getId)
-        .contains("sword_pierce", "sword_storm", "tank_taunt");
+        .contains("sword_pierce", "tank_taunt");
 
     PartyMemberSkill pierce = leader.getSkills().stream()
         .filter(s -> s.getId().equals("sword_pierce")).findFirst().orElseThrow();
-    assertThat(pierce.getDescription()).contains("Lv.6");
-    assertThat(pierce.getDamageMultiplier()).isGreaterThan(1.8);
+    assertThat(pierce.getLevel()).isEqualTo(6);
+    assertThat(pierce.getEffectiveDamageMultiplier()).isGreaterThan(1.2);
   }
 
   @Test
-  @DisplayName("測試戰後修為回饋：戰鬥獲勝為 MUD 技能發放熟練度並促成突破升級")
+  @DisplayName("測試戰後原地熟練度增長：大一統技能自內聚升級與熟練度保留")
   void testAwardCombatSkillXpAndLevelUp() {
-    Player player = mock(Player.class);
-    when(player.isValid()).thenReturn(true);
+    PartyMemberSkill skill = PartyMemberSkill.builder()
+        .id("sword_pierce")
+        .name("破空劍氣")
+        .level(1)
+        .xp(90L)
+        .maxXp(100L)
+        .build();
 
-    LivingStats stats = new LivingStats();
-    SkillEntry swordEntry = new SkillEntry("basic_sword", 1);
-    swordEntry.setXp(90); // 差 10 點升級
-    stats.getLearnedSkills().put("basic_sword", swordEntry);
+    // 獲得 25 點熟練度，突破 Lv.1 門檻 (100) 升為 Lv.2，保留溢出熟練度 15
+    skill.addXp(25L);
 
-    when(player.getLearnedSkills()).thenReturn(stats.getLearnedSkills());
-
-    skillBridgeService.awardCombatSkillXp(player, 100);
-
-    // 獲得 25 點熟練度 (100 / 4)，突破 Lv.1 門檻 (50) 升為 Lv.2，依統一公式保留溢出熟練度 65 (90 + 25 - 50)
-    assertThat(swordEntry.getLevel()).isEqualTo(2);
-    assertThat(swordEntry.getXp()).isEqualTo(65L);
+    assertThat(skill.getLevel()).isEqualTo(2);
+    assertThat(skill.getXp()).isEqualTo(15L);
   }
 
   @Test
   @DisplayName("測試反查解鎖前置武學")
   void testPrerequisiteLookup() {
-    Set<String> prereqs = skillBridgeService.getPrerequisiteMudSkills("sword_storm");
+    List<String> prereqs = SkillDefinition.findDefaultPrerequisites("sword_storm");
     assertThat(prereqs).isNotEmpty();
     assertThat(prereqs).anyMatch(p -> p.contains("basic_sword"));
   }

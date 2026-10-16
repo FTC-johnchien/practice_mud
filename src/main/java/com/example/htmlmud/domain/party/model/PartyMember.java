@@ -99,6 +99,14 @@ public class PartyMember implements Combatant {
   @Builder.Default
   private java.util.Set<String> learnedStances = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
+  public void addSkill(PartyMemberSkill skill) {
+    if (skill == null) return;
+    if (this.skills == null) {
+      this.skills = new java.util.ArrayList<>();
+    }
+    this.skills.add(skill);
+  }
+
   public enum MadnessState {
     SANE,         // 正常
     CHAOS,        // 第一階段：走火入魔混亂期 (SAN == 0, 計數中)

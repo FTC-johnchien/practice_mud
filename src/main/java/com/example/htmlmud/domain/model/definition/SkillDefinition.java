@@ -220,6 +220,16 @@ public record SkillDefinition(
   }
 
   /**
+   * 依等級篩選解析預設橋接之技能 ID 列表
+   */
+  public static List<String> resolveDefaultBridges(String mudSkillId, int level) {
+    return resolveDefaultBridges(mudSkillId).stream()
+        .filter(r -> level >= r.requiredLevel())
+        .map(SkillBridgeRule::targetDrpgSkillId)
+        .toList();
+  }
+
+  /**
    * 預設標準 MUD 到 DRPG 橋接規則解析 (提供開箱即用之資料驅動保底)
    */
   public static List<SkillBridgeRule> resolveDefaultBridges(String mudSkillId) {
