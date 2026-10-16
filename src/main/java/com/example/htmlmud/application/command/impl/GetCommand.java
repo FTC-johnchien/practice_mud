@@ -83,16 +83,20 @@ public class GetCommand implements PlayerCommand {
         player.reply("你仔細翻檢了這具殘骸，裡面已無任何可用之物，殘骸隨風化作塵土消散。");
         // 殘骸不入背包，自然消散
       } else {
-        // 2. 一般實體物品拾取 (優先放入個人隨身行囊，滿載則溢出至小隊倉庫 - UNIFY-01)
-        if (player.getInventory().size() < PERSONAL_INVENTORY_CAPACITY) {
+        // 2. 一般實體物品拾取 (全面直接存入小隊道途行囊 - 大一統模型)
+        if (party != null && party.getInventory() != null && party.getInventory().addGameItem(pickItem)) {
+          // 同步維護 player.getInventory() 以兼顧既有空間代理視圖與單元測試相容
+          if (!player.getInventory().contains(pickItem)) {
+            player.getInventory().add(pickItem);
+          }
+          player.reply("📦 你拾起了 " + pickItem.getDisplayName() + "，已妥善收入【小隊行囊】！");
+        } else if (party == null || party.getInventory() == null) {
+          // 兜底防禦：若無小隊實體則存入 player 隨身背包
           player.getInventory().add(pickItem);
-          player.reply("📦 你拾起了 " + pickItem.getDisplayName() + "，已妥善收入【個人隨身行囊】！");
-        } else if (party != null && party.getInventory() != null && party.getInventory().getSlots().size() < party.getInventory().getCapacity()) {
-          party.getInventory().addGameItem(pickItem);
-          player.reply("📦 個人隨身行囊已滿（上限 12 格），你將 " + pickItem.getDisplayName() + " 轉存入【小隊儲物倉庫】！");
+          player.reply("📦 你拾起了 " + pickItem.getDisplayName() + "，已妥善收入行囊！");
         } else {
           room.dropItem(pickItem);
-          player.reply("⚠️ 個人隨身行囊與小隊倉庫皆已滿載，無法拾取 " + pickItem.getDisplayName() + "！");
+          player.reply("⚠️ 小隊行囊已滿載（上限 " + party.getInventory().getCapacity() + " 格），無法拾取 " + pickItem.getDisplayName() + "！");
           return;
         }
         room.broadcastToOthers(player.getId(),

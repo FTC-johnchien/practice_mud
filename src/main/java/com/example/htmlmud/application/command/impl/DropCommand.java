@@ -19,13 +19,23 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @CommandAlias("drop")
-@RequiredArgsConstructor
 public class DropCommand implements PlayerCommand {
 
   private final TargetSelector targetSelector;
   private final PartyService partyService;
   private final TemplateReader templateReader;
   private final GameStateBroadcastService broadcastService;
+
+  @org.springframework.beans.factory.annotation.Autowired
+  public DropCommand(TargetSelector targetSelector,
+                     PartyService partyService,
+                     TemplateReader templateReader,
+                     GameStateBroadcastService broadcastService) {
+    this.targetSelector = targetSelector;
+    this.partyService = partyService;
+    this.templateReader = templateReader;
+    this.broadcastService = broadcastService;
+  }
 
   @Override
   public String getKey() {
@@ -50,35 +60,44 @@ public class DropCommand implements PlayerCommand {
 
     Party party = partyService.getOrCreateParty(player.getName());
 
-    // 1. 支援 drop stash <物品> / drop storage <物品> (丟棄小隊倉庫中的物品)
+    // 1. 若輸入帶有 stash / storage / party 前綴，去除前綴後統一處理
+    String keyword = trimmed;
     if (trimmed.startsWith("stash ") || trimmed.startsWith("storage ") || trimmed.startsWith("party ")) {
-      String sub = trimmed.substring(trimmed.indexOf(' ') + 1).trim();
-      PartyItemSlot slot = findPartySlot(party, sub);
-      if (slot == null) {
-        player.reply("小隊儲物倉庫中沒有 '" + sub + "'。");
-        return;
+      keyword = trimmed.substring(trimmed.indexOf(' ') + 1).trim();
+    }
+
+    // 2. 優先自大一統【小隊行囊】中尋找並丟棄
+    PartyItemSlot partySlot = findPartySlot(party, keyword);
+    if (partySlot != null) {
+      party.getInventory().removeItem(partySlot.getSlotId(), 1);
+      GameItem droppedItem = partySlot.toGameItem(templateReader);
+      if (droppedItem != null) {
+        droppedItem.setAmount(1);
+        room.dropItem(droppedItem);
+      }
+      // 同步移除 player.getInventory() 中的對應物品 (若存在)
+      if (player.getInventory() != null) {
+        var optItem = targetSelector.selectItem(player.getInventory(), keyword);
+        if (optItem != null) {
+          player.getInventory().remove(optItem);
+        }
       }
 
-      party.getInventory().removeItem(slot.getSlotId(), 1);
-      GameItem droppedItem = slot.toGameItem(templateReader);
-      droppedItem.setAmount(1);
-      room.dropItem(droppedItem);
-
-      player.reply("🗑️ $N從小隊倉庫丟下了 " + slot.getName());
-      room.broadcastToOthers(player.getId(), player.getNickname() + " 從小隊倉庫丟下了 " + slot.getName());
+      player.reply("🗑️ $N從小隊行囊丟下了 " + partySlot.getName());
+      room.broadcastToOthers(player.getId(), player.getNickname() + " 從小隊行囊丟下了 " + partySlot.getName());
       if (broadcastService != null) {
         broadcastService.broadcastState(player);
       }
       return;
     }
 
-    // 2. 預設自個人隨身行囊丟棄
-    GameItem target = targetSelector.selectItem(player.getInventory(), trimmed);
+    // 3. 兜底自個人隨身背包視圖丟棄 (相容舊單元測試)
+    GameItem target = targetSelector.selectItem(player.getInventory(), keyword);
     if (target != null) {
       player.getInventory().remove(target);
       room.dropItem(target);
 
-      player.reply("🗑️ $N從隨身行囊丟下了 " + target.getDisplayName());
+      player.reply("🗑️ $N從行囊丟下了 " + target.getDisplayName());
       room.broadcastToOthers(player.getId(), player.getNickname() + " 丟下了 " + target.getDisplayName());
       if (broadcastService != null) {
         broadcastService.broadcastState(player);
@@ -86,14 +105,7 @@ public class DropCommand implements PlayerCommand {
       return;
     }
 
-    // 3. 若個人隨身行囊沒有，但小隊倉庫有，給予貼心引導提示
-    PartyItemSlot inStorage = findPartySlot(party, trimmed);
-    if (inStorage != null) {
-      player.reply("$N隨身行囊裡沒有 '" + trimmed + "'。（小隊倉庫中存有【" + inStorage.getName()
-          + "】，若欲丟棄倉庫物品，請輸入: drop stash " + trimmed + "）");
-    } else {
-      player.reply("$N隨身行囊與小隊倉庫裡皆沒有 '" + trimmed + "'。");
-    }
+    player.reply("$N行囊裡沒有 '" + keyword + "'。");
   }
 
   private PartyItemSlot findPartySlot(Party party, String keyword) {

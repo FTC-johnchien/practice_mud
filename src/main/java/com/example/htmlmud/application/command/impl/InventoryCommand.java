@@ -78,35 +78,23 @@ public class InventoryCommand implements PlayerCommand {
       return;
     }
 
-    // 預設列出雙層行囊內容 (UNIFY-01: 個人隨身行囊 + 小隊公共倉庫)
+    // 預設列出大一統小隊道途行囊 (Unified Party Inventory)
     StringBuilder sb = new StringBuilder();
-    sb.append("\n\u001B[1;36m═══════════════════【道途行囊與庫存一覽】═══════════════════\u001B[0m\n");
+    sb.append("\n\u001B[1;36m═══════════════════【道途小隊行囊】═══════════════════\u001B[0m\n");
 
-    // 1. 個人隨身行囊
-    var personalItems = self.getInventory();
-    sb.append(" 🎒\u001B[1;33m【個人隨身行囊】\u001B[0m 容量負載: ").append(personalItems.size()).append(" / ")
-        .append(GetCommand.PERSONAL_INVENTORY_CAPACITY).append(" 格\n");
-    if (personalItems.isEmpty()) {
-      sb.append("   (隨身行囊空空如也，可使用 'withdraw <序號>' 從小隊倉庫調取)\n");
-    } else {
-      for (int i = 0; i < personalItems.size(); i++) {
-        var item = personalItems.get(i);
-        sb.append(String.format("   [%2d] %-16s x%d\n", (i + 1), item.getDisplayName(), item.getAmount() > 0 ? item.getAmount() : 1));
-      }
-    }
+    var slots = (party != null && party.getInventory() != null)
+        ? party.getInventory().getSlots()
+        : java.util.List.<PartyItemSlot>of();
+    int cap = (party != null && party.getInventory() != null) ? party.getInventory().getCapacity() : 30;
 
-    sb.append("──────────────────────────────────────────────────\n");
+    sb.append(" 🎒\u001B[1;32m【小隊共用行囊】\u001B[0m 容量負載: ").append(slots.size()).append(" / ").append(cap).append(" 格\n");
 
-    // 2. 小隊儲物倉庫
-    var slots = party.getInventory().getSlots();
-    sb.append(" 📦\u001B[1;32m【小隊儲物倉庫】\u001B[0m 容量負載: ").append(slots.size()).append(" / ")
-        .append(party.getInventory().getCapacity()).append(" 格\n");
     if (slots.isEmpty()) {
-      sb.append("   (倉庫空空如也，可探索墓塚或擊殺妖邪獲取戰利品)\n");
+      sb.append("   (行囊空空如也，可探索地牢、開箱或擊殺妖邪獲取戰利品)\n");
     } else {
       for (int i = 0; i < slots.size(); i++) {
         PartyItemSlot s = slots.get(i);
-        sb.append(String.format("   [%2d] %s %-14s x%d", (i + 1), s.getIcon(), s.getName(), s.getCount()));
+        sb.append(String.format("   [%2d] %s %-14s x%d", (i + 1), s.getIcon() != null ? s.getIcon() : "📦", s.getName(), s.getCount()));
         if (s.isWeapon()) {
           sb.append(" [武器: 攻 +").append(s.getBonusMinDamage()).append("~").append(s.getBonusMaxDamage()).append("]");
         } else if (s.isArmor()) {
@@ -122,13 +110,11 @@ public class InventoryCommand implements PlayerCommand {
       }
     }
     sb.append("──────────────────────────────────────────────────\n");
-    sb.append(" 調度與使用指令:\n");
-    sb.append("   stash <隨身物品名稱>        - 將隨身物品存入小隊倉庫 (別名: store / 存入)\n");
-    sb.append("   withdraw <倉庫序號/名稱>     - 從小隊倉庫取出物品至隨身 (別名: take / 取出)\n");
-    sb.append("   drop stash <倉庫序號/名稱>   - 直接丟棄小隊倉庫中的物品\n");
-    sb.append("   item use <序號> <隊員0-5>   - 對隊員使用丹藥/符咒/道種\n");
-    sb.append("   item equip <序號> <隊員0-5> - 為隊員穿戴武器或防具\n");
-    sb.append("   item unequip <部位> <隊員0-5> - 卸下裝備放回倉庫\n");
+    sb.append(" 行囊快捷操作指令:\n");
+    sb.append("   item equip <序號> [隊員0-5]   - 為隊員穿戴武器或防具 (別名: equip)\n");
+    sb.append("   item unequip <部位> [隊員0-5] - 卸下裝備放回行囊 (別名: unequip)\n");
+    sb.append("   item use <序號> [隊員0-5]     - 對隊員使用丹藥/符咒/道種 (別名: use)\n");
+    sb.append("   drop <序號/名稱>             - 從小隊行囊丟棄物品\n");
     sb.append("\u001B[1;36m══════════════════════════════════════════════════\u001B[0m\n");
 
     self.reply(sb.toString());

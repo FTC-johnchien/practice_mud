@@ -144,8 +144,9 @@ public class StashCommand implements PlayerCommand {
     int sCap = party.getInventory().getCapacity();
 
     player.reply("\n\u001B[1;36m═══════════════【行囊與倉庫物品調度】═══════════════\u001B[0m\n"
-        + " 目前負載: 個人隨身 [" + pSize + "/" + GetCommand.PERSONAL_INVENTORY_CAPACITY + "] 格 | 小隊倉庫 [" + sSize + "/" + sCap + "] 格\n"
-        + " 指令語法:\n"
+        + " 💡【行囊大一統】：小隊行囊已全面共用！拾取之物品皆直接入庫，無需繁瑣轉存。\n"
+        + " 目前負載: 小隊行囊 [" + sSize + "/" + sCap + "] 格 | 隨身相容視圖 [" + pSize + "/" + GetCommand.PERSONAL_INVENTORY_CAPACITY + "] 格\n"
+        + " 調度指令（相容支援）:\n"
         + "   stash <物品名稱>     - 將隨身行囊物品存入小隊倉庫 (別名 store / 存入)\n"
         + "   withdraw <序號/名稱>  - 從小隊倉庫取出物品至隨身行囊 (別名 take / 取出)\n"
         + "\u001B[1;36m════════════════════════════════════════════════════\u001B[0m");

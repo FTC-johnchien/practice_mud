@@ -88,8 +88,8 @@ class DualTierInventoryAndStashTest {
   }
 
   @Test
-  @DisplayName("驗證地面散落物品拾取至個人行囊，且不記入小隊公共倉庫（杜絕兩本假帳）")
-  void testLooseItemPickupEntersPersonalInventoryOnly() {
+  @DisplayName("驗證地面散落物品拾取時直接同步納入大一統小隊行囊")
+  void testLooseItemPickupEntersPartyInventory() {
     GameItem looseSword = worldFactory.createItem("steel_blade");
     if (looseSword == null) {
       looseSword = new GameItem();
@@ -104,11 +104,11 @@ class DualTierInventoryAndStashTest {
       getCommand.execute(finalItem.getId());
     });
 
-    // 1. 個人隨身行囊已獲得此物品
+    // 1. 個人隨身行囊視圖已獲得此物品
     assertThat(player.getInventory()).anyMatch(it -> it.getName().contains("鋼刀") || it.getId().equals("steel_blade"));
 
-    // 2. 小隊倉庫沒有該物品 (杜絕兩邊重複記錄)
-    assertThat(party.getInventory().getSlots()).noneMatch(s -> s.getItemId().contains("steel_blade") || s.getName().contains("鋼刀"));
+    // 2. 小隊公共行囊亦已同步獲得該物品 (大一統單一真相源)
+    assertThat(party.getInventory().getSlots()).anyMatch(s -> s.getItemId().contains("steel_blade") || s.getName().contains("鋼刀"));
   }
 
   @Test
