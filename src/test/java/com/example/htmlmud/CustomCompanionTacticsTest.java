@@ -35,7 +35,7 @@ import com.example.htmlmud.domain.party.model.TacticsCondition;
 import com.example.htmlmud.domain.party.model.TacticsRule;
 import com.example.htmlmud.domain.party.model.TacticsTarget;
 import com.example.htmlmud.domain.party.service.PartyService;
-import com.example.htmlmud.domain.service.GameStateBroadcastService;
+import com.example.htmlmud.domain.world.GameStateBroadcastService;
 
 class CustomCompanionTacticsTest {
 

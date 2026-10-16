@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.service;
+package com.example.htmlmud.domain.world;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -26,8 +26,8 @@ import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.domain.service.LivingService;
 import com.example.htmlmud.domain.service.PlayerService;
-import com.example.htmlmud.domain.service.RoomService;
-import com.example.htmlmud.domain.service.WorldManager;
+import com.example.htmlmud.domain.world.RoomService;
+import com.example.htmlmud.domain.world.WorldManager;
 import com.example.htmlmud.protocol.MudMessage;
 
 @SpringBootTest

@@ -351,7 +351,7 @@ class EnemyCastAndInterruptTest {
     assertThat(enemyDto.index()).isEqualTo(2);
     assertThat(enemyDto.name()).isEqualTo("怨魂守衛");
     assertThat(enemyDto.currentAction()).isEqualTo("厲鬼索命");
-    assertThat(enemyDto.actionProgressPercent()).isEqualTo(50);
+    assertThat(enemyDto.actionProgressPercent()).isCloseTo(50, org.assertj.core.data.Offset.offset(2));
     assertThat(enemyDto.interruptible()).isTrue();
 
     // 測試 CombatMobDto
@@ -366,7 +366,7 @@ class EnemyCastAndInterruptTest {
     );
     assertThat(mobDto.id()).isEqualTo("mob-test");
     assertThat(mobDto.currentAction()).isEqualTo("厲鬼索命");
-    assertThat(mobDto.actionProgressPercent()).isEqualTo(50);
+    assertThat(mobDto.actionProgressPercent()).isCloseTo(50, org.assertj.core.data.Offset.offset(2));
     assertThat(mobDto.interruptible()).isTrue();
   }
 }

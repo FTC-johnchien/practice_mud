@@ -33,7 +33,7 @@ import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.service.WorldManager;
+import com.example.htmlmud.domain.world.WorldManager;
 
 @SpringBootTest
 @ActiveProfiles("test")

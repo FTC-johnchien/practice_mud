@@ -31,8 +31,8 @@ import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.service.PartyService;
 import com.example.htmlmud.domain.save.service.SaveGameService;
 import com.example.htmlmud.domain.service.PlayerService;
-import com.example.htmlmud.domain.service.RoomMovementService;
-import com.example.htmlmud.domain.service.WorldManager;
+import com.example.htmlmud.domain.world.RoomMovementService;
+import com.example.htmlmud.domain.world.WorldManager;
 
 @SpringBootTest
 class CleanArchitectureDecouplingTest {

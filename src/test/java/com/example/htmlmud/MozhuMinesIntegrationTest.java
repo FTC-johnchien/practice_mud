@@ -11,7 +11,7 @@ import com.example.htmlmud.domain.model.template.MobTemplate;
 import com.example.htmlmud.domain.model.template.RoomTemplate;
 import com.example.htmlmud.domain.model.template.SkillTemplate;
 import com.example.htmlmud.domain.model.template.ZoneTemplate;
-import com.example.htmlmud.domain.service.WorldManager;
+import com.example.htmlmud.domain.world.WorldManager;
 import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
 
 @SpringBootTest

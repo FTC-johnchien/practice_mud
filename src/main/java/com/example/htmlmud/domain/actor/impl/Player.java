@@ -24,7 +24,7 @@ import com.example.htmlmud.domain.model.entity.PlayerRecord;
 import com.example.htmlmud.domain.model.entity.SkillEntry;
 import com.example.htmlmud.domain.model.enums.Direction;
 import com.example.htmlmud.domain.service.PlayerService;
-import com.example.htmlmud.domain.service.WorldManager;
+import com.example.htmlmud.domain.world.WorldManager;
 import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.ConnectionState;
 import com.example.htmlmud.protocol.GameCommand;

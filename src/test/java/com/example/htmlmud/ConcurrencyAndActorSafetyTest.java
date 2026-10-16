@@ -25,7 +25,7 @@ import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.service.PlayerService;
-import com.example.htmlmud.domain.service.WorldManager;
+import com.example.htmlmud.domain.world.WorldManager;
 
 @SpringBootTest
 public class ConcurrencyAndActorSafetyTest {

@@ -25,7 +25,7 @@ import com.example.htmlmud.domain.save.service.SaveGameService;
 import com.example.htmlmud.domain.actor.core.MessageOutput;
 import com.example.htmlmud.domain.service.PlayerService;
 import com.example.htmlmud.domain.service.TargetSelector;
-import com.example.htmlmud.domain.service.WorldManager;
+import com.example.htmlmud.domain.world.WorldManager;
 
 @SpringBootTest
 class ItemPickupAndEntitySyncTest {

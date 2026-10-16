@@ -9,7 +9,7 @@ import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.context.MudKeys;
 import com.example.htmlmud.domain.model.entity.PlayerRecord;
 import com.example.htmlmud.domain.model.enums.Direction;
-import com.example.htmlmud.domain.service.WorldManager;
+import com.example.htmlmud.domain.world.WorldManager;
 import com.example.htmlmud.protocol.ConnectionState;
 import com.example.htmlmud.protocol.GameCommand;
 import com.example.htmlmud.domain.port.AuthenticationPort;

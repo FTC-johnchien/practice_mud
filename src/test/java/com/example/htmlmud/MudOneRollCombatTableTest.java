@@ -21,7 +21,7 @@ import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.domain.model.template.MobTemplate;
 import com.example.htmlmud.domain.service.MobService;
 import com.example.htmlmud.domain.service.PlayerService;
-import com.example.htmlmud.domain.service.WorldManager;
+import com.example.htmlmud.domain.world.WorldManager;
 
 /**
  * 3.1: MUD 端生靈一元一次擲骰圓桌判定 (One-Roll Combat Table) 整合測試

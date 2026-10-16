@@ -35,8 +35,8 @@ public class DungeonCommand implements PlayerCommand {
   private final DungeonNavigator dungeonNavigator;
   private final PartyService partyService;
   private final com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService;
-  private final com.example.htmlmud.domain.service.RoomMovementService roomMovementService;
-  private final com.example.htmlmud.domain.service.GameStateBroadcastService broadcastService;
+  private final com.example.htmlmud.domain.world.RoomMovementService roomMovementService;
+  private final com.example.htmlmud.domain.world.GameStateBroadcastService broadcastService;
   private final TemplateReader templateReader;
 
   @org.springframework.beans.factory.annotation.Autowired(required = false)

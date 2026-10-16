@@ -40,7 +40,7 @@ public class DataDrivenExpansionTest {
   private com.example.htmlmud.application.command.impl.TalkCommand talkCommand;
 
   @Autowired
-  private com.example.htmlmud.domain.service.WorldManager worldManager;
+  private com.example.htmlmud.domain.world.WorldManager worldManager;
 
   @Test
   @DisplayName("1. 驗證 classes.json 成功載入為 ClassTemplate 且屬性齊全")

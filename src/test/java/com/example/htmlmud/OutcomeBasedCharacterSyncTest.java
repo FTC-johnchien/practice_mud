@@ -20,7 +20,7 @@ import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.service.PartyService;
 import com.example.htmlmud.domain.service.CharacterSyncService;
 import com.example.htmlmud.domain.service.PlayerService;
-import com.example.htmlmud.domain.service.WorldManager;
+import com.example.htmlmud.domain.world.WorldManager;
 
 /**
  * CANON-04 (Phase 5): 基於 Snapshot / Outcome 的角色戰鬥同步專屬測試

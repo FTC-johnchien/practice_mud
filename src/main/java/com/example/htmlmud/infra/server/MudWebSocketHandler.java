@@ -10,7 +10,7 @@ import com.example.htmlmud.application.dto.GameRequest;
 import com.example.htmlmud.application.service.GameCommandService;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.service.PlayerService;
-import com.example.htmlmud.domain.service.WorldManager;
+import com.example.htmlmud.domain.world.WorldManager;
 import com.example.htmlmud.domain.port.ClientSessionManagerPort;
 import com.example.htmlmud.infra.monitor.GameMetrics;
 import com.example.htmlmud.protocol.WebSocketOutput;

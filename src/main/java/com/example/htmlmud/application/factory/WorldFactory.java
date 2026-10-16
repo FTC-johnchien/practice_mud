@@ -23,7 +23,7 @@ import com.example.htmlmud.domain.model.template.RaceTemplate;
 import com.example.htmlmud.domain.port.WorldEntityFactoryPort;
 import com.example.htmlmud.domain.repository.TemplateReader;
 import com.example.htmlmud.domain.service.MobService;
-import com.example.htmlmud.domain.service.RoomService;
+import com.example.htmlmud.domain.world.RoomService;
 import com.example.htmlmud.infra.mapper.ItemTemplateMapper;
 import com.example.htmlmud.infra.mapper.MobMapper;
 import lombok.RequiredArgsConstructor;

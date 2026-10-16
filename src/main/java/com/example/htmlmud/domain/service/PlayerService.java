@@ -5,6 +5,7 @@ import java.util.Map;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
+import com.example.htmlmud.domain.world.WorldManager;
 import com.example.htmlmud.config.GuiBridge;
 import com.example.htmlmud.domain.actor.behavior.PlayerBehavior;
 import com.example.htmlmud.domain.actor.core.MessageOutput;

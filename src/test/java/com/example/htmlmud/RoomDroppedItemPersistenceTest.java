@@ -13,7 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.entity.RoomStateRecord;
 import com.example.htmlmud.domain.model.enums.ItemType;
-import com.example.htmlmud.domain.service.RoomService;
+import com.example.htmlmud.domain.world.RoomService;
 import com.example.htmlmud.infra.persistence.entity.RoomStateEntity;
 import com.example.htmlmud.infra.persistence.repository.RoomStateRepository;
 import com.example.htmlmud.infra.persistence.service.RoomPersistenceService;

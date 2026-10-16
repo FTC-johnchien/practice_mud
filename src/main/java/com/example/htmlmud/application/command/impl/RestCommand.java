@@ -26,7 +26,7 @@ public class RestCommand implements PlayerCommand {
   private final DungeonManager dungeonManager;
   private final DungeonNavigator dungeonNavigator;
   private final com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService;
-  private final com.example.htmlmud.domain.service.GameStateBroadcastService broadcastService;
+  private final com.example.htmlmud.domain.world.GameStateBroadcastService broadcastService;
 
   @Override
   public String getKey() {

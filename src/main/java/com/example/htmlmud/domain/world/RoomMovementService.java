@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.service;
+package com.example.htmlmud.domain.world;
 
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.actor.impl.Player;

@@ -20,7 +20,7 @@ import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.actor.core.MessageOutput;
 import com.example.htmlmud.domain.service.CombatService;
 import com.example.htmlmud.domain.service.PlayerService;
-import com.example.htmlmud.domain.service.WorldManager;
+import com.example.htmlmud.domain.world.WorldManager;
 import com.example.htmlmud.infra.server.WorldPulse;
 import org.springframework.web.socket.WebSocketSession;
 

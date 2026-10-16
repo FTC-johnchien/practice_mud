@@ -6,40 +6,53 @@
 
 ---
 
-## 📌 當前焦點里程碑：Milestone 2 — 核心雙軌實體大一統：Player 與 PartyMember 實體合一與單一真相源治理 (F1-01 / M1 / M4)
+## 📌 當前焦點里程碑：Milestone 3 — 後端領域層 Package 結構按模組收斂 (M1/M4/M5/M6)
 
 - **對應模組手冊**：
   - 後端探索：[`後端_M1_探索與世界模組_WORLD_AND_EXPLORATION.md`](./docs/manual/後端_M1_探索與世界模組_WORLD_AND_EXPLORATION.md)
   - 後端小隊：[`後端_M4_小隊生靈與陣法模組_PARTY_AND_FORMATION.md`](./docs/manual/後端_M4_小隊生靈與陣法模組_PARTY_AND_FORMATION.md)
-  - 長遠藍圖：[`FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) §22.1 F1-01
-- **核心目標**：徹底消除多人架構殘留之「Player (MUD 空間代理) vs PartyMember (DRPG 角色)」雙軌並立與兩套背包、兩套裝備痛點。以小隊為唯一真實資料源（Single Source of Truth），廢止脆弱的 `CharacterSyncService` 雙向拷貝與超時等待，實現純單機極致純粹之角色與行囊體系。
+  - 後端技能：[`後端_M5_技能境界與修煉模組_SKILL_AND_PROGRESSION.md`](./docs/manual/後端_M5_技能境界與修煉模組_SKILL_AND_PROGRESSION.md)
+  - 後端戰鬥：[`後端_M3_核心戰鬥引擎模組_COMBAT_ENGINE.md`](./docs/manual/後端_M3_核心戰鬥引擎模組_COMBAT_ENGINE.md)
+  - 長遠藍圖：[`FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) §22.2 M1~M6
+- **核心目標**：解決歷史上 `com.example.htmlmud.domain.service` 平鋪 22 個服務類別之雜糅問題。遵循領域驅動設計（DDD）與模組化規格，將平鋪的 service 依照核心領域進行分拆與收斂，建立職責清晰的高內聚子 package，消除架構模糊地帶，保持全量 315 項測試 100% 綠燈。
 
 ### 📋 微任務清單 (Micro-Tasks)
 
-- [x] **Task 1: 行囊大一統 (Unified Party Inventory)**
-  - 消除「個人隨身行囊 12 格」與「小隊公共倉庫 40 格」割裂。
-  - `GetCommand`、`DropCommand`、`InventoryCommand`、`UseCommand` 全面直接操作 `party.getInventory()`。
-  - 廢除強制性 `stash/withdraw` 轉存，`Player.getInventory()` 委派/同步小隊行囊視圖。
-- [x] **Task 2: 裝備與核心屬性大一統 (Unified Equipment & Stats)**
-  - `Player` 之 `LivingStats.equipment` 與 `party.getLeader().getEquipment()` 保持一致引用或直接委派。
-  - 徹底廢止 `syncEquipmentFromPartyToPlayer` 內的 `CompletableFuture` 5 秒超時等待與 Mailbox 轉發。
-  - `EquipCommand` 直接穿戴至小隊成員槽位，即時生效。
-- [x] **Task 3: 廢止 CharacterSyncService 淺拷貝與戰鬥結果雙向同步 (Decommission Sync Copies)**
-  - `CharacterSyncService.syncFromPartyToPlayer` 徹底廢除偽裝 `BattleOutcome` 與 5s 超時阻塞，改為同步直接深度數值鏡像。
-  - 補足氣血、真元、體力、理智、戰鬥修為、潛力點與五維核心屬性單向同步與 `recalculateStats`，消除狀態分裂。
-- [x] **Task 4: 測試驅動驗證與舊測試重構 (Test-Driven Verification)**
-  - 盤查並確認 `CharacterSyncServiceTest`、`CanonicalEquipmentProjectionTest`、`OutcomeBasedCharacterSyncTest`、`DualTrackPotentialPointsTest`、`DualTierInventoryAndStashTest` 等測試，已完全對齊單一真相源規範。
-  - 執行全量 `.\test.ps1`，確認全專案 315 項測試 100% 綠燈全數通過 (0 Failures, 0 Errors)。
-- [x] **Task 5: 模組手冊同步與 Git Commit 提交流程 (Documentation & Commit)**
-  - 同步更新 `後端_M1` 與 `後端_M4` 手冊，記錄小隊大一統行囊、裝備單一擁有權與零延遲投影架構圖。
-  - 315 項測試 100% 綠燈完成驗證，執行繁體中文結構化 Git Commit。
+- [x] **Task 1: 收斂 M1 探索與世界模組 (`domain.world`)**
+  - 建立 `com.example.htmlmud.domain.world` 子 package。
+  - 將 `WorldManager`、`RoomService`、`RoomMovementService`、`GameStateBroadcastService` 遷移至 `domain.world`。
+  - 批次更新全專案 48 個關聯檔案的 import，並修復時間抖動脆弱斷言，全量 315 項測試 100% 綠燈。
+- [ ] **Task 2: 收斂 M5 技能修為與經驗進程模組 (`domain.progression`)**
+  - 建立 `com.example.htmlmud.domain.progression` 子 package。
+  - 遷移 `XpProgressionService`、`XpService`、`SkillService`、`SkillCostService`、`SkillBridgeService` 及 `perform/` 招式邏輯。
+  - 全域更新關聯引用，驗證相關測試綠燈。
+- [ ] **Task 3: 收斂 M4 生靈與角色主體模組 (`domain.living`)**
+  - 建立 `com.example.htmlmud.domain.living` 子 package。
+  - 遷移 `LivingService`、`LivingStateService`、`PlayerService`、`MobService`、`CharacterSyncService`、`HealthStatusUtil`、`MessageUtil`。
+  - 全域更新關聯引用，驗證相關測試綠燈。
+- [ ] **Task 4: 收斂 M3 戰鬥判定與目標選擇模組 (`domain.combat`)**
+  - 整合至既有 `com.example.htmlmud.domain.combat`。
+  - 遷移 `CombatService`、`TargetSelector`、`BodyPartSelector`。
+  - 整理模板適配器 `DrpgTemplateAdapter`、`MudTemplateAdapter`、`TemplateCatalog`。
+  - 全域更新關聯引用，驗證相關測試綠燈。
+- [ ] **Task 5: 全模組手冊對齊、全量 315 項測試回歸驗證與 Git Commit**
+  - 同步更新各後端技術手冊中的路徑與架構圖。
+  - 執行全量 `.\test.ps1`，確保 315 項測試 100% 綠燈，完成結構化 Git Commit。
+
+---
+
+## 🏆 已完成里程碑 (Completed Milestones)
+
+- [x] **Milestone 2 — 核心雙軌實體大一統：Player 與 PartyMember 實體合一與單一真相源治理 (F1-01 / M1 / M4)**
+  - Task 1: 行囊大一統 (Unified Party Inventory) — 消除個人 12 格限制與強制 stash 轉存，40 格小隊公共背包為唯一真相源。
+  - Task 2: 裝備與核心屬性大一統 (Unified Equipment & Stats) — 徹底除役 5 秒 CompletableFuture 超時阻塞，達成 0ms 零延遲鏡像投影。
+  - Task 3: 廢止 CharacterSyncService 偽 Outcome 拷貝 — 同步直接深度鏡像，修復線上運行時深層屬性被略過的缺陷。
+  - Task 4: 測試驅動驗證 — 全專案 315 項測試 100% 綠燈通過。
+  - Task 5: 模組技術手冊同步 — 更新後端 M1 與 M4 手冊。
 
 ---
 
 ## 🔮 後續備選里程碑 (Upcoming Milestones)
-
-### 📌 Milestone 3 — 後端領域層 Package 結構按模組收斂 (M1/M4/M5/M6)
-- **目標**：在大一統實體穩定後，解決 `com.example.htmlmud.domain.service` 平鋪問題，拆分為 `domain.world`、`domain.party`、`domain.progression`、`domain.economy`。
 
 ### 📌 Milestone 4 — 前端歷史樣式巨石除役 (FE-6)
 - **目標**：完成 `static/css/style.css`（122 KB）歷史巨石安全移除，徹底切換至 `style-01` ~ `style-07` 七層樣式流。

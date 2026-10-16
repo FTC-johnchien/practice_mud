@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public class LookCommand implements PlayerCommand {
 
   private final ObjectMapper objectMapper;
-  private final com.example.htmlmud.domain.service.GameStateBroadcastService broadcastService;
+  private final com.example.htmlmud.domain.world.GameStateBroadcastService broadcastService;
 
 
   @Override

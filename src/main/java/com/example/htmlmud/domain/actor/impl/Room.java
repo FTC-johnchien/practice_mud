@@ -18,7 +18,7 @@ import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.enums.Direction;
 import com.example.htmlmud.domain.model.template.RoomTemplate;
 import com.example.htmlmud.domain.model.template.ZoneTemplate;
-import com.example.htmlmud.domain.service.RoomService;
+import com.example.htmlmud.domain.world.RoomService;
 import com.example.htmlmud.protocol.MudMessage;
 import com.example.htmlmud.protocol.RoomMessage;
 import lombok.Getter;

@@ -13,7 +13,7 @@ import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.context.MudKeys;
 import com.example.htmlmud.domain.event.DomainEvent.SystemEvent;
-import com.example.htmlmud.domain.service.WorldManager;
+import com.example.htmlmud.domain.world.WorldManager;
 import com.example.htmlmud.infra.persistence.repository.UserRepository;
 import com.example.htmlmud.infra.server.SessionRegistry;
 import com.example.htmlmud.protocol.ConnectionState;

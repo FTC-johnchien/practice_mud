@@ -13,7 +13,7 @@ import com.example.htmlmud.domain.model.template.ShopTemplate;
 import com.example.htmlmud.domain.model.template.ShopTemplate.ShopItemTemplate;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.service.PartyService;
-import com.example.htmlmud.domain.service.GameStateBroadcastService;
+import com.example.htmlmud.domain.world.GameStateBroadcastService;
 import com.example.htmlmud.domain.repository.TemplateReader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

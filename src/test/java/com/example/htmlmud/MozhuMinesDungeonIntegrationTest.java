@@ -24,7 +24,7 @@ import com.example.htmlmud.domain.dungeon.service.DungeonManager;
 import com.example.htmlmud.domain.dungeon.service.DungeonNavigator;
 import com.example.htmlmud.domain.party.service.PartyService;
 import com.example.htmlmud.domain.service.PlayerService;
-import com.example.htmlmud.domain.service.WorldManager;
+import com.example.htmlmud.domain.world.WorldManager;
 
 @SpringBootTest
 class MozhuMinesDungeonIntegrationTest {

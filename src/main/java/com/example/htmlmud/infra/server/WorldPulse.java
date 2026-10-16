@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.domain.service.CombatService;
-import com.example.htmlmud.domain.service.WorldManager;
+import com.example.htmlmud.domain.world.WorldManager;
 import com.example.htmlmud.infra.monitor.GameMetrics;
 import com.example.htmlmud.protocol.util.AnsiColor;
 import lombok.RequiredArgsConstructor;

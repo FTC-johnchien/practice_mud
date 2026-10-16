@@ -5,7 +5,7 @@ import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.model.enums.Direction;
-import com.example.htmlmud.domain.service.RoomMovementService;
+import com.example.htmlmud.domain.world.RoomMovementService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
