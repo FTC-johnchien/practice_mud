@@ -118,11 +118,10 @@ public class LivingService {
       if (self.getCurrentRoomId() != null) {
         try {
           Room room = self.getCurrentRoom();
-          if (room != null && !room.getPlayers().isEmpty()) {
-            for (Player p : room.getPlayers()) {
-              for (String l : logs) {
-                p.sendText(l);
-              }
+          if (room != null && room.hasProtagonist()) {
+            Player p = room.getProtagonist();
+            for (String l : logs) {
+              p.sendText(l);
             }
             sent = true;
           }
@@ -289,10 +288,10 @@ public class LivingService {
       room.dropItem(corpse);
     }
 
-    List<Player> audiences = room.getPlayers();
-    GameStateBroadcastService bs = broadcastServiceProvider.getIfAvailable();
-    for (Player receiver : audiences) {
+    Player receiver = (room != null) ? room.getProtagonist() : null;
+    if (receiver != null) {
       MessageUtil.send(messageTemplate, self, killer, receiver);
+      GameStateBroadcastService bs = broadcastServiceProvider.getIfAvailable();
       if (bs != null) {
         bs.broadcastState(receiver);
       }

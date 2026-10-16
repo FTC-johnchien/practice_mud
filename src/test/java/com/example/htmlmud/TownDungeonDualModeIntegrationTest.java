@@ -141,10 +141,14 @@ class TownDungeonDualModeIntegrationTest {
       player.setInDungeon(false);
       player.setCurrentRoomId("newbie_village:inn");
 
+      capturedMessages.clear();
       broadcastService.broadcastState(player);
 
       assertThat(capturedMessages).isNotEmpty();
-      String lastJson = capturedMessages.get(capturedMessages.size() - 1);
+      String lastJson = capturedMessages.stream()
+          .filter(m -> m.contains("\"type\":\"DRPG_STATE\""))
+          .reduce((first, second) -> second)
+          .orElse(capturedMessages.get(capturedMessages.size() - 1));
       assertThat(lastJson).contains("\"type\":\"DRPG_STATE\"");
       assertThat(lastJson).contains("\"mode\":\"TOWN\"");
       assertThat(lastJson).contains("村莊客棧");

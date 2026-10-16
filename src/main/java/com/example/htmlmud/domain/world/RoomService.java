@@ -57,17 +57,12 @@ public class RoomService {
     return templateReader.findRoom(roomId).orElse(null);
   }
 
-  public void enter(Room room, List<Player> players, List<Mob> mobs, Living actor,
-      Direction direction) {
-
+  public void enter(Room room, List<Mob> mobs, Living actor, Direction direction) {
     String livingName = null;
-    // 當actor為玩家時，要將room里的mobs丟出playerEnter的message
     switch (actor) {
       case Player player -> {
         livingName = player.getNickname();
-        if (!players.contains(player)) {
-          players.add(player);
-        }
+        room.setProtagonist(player);
         mobs.forEach(m -> m.onPlayerEnter(player.getId()));
       }
       case Mob mob -> {
@@ -89,15 +84,21 @@ public class RoomService {
     String arriveMsg = direction != null
         ? ColorText.wrap(AnsiColor.YELLOW, livingName + " 從 " + direction.getDisplayName() + " 過來了。")
         : ColorText.wrap(AnsiColor.YELLOW, livingName + " 出現在此處。");
-    broadcastToOthers(players, actor.getId(), arriveMsg);
+    broadcastToOthers(room, actor.getId(), arriveMsg);
   }
 
-  public void leave(Room room, List<Player> players, List<Mob> mobs, Living actor,
-      Direction direction) {
+  @Deprecated
+  public void enter(Room room, List<Player> players, List<Mob> mobs, Living actor, Direction direction) {
+    enter(room, mobs, actor, direction);
+  }
+
+  public void leave(Room room, List<Mob> mobs, Living actor, Direction direction) {
     String livingName = null;
     switch (actor) {
       case Player player -> {
-        players.remove(player);
+        if (room.getProtagonist() == player || (room.getProtagonist() != null && player.getId().equals(room.getProtagonist().getId()))) {
+          room.clearProtagonist();
+        }
         livingName = player.getNickname();
       }
       case Mob mob -> {
@@ -109,7 +110,12 @@ public class RoomService {
     String leaveMsg =
         ColorText.wrap(AnsiColor.YELLOW, livingName + " 往 " + direction.getDisplayName() + " 離開了。");
 
-    broadcast(players, mobs, actor.getId(), null, leaveMsg);
+    broadcast(room, mobs, actor.getId(), null, leaveMsg);
+  }
+
+  @Deprecated
+  public void leave(Room room, List<Player> players, List<Mob> mobs, Living actor, Direction direction) {
+    leave(room, mobs, actor, direction);
   }
 
   @Deprecated
@@ -136,6 +142,16 @@ public class RoomService {
     future.complete(null);
   }
 
+  public void say(Room room, String sourceId, String content) {
+    Player protagonist = room.getProtagonist();
+    String name = (protagonist != null && protagonist.getId().equals(sourceId))
+        ? protagonist.getName()
+        : "有人";
+
+    broadcastToOthers(room, sourceId, name + ": " + content);
+  }
+
+  @Deprecated
   public void say(List<Player> players, String sourceId, String content) {
     Player speaker =
         players.stream().filter(p -> p.getId().equals(sourceId)).findFirst().orElse(null);
@@ -168,56 +184,112 @@ public class RoomService {
 
     // === 2. 轉發給 Actor ===
     // 過濾掉 "完全沒事做且沒玩家在場" 的怪物
-    if (!room.getPlayers().isEmpty() || room.getMobs().stream().anyMatch(Living::isInCombat)) {
+    if (room.hasProtagonist() || room.getMobs().stream().anyMatch(Living::isInCombat)) {
       for (Mob mob : room.getMobs()) {
         mob.tick(tickCount, timestamp);
       }
 
-      for (Player player : room.getPlayers()) {
-        player.tick(tickCount, timestamp);
+      Player protagonist = room.getProtagonist();
+      if (protagonist != null) {
+        protagonist.tick(tickCount, timestamp);
       }
     }
   }
 
-  public void broadcast(List<Player> players, List<Mob> mobs, String actorId, String targetId,
+  public void broadcast(Room room, List<Mob> mobs, String actorId, String targetId,
       String message) {
-    Living actor = manager.findLivingActor(actorId).orElse(null);
-    Living target = null;
-
-    if (targetId != null) {
-
-      // 先找房間內的mobs
-      target = mobs.stream().filter(m -> m.getId().equals(targetId)).findFirst().orElse(null);
-
-      // 再找 players
-      if (target == null) {
-        target = players.stream().filter(p -> p.getId().equals(targetId)).findFirst().orElse(null);
+    Player protagonist = room.getProtagonist();
+    if (protagonist == null) {
+      return;
+    }
+    Living actor = null;
+    if (actorId != null) {
+      if (actorId.equals(protagonist.getId())) {
+        actor = protagonist;
+      } else {
+        actor = mobs.stream().filter(m -> m.getId().equals(actorId)).findFirst().orElse(null);
       }
-
+      if (actor == null) {
+        actor = manager.findLivingActor(actorId).orElse(null);
+      }
+    }
+    Living target = null;
+    if (targetId != null) {
+      if (targetId.equals(protagonist.getId())) {
+        target = protagonist;
+      } else {
+        target = mobs.stream().filter(m -> m.getId().equals(targetId)).findFirst().orElse(null);
+      }
       if (target == null) {
         target = manager.findLivingActor(targetId).orElse(null);
       }
     }
+    MessageUtil.send(message, actor, target, protagonist);
+  }
 
+  @Deprecated
+  public void broadcast(List<Player> players, List<Mob> mobs, String actorId, String targetId,
+      String message) {
+    Living actor = manager.findLivingActor(actorId).orElse(null);
+    Living target = null;
+    if (targetId != null) {
+      target = mobs.stream().filter(m -> m.getId().equals(targetId)).findFirst().orElse(null);
+      if (target == null) {
+        target = players.stream().filter(p -> p.getId().equals(targetId)).findFirst().orElse(null);
+      }
+      if (target == null) {
+        target = manager.findLivingActor(targetId).orElse(null);
+      }
+    }
     for (Player player : players) {
       MessageUtil.send(message, actor, target, player);
     }
   }
 
+  public void broadcastJson(Room room, MudMessage<Object> message) {
+    Player protagonist = room.getProtagonist();
+    if (protagonist != null) {
+      protagonist.sendJson(message);
+    }
+  }
+
+  @Deprecated
   public void broadcastJson(List<Player> players, MudMessage<Object> message) {
     for (Player player : players) {
       player.sendJson(message);
     }
   }
 
+  public void broadcastToOthers(Room room, String actorId, String message) {
+    Player protagonist = room.getProtagonist();
+    if (protagonist == null) {
+      return;
+    }
+    // 單機模式下，若事件源即為主角本人（如自己丟下物品），排他性廣播直接略過
+    if (actorId != null && actorId.equals(protagonist.getId())) {
+      return;
+    }
+    Living actor = manager.findLivingActor(actorId).orElse(null);
+    MessageUtil.send(message, actor, protagonist);
+  }
+
+  @Deprecated
   public void broadcastToOthers(List<Player> players, String actorId, String message) {
     Living actor = manager.findLivingActor(actorId).orElse(null);
     players.stream().filter(p -> !p.getId().equals(actorId))
         .forEach(p -> MessageUtil.send(message, actor, p));
   }
 
+  public Living findLiving(Room room, List<Mob> mobs, String livingId) {
+    Player protagonist = room.getProtagonist();
+    if (protagonist != null && protagonist.getId().equals(livingId)) {
+      return protagonist;
+    }
+    return mobs.stream().filter(living -> living.getId().equals(livingId)).findFirst().orElse(null);
+  }
+
+  @Deprecated
   public Living findLiving(List<Player> players, List<Mob> mobs, String livingId) {
-    // 結合兩個列表並搜尋第一個匹配項
     return Stream.concat(players.stream(), mobs.stream())
         .filter(living -> living.getId().equals(livingId)).findFirst().orElse(null);
   }
@@ -241,24 +313,12 @@ public class RoomService {
     }
     sb.append("\r\n");
 
-    // 取得房間內的玩家
-    List<Player> otherPlayers =
-        sortedPlayers(players.stream().filter(p -> !p.getId().equals(playerId)).toList());
-
-    // 取得房間內的怪物
-    // List<Mob> mobs = room.getMobs();
-    // mobs = sortedMobs(mobs);
+    // 單機模式下房內無其他玩家，直接略過 otherPlayers 計算
+    List<Player> otherPlayers = List.of();
+    List<String> otherPlayerNames = List.of();
 
     // 取得房間內的物品
     List<GameItem> sortedItems = sortedItems(items);
-
-    log.info("otherPlayers: {}, mobs: {} items: {}", otherPlayers.size(), mobs.size(),
-        sortedItems.size());
-
-
-    // 1. 篩選出 其他玩家 (亮藍色，排除自己)
-    List<String> otherPlayerNames = otherPlayers.stream().filter(p -> !p.getId().equals(playerId))
-        .map(p -> ColorText.player(p.getName() + "(" + p.getAliases().get(0) + ")")).toList();
 
 
     // 2. 篩選出 NPC (綠色顯示)

@@ -44,7 +44,7 @@ public class WorldPulse {
 
       // 對 Active Rooms 定義：只對「活躍」的房間發送
       worldManager.getActiveRooms().values().forEach(room -> {
-        boolean hasPlayers = !room.getPlayers().isEmpty();
+        boolean hasPlayers = room.hasProtagonist();
         int respawnSec = (room.getZoneTemplate() != null && room.getZoneTemplate().respawnTime() > 0)
             ? room.getZoneTemplate().respawnTime() : 300;
         long respawnTicks = respawnSec * 10L;

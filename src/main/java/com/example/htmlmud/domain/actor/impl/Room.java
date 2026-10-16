@@ -39,8 +39,10 @@ public class Room extends VirtualActor<RoomMessage> {
   @Getter
   private final ZoneTemplate zoneTemplate;
 
-  // 房間內的生物與物品 (Runtime State) - 使用 CopyOnWriteArrayList 支援無鎖快照讀取
-  private final List<Player> players = new CopyOnWriteArrayList<>();
+  // 房間內的生物與物品 (Runtime State)
+  // SP-04 (單機單體化：房間單一主角模型)
+  // 純單機模式下世界同時僅存在一位道友主角，除役多玩家並發集合以消滅鎖與記憶體開銷
+  private volatile Player protagonist = null;
 
   private final List<Mob> mobs = new CopyOnWriteArrayList<>();
 
@@ -113,10 +115,8 @@ public class Room extends VirtualActor<RoomMessage> {
       return;
     }
     if (isActorThread()) {
-      if (!players.contains(player)) {
-        players.add(player);
-        player.setCurrentRoomId(this.id);
-      }
+      setProtagonist(player);
+      player.setCurrentRoomId(this.id);
       return;
     }
     enter(player, null);
@@ -144,14 +144,14 @@ public class Room extends VirtualActor<RoomMessage> {
     // 這裡的邏輯跟之前一模一樣，但不需要自己寫 loop 和 try-catch 了
     switch (msg) {
       case RoomMessage.Enter(var actor, var direction, var future) -> {
-        roomService.enter(this, players, mobs, actor, direction);
+        roomService.enter(this, mobs, actor, direction);
         future.complete(null);
       }
       case RoomMessage.Leave(var actor, var direction) -> {
-        roomService.leave(this, players, mobs, actor, direction);
+        roomService.leave(this, mobs, actor, direction);
       }
       case RoomMessage.Say(var sourceId, var content) -> {
-        roomService.say(players, sourceId, content);
+        roomService.say(this, sourceId, content);
       }
       case RoomMessage.TryPickItem(var args, var picker, var future) -> {
         GameItem picked = roomService.tryPickItem(items, args, picker);
@@ -164,28 +164,29 @@ public class Room extends VirtualActor<RoomMessage> {
         roomService.tick(this, tickCount, timestamp);
       }
       case RoomMessage.Broadcast(var sourceId, var targetId, var message) -> {
-        roomService.broadcast(players, mobs, sourceId, targetId, message);
+        roomService.broadcast(this, mobs, sourceId, targetId, message);
       }
       case RoomMessage.BroadcastJson(var message) -> {
-        roomService.broadcastJson(players, message);
+        roomService.broadcastJson(this, message);
       }
       case RoomMessage.BroadcastToOthers(var sourceId, var message) -> {
-        roomService.broadcastToOthers(players, sourceId, message);
+        roomService.broadcastToOthers(this, sourceId, message);
       }
       case RoomMessage.FindLiving(var livingId, var future) -> {
-        future.complete(roomService.findLiving(players, mobs, livingId));
+        future.complete(roomService.findLiving(this, mobs, livingId));
       }
       case RoomMessage.GetLivings(var future) -> {
         future.complete(
-            Stream.concat(players.stream(), mobs.stream()).filter(Living::isValid).toList());
+            Stream.concat(getPlayers().stream(), mobs.stream()).filter(Living::isValid).toList());
       }
       case RoomMessage.GetPlayers(var future) -> {
-        future.complete(players.stream().filter(Player::isValid).toList());
+        future.complete(getPlayers());
       }
       case RoomMessage.RemovePlayer(var playerId, var future) -> {
         boolean removed = false;
-        if (playerId != null) {
-          removed = players.removeIf(player -> player.getId().equals(playerId));
+        if (playerId != null && protagonist != null && playerId.equals(protagonist.getId())) {
+          protagonist = null;
+          removed = true;
         }
         if (future != null) {
           future.complete(removed);
@@ -233,7 +234,7 @@ public class Room extends VirtualActor<RoomMessage> {
         roomService.record(this.getId(), items);
       }
       case RoomMessage.LookAtRoom(var playerId, var future) -> {
-        future.complete(roomService.lookAtRoom(this, players, mobs, items, playerId));
+        future.complete(roomService.lookAtRoom(this, getPlayers(), mobs, items, playerId));
       }
       case RoomMessage.LookDirection(var player, var dir, var future) -> {
         future.complete(roomService.lookDirection(this, player, dir));
@@ -258,7 +259,7 @@ public class Room extends VirtualActor<RoomMessage> {
 
   public void enter(Living actor, Direction direction) {
     if (isActorThread()) {
-      roomService.enter(this, players, mobs, actor, direction);
+      roomService.enter(this, mobs, actor, direction);
       return;
     }
     CompletableFuture<Void> future = new CompletableFuture<>();
@@ -321,19 +322,36 @@ public class Room extends VirtualActor<RoomMessage> {
 
   public Optional<Living> findLiving(String livingId) {
     if (livingId == null) return Optional.empty();
-    return Stream.concat(players.stream(), mobs.stream())
+    return Stream.concat(getPlayers().stream(), mobs.stream())
         .filter(l -> l.isValid() && livingId.equals(l.getId()))
         .findFirst();
   }
 
   public List<Living> getLivings() {
-    return Stream.concat(players.stream(), mobs.stream())
+    return Stream.concat(getPlayers().stream(), mobs.stream())
         .filter(Living::isValid)
         .toList();
   }
 
+  public Player getProtagonist() {
+    return (this.protagonist != null && this.protagonist.isValid()) ? this.protagonist : null;
+  }
+
+  public void setProtagonist(Player player) {
+    this.protagonist = player;
+  }
+
+  public void clearProtagonist() {
+    this.protagonist = null;
+  }
+
+  public boolean hasProtagonist() {
+    return this.protagonist != null && this.protagonist.isValid();
+  }
+
   public List<Player> getPlayers() {
-    return players.stream().filter(Player::isValid).toList();
+    Player p = getProtagonist();
+    return (p != null) ? List.of(p) : List.of();
   }
 
   public List<Mob> getMobs() {
@@ -381,7 +399,11 @@ public class Room extends VirtualActor<RoomMessage> {
       return CompletableFuture.completedFuture(false);
     }
     if (isActorThread()) {
-      boolean removed = players.removeIf(player -> player.getId().equals(playerId));
+      boolean removed = false;
+      if (protagonist != null && playerId.equals(protagonist.getId())) {
+        protagonist = null;
+        removed = true;
+      }
       return CompletableFuture.completedFuture(removed);
     }
     CompletableFuture<Boolean> future = new CompletableFuture<>();
@@ -394,7 +416,9 @@ public class Room extends VirtualActor<RoomMessage> {
       return;
     }
     if (isActorThread()) {
-      players.removeIf(player -> player.getId().equals(playerId));
+      if (protagonist != null && playerId.equals(protagonist.getId())) {
+        protagonist = null;
+      }
       return;
     }
     this.send(new RoomMessage.RemovePlayer(playerId));
@@ -482,7 +506,7 @@ public class Room extends VirtualActor<RoomMessage> {
 
   public String lookAtRoom(Player player) {
     if (isActorThread()) {
-      return roomService.lookAtRoom(this, players, mobs, items, player.getId());
+      return roomService.lookAtRoom(this, getPlayers(), mobs, items, player.getId());
     }
     CompletableFuture<String> future = new CompletableFuture<>();
     this.send(new RoomMessage.LookAtRoom(player.getId(), future));

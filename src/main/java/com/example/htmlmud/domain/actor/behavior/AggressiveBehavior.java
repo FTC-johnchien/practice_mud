@@ -54,11 +54,9 @@ public class AggressiveBehavior implements MobBehavior {
       }
       case ActorMessage.AgroScan() -> {
         if (mob != null && !mob.isInCombat() && mob.getCurrentRoom() != null) {
-          for (Player player : mob.getCurrentRoom().getPlayers()) {
-            if (player != null && player.isValid()) {
-              onPlayerEnter(mob, player);
-              break;
-            }
+          Player protagonist = mob.getCurrentRoom().getProtagonist();
+          if (protagonist != null && protagonist.isValid()) {
+            onPlayerEnter(mob, protagonist);
           }
         }
       }

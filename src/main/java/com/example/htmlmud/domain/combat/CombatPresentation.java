@@ -40,7 +40,6 @@ public final class CombatPresentation {
     if (self == null || target == null || action == null || resolution == null) return;
     if (self.getCurrentRoom() == null) return;
 
-    List<Player> audiences = self.getCurrentRoom().getPlayers();
     String msg = action.msg().cast();
 
     if (resolution.outcome() == DefenseOutcome.MISS) {
@@ -67,8 +66,9 @@ public final class CombatPresentation {
              .replace("$l", bodyPart != null ? bodyPart : "要害")
              .replace("$d", ColorText.damage(finalDamage));
 
-    for (Player receiver : audiences) {
-      MessageUtil.send(msg, self, target, receiver);
+    Player protagonist = self.getCurrentRoom().getProtagonist();
+    if (protagonist != null) {
+      MessageUtil.send(msg, self, target, protagonist);
     }
   }
 
