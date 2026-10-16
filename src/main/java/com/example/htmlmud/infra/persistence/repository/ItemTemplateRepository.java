@@ -1,8 +1,7 @@
 package com.example.htmlmud.infra.persistence.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import com.example.htmlmud.infra.persistence.entity.ItemTemplateEntity;
+import org.springframework.stereotype.Repository;
 
-public interface ItemTemplateRepository extends JpaRepository<ItemTemplateEntity, String> {
-
+@Repository
+public class ItemTemplateRepository {
 }

@@ -2,9 +2,8 @@ package com.example.htmlmud.application.service;
 
 import java.time.LocalDateTime;
 import java.util.Set;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import com.example.htmlmud.config.SecurityConfig.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.entity.PlayerRecord;
 import com.example.htmlmud.domain.port.AuthenticationPort;
@@ -44,7 +43,6 @@ public class AuthService implements AuthenticationPort {
   /**
    * 註冊新帳號
    */
-  @Transactional
   public CharacterEntity register(String username, String rawPassword) {
     String usernameError = validateUsername(username);
     if (usernameError != null) {
@@ -82,7 +80,6 @@ public class AuthService implements AuthenticationPort {
   /**
    * 登入驗證
    */
-  @Transactional
   public PlayerRecord login(String username, String rawPassword) {
     // log.info("login username:{} password: {}", username, rawPassword);
     UserEntity user = userRepository.findByUsername(username)
