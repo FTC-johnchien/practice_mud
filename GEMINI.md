@@ -39,10 +39,20 @@
      - **MUD 全面以網頁呈現**：所有的遊戲功能（包含傳統 MUD 指令與 DRPG 迷宮探索）都必須能在網頁介面上有對應的功能按鈕或操作元件供玩家直覺點擊操作，同時支援鍵盤快捷鍵（如 WASD 移動與特定功能熱鍵輸入）。
      - **拒絕雙軌並存與重複輪子**：系統中絕不允許 MUD 一套、DRPG 一套的雙軌機制（例如移動方向、資源類型、Buff/Debuff 狀態等必須徹底統一命名與模型）。
      - **不足即溝通重構**：若既有設定或資料結構考慮不周，主動透過分析與討論進行修改、擴充與統一命名重構，杜絕歷史包袱累積。
-  9. **文檔治理與核心工作流程鐵律 (Documentation & Workflow Governance) — 🚨 極度重要**：
-     - **待辦與未決事項第一時間入庫 (`FUTURE_IMPROVEMENTS.md`)**：凡是在對話討論中提出但「未決定」、「待決議」或「待執行/待重構」的項目與技術建議，**必須第一時間記錄至 [`docs/plans/FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md)**，按優先級 (P0~P3) 結構化排列，確保無遺漏。
-     - **每次新增/變更項目必記 Log (`CHANGELOG.md`)**：**每次進行專案功能新增、程式碼重構、缺陷修復或規格變更時，必須同步將變更內容詳細登載到 [`CHANGELOG.md`](./CHANGELOG.md)**，維持清晰可追溯的歷史演進歷程，嚴禁私自進行無記錄的靜默修改。
-     - **每次新增/變更時必 Review 並修調架構 (`ARCHITECTURE.md`)**：**每次進行功能新增或架構變更時，AI 必須主動 Review [`ARCHITECTURE.md`](./ARCHITECTURE.md)（若涉及前端視圖則同步 Review [`docs/UI_PAGE_STRUCTURE.md`](./docs/UI_PAGE_STRUCTURE.md)），並及時進行必要的修訂與調優**，確保架構說明書與實際代碼庫永遠維持 100% 同步一致。
+   9. **文檔治理與核心工作流程鐵律 (Documentation & Workflow Governance) — 🚨 極度重要**：
+      - **單一權威來源 (SSoT) 職責分工與規則優先級**：
+        1. 憲法核心：GEMINI.md（最高憲法、第一紅線、不可動搖保護鎖；與任何其他文件或規則衝突時以此處條款為最高準則）。
+        2. 當前看板：[ACTIVE_TASKS.md](./ACTIVE_TASKS.md)（唯一當前迭代執行微任務看板）。
+        3. 系統架構：[ARCHITECTURE.md](./ARCHITECTURE.md)（Clean Architecture、DDD、併發與邊界唯一來源）。
+        4. 模組手冊：[docs/manual/](./docs/manual/)（已驗證之模組契約、API、DTO、JSON 欄位）。
+        5. 全域概覽：[docs/overview/](./docs/overview/)（導覽指引，不定義第二套規格）。
+        6. 待辦武器庫：[docs/plans/FUTURE_IMPROVEMENTS.md](./docs/plans/FUTURE_IMPROVEMENTS.md)（未決議提案與 P0~P3 演進總待辦唯一來源）。
+        7. 歷史紀錄：[CHANGELOG.md](./CHANGELOG.md)（已交付變更與驗收紀錄唯一來源）。
+        8. 參考資料庫：[docs/references/](./docs/references/)（外部靈感與非規範性審查報告，未決議前不具規範力）。
+      - **四級內容狀態標籤規範**：專案文件統一標註【現行已驗證】、【已決議待實作】、【候選提案】與【歷史／已除役】，避免將遠期藍圖誤當現行規格。
+      - **待辦與未決事項第一時間入庫 (FUTURE_IMPROVEMENTS.md)**：凡是在對話討論中提出但「未決定」、「待決議」或「待執行/待重構」的項目與技術建議，**必須第一時間記錄至 [docs/plans/FUTURE_IMPROVEMENTS.md](./docs/plans/FUTURE_IMPROVEMENTS.md)**，按優先級 (P0~P3) 結構化排列，確保無遺漏。
+      - **每次新增/變更項目必記 Log (CHANGELOG.md)**：**每次進行專案功能新增、程式碼重構、缺陷修復或規格變更時，必須同步將變更內容詳細登載到 [CHANGELOG.md](./CHANGELOG.md)**，維持清晰可追溯的歷史演進歷程，嚴禁私自進行無記錄的靜默修改。
+      - **每次新增/變更時必 Review 並修調架構 (ARCHITECTURE.md)**：**每次進行功能新增或架構變更時，AI 必須主動 Review [ARCHITECTURE.md](./ARCHITECTURE.md)（若涉及前端視圖則同步 Review [docs/UI_PAGE_STRUCTURE.md](./docs/UI_PAGE_STRUCTURE.md)），並及時進行必要的修訂與調優**，確保架構說明書與實際代碼庫永遠維持 100% 同步一致。
   10. **強調畫面呈現並淡化文字訊息鐵律 (Visual-First, De-emphasize Text-Heavy Presentation Rule) — 🚨 極度重要**：
       - **從 MUD 邁向生動 DRPG 的視覺核心原則**：本專案的核心願景是由「傳統文字 MUD」全面轉化為「生動沉浸的 DRPG 遊戲」。底層引擎仍保留文字訊息 Log（僅作為後台稽核、排查與輔助紀錄），**所有遊戲機制、狀態變更、戰鬥互動、環境探索、NPC 交流與操作回饋，必須以生動的「畫面呈現、微動態、HUD 視覺指標、可點擊熱區」為第一優先，徹底淡化玩家對閱讀文字訊息的依賴！**
       - **具體驗收標準與開發準則 (Definition of Done)**：

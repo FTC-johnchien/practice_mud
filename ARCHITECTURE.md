@@ -326,21 +326,37 @@ resources/data/
 | **當前作戰看板** | [`ACTIVE_TASKS.md`](./ACTIVE_TASKS.md) | **【當前迭代唯一真相源】** Checkbox 微任務清單、DoD 三位一體交付標準 |
 | **宏觀架構說明** | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | **【後端與系統設計唯一來源】** 潔淨架構、DDD 模型、Actor 併發、SOP |
 | **模組全景與佈局** | [`docs/overview/`](./docs/overview/) | **【高階概覽】** `MODULES_MAP.md`、`FRONTEND_LAYOUT_GUIDE.md`、`QUICKSTART.md` |
-| **16 本模組技術手冊** | [`docs/manual/`](./docs/manual/) | **【前後端模組唯一來源】** 後端 M1~M9 (含 M3-1 戰鬥子模組)、前端 FE-1~FE-6 深度手冊與未來演進規劃 |
+| **16 本模組技術手冊** | [`docs/manual/`](./docs/manual/) | **【前後端模組唯一來源】** 後端 M1~M9 (含 M3-1 戰鬥子模組)、前端 FE-1~FE-6 深度手冊與現行契約 |
 | **未來演化藍圖** | [`docs/plans/FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) | **【長期待辦唯一來源】** 未決議項目、P0~P3 架構改善總庫 |
 | **版本變更紀錄** | [`CHANGELOG.md`](./CHANGELOG.md) | **【過去歷程唯一來源】** 各 Phase 歷史落地、重構與 Bug 修復紀錄 |
+| **靈感與參考報告** | [`docs/references/`](./docs/references/) | **【原始素材與非規範性審查報告】** 世界觀、概念圖、外部審查報告（如 `Codex_Review.md`、`Copilot_Review.md`，屬參考建議，未決議前不具規範力） |
+
+### 8.1 內容四級狀態標籤規範 (Content Status Standards)
+為杜絕讀者將「未來藍圖」誤認為「現行已實作規格」，專案所有規格手冊與規劃文件應統一標記以下四級狀態：
+1. **【現行已驗證】(Verified Live Spec)**：具備對應 Java/JS 代碼、JSON 配置與自動化測試 100% 綠燈支撐之現行規格。
+2. **【已決議待實作】(Decided Backlog)**：已獲決議並正式拆解於 [`ACTIVE_TASKS.md`](./ACTIVE_TASKS.md) 的當前迭代任務。
+3. **【候選提案】(Candidate Proposal)**：收錄於 [`docs/plans/FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) 待排期或技術討論之提案，使用將來式語態。
+4. **【歷史／已除役】(Historical / Decommissioned)**：已除役之 legacy 代碼或過渡設計，僅於 [`CHANGELOG.md`](./CHANGELOG.md) 作為歷史依據留存。
+
+### 8.2 前端三維度術語標準 (Frontend Three Dimensions)
+文件對前端系統描述時，嚴格區分三個獨立維度，杜絕混為一談：
+- **維度一：6 大核心前端 JS 模組**：`app.js`、`pipeline.js`、`town-view-panel.js`、`dungeon-view-panel.js`、`battle-panel.js`、`party-modal.js`（責任分工）。
+- **維度二：7 大視覺舞台區塊 (Panels)**：`town-panel`、`dungeon-viewport`、`battle-panel`、`party-hud`、`dialog-overlay`、`bag-drawer`、`main-menu-modal`（畫面排版與互斥狀態機）。
+- **維度三：7 層樣式串流 (CSS Layers)**：`style-01-tokens` 至 `style-07-themes`（視覺屬性與 CSS Token 串流）。
 
 ---
 
 ## 9. 🚀 系統架構演進與現代化擴充願景 (System Architecture Roadmap)
 
-為使本專案由「單體單機原型」平滑演進至「百人同服、萬人線上的高併發高可用現代遊戲伺服器」，確立以下四大宏觀架構演進支柱：
+> 💡 **階段邊界提醒 (Architecture Staging Principle)**：  
+> 現階段本專案以**「高品質單體模組化 (Modular Monolith)」**與「單機可玩閉環」為最高優先級核心。  
+> 以下 EDA、多租戶 Actor、Protobuf 二進位流、動態腳本熱更等，均標記為**【遠期探索】**，必須在未來「具備明確多人線上需求、負載壓測數據與維運能力」成立時方可啟動，目前絕不提前引入複雜分散式架構。
 
 ### 1. 現代架構規劃 (Modern Enterprise & Gaming Architecture)
-- **領域事件驅動架構 (Domain Event-Driven Architecture, EDA)**：
+- **領域事件驅動架構 (Domain Event-Driven Architecture, EDA) 【遠期探索】**：
   - 全面解耦服務間的同步呼叫（如戰鬥呼叫背包、升級呼叫廣播）。
   - 引進基於虛擬執行緒的輕量領域事件匯流排（`DomainEventBus`），各模組以發布-訂閱（Pub-Sub）模式非同步處理後續副作用，保證核心業務邏輯的純粹性與毫秒級響應。
-- **多人地宮實例 Actor 容器 (Multi-Tenant Instance Actor)**：
+- **多人地宮實例 Actor 容器 (Multi-Tenant Instance Actor) 【遠期探索】**：
   - 將地牢探索與戰鬥解構為獨立生命週期的 `DungeonInstanceActor`。
   - 每個探索隊伍擁有專屬的計算沙盒，迷霧矩陣與戰況狀態完全隔離；即便單一副本遭遇不可預期的運算異常，亦具備自動崩潰重啟與隔離能力，絕不波及全伺服器。
 
@@ -352,7 +368,7 @@ resources/data/
   - 擴充 `ArchitectureGuardrailsTest`：在 CI 管線中自動化掃描 Clean Architecture 反向依賴、禁止直接讀取內部私有狀態、強行校驗 100% 資料驅動紅線，杜絕架構腐化。
 
 ### 3. 系統效能調優 (Performance & Extreme Throughput)
-- **雙軌傳輸協定支援 (Protobuf / JSON Binary Pipeline)**：
+- **雙軌傳輸協定支援 (Protobuf / JSON Binary Pipeline) 【遠期探索】**：
   - 戰鬥與探索狀態廣播支援 Protobuf 二進位序列化，將高頻 WebSocket 訊息吞吐量提升 300%，頻寬開銷降低 60% 以上。
 - **異步批次持久化強一致性保證**：
   - 固化 `AbstractAsyncBatchPersistenceService` 的讀寫鎖生命週期與 `flushImmediately` 度量計數契約，杜絕任何高併發場景下的停機資料遺失與競態。
@@ -360,5 +376,5 @@ resources/data/
 ### 4. 模組化與多語言動態擴充 (Modular Subpackages & Polyglot Scripting)
 - **領域層 Service 包結構模組化收斂**：
   - 將 `com.example.htmlmud.domain.service` 下平鋪的 10+ 個服務拆解至獨立子包（`domain.world`、`domain.combat`、`domain.party`、`domain.progression`、`domain.economy`），對外僅開放 Facade 介面與 Output Ports。
-- **GraalVM 多語言動態腳本引擎 (Polyglot Dynamic Scripting)**：
+- **GraalVM 多語言動態腳本引擎 (Polyglot Dynamic Scripting) 【遠期探索】**：
   - 引入 GraalVM 執行時期，支援使用 JavaScript 或 Python 編寫複雜的 NPC 劇情對話、地牢機關解謎與首領行為樹（Behavior Tree），支援伺服器不停機熱更載入（Hot-Reload）。

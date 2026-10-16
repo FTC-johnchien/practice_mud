@@ -35,3 +35,20 @@
 * `畫面佈局.txt`：早期畫面切分思考草稿
 * `賽博龐克技能對應到修仙技能的概念.txt`：技能五行仙俠化設計靈感對照
 * `道祖是克苏鲁_全本.txt`：克蘇魯仙俠世界觀、SAN 異化與道核克系修真原始背景文本
+
+---
+
+## 🔍 外部代碼與文件架構審查報告 (External Review Reports)
+
+> ⚠️ **非規範性文件提醒 (Non-Normative Reference Notice)**：  
+> 本目錄下的審查文件屬於外部審查員／AI 審查產物，定位為**「參考與改善建議」**。  
+> 審查報告中的項目**不取代**專案憲法（`GEMINI.md`）、架構邊界（`ARCHITECTURE.md`）或已決議規格（`docs/manual/`）。  
+> 僅有經過審查、決議並納入 [`docs/plans/FUTURE_IMPROVEMENTS.md`](../plans/FUTURE_IMPROVEMENTS.md) 及 [`ACTIVE_TASKS.md`](../../ACTIVE_TASKS.md) 的項目，才正式成為專案執行規劃。
+
+* [`Codex_Review.md`](./Codex_Review.md)（2026-10-15）：
+  - **主題**：專案 Markdown 文件體系與遊戲規劃審查。
+  - **核心建議**：建立單一權威來源 (SSoT)、定義四級內容狀態標籤（現行已驗證／已決議待實作／候選提案／歷史已除役）、修復相對連結、收斂重複路線圖、以可玩的垂直切片推進核心玩法、對齊傷害/元素/抗性與鍵位詞彙表。
+* [`Copilot_Review.md`](./Copilot_Review.md)（2026-10-15）：
+  - **主題**：專案文件體系與遊戲規劃審查建議。
+  - **核心建議**：具體定位失效連結與歷史引用、跨文件不一致性對照表（心跳排程、SaveData schemaVersion、CSS 層數與模組定義）、區分近期單機模組化與遠期在線願景、微任務驗收語意精密化。
+

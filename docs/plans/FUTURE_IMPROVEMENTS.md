@@ -1,8 +1,8 @@
-# 專案後續架構改善與演化藍圖 (Consolidated Future Improvements & Evolution Roadmap)
+﻿# 專案後續架構改善與演化藍圖 (Consolidated Future Improvements & Evolution Roadmap)
 
 > **文件定位與目的**：
 > 本文件作為專案所有後續架構演進、機制補完、安全加固與重構任務的**單一權威來源 (Single Source of Truth, SSoT)**。
-> 本文件收斂歷史架構規劃與多次代碼審查提出的待辦；舊審查稿僅作為歷史來源，**目前狀態與新發現以本文件的驗收狀態及最新 [`Copilot_Code_Review.md`](./Copilot_Code_Review.md) 為準**：
+> 本文件收斂歷史架構規劃與多次代碼審查提出的待辦；舊審查稿僅作為歷史來源，**目前狀態與新發現以本文件的驗收狀態及最新 [`docs/references/Copilot_Review.md`](../references/Copilot_Review.md) 為準**：
 > 1. **戰鬥與成長機制** (圓桌判定、魂系精力破防、主角自由潛能點、MUD 生靈閉環)
 > 2. **全實體資料驅動** (去除職業/陣型/反擊/別名硬編碼、集中式 JSON 啟動校驗)
 > 3. **共用規範模型與清潔架構** (Canonical Model、Domain 依賴反向、Actor 狀態邊界單一擁有)
@@ -48,7 +48,7 @@
 - [ ] **路徑 T: 實體深拷貝加固、Fallback 棘輪清零與雙持久化收斂** (§20 全項) — **Priority: P1 / P2 (DEEPCOPY-01 已完成)**
 - [x] **路徑 U: 全專案綜合審查後續與紅線治理藍圖** (§21 全項) — **Priority: P0 ~ P3 (2026-10-15 制定，P0/P1/P2 死代碼與紅線清理已完成，304 測試全綠燈)**
 - [ ] **路徑 V: 全專案大一統與現代化演進戰略五大戰線** (§22 全項) — **Priority: P1 ~ P3 (2026-10-15 全文件對齊版，當前微任務落地請參閱根目錄 [ACTIVE_TASKS.md](../../ACTIVE_TASKS.md))**
-- [ ] **路徑 W: 文件權威來源、交叉一致性與現代遊戲規劃治理** (§23 全項) — **Priority: P1（審查建議尚待決議；詳見 [Copilot_Review.md](../references/Copilot_Review.md)）**
+- [ ] **路徑 W: 文件權威來源、交叉一致性與現代遊戲規劃治理** (§23 全項) — **Priority: P1（審查建議已整合；詳見 [Codex_Review.md](../references/Codex_Review.md) 與 [Copilot_Review.md](../references/Copilot_Review.md)）**
 
 ---
 
@@ -177,7 +177,7 @@
 
 ## 🌐 6. ✅ [已完成] 網路邊界安全、WebSocket 部署防護與連線配額 (Network Hardening) — Priority: P1
 
-> **來源**：歷史檢視（Codex／Claude）；最新 WebSocket 與持久化風險見 [`Copilot_Code_Review.md`](./Copilot_Code_Review.md) §二 #1–2。
+> **來源**：歷史檢視（Codex／Claude）；最新 WebSocket 與持久化風險見 [`docs/references/Copilot_Review.md`](../references/Copilot_Review.md) §二 #1–2。
 > **核心目標**：明確界定「單機本機」與「公開部署」的安全邊界，防止未驗證連線、大封包記憶體攻擊與指令洪水。
 > **落地進度**：已於 2026-10-04 完成。
 > 1. **明確部署模式與環回綁定 (NET-01)**：`application.yml` 明確宣告 `game.network.mode: local`、`game.network.bind-address: 127.0.0.1` 與 `server.address: 127.0.0.1`；`application-prod.yml` 支援動態注入公開綁定，防禦區域網未授權連線。
@@ -213,11 +213,11 @@
 
 ## 🛡️ 8. ✅ [已完成] 檔案式存檔版本治理 (`schemaVersion`) 與壞檔防禦 (Save File Resilience) — Priority: P1
 
-> **來源**：歷史檢視（Codex／Claude）；最新 Write-Behind 風險與驗收建議見 [`Copilot_Code_Review.md`](./Copilot_Code_Review.md) §二 #1、§四。
+> **來源**：歷史檢視（Codex／Claude）；最新 Write-Behind 風險與驗收建議見 [`docs/references/Copilot_Review.md`](../references/Copilot_Review.md) §二 #1、§四。
 > **落地進度**：已於 2026-10-03 完成。
 > 1. **資料模型版本治理 (`CURRENT_SCHEMA_VERSION = 1` / `SaveMigrationPipeline`)**：
 >    - [SaveData.java](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/save/model/SaveData.java) 引入 `CURRENT_SCHEMA_VERSION = 1` 與 `schemaVersion` 欄位（`@Builder.Default`）。
->    - 實作 [SaveMigrationPipeline.java](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/save/migration/SaveMigrationPipeline.java) 與 `SaveMigration` 介面，內建 v0（歷史 legacy 無版本存檔）平滑遷移升級至 v1 的安全補齊管線。
+>    - 實作 [SaveMigrationPipeline.java](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/save/migration/SaveMigrationPipeline.java) 與 `SaveMigration` 介面，內建 v0 $\to$ v1（補齊槽位與裝備結構）與 v1 $\to$ v2（補齊九大抗性矩陣與罡氣上限）的平滑自動遷移管線。
 > 2. **壞檔狀態明確標記與防禦 (`SaveSlotDto` / `SaveCorruptedException`)**：
 >    - [SaveSlotDto.java](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/save/dto/SaveSlotDto.java) 新增 `boolean corrupted` 欄位。
 >    - [SaveGameService.java](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/save/service/SaveGameService.java) 的 `readSlotSummary()` 在 JSON 格式不合法或解析例外時，嚴格回傳 `empty: false, corrupted: true, title: "... (存檔損壞)"`，杜絕壞檔被誤判為空槽而遭意外覆寫。
@@ -235,7 +235,7 @@
 
 ## 🏛️ 9. 徹底資料驅動消除硬編碼與集中式 JSON 啟動拓撲校驗 (Data-Driven Purity) — Priority: P1
 
-> **來源**：歷史檢視（Claude／Codex）；最新 fallback 護欄發現見 [`Copilot_Code_Review.md`](./Copilot_Code_Review.md) §二 #3。
+> **來源**：歷史檢視（Claude／Codex）；最新 fallback 護欄發現見 [`docs/references/Copilot_Review.md`](../references/Copilot_Review.md) §二 #3。
 > **核心目標**：拔除底層代碼中殘留的職業名稱、陣法字串比對與技能別名映射；建立啟動期跨檔案資料校驗器。
 
 ### 9.1 ✅ [已完成] 消除職業特例與反擊特性硬編碼 (DATA-01) (P1)
@@ -274,7 +274,7 @@
 
 ## 🎨 10. 前端巨石模組拆分與 Legacy 除役 (Frontend Modularization) — Priority: P2
 
-> **來源**：歷史檢視（Claude／Codex）；前端模組現況與文件治理建議見 [`Copilot_Code_Review.md`](./Copilot_Code_Review.md) §三。
+> **來源**：歷史檢視（Claude／Codex）；前端模組現況與文件治理建議見 [`docs/references/Copilot_Review.md`](../references/Copilot_Review.md) §三。
 > **核心目標**：以低風險方式拆解大型 CSS 與 Party 模組；盤查並正式除役 legacy 代碼。行數僅作歷史參考，執行時以實際檔案為準。
 
 ### 10.1 ✅ [已完成] 巨石 `style.css` 安全物理拆分 (CSS-01) (P2)
@@ -316,7 +316,7 @@
 
 ## ⚡ 11. 測試工程分層加速與可觀測性加固 (Testing & Observability) — Priority: P3
 
-> **來源**：歷史檢視（Claude／Codex）；本次測試執行限制與治理建議見 [`Copilot_Code_Review.md`](./Copilot_Code_Review.md) §五、§四。
+> **來源**：歷史檢視（Claude／Codex）；本次測試執行限制與治理建議見 [`docs/references/Copilot_Review.md`](../references/Copilot_Review.md) §五、§四。
 > **核心目標**：測試架構下沉為純單元測試提高執行效率；補齊關鍵指標與稽核日誌。
 
 ### 11.1 測試套件分層與純單元測試下沉 (P3)
@@ -339,7 +339,7 @@
 
 ## 🎮 12. ✅ [已完成] 垂直可玩內容閉環 (Playable Baseline) — Priority: P3
 
-> **來源**：歷史檢視（Codex）；單機切片與長期演進方向見最新 [`Copilot_Code_Review.md`](./Copilot_Code_Review.md) §四。
+> **來源**：歷史檢視（Codex）；單機切片與長期演進方向見最新 [`docs/references/Copilot_Review.md`](../references/Copilot_Review.md) §四。
 > **核心目標**：避免長期停留在抽象基礎架構重構，打通一條從新手建立角色、滄浪客棧接案、組隊鐵牛、進入太陰地宮探險、遭遇戰鬥、撤退調息至安全存檔的完整端到端可玩迴圈。
 > **落地進度**：已於 2026-10-04 完成。
 > 1. **城鎮開局與隊伍組建**：支援單人創角入局、客棧與掌櫃福伯及鐵牛對話，並透過 `recruit tie_niu` 順利組建雙人陣型小隊。
@@ -351,7 +351,7 @@
 
 ## ⚔️ 13. 敵方行動預告、反制窗口與首領階段 (Readable & Reactive Combat) — Priority: P1 / P2
 
-> **來源**：2026-10-05 Codex 戰鬥呈現檢視；最新整體發展建議見 [`Copilot_Code_Review.md`](./Copilot_Code_Review.md) §四。
+> **來源**：2026-10-05 Codex 戰鬥呈現檢視；最新整體發展建議見 [`docs/references/Copilot_Review.md`](../references/Copilot_Review.md) §四。
 > **核心目標**：讓玩家能讀懂敵方下一步、使用既有戰鬥資源反制，並將招式／首領階段維持在資料驅動規則內；先完成一個普通敵人與一個首領的垂直切片，不先引入 Lua 或大型行為樹框架。
 
 ### 13.1 敵方技能效果與預告狀態 (ENEMY-ACTION-01) (P1)
@@ -888,7 +888,7 @@ flowchart TD
 
 ## 🧭 19. 2026-10-13 Copilot 審查後續：Buff 契約與可靠性護欄 (Review Follow-ups)
 
-> **來源**：[`Copilot_Code_Review.md`](./Copilot_Code_Review.md)。以下項目是本次靜態審查發現，尚未代表已決議的行為設計或已完成修復；實作前仍須以現行程式碼、部署設定與測試再次驗收。
+> **來源**：[`docs/references/Copilot_Review.md`](../references/Copilot_Review.md)。以下項目是本次靜態審查發現，尚未代表已決議的行為設計或已完成修復；實作前仍須以現行程式碼、部署設定與測試再次驗收。
 
 ### 19.1 ASYNC-03：持久化提交與停機生命週期原子化 — ✅ 已完成 (2026-10-13)
 
@@ -957,26 +957,26 @@ flowchart TD
 - **加固方案**：全面修訂三份核心文件，消除過期文字與矛盾，維持架構說明書與實際代碼庫 100% 同步。
 
 ### 21.2 EQUIP-SLOT-CLEAN-01：清除裝備槽位中文名稱硬編碼推測 — 🚨 紅線治理 ✅ 已完成 (2026-10-15)
-- **問題現況**：[`static/js/modals/party-equipment-tab.js:L54-L61`](../src/main/resources/static/js/modals/party-equipment-tab.js#L54-L61) 在判定裝備槽位時，依然保留 `name.includes('冠') || name.includes('盔') || name.includes('帽')`、`name.includes('甲') || name.includes('袍') || name.includes('衣')`、`name.includes('靴') || name.includes('履')`、`name.includes('戒') || name.includes('佩') || name.includes('鐲') || name.includes('珠')` 等字串比對作為 fallback，明確違反 `GEMINI.md` 專案第一紅線（嚴禁中文名稱業務特例推測）。
+- **問題現況**：[`static/js/modals/party-equipment-tab.js:L54-L61`](../../src/main/resources/static/js/modals/party-equipment-tab.js#L54-L61) 在判定裝備槽位時，依然保留 `name.includes('冠') || name.includes('盔') || name.includes('帽')`、`name.includes('甲') || name.includes('袍') || name.includes('衣')`、`name.includes('靴') || name.includes('履')`、`name.includes('戒') || name.includes('佩') || name.includes('鐲') || name.includes('珠')` 等字串比對作為 fallback，明確違反 `GEMINI.md` 專案第一紅線（嚴禁中文名稱業務特例推測）。
 - **加固方案**：徹底拔除所有 `name.includes(...)` 中文名稱推測，全面嚴格依賴後端 `ItemTemplate` 的 `equipSlot` 枚舉。由 `DataIntegrityValidator` 確保所有裝備資料在啟動時皆有明確槽位定義。
 
 ### 21.3 DATA-03-REVISIT：地牢出入口 exitRoomId 與地塊 Tooltip 100% 配置化 — ✅ 已完成 (2026-10-15)
 - **問題現況**：
-  1. [`DungeonCommand.java:L152-L158`](../src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L152-L158) 仍寫死 `if ("mozhu_mines_b1f".equals(floor.getId()))` 導向 `mine_entrance`，其餘導向 `newbie_village:inn`。
-  2. [`static/js/panels/dungeon-panel.js:L67-L97`](../src/main/resources/static/js/panels/dungeon-panel.js#L67-L97) 地塊懸停提示寫死為太陰古塚地貌（「青岡石壁」、「古仙棺槨寶箱」），在墨竹礦坑等不同地城中顯示失真。
+  1. [`DungeonCommand.java:L152-L158`](../../src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L152-L158) 仍寫死 `if ("mozhu_mines_b1f".equals(floor.getId()))` 導向 `mine_entrance`，其餘導向 `newbie_village:inn`。
+  2. [`static/js/panels/dungeon-panel.js:L67-L97`](../../src/main/resources/static/js/panels/dungeon-panel.js#L67-L97) 地塊懸停提示寫死為太陰古塚地貌（「青岡石壁」、「古仙棺槨寶箱」），在墨竹礦坑等不同地城中顯示失真。
 - **加固方案**：
   1. 在 `DungeonFloor` 模型、`DungeonFloorLoader` 與對應 JSON（`mozhu_mines_b1f.json`、`taiyin_tomb_b1f.json`）補齊 `exitRoomId` 欄位，重構 `DungeonCommand.java` 撤離邏輯為 `floor.getExitRoomId()` 動態導向。
   2. 前端 `dungeon-panel.js` 的 `populateTileAppearance` 替換為通用地牢圖塊提示並補全向上階梯（`<`）圖標提示。
 
 ### 21.4 SHOP-FALLBACK-01：移除 ShopCommand 客棧名稱比對與偽商店 Fallback — ✅ 已完成 (2026-10-15)
-- **問題現況**：[`ShopCommand.java:L81-L83`](../src/main/java/com/example/htmlmud/application/command/impl/ShopCommand.java#L81-L83) 包含 `if (roomId != null && roomId.contains("inn")) shopOpt = templateReader.findShop("newbie_village:inn_shop");`，導致任意包含 inn 的房間若無商店會被強制導流至新手村客棧商店。
+- **問題現況**：[`ShopCommand.java:L81-L83`](../../src/main/java/com/example/htmlmud/application/command/impl/ShopCommand.java#L81-L83) 包含 `if (roomId != null && roomId.contains("inn")) shopOpt = templateReader.findShop("newbie_village:inn_shop");`，導致任意包含 inn 的房間若無商店會被強制導流至新手村客棧商店。
 - **加固方案**：移除客棧名稱硬編碼比對，商店完全依據 `TemplateReader.findShopByRoomId(roomId)` 提供服務，無商店時給予明確提示。
 
 ### 21.5 DEADCODE-01：清理死代碼、殘留內聯屬性與歷史巨石檔案 — ✅ 已完成 (2026-10-15)
 - **問題現況**：
-  1. [`PlayerLoginListener.java`](../src/main/java/com/example/htmlmud/application/listener/PlayerLoginListener.java) 全檔案 100% 為註解代碼。
-  2. [`QuestEventListener.java`](../src/main/java/com/example/htmlmud/application/listener/QuestEventListener.java) 包含 `System.out.println` 未完成代碼。
-  3. [`index.html:L37-L61`](../src/main/resources/static/index.html#L37-L61) 殘留 4 處內聯 `onclick` 屬性。
+  1. [`PlayerLoginListener.java`](../../src/main/java/com/example/htmlmud/application/listener/PlayerLoginListener.java) 全檔案 100% 為註解代碼。
+  2. [`QuestEventListener.java`](../../src/main/java/com/example/htmlmud/application/listener/QuestEventListener.java) 包含 `System.out.println` 未完成代碼。
+  3. [`index.html:L37-L61`](../../src/main/resources/static/index.html#L37-L61) 殘留 4 處內聯 `onclick` 屬性。
 - **加固方案**：刪除死代碼類別 `PlayerLoginListener.java`，改用標準 SLF4J Logger 於 `QuestEventListener`，清除 `index.html` 內聯 `onclick` 屬性。
 
 ### 21.6 FALLBACK-02：持續推進生產環境 new TemplateCatalog() 歸零 — ✅ 階段性完成 (2026-10-15 基準收斂至 26 處)
@@ -984,7 +984,7 @@ flowchart TD
 - **加固方案**：重構 `PartyInventory`、`SkillBridgeService`、`DrpgEnemyTacticsService`、`XpProgressionService`、`DrpgTemplateAdapter`、`MudTemplateAdapter` 建構子，棘輪看門狗上限自 33 成功收斂至 26 處（縮減 21.2%）。
 
 ### 21.7 QUEST-DATA-01：任務劇情資料模型化與特例監聽器解耦 — ✅ 已完成 (2026-10-15)
-- **問題現況**：[`MozhuMinesQuestListener.java`](../src/main/java/com/example/htmlmud/application/listener/MozhuMinesQuestListener.java) 以特例監聽 `boss_song_tianheng` 並在 Java 代碼硬編碼輸出 25 行台詞，全專案無通用任務資料模型。
+- **問題現況**：[`MozhuMinesQuestListener.java`](../../src/main/java/com/example/htmlmud/application/listener/MozhuMinesQuestListener.java) 以特例監聽 `boss_song_tianheng` 並在 Java 代碼硬編碼輸出 25 行台詞，全專案無通用任務資料模型。
 - **加固方案**：建立 `QuestTemplate` 領域模型與 `quests.json` 資料設定檔，擴充 `TemplateReader.findQuestByTriggerMob()` 與 `TemplateRepository` 自動加載機制；重構 `MozhuMinesQuestListener` 為通用資料驅動型監聽器，消除全部硬編碼劇情台詞與首領特例。
 
 ### 21.8 PERSIST-01：H2 CharacterEntity.inventory 雙持久化收斂 — ✅ 已完成 (2026-10-15)
@@ -1125,45 +1125,75 @@ flowchart TD
 ---
 
 ### 22.5 戰線五：高併發通訊、可擴充生態與工程維運 (P2 ~ P3)
+> 💡 **階段邊界提醒**：以下 F5-01 ~ F5-03 標記為【遠期探索】，需具備明確多人需求、容量測試數據與部署營運能力為觸發條件；現階段專注於單體模組化 (Modular Monolith) 與單機可玩閉環。
 
-#### 1. F5-01：領域事件總線 (Domain EventBus EDA)
+#### 1. F5-01：領域事件總線 (Domain EventBus EDA) 【遠期探索】
 - 構建輕量級 `DomainEventBus`，服務間同步依賴全面轉化為發布-訂閱（Pub-Sub）模式，確保核心心跳超低延遲。
 
-#### 2. F5-02：WebSocket 雙軌傳輸協定 (Protobuf Binary Pipeline)
+#### 2. F5-02：WebSocket 雙軌傳輸協定 (Protobuf Binary Pipeline) 【遠期探索】
 - 高頻戰鬥封包支援 Protobuf 二進位串流，網路頻寬開銷縮減 60%，傳輸延遲小於 1ms。
 
-#### 3. F5-03：外部模組擴充 SPI (Plugin SPI Architecture)
+#### 3. F5-03：外部模組擴充 SPI (Plugin SPI Architecture) 【遠期探索】
 - 定義外掛 SPI 介面，第三方可以獨立 JAR 或動態目錄掛載自製地牢、職業與技能，支援伺服器不停機熱重載。
 
-#### 4. F5-04：Docker 一鍵容器化與 Dev Container 支援
+#### 4. F5-04：Docker 一鍵容器化與 Dev Container 支援 (P3)
 - 提供 `docker-compose.yml` 實現零環境門檻 60 秒開箱即用，整合 CI/CD 自動化看門狗門禁。
 
 ---
 
 ## 📝 23. 文件權威來源、交叉一致性與現代遊戲規劃治理 (Documentation & Game Planning Governance) — Priority: P1（待決議）
 
-> **來源**：2026-10-15 全部 `docs/**/*.md` 與指定架構／任務文件審查。細節及具體檔案觀察見 [`docs/references/Copilot_Review.md`](../references/Copilot_Review.md)。本節是候選治理工作，不代表相關設計已核准或已完成。
+> **來源**：2026-10-15 全部 `docs/**/*.md` 與指定架構／任務文件審查。詳細分析見參考審查報告 [`docs/references/Codex_Review.md`](../references/Codex_Review.md) 與 [`docs/references/Copilot_Review.md`](../references/Copilot_Review.md)。本節綜合兩份審查稿之具體建議，作為專案文件體系與遊戲規劃之後續治理藍圖。
 
-### 23.1 DOC-LINK-01：修復文件相對連結並建立連結檢查
-- 核對 `FUTURE_IMPROVEMENTS.md` 中失效的審查稿引用及程式碼路徑；依正確來源修復、替換或移除，不將失效引用盲目指向新審查文件。
-- 加入本機或 CI Markdown 相對連結檢查，對無效目標提供檔案與行號。
-- **驗收**：文件相對連結檢查零失效；所有歷史審查來源皆有可讀目標或清楚標示已除役。
+### 23.1 DOC-LINK-01：修復文件相對連結並建立連結自動檢查機制 — ✅ 已修復 (2026-10-16)
+- 核對並修復 `FUTURE_IMPROVEMENTS.md` 中歷史審查稿引用（清理 9 處不存在的 `Copilot_Code_Review.md` 引用）與 8 處錯誤的相對代碼路徑（`../src/` $\to$ `../../src/`）。
+- 建立本機或 CI Markdown 相對連結檢查腳本，防止後續文件移動引發死鏈。
+- **驗收**：全專案 Markdown 檔案無失效相對連結；歷史審查稿具備有效連結或清楚標示已除役。
 
-### 23.2 DOC-SSOT-01：定義文件權責、內容狀態及遊戲共同詞彙
-- 明確規範憲法、當前任務、架構、模組手冊、概覽、總待辦、變更紀錄及參考稿的權責；每個事實只指定一份權威來源。
-- 定義現行已驗證、已決議待實作、候選提案、歷史／除役等狀態標記，並建立屬性、資源、傷害／元素、Buff、裝備槽位、操作鍵位等共同詞彙表。
-- 核對並對齊心跳週期、schemaVersion、CSS 層數、模組命名、鍵位與測試基準等跨文件資訊。
-- **驗收**：跨文件一致性檢核項皆有單一來源；現況數值具備核對日期及程式／資料／測試證據。
+### 23.2 DOC-SSOT-01：定義單一權威來源 (SSoT) 與四級狀態標籤規範
+- 確立每類資訊的唯一權威文件：
+  - `GEMINI.md`：專案最高憲法、第一紅線、不可動搖保護鎖。
+  - `ACTIVE_TASKS.md`：唯一當前迭代微任務看板。
+  - `ARCHITECTURE.md`：現行系統邊界、Clean Architecture 與 DDD 依賴方向。
+  - `docs/manual/`：經核對之模組契約、API、DTO 與配置。
+  - `docs/overview/`：全域導覽指引，不定義第二套規格。
+  - `docs/plans/FUTURE_IMPROVEMENTS.md`：候選改善與演進總待辦。
+  - `CHANGELOG.md`：歷史交付歷程與驗收證據。
+  - `docs/references/`：外部靈感與非規範性參考審查報告。
+- 引入四級內容狀態標記：【現行已驗證】、【已決議待實作】、【候選提案】、【歷史／已除役】，避免將遠期藍圖誤讀為現行實作。
+- **驗收**：跨文件事實皆能對齊單一來源；手冊與概覽全面標註狀態標籤。
 
-### 23.3 DOC-ROADMAP-01：收斂重複規劃並提升工作可驗收性
-- 將完整待辦集中於本文件；模組手冊的未來方向縮為連結或已決議事項，避免多份 roadmap 狀態分歧。
-- 每項候選工作記錄唯一 ID、玩家或工程問題、優先級、依賴、非目標、驗收條件、測試／量測方法及狀態。
-- 依單機垂直切片與玩家體驗證據排序近期工作；多人分散式、雲同步、腳本熱載入等列為遠期探索，須先具備明確需求與評估門檻。
-- **驗收**：`ACTIVE_TASKS.md` 僅列當前可執行任務；已完成路線均可追溯到實際程式變更及驗收證據。
+### 23.3 DOC-ROADMAP-01：收斂模組手冊重複路線圖至中央總待辦
+- 將 15 本模組手冊（後端 M1~M9、前端 FE-1~FE-6）中重複分散的「未來演進」章節收斂至本文件，模組手冊僅保留模組契約、現行行為與指向總待辦的超連結。
+- 待辦任務統一標準格式：唯一 ID、玩家或工程問題、優先級、前置依賴、非目標、驗收條件、測試量測方法與狀態。
+- **驗收**：模組手冊回歸純粹規格說明；中央總待辦成為唯一候選任務來源。
 
-### 23.4 DOC-SYNC-01：降低易變數據複製與文件維護成本
-- 對測試數、效能百分比、FPS、檔案大小及其他快照數據記錄來源、環境與日期；無實測時標記為目標而非事實。
-- 評估由程式碼／資料自動產生鍵位、DTO、枚舉、JSON 範例及 CSS 載入清單；以測試或檢查器防止文件漂移。
-- 將鍵盤／手把、無障礙、減少動態效果、行動端與弱網恢復需求納入玩法提案的驗收條件。
-- **驗收**：被選定的易變資料有自動驗證或唯一更新流程；不再用未驗證的絕對效能承諾作為 DoD。
+### 23.4 DOC-GLOSSARY-01：建立全域遊戲詞彙表、前端三維度與契約對齊
+- **共用詞彙字典**：
+  - 五維屬性：根骨 (CON)、敏捷 (AGI)、靈性 (INT)、神識 (PER)、定力 (WIL)。
+  - 五大資源：氣血 (HP)、真元 (MP)、精力 (SP)、道心 (SAN)、罡氣 (Poise)。
+  - 戰鬥概念分層：明確劃分「傷害類型 (`DamageType`: 斬擊/穿刺/鈍擊/道法)」、「天道元素家族 (九大靈氣: 金/木/水/火/土/風/雷/陰/陽)」、「狀態標籤 (`StatusTags`: STUN, SILENCE, POISON)」與「Buff 分類 (`BuffType`: HOT, DOT, SHIELD, STAT_MOD)」。
+- **前端三維度術語消歧**：
+  - 6 大前端核心 JS 模組（`app.js`, `pipeline.js`, `battle-panel.js` 等）。
+  - 7 大視覺舞台區塊 Panels（`town-panel`, `dungeon-viewport`, `battle-panel`, `party-hud` 等）。
+  - 7 層樣式串流 CSS Tokens（`style-01-tokens` 至 `style-07-themes`）。
+- **心跳排程明確化**：
+  - `WorldPulse`（世界生靈 Tick）：3,000ms。
+  - `CombatLoop`（戰鬥 ATB / GCD Tick）：200ms。
+  - `WebSocket`（保持連線 Ping-Pong）：30s。
+- **鍵位標準規範**：WASD 步進轉向、I/L 探查與撤離、M 地圖、Esc 關閉/退出。
+- **驗收**：手冊與程式庫 enum、DTO、常數 100% 吻合。
+
+### 23.5 DOC-SLICE-01：玩法垂直切片驅動與以玩家體驗為核心之規劃
+- 以「城鎮整備 $\to$ 地牢探索 $\to$ 戰鬥抉擇 $\to$ 戰利品／成長 $\to$ 安全撤離／存檔」為核心垂直切片閉環，每一階段明確玩家目標、選擇風險、反制手段與失敗代價。
+- 玩法提案先回答「玩家面臨什麼問題、核心樂趣何在、如何透過原型驗證」，杜絕純技術名詞堆疊。
+- 驗收條件拒絕模糊詞彙（如「更刺激」、「永遠 60 FPS」），轉化為可觀察、可量測的具體測試（如「可打斷窗口為吟唱前 60%」、「怪物意圖可讀性」）。
+- 無障礙、弱網復原與 `@media (prefers-reduced-motion)` 列為互動機能的一級需求。
+- **驗收**：所有新增玩法規劃具備完整垂直切片說明與可量測之驗收標準。
+
+### 23.6 DOC-SYNC-01：易變數值快照化與自動代碼產生／檢查
+- 測試總數、檔案大小、效能百分比等易變數據附帶測量日期與環境依據，未實測者明確標記為目標。
+- 評估由 Java 列舉與 JSON Schema 自動生成手冊中的 DTO、枚舉與設定表格，減少手動同步錯誤。
+- **驗收**：關鍵易變數值具備測試依據或自動生成機制。
+
 
