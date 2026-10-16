@@ -49,6 +49,7 @@
 - [x] **路徑 U: 全專案綜合審查後續與紅線治理藍圖** (§21 全項) — **Priority: P0 ~ P3 (2026-10-15 制定，P0/P1/P2 死代碼與紅線清理已完成，304 測試全綠燈)**
 - [ ] **路徑 V: 全專案大一統與現代化演進戰略五大戰線** (§22 全項) — **Priority: P1 ~ P3 (2026-10-15 全文件對齊版，當前微任務落地請參閱根目錄 [ACTIVE_TASKS.md](../../ACTIVE_TASKS.md))**
 - [ ] **路徑 W: 文件權威來源、交叉一致性與現代遊戲規劃治理** (§23 全項) — **Priority: P1（審查建議已整合；詳見 [Codex_Review.md](../references/Codex_Review.md) 與 [Copilot_Review.md](../references/Copilot_Review.md)）**
+- [ ] **路徑 X: 純單機單體化演進戰略：多人機制、雙軌架構與膠水代碼全域收斂藍圖** (§24 全項) — **Priority: P0 ~ P2（單人轉型核心戰役）**
 
 ---
 
@@ -1219,5 +1220,170 @@ flowchart TD
 - 測試總數、檔案大小、效能百分比等易變數據附帶測量日期與環境依據，未實測者明確標記為目標。
 - 評估由 Java 列舉與 JSON Schema 自動生成手冊中的 DTO、枚舉與設定表格，減少手動同步錯誤。
 - **驗收**：關鍵易變數值具備測試依據或自動生成機制。
+
+---
+
+## 🗡️ 24. 純單機單體化演進戰略：多人機制、雙軌架構與膠水代碼全域收斂藍圖 (Single-Player Monolith & Dual-Track Convergence Masterplan) — Priority: P0 ~ P2（單人轉型核心戰役）
+
+> **戰略定位與決策背景**：  
+> 專案已正式決策由多人 MUD 架構全面轉向**「純單機單體暗黑克蘇魯修仙 DRPG (Single-Player Dark Xianxia DRPG Monolith)」**。  
+> 歷史上由於「MUD 文字探索」與「網格 3D/DRPG 地牢」平行拼裝，累積了嚴重的雙重實體、兩套背包、兩套技能、兩套戰鬥與兩套存檔，以及依附其上的各種翻譯膠水代碼（如 `CharacterSyncService`、`SkillBridgeService`、`StashCommand`、`TellCommand`）。  
+> 愈晚處理，後續新功能的開發與包袱愈重。本章節將所有殘留點系統化解構為**四大執行階段 (Phase 0 ~ Phase 3)**，明確各步驟之涉及類別、改動方針、非目標與驗收標準（DoD），作為專案單人化收斂之唯一權威依據（SSoT），供後續依序逐一落地。
+
+### 核心演進哲學 (Guiding Principles)
+1. **小隊即世界 (The Party is the Single Source of Truth)**：小隊公共行囊為全遊戲唯一背包；隊員實體擁有裝備與戰鬥屬性；主角即隊長。
+2. **零膠水橋接 (Zero Glue Code & Zero Dual-Track)**：徹底消滅在 MUD 與 DRPG 之間倒買倒賣的翻譯器與雙寫鏡像。
+3. **單一主角與單一戰鬥引擎 (Singleton Protagonist & Unified Combat Engine)**：城鎮與地牢共享同一套小隊與戰鬥規則。
+
+---
+
+### 24.1 階段 0：P0 級速勝清理 — 廢止明顯多人指令與轉存假帳 (Fast Wins & Immediate Decommission)
+
+#### 1. SP-01: 多人密語指令除役與單機世界化 (Decommission TellCommand) — Priority: P0
+- **問題現狀**：目前仍註冊 `tell` / `whisper` / `t` 指令，代碼依賴 `worldManager.findPlayerByName(targetName)` 在世界中尋找其他玩家並發送私聊，是典型的多人殘留死代碼。
+- **涉及檔案**：
+  - [`TellCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/TellCommand.java)
+  - [`WorldManager.java`](../../src/main/java/com/example/htmlmud/domain/world/WorldManager.java)
+- **改動方針**：
+  1. 徹底刪除 [`TellCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/TellCommand.java)。
+  2. 自 [`WorldManager.java`](../../src/main/java/com/example/htmlmud/domain/world/WorldManager.java) 中移除 `findPlayerByName(String targetName)` 方法。
+  3. 自指令別名與幫助文件中移除 `tell` 相關說明。
+- **非目標**：不影響與 NPC 對話的 `TalkCommand`。
+- **驗收標準 (DoD)**：
+  - 輸入 `tell` 指令提示無此命令；全專案測試無失效引用，315 項測試 100% 綠燈。
+
+#### 2. SP-02: 雙層背包轉存指令徹底除役 (Decommission Stash Dual-Transfer) — Priority: P0
+- **問題現狀**：雖然 `get` 與 `drop` 已操作小隊行囊，但 [`StashCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/StashCommand.java) 內部仍保留將道具自 `player.getInventory()` 存入/取出到 `party.getInventory()` 的雙向轉存邏輯。玩家若輸入 `stash` / `withdraw`，道具會掉入底層已廢止的個人隨身假帳背包中。
+- **涉及檔案**：
+  - [`StashCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/StashCommand.java)
+  - [`Living.java`](../../src/main/java/com/example/htmlmud/domain/actor/impl/Living.java)
+  - [`DualTierInventoryAndStashTest.java`](../../src/test/java/com/example/htmlmud/DualTierInventoryAndStashTest.java)
+- **改動方針**：
+  1. 廢除 `handleStash` 與 `handleWithdraw` 跨背包搬移業務邏輯。
+  2. 將 `StashCommand` 簡化為純粹導向 `InventoryCommand` 或友情回應用戶：「道途公共行囊已全面大一統（40格公共儲物袋），所有拾取與獲取物資皆自動納入全隊共享，無需手動轉存！」。
+  3. 將 [`Living.java`](../../src/main/java/com/example/htmlmud/domain/actor/impl/Living.java) 中的 `inventory` 限制為僅供 `Mob` 掉落物保管使用，禁止 `Player` 依賴此集合。
+- **驗收標準 (DoD)**：
+  - 玩家輸入 `stash` / `withdraw` 不會發生任何雙軌物品劃撥；小隊行囊為全專案道具流轉唯一真實載體；測試 100% 綠燈。
+
+---
+
+### 24.2 階段 1：P1 級核心實體與存檔單一真相源 (Single Source of Truth & Save Convergence)
+
+#### 1. SP-03: 存檔雙寫徹底根除與結構純化 (Decommission Personal Inventory in Saves) — Priority: P1
+- **問題現狀**：[`SaveGameService.java`](../../src/main/java/com/example/htmlmud/domain/save/service/SaveGameService.java) 在存檔時，既序列化了整個 `party`（小隊 40 格公共行囊），又額外將 `player.getInventory()` 序列化為 `personalInventory` 寫入 JSON；讀檔時又重新還原並呼叫 `syncEquipmentFromPartyToPlayer` 進行投影，維護成本高且存在假帳隱患。
+- **涉及檔案**：
+  - [`SaveGameService.java`](../../src/main/java/com/example/htmlmud/domain/save/service/SaveGameService.java)
+  - [`SaveData.java`](../../src/main/java/com/example/htmlmud/domain/save/model/SaveData.java)
+  - [`SaveMigrationPipeline.java`](../../src/main/java/com/example/htmlmud/domain/save/migration/SaveMigrationPipeline.java)
+- **改動方針**：
+  1. 存檔寫入：移除 `personalInventory` 提取與序列化邏輯，小隊公共行囊為道具唯一保存源。
+  2. 存檔載入：移除 `onlinePlayer.getInventory()` 還原流程，僅還原小隊實體與其裝備。
+  3. 版本遷移：在 `SaveMigrationPipeline` 中將舊存檔的 `personalInventory` 自動合併進 `party.inventory`，確保相容舊有存檔。
+- **驗收標準 (DoD)**：
+  - 存檔 JSON 檔案結構不再冗餘記錄 `personalInventory`；舊檔載入時物品安全合流，無道具遺失；測試 100% 綠燈。
+
+#### 2. SP-04: 房間實體單一主角化與多人廣播除役 (Single Protagonist Room & Broadcast Simplification) — Priority: P1
+- **問題現狀**：[`Room.java`](../../src/main/java/com/example/htmlmud/domain/actor/impl/Room.java) 維護 `List<Player> players = new CopyOnWriteArrayList<>()`，[`RoomService.java`](../../src/main/java/com/example/htmlmud/domain/world/RoomService.java) 與 [`LivingService.java`](../../src/main/java/com/example/htmlmud/domain/service/LivingService.java) 處處依賴遍歷房間所有玩家，並維護 `broadcastToOthers`「排除自己發送給其他人」邏輯。
+- **涉及檔案**：
+  - [`Room.java`](../../src/main/java/com/example/htmlmud/domain/actor/impl/Room.java)
+  - [`RoomService.java`](../../src/main/java/com/example/htmlmud/domain/world/RoomService.java)
+  - [`LivingService.java`](../../src/main/java/com/example/htmlmud/domain/service/LivingService.java)
+- **改動方針**：
+  1. 將 `Room` 內部代表玩家的並發清單 `List<Player> players` 重構為單一引用 `Player protagonist`（當主角進入時賦值，離開時置 null）。
+  2. 除役 `broadcastToOthers` 冗餘方法，簡化 `broadcast` 為直接向房內主角推送。
+  3. 簡化生靈 Buff 結算跳字：若房內有主角則直接送達，不再進行多重 foreach 遍歷。
+- **驗收標準 (DoD)**：
+  - 消除房間對多玩家並發集合的鎖與記憶體開銷；房間探索與事件通知邏輯大幅精簡；測試 100% 綠燈。
+
+#### 3. SP-05: WebSocket 單一主角綁定與多開會話接管 (Singleton Protagonist & Session Takeover) — Priority: P1
+- **問題現狀**：目前每次 WebSocket 連入，[`MudWebSocketHandler.java`](../../src/main/java/com/example/htmlmud/infra/server/MudWebSocketHandler.java) 就分配一個 `p-<sessionId>` 並建立全新 `Player` 實體。若瀏覽器開多個分頁，世界中會同時存在多個「主角」，造成存檔槽位覆寫衝突。
+- **涉及檔案**：
+  - [`MudWebSocketHandler.java`](../../src/main/java/com/example/htmlmud/infra/server/MudWebSocketHandler.java)
+  - [`SessionRegistry.java`](../../src/main/java/com/example/htmlmud/infra/server/SessionRegistry.java)
+- **改動方針**：
+  1. 引入「單機單一主角實例（Singleton Protagonist）」模型：世界只維持單一主角生命週期。
+  2. 當新分頁連入時，自動接管現有主角的 `WebSocketOutput` 並向前端同步最新全景狀態，而非盲目創生新的獨立 Player。
+- **驗收標準 (DoD)**：
+  - 多分頁連入時共享同一個主角進度；消除存檔競爭條件；測試 100% 綠燈。
+
+---
+
+### 24.3 階段 2：P2 級技能體系大一統與橋接膠水除役 (Skill Unified Architecture)
+
+#### 1. SP-06: 技能模型合一 (Skill Model Unification) — Priority: P2
+- **問題現狀**：技能體系存在兩套定義：MUD 端的 `SkillEntry`（修煉熟練度、境界等級）與 DRPG 端的 `PartyMemberSkill`（CD、傷害倍率、消耗、打斷標籤），導致新增一門技能需維護兩份範本資料。
+- **涉及檔案**：
+  - [`SkillEntry.java`](../../src/main/java/com/example/htmlmud/domain/model/entity/SkillEntry.java)
+  - [`PartyMemberSkill.java`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyMemberSkill.java)
+  - [`skills.json`](../../src/main/resources/data/skills/skills.json)
+- **改動方針**：
+  1. 建立大一統規範技能實體 `UnifiedSkill`（或擴充升級 `PartyMemberSkill`），同時包含：
+     - **戰術數值**：CD、傷害倍率、真元/精力消耗、施法時間、打斷反制標籤（STUN / SILENCE / CONTROL）。
+     - **修煉境界**：熟練度（Mastery）、道法等級（Level 1~10）、屬性補正係數。
+     - **敘事文本**：動態戰鬥播報範本、招式意境描述。
+  2. 主角與 4 名隊友均統一持有此技能模型。
+- **驗收標準 (DoD)**：
+  - 全遊戲唯一技能資料源，徹底消除 `skills.json` 與 DRPG 戰術技能重複定義。
+
+#### 2. SP-07: 徹底除役 `SkillBridgeService` 膠水橋接 — Priority: P2
+- **問題現狀**：目前依賴 [`SkillBridgeService.java`](../../src/main/java/com/example/htmlmud/domain/service/SkillBridgeService.java) 進行字串映射、動態縮放與熟練度回饋，代碼超過 260 行且容易產生數值飄移。
+- **涉及檔案**：
+  - [`SkillBridgeService.java`](../../src/main/java/com/example/htmlmud/domain/service/SkillBridgeService.java)
+  - [`CharacterSyncService.java`](../../src/main/java/com/example/htmlmud/domain/service/CharacterSyncService.java)
+  - [`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java)
+- **改動方針**：
+  1. 在技能模型合一後，戰鬥直接讀取隊員自身的統一技能物件，無需戰前映射翻譯。
+  2. 戰鬥獲勝後，熟練度直接原地記入小隊成員技能中，無需反向回饋。
+  3. 徹底刪除 [`SkillBridgeService.java`](../../src/main/java/com/example/htmlmud/domain/service/SkillBridgeService.java)。
+- **驗收標準 (DoD)**：
+  - 成功刪除 `SkillBridgeService` 類別，零編譯錯誤，全量 315 測試綠燈。
+
+---
+
+### 24.4 階段 3：P2 級戰鬥引擎雙軌大一統與共享經濟 (Combat & Economy Unification)
+
+#### 1. SP-08: 戰鬥引擎收斂與 5 人小隊全域協同 (Combat Engine Unification) — Priority: P2
+- **問題現狀**：目前城鎮與野外採用 MUD [`CombatService.java`](../../src/main/java/com/example/htmlmud/domain/service/CombatService.java)（主角一人單挑，隊友看戲）；地牢採用 DRPG [`DrpgBattleService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgBattleService.java)（5人小隊滿編戰術戰鬥），戰鬥規則與體驗嚴重分裂。
+- **涉及檔案**：
+  - [`KillCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/KillCommand.java)
+  - [`CombatService.java`](../../src/main/java/com/example/htmlmud/domain/service/CombatService.java)
+  - [`DrpgBattleService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgBattleService.java)
+- **改動方針**：
+  1. 將城鎮與野外探索模式明確定性：
+     - 城鎮區域：100% 安全區（SAFE_ZONE），專注於 NPC 對話、任務承接、客棧休憩與貨棧交易。
+     - 野外與危險區域：遭遇野怪時，呼叫核心戰鬥引擎，由 5 人滿編小隊共同迎敵（支援陣法、站位與隊友戰術 AI）。
+  2. 廢止舊 MUD `CombatService` 獨立的輪詢傷害計算，全域戰鬥統歸核心戰鬥引擎。
+- **驗收標準 (DoD)**：
+  - 戰鬥規則完全統一；玩家率領的 5 人隊伍在任何戰鬥中皆協同作戰；消除雙軌戰鬥維護成本。
+
+#### 2. SP-09: 全隊共享經濟與小隊資產化 (Unified Party Economy & Coin) — Priority: P2
+- **問題現狀**：金幣/靈石目前分散於各成員的 `LivingStats.coin`，但道具則放入小隊公共行囊；商店扣款扣主角個人，缺少小隊公共金庫概念。
+- **涉及檔案**：
+  - [`Party.java`](../../src/main/java/com/example/htmlmud/domain/party/model/Party.java)
+  - [`ShopCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/ShopCommand.java)
+  - [`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java)
+- **改動方針**：
+  1. 在 `Party` 實體中增設 `coin` 欄位作為全隊共享靈石金庫。
+  2. 商店購買（`ShopCommand`）、野外地牢掉落獎勵、開寶箱獲取金幣全面直接入帳至小隊金庫。
+  3. 主角個人 `LivingStats.coin` 與隊長小隊金庫保持單向關聯或委派。
+- **驗收標準 (DoD)**：
+  - 前端與終端介面小隊面板清楚展示「隊伍總靈石」；道具與金幣皆為全隊單一共享資產。
+
+---
+
+### 24.5 執行步驟順序與看板里程碑映射 (Execution Sequence & Milestone Mapping)
+
+| 順序 | 步驟編號 | 核心收斂任務 | 優先級 | 預估風險 |
+| :---: | :---: | :--- | :---: | :---: |
+| **Step 1** | **SP-01** | 刪除 `TellCommand` 多人私聊與 `findPlayerByName` | **P0** | 極低 |
+| **Step 2** | **SP-02** | 廢止 `StashCommand` 雙向轉存，除役個人背包假帳 | **P0** | 低 |
+| **Step 3** | **SP-03** | 存檔寫入與載入徹底除役 `personalInventory` 雙寫 | **P1** | 中（需兼顧舊存檔遷移） |
+| **Step 4** | **SP-04** | `Room` 房間實體改為單一主角引用，除役多玩家廣播遍歷 | **P1** | 中 |
+| **Step 5** | **SP-05** | WebSocket 多開連線自動接管唯一主角，杜絕存檔覆寫競爭 | **P1** | 中 |
+| **Step 6** | **SP-06** | 技能模型合一 (`UnifiedSkill`)，消除 MUD/DRPG 技能定義割裂 | **P2** | 中高 |
+| **Step 7** | **SP-07** | 徹底除役 `SkillBridgeService` 翻譯縮放膠水代碼 | **P2** | 中 |
+| **Step 8** | **SP-08** | 戰鬥引擎大一統，野外戰鬥全面對齊 5 人小隊協同作戰 | **P2** | 高 |
+| **Step 9** | **SP-09** | 小隊共享金庫與經濟體系大一統 | **P2** | 低 |
+
 
 
