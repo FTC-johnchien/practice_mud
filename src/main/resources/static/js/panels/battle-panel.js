@@ -3,11 +3,59 @@ import { sendCmd } from '../core/cmd-dispatcher.js';
 import { selectPartyMember } from './party-hud-panel.js';
 import { escapeHtml } from '../core/ui-utils.js';
 import { renderAggregatedBuffBadges, renderShieldOverlayHtml, renderPoiseBarHtml, resolveStatusPulseClass } from '../core/buff-hud-helper.js';
+import { spawnInterruptFloatingText } from '../fx/floating-text.js';
 
 /**
  * 戰鬥主舞台與敵方陣列面板 (Battle Arena Panel)
  * 負責渲染敵方雙排陣列 (1~7 體)、集火鎖定準星、戰場我方快顯 HUD 及戰鬥專屬按鈕列
  */
+
+// 記錄敵方怪物上一幀的施法蓄力與破防狀態，用於即時判定打斷反制
+const enemyCastingStateMap = new Map();
+
+/**
+ * 檢查並觸發打斷視覺特效（失衡震顫與 ⚡ 打斷! 浮動文字）
+ * @param {HTMLElement} card 敵方卡片節點
+ * @param {Object} e 敵怪快照數據
+ */
+function checkAndTriggerInterrupt(card, e) {
+  if (!card || !e) return;
+  const key = e.id || String(e.index);
+  const prev = enemyCastingStateMap.get(key);
+  const isNowCasting = Boolean(e.isCasting);
+
+  // 打斷判定：上一幀蓄力中，當前幀停止蓄力且處於力竭破防 (PoiseBroken) 或眩暈 (Stunned)
+  const isInterrupted = prev && prev.isCasting && !isNowCasting && (e.isPoiseBroken || e.isStunned);
+
+  if (isInterrupted) {
+    card.classList.remove('interrupted-break');
+    void card.offsetWidth; // 強制重繪重啟 CSS 動畫
+    card.classList.add('interrupted-break');
+    setTimeout(() => {
+      if (card) card.classList.remove('interrupted-break');
+    }, 700);
+
+    const fxLayer = document.getElementById('battle-fx-layer');
+    if (fxLayer && card.getBoundingClientRect) {
+      const rect = card.getBoundingClientRect();
+      const parentRect = fxLayer.getBoundingClientRect();
+      const relativeRect = {
+        x: rect.left - parentRect.left,
+        y: rect.top - parentRect.top,
+        w: rect.width,
+        h: rect.height
+      };
+      spawnInterruptFloatingText(fxLayer, relativeRect);
+    }
+  }
+
+  // 更新快照
+  enemyCastingStateMap.set(key, {
+    isCasting: isNowCasting,
+    isPoiseBroken: Boolean(e.isPoiseBroken),
+    isStunned: Boolean(e.isStunned)
+  });
+}
 
 /**
  * 渲染戰場敵方陣列與主舞台交鋒態勢
@@ -21,6 +69,7 @@ export function renderBattleArena(battle) {
     panel.classList.remove('hidden');
   } else {
     panel.classList.add('hidden');
+    enemyCastingStateMap.clear();
     return;
   }
 
@@ -284,6 +333,7 @@ export function renderBattleArena(battle) {
         <div class="enemy-intent-container">${intentHtml}</div>
       `;
     }
+    checkAndTriggerInterrupt(card, e);
     return card;
   }
 
@@ -407,6 +457,7 @@ export function renderBattleArena(battle) {
         card.appendChild(intentContainer);
       }
       intentContainer.innerHTML = renderEnemyIntentAndCast(e);
+      checkAndTriggerInterrupt(card, e);
     });
   }
 
@@ -426,7 +477,7 @@ function renderBuffBadges(activeBuffs) {
  */
 function renderEnemyIntentAndCast(e) {
   if (!e) return '';
-  const intentName = escapeHtml(e.intentName || '');
+  const intentName = escapeHtml(e.currentAction || e.intentName || (e.isCasting ? '蓄力施法' : ''));
   const isCasting = Boolean(e.isCasting);
 
   if (!intentName && !isCasting) {
@@ -434,29 +485,38 @@ function renderEnemyIntentAndCast(e) {
   }
 
   const intentType = (e.intentType || 'PHYSICAL').toLowerCase();
-  const intentIcon = escapeHtml(e.intentIcon || '🗡️');
+  const intentIcon = escapeHtml(e.intentIcon || (intentType === 'heavy' ? '💥' : (intentType === 'spell' ? '🔮' : (intentType === 'aberration' ? '👁️' : '🗡️'))));
   const targetMember = escapeHtml(e.targetMemberName || '');
+  const isInterruptible = Boolean(e.isInterruptible !== undefined ? e.isInterruptible : e.interruptible);
 
-  const castPct = (e.castDurationMs > 0 && e.castRemainingMs !== undefined)
-    ? Math.max(0, Math.min(100, Math.round((1 - (e.castRemainingMs / e.castDurationMs)) * 100)))
-    : 100;
+  const castPct = (e.actionProgressPercent !== undefined && e.actionProgressPercent !== null && e.actionProgressPercent >= 0)
+    ? Math.max(0, Math.min(100, e.actionProgressPercent))
+    : ((e.castDurationMs > 0 && e.castRemainingMs !== undefined)
+        ? Math.max(0, Math.min(100, Math.round((1 - (e.castRemainingMs / e.castDurationMs)) * 100)))
+        : (isCasting ? 50 : 100));
 
   const remSec = (e.castRemainingMs && e.castRemainingMs > 0)
     ? (e.castRemainingMs / 1000).toFixed(1)
     : '';
 
-  const interruptTag = (isCasting && e.isInterruptible)
-    ? `<span class="intent-interrupt-tag" title="可被眩暈或破招打斷">可斷</span>`
+  const interruptTag = isCasting
+    ? (isInterruptible
+        ? `<span class="intent-interrupt-tag" title="可被眩暈、沉默或破招打斷">可斷</span>`
+        : `<span class="intent-uninterrupt-tag" title="霸體蓄力，無法打斷！">霸體</span>`)
     : '';
 
   const targetTag = targetMember
     ? `<span class="intent-target-member" title="鎖定目標：${targetMember}">➔ ${targetMember}</span>`
     : '';
 
+  const barClass = (intentType === 'heavy' || intentType === 'aberration')
+    ? 'intent-bar-heavy'
+    : (intentType === 'spell' ? 'intent-bar-spell' : 'intent-bar-physical');
+
   const castBarHtml = isCasting ? `
-    <div class="enemy-cast-track" title="蓄力施法中：剩餘 ${remSec}s">
-      <div class="enemy-cast-fill intent-bar-${intentType}" style="width: ${castPct}%;"></div>
-      <span class="enemy-cast-rem">${remSec ? remSec + 's' : '蓄力'}</span>
+    <div class="enemy-cast-track" title="蓄力施法中：${intentName} (${castPct}%)">
+      <div class="enemy-cast-fill ${barClass}" style="width: ${castPct}%;"></div>
+      <span class="enemy-cast-rem">${remSec ? remSec + 's' : castPct + '%'}</span>
     </div>
   ` : '';
 

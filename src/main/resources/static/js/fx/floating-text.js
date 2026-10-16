@@ -67,6 +67,10 @@ export function spawnFloatingText(layer, rect, hit, ev) {
         cls.push('ft-block');
         text = '🛡️ 護盾吸收';
         break;
+      case 'INTERRUPT':
+        cls.push('ft-interrupt');
+        text = '⚡ 打斷！';
+        break;
       default:
         if (ev.type === 'SHIELD') {
           cls.push('ft-heal');
@@ -115,3 +119,25 @@ export function spawnFloatingText(layer, rect, hit, ev) {
   el.addEventListener('animationend', () => el.remove(), { once: true });
   layer.appendChild(el);
 }
+
+/**
+ * 專屬打斷反制 FCT 浮動大字生成
+ * @param {HTMLElement} layer 特效層容器 (#battle-fx-layer)
+ * @param {{x: number, y: number, w: number, h: number}} rect 目標敵方卡片幾何位置
+ */
+export function spawnInterruptFloatingText(layer, rect) {
+  if (!layer || !rect) return;
+  const el = document.createElement('div');
+  el.className = 'ftext ft-interrupt';
+  el.textContent = '⚡ 打斷！';
+
+  const posX = rect.x + (rect.w / 2);
+  const posY = rect.y + (rect.h * 0.2);
+
+  el.style.left = `${posX}px`;
+  el.style.top = `${posY}px`;
+
+  el.addEventListener('animationend', () => el.remove(), { once: true });
+  layer.appendChild(el);
+}
+
