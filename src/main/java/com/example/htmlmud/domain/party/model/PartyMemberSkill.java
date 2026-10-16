@@ -6,18 +6,37 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 隊員專屬主動戰鬥技能
+ * 隊員專屬主動戰鬥技能 (升級實作大一統規範技能 UnifiedSkill)
+ * 同時具備修煉境界 (道法等級/熟練度/升級門檻) 與回合戰術 (CD/消耗/傷害倍率/打斷標籤)
  */
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class PartyMemberSkill {
+public class PartyMemberSkill implements UnifiedSkill {
+
+  public PartyMemberSkill() {
+    super();
+  }
+
   private String id;
   private String name;
   private String icon;
   private String description;
   private CombatResourceType costType;
+
+  // === SP-06: 大一統修煉境界屬性 (Level 1~10 & Mastery XP) ===
+  @Builder.Default
+  private int level = 1;
+  @Builder.Default
+  private long xp = 0L;
+  @Builder.Default
+  private long maxXp = 100L;
+  @Builder.Default
+  private double masteryMultiplier = 1.0;
+
+  // === SP-06: 敘事文本 (招式動態播報) ===
+  @Builder.Default
+  private java.util.List<String> moves = new java.util.ArrayList<>();
 
   @Deprecated
   public ResourceType getLegacyCostType() {
@@ -134,6 +153,72 @@ public class PartyMemberSkill {
     return false;
   }
 
+  // === SP-06: UnifiedSkill 修煉境界與動態縮放實作 ===
+  public static final int MAX_SKILL_LEVEL = 10;
+
+  @Override
+  public boolean isMaxLevel() {
+    return level >= MAX_SKILL_LEVEL;
+  }
+
+  @Override
+  public double getProficiencyProgress() {
+    if (isMaxLevel()) return 1.0;
+    if (maxXp <= 0) return 0.0;
+    return Math.min(1.0, Math.max(0.0, (double) xp / maxXp));
+  }
+
+  @Override
+  public void addXp(long amount) {
+    if (amount <= 0 || isMaxLevel()) return;
+    this.xp += amount;
+    while (this.xp >= this.maxXp && this.level < MAX_SKILL_LEVEL) {
+      levelUp();
+    }
+  }
+
+  @Override
+  public void levelUp() {
+    if (this.level >= MAX_SKILL_LEVEL) {
+      this.level = MAX_SKILL_LEVEL;
+      return;
+    }
+    this.xp = Math.max(0, this.xp - this.maxXp);
+    this.level++;
+    this.maxXp = calculateRequiredXpForLevel(this.level);
+    this.masteryMultiplier = 1.0 + (this.level - 1) * 0.05;
+  }
+
+  public static long calculateRequiredXpForLevel(int lvl) {
+    if (lvl <= 1) return 100L;
+    return (long) Math.floor(100.0 * Math.pow(lvl, 1.4));
+  }
+
+  @Override
+  public double getEffectiveDamageMultiplier() {
+    int lvl = Math.max(1, this.level);
+    double raw = this.damageMultiplier * (1.0 + (lvl - 1) * 0.05);
+    return Math.round((raw + 1e-9) * 100.0) / 100.0;
+  }
+
+  @Override
+  public long getEffectiveCooldownMs() {
+    int lvl = Math.max(1, this.level);
+    return Math.max(1000L, this.cooldownMs - (long) (lvl - 1) * 100L);
+  }
+
+  @Override
+  public int getEffectiveHealAmount() {
+    int lvl = Math.max(1, this.level);
+    return (int) Math.round(this.healAmount * (1.0 + (lvl - 1) * 0.08));
+  }
+
+  @Override
+  public int getEffectiveSanRestore() {
+    int lvl = Math.max(1, this.level);
+    return (int) Math.round(this.sanRestore * (1.0 + (lvl - 1) * 0.05));
+  }
+
   public static PartyMemberSkill fromSkillTemplate(com.example.htmlmud.domain.model.template.SkillTemplate tpl) {
     if (tpl == null) return null;
 
@@ -196,6 +281,15 @@ public class PartyMemberSkill {
           .filter(java.util.Objects::nonNull)
           .map(Enum::name)
           .toList();
+    }
+
+    java.util.List<String> moveNames = new java.util.ArrayList<>();
+    if (tpl.getMoves() != null) {
+      for (var m : tpl.getMoves()) {
+        if (m != null && m.name() != null && !m.name().isBlank()) {
+          moveNames.add(m.name());
+        }
+      }
     }
 
     String category = "CLASS";
@@ -270,6 +364,7 @@ public class PartyMemberSkill {
         .healAmount(healAmt)
         .sanRestore(sanVal)
         .allowedWeapons(weapons)
+        .moves(moveNames)
         .gcdMs(gcdTime)
         .triggersGcd(trigGcd)
         .castTimeMs(castTime)
