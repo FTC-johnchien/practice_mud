@@ -165,7 +165,7 @@ graph TD
 ### 9. M9: 虛擬執行緒 Actor 通訊模組 (Actor & Protocol)
 - 📖 **詳細技術手冊**：[`後端_M9_虛擬執行緒Actor通訊模組_ACTOR_AND_PROTOCOL.md`](../manual/後端_M9_虛擬執行緒Actor通訊模組_ACTOR_AND_PROTOCOL.md)
 - **核心職責**：
-  - 基於 Java 21/25 Virtual Threads + 訊息信箱，為每個在線玩家（`Player`）與房間（`RoomActor`）建立輕量併發 Actor。
+  - 基於 Java 21/25 Virtual Threads + 訊息信箱，為冒險主角（`Player`）與活躍房間（`RoomActor`）建立輕量併發 Actor。
   - 整合 Spring WebSocket，負責全狀態數據（`DrpgStateDto`）推送與 ANSI 彩色字串流。
   - 提供執行緒安全上下文管理（`MudContext`）。
 - **代表類別**：
@@ -261,31 +261,30 @@ static/
 
 ---
 
-## 🚀 五、未來模組生態與演進規劃 (Module Ecosystem Roadmap)
+## 🚀 五、純單機單體模組深度演進藍圖 (Single-Player Monolith Roadmap)
 
-為因應未來由單機體驗邁向 1-5 人在線合作、長線 Live-Ops 營運與社群自製 MOD 的擴充需求，規劃以下模組生態演進策略：
+本專案圍繞「一人掌控 5 人戰術小隊之純單機 DRPG 沉浸體驗」，規劃以下四大模組演進維度：
 
-### 1. 現代遊戲規劃 (Modern Modularity & Live-Ops)
-- **領域事件總線解耦 (Domain Event-Driven Architecture)**：
-  - 現行各服務間有直接相依呼叫（如 M3 戰鬥直接呼叫 M6 背包與 M5 經驗升級）。
-  - 未來演進為非同步領域事件：M3 僅廣播 `CombatMobKilledEvent`，由 M6 (掉落監聽器)、M5 (修為監聽器)、M7 (任務進度監聽器) 獨立非同步消費，達到模組間完全解耦。
-- **多人地宮實例叢集 (Dungeon Instance Cluster)**：
-  - 將 M2 與 M3 升級為副本房間實例 Actor（`DungeonInstanceActor`），支援同伺服器內數百個隊伍獨立在各自的地下城層次並行計算，迷霧與戰況完全隔離。
+### 1. 單人小隊戰術深度 (Tactical Party & Companion Gambits)
+- **隊友 Gambit 規則鏈引擎 (M4 擴展)**：
+  - 為 4 名招募夥伴實作 FFXII 風格的條件式戰術規則鏈（例如：「隊友血量 < 35% ➔ 施放回春術」、「敵怪處於破防虛弱 ➔ 施放太白重擊」），100% 透過 JSON 規則檔驅動，讓單人掌控 5 人小隊流暢自如。
+- **陣法聯攜技與五行連鎖反應 (M3 & M4 協同)**：
+  - 五行靈氣環境共鳴：前排土系修士施加「流沙束縛」後，後排木系修士觸發「藤蔓絞殺」產生額外 50% 破防傷害。
 
-### 2. 穩定性與容錯防禦 (Stability & Fault Tolerance)
-- **跨模組熔斷與優雅降級 (Circuit Breaker & Fallback)**：
-  - 當日誌儲存或非同步持久化佇列面臨極端高壓時，自動啟動日誌降級模式，保證核心戰鬥與探索狀態機 100% 優先運行，絕不阻塞主執行緒。
-- **模組健康度自我診斷看門狗 (Module Health Self-Diagnostics)**：
-  - 整合 Actuator 端點，即時監控各模組郵箱深度、GC 停頓與延遲，自動觸發高水位警告。
+### 2. 探索沉浸與黑暗博弈 (Dungeon Survival & Sanity)
+- **火把燃盡度與視野迷霧 (M2 擴展)**：
+  - 引入「火把光明度」消耗計量。光照度降低時前方視野從 3 步縮減為 1 步，遇怪率倍增；燃盡時全隊陷入漆黑，強制觸發 SAN 值精神檢定。
+- **古仙靈視與 SAN 值幻覺事件 (M2 & M1 協同)**：
+  - SAN 值過低時地牢出現偽裝寶箱怪（擬態鬼物）與牆面蠕動低語，但在幻覺中亦可看見一般狀態下隱形的古修士道藏暗門。
 
-### 3. 系統效能調優 (Performance & High-Throughput)
-- **零拷貝廣播快取 (Zero-Copy Broadcast Buffer)**：
-  - 當房間或戰鬥中有多名在線玩家時，`DrpgStateDto` 序列化結果快取於單一共享 ByteBuf，避免向每位隊員重複序列化相同的地圖或怪物狀態，大幅減輕 CPU 與記憶體壓力。
-- **Java 25 虛擬執行緒池化精細控制**：
-  - 核心排程（WorldPulse）與 I/O 寫入器（DB-Writer）分離獨立 Carrier Thread 資源限制，防止 I/O 阻塞波及戰鬥心跳。
+### 3. 本地存檔防禦與強健性 (Save Robustness & Crash Recovery)
+- **多槽位原子存檔與自動備份 (M8 擴展)**：
+  - 實作安全雙寫入策略（先寫入 `.json.tmp`，完成校驗後原子替換 `slot_N.json`），並自動留存 `.bak` 歷史版本，防止突發斷電或系統當機導致存檔損壞。
+- **存檔 Schema 自動向上遷移 (Schema Migration Pipeline)**：
+  - 面對未來的數值或屬性擴充，透過宣告式遷移器（`SaveDataMigrator`）自動將舊版存檔平滑升級至最新結構。
 
-### 4. 資料驅動設計與單機擴展 (Data-Driven Configuration)
+### 4. 資料驅動設計與零硬編碼 (100% Data-Driven Architecture)
 - **純靜態資料驅動 (100% Data-Driven)**：
   - 遵循專案第一紅線，所有門派職業、武學技能、敵怪首領、地下城地圖與掉落表，100% 集中於 `src/main/resources/data/**/*.json`。擴充新內容純靠新增或修改 JSON 配置，絕無代碼特例。
 - **🚫 已正式除役之過度設計**：
-  - 不引入動態 JAR 外部外掛 SPI 或伺服器不停機動態腳本熱更，專注於可測試、穩定的單體模組化架構。
+  - 徹底除役多人在線房間同步、副本實例叢集、Protobuf 二進位協定、動態 JAR 外部外掛 SPI 與腳本熱更，專注於極致穩健的單機單體架構。

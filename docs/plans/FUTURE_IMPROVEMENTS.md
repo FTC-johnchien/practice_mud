@@ -756,7 +756,7 @@ flowchart TD
 - **2. 存檔架構升級 (SaveData v2 Migration)**：
   - `SaveData.CURRENT_SCHEMA_VERSION` 升級為 `2`，新增 `personalInventory: List<PartyItemSlot>` 欄位。
   - `SaveMigrationPipeline` 實作 `1 -> 2` 自動補齊空 `personalInventory` 陣列，確保舊存檔讀取不中斷。
-  - `SaveGameService` 存檔時自動序列化線上玩家隨身行囊至 `personalInventory`，讀檔時完整還原至 `player.getInventory()`。
+  - `SaveGameService` 存檔時自動序列化冒險主角隨身行囊至 `personalInventory`，讀檔時完整還原至 `player.getInventory()`。
 - **3. 自動化測試驗證**：
   - `DualTierInventoryAndStashTest`: 包含散落物拾取入行囊、容器入倉庫、雙向 stash/withdraw 流轉、雙向 drop 丟棄、存檔還原與雙層 inventory 顯示共 6 項整合測試。
   - `SaveGameServiceTest`: 擴充舊存檔 v0->v1->v2 平滑遷移測試。
@@ -1067,6 +1067,13 @@ flowchart TD
 #### 4. F1-04：前端歷史樣式巨石 `style.css` (122 KB) 安全除役
 - 驗證 `index.html` 與各視圖完全運行於 `style-01` ~ `style-07` 七層樣式串流，安全封存並刪除 122 KB 死代碼巨石。
 
+#### 5. F1-05：地牢生存火把明滅與步進機關陷阱 (Dungeon Torch & Step Traps, P1)
+- **機制設計**：
+  - 小隊持有「火把光明度（Torch Light 0~100）」資源，隨地牢步進移動每步扣減 1 點。
+  - 當光明度 > 50 時，前方維持 3 步全視野；光明度降至 20~50 時視距縮減為 2 步且遭遇突襲率提高；光明度歸零時陷入「絕對黑暗」，前方僅餘 1 步迷霧，每次位移扣減全隊 5 點 SAN 值並觸發擬態妖邪。
+  - 地牢格子引入「暗弩陷阱」、「靈泉地窟」與「鎖鏈暗門」，踩踏時根據小隊先鋒（如鐵牛）的根骨或神識進行檢定，可消耗工具解鎖或規避。
+- **目標體驗**：賦予單人地牢每一步前進的資源管理緊張感與決策權重。
+
 ---
 
 ### 22.2 戰線二：戰鬥深度突破與動態沉浸博弈 (P1 ~ P2)
@@ -1106,6 +1113,17 @@ flowchart TD
 #### 4. F3-04：法寶注靈重鑄與裝備數值對比浮窗 (Stat Diff Tooltip)
 - 換裝介面滑鼠懸停即時展示數值增減對比（綠色提升 / 紅色下降），支援消耗靈石與天材地寶強化注靈。
 
+#### 5. F3-05：隊友自動戰術 Gambit 規則鏈引擎 (Companion Gambit AI Chains, P1)
+- **機制設計**：
+  - 借鑒 Final Fantasy XII 戰術 Gambit 系統：為 4 名招募夥伴（鐵牛、凌霜、墨衍、燕青）提供優先順序由高至低的條件觸發鏈。
+  - 條件範例：`[隊友氣血 < 35%] ➔ [施放回春術]`、`[自身處於破防狀態] ➔ [服用金剛丹]`、`[目標處於吟唱蓄力中] ➔ [施放太白斷空 (打斷技)]`、`[前排隊友承傷過高] ➔ [先鋒施放金鐘護體]`。
+  - 玩家可在單人小隊彈窗介面中自訂或切換「激進攻堅」、「沉著續航」、「破防打斷」等戰術預設，在半即時戰鬥中無需手忙腳亂切換 5 名隊員，亦可隨時手動指令介入。
+
+#### 6. F3-06：城鎮夥伴招募奇遇與道心羈絆故事 (Companion Recruitment & Bonding, P2)
+- **機制設計**：
+  - 各夥伴擁有獨特的個人身世與好感度/羈絆任務鏈：鐵牛的宗門復仇、凌霜的寒毒反噬、墨衍的丹道執念。
+  - 隨著好感度提升與專屬地牢暗室解鎖，夥伴將領悟隱藏被動秘傳（如墨衍在 SAN 低於 50 時觸發「瘋魔妙手」醫療暴擊），深化單機 RPG 人物塑造與陪伴感。
+
 ---
 
 ### 22.4 戰線四：現代視覺呈現與跨端互動體驗 (P2)
@@ -1133,7 +1151,13 @@ flowchart TD
 #### 2. F5-02：本機單機可觀測性與健康指標 (Local Observability) (P3)
 - 透過 `DomainMetricsPort` 監控本機虛擬執行緒戰鬥循環活躍數、Write-Behind 批次排空耗時、本機存檔 JSON 寫入延遲。
 
-#### 3. 🚫 歷史過度設計除役項目 (Decommissioned)
+#### 3. F5-03：本地多槽位安全雙寫與 .bak 崩潰自動復原 (Atomic Local Saves & Crash Recovery) (P2)
+- **機制設計**：
+  - 實作「先寫臨時檔 `slot_*.json.tmp` $\to$ 完成校驗 $\to$ 原生 Atomic Rename 覆蓋主檔」之防斷電安全寫入機制。
+  - 主動在 `saves/backups/` 維護前 3 個版本的自動快照滾動備份（`.bak1`, `.bak2`, `.bak3`）。
+  - 若偵測到存檔因非正常關機造成 JSON 結構殘缺，開機時自動啟動「存檔修復精靈」，無縫讀取最近完整 `.bak` 備份，保證玩家珍貴進度永不丟失。
+
+#### 4. 🚫 歷史過度設計除役項目 (Decommissioned)
 - **F5-EX-01 [已除役] 領域事件總線 (EDA Pub-Sub)**：純單機維持單體內同步呼叫與 Actor 信箱，不引入跨服務非同步事件匯流排。
 - **F5-EX-02 [已除役] Protobuf 二進位串流 (Binary Pipeline)**：本機 WebSocket 維持簡潔標準的 JSON 傳輸，不引入二進位編解碼複雜度。
 - **F5-EX-03 [已除役] 外部模組擴充 SPI (Dynamic Plugin Hot-Reload)**：全規則由 Java 機制與靜態 JSON 配置驅動，不引入動態 JAR 載入或腳本熱更。

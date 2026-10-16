@@ -23,14 +23,14 @@
   - 當怪物受到帶有 `STUN`、`SILENCE` 標籤的招式時觸發打斷判定，重置蓄力並進入失衡狀態。
 - [x] **Task 3: 機制單元與整合測試編寫 (Test-Driven Verification)**
   - 編寫 `EnemyCastAndInterruptTest.java`，驗證蓄力進度推移、打斷成功率與免疫機制。
-  - 執行 `.\test.ps1` 確認全專案 304+ 測試全數綠燈。
+  - 執行 `.\test.ps1` 確認全專案 315 測試全數綠燈。
 - [ ] **Task 4: 前端戰鬥擂台 FE-3 視覺化呈現 (Frontend Visuals)**
   - `battle-panel.js` 與 `style-03-battle.css` 渲染敵方卡片即時蓄力條（普通招式青藍色 / 致命招式猩紅色，平滑進度百分比）。
   - 打斷反制視覺回饋：觸發 `⚡ 打斷!` 震顫粒子、失衡紅框閃爍與 FCT 浮動提示文字；微動態相容 `@media (prefers-reduced-motion)`。
   - 邊界防禦：怪物死亡、逃跑或戰鬥超時熔斷時即時重置蓄力狀態與 UI，杜絕幽靈施法與殘留。
 - [ ] **Task 5: 全面整合與架構防線驗證 (Verification Gate)**
   - 邊界案例覆蓋：確認打斷判定為確定性標籤比對（`STUN` / `SILENCE` 於可打斷窗口內 100% 觸發打斷）、首領霸體（`UNSTOPPABLE`）免疫防禦。
-  - 執行全量 `.\test.ps1`，確保 304+ 測試 100% 綠燈全數通過，架構看門狗維持在 26 處以內。
+  - 執行全量 `.\test.ps1`，確保 315 測試 100% 綠燈全數通過，架構看門狗維持在 26 處以內。
 - [ ] **Task 6: 模組手冊同步與 Git Commit 提交流程**
   - 同步更新 `後端_M3` 與 `前端_FE3` 手冊之 API / DTO 欄位說明與蓄力打斷時序圖。
   - 由使用者審查後執行繁體中文 Git Commit。
@@ -45,7 +45,7 @@
   - [ ] 1. 建立領域子包並搬移對應 Service。
   - [ ] 2. 修正 package import 與 Spring Bean 宣告。
   - [ ] 3. 執行 `ArchitectureGuardrailsTest` 確認 Clean Architecture 依賴反轉無違規。
-  - [ ] 4. 執行 `.\test.ps1` 確保 304 測試通過。
+  - [ ] 4. 執行 `.\test.ps1` 確保 315 測試通過。
 
 ### 📌 Milestone 3 — 前端歷史樣式巨石除役 (FE-6)
 - **目標**：完成 `static/css/style.css`（122 KB）歷史巨石安全移除，徹底切換至 `style-01` ~ `style-07` 七層樣式流。

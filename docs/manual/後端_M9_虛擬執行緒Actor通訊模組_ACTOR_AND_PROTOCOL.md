@@ -30,7 +30,7 @@ graph LR
 ```
 
 ### 1. 單一擁有權原則 (Single Ownership)
-- 每個在線玩家（`Player`）與活動房間（`RoomActor`）皆繼承或持有 `VirtualActor`。
+- 冒險主角（`Player`）與活躍房間（`RoomActor`）皆繼承或持有 `VirtualActor`。
 - **無鎖化設計**：外部執行緒不得直接修改 `Player` 內部的狀態變數，而是透過發送訊息進入其專屬信箱，由該 Actor 的專屬虛擬執行緒循序處理，天然免除鎖競爭（Race Condition）與死鎖風險。
 
 ### 2. 生靈生命週期 (Lifecycle)

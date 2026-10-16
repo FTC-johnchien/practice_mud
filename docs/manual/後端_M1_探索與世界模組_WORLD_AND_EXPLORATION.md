@@ -55,11 +55,11 @@ graph TD
 當玩家輸入 `north` / `south` / `east` / `west` 等方向移動指令時：
 1. **方向與出口合法性檢驗**：向當前房間範本查詢該方向是否存在有效出口。若無出路即時回傳「此處無路可走」。
 2. **目標房間載入**：向 `WorldManager.getRoomActor(targetRoomId)` 請求目標房間 Actor 實例。
-3. **離場與進場廣播**：
-   - 呼叫 `currentRoom.leave(player, dir)`，通知房內其他修士「某某往北離去」。
-   - 呼叫 `targetRoom.enter(player, dir.opposite())`，通知房內修士「某某自南邊走來」。
-4. **小隊整體協同位移**：若玩家處於組隊狀態，移動提示會由單人名稱切換為「小隊向北前行」，展現團隊冒險氛圍。
-5. **全景廣播推送**：呼叫 `GameStateBroadcastService.broadcastState(player)`，即時推送最新城鎮數據（`TownViewDto`）給前端進行介面重繪。
+3. **離場與進場事件派發**：
+   - 呼叫 `currentRoom.leave(player, dir)`，解除當前房間之駐留監聽與足跡錨點。
+   - 呼叫 `targetRoom.enter(player, dir.opposite())`，觸發新房間生靈（NPC、巡邏怪）之警覺與環境敘事日誌（如「你率領小隊推門進入客棧正廳...」）。
+4. **五人小隊協同空間位移**：5 人戰術小隊作為不可分割的整體冒險單元，位移時同步更新所有小隊成員之房間空間座標與環境光照。
+5. **全景狀態推送**：呼叫 `GameStateBroadcastService.broadcastState(player)`，即時推送最新城鎮數據（`TownViewDto`）給前端進行介面重繪。
 
 ---
 
