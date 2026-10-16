@@ -1269,7 +1269,7 @@ flowchart TD
 
 ### 24.2 階段 1：P1 級核心實體與存檔單一真相源 (Single Source of Truth & Save Convergence)
 
-#### 1. SP-03: 存檔雙寫徹底根除與結構純化 (Decommission Personal Inventory in Saves) — Priority: P1
+#### 1. SP-03: 存檔雙寫徹底根除與結構純化 (Decommission Personal Inventory in Saves) — Priority: P1 [已完成 ✅]
 - **問題現狀**：[`SaveGameService.java`](../../src/main/java/com/example/htmlmud/domain/save/service/SaveGameService.java) 在存檔時，既序列化了整個 `party`（小隊 40 格公共行囊），又額外將 `player.getInventory()` 序列化為 `personalInventory` 寫入 JSON；讀檔時又重新還原並呼叫 `syncEquipmentFromPartyToPlayer` 進行投影，維護成本高且存在假帳隱患。
 - **涉及檔案**：
   - [`SaveGameService.java`](../../src/main/java/com/example/htmlmud/domain/save/service/SaveGameService.java)
@@ -1280,7 +1280,7 @@ flowchart TD
   2. 存檔載入：移除 `onlinePlayer.getInventory()` 還原流程，僅還原小隊實體與其裝備。
   3. 版本遷移：在 `SaveMigrationPipeline` 中將舊存檔的 `personalInventory` 自動合併進 `party.inventory`，確保相容舊有存檔。
 - **驗收標準 (DoD)**：
-  - 存檔 JSON 檔案結構不再冗餘記錄 `personalInventory`；舊檔載入時物品安全合流，無道具遺失；測試 100% 綠燈。
+  - 存檔 JSON 檔案結構不再冗餘記錄 `personalInventory`；舊檔載入時物品安全合流，無道具遺失；測試 100% 綠燈。[已達成 ✅ (316 測試全綠)]
 
 #### 2. SP-04: 房間實體單一主角化與多人廣播除役 (Single Protagonist Room & Broadcast Simplification) — Priority: P1
 - **問題現狀**：[`Room.java`](../../src/main/java/com/example/htmlmud/domain/actor/impl/Room.java) 維護 `List<Player> players = new CopyOnWriteArrayList<>()`，[`RoomService.java`](../../src/main/java/com/example/htmlmud/domain/world/RoomService.java) 與 [`LivingService.java`](../../src/main/java/com/example/htmlmud/domain/service/LivingService.java) 處處依賴遍歷房間所有玩家，並維護 `broadcastToOthers`「排除自己發送給其他人」邏輯。
@@ -1377,7 +1377,7 @@ flowchart TD
 | :---: | :---: | :--- | :---: | :---: | :---: |
 | **Step 1** | **SP-01** | 刪除 `TellCommand` 多人私聊與 `findPlayerByName` | **P0** | 極低 | **已完成 (315綠燈) ✅** |
 | **Step 2** | **SP-02** | 廢止 `StashCommand` 雙向轉存，除役個人背包假帳 | **P0** | 低 | **已完成 (315綠燈) ✅** |
-| **Step 3** | **SP-03** | 存檔寫入與載入徹底除役 `personalInventory` 雙寫 | **P1** | 中（需兼顧舊存檔遷移） | **待執行 ⏳** |
+| **Step 3** | **SP-03** | 存檔寫入與載入徹底除役 `personalInventory` 雙寫 | **P1** | 中（需兼顧舊存檔遷移） | **已完成 (316綠燈) ✅** |
 | **Step 4** | **SP-04** | `Room` 房間實體改為單一主角引用，除役多玩家廣播遍歷 | **P1** | 中 | **待執行 ⏳** |
 | **Step 5** | **SP-05** | WebSocket 多開連線自動接管唯一主角，杜絕存檔覆寫競爭 | **P1** | 中 | **待執行 ⏳** |
 | **Step 6** | **SP-06** | 技能模型合一 (`UnifiedSkill`)，消除 MUD/DRPG 技能定義割裂 | **P2** | 中高 | **待執行 ⏳** |

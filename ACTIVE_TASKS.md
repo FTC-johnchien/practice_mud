@@ -25,9 +25,11 @@
   - 更新 `DualTierInventoryAndStashTest`，315 項測試 100% 綠燈。
 
 #### 階段 1：P1 級核心實體與存檔單一真相源 (Single Source of Truth)
-- [ ] **Task 3 (SP-03): 存檔寫入與載入徹底除役 `personalInventory` 雙寫**
-  - 移除 `SaveData.personalInventory` 序列化與投影還原邏輯。
-  - 在 `SaveMigrationPipeline` 自動將舊存檔個人行囊合併進小隊公共行囊。
+- [x] **Task 3 (SP-03): 存檔寫入與載入徹底除役 `personalInventory` 雙寫**
+  - 升級存檔結構至 CURRENT_SCHEMA_VERSION = 3，SaveData 移除 personalInventory 寫出。
+  - 在 SaveGameService 徹底除役 personalInventory 的搜集與還原邏輯，單一真相源為 party.inventory。
+  - 在 SaveMigrationPipeline 新增 2 -> 3 遷移：舊存檔個人物品自動安全合流至小隊公共行囊，無物資遺失。
+  - 新增專屬遷移測試，全專案 316 項測試 100% 綠燈通過。
 - [ ] **Task 4 (SP-04): `Room` 房間實體改為單一主角引用，除役多玩家廣播遍歷**
   - `Room.players` 並發列表重構為單一引用 `Player protagonist`。
   - 除役 `broadcastToOthers`，簡化事件廣播為直接推送房內主角。
