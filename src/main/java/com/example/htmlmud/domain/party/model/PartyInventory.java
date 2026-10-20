@@ -152,10 +152,11 @@ public class PartyInventory {
     return PartyItemSlot.createFallback(templateId, count);
   }
 
-  private TemplateReader getTemplateReader() {
+  public TemplateReader getTemplateReader() {
     if (templateReader == null) {
       templateReader = new TemplateCatalog();
     }
     return templateReader;
   }
 }
+

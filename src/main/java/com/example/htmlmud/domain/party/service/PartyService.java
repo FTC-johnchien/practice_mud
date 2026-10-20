@@ -537,7 +537,12 @@ public class PartyService {
       if (alreadyIn) {
         self.reply("【同道同行】「" + target + "」已身處隊伍之中，與你生死與共。");
       } else {
-        self.reply("此地並未見到能結納為同道的「" + target + "」。(可招募夥伴：鐵牛 tie_niu、凌霜 ling_shuang、燕青 yan_qing、墨衍 mo_yan)");
+        String availableList = (templateReader != null && templateReader.getAllCompanions() != null)
+            ? templateReader.getAllCompanions().values().stream()
+                .map(c -> c.name() + " " + c.id())
+                .collect(java.util.stream.Collectors.joining("、"))
+            : "鐵牛 tie_niu、凌霜 ling_shuang、燕青 yan_qing、墨衍 mo_yan";
+        self.reply("此地並未見到能結納為同道的「" + target + "」。（全域可招募同道：" + availableList + "）");
       }
     }
     if (broadcastService != null) {

@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
  * 同時具備修煉境界 (道法等級/熟練度/升級門檻) 與回合戰術 (CD/消耗/傷害倍率/打斷標籤)
  */
 @Data
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 public class PartyMemberSkill implements UnifiedSkill {
 

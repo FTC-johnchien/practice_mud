@@ -144,7 +144,7 @@ public class ShopCommand implements PlayerCommand {
     }
 
     if (selected == null) {
-      self.reply("掌櫃福伯擦著汗道：「客官，小店沒有這件貨物，請對照貨架清單輸入代號或編號！」");
+      self.reply("【" + getNpcName(shop) + "】道：「客官，小店沒有這件貨物，請對照貨架清單輸入代號或編號！」");
       showShopList(self, shop, party);
       return;
     }
@@ -152,11 +152,11 @@ public class ShopCommand implements PlayerCommand {
     // 檢核限量庫存
     int availableStock = getStock(shop.id(), selected);
     if (availableStock == 0) {
-      self.reply("掌櫃福伯抱歉地躬身道：「客官來得不巧，小店的【" + selected.getEffectiveName(templateReader) + "】已全數售罄，尚在等待進貨呢！」");
+      self.reply("【" + getNpcName(shop) + "】抱歉地躬身道：「客官來得不巧，小店的【" + selected.getEffectiveName(templateReader) + "】已全數售罄，尚在等待進貨呢！」");
       return;
     }
     if (availableStock > 0 && availableStock < count) {
-      self.reply("掌櫃福伯抱歉地笑道：「客官，小店【" + selected.getEffectiveName(templateReader) + "】庫存吃緊，當前僅剩 "
+      self.reply("【" + getNpcName(shop) + "】抱歉地笑道：「客官，小店【" + selected.getEffectiveName(templateReader) + "】庫存吃緊，當前僅剩 "
           + availableStock + " 件，無法滿足 " + count + " 件之需！」");
       return;
     }
@@ -165,7 +165,7 @@ public class ShopCommand implements PlayerCommand {
     int currentCoin = party.getCoin();
     int totalPrice = effectivePrice * count;
     if (currentCoin < totalPrice) {
-      self.reply("掌櫃福伯抱歉地笑道：「客官身上的靈石/盤纏不夠呢！（需要 " + totalPrice
+      self.reply("【" + getNpcName(shop) + "】抱歉地笑道：「客官身上的靈石/盤纏不夠呢！（需要 " + totalPrice
           + " 靈石，小隊金庫當前僅有 " + currentCoin + " 靈石）」");
       return;
     }
@@ -197,7 +197,7 @@ public class ShopCommand implements PlayerCommand {
   private void handleSell(Player self, ShopTemplate shop, Party party, String input) {
     String rest = input.toLowerCase().startsWith("sell ") ? input.substring(5).trim() : "";
     if (rest.isBlank() || "list".equalsIgnoreCase(rest)) {
-      showSellList(self, party);
+      showSellList(self, shop, party);
       return;
     }
 
@@ -217,7 +217,7 @@ public class ShopCommand implements PlayerCommand {
 
     List<PartyItemSlot> slots = party.getInventory().getSlots();
     if (slots == null || slots.isEmpty()) {
-      self.reply("掌櫃福伯客氣道：「客官的小隊公共行囊中空無一物，暫無可供出售的法寶或素材！」");
+      self.reply("【" + getNpcName(shop) + "】客氣道：「客官的小隊公共行囊中空無一物，暫無可供出售的法寶或素材！」");
       return;
     }
 
@@ -237,12 +237,12 @@ public class ShopCommand implements PlayerCommand {
     }
 
     if (selectedSlot == null) {
-      self.reply("掌櫃福伯搖頭笑道：「客官小隊行囊中並無此件物品，請輸入「sell」查看小隊可回收之物！」");
+      self.reply("【" + getNpcName(shop) + "】搖頭笑道：「客官小隊行囊中並無此件物品，請輸入「sell」查看小隊可回收之物！」");
       return;
     }
 
     if (selectedSlot.getCount() < count) {
-      self.reply("掌櫃福伯抱歉地笑道：「客官小隊行囊中的【" + selectedSlot.getName() + "】僅存 "
+      self.reply("【" + getNpcName(shop) + "】抱歉地笑道：「客官小隊行囊中的【" + selectedSlot.getName() + "】僅存 "
           + selectedSlot.getCount() + " 件，無法出售 " + count + " 件之多！」");
       return;
     }
@@ -269,11 +269,11 @@ public class ShopCommand implements PlayerCommand {
     sendShopCatalog(self, shop, party);
   }
 
-  private void showSellList(Player self, Party party) {
+  private void showSellList(Player self, ShopTemplate shop, Party party) {
     List<PartyItemSlot> slots = party.getInventory().getSlots();
     StringBuilder sb = new StringBuilder();
     sb.append("🛒【小隊行囊回收櫃檯】\n");
-    sb.append("掌櫃笑吟吟地道：「客官若有多餘的妖獸素材或行囊雜物，小店童叟無欺，皆可按半價靈石回收！」\n");
+    sb.append("【").append(getNpcName(shop)).append("】笑吟吟地道：「客官若有多餘的妖獸素材或行囊雜物，小店童叟無欺，皆可按半價靈石回收！」\n");
     sb.append("----------------------------------------------------------------------\n");
     if (slots == null || slots.isEmpty()) {
       sb.append(" (小隊公共行囊中空空如也，暫無可出售物品)\n");
@@ -297,13 +297,13 @@ public class ShopCommand implements PlayerCommand {
   private void showShopList(Player self, ShopTemplate shop, Party party) {
     if (self.getOutput() != null) {
       sendShopCatalog(self, shop, party);
-      self.reply("🏪 已開啟【" + shop.name() + "】交易櫃檯，掌櫃正笑吟吟地候著您。（可於彈出視窗點選購買或按 Esc 關閉）");
+      self.reply("🏪 已開啟【" + shop.name() + "】交易櫃檯，【" + getNpcName(shop) + "】正候著您。（可於彈出視窗點選購買或按 Esc 關閉）");
       return;
     }
 
     StringBuilder sb = new StringBuilder();
     sb.append("🛒【").append(shop.name()).append("】\n");
-    sb.append("掌櫃笑吟吟地招呼：「客官要進墨竹山吧？帶足乾糧和清心靈茶才是保命上策！」\n");
+    sb.append("【").append(getNpcName(shop)).append("】招呼道：「").append(getNpcGreeting(shop)).append("」\n");
     sb.append("----------------------------------------------------------------------\n");
     for (ShopItemTemplate item : shop.goods()) {
       int s = getStock(shop.id(), item);
@@ -339,8 +339,31 @@ public class ShopCommand implements PlayerCommand {
     }
   }
 
+  private String getNpcName(ShopTemplate shop) {
+    if (shop != null && shop.npcId() != null && !shop.npcId().isBlank()) {
+      return templateReader.findMob(shop.npcId())
+          .map(com.example.htmlmud.domain.model.template.MobTemplate::name)
+          .orElse(shop.npcId());
+    }
+    return "掌櫃";
+  }
+
+  private String getNpcGreeting(ShopTemplate shop) {
+    if (shop != null && shop.npcId() != null && !shop.npcId().isBlank()) {
+      var mobOpt = templateReader.findMob(shop.npcId());
+      if (mobOpt.isPresent()) {
+        java.util.List<String> dialogues = mobOpt.get().dialogues();
+        if (dialogues != null && !dialogues.isEmpty()) {
+          return dialogues.get(0);
+        }
+      }
+    }
+    return "客官請進，看看小店有些什麼所需之物！";
+  }
+
   @Override
   public String getDescription() {
     return "貨棧買賣 (查看貨架商品、購買物資或出售小隊行囊物品)";
   }
 }
+

@@ -106,9 +106,59 @@ class DataCoreIntegrityTest {
     assertThat(newPlayer.isInDungeon()).isFalse();
   }
 
+  @Autowired
+  private com.example.htmlmud.application.command.impl.ShopCommand shopCommand;
+
+  @Autowired
+  private com.example.htmlmud.domain.repository.TemplateReader templateReader;
+
+  @Test
+  @DisplayName("DATA-CORE-02: PartyService 夥伴招募失敗提示動態自 TemplateReader 產出可用清單")
+  void testCompanionRecruitmentFailureListsAllCompanions() {
+    Player player = Player.createSinglePlayer(createMockOutput(), worldManager, playerService, "recruit_tester");
+    partyService.recruitCompanionForPlayer(player, "non_existent_companion");
+    int companionCount = templateReader.getAllCompanions().size();
+    assertThat(companionCount).isGreaterThanOrEqualTo(4);
+  }
+
+  @Test
+  @DisplayName("DATA-CORE-02: Party 吸收道核學習技能自 TemplateReader 動態反查設定")
+  void testLearnSkillFromDaoCoreDynamicallyResolvesTemplate() {
+    Party party = partyService.getOrCreateParty("dao_tester");
+    PartyMember member = party.getMembers().get(0);
+    int initialSkills = member.getSkills().size();
+
+    com.example.htmlmud.domain.party.model.PartyItemSlot daoCore =
+        com.example.htmlmud.domain.party.model.PartyItemSlot.builder()
+            .slotId("dao-core-slot-1")
+            .itemId("dao_core_blade")
+            .name("異變刀客道核")
+            .count(1)
+            .itemType(com.example.htmlmud.domain.model.enums.ItemType.CONSUMABLE)
+            .effectType("LEARN_SKILL")
+            .grantedSkillId("combo_blade_and_shadow")
+            .grantedSkillName("刀劍合璧・斷空破")
+            .build();
+    party.getInventory().addSlot(daoCore);
+
+    String msg = party.useItemOnMember("dao-core-slot-1", 0);
+    assertThat(msg).contains("成功領悟掌握新絕學");
+    assertThat(member.getSkills().size()).isEqualTo(initialSkills + 1);
+
+    com.example.htmlmud.domain.party.model.PartyMemberSkill learned = member.getSkills().stream()
+        .filter(s -> s.getId().equals("combo_blade_and_shadow"))
+        .findFirst().orElse(null);
+    assertThat(learned).isNotNull();
+    assertThat(learned.getName()).isEqualTo("刀劍合璧・斷空破");
+    // party_skills.json 中 combo_blade_and_shadow 的 damageMultiplier 為 6.0, cooldownMs 為 15000，完全動態讀取範本數值（消滅寫死的 1.8 與 6000ms）
+    assertThat(learned.getDamageMultiplier()).isEqualTo(6.0);
+    assertThat(learned.getCooldownMs()).isEqualTo(15000L);
+  }
+
   @org.junit.jupiter.api.AfterEach
   void tearDown() {
     partyService.clearCache();
   }
 }
+
 

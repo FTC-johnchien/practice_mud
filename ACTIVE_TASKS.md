@@ -24,10 +24,11 @@
   - 消除 `SaveGameService` 與 `DungeonCommand` 中寫死字串 `"newbie_village:inn"`，全面改由注入之 `gameConfig.getDefaults().getPlayer().getSpawnRoomId()` 驅動。
   - 在 `DataIntegrityValidator` 擴充地牢 `exitRoomId` 拓撲校驗，消除首領地塊 hardcoded `"mozhu_mines:boss_song_tianheng"`。
   - 新增 `DataCoreIntegrityTest` 專屬整合測試，全專案 335 項測試維持 100% 綠燈。
-- [ ] **Task 3 (DATA-CORE-02): 商店 NPC 身份動態化、道核技能反查與夥伴列表配置化**
+- [x] **Task 3 (DATA-CORE-02): 商店 NPC 身份動態化、道核技能反查與夥伴列表配置化**
   - 重構 `ShopCommand`：依據 `shop.npcId()` 查詢真實掌櫃名稱與台詞，徹底消除所有商店寫死「掌櫃福伯擦著汗道」、「客官要進墨竹山吧？」。
   - 重構 `Party.useItemOnMember` 中 `LEARN_SKILL`：自 `TemplateReader` 動態反查技能範本數值，消滅 `cooldownMs(6000)` 與 `damageMultiplier(1.8)` 寫死數值。
   - 重構 `PartyService` 夥伴招募失敗提示：自 `templateReader.getAllCompanions()` 動態產出可用夥伴清單。
+  - 擴充 `DataCoreIntegrityTest` 測試驗證，全專案 337 項測試維持 100% 綠燈。
 - [ ] **Task 4 (DATA-GUARD-03): 前端地塊動態 Tooltip 與看門狗棘輪加固**
   - `dungeon-panel.js` 懸停 title 優先讀取 DTO 地塊動態名稱，消除「玄岩石壁」寫死符號推論。
   - 清理 `Player.java` 與 `Living.java` 中的 `GameConfig.getInstance()`，收緊 `ArchitectureGuardrailsTest` 棘輪閾值。

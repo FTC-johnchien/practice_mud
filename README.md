@@ -3,7 +3,7 @@
 
 [![Java](https://img.shields.io/badge/Java-21%20%2F%2025-orange.svg)](https://openjdk.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-green.svg)](https://spring.io/projects/spring-boot)
-[![Tests](https://img.shields.io/badge/Tests-335%20Passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-337%20Passed-brightgreen.svg)]()
 [![Architecture](https://img.shields.io/badge/Architecture-Clean%20%26%20100%25%20Data--Driven-blue.svg)]()
 
 > **遊戲簡介**：  
@@ -31,7 +31,7 @@
 
 ### 3. 執行全量測試驗證
 ```powershell
-# 執行全套單元、整合與架構看門狗測試 (目前基準: 331 項 100% 綠燈)
+# 執行全套單元、整合與架構看門狗測試 (目前基準: 337 項 100% 綠燈)
 .\test.ps1
 ```
 

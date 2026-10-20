@@ -87,16 +87,61 @@ public class Party {
 
     if ("LEARN_SKILL".equals(slot.getEffectType()) && slot.getGrantedSkillId() != null) {
       // 吸收道種遺物，習得技能
-      PartyMemberSkill newSkill = PartyMemberSkill.builder()
-          .id(slot.getGrantedSkillId())
-          .name(slot.getGrantedSkillName() != null ? slot.getGrantedSkillName() : "道種絕學")
-          .icon("🧬")
-          .description("自異變隊友道核中領悟之殘篇秘法")
-          .costType(target.getResourceType())
-          .costValue(target.getResourceType() == CombatResourceType.COMBO ? 2 : (target.getResourceType() == CombatResourceType.RAGE ? 30 : 35))
-          .cooldownMs(6000)
-          .damageMultiplier(1.8)
-          .build();
+      String grantedSkillId = slot.getGrantedSkillId();
+      com.example.htmlmud.domain.repository.TemplateReader reader = getTemplateReader();
+      PartyMemberSkill newSkill = null;
+      if (reader != null) {
+        var partySkillOpt = reader.findPartySkill(grantedSkillId);
+        if (partySkillOpt.isPresent()) {
+          newSkill = partySkillOpt.get().toBuilder()
+              .costType(target.getResourceType())
+              .build();
+          if (slot.getGrantedSkillName() != null && !slot.getGrantedSkillName().isBlank()) {
+            newSkill.setName(slot.getGrantedSkillName());
+          }
+        } else {
+          var skillTplOpt = reader.findSkill(grantedSkillId);
+          if (skillTplOpt.isPresent()) {
+            com.example.htmlmud.domain.model.template.SkillTemplate st = skillTplOpt.get();
+            PartyMemberSkill converted = PartyMemberSkill.fromSkillTemplate(st);
+            if (converted != null) {
+              int cooldown = (st.getTiming() != null && st.getTiming().cooldown() > 0)
+                  ? (int) (st.getTiming().cooldown() * 1000)
+                  : (int) converted.getCooldownMs();
+              double dmgMult = (st.getMechanics() != null && st.getMechanics().scaleFactor() > 0)
+                  ? st.getMechanics().scaleFactor()
+                  : converted.getDamageMultiplier();
+              int cost = (st.getCosts() != null && st.getCosts().mp() > 0)
+                  ? st.getCosts().mp()
+                  : (converted.getCostValue() > 0 ? converted.getCostValue()
+                      : (target.getResourceType() == CombatResourceType.COMBO ? 2 : (target.getResourceType() == CombatResourceType.RAGE ? 30 : 25)));
+              String sName = (slot.getGrantedSkillName() != null && !slot.getGrantedSkillName().isBlank())
+                  ? slot.getGrantedSkillName()
+                  : (st.getName() != null ? st.getName() : "道種絕學");
+              newSkill = converted.toBuilder()
+                  .name(sName)
+                  .costType(target.getResourceType())
+                  .costValue(cost)
+                  .cooldownMs(cooldown)
+                  .damageMultiplier(dmgMult)
+                  .build();
+            }
+          }
+        }
+      }
+
+      if (newSkill == null) {
+        newSkill = PartyMemberSkill.builder()
+            .id(grantedSkillId)
+            .name(slot.getGrantedSkillName() != null ? slot.getGrantedSkillName() : "道種絕學")
+            .icon("🧬")
+            .description("自異變隊友道核中領悟之殘篇秘法")
+            .costType(target.getResourceType())
+            .costValue(target.getResourceType() == CombatResourceType.COMBO ? 2 : (target.getResourceType() == CombatResourceType.RAGE ? 30 : 35))
+            .cooldownMs(5000)
+            .damageMultiplier(1.5)
+            .build();
+      }
 
       boolean learned = target.learnSkill(newSkill);
       if (!learned) {
@@ -512,4 +557,13 @@ public class Party {
 
     return new EffectiveCombatStats(minDmg, maxDmg, def, hp, maxHp, mp, maxMp, san, maxSan);
   }
+
+  @JsonIgnore
+  public com.example.htmlmud.domain.repository.TemplateReader getTemplateReader() {
+    if (inventory != null && inventory.getTemplateReader() != null) {
+      return inventory.getTemplateReader();
+    }
+    return new com.example.htmlmud.domain.service.TemplateCatalog();
+  }
 }
+
