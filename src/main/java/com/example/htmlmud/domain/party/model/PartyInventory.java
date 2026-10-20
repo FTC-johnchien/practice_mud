@@ -118,6 +118,14 @@ public class PartyInventory {
     return true;
   }
 
+  public synchronized int getItemCount(String templateId) {
+    if (templateId == null) return 0;
+    return slots.stream()
+        .filter(s -> isSameItemId(templateId, s.getItemId()))
+        .mapToInt(PartyItemSlot::getCount)
+        .sum();
+  }
+
   public synchronized boolean addGameItem(com.example.htmlmud.domain.model.entity.GameItem item) {
     if (item == null) return false;
     if (item.getTemplate() != null && item.getTemplate().id() != null) {

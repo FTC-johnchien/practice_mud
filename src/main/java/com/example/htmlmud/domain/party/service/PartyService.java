@@ -156,12 +156,17 @@ public class PartyService {
       inv.addItem(entry.getKey(), entry.getValue());
     }
 
+    int initialCoin = (gameConfig != null && gameConfig.getDefaults() != null && gameConfig.getDefaults().getPlayer() != null)
+        ? gameConfig.getDefaults().getPlayer().getInitialCoin()
+        : 100;
+
     Party party = Party.builder()
         .id("party-" + leaderName)
         .partyName(leaderName + "的問道旅團")
         .equippedFormation(form)
         .formationEnergy(50)
         .inventory(inv)
+        .coin(initialCoin)
         .build();
 
     PartyMember leader = createCompanion("leader");

@@ -58,7 +58,14 @@
   - `BattleContext` 增設 `onBattleEnd` 生命週期回呼，戰鬥大捷時掉落物直入 40 格小隊公共行囊，隊員獲得修為經驗與技能熟練度原地增長，發布擊殺事件並同步移除/標記大世界房間 Mob。
   - `KillCommand` 與 `CombatService.startCombat` 全面委派至小隊戰鬥引擎，`TargetSelector` 自動過濾死亡怪防禦性防護。
   - 新增 `FieldCombatPartyUnificationTest`，全專案 327 項測試 100% 綠燈零回歸破壞。
-- [ ] **Task 9 (SP-09): 小隊共享金庫與經濟體系大一統**
+- [x] **Task 9 (SP-09): 小隊共享金庫與經濟體系大一統**
+  - 在 `Party` 實體中增設 `coin` 共享金庫欄位與安全操作方法（`addCoin`、`deductCoin`、`setCoin`），徹底消除「40 格公共行囊但金幣分散於個人」的資產割裂。
+  - `ShopCommand` 購買與出售全數以小隊金庫為唯一真相源（SSOT），購買扣減小隊金庫並存入行囊，新增行囊回收出售物品換取小隊靈石。
+  - `DrpgRewardService` 戰鬥大捷繳獲妖獸靈石直接入帳小隊金庫，並透過 `BattleVictoryDto` 與文字廣播即時同步前端結算視窗。
+  - `DungeonCommand` 探索開啟寶箱暗格靈石直接存入小隊金庫。
+  - 隊長 `LivingStats.coin` 與小隊金庫達成 0ms 零延遲雙向鏡像同步，確保歷史測試與舊代碼 100% 向下相容。
+  - 前端與 DTO（`PartyViewDto`、`header-coins-val`、公共行囊面板）全域統一展示「小隊總靈石」。
+  - 新增 `UnifiedPartyEconomyTest`，全專案 331 項測試 100% 綠燈零回歸通過。
 
 ---
 

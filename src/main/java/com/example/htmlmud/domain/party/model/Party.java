@@ -36,6 +36,37 @@ public class Party {
   private boolean formationBroken = false;
   @Builder.Default
   private PartyInventory inventory = new PartyInventory();
+  @Builder.Default
+  private int coin = 0;
+
+  public synchronized void addCoin(int amount) {
+    if (amount > 0) {
+      this.coin += amount;
+      syncLeaderCoin();
+    }
+  }
+
+  public synchronized boolean deductCoin(int amount) {
+    if (amount <= 0) return true;
+    if (this.coin >= amount) {
+      this.coin -= amount;
+      syncLeaderCoin();
+      return true;
+    }
+    return false;
+  }
+
+  public synchronized void setCoin(int coin) {
+    this.coin = Math.max(0, coin);
+    syncLeaderCoin();
+  }
+
+  private void syncLeaderCoin() {
+    PartyMember leader = getLeader();
+    if (leader != null && leader.getStats() != null) {
+      leader.getStats().setCoin(this.coin);
+    }
+  }
 
   public PartyInventory getInventory() {
     if (this.inventory == null) {
@@ -347,6 +378,7 @@ public class Party {
       }
     }
     members.add(member);
+    syncLeaderCoin();
     alignFormationRows();
     refreshFormation();
     return true;

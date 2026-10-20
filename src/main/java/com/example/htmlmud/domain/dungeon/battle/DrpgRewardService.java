@@ -236,20 +236,43 @@ public class DrpgRewardService {
       }
     }
 
-    // 4. 戰後清理 (解開封印 / 移除永久死肉與異變者)
+    // 4. 計算繳獲靈石並入帳小隊金庫 (SP-09)
+    int rewardCoin = 0;
+    for (BattleEnemy e : ctx.getEnemies()) {
+      if (!e.isAlive()) {
+        int enemyCoin = 8;
+        if (e.getRank() != null) {
+          enemyCoin = switch (e.getRank()) {
+            case NORMAL -> 8;
+            case ELITE -> 25;
+            case BOSS -> 80;
+          };
+        }
+        rewardCoin += enemyCoin;
+      }
+    }
+    if (rewardCoin > 0 && ctx.getParty() != null) {
+      ctx.getParty().addCoin(rewardCoin);
+      if (player != null && player.getStats() != null) {
+        player.getStats().setCoin(ctx.getParty().getCoin());
+      }
+    }
+
+    // 5. 戰後清理 (解開封印 / 移除永久死肉與異變者)
     postBattleCleanup(player, ctx);
 
-    // 5. 推送結構化大捷事件給客戶端，用於渲染視覺化結算視窗
+    // 6. 推送結構化大捷事件給客戶端，用於渲染視覺化結算視窗
     if (player != null) {
       var victoryDto = new com.example.htmlmud.domain.dungeon.dto.BattleVictoryDto(
-          ctx.getBattleId(), totalXp, 0, levelUpDtos, lootDtos
+          ctx.getBattleId(), totalXp, rewardCoin, levelUpDtos, lootDtos
       );
       player.sendJson(victoryDto);
     }
 
-    // 6. 文字日誌純粹單行化 (遵守第 10 條鐵律)
+    // 7. 文字日誌純粹單行化 (遵守第 10 條鐵律)
     String lootSummary = droppedItemNames.isEmpty() ? "無特殊靈物" : String.join("、", droppedItemNames);
-    broadcastLog(player, ctx, "🏆 \u001B[1;32m【戰鬥大捷】小隊合力斬除妖邪！全員獲得修為 " + totalXp + " 點，獲取戰利品：【" + lootSummary + "】！\u001B[0m");
+    String coinSummary = (rewardCoin > 0) ? "，繳獲靈石 " + rewardCoin + " 枚（小隊金庫當前: " + (ctx.getParty() != null ? ctx.getParty().getCoin() : rewardCoin) + "）" : "";
+    broadcastLog(player, ctx, "🏆 \u001B[1;32m【戰鬥大捷】小隊合力斬除妖邪！全員獲得修為 " + totalXp + " 點" + coinSummary + "，獲取戰利品：【" + lootSummary + "】！\u001B[0m");
     for (String ann : levelUpAnnouncements) {
       broadcastLog(player, ctx, "✨ \u001B[1;33m" + ann + "\u001B[0m");
     }

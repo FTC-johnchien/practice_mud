@@ -1429,12 +1429,20 @@ flowchart TD
   - [`Party.java`](../../src/main/java/com/example/htmlmud/domain/party/model/Party.java)
   - [`ShopCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/ShopCommand.java)
   - [`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java)
+  - [`DungeonCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java)
+  - [`DrpgStateDto.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/dto/DrpgStateDto.java)
+  - [`UnifiedPartyEconomyTest.java`](../../src/test/java/com/example/htmlmud/UnifiedPartyEconomyTest.java)
 - **改動方針**：
   1. 在 `Party` 實體中增設 `coin` 欄位作為全隊共享靈石金庫。
-  2. 商店購買（`ShopCommand`）、野外地牢掉落獎勵、開寶箱獲取金幣全面直接入帳至小隊金庫。
-  3. 主角個人 `LivingStats.coin` 與隊長小隊金庫保持單向關聯或委派。
-- **驗收標準 (DoD)**：
-  - 前端與終端介面小隊面板清楚展示「隊伍總靈石」；道具與金幣皆為全隊單一共享資產。
+  2. 商店購買與出售（`ShopCommand`）、野外地牢掉落獎勵、開寶箱獲取金幣全面直接入帳至小隊金庫。
+  3. 主角個人 `LivingStats.coin` 與隊長小隊金庫保持單向關聯與 0ms 零延遲鏡像同步。
+- **落地成果**：
+  1. `Party.java` 實裝 `coin`、`addCoin`、`deductCoin`、`setCoin` 與 `syncLeaderCoin`。
+  2. `ShopCommand.java` 採小隊金庫出納，新增行囊回收出售換取靈石機制。
+  3. `DrpgRewardService.java` 戰鬥大捷繳獲妖獸靈石直接存入小隊金庫，並透過 `BattleVictoryDto` 推送前端。
+  4. `DungeonCommand.java` 地牢寶箱暗格繳獲靈石入帳小隊金庫。
+  5. 前端面板（頂部靈石導航列、隊伍行囊抽屜、大捷視窗）全域統一顯示小隊共享靈石。
+  6. 新增 `UnifiedPartyEconomyTest.java`，全專案 331 項測試 100% 綠燈零回歸通過。
 
 ---
 
@@ -1450,7 +1458,7 @@ flowchart TD
 | **Step 6** | **SP-06** | 技能模型合一 (`UnifiedSkill`)，消除 MUD/DRPG 技能定義割裂 | **P2** | 中高 | **已完成 (324綠燈) ✅** |
 | **Step 7** | **SP-07** | 徹底除役 `SkillBridgeService` 翻譯縮放膠水代碼 | **P2** | 中 | **已完成 (324綠燈) ✅** |
 | **Step 8** | **SP-08** | 戰鬥引擎大一統，野外戰鬥全面對齊 5 人小隊協同作戰 | **P2** | 高 | **已完成 (327綠燈) ✅** |
-| **Step 9** | **SP-09** | 小隊共享金庫與經濟體系大一統 | **P2** | 低 | **待執行 ⏳** |
+| **Step 9** | **SP-09** | 小隊共享金庫與經濟體系大一統 | **P2** | 低 | **已完成 (331綠燈) ✅** |
 
 
 

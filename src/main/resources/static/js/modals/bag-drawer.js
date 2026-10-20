@@ -44,6 +44,14 @@ export function renderBagDrawer() {
   if (countEl) {
     countEl.innerText = `${slots.length}/${capacity}`;
   }
+  const capacityBadge = document.getElementById('bag-capacity-badge');
+  if (capacityBadge) {
+    capacityBadge.innerText = `${slots.length}/${capacity}`;
+  }
+  const coinVal = document.getElementById('bag-coin-val');
+  if (coinVal && typeof lastParty.coin === 'number') {
+    coinVal.innerText = lastParty.coin;
+  }
 
   listEl.innerHTML = '';
   if (slots.length === 0) {

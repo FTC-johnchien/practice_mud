@@ -221,12 +221,16 @@ export function updateGlobalHeader(payload) {
     }
   }
 
-  // 3. 盤纏靈石
+  // 3. 盤纏靈石 (小隊金庫大一統 SP-09)
   const coinEl = document.getElementById('header-coins-val');
   if (coinEl) {
-    const lastShop = store.get('lastShopCatalog');
-    if (lastShop && typeof lastShop.playerCoin === 'number') {
-      coinEl.innerText = lastShop.playerCoin;
+    if (payload.party && typeof payload.party.coin === 'number') {
+      coinEl.innerText = payload.party.coin;
+    } else {
+      const lastShop = store.get('lastShopCatalog');
+      if (lastShop && typeof lastShop.playerCoin === 'number') {
+        coinEl.innerText = lastShop.playerCoin;
+      }
     }
   }
 

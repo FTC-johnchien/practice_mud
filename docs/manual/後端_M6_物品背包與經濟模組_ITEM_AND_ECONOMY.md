@@ -49,18 +49,33 @@ public enum EquipmentSlot {
 
 ---
 
-## 🛒 三、貨棧買賣與經濟系統 (Shop System)
+## 🛒 三、貨棧買賣與小隊共享金庫經濟體系 (Unified Party Economy & Coin)
 
-城鎮中的客棧與商販提供貨棧交易服務（[`ShopCommand.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/ShopCommand.java)）：
+在 SP-09 演進中，專案徹底消滅了「道具放入 40 格小隊公共行囊，但靈石卻割裂在個人 `LivingStats.coin`」的非對稱架構，確立以 **小隊共享金庫 (`Party.coin`)** 作為全隊單一真相源（SSOT）：
+
+```
+┌────────────────────────────────────────────────────────┐
+│                   全隊大一統共享經濟體系                │
+│             Party.coin (全隊共享靈石金庫 SSOT)           │
+├────────────────────────────────────────────────────────┤
+│ • 商店購買 (buy)  ➔ 檢核小隊金庫 ➔ 扣款 ➔ 入庫 40格行囊  │
+│ • 行囊出售 (sell) ➔ 從 40 格行囊扣除 ➔ 半價靈石入金庫   │
+│ • 戰鬥大捷繳獲    ➔ 妖獸掉落靈石直接入帳小隊金庫        │
+│ • 地牢探索寶箱    ➔ 寶箱暗格靈石直接入帳小隊金庫        │
+│ • 隊長零延遲鏡像  ➔ leader.stats.coin 與金庫保持雙向同步│
+└────────────────────────────────────────────────────────┘
+```
 
 1. **資料驅動查詢**：
    - 根據當前房間 ID，向 `TemplateReader.findShopByRoomId(roomId)` 獲取商店範本。
    - 徹底拔除舊有的 `roomId.contains("inn")` 硬編碼降級。
-2. **購買交易檢驗**：
-   - 檢驗玩家碎銀/靈石餘額是否足夠。
-   - 檢驗小隊儲物袋是否有空餘格位（未滿 40 格）。
-   - 支援批次購買（如 `buy bread 5`）。
-3. **靈藥消耗效果**：
+2. **小隊金庫出納流水線 (`ShopCommand.java`)**：
+   - **購買 (buy)**：檢驗小隊金庫靈石餘額是否足夠；小隊 40 格行囊未滿時入庫，扣減小隊金庫並同步隊長個人數值。支援批次購買（如 `buy 1 5` 或 `buy bread 3`）。
+   - **出售 (sell)**：支援回收小隊公共行囊中的多餘法寶與素材（如 `sell 1 2` 或 `sell herb 1`），以半價回收換取靈石直接入帳小隊金庫。
+3. **戰鬥與探索結算 (`DrpgRewardService.java` & `DungeonCommand.java`)**：
+   - 戰鬥大捷時，依據擊倒怪物品階（NORMAL / ELITE / BOSS）計算繳獲靈石，直接注入 `Party.addCoin(rewardCoin)`，並透過 `BattleVictoryDto.coinsGained` 推送前端視覺化結算視窗。
+   - 開啟地牢寶箱時，暗格繳獲靈石直接入庫小隊金庫。
+4. **靈藥消耗效果**：
    - **辟邪清心靈茶**：飲用回復 25 點道心（SAN 值）與 20 點真元。
    - **百草金創藥膏**：塗抹迅速回復 60 點氣血。
 

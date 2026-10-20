@@ -12,16 +12,20 @@ import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.model.template.ShopTemplate;
 import com.example.htmlmud.domain.model.template.ShopTemplate.ShopItemTemplate;
 import com.example.htmlmud.domain.party.model.Party;
+import com.example.htmlmud.domain.party.model.PartyItemSlot;
 import com.example.htmlmud.domain.party.service.PartyService;
 import com.example.htmlmud.domain.world.GameStateBroadcastService;
 import com.example.htmlmud.domain.repository.TemplateReader;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * 貨棧買賣與小隊共享金庫出納命令 (SP-09)。
+ * 購買消耗小隊金庫、物品入庫小隊公共行囊；出售小隊行囊物品回收靈石入庫小隊金庫。
+ * 隊長個人 LivingStats.coin 與小隊金庫保持單一真相源零延遲鏡像同步。
+ */
 @Slf4j
 @Component
-@RequiredArgsConstructor
-@CommandAlias({"buy", "list", "store"})
+@CommandAlias({"buy", "list", "store", "sell"})
 public class ShopCommand implements PlayerCommand {
 
   private final PartyService partyService;
@@ -29,6 +33,15 @@ public class ShopCommand implements PlayerCommand {
   private final TemplateReader templateReader;
 
   private final Map<String, Integer> shopStockTracker = new ConcurrentHashMap<>();
+
+  public ShopCommand(
+      PartyService partyService,
+      GameStateBroadcastService broadcastService,
+      TemplateReader templateReader) {
+    this.partyService = partyService;
+    this.broadcastService = broadcastService;
+    this.templateReader = templateReader;
+  }
 
   public record ShopCatalogDto(
       String type,
@@ -83,17 +96,25 @@ public class ShopCommand implements PlayerCommand {
     }
 
     ShopTemplate shop = shopOpt.get();
-    List<ShopItemTemplate> goods = shop.goods();
+    Party party = partyService.getOrCreateParty(self.getName());
+    syncPlayerAndPartyCoin(self, party);
 
     if (args == null || args.isBlank() || "list".equalsIgnoreCase(args.trim())) {
-      showShopList(self, shop);
+      showShopList(self, shop, party);
       return;
     }
 
     String input = args.trim();
+    if (input.toLowerCase().startsWith("sell")) {
+      handleSell(self, shop, party, input);
+      return;
+    }
+
     if (input.toLowerCase().startsWith("buy ")) {
       input = input.substring(4).trim();
     }
+
+    List<ShopItemTemplate> goods = shop.goods();
 
     // 解析購買數量 (支援: "1 5" 或 "tea 3" 或 "1")
     int count = 1;
@@ -104,7 +125,6 @@ public class ShopCommand implements PlayerCommand {
         int parsedCount = Integer.parseInt(tokens[tokens.length - 1]);
         if (parsedCount > 0) {
           count = parsedCount;
-          // 前面的 tokens 為商品識別名稱/編號
           itemKeyword = input.substring(0, input.lastIndexOf(tokens[tokens.length - 1])).trim();
         }
       } catch (NumberFormatException ignored) {
@@ -125,7 +145,7 @@ public class ShopCommand implements PlayerCommand {
 
     if (selected == null) {
       self.reply("掌櫃福伯擦著汗道：「客官，小店沒有這件貨物，請對照貨架清單輸入代號或編號！」");
-      showShopList(self, shop);
+      showShopList(self, shop, party);
       return;
     }
 
@@ -142,15 +162,14 @@ public class ShopCommand implements PlayerCommand {
     }
 
     int effectivePrice = selected.getEffectivePrice(templateReader);
-    int currentCoin = self.getStats().getCoin();
+    int currentCoin = party.getCoin();
     int totalPrice = effectivePrice * count;
     if (currentCoin < totalPrice) {
       self.reply("掌櫃福伯抱歉地笑道：「客官身上的靈石/盤纏不夠呢！（需要 " + totalPrice
-          + " 靈石，您當前僅有 " + currentCoin + " 靈石）」");
+          + " 靈石，小隊金庫當前僅有 " + currentCoin + " 靈石）」");
       return;
     }
 
-    Party party = partyService.getOrCreateParty(self.getName());
     String templateIdToGive = selected.templateId() != null ? selected.templateId() : selected.id();
     boolean added = party.getInventory().addItem(templateIdToGive, count);
     if (!added) {
@@ -158,23 +177,126 @@ public class ShopCommand implements PlayerCommand {
       return;
     }
 
-    // 扣減金幣與庫存
-    self.getStats().setCoin(currentCoin - totalPrice);
+    // 扣減金幣與庫存 (小隊金庫為單一真相源，並同步隊長個人數值)
+    party.deductCoin(totalPrice);
+    if (self.getStats() != null) {
+      self.getStats().setCoin(party.getCoin());
+    }
     deductStock(shop.id(), selected, count);
 
     int remainingStock = getStock(shop.id(), selected);
     String stockNotice = remainingStock >= 0 ? "（小店剩餘庫存: " + remainingStock + "）" : "（供應充足）";
 
     self.reply("💰【購買成功】你花費了 " + totalPrice + " 靈石購入了 " + count + " 件【" + selected.getEffectiveName(templateReader) + "】！\n"
-        + "物品已安全收納入【隊伍行囊】。" + stockNotice + "（剩餘靈石/盤纏: " + self.getStats().getCoin() + " 靈石）");
+        + "物品已安全收納入【隊伍行囊】。" + stockNotice + "（小隊金庫剩餘: " + party.getCoin() + " 靈石）");
 
     broadcastService.broadcastState(self);
-    sendShopCatalog(self, shop);
+    sendShopCatalog(self, shop, party);
   }
 
-  private void showShopList(Player self, ShopTemplate shop) {
+  private void handleSell(Player self, ShopTemplate shop, Party party, String input) {
+    String rest = input.toLowerCase().startsWith("sell ") ? input.substring(5).trim() : "";
+    if (rest.isBlank() || "list".equalsIgnoreCase(rest)) {
+      showSellList(self, party);
+      return;
+    }
+
+    // 解析出售數量 (支援: "1 5" 或 "herb 2" 或 "1")
+    int count = 1;
+    String itemKeyword = rest;
+    String[] tokens = rest.split("\\s+");
+    if (tokens.length >= 2) {
+      try {
+        int parsedCount = Integer.parseInt(tokens[tokens.length - 1]);
+        if (parsedCount > 0) {
+          count = parsedCount;
+          itemKeyword = rest.substring(0, rest.lastIndexOf(tokens[tokens.length - 1])).trim();
+        }
+      } catch (NumberFormatException ignored) {}
+    }
+
+    List<PartyItemSlot> slots = party.getInventory().getSlots();
+    if (slots == null || slots.isEmpty()) {
+      self.reply("掌櫃福伯客氣道：「客官的小隊公共行囊中空無一物，暫無可供出售的法寶或素材！」");
+      return;
+    }
+
+    PartyItemSlot selectedSlot = null;
+    try {
+      int idx = Integer.parseInt(itemKeyword);
+      if (idx >= 1 && idx <= slots.size()) {
+        selectedSlot = slots.get(idx - 1);
+      }
+    } catch (NumberFormatException ignored) {
+      String kw = itemKeyword.toLowerCase();
+      selectedSlot = slots.stream().filter(s ->
+          (s.getItemId() != null && s.getItemId().equalsIgnoreCase(kw)) ||
+          (s.getName() != null && s.getName().toLowerCase().contains(kw)) ||
+          (s.getSlotId() != null && s.getSlotId().equalsIgnoreCase(kw))
+      ).findFirst().orElse(null);
+    }
+
+    if (selectedSlot == null) {
+      self.reply("掌櫃福伯搖頭笑道：「客官小隊行囊中並無此件物品，請輸入「sell」查看小隊可回收之物！」");
+      return;
+    }
+
+    if (selectedSlot.getCount() < count) {
+      self.reply("掌櫃福伯抱歉地笑道：「客官小隊行囊中的【" + selectedSlot.getName() + "】僅存 "
+          + selectedSlot.getCount() + " 件，無法出售 " + count + " 件之多！」");
+      return;
+    }
+
+    // 計算回收價 (以物品原價之半價回收，若低於 2 則以 1 靈石回收)
+    int basePrice = 2;
+    var itemOpt = templateReader.findItem(selectedSlot.getItemId());
+    if (itemOpt.isPresent()) {
+      basePrice = itemOpt.get().value();
+    }
+    int unitSellPrice = Math.max(1, basePrice / 2);
+    int totalEarn = unitSellPrice * count;
+
+    party.getInventory().removeItem(selectedSlot.getSlotId(), count);
+    party.addCoin(totalEarn);
+    if (self.getStats() != null) {
+      self.getStats().setCoin(party.getCoin());
+    }
+
+    self.reply("💰【出售成功】小隊公共行囊出售了 " + count + " 件【" + selectedSlot.getName() + "】，換得 "
+        + totalEarn + " 靈石！\n（小隊金庫剩餘: " + party.getCoin() + " 靈石）");
+
+    broadcastService.broadcastState(self);
+    sendShopCatalog(self, shop, party);
+  }
+
+  private void showSellList(Player self, Party party) {
+    List<PartyItemSlot> slots = party.getInventory().getSlots();
+    StringBuilder sb = new StringBuilder();
+    sb.append("🛒【小隊行囊回收櫃檯】\n");
+    sb.append("掌櫃笑吟吟地道：「客官若有多餘的妖獸素材或行囊雜物，小店童叟無欺，皆可按半價靈石回收！」\n");
+    sb.append("----------------------------------------------------------------------\n");
+    if (slots == null || slots.isEmpty()) {
+      sb.append(" (小隊公共行囊中空空如也，暫無可出售物品)\n");
+    } else {
+      for (int i = 0; i < slots.size(); i++) {
+        PartyItemSlot s = slots.get(i);
+        int basePrice = 2;
+        var itemOpt = templateReader.findItem(s.getItemId());
+        if (itemOpt.isPresent()) basePrice = itemOpt.get().value();
+        int unitPrice = Math.max(1, basePrice / 2);
+        sb.append(String.format(" [%d] %-14s (數量: %2d) - 回收單價: %2d 靈石 (總值: %d 靈石)\n",
+            i + 1, s.getName(), s.getCount(), unitPrice, unitPrice * s.getCount()));
+      }
+    }
+    sb.append("----------------------------------------------------------------------\n");
+    sb.append("💰 小隊金庫當前持有: ").append(party.getCoin()).append(" 靈石\n");
+    sb.append("💡 輸入「sell <編號/名稱> [數量]」（例如 sell 1 2 或 sell herb 1）即可出售！");
+    self.reply(sb.toString());
+  }
+
+  private void showShopList(Player self, ShopTemplate shop, Party party) {
     if (self.getOutput() != null) {
-      sendShopCatalog(self, shop);
+      sendShopCatalog(self, shop, party);
       self.reply("🏪 已開啟【" + shop.name() + "】交易櫃檯，掌櫃正笑吟吟地候著您。（可於彈出視窗點選購買或按 Esc 關閉）");
       return;
     }
@@ -190,12 +312,12 @@ public class ShopCommand implements PlayerCommand {
           item.index(), item.id(), item.getEffectiveName(templateReader), item.getEffectivePrice(templateReader), stockLabel, item.getEffectiveDescription(templateReader)));
     }
     sb.append("----------------------------------------------------------------------\n");
-    sb.append("💰 您當前持有靈石/盤纏: ").append(self.getStats().getCoin()).append(" 靈石\n");
-    sb.append("💡 輸入「buy <商品> [數量]」（例如 buy 1 5 或 buy tea 2）即可購入！");
+    sb.append("💰 小隊金庫持有靈石/盤纏: ").append(party.getCoin()).append(" 靈石\n");
+    sb.append("💡 輸入「buy <商品> [數量]」購入，或「sell [物品]」出售行囊多餘物資！");
     self.reply(sb.toString());
   }
 
-  private void sendShopCatalog(Player self, ShopTemplate shop) {
+  private void sendShopCatalog(Player self, ShopTemplate shop, Party party) {
     if (self.getOutput() == null) return;
     List<ShopCatalogDto.ShopCatalogItemDto> dtos = shop.goods().stream()
         .map(g -> new ShopCatalogDto.ShopCatalogItemDto(
@@ -207,12 +329,18 @@ public class ShopCommand implements PlayerCommand {
             getStock(shop.id(), g),
             g.getEffectiveDescription(templateReader)))
         .toList();
-    ShopCatalogDto catalogDto = new ShopCatalogDto("SHOP_CATALOG", shop.id(), shop.name(), self.getStats().getCoin(), dtos);
+    ShopCatalogDto catalogDto = new ShopCatalogDto("SHOP_CATALOG", shop.id(), shop.name(), party.getCoin(), dtos);
     self.getOutput().sendJson(catalogDto);
+  }
+
+  private void syncPlayerAndPartyCoin(Player self, Party party) {
+    if (self.getStats() != null && self.getStats().getCoin() != party.getCoin()) {
+      party.setCoin(self.getStats().getCoin());
+    }
   }
 
   @Override
   public String getDescription() {
-    return "貨棧買賣 (查看貨架商品或購買乾糧與靈藥)";
+    return "貨棧買賣 (查看貨架商品、購買物資或出售小隊行囊物品)";
   }
 }

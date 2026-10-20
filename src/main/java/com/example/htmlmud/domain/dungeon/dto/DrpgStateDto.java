@@ -463,7 +463,8 @@ public record DrpgStateDto(
         memberViews,
         invView,
         availableFormations,
-        isActive
+        isActive,
+        party.getCoin()
     );
   }
 
@@ -632,8 +633,23 @@ public record DrpgStateDto(
       List<PartyMemberViewDto> members,
       PartyInventoryViewDto inventory,
       List<PartyFormationOptionDto> availableFormations,
-      boolean formationActive
+      boolean formationActive,
+      int coin
   ) {
+    public PartyViewDto(
+        String name,
+        String formationName,
+        int formationEnergy,
+        String ultimateSkillName,
+        boolean canCastUltimate,
+        List<PartyMemberViewDto> members,
+        PartyInventoryViewDto inventory,
+        List<PartyFormationOptionDto> availableFormations,
+        boolean formationActive
+    ) {
+      this(name, formationName, formationEnergy, ultimateSkillName, canCastUltimate, members, inventory, availableFormations, formationActive, 0);
+    }
+
     public PartyViewDto(
         String name,
         String formationName,
@@ -644,7 +660,7 @@ public record DrpgStateDto(
         PartyInventoryViewDto inventory,
         List<PartyFormationOptionDto> availableFormations
     ) {
-      this(name, formationName, formationEnergy, ultimateSkillName, canCastUltimate, members, inventory, availableFormations, true);
+      this(name, formationName, formationEnergy, ultimateSkillName, canCastUltimate, members, inventory, availableFormations, true, 0);
     }
 
     public PartyViewDto(
@@ -656,7 +672,7 @@ public record DrpgStateDto(
         List<PartyMemberViewDto> members,
         PartyInventoryViewDto inventory
     ) {
-      this(name, formationName, formationEnergy, ultimateSkillName, canCastUltimate, members, inventory, List.of(), true);
+      this(name, formationName, formationEnergy, ultimateSkillName, canCastUltimate, members, inventory, List.of(), true, 0);
     }
   }
 

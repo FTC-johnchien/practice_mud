@@ -21,11 +21,23 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class DungeonFloorLoader {
 
   private final ObjectMapper objectMapper;
-  private final ResourcePatternResolver resourceResolver = new PathMatchingResourcePatternResolver();
+  private final ResourcePatternResolver resourceResolver;
+
+  public DungeonFloorLoader(ObjectMapper objectMapper, ResourcePatternResolver resourceResolver) {
+    this.objectMapper = objectMapper != null ? objectMapper : new ObjectMapper();
+    this.resourceResolver = resourceResolver != null ? resourceResolver : new PathMatchingResourcePatternResolver();
+  }
+
+  public DungeonFloorLoader(ObjectMapper objectMapper) {
+    this(objectMapper, new PathMatchingResourcePatternResolver());
+  }
+
+  public DungeonFloorLoader() {
+    this(new ObjectMapper());
+  }
 
   @Data
   @JsonIgnoreProperties(ignoreUnknown = true)

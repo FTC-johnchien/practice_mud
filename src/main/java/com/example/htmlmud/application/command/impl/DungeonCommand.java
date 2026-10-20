@@ -284,13 +284,23 @@ public class DungeonCommand implements PlayerCommand {
           String itemName = opt.map(ItemTemplate::name).orElse(itemId);
           String itemDesc = opt.map(ItemTemplate::description).orElse("");
           Party party = partyService.getOrCreateParty(self.getName());
+          int chestCoin = ThreadLocalRandom.current().nextInt(10, 26);
+          party.addCoin(chestCoin);
+          if (self.getStats() != null) {
+            self.getStats().setCoin(party.getCoin());
+          }
+
           boolean added = party.getInventory().addItem(itemId, 1);
           if (added) {
             self.reply("\n\u001B[1;33m🎁【開啟寶箱】沉重的箱蓋緩緩開啟，靈光流轉！你獲得了寶物：【"
-                + itemName + "】！已收納入隊伍行囊！\n" + itemDesc + "\u001B[0m\n");
+                + itemName + "】！已收納入隊伍行囊！\n"
+                + "💰 於箱底暗格收穫靈石 +" + chestCoin + " 枚（小隊金庫總計: " + party.getCoin() + " 靈石）！\n"
+                + itemDesc + "\u001B[0m\n");
           } else {
             self.reply("\n\u001B[1;33m🎁【開啟寶箱】沉重的箱蓋緩緩開啟，靈光流轉！發現了寶物【"
-                + itemName + "】！\n\u001B[1;31m⚠️ 隊伍行囊已滿，寶物散落於地無法收納！\u001B[0m\n");
+                + itemName + "】！\n"
+                + "💰 於箱底暗格收穫靈石 +" + chestCoin + " 枚（小隊金庫總計: " + party.getCoin() + " 靈石）！\n"
+                + "\u001B[1;31m⚠️ 隊伍行囊已滿，寶物散落於地無法收納！\u001B[0m\n");
           }
           broadcastDrpgState(self, floor, pos);
         } else {

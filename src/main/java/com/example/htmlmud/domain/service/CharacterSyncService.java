@@ -218,5 +218,6 @@ public class CharacterSyncService {
     target.setIntelligence(source.getIntelligence());
     target.setWis(source.getWis());
     target.setFreeStatPoints(source.getFreeStatPoints());
+    target.setCoin(source.getCoin());
   }
 }
