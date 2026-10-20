@@ -27,6 +27,12 @@ public class RestCommand implements PlayerCommand {
   private final DungeonNavigator dungeonNavigator;
   private final com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService;
   private final com.example.htmlmud.domain.world.GameStateBroadcastService broadcastService;
+  @org.springframework.beans.factory.annotation.Autowired(required = false)
+  private com.example.htmlmud.domain.world.WorldManager worldManager;
+
+  public void setWorldManager(com.example.htmlmud.domain.world.WorldManager worldManager) {
+    this.worldManager = worldManager;
+  }
 
   @Override
   public String getKey() {
@@ -43,9 +49,13 @@ public class RestCommand implements PlayerCommand {
 
     Party party = partyService.getOrCreateParty(self.getName());
 
-    // 1. 若處於客棧 (Hub Safe Zone)，全體氣血、真元、道心理智全數回滿
-    boolean isInn = self.getCurrentRoomId() != null && self.getCurrentRoomId().contains("inn");
-    if (isInn) {
+    // 1. 若處於客棧或城鎮安全區 (Hub Safe Zone)，全體氣血、真元、道心理智全數回滿
+    com.example.htmlmud.domain.actor.impl.Room currentRoom = self.getCurrentRoom();
+    if (currentRoom == null && self.getCurrentRoomId() != null && worldManager != null) {
+      currentRoom = worldManager.getRoomActor(self.getCurrentRoomId());
+    }
+    boolean isSafeZone = currentRoom != null && currentRoom.hasFlag(com.example.htmlmud.domain.model.enums.RoomFlag.SAFE_ZONE);
+    if (isSafeZone) {
       for (PartyMember member : party.getMembers()) {
         member.heal(member.getStats() != null ? member.getStats().getMaxHp() : 200);
         member.restoreSan(100);
@@ -53,7 +63,7 @@ public class RestCommand implements PlayerCommand {
           member.getStats().setMp(member.getStats().getMaxMp());
         }
       }
-      self.reply("🛌【客棧安歇】小隊在客棧暖榻上飽食安睡，飲下一碗溫熱的百草參茶……\n"
+      self.reply("🛌【客棧安歇】小隊在安全客棧暖榻上飽食安睡，飲下一碗溫熱的百草參茶……\n"
           + "全體成員氣血、真元與道心理智全數回滿！神完氣足！");
       broadcastService.broadcastState(self);
       return;

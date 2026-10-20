@@ -63,6 +63,20 @@ public class SaveGameService {
   @Autowired(required = false)
   private ObjectProvider<com.example.htmlmud.domain.service.CharacterSyncService> characterSyncServiceProvider;
 
+  @Autowired(required = false)
+  private com.example.htmlmud.config.GameConfig gameConfig;
+
+  public void setGameConfig(com.example.htmlmud.config.GameConfig gameConfig) {
+    this.gameConfig = gameConfig;
+  }
+
+  private String getDefaultSpawnRoomId() {
+    if (gameConfig != null && gameConfig.getDefaults() != null && gameConfig.getDefaults().getPlayer() != null) {
+      return gameConfig.getDefaults().getPlayer().getSpawnRoomId();
+    }
+    return com.example.htmlmud.config.GameConfig.getInstance().getDefaults().getPlayer().getSpawnRoomId();
+  }
+
   private File savesDir;
 
   public SaveMigrationPipeline getMigrationPipeline() {
@@ -204,7 +218,7 @@ public class SaveGameService {
   }
 
   public SaveData saveGame(String playerId, int slotId, String customTitle) {
-    return saveGame(playerId, slotId, customTitle, false, "newbie_village:inn");
+    return saveGame(playerId, slotId, customTitle, false, getDefaultSpawnRoomId());
   }
 
   public SaveData saveGame(String playerId, int slotId, String customTitle, boolean inDungeon, String currentRoomId) {
@@ -513,7 +527,7 @@ public class SaveGameService {
       player.reply("\n\u001B[1;33m✨【新途啟程】道心初定！主角【" + protagonistName + "】踏入【新手村客棧】！\u001B[0m\n");
 
       player.setInDungeon(false);
-      player.setCurrentRoomId("newbie_village:inn");
+      player.setCurrentRoomId(getDefaultSpawnRoomId());
       if (broadcastService != null) {
         broadcastService.broadcastState(player);
       }

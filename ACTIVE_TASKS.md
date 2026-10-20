@@ -6,70 +6,46 @@
 
 ---
 
-## 📌 當前焦點里程碑：路徑 X — 純單機單體化演進戰略 (Single-Player Monolith Transition)
+## 📌 當前焦點里程碑：路徑 Y — 單機語意純化與全域硬編碼大清剿 (SP-PURITY & DATA-CORE)
 
-- **長遠藍圖**：[`FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) 第 24 章《純單機單體化演進戰略：多人機制、雙軌架構與膠水代碼全域收斂藍圖》
-- **核心目標**：徹底消除舊有 MUD 多人連線、兩本假帳背包、多玩家廣播遍歷與雙軌膠水代碼，確立小隊 40 格行囊為全專案唯一真實載體，簡化架構並保持全專案 315 項測試 100% 綠燈。
+- **長遠藍圖**：[`FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) 第 25 章《單機語意純化與全域硬編碼大清剿》
+- **核心目標**：徹底消除房間內「其他玩家廣播」等非單機多人殘留語意，清除客棧 `contains("inn")`、商店掌櫃福伯台詞、道核固定數值與全域出生地硬編碼，守衛專案第一紅線（100% 資料驅動），維持全專案 331+ 測試全綠。
 
-### 📋 微任務清單 (Micro-Tasks: SP-01 ~ SP-09)
+### 📋 微任務清單 (Micro-Tasks)
 
-#### 階段 0：P0 級速勝清理 (Fast Wins & Immediate Decommission)
-- [x] **Task 1 (SP-01): 刪除 `TellCommand` 多人私聊與 `findPlayerByName`**
-  - 徹底刪除 `TellCommand.java`。
-  - 從 `WorldManager.java` 移除多玩家搜尋方法 `findPlayerByName`。
-  - 驗收通過：315 項測試 100% 綠燈。
-- [x] **Task 2 (SP-02): 廢止 `StashCommand` 雙向轉存，除役個人背包假帳**
-  - 廢除 `handleStash` 與 `handleWithdraw` 跨背包搬移業務邏輯。
-  - `StashCommand` 簡化為全面友善導引大一統小隊公共行囊提示。
-  - 標記 `Living.inventory` 僅限 Mob / 生靈專用，禁止主角使用。
-  - 更新 `DualTierInventoryAndStashTest`，315 項測試 100% 綠燈。
-
-#### 階段 1：P1 級核心實體與存檔單一真相源 (Single Source of Truth)
-- [x] **Task 3 (SP-03): 存檔寫入與載入徹底除役 `personalInventory` 雙寫**
-  - 升級存檔結構至 CURRENT_SCHEMA_VERSION = 3，SaveData 移除 personalInventory 寫出。
-  - 在 SaveGameService 徹底除役 personalInventory 的搜集與還原邏輯，單一真相源為 party.inventory。
-  - 在 SaveMigrationPipeline 新增 2 -> 3 遷移：舊存檔個人物品自動安全合流至小隊公共行囊，無物資遺失。
-  - 新增專屬遷移測試，全專案 316 項測試 100% 綠燈通過。
-- [x] **Task 4 (SP-04): `Room` 房間實體改為單一主角引用，除役多玩家廣播遍歷**
-  - `Room.players` 列表重構為單一引用 `Player protagonist`（並提供基於單一主角的不可變相容視圖）。
-  - 除役多人無差別廣播遍歷，重構 `RoomService`、`LivingService`、`CombatPresentation`、`AggressiveBehavior`、`WorldPulse` 為主角直接推送。
-  - 驗收通過：全專案 316 項測試 100% 綠燈。
-- [x] **Task 5 (SP-05): WebSocket 多開連線自動接管唯一主角，杜絕存檔覆寫競爭**
-  - 引入單機單一主角實例模型（Singleton Protagonist），`SessionRegistry` 升級支援主角與活躍連線治理。
-  - `MudWebSocketHandler` 實裝多開分頁/重連自動接管（Session Takeover）：無縫切換 `WebSocketOutput`，關閉舊分頁避免操作干擾，推送最新全景狀態。
-  - 加固連線關閉隔離：舊會話關閉不干擾現有連線，活躍連線關閉觸發自動存檔防禦進度遺失。
-  - 新增專屬驗收測試 `SessionTakeoverAndSingletonProtagonistTest`，全專案 320 項測試 100% 綠燈通過。
-  - 🎉 **【階段 1：P1 級核心實體與存檔單一真相源】圓滿達成！**
-
-#### 階段 2：P2 級機制大一統與膠水代碼徹底除役 (Deep Convergence)
-- [x] **Task 6 (SP-06): 技能模型合一 (`UnifiedSkill`)，消除 MUD/DRPG 技能定義割裂**
-  - 定義大一統規範技能介面 `UnifiedSkill`，統合修煉境界（Level 1~10、XP、MaxXP）、戰術數值（CD、消耗、傷害倍率、打斷標籤）與敘事文本（`moves` 動態招式播報）。
-  - 升級 `PartyMemberSkill` 實作 `UnifiedSkill`，實裝內聚的熟練度積累（`addXp`）、境界突破（`levelUp`）與動態威力/冷卻等級縮放。
-  - 在 `SkillEntry` 實作與大一統技能雙向無縫互轉（`toUnifiedSkill` / `fromUnifiedSkill`），主角與 4 位小隊隊員統一持有合一技能模型。
-  - 新增專屬驗收測試 `UnifiedSkillModelTest`，全專案 324 項測試 100% 綠燈通過。
-- [x] **Task 7 (SP-07): 徹底除役 `SkillBridgeService` 翻譯縮放膠水代碼**
-  - 徹底物理刪除 `SkillBridgeService.java` 膠水代碼。
-  - `CharacterSyncService` 直接以 `UnifiedSkill` / `PartyMemberSkill` 進行同步，不再需要中間層動態縮放與字串比對翻譯。
-  - `DrpgRewardService` 戰鬥後熟練度原地增長給存活小隊成員，主角隊長技能同步回傳，消除反向回饋膠水代碼。
-  - 重構 `CanonicalSkillModelTest`、`MechanismPurityAndBugfixTest` 與 `SkillBridgeIntegrationTest`，全專案 324 項測試 100% 綠燈通過。
-- [x] **Task 8 (SP-08): 戰鬥引擎大一統，野外戰鬥全面對齊 5 人小隊協同作戰**
-  - 徹底收斂野外 MUD 與地牢 DRPG 雙軌機制，消滅「主角一人單挑，小隊另外 4 位隊友冷眼看戲」的架構割裂。
-  - `DrpgBattleService` 實裝 `startFieldBattle(Player, Mob)`，野外遭遇戰由 5 人小隊全員依照站位、陣法與戰術 AI (Gambit) 協同迎敵。
-  - `BattleContext` 增設 `onBattleEnd` 生命週期回呼，戰鬥大捷時掉落物直入 40 格小隊公共行囊，隊員獲得修為經驗與技能熟練度原地增長，發布擊殺事件並同步移除/標記大世界房間 Mob。
-  - `KillCommand` 與 `CombatService.startCombat` 全面委派至小隊戰鬥引擎，`TargetSelector` 自動過濾死亡怪防禦性防護。
-  - 新增 `FieldCombatPartyUnificationTest`，全專案 327 項測試 100% 綠燈零回歸破壞。
-- [x] **Task 9 (SP-09): 小隊共享金庫與經濟體系大一統**
-  - 在 `Party` 實體中增設 `coin` 共享金庫欄位與安全操作方法（`addCoin`、`deductCoin`、`setCoin`），徹底消除「40 格公共行囊但金幣分散於個人」的資產割裂。
-  - `ShopCommand` 購買與出售全數以小隊金庫為唯一真相源（SSOT），購買扣減小隊金庫並存入行囊，新增行囊回收出售物品換取小隊靈石。
-  - `DrpgRewardService` 戰鬥大捷繳獲妖獸靈石直接入帳小隊金庫，並透過 `BattleVictoryDto` 與文字廣播即時同步前端結算視窗。
-  - `DungeonCommand` 探索開啟寶箱暗格靈石直接存入小隊金庫。
-  - 隊長 `LivingStats.coin` 與小隊金庫達成 0ms 零延遲雙向鏡像同步，確保歷史測試與舊代碼 100% 向下相容。
-  - 前端與 DTO（`PartyViewDto`、`header-coins-val`、公共行囊面板）全域統一展示「小隊總靈石」。
-  - 新增 `UnifiedPartyEconomyTest`，全專案 331 項測試 100% 綠燈零回歸通過。
+- [x] **Task 1 (SP-PURITY-01): 房間廣播通道與多人遍歷舊代碼徹底除役**
+  - 物理刪除 `RoomService.java` 中標註 `@Deprecated` 之 `broadcastJson(List<Player>, ...)` 與 `broadcastToOthers(List<Player>, ...)`。
+  - 將各指令與實體中語意混淆之 `room.broadcastToOthers(...)` 收斂為純粹單機環境事件或主角通知，去除無意義的排他性廣播。
+  - 清理 `WorldManager.java` 底部註解殘留之 20 行死代碼。
+  - 校準 `README.md` 測試數量指標（315 -> 331+）。
+  - 驗收測試全數通過，全專案 331 項測試維持 100% 綠燈。
+- [x] **Task 2 (DATA-CORE-01): 房間安全區標籤化與全域出生點 GameConfig 統一驅動**
+  - 消除 `RestCommand` 與 `GameStateBroadcastService` 中寫死字串 `id.contains("inn")`，改以 `RoomFlag.SAFE_ZONE` 判定。
+  - 消除 `SaveGameService` 與 `DungeonCommand` 中寫死字串 `"newbie_village:inn"`，全面改由注入之 `gameConfig.getDefaults().getPlayer().getSpawnRoomId()` 驅動。
+  - 在 `DataIntegrityValidator` 擴充地牢 `exitRoomId` 拓撲校驗，消除首領地塊 hardcoded `"mozhu_mines:boss_song_tianheng"`。
+  - 新增 `DataCoreIntegrityTest` 專屬整合測試，全專案 335 項測試維持 100% 綠燈。
+- [ ] **Task 3 (DATA-CORE-02): 商店 NPC 身份動態化、道核技能反查與夥伴列表配置化**
+  - 重構 `ShopCommand`：依據 `shop.npcId()` 查詢真實掌櫃名稱與台詞，徹底消除所有商店寫死「掌櫃福伯擦著汗道」、「客官要進墨竹山吧？」。
+  - 重構 `Party.useItemOnMember` 中 `LEARN_SKILL`：自 `TemplateReader` 動態反查技能範本數值，消滅 `cooldownMs(6000)` 與 `damageMultiplier(1.8)` 寫死數值。
+  - 重構 `PartyService` 夥伴招募失敗提示：自 `templateReader.getAllCompanions()` 動態產出可用夥伴清單。
+- [ ] **Task 4 (DATA-GUARD-03): 前端地塊動態 Tooltip 與看門狗棘輪加固**
+  - `dungeon-panel.js` 懸停 title 優先讀取 DTO 地塊動態名稱，消除「玄岩石壁」寫死符號推論。
+  - 清理 `Player.java` 與 `Living.java` 中的 `GameConfig.getInstance()`，收緊 `ArchitectureGuardrailsTest` 棘輪閾值。
 
 ---
 
 ## 🏆 已完成里程碑 (Completed Milestones)
+
+- [x] **Milestone Path X — 純單機單體化演進戰略：多人機制、雙軌架構與膠水代碼全域收斂 (SP-01 ~ SP-09)**
+  - Task 1 (SP-01): 刪除 `TellCommand` 多人私聊與 `findPlayerByName`。
+  - Task 2 (SP-02): 廢止 `StashCommand` 雙向轉存，除役個人背包假帳。
+  - Task 3 (SP-03): 存檔寫入與載入徹底除役 `personalInventory` 雙寫 (schemaVersion=3)。
+  - Task 4 (SP-04): `Room` 房間實體改為單一主角引用，除役多玩家廣播遍歷。
+  - Task 5 (SP-05): WebSocket 多開連線自動接管唯一主角，杜絕存檔覆寫競爭。
+  - Task 6 (SP-06): 技能模型合一 (`UnifiedSkill`)，消除 MUD/DRPG 技能定義割裂。
+  - Task 7 (SP-07): 徹底物理刪除 `SkillBridgeService.java` 膠水代碼。
+  - Task 8 (SP-08): 戰鬥引擎大一統，野外戰鬥全面對齊 5 人小隊協同作戰 (`FieldCombatPartyUnificationTest`)。
+  - Task 9 (SP-09): 小隊共享金庫與經濟體系大一統 (`UnifiedPartyEconomyTest`)，全專案 331 項測試全綠。
 
 - [x] **Milestone 2 — 核心雙軌實體大一統：Player 與 PartyMember 實體合一與單一真相源治理 (F1-01 / M1 / M4)**
   - Task 1: 行囊大一統 (Unified Party Inventory) — 消除個人 12 格限制與強制 stash 轉存，40 格小隊公共背包為唯一真相源。

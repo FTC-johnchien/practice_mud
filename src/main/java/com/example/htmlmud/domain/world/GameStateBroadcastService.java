@@ -79,13 +79,13 @@ public class GameStateBroadcastService {
     RoomTemplate tmpl = room.getTemplate();
     String zoneId = tmpl.zoneId();
     String zoneName = "新手仙鄉";
-    if (zoneId != null && zoneId.contains("mozhu")) zoneName = "墨竹山脈";
-    else if (zoneId != null && zoneId.contains("newbie")) zoneName = "桃源新手村";
-    else if (zoneId != null && zoneId.contains("snow")) zoneName = "雪亭鎮";
-    else if (zoneId != null && zoneId.contains("silverleaf")) zoneName = "銀葉村";
+    if (zoneId != null) {
+      zoneName = templateReader.findZone(zoneId)
+          .map(com.example.htmlmud.domain.model.template.ZoneTemplate::name)
+          .orElse(zoneId);
+    }
 
-    boolean safe = tmpl.flags() != null && tmpl.flags().contains("SAFE");
-    if (tmpl.id().contains("inn")) safe = true;
+    boolean safe = room.hasFlag(com.example.htmlmud.domain.model.enums.RoomFlag.SAFE_ZONE);
 
     List<TownExitDto> exits = new ArrayList<>();
     if (tmpl.exits() != null) {

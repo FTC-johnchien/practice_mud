@@ -218,4 +218,47 @@ class DataIntegrityValidatorTest {
     assertThat(report.getErrors()).anyMatch(e -> e.contains("夥伴 [broken_hero] 初始裝備 [MAIN_HAND: missing_sword] 不存在"));
     assertThat(report.getErrors()).anyMatch(e -> e.contains("陣法 [broken_formation] 要求之職業/職能分類 [INVALID_CLASS_REQUIREMENT] 無效"));
   }
+
+  @Test
+  @DisplayName("DATA-CORE-01: 模擬地牢 exitRoomId 不存在與首領地塊缺 eventId/怪物不存在，精確捕獲異常")
+  void testDungeonExitRoomAndBossIntegrity() {
+    TemplateReader mockReader = mock(TemplateReader.class);
+    DungeonManager mockDungeonManager = mock(DungeonManager.class);
+    DataIntegrityValidator validator = new DataIntegrityValidator(mockReader);
+    validator.setDungeonManager(mockDungeonManager);
+    validator.setFailFast(false);
+
+    com.example.htmlmud.domain.dungeon.model.DungeonFloor floor =
+        com.example.htmlmud.domain.dungeon.model.DungeonFloor.builder()
+            .id("broken_floor")
+            .exitRoomId("zone:missing_exit_room")
+            .width(2)
+            .height(2)
+            .startCoord(new com.example.htmlmud.domain.dungeon.model.GridCoord(0, 0))
+            .tiles(new com.example.htmlmud.domain.dungeon.model.DungeonTile[][] {
+                {
+                    com.example.htmlmud.domain.dungeon.model.DungeonTile.floor("起點"),
+                    com.example.htmlmud.domain.dungeon.model.DungeonTile.builder()
+                        .type(com.example.htmlmud.domain.dungeon.model.DungeonTile.TileType.BOSS)
+                        .eventId("missing_boss_mob")
+                        .build()
+                },
+                {
+                    com.example.htmlmud.domain.dungeon.model.DungeonTile.wall(),
+                    com.example.htmlmud.domain.dungeon.model.DungeonTile.wall()
+                }
+            })
+            .build();
+
+    when(mockDungeonManager.getAllFloorIds()).thenReturn(List.of("broken_floor"));
+    when(mockDungeonManager.getFloor("broken_floor")).thenReturn(floor);
+    when(mockReader.findRoom("zone:missing_exit_room")).thenReturn(Optional.empty());
+    when(mockReader.findMob("missing_boss_mob")).thenReturn(Optional.empty());
+
+    DataIntegrityValidator.ValidationReport report = validator.validate();
+    assertThat(report.isValid()).isFalse();
+    assertThat(report.getErrors()).anyMatch(e -> e.contains("撤退出口房間 [zone:missing_exit_room] 不存在於房間庫"));
+    assertThat(report.getErrors()).anyMatch(e -> e.contains("首領地塊 (1, 0) 指定首領怪物 [missing_boss_mob] 不存在於怪物庫"));
+  }
 }
+

@@ -49,7 +49,8 @@
 - [x] **路徑 U: 全專案綜合審查後續與紅線治理藍圖** (§21 全項) — **Priority: P0 ~ P3 (2026-10-15 制定，P0/P1/P2 死代碼與紅線清理已完成，304 測試全綠燈)**
 - [ ] **路徑 V: 全專案大一統與現代化演進戰略五大戰線** (§22 全項) — **Priority: P1 ~ P3 (2026-10-15 全文件對齊版，當前微任務落地請參閱根目錄 [ACTIVE_TASKS.md](../../ACTIVE_TASKS.md))**
 - [ ] **路徑 W: 文件權威來源、交叉一致性與三方審查全面整合治理 (Tri-Review Masterplan)** (§23 全項) — **Priority: P0 ~ P2（綜合 Codex、Copilot 與 Claude 審查報告，對齊代碼現況與純單機單體演進）**
-- [ ] **路徑 X: 純單機單體化演進戰略：多人機制、雙軌架構與膠水代碼全域收斂藍圖** (§24 全項) — **Priority: P0 ~ P2（單人轉型核心戰役）**
+- [x] **路徑 X: 純單機單體化演進戰略：多人機制、雙軌架構與膠水代碼全域收斂藍圖** (§24 全項) — **Priority: P0 ~ P2 (SP-01~09 已全數完工，331 項測試全綠 ✅)**
+- [ ] **路徑 Y: 單機語意純化與全域硬編碼大清剿 (SP-PURITY & DATA-CORE)** (§25 全項) — **Priority: P1（地毯式盤查與第一紅線守衛戰役）**
 
 ---
 
@@ -1459,6 +1460,66 @@ flowchart TD
 | **Step 7** | **SP-07** | 徹底除役 `SkillBridgeService` 翻譯縮放膠水代碼 | **P2** | 中 | **已完成 (324綠燈) ✅** |
 | **Step 8** | **SP-08** | 戰鬥引擎大一統，野外戰鬥全面對齊 5 人小隊協同作戰 | **P2** | 高 | **已完成 (327綠燈) ✅** |
 | **Step 9** | **SP-09** | 小隊共享金庫與經濟體系大一統 | **P2** | 低 | **已完成 (331綠燈) ✅** |
+
+---
+
+## 🧹 25. 單機語意純化與全域硬編碼大清剿 (Single-Player Purity & Anti-Hardcoding Audit) — Priority: P1
+
+> **專題背景**：
+> 於 2026-10-20 完成 SP-09 後進行之全域代碼與文檔地毯式盤查，針對專案中殘留之**非單機多人語意**與違反專案第一紅線之**寫死字串/特例**進行深度建檔與系統性清剿。
+
+### 25.1 非單機（Multiplayer）設計與殘留代碼清單
+
+1. **排除自己的「其他玩家廣播」**：
+   - 涉及：`DropCommand.java:L87`, `GetCommand.java:L77`, `Mob.java:L355`, `PlayerService.java:L146`。
+   - 現狀：丟棄/拾取/說話時調用 `room.broadcastToOthers(player.getId(), ...)`。單機房間僅有主角一人，向不存在的其他玩家發送排他性廣播在架構上是偽操作。
+   - 處置：收斂為純粹的單機事件通知或主角直接感知。
+2. **RoomService 廢棄多玩家重載**：
+   - 涉及：`RoomService.java:L257, L277`。
+   - 現狀：保留 `@Deprecated` 之 `broadcastJson(List<Player>, ...)` 與 `broadcastToOthers(List<Player>, ...)`。
+   - 處置：徹底物理刪除該批過期方法。
+3. **WorldManager 殘留注釋死代碼**：
+   - 涉及：`WorldManager.java:L548-570` 底部 20 行 `createItem` 註解代碼。
+   - 處置：安全清除。
+4. **文檔測試指標滯後**：
+   - 涉及：`README.md:L6, L34` 標記 315 Passed，現行實測已達 331 項。
+   - 處置：校準為 331+ 項全綠燈。
+
+### 25.2 寫死代碼（Hardcoded Code / 第一紅線違規）地毯式清單
+
+1. **商店掌櫃名稱與進店台詞全域寫死**：
+   - 涉及：`ShopCommand.java:L147, L155, L159, L168, L220, L245, L268, L296`。
+   - 現狀：所有城鎮所有商店台詞皆寫死「掌櫃福伯擦著汗道」、「客官要進墨竹山吧？」。
+   - 處置：依 `ShopTemplate.npcId` 向 `TemplateReader` 反查 NPC 真實姓名，改為資料驅動動態台詞。
+2. **客棧與安全區以 `contains("inn")` 字串寫死比對**：
+   - 涉及：`RestCommand.java:L47`, `GameStateBroadcastService.java:L88`。
+   - 現狀：直接判斷房間 ID 是否包含 `"inn"` 作為客棧與安全區判定。
+   - 處置：全面改由 `RoomTemplate` 之 `RoomFlag.SAFE_ZONE` 或 `flags` 集合驅動。
+3. **開新遊戲、重生與地牢撤離房間寫死**：
+   - 涉及：`SaveGameService.java:L207, L516`, `DungeonCommand.java:L154`, `DataIntegrityValidator.java:L353`。
+   - 現狀：硬編碼 `"newbie_village:inn"` 或 `"mozhu_mines:boss_song_tianheng"`。
+   - 處置：統一讀取 `GameConfig.getDefaults().getPlayer().getSpawnRoomId()`，地牢 exitRoomId 納入 Fail-Fast 啟動校驗。
+4. **吸收道核技能數值與夥伴招募列表寫死**：
+   - 涉及：`Party.java:L96-98`, `PartyService.java:L540`。
+   - 現狀：吸收道核硬編碼 `cooldownMs(6000)`、`damageMultiplier(1.8)`；夥伴提示手寫四人名稱。
+   - 處置：由 `TemplateReader` 動態反查技能範本；夥伴清單自 `getAllCompanions()` 動態產出。
+5. **靜默 Fallback 棘輪殘留**：
+   - 現狀：26 處 `new TemplateCatalog()` 與 5 處 `GameConfig.getInstance()`。
+   - 處置：改為 Spring 建構子依賴注入，並收緊看門狗測試閾值。
+6. **前端地牢懸停文字依字元符號寫死**：
+   - 涉及：`dungeon-panel.js:L67-107`。
+   - 現狀：`cell.title` 依符號寫死「玄岩石壁」、「石門」等固定太陰地貌名稱。
+   - 處置：優先從 DTO 當前地塊名稱動態注入。
+
+### 25.3 清剿微任務執行映射 (Clean Tasks: SP-PURITY-01 ~ DATA-GUARD-03)
+
+| 任務編號 | 核心收斂內容 | 優先級 | 涉及模組 | 狀態 |
+| :--- | :--- | :---: | :--- | :---: |
+| **SP-PURITY-01** | 房間廣播通道收斂為單機通知，刪除 `@Deprecated` 多玩家方法與死代碼，對齊測試指標 | **P1** | `Room`, `RoomService`, `WorldManager` | **已完成 (331 測試全綠 ✅)** |
+| **DATA-CORE-01** | 客棧安全區改為 `RoomFlag.SAFE_ZONE`，全域出生點與地牢撤離統一 `GameConfig` 驅動 | **P1** | `RestCommand`, `SaveGameService`, `DungeonCommand` | **已完成 (335 測試全綠 ✅)** |
+| **DATA-CORE-02** | 商店掌櫃動態稱謂與台詞，道核領悟反查技能範本，夥伴招募提示動態產出 | **P1** | `ShopCommand`, `Party`, `PartyService` | 待執行 |
+| **DATA-GUARD-03** | 前端地塊動態 Tooltip 支援，清理 `GameConfig.getInstance()`，收緊看門狗棘輪 | **P1** | `dungeon-panel.js`, `Living`, `Player`, `Guardrails` | 待執行 |
+
 
 
 

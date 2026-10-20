@@ -537,34 +537,4 @@ public class WorldManager {
     // 實際專案中這裡應該要把 Queue 裡的剩餘資料 flush 到資料庫
     log.info("WorldManager shutting down...");
   }
-
-  /**
-   * 建立一個全新的物品實體
-   *
-   * @param templateId 物品原型 ID
-   * @param randomize 是否進行隨機數值浮動
-   */
-  // public GameItem createItem(int templateId, boolean randomize) {
-  // ItemTemplate tpl = loadItemTemplate(templateId);
-
-  // GameItem item = new GameItem();
-  // item.setId(UUID.randomUUID().toString());
-  // item.setTemplateId(tpl.id());
-  // item.setCurrentDurability(tpl.maxDurability());
-  // item.setAmount(1);
-
-  // // --- 處理隨機邏輯 (RNG) ---
-  // if (randomize) {
-  // // 1. 隨機浮動耐久度 (例如：全新 ~ 80% 新)
-  // // item.setCurrentDurability(...);
-
-  // // 2. 隨機詞綴 (例如 10% 機率出現 +1 攻擊)
-  // if (ThreadLocalRandom.current().nextDouble() < 0.1) {
-  // item.getDynamicProps().put("attack_bonus", 1);
-  // item.getDynamicProps().put("quality", "RARE");
-  // }
-  // }
-
-  // return item;
-  // }
 }

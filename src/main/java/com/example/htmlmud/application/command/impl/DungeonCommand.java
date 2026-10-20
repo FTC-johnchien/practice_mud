@@ -149,9 +149,12 @@ public class DungeonCommand implements PlayerCommand {
       if (currentTile != null && currentTile.getType() == DungeonTile.TileType.STAIRS_UP) {
         self.setInDungeon(false);
         self.reply("\n\u001B[1;36m🚪【撤出地牢】你沿著向上石階攀爬而出，安全重返地表！\u001B[0m\n");
+        String defaultSpawn = (gameConfig != null && gameConfig.getDefaults() != null && gameConfig.getDefaults().getPlayer() != null)
+            ? gameConfig.getDefaults().getPlayer().getSpawnRoomId()
+            : com.example.htmlmud.config.GameConfig.getInstance().getDefaults().getPlayer().getSpawnRoomId();
         String exitRoomId = (floor.getExitRoomId() != null && !floor.getExitRoomId().isBlank())
             ? floor.getExitRoomId()
-            : "newbie_village:inn";
+            : defaultSpawn;
         self.setCurrentRoomId(exitRoomId);
         self.getService().getCommandDispatcher().dispatch("look");
         return;

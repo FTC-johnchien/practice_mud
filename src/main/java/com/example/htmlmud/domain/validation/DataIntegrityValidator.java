@@ -324,6 +324,11 @@ public class DataIntegrityValidator implements ApplicationRunner {
               + floor.getStartCoord().y() + ") 位於不可通行之障礙牆體！");
         }
       }
+      if (floor.getExitRoomId() != null && !floor.getExitRoomId().isBlank()) {
+        if (templateReader.findRoom(floor.getExitRoomId()).isEmpty()) {
+          errors.add("地牢樓層 [" + floorId + "] 撤退出口房間 [" + floor.getExitRoomId() + "] 不存在於房間庫！");
+        }
+      }
       if (floor.getMobPool() != null) {
         for (String mobId : floor.getMobPool()) {
           if (mobId != null && !mobId.isBlank()) {
@@ -349,9 +354,10 @@ public class DataIntegrityValidator implements ApplicationRunner {
             }
           }
           if (tile.getType() == com.example.htmlmud.domain.dungeon.model.DungeonTile.TileType.BOSS) {
-            String bossId = (tile.getEventId() != null && !tile.getEventId().isBlank())
-                ? tile.getEventId() : "mozhu_mines:boss_song_tianheng";
-            if (templateReader.findMob(bossId).isEmpty()) {
+            String bossId = tile.getEventId();
+            if (bossId == null || bossId.isBlank()) {
+              errors.add("地牢樓層 [" + floorId + "] 首領地塊 (" + x + ", " + y + ") 未配置 eventId (首領怪物 ID)！");
+            } else if (templateReader.findMob(bossId).isEmpty()) {
               errors.add("地牢樓層 [" + floorId + "] 首領地塊 (" + x + ", " + y + ") 指定首領怪物 [" + bossId + "] 不存在於怪物庫！");
             }
           } else if (tile.getEventId() != null && !tile.getEventId().isBlank()) {

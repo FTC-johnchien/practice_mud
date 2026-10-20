@@ -143,7 +143,6 @@ public class PlayerService {
     ScopedValue.where(MudContext.CURRENT_PLAYER, player).run(() -> {
       commandDispatcher.dispatch("look");
     });
-    player.getCurrentRoom().broadcastToOthers(player.getId(), "$N的眼神恢復了光采。");
   }
 
   // 【當 WebSocket 斷線時呼叫此方法】
@@ -153,9 +152,6 @@ public class PlayerService {
 
     player.setLastDisconnectTime(disconnectTimestamp);
     player.setConnectionState(ConnectionState.LINK_DEAD);
-
-    // 廣播給房間其他人 (沉浸式體驗)
-    player.getCurrentRoom().broadcastToOthers(player.getId(), "$N眼神突然變得呆滯，似乎失去了靈魂。");
 
     // 【關鍵】啟動一個「死神 VT」
     startDeathTimer(player, disconnectTimestamp);

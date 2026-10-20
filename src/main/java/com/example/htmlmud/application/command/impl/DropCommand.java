@@ -84,7 +84,6 @@ public class DropCommand implements PlayerCommand {
       }
 
       player.reply("🗑️ $N從小隊行囊丟下了 " + partySlot.getName());
-      room.broadcastToOthers(player.getId(), player.getNickname() + " 從小隊行囊丟下了 " + partySlot.getName());
       if (broadcastService != null) {
         broadcastService.broadcastState(player);
       }
@@ -98,7 +97,6 @@ public class DropCommand implements PlayerCommand {
       room.dropItem(target);
 
       player.reply("🗑️ $N從行囊丟下了 " + target.getDisplayName());
-      room.broadcastToOthers(player.getId(), player.getNickname() + " 丟下了 " + target.getDisplayName());
       if (broadcastService != null) {
         broadcastService.broadcastState(player);
       }

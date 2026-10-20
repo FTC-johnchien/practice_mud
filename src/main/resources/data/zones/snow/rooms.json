@@ -68,6 +68,10 @@
     "id": "snow_inn",
     "name": "飲風客棧",
     "description": "這是一家位在雪亭鎮西邊的客棧，客棧並不大，也沒有什麼豪華的裝飾，但是這裡著名的烤山豬肉及烈酒「寒那」，卻吸引了不少遊客千里迢迢來到這裡。",
+    "flags": [
+      "SAFE_ZONE",
+      "INDOORS"
+    ],
     "exits": {
       "east": "snow_lane1"
     },

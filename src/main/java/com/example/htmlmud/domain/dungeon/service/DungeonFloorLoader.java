@@ -54,6 +54,8 @@ public class DungeonFloorLoader {
     private List<TileOverrideJson> tileOverrides = new ArrayList<>();
     private EncounterJson encounters;
     private String exitRoomId;
+
+    public DungeonFloorJson() {}
   }
 
   @Data
@@ -61,6 +63,8 @@ public class DungeonFloorLoader {
   public static class StartCoordJson {
     private int x;
     private int y;
+
+    public StartCoordJson() {}
   }
 
   @Data
@@ -72,6 +76,8 @@ public class DungeonFloorLoader {
     private Boolean passable;
     private String eventId;
     private List<String> drops;
+
+    public LegendItemJson() {}
   }
 
   @Data
@@ -85,6 +91,8 @@ public class DungeonFloorLoader {
     private Boolean passable;
     private String eventId;
     private List<String> drops;
+
+    public TileOverrideJson() {}
   }
 
   @Data
@@ -92,6 +100,8 @@ public class DungeonFloorLoader {
   public static class EncounterJson {
     private int dangerRate = 15;
     private List<String> mobs = new ArrayList<>();
+
+    public EncounterJson() {}
   }
 
   public List<DungeonFloor> loadAllFloors() {

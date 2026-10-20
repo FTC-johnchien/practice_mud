@@ -233,6 +233,10 @@
     "id": "inn",
     "name": "村莊客棧",
     "description": "一家樸素溫馨的小客棧，空氣中飄著麥酒與烤麵包的香氣，幾名疲憊的旅人正坐在角落歇息，掌櫃福伯笑瞇瞇地在櫃檯前迎客。",
+    "flags": [
+      "SAFE_ZONE",
+      "INDOORS"
+    ],
     "exits": {
       "east": "square"
     },

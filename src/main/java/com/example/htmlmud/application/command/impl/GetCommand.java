@@ -74,8 +74,6 @@ public class GetCommand implements PlayerCommand {
           }
           String lootList = String.join("、", lootedNames);
           player.reply("\u001B[1;32m👝 你打開了 " + pickItem.getName() + "，搜刮獲得了：\u001B[1;33m" + lootList + "\u001B[1;32m！已全數收入【小隊儲物倉庫】。\u001B[0m");
-          room.broadcastToOthers(player.getId(),
-              player.getNickname() + " 搜刮了 " + pickItem.getName() + "，將裡面的戰利品收入小隊倉庫。");
         }
         // 容器已完成搜刮，即刻消散，不存入背包
       } else if (pickItem.getType() == ItemType.CORPSE) {
@@ -99,8 +97,6 @@ public class GetCommand implements PlayerCommand {
           player.reply("⚠️ 小隊行囊已滿載（上限 " + party.getInventory().getCapacity() + " 格），無法拾取 " + pickItem.getDisplayName() + "！");
           return;
         }
-        room.broadcastToOthers(player.getId(),
-            player.getNickname() + " 拾起了 " + pickItem.getDisplayName());
       }
 
       // 即時向全隊/玩家推播最新狀態 (地面物品即時移除)

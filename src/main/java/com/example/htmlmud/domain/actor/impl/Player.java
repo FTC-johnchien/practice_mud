@@ -362,7 +362,6 @@ public final class Player extends Living {
     Room room = getCurrentRoom();
     if (room != null) {
       room.removePlayer(this.id);
-      room.broadcastToOthers(this.id, this.name + " 的身影慢慢消失在空氣中。");
     }
 
     // 3. 從全域管理器移除

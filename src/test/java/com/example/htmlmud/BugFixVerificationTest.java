@@ -151,26 +151,23 @@ class BugFixVerificationTest {
   }
 
   @Test
-  @DisplayName("Bug 5 驗證: RoomService.broadcastJson 正確將訊息透過 sendJson 發送給房間內所有玩家")
+  @DisplayName("Bug 5 驗證: RoomService.broadcastJson 正確將訊息透過 sendJson 發送給房間內主角")
   void testRoomServiceBroadcastJson() {
-    List<Object> receivedJson1 = new ArrayList<>();
-    List<Object> receivedJson2 = new ArrayList<>();
-
-    Player player1 = Player.createSinglePlayer(createMockOutput(receivedJson1), worldManager, playerService, "廣播收訊者1");
-    Player player2 = Player.createSinglePlayer(createMockOutput(receivedJson2), worldManager, playerService, "廣播收訊者2");
+    List<Object> receivedJson = new ArrayList<>();
+    Player player = Player.createSinglePlayer(createMockOutput(receivedJson), worldManager, playerService, "廣播收訊者");
+    Room room = worldManager.getRoomActor("newbie_village:inn");
+    room.setProtagonist(player);
 
     // 清空進場訊息
-    receivedJson1.clear();
-    receivedJson2.clear();
+    receivedJson.clear();
 
     MudMessage<Object> testMsg = MudMessage.<Object>builder()
         .type("TEST_BROADCAST")
         .payload("測試廣播資料")
         .build();
 
-    roomService.broadcastJson(List.of(player1, player2), testMsg);
+    roomService.broadcastJson(room, testMsg);
 
-    assertThat(receivedJson1).contains(testMsg);
-    assertThat(receivedJson2).contains(testMsg);
+    assertThat(receivedJson).contains(testMsg);
   }
 }

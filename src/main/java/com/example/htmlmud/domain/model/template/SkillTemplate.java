@@ -18,6 +18,8 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SkillTemplate {
 
+  public SkillTemplate() {}
+
   // 基礎資訊
   String id;
 

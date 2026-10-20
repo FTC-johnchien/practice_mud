@@ -87,10 +87,6 @@ public class RoomService {
     broadcastToOthers(room, actor.getId(), arriveMsg);
   }
 
-  @Deprecated
-  public void enter(Room room, List<Player> players, List<Mob> mobs, Living actor, Direction direction) {
-    enter(room, mobs, actor, direction);
-  }
 
   public void leave(Room room, List<Mob> mobs, Living actor, Direction direction) {
     String livingName = null;
@@ -113,34 +109,6 @@ public class RoomService {
     broadcast(room, mobs, actor.getId(), null, leaveMsg);
   }
 
-  @Deprecated
-  public void leave(Room room, List<Player> players, List<Mob> mobs, Living actor, Direction direction) {
-    leave(room, mobs, actor, direction);
-  }
-
-  @Deprecated
-  public void doLook(Room roomActor, String playerId, CompletableFuture<String> future) {
-    log.info("Player {} Look room", playerId);
-
-    // StringBuilder sb = new StringBuilder();
-    // sb.append("\u001B[1;36m").append(template.name()).append("\u001B[0m\r\n");
-    // sb.append(template.description()).append("\r\n");
-
-    // if (template.exits() != null && !template.exits().isEmpty()) {
-    // sb.append("\u001B[33m[出口]: ").append(String.join(", ", template.exits().keySet()))
-    // .append("\u001B[0m\r\n");
-    // }
-
-    // StringBuilder others = new StringBuilder();
-    // players.stream().filter(p -> !p.getId().equals(playerId))
-    // .forEach(p -> others.append(p.getNickname()).append(" "));
-
-    // if (!others.isEmpty()) {
-    // sb.append("\u001B[35m[這裡有]: \u001B[0m").append(others).append("\r\n");
-    // }
-    // future.complete(sb.toString());
-    future.complete(null);
-  }
 
   public void say(Room room, String sourceId, String content) {
     Player protagonist = room.getProtagonist();
@@ -151,14 +119,6 @@ public class RoomService {
     broadcastToOthers(room, sourceId, name + ": " + content);
   }
 
-  @Deprecated
-  public void say(List<Player> players, String sourceId, String content) {
-    Player speaker =
-        players.stream().filter(p -> p.getId().equals(sourceId)).findFirst().orElse(null);
-    String name = (speaker != null) ? speaker.getName() : "有人";
-
-    broadcastToOthers(players, sourceId, name + ": " + content);
-  }
 
   public GameItem tryPickItem(List<GameItem> items, String args, Player picker) {
     log.info("tryPickItem: {}", args);
@@ -227,24 +187,6 @@ public class RoomService {
     MessageUtil.send(message, actor, target, protagonist);
   }
 
-  @Deprecated
-  public void broadcast(List<Player> players, List<Mob> mobs, String actorId, String targetId,
-      String message) {
-    Living actor = manager.findLivingActor(actorId).orElse(null);
-    Living target = null;
-    if (targetId != null) {
-      target = mobs.stream().filter(m -> m.getId().equals(targetId)).findFirst().orElse(null);
-      if (target == null) {
-        target = players.stream().filter(p -> p.getId().equals(targetId)).findFirst().orElse(null);
-      }
-      if (target == null) {
-        target = manager.findLivingActor(targetId).orElse(null);
-      }
-    }
-    for (Player player : players) {
-      MessageUtil.send(message, actor, target, player);
-    }
-  }
 
   public void broadcastJson(Room room, MudMessage<Object> message) {
     Player protagonist = room.getProtagonist();
@@ -253,12 +195,6 @@ public class RoomService {
     }
   }
 
-  @Deprecated
-  public void broadcastJson(List<Player> players, MudMessage<Object> message) {
-    for (Player player : players) {
-      player.sendJson(message);
-    }
-  }
 
   public void broadcastToOthers(Room room, String actorId, String message) {
     Player protagonist = room.getProtagonist();
@@ -273,12 +209,6 @@ public class RoomService {
     MessageUtil.send(message, actor, protagonist);
   }
 
-  @Deprecated
-  public void broadcastToOthers(List<Player> players, String actorId, String message) {
-    Living actor = manager.findLivingActor(actorId).orElse(null);
-    players.stream().filter(p -> !p.getId().equals(actorId))
-        .forEach(p -> MessageUtil.send(message, actor, p));
-  }
 
   public Living findLiving(Room room, List<Mob> mobs, String livingId) {
     Player protagonist = room.getProtagonist();
@@ -288,11 +218,6 @@ public class RoomService {
     return mobs.stream().filter(living -> living.getId().equals(livingId)).findFirst().orElse(null);
   }
 
-  @Deprecated
-  public Living findLiving(List<Player> players, List<Mob> mobs, String livingId) {
-    return Stream.concat(players.stream(), mobs.stream())
-        .filter(living -> living.getId().equals(livingId)).findFirst().orElse(null);
-  }
 
   public String lookAtRoom(Room room, List<Player> players, List<Mob> mobs, List<GameItem> items,
       String playerId) {
