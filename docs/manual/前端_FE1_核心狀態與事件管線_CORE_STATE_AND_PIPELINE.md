@@ -32,7 +32,7 @@ graph TD
 ### 1. 核心狀態樹結構
 - **`viewMode`**：當前主視圖模式，可為 `'TOWN'`（城鎮文字 MUD）或 `'DUNGEON'`（第一人稱地牢 DRPG）。
 - **`dungeon`**：地牢樓層 ID、座標 `(x, y)`、朝向、`visited` 迷霧矩陣、`openedChests` 寶箱矩陣、`forwardInspection` 前方視野文字。
-- **`party`**：小隊 5 位成員之即時氣血（HP）、真元（MP）、道心（SAN）、罡氣（Poise）、裝備與 30 格小隊共用儲物袋。
+- **`party`**：小隊 5 位成員之即時氣血（HP）、真元（MP）、道心（SAN）、罡氣（Poise）、裝備與 40 格小隊共用儲物袋。
 - **`battle`**：戰鬥進行標記、敵方怪物清單、敵方氣血/韌性/行動進度條、當前目標鎖定。
 - **`radarMode`**：雷達地圖顯示模式，支援 `'centered'`（中心跟隨）與 `'full'`（全圖宏觀）。
 
@@ -89,14 +89,16 @@ document.addEventListener('click', (event) => {
 
 ## 🌐 四、WebSocket 連線與強健重連管線 (`websocket.js`)
 
-前端透過單一連線管道與後端 `MudWebSocketHandler` 保持通訊：
+前端透過獨立模組 `static/js/network/websocket.js` 與後端 `MudWebSocketHandler` 保持全雙工長連線通訊：
 
-1. **心跳保活機制 (Keep-Alive)**：
-   - 每 15 秒主動發送一次文字 Ping，防止代理伺服器或瀏覽器閒置切斷連線。
-2. **指數退避斷線重連 (Exponential Backoff)**：
-   - 當網路中斷時，自動以 $1\text{s} \to 2\text{s} \to 4\text{s} \to 8\text{s}$（上限 15 秒）間隔嘗試重連。
-   - 重連成功後自動請求刷新最新狀態，玩家無需手動重整瀏覽器。
-3. **ANSI 彩色字串解碼器**：
+1. **指數退避斷線重連 (Exponential Backoff)**：
+   - 當網路異常或伺服端重啟中斷時，自動以 $1\text{s} \to 2\text{s} \to 4\text{s} \to 8\text{s} \to 15\text{s}$（上限 15 秒）間隔嘗試重連。
+   - 重連成功後自動發送 `saves quiet` 主動請求刷新最新全景狀態，玩家無需手動重整瀏覽器。
+2. **單機本機心跳政策 (Localhost Keep-Alive Policy)**：
+   - 遵循專案架構決策二與純單機單體定位：在純本機開發與執行環境（`localhost:8080`），除役過度設計的高頻 15 秒文字 Ping，避免本機虛擬執行緒無效喚醒。
+   - 連線保活完全被動依賴 WebSocket 傳輸層之底層 Ping-Pong 與瀏覽器 `onclose` 事件，達到零 CPU 浪費之事件驅動架構。
+3. **ANSI 彩色字串解碼器與靜默過濾**：
+   - 步進移動（`step *`）與背景狀態拉取（`*quiet*`）自動走靜默通道，不洗版終端文字日誌；玩家主動操作則正常回顯。
    - 將伺服端傳送的 ANSI 終端跳脫序列（如 `\u001b[32m` 綠色、`\u001b[31m` 紅色）即時轉換為具備對應 CSS 樣式的 `<span>` 元素，完美呈現復古 MUD 文字氛圍。
 
 ---
@@ -105,7 +107,7 @@ document.addEventListener('click', (event) => {
 
 | 檔案路徑 | 模組定位 | 關鍵導出項目 |
 | :--- | :--- | :--- |
-| **代表檔案** | `static/js/network/websocket.js` | WebSocket 通訊管線 | `connectWebSocket()`, `sendWsCommand()`, `onMessage` |
+| **代表檔案** | `static/js/network/websocket.js` | WebSocket 通訊管線 | `connectWebSocket()`, `sendWsCommand()`, `disconnectWebSocket()`, `getWebSocket()`, `isWebSocketConnected()` (向後相容掛載至 `window.send`, `window.connect`) |
 
 ---
 

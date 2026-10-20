@@ -24,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class CombatService {
   private final DomainMetricsPort gameMetrics;
   // 【戰鬥名單】
@@ -38,6 +37,27 @@ public class CombatService {
   private final com.example.htmlmud.config.GameConfig gameConfig;
   private final com.example.htmlmud.domain.dungeon.battle.DefenseResolver defenseResolver;
   private final org.springframework.beans.factory.ObjectProvider<com.example.htmlmud.domain.party.service.PartyService> partyServiceProvider;
+  private final org.springframework.beans.factory.ObjectProvider<com.example.htmlmud.domain.dungeon.battle.DrpgBattleService> drpgBattleServiceProvider;
+
+  public CombatService(
+      DomainMetricsPort gameMetrics,
+      SkillService skillService,
+      XpService xpService,
+      XpProgressionService xpProgressionService,
+      com.example.htmlmud.config.GameConfig gameConfig,
+      com.example.htmlmud.domain.dungeon.battle.DefenseResolver defenseResolver,
+      org.springframework.beans.factory.ObjectProvider<com.example.htmlmud.domain.party.service.PartyService> partyServiceProvider,
+      org.springframework.beans.factory.ObjectProvider<com.example.htmlmud.domain.dungeon.battle.DrpgBattleService> drpgBattleServiceProvider) {
+    super();
+    this.gameMetrics = gameMetrics;
+    this.skillService = skillService;
+    this.xpService = xpService;
+    this.xpProgressionService = xpProgressionService;
+    this.gameConfig = gameConfig;
+    this.defenseResolver = defenseResolver;
+    this.partyServiceProvider = partyServiceProvider;
+    this.drpgBattleServiceProvider = drpgBattleServiceProvider;
+  }
 
   @org.springframework.beans.factory.annotation.Autowired(required = false)
   private com.example.htmlmud.domain.dungeon.battle.BuffSettlementService buffSettlementService;
@@ -57,10 +77,11 @@ public class CombatService {
   public void tick(long currentTick, long now) {
     // 只遍歷「正在戰鬥」的生物，效率極高
     // log.info("tick combatants: {}" + combatants.size());
+    var drpgService = drpgBattleServiceProvider != null ? drpgBattleServiceProvider.getIfAvailable() : null;
     for (Living actor : combatants) {
 
-      // 檢查是否正在戰鬥
-      if (!actor.isValid() || !actor.isInCombat()) {
+      // 檢查是否正在戰鬥，或已被 DRPG 小隊戰鬥接管
+      if (!actor.isValid() || !actor.isInCombat() || (drpgService != null && (drpgService.isInBattle(actor.getId()) || (actor instanceof Player p && drpgService.isInBattle(p))))) {
         // log.info("actor.isInCombat:false name:{}", actor.getName());
         endCombat(actor);
         continue;
@@ -110,6 +131,35 @@ public class CombatService {
       }
       return;
     }
+
+    // 檢查是否有 DrpgBattleService 接管 (SP-08: 5人小隊全員協同迎敵)
+    var drpgService = drpgBattleServiceProvider != null ? drpgBattleServiceProvider.getIfAvailable() : null;
+    if (drpgService != null) {
+      if (self instanceof Player p) {
+        if (drpgService.isInBattle(p)) {
+          return;
+        }
+        if (room != null) {
+          Living target = room.findLiving(targetId).orElse(null);
+          if (target instanceof Mob mob) {
+            boolean started = drpgService.startFieldBattle(p, mob);
+            if (started) return;
+          }
+        }
+      } else if (self instanceof Mob mob) {
+        if (room != null) {
+          Living target = room.findLiving(targetId).orElse(null);
+          if (target instanceof Player p) {
+            if (drpgService.isInBattle(p)) {
+              return;
+            }
+            boolean started = drpgService.startFieldBattle(p, mob);
+            if (started) return;
+          }
+        }
+      }
+    }
+
     self.enterCombat(targetId);
 
     // 【加入名單】

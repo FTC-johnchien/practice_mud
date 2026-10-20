@@ -2,7 +2,7 @@
 
 > **模組編號**：M3  
 > **系統類型**：後端核心業務模組  
-> **核心定位**：管理半即時戰鬥時間線（200ms Tick ATB/GCD）、一元一次擲骰圓桌判定公式、罡氣削韌與破防（Poise Break）、九大五行抗性與逆流回血、智慧仇恨索敵與 Buff 狀態機。
+> **核心定位**：管理半即時戰鬥時間線（500ms Tick 虛擬執行緒迴圈）、一元一次擲骰圓桌判定公式、罡氣削韌與破防（Poise Break）、戰鬥概念四層分離字典（DamageType / 九大靈氣 / 狀態標籤 / BuffCategory）、五行逆流回血（順成人逆成仙）、智慧仇恨索敵與打斷反制狀態機。
 
 ---
 
@@ -13,7 +13,7 @@
 ```mermaid
 sequenceDiagram
     autonumber
-    participant Loop as DrpgCombatLoop (200ms Tick)
+    participant Loop as DrpgCombatLoop (500ms Tick 迴圈)
     participant Hero as 玩家小隊成員
     participant Enemy as 怪物敵方
     participant Rules as CombatRules (純領域規則)
@@ -39,8 +39,8 @@ sequenceDiagram
     end
 ```
 
-- **Tick 頻率**：後端以每 200ms 一次 Tick 推進戰鬥世界時間。
-- **身法速度加成**：角色身法（Agility）越高，攻擊與技能冷卻縮減越快。
+- **Tick 頻率**：後端戰鬥虛擬執行緒以每 500ms 一次迴圈（`Thread.sleep(500)`）推進戰鬥時間線與狀態倒數。
+- **身法速度加成**：角色身法（Agility）越高，攻擊間隔與技能冷卻縮減越快。
 
 ---
 
@@ -91,28 +91,88 @@ sequenceDiagram
 
 ---
 
-## 🌊 四、九大五行抗性與逆流回血 (Elements & Resistances)
+## 🌊 四、戰鬥概念四層分離字典與五行逆流回血 (Combat Canonical Taxonomy)
 
-修仙世界講究五行生剋與道法抗衡。專案定義了 9 大傷害類型（`DamageType`）：
-- **物理系**：`PHYSICAL`（通用）、`SLASH`（斬擊）、`PIERCE`（穿刺）、`BLUNT`（鈍擊）。
-- **五行天道系**：`METAL`（金石）、`WOOD`（草木）、`WATER`（坎水）、`FIRE`（離火）、`EARTH`（厚土）、`WIND`（神風）。
-- **陰陽玄黃系**：`CORRUPT`（陰煞/混沌）、`LIGHT`（陽炎/天光）。
+為解決戰鬥概念在各模組手冊間的語意混淆，專案正式確立**「戰鬥四層字典架構」**，嚴格劃分傷害類型、元素家族、狀態標籤與底層 Buff 分類之職責邊界：
 
-### 結算公式：順成人，逆成仙（`CombatRules.resolveResistance`）
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                    戰鬥概念四層分離字典架構                             │
+├────────────────────┬───────────────────────────────────────────────────┤
+│ 1. 底層傷害類型     │ DamageType 枚舉 (20 種繼承樹：物理派生/法術派生/特殊)│
+├────────────────────┼───────────────────────────────────────────────────┤
+│ 2. 天道元素家族     │ 九大靈氣家族 (五行天道/乾坤氣象/陰陽造化，對應抗性與逆流) │
+├────────────────────┼───────────────────────────────────────────────────┤
+│ 3. 狀態效果標籤     │ Status / Skill Tags (STUN/SILENCE/SEAL/INTERRUPT 矩陣)│
+├────────────────────┼───────────────────────────────────────────────────┤
+│ 4. 底層 Buff 分類  │ BuffCategory (SHIELD/HOT/DOT/STAT_MODIFIER/CONTROL)   │
+└────────────────────┴───────────────────────────────────────────────────┘
+```
+
+### 1. 第一層：底層傷害類型 [`DamageType`](../../src/main/java/com/example/htmlmud/domain/model/enums/DamageType.java)（20 種繼承樹）
+代碼中以單一繼承樹組織，支援 `type.is(parent)` 多態檢定：
+- **`PHYSICAL` (物理根類別)**：
+  - `SLASH`（揮砍）：刀劍類鋒刃斬擊。
+  - `PIERCE`（穿刺）：槍矛箭矢點狀破甲。
+  - `BLUNT`（鈍擊）：戰錘巨棒重型打擊。
+  - `METAL`（金石）：金屬銳器實體衝擊。
+- **`MAGIC` (法術根類別)**：
+  - `FIRE`（烈火）：赤煞焚燒。
+  - `ICE`（冰霜）：玄冥極寒。
+  - `WATER`（坎水）：巨浪激流。
+  - `LIGHTNING`（神雷）：九霄天雷。
+  - `WIND`（神風）：天罡烈風。
+  - `EARTH`（厚土）：大地重壓。
+  - `WOOD`（草木）：青囊生發。
+  - `POISON`（毒素）：陰毒瘴氣。
+  - `HOLY`（神聖）/ `LIGHT`（天光）：純陽正道、辟邪驅煞。
+  - `DARK`（幽冥）/ `CORRUPT`（陰煞/混沌）：古神侵蝕、魔道濁氣。
+- **特殊類別**：
+  - `SONIC`（音波）：無視常規物防之震盪傷害。
+  - `TRUE`（真實傷害）：天道不可抗拒之真實扣血，不計護甲與抗性折減。
+
+### 2. 第二層：天道元素家族 (九大靈氣家族)
+修仙世界講究五行生剋與道法抗衡，用於抗性面板、天道靈氣克制與「順成人逆成仙」之回血維度：
+- **五行天道靈氣**：金 (`METAL`)、木 (`WOOD`/`POISON`)、水 (`WATER`/`ICE`)、火 (`FIRE`)、土 (`EARTH`)。
+- **乾坤氣象靈氣**：風 (`WIND`)、雷 (`LIGHTNING`)。
+- **陰陽造化靈氣**：陰煞 (`DARK`/`CORRUPT`)、純陽 (`HOLY`/`LIGHT`)。
+
+### 3. 第三層：狀態機制標籤 (Status & Skill Mechanism Tags)
+用於技能反制檢定、Boss 施法蓄力打斷與戰術決策：
+- **控場反制標籤**：`STUN`（眩暈/硬直）、`SILENCE`（沉默/封咒）、`SEAL`（封印/鎮魔）、`CONTROL`（通用受控）、`INTERRUPT`（通用反制打斷）。
+- **戰術行為標籤**：`ATTACK`（普攻）、`SPELL`（法術）、`HEAL`（治療）、`DEFENSE`（防護）、`AOE`（群體）、`TAUNT`（嘲諷）、`CLEANSE`（淨化）、`DISPEL`（驅散）、`PARRY`（偏斜招架）。
+
+### 4. 第四層：底層 Buff 分類 [`BuffCategory`](../../src/main/java/com/example/htmlmud/domain/model/enums/BuffCategory.java)
+引擎底層核心運算的分流憑據，規範生命週期與結算邏輯：
+- `SHIELD`：傷害吸收護盾（耗盡即破碎提前失效）。
+- `HOT`：週期性治療 (Heal over Time)。
+- `DOT`：週期性傷害 (Damage over Time)。
+- `STAT_MODIFIER`：五維屬性或戰鬥數值加成/減益。
+- `CONTROL`：強制控場限制（受 `Buffable.isControlled()` / `isSilenced()` 全入口門控）。
+
+### 5. 傷害抗性折減與「順成人，逆成仙」逆流回血契約
+實作於 [`CombatRules.resolveResistance`](../../src/main/java/com/example/htmlmud/domain/combat/CombatRules.java)：
 
 ```java
 public static ResistanceResult resolveResistance(int rawDamage, DamageType type, double resistance)
 ```
 
 1. **物理保底穿透原則**：
-   - 物理系傷害不走元素逆流回血。
+   - 物理系傷害（`PHYSICAL` 及其派生 `SLASH/PIERCE/BLUNT/METAL`）不走元素逆流回血。
    - 為防止極限堆防禦導致「絕對無敵死鎖」，物理抗性最高折減至 90%（**保底 10% 穿透**）：
      $$\text{FinalDamage} = \max(1, \text{RawDamage} \times \max(0.1, 1.0 - \text{Resistance}))$$
-2. **五行逆流回血原則 (Absorption)**：
+2. **五行法術逆流回血原則 (Absorption & Healing)**：
    - 當怪物或修士修煉特定真功，使某屬性抗性大於 100%（$\text{Resistance} > 1.0$，如火靈真身火抗 125%）：
    - **承受傷害歸零**，超額部分化為甘霖，**逆流轉化為氣血回復**！
      $$\text{HealAmount} = \text{round}(\text{RawDamage} \times (\text{Resistance} - 1.0))$$
    - 完美還原修仙小說中「用火法轟擊火精靈反而為其療傷」的神妙機制。
+
+### 6. 全系統時間心跳層級排程字典 (Timing & Heartbeat Hierarchy)
+系統遵循清晰的階層化排程架構，各層頻率互不混淆：
+1. **底層世界定時器 (`WorldPulse.pulse`)**：`@Scheduled(fixedRate = 100)` (100ms 輪詢)，作為伺服端全局最小心跳單位。
+2. **戰鬥虛擬執行緒迴圈 (`DrpgCombatLoop`)**：獨立執行緒 500ms 迴圈（`Thread.sleep(500)`），推進行動間隔冷卻與意圖蓄力。
+3. **狀態效果推進 (`BuffSettlementService` / `ActiveBuff`)**：基準 1 Tick = 500ms（戰鬥中由 CombatLoop 驅動；常態由 WorldPulse 推進），推進 DoT/HoT 與倒數。
+4. **世界生靈巡邏與刷新**：3,000ms（由 `WorldPulse` 計數器計數 30 Ticks 觸發），負責怪物刷新與大世界巡邏。
 
 ---
 
@@ -156,11 +216,12 @@ public static ResistanceResult resolveResistance(int rawDamage, DamageType type,
 | 項目 | 路徑 / 名稱 | 職責 |
 | :--- | :--- | :--- |
 | **純領域規則** | `com.example.htmlmud.domain.combat.CombatRules` | 一元一次圓桌判定、五行抗性與逆流結算 |
-| **戰鬥編排** | `com.example.htmlmud.domain.dungeon.battle.DrpgBattleService` | 戰鬥初始化、逃跑、指令派發 |
-| **時間線迴圈** | `com.example.htmlmud.domain.dungeon.battle.DrpgCombatLoop` | 200ms Tick 輪詢推進與攻擊觸發 |
+| **戰鬥編排** | `com.example.htmlmud.domain.dungeon.battle.DrpgBattleService` | 戰鬥初始化、地牢遭遇戰、野外遭遇戰 5 人小隊協同迎敵 (`startFieldBattle`)、指令派發 |
+| **時間線迴圈** | `com.example.htmlmud.domain.dungeon.battle.DrpgCombatLoop` | 500ms Tick 虛擬執行緒迴圈推進、攻擊觸發與戰鬥演出廣播 |
 | **狀態機與打斷服務** | `com.example.htmlmud.domain.dungeon.battle.CombatFsmService` | 蓄力前搖管理、標籤比對與即時打斷反制結算 |
 | **智慧索敵** | `com.example.htmlmud.domain.dungeon.battle.DrpgEnemyTacticsService` | 前排加成、嘲諷係數與仇恨演算 |
-| **戰果結算** | `com.example.htmlmud.domain.dungeon.battle.DrpgRewardService` | 經驗派發、掉落物入庫與金幣分配 |
+| **戰果結算** | `com.example.htmlmud.domain.dungeon.battle.DrpgRewardService` | 經驗派發、40格小隊公共行囊入庫與任務擊殺事件通知 |
+| **生靈狀態連動** | `BattleContext.onBattleEnd` | 戰鬥結束大世界 Mob 實體標記死亡、停止心跳與移出房間 |
 | **戰況視圖契約** | `com.example.htmlmud.domain.dungeon.dto.BattleEnemyViewDto` | 前端戰況實體 DTO（含 `currentAction`, `actionProgressPercent`, `interruptible`） |
 | **精簡敵方傳輸** | `com.example.htmlmud.domain.dungeon.dto.BattleEnemyDto` / `CombatMobDto` | 敵方蓄力與打斷即時狀態傳輸合約 |
 | **資料設定** | `src/main/resources/data/party/party_skills.json` | 小隊技能傷害、削韌值、蓄力 `castTimeMs` 與打斷 `interruptible` 標籤 |

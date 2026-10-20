@@ -168,7 +168,7 @@
         <div class="guide-card">
           <div class="guide-card-icon">☯️</div>
           <div class="guide-card-title">四、陣法靈威與公共行囊</div>
-          <p class="guide-card-text">前後排孔位享有專屬陣法加成，靈威滿 100 可釋放 <strong>【⚡ 陣法奧義】</strong>。按 <strong>B</strong> 開啟 30 格公共行囊，隨時使用丹藥、穿脫武器防具強化小隊戰力。</p>
+          <p class="guide-card-text">前後排孔位享有專屬陣法加成，靈威滿 100 可釋放 <strong>【⚡ 陣法奧義】</strong>。按 <strong>B</strong> 開啟 40 格公共行囊，隨時使用丹藥、穿脫武器防具強化小隊戰力。</p>
         </div>
       </div>
 
@@ -664,40 +664,6 @@
 
   <script src="js/mud-core.js?v=1.2.2"></script>
   <script src="js/mud-ui.js?v=1.2.2"></script>
-
-  <script>
-    let ws = null;
-    function connect() {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.host || 'localhost:8080';
-      const socketUrl = `${protocol}//${host}/ws`;
-
-      ws = new WebSocket(socketUrl);
-      ws.onopen = () => {
-        appendHtml("系統：神識已連結至太陰地宮！", "#10b981");
-        send('saves quiet', true);
-      };
-      ws.onclose = () => {
-        appendHtml("系統：靈識中斷...", "#ef4444");
-        // appendHtml("系統：靈識中斷，3秒後嘗試凝神重連...", "#ef4444");
-        // setTimeout(connect, 3000);
-      };
-      ws.onmessage = (event) => handleServerMessage(event.data);
-    }
-
-    function send(cmd, silent = false) {
-      if (!cmd || !ws || ws.readyState !== WebSocket.OPEN) return;
-      ws.send(JSON.stringify({ type: "INPUT", text: cmd }));
-      // 步進與靜默指令不需洗版文字日誌，僅玩家操作記錄
-      const isSilentCmd = silent || cmd.startsWith('step ') || cmd.includes('quiet') || cmd.includes('silent');
-      if (!isSilentCmd) {
-        appendHtml("> " + cmd, "#6b7280");
-      }
-    }
-
-    window.send = send;
-    connect();
-  </script>
   <script type="module" src="js/app.js?v=1.8.2"></script>
 </body>
-</html>
+</html>

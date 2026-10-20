@@ -50,6 +50,7 @@ public class BattleContext {
   private java.util.concurrent.Future<?> combatFuture;
   @Builder.Default
   private long lastHeartbeat = System.currentTimeMillis();
+  private java.util.function.Consumer<BattleState> onBattleEnd;
 
   public void touchActivity() {
     this.lastActivityTime = System.currentTimeMillis();

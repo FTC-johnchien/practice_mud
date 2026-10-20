@@ -38,7 +38,7 @@ saves/
 ### `SaveData` JSON 核心結構
 ```json
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "saveTimestamp": 1729000000000,
   "saveSlot": "slot_1",
   "saveName": "墨竹礦坑深處 ‧ 練氣九層",
@@ -55,7 +55,7 @@ saves/
     "activeFormationId": "nine_palaces_eight_trigrams",
     "members": [ ... ],
     "sharedInventory": {
-      "capacity": 30,
+      "capacity": 40,
       "slots": [ ... ]
     }
   },
@@ -83,7 +83,9 @@ saves/
        │
        ├─► 若為 v1: 執行 migrateV1toV2() 補齊九大抗性矩陣、罡氣韌性上限與裝備槽位
        │
-       ├─► 若為 v2 (當前最新): 直接安全載入
+       ├─► 若為 v2: 執行 migrateV2toV3() (SP-03 存檔大一統) 徹底除役 personalInventory 雙寫，將隨身道具自動合流入小隊公共行囊
+       │
+       ├─► 若為 v3 (當前最新): 直接安全載入
        │
        ▼
 寫回備份並完成反序列化
@@ -107,9 +109,9 @@ saves/
 
 | 項目 | 路徑 / 名稱 | 職責 |
 | :--- | :--- | :--- |
-| **存檔服務** | `com.example.htmlmud.domain.service.SaveGameService` | 槽位讀寫、備份回滾與版本遷移 |
-| **自動存檔** | `com.example.htmlmud.domain.service.AutoSaveService` | 撤離地牢與戰勝後自動非同步快照 |
-| **存檔真相源** | `com.example.htmlmud.domain.model.save.SaveData` | 小隊、背包、進度聚合根 DTO |
+| **存檔服務** | `com.example.htmlmud.domain.save.service.SaveGameService` | 槽位讀寫、備份回滾與版本遷移 |
+| **遷移管線** | `com.example.htmlmud.domain.save.migration.SaveMigrationPipeline` | v1 $\to$ v2 $\to$ v3 平滑遷移 |
+| **存檔真相源** | `com.example.htmlmud.domain.save.model.SaveData` | 小隊、40格背包、進度聚合根 DTO |
 | **房間持久化** | `com.example.htmlmud.domain.service.RoomPersistenceService` | 地面遺留物非同步寫入 |
 | **存檔存放目錄** | `saves/slot_*.json` | 本地原子性 JSON 存檔目錄 |
 

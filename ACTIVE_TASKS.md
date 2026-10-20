@@ -52,7 +52,12 @@
   - `CharacterSyncService` 直接以 `UnifiedSkill` / `PartyMemberSkill` 進行同步，不再需要中間層動態縮放與字串比對翻譯。
   - `DrpgRewardService` 戰鬥後熟練度原地增長給存活小隊成員，主角隊長技能同步回傳，消除反向回饋膠水代碼。
   - 重構 `CanonicalSkillModelTest`、`MechanismPurityAndBugfixTest` 與 `SkillBridgeIntegrationTest`，全專案 324 項測試 100% 綠燈通過。
-- [ ] **Task 8 (SP-08): 戰鬥引擎大一統，野外戰鬥全面對齊 5 人小隊協同作戰**
+- [x] **Task 8 (SP-08): 戰鬥引擎大一統，野外戰鬥全面對齊 5 人小隊協同作戰**
+  - 徹底收斂野外 MUD 與地牢 DRPG 雙軌機制，消滅「主角一人單挑，小隊另外 4 位隊友冷眼看戲」的架構割裂。
+  - `DrpgBattleService` 實裝 `startFieldBattle(Player, Mob)`，野外遭遇戰由 5 人小隊全員依照站位、陣法與戰術 AI (Gambit) 協同迎敵。
+  - `BattleContext` 增設 `onBattleEnd` 生命週期回呼，戰鬥大捷時掉落物直入 40 格小隊公共行囊，隊員獲得修為經驗與技能熟練度原地增長，發布擊殺事件並同步移除/標記大世界房間 Mob。
+  - `KillCommand` 與 `CombatService.startCombat` 全面委派至小隊戰鬥引擎，`TargetSelector` 自動過濾死亡怪防禦性防護。
+  - 新增 `FieldCombatPartyUnificationTest`，全專案 327 項測試 100% 綠燈零回歸破壞。
 - [ ] **Task 9 (SP-09): 小隊共享金庫與經濟體系大一統**
 
 ---
@@ -65,6 +70,12 @@
   - Task 3: 廢止 CharacterSyncService 偽 Outcome 拷貝 — 同步直接深度鏡像，修復線上運行時深層屬性被略過的缺陷。
   - Task 4: 測試驅動驗證 — 全專案 315 項測試 100% 綠燈通過。
   - Task 5: 模組技術手冊同步 — 更新後端 M1 與 M4 手冊。
+
+- [x] **Milestone 2.5 — 文檔代碼全域對齊、40 格行囊標準裁定與前端 WebSocket 模組化重構 (DOC-FACT-01 / DOC-CAP-01 / DOC-WS-01 / DOC-ENUM-01)**
+  - Task 1: 40 格小隊行囊全域標準裁定與代碼文檔落地 (DOC-CAP-01) — 後端常數升級為 40，前端與 16 本手冊全域同步。
+  - Task 2: 事實脫節全面清繳 (DOC-FACT-01) — 清理已刪除的 `SkillBridgeService`，對齊 Java 25 `ScopedValue`、`schemaVersion=3` 與 324 項測試基準。
+  - Task 3: 前端 WebSocket 獨立成檔與健壯性重構 (DOC-WS-01) — 新建 `network/websocket.js`，實裝指數退避斷線重連（1s~15s），清除 `index.html` 內嵌連線腳本（嚴格 CSP），落實單機心跳合理化政策。
+  - Task 4: 全域遊戲詞彙表分層與裝備枚舉對齊 (DOC-ENUM-01) — 校準 `EquipmentSlot` 5+2 雙飾品體系；在 `後端_M3` 確立戰鬥概念四層分離字典（DamageType 20 種繼承樹 / 九大靈氣 / 狀態標籤 / BuffCategory）與 500ms 心跳階層。
 
 ---
 

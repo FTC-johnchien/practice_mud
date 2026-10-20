@@ -103,6 +103,9 @@ public class TargetSelector {
     int matchCount = 0;
 
     for (T candidate : candidates) {
+      if (candidate instanceof Living l && (!l.isValid() || l.isDead())) {
+        continue;
+      }
       if (matcher.test(candidate, keyword)) {
         matchCount++;
         if (matchCount == targetIndex) {

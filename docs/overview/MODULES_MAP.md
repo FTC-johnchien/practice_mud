@@ -120,18 +120,18 @@ graph TD
 - 📖 **詳細技術手冊**：[`後端_M5_技能境界與修煉模組_SKILL_AND_PROGRESSION.md`](../manual/後端_M5_技能境界與修煉模組_SKILL_AND_PROGRESSION.md)
 - **核心職責**：
   - 技能學習、真元消耗檢定、冷卻時間（CD）與通用冷卻（GCD）管制。
-  - 動態屬性縮放（`SkillBridgeService.scaleSkill`）：在保留 Buff、削韌、五行標籤的前提下，根據施法者道基五維動態縮放威力。
+  - 大一統動態屬性縮放（`UnifiedSkill` / `PartyMemberSkill`）：在保留 Buff、削韌、五行標籤的前提下，根據施法者道基五維與修煉境界動態縮放威力。
   - 境界突破（練氣 ➔ 築基 ➔ 金丹...）與自由屬性點分配。
 - **代表類別**：
-  - `SkillBridgeService`, `XpProgressionService`, `SkillCostService`, `FormulaEvaluator`
+  - `UnifiedSkill`, `PartyMemberSkill`, `XpProgressionService`, `SkillCostService`, `FormulaEvaluator`
 - **資料設定來源**：
   - `src/main/resources/data/classes/classes.json`, `data/skills.json`
 
 ### 6. M6: 物品、背包與經濟模組 (Item, Inventory & Economy)
 - 📖 **詳細技術手冊**：[`後端_M6_物品背包與經濟模組_ITEM_AND_ECONOMY.md`](../manual/後端_M6_物品背包與經濟模組_ITEM_AND_ECONOMY.md)
 - **核心職責**：
-  - 四大裝備槽位管理（武器 `MAIN_HAND`/`OFF_HAND`、頭部 `HEAD`、胸甲 `BODY`、鞋子 `FEET`、飾品 `ACCESSORY`/`RING`）。
-  - 30 格小隊共用儲物袋（`PartyInventory`）與堆疊機制。
+  - 裝備槽位管理（武器 `MAIN_HAND`/`OFF_HAND`、頭部 `HEAD`、胸甲 `BODY`、鞋子 `FEET`、飾品 `ACCESSORY_1`/`ACCESSORY_2` 5+2 結構）。
+  - 40 格小隊共用儲物袋（`PartyInventory`）與堆疊機制。
   - 貨棧買賣交易、貨幣（碎銀、靈石）扣除、消耗品使用（百草金創藥、辟邪靈茶）。
 - **代表類別**：
   - `PartyInventory`, `PartyItemSlot`, `GameItem`, `ShopCommand`, `DropCommand`, `GetCommand`
@@ -239,8 +239,8 @@ static/
 5. M3 從 M7 (TemplateRepository) 載入怪物模板，並從 M4 (PartyService) 取得 5 人小隊站位
        │
        ▼
-6. M3 啟動 DrpgCombatLoop (200ms Tick 輪詢)：
-   - 玩家點擊技能 ➔ M5 (SkillBridgeService) 動態縮放 ➔ M3 (CombatRules) 圓桌判定
+6. M3 啟動 DrpgCombatLoop (500ms 迴圈輪詢)：
+   - 玩家點擊技能 ➔ M5 (UnifiedSkill / PartyMemberSkill) 動態縮放 ➔ M3 (CombatRules) 圓桌判定
    - 命中 ➔ 扣除怪物 Poise 韌性 ➔ 觸發破防虛弱狀態 ➔ 五行傷害加成結算
        │
        ▼

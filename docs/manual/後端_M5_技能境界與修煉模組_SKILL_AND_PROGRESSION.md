@@ -20,23 +20,23 @@
 
 ---
 
-## ⚔️ 二、技能動態屬性縮放 (Skill Scaling Engine)
+## ⚔️ 二、大一統技能模型與境界動態縮放 (Unified Skill & Scaling Engine)
 
 在遊戲中，一本「太陰玄冰訣」在練氣修士與金丹老怪手中釋放，威力截然不同。
 
-專案透過 [`SkillBridgeService.scaleSkill()`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/service/SkillBridgeService.java) 實作高階動態縮放：
+專案在 SP-06 / SP-07 階段正式確立**大一統技能模型** [`UnifiedSkill`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/party/model/UnifiedSkill.java) 與 [`PartyMemberSkill`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/party/model/PartyMemberSkill.java)，隊員直接持有技能，徹底除役中間翻譯層 `SkillBridgeService`：
 
-### 1. 完整保留原始元資料 (Metadata Preservation)
-動態縮放時，嚴格保留原技能的全部核心戰鬥契約：
-- **`poiseDamage`**：削韌值（不因縮放遺失）。
-- **`damageType`**：五行傷害類型（如 `FIRE`, `WATER`, `CORRUPT`）。
-- **`buffConfig`** / **`tags`**：狀態賦予與技能標籤（如 `CLEANSE`, `INTERRUPT`）。
-- **`gcdMs`** / **`castTimeMs`**：吟唱與公共冷卻。
+### 1. 內聚合一的核心契約 (Unified Contract)
+大一統模型同時封裝三大面向：
+- **修煉境界維度**：道法等級（`level` 1~10）、熟練度累積（`xp` / `maxXp`）、境界倍率（`masteryMultiplier`）。
+- **戰術機制維度**：傷害倍率（`damageMultiplier`）、冷卻時間（`cooldownMs`）、資源消耗（`costType` / `costValue`）、反制標籤（`STUN`, `SILENCE`, `TAUNT`, `CLEANSE`）、削韌（`poiseDamage`）。
+- **動態播報敘事**：招式文本範本（`moves`）。
 
-### 2. 縮放演算法公式
-$$\text{ScaledDamage} = \text{BaseDamage} + (\text{Caster.SPI} \times \text{SpiRatio}) + (\text{Caster.STR} \times \text{StrRatio})$$
-- 物理武技偏向根骨（STR）縮放。
-- 道法仙術偏向真元與神識（SPI/PER）縮放。
+### 2. 動態屬性與境界縮放
+- 戰鬥中呼叫 `skill.getEffectiveDamageMultiplier()` 時，自動結合隊員五維道基與修煉等級進行動態加成：
+$$\text{ScaledDamage} = \text{BaseDamage} \times (1.0 + (\text{SkillLevel} - 1) \times 0.15) \times \text{MasteryMult}$$
+- 物理武技偏向根骨（STR）縮放；道法仙術偏向真元與神識（SPI/PER）縮放。
+- 戰鬥大捷後，熟練度直接原地記入 `skill.addXp(amount)`，零跨層轉錄。
 
 ---
 
@@ -54,7 +54,8 @@ $$\text{ScaledDamage} = \text{BaseDamage} + (\text{Caster.SPI} \times \text{SpiR
 
 | 項目 | 路徑 / 名稱 | 職責 |
 | :--- | :--- | :--- |
-| **技能橋接** | `com.example.htmlmud.domain.service.SkillBridgeService` | 技能動態五維縮放與元契約深拷貝 |
+| **大一統技能** | `com.example.htmlmud.domain.party.model.UnifiedSkill` | 修煉境界與戰術機制大一統介面 |
+| **隊員技能實體** | `com.example.htmlmud.domain.party.model.PartyMemberSkill` | 隊員專屬技能、熟練度成長與動態縮放 |
 | **經驗成長** | `com.example.htmlmud.domain.service.XpProgressionService` | 經驗分配、等級提升與屬性點獎勵 |
 | **真元消耗** | `com.example.htmlmud.domain.service.SkillCostService` | 施法檢定真元消耗與冷卻時間判定 |
 | **公式解算** | `com.example.htmlmud.domain.service.FormulaEvaluator` | 數值公式字串動態解析 |

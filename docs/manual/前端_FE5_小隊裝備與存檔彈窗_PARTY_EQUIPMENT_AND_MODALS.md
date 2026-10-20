@@ -40,24 +40,26 @@ static/js/modals/
 
 ## 🛡️ 三、純資料驅動裝備換裝分頁 (`party-equipment-tab.js`)
 
-嚴格遵守專案第一紅線，裝備換裝介面**完全摒棄中文名稱推測**，全面依賴 `EquipSlot` 枚舉：
+嚴格遵守專案第一紅線，裝備換裝介面**完全摒棄中文名稱推測**，全面依賴後端 [`EquipmentSlot`](../../src/main/java/com/example/htmlmud/domain/model/enums/EquipmentSlot.java) 枚舉（5+2 結構，前端常數為 `EQUIP_SLOT_DEFS`）：
 
 ```mermaid
 sequenceDiagram
     autonumber
     participant UI as 前端 party-equipment-tab.js
-    participant Store as store.js (小隊儲物袋)
+    participant Store as store.js (小隊行囊 40 格)
     participant Server as 後端 PartyCommand
 
     UI->>Store: 點選隊員之【主手武器 (MAIN_HAND)】槽位
-    UI->>Store: 過濾儲物袋 items.filter(it => it.equipSlot === 'MAIN_HAND')
+    UI->>Store: 過濾行囊 items.filter(it => it.equipSlot === 'MAIN_HAND')
     Note over UI: 僅列出符合該槽位之飛劍或法杖，防具自動隱藏
     UI->>Server: 玩家點選穿戴 ➔ 發送 "party equip <charId> <slot> <itemId>"
     Server-->>Store: 回傳最新 DrpgStateDto (道基五維即時重算)
     Store-->>UI: 介面自動局部更新，裝備穿戴成功
 ```
 
-- **裝備槽位覆蓋**：主手（MAIN_HAND）、副手（OFF_HAND）、頭部（HEAD）、胸甲（BODY）、鞋子（FEET）、飾品（ACCESSORY）、戒指（RING）。
+- **裝備槽位覆蓋 (5+2 結構)**：
+  - **5 大基礎部位**：主手武器（`MAIN_HAND`）、副手防具（`OFF_HAND`）、頭部盔甲（`HEAD`）、身軀道袍（`BODY`）、靴履護具（`FEET`）。
+  - **2 大擴充飾品**：本命法寶（`ACCESSORY_1`）、輔佐靈寶（`ACCESSORY_2`）。
 - **屬性動態 Tooltip**：滑鼠移至法寶上方時，即時展示其增加之「根骨 +15、身法 +8、物理穿透 +10%」等詞綴明細。
 
 ---
@@ -92,7 +94,7 @@ sequenceDiagram
 
 當地下城首領或遭遇戰魔物全數殲滅時自動觸發：
 - **修為經驗分配動效**：經驗條自左向右蓄力填滿，若觸發升級則浮現金色仙光。
-- **戰利品展示卡片**：將怪物掉落之靈石碎銀、妖丹靈草與極品法寶逐一展示，點擊「收納入袋」後自動安全存入 30 格小隊儲物袋。
+- **戰利品展示卡片**：將怪物掉落之靈石碎銀、妖丹靈草與極品法寶逐一展示，點擊「收納入袋」後自動安全存入 40 格小隊儲物袋。
 
 ---
 

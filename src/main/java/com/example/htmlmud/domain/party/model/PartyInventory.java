@@ -13,7 +13,7 @@ import lombok.Data;
 
 @Data
 public class PartyInventory {
-  public static final int DEFAULT_CAPACITY = 30;
+  public static final int DEFAULT_CAPACITY = 40;
 
   private int capacity = DEFAULT_CAPACITY;
   private List<PartyItemSlot> slots = new ArrayList<>();

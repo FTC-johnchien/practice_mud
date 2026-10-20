@@ -6,51 +6,46 @@
 
 ---
 
-## 🎒 一、雙層背包模型架構
+## 🎒 一、大一統小隊行囊架構 (Unified Party Inventory)
 
-遊戲採用「個人速用背包 + 小隊共用儲物袋」的雙層結構：
+在 SP-02 / SP-03 演進中，專案已徹底除役過去容易產生兩本假帳的「個人隨身背包 + 小隊倉庫」雙層轉存模型（`stash` / `withdraw` 跨背包搬運已全面廢止），確立以 **40 格小隊共用儲物袋 (`PartyInventory`)** 作為全專案唯一的道具真實載體：
 
 ```
 ┌────────────────────────────────────────────────────────┐
-│                   30 格小隊共用儲物袋                   │
+│                   40 格小隊共用行囊                     │
 │                    (PartyInventory)                    │
 ├────────────────────────────────────────────────────────┤
-│ • 全隊 5 人共用，地牢掉落物直接入庫                    │
+│ • 全隊 5 人共用，地牢掉落物與任務獎勵直接入庫          │
 │ • 支援最大堆疊 (靈石/丹藥 99 堆疊，裝備單件獨立)         │
-│ • 任何隊員換裝皆可直接從儲物袋中調取裝備               │
-└────────────────────────────────────────────────────────┘
-                           ▲
-                           │ stash 存入 / withdraw 取出
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│                   個人隨身背包 (6 格)                   │
-├────────────────────────────────────────────────────────┤
-│ • 個人速用乾糧、回春靈藥、任務信物                     │
-│ • 個人裝備穿戴欄位 (武器、頭盔、胸甲、靴子、飾品)       │
+│ • 5 位隊員換裝皆直接從小隊行囊中存取，零假帳雙寫       │
+│ • 拾取 (get)、丟棄 (drop)、商店買賣 (buy) 直接操作行囊 │
 └────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🛡️ 二、裝備槽位與純資料驅動契約
+## 🛡️ 二、裝備槽位與純資料驅動契約 (EquipmentSlot 5+2 結構)
 
-嚴格遵循專案第一紅線，前端與後端換裝邏輯**完全拋棄中文名稱推測**，全面依賴 `EquipSlot` 枚舉：
+嚴格遵循專案第一紅線，前端與後端換裝邏輯**完全拋棄中文名稱推測**，全面依賴 [`EquipmentSlot`](../../src/main/java/com/example/htmlmud/domain/model/enums/EquipmentSlot.java) 枚舉（JSON / DTO 序列化欄位為 `equipSlot`）：
 
 ```java
-public enum EquipSlot {
-  MAIN_HAND,  // 主手兵刃 (飛劍、巨錘、長槍、法杖)
-  OFF_HAND,   // 副手防具 (法印、靈盾、劍鞘)
-  HEAD,       // 頭部 (道冠、兜鍪、面具)
-  BODY,       // 胸部 (道袍、玄甲、法衣)
-  FEET,       // 足部 (踏雲靴、芒鞋)
-  ACCESSORY,  // 飾品 (玉佩、手鐲、寶珠)
-  RING        // 戒指 (儲物戒、煞靈戒)
+public enum EquipmentSlot {
+  // === 5 大基礎防禦與兵刃部位 ===
+  MAIN_HAND,    // 主手兵刃 (飛劍、巨錘、長槍、法杖)
+  OFF_HAND,     // 副手防具 (法印、靈盾、劍鞘)
+  HEAD,         // 頭部防具 (道冠、兜鍪、面具)
+  BODY,         // 身軀防具 (道袍、玄甲、法衣)
+  FEET,         // 靴履防具 (踏雲靴、芒鞋、鐵靴)
+
+  // === 2 大擴充靈寶飾品部位 (雙飾品體系) ===
+  ACCESSORY_1,  // 本命法寶 / 飾品一 (玉佩、寶珠、靈幡、護符)
+  ACCESSORY_2   // 輔佐靈寶 / 飾品二 (戒指、手鐲、魂印、法印)
 }
 ```
 
 ### 換裝流水線 (`party-equipment-tab.js` ➔ `PartyCommand`)
-1. **前端依槽位過濾**：僅顯示 `item.equipSlot == targetSlot` 的儲物袋物品，防範防具誤戴在武器欄。
-2. **替換舊裝機制**：將舊裝備安全卸下放回小隊儲物袋，新裝備穿上並即時重算五維道基加成。
+1. **前端依槽位精準過濾**：僅顯示 `item.equipSlot == targetSlot` 的小隊行囊物品，防範防具誤戴在武器欄，杜絕字串推測。
+2. **替換舊裝機制**：將舊裝備安全卸下放回小隊 40 格行囊，新裝備穿上並即時重算五維道基與抗性加成。
 
 ---
 
@@ -63,7 +58,7 @@ public enum EquipSlot {
    - 徹底拔除舊有的 `roomId.contains("inn")` 硬編碼降級。
 2. **購買交易檢驗**：
    - 檢驗玩家碎銀/靈石餘額是否足夠。
-   - 檢驗小隊儲物袋是否有空餘格位（未滿 30 格）。
+   - 檢驗小隊儲物袋是否有空餘格位（未滿 40 格）。
    - 支援批次購買（如 `buy bread 5`）。
 3. **靈藥消耗效果**：
    - **辟邪清心靈茶**：飲用回復 25 點道心（SAN 值）與 20 點真元。
@@ -75,9 +70,9 @@ public enum EquipSlot {
 
 | 項目 | 路徑 / 名稱 | 職責 |
 | :--- | :--- | :--- |
-| **小隊背包** | `com.example.htmlmud.domain.party.model.PartyInventory` | 30 格小隊儲物袋堆疊、存取與序列化 |
+| **小隊背包** | `com.example.htmlmud.domain.party.model.PartyInventory` | 40 格小隊儲物袋堆疊、存取與序列化 |
 | **物品實體** | `com.example.htmlmud.domain.model.GameItem` | 靈物實例、耐久度、詞綴與五維加成 |
-| **槽位枚舉** | `com.example.htmlmud.domain.model.EquipSlot` | 裝備欄位嚴格枚舉契約 |
+| **槽位枚舉** | `com.example.htmlmud.domain.model.enums.EquipmentSlot` | 裝備欄位嚴格枚舉契約 (5+2 結構) |
 | **商店指令** | `com.example.htmlmud.application.command.impl.ShopCommand` | 貨棧清單列出、買入、賣出指令處理 |
 | **拾取丟棄** | `com.example.htmlmud.application.command.impl.DropCommand` | 地面物品拾取（`get`）與丟棄（`drop`） |
 | **資料設定** | `src/main/resources/data/items.json` | 全域裝備、法寶、丹藥與素材屬性模板 |
@@ -98,7 +93,7 @@ public enum EquipSlot {
 ### 2. 🛡️ 穩定性與狀態防禦 (Robustness & Resilience)
 - **交易原子性兩階段事務 (Two-Phase Commit Transaction)**：
   在進行小隊共用儲物袋存取、裝備替換或商店大額買賣時，採用嚴格的兩階段驗證（`ValidateInventorySpace` ➔ `DeductCurrency` ➔ `CommitTransfer`），若任何環節異常自動回滾（Rollback），徹底消滅「物品丟失」或「複製刷物」漏洞。
-- **背包格位邊界保護**：為小隊儲物袋擴充滿載溢出緩衝區（Mailbox Overfill Buffer），若滿 30 格時戰鬥大捷掉落稀有法寶，自動暫存於臨時寄存箱，防範珍貴掉落物被強制銷毀。
+- **背包格位邊界保護**：為小隊儲物袋擴充滿載溢出緩衝區（Mailbox Overfill Buffer），若滿 40 格時戰鬥大捷掉落稀有法寶，自動暫存於臨時寄存箱，防範珍貴掉落物被強制銷毀。
 
 ### 3. ⚡ 效能與記憶體最佳化 (Performance & Concurrency)
 - **物品原型享元架構 (Flyweight Item Model)**：

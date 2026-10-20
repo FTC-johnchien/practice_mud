@@ -53,7 +53,7 @@
 ### 1. 100% 資料驅動與零硬編碼鐵律 (Zero Hardcoding)
 - **嚴禁使用中文名稱做業務特例比對**：
   - ❌ 禁止：`if (item.getName().contains("甲"))` 或 `if ("boss_song_tianheng".equals(mobId))`。
-  - ✅ 正確：全面依賴資料庫/JSON 枚舉與標籤，如 `item.getEquipSlot() == EquipSlot.BODY`，或透過 `quests.json` 資料驅動查詢。
+  - ✅ 正確：全面依賴資料庫/JSON 枚舉與標籤，如 `item.getEquipSlot() == EquipmentSlot.BODY`，或透過 `quests.json` 資料驅動查詢。
 - **所有遊戲數值完全由 JSON 驅動**：怪物數值、物品屬性、技能威力、地牢地塊全部由 JSON 設定檔定義，Java 程式碼僅負責通用公式解算。
 
 ### 2. 深拷貝不可遺漏屬性鐵律 (Complete Deep-Copy)
@@ -90,7 +90,7 @@
 
 ### 2. 穩定性與單機存檔安全 (Local Save Resilience & Guardrails)
 - **檔案式存檔可靠性與壞檔防禦**：
-  - 以 `SaveData` JSON 為唯一單一真相源，多槽位原子替換、自動 `.bak` 備份與 `schemaVersion` 平滑遷移管線（v0 $\to$ v1 $\to$ v2）。
+  - 以 `SaveData` JSON 為唯一單一真相源，多槽位原子替換、自動 `.bak` 備份與 `schemaVersion` 平滑遷移管線（v0 $\to$ v1 $\to$ v2 $\to$ v3）。
 - **看門狗棘輪全面清零 (Zero-Tolerance Ratchet Gate)**：
   - 持續推進領域層重構，將當前 26 處 `new TemplateCatalog()` 的棘輪上限逐步清零，全面消除代碼庫中任何潛在的靜默 fallback。
 

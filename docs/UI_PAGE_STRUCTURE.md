@@ -321,7 +321,7 @@ export const UiUtils = {
      - `TACTICS`（戰術方針：FFXII 風格 Gambit 優先序規則鏈配置）
      - `SYSTEM`（系統：多槽位存檔、讀檔、遊戲設定）
 - **Data-Driven 規範**：
-  - 裝備槽位清單（`WEAPON`, `OFF_HAND`, `HEAD`, `BODY`, `FEET`, `ACCESSORY_1`, `ACCESSORY_2`）取自資料字典。
+  - 裝備槽位清單（`MAIN_HAND`, `OFF_HAND`, `HEAD`, `BODY`, `FEET`, `ACCESSORY_1`, `ACCESSORY_2`，5+2 結構）嚴格取自後端 `EquipmentSlot` 資料字典。
   - 數值比對差異（綠字增益、紅字衰減）由裝備屬性動態相減計算，不寫死固定屬性名稱。
 
 ---

@@ -1,4 +1,5 @@
 import { store } from './state-store.js';
+import { sendWsCommand } from '../network/websocket.js';
 
 /**
  * 指令發送派發器 (Command Dispatcher)
@@ -11,7 +12,9 @@ import { store } from './state-store.js';
  * @param {boolean} silent 是否不印出至文字日誌
  */
 export function sendCmd(cmd, silent = false) {
-  if (typeof window !== 'undefined' && typeof window.send === 'function') {
+  if (typeof sendWsCommand === 'function') {
+    sendWsCommand(cmd, silent);
+  } else if (typeof window !== 'undefined' && typeof window.send === 'function') {
     window.send(cmd, silent);
   }
 }

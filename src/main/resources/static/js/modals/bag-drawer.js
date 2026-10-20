@@ -4,7 +4,7 @@ import { escapeHtml } from '../core/ui-utils.js';
 
 /**
  * 隊伍公共行囊抽屜 (Bag Drawer Component)
- * 負責渲染隊伍公共背包 30 格、物品分類、使用丹藥及裝備穿戴
+ * 負責渲染隊伍公共背包 40 格、物品分類、使用丹藥及裝備穿戴
  */
 
 /**
@@ -39,7 +39,7 @@ export function renderBagDrawer() {
   const inv = lastParty.inventory;
   const members = lastParty.members || [];
   const slots = (inv && inv.slots) ? inv.slots : [];
-  const capacity = inv ? inv.capacity : 30;
+  const capacity = inv ? inv.capacity : 40;
 
   if (countEl) {
     countEl.innerText = `${slots.length}/${capacity}`;

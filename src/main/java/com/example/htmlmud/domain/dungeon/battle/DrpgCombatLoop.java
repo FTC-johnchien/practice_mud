@@ -596,6 +596,13 @@ public class DrpgCombatLoop {
           player.reply("戰鬥因時限已至或靈氣枯竭而終止。");
         }
       }
+      if (ctx.getOnBattleEnd() != null) {
+        try {
+          ctx.getOnBattleEnd().accept(ctx.getState());
+        } catch (Exception ex) {
+          log.error("執行 onBattleEnd 回呼異常 for player {}", (player != null ? player.getName() : "anon"), ex);
+        }
+      }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       log.info("Battle loop thread interrupted for player {}", (player != null ? player.getName() : "anon"));

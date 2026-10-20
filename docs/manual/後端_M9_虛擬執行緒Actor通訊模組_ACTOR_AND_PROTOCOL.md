@@ -43,18 +43,29 @@ graph LR
 
 在處理跨服務呼叫時，系統需要知道「當前發起請求的玩家是誰」。
 
-專案提供 `MudContext`（基於 `InheritableThreadLocal`）：
+專案提供 `MudContext`（基於 Java 25 現代特性 `ScopedValue`，徹底除役易引發記憶體洩漏與執行緒污染的 `ThreadLocal`）：
 ```java
 public class MudContext {
-  private static final ThreadLocal<Player> CURRENT_PLAYER = new ThreadLocal<>();
+  // 1. 當前操作的玩家 Actor
+  public static final ScopedValue<Player> CURRENT_PLAYER = ScopedValue.newInstance();
+  // 2. 當前的 Trace ID (除錯稽核)
+  public static final ScopedValue<String> TRACE_ID = ScopedValue.newInstance();
+  // 3. 原始輸入字串 (別名指令追蹤)
+  public static final ScopedValue<String> RAW_INPUT = ScopedValue.newInstance();
   
   public static Player currentPlayer() {
-    return CURRENT_PLAYER.get();
+    return CURRENT_PLAYER.orElseThrow(() -> new IllegalStateException("錯誤：嘗試在非 Request Scope 獲取 CurrentPlayer"));
   }
 }
 ```
 - **生命週期規範**：
-  在 WebSocket 收到文字指令時綁定 `MudContext.setCurrentPlayer(player)`，指令處理完畢於 `finally` 區塊強制 `clear()`，徹底防範 ThreadLocal 記憶體洩漏與跨請求資料污染。
+  在 WebSocket 收到文字指令分派時，透過結構化範圍執行：
+  ```java
+  ScopedValue.where(MudContext.CURRENT_PLAYER, player)
+             .where(MudContext.TRACE_ID, traceId)
+             .run(() -> commandDispatcher.dispatch(cmd, args));
+  ```
+  區塊結束後自動回歸未綁定狀態，不可變、無執行緒污染、零手動 `clear()` 遺漏風險，完美契合 Java 25 虛擬執行緒。
 
 ---
 

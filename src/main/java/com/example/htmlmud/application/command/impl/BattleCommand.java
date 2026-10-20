@@ -13,12 +13,17 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 @CommandAlias({"fight", "bt"})
 public class BattleCommand implements PlayerCommand {
 
   private final DrpgBattleService battleService;
   private final DungeonManager dungeonManager;
+
+  public BattleCommand(DrpgBattleService battleService, DungeonManager dungeonManager) {
+    super();
+    this.battleService = battleService;
+    this.dungeonManager = dungeonManager;
+  }
 
   @org.springframework.beans.factory.annotation.Autowired(required = false)
   private com.example.htmlmud.config.GameConfig gameConfig;

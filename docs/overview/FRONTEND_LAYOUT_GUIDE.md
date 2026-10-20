@@ -57,7 +57,7 @@
 | **FE-2** | DRPG 視口與雷達渲染器 | `#dungeon-radar-panel` (左舞台) | **地牢非戰鬥探索態** | 第一人稱 3 步透視視口、10x10 雷達迷霧網格、前方景致描述、八方羅盤。 |
 | **FE-3** | 戰鬥擂台與特效引擎 | `#battle-arena-panel` (左舞台) + `#battle-fx-layer` | **戰鬥交鋒態** (`inBattle === true`) | 敵方 5x5 陣線、血條/罡氣韌性條/ATB 條、我方 5x3 戰陣盤、打擊飄字、破防爆裂動效。 |
 | **FE-4** | 城鎮中樞與動作列面板 | `#town-nav-panel` (左舞台) + `footer.context-action-bar` | **城鎮生活態** + **全域底欄** | 城鎮 NPC 互動名片、出口路徑網格；底部快捷操作列（探索快捷鍵 vs 戰鬥法術列）。 |
-| **FE-5** | 小隊裝備與存檔彈窗 | `#party-modal`, `#bag-drawer`, `#save-modal`, `#battle-victory-modal` | **彈窗觸發時** (按鍵或點擊) | 5 人小隊數值與裝備穿脫分頁、30 格公共行囊、5 大存檔槽位管理、戰勝結算翻牌。 |
+| **FE-5** | 小隊裝備與存檔彈窗 | `#party-modal`, `#bag-drawer`, `#save-modal`, `#battle-victory-modal` | **彈窗觸發時** (按鍵或點擊) | 5 人小隊數值與裝備穿脫分頁、40 格公共行囊、5 大存檔槽位管理、戰勝結算翻牌。 |
 | **FE-6** | 七層樣式串流與視覺主題 | `static/css/style-01` ~ `style-07.css` | **全域樣式層** | 暗黑克系修仙色譜（玄青/幽藍/暗紅/琉璃金）、無障礙字級（$\ge 13\text{px}$）、響應式佈局。 |
 
 ---

@@ -7,22 +7,27 @@ import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.context.MudContext;
+import com.example.htmlmud.domain.dungeon.battle.DrpgBattleService;
 import com.example.htmlmud.domain.service.CombatService;
 import com.example.htmlmud.domain.service.TargetSelector;
-import com.example.htmlmud.protocol.util.AnsiColor;
-import com.example.htmlmud.protocol.util.ColorText;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
 @CommandAlias("k")
-@RequiredArgsConstructor
 public class KillCommand implements PlayerCommand {
 
   private final TargetSelector targetSelector; // 注入工具
-
+  private final DrpgBattleService drpgBattleService;
   private final CombatService combatService;
+
+  public KillCommand(TargetSelector targetSelector, DrpgBattleService drpgBattleService, CombatService combatService) {
+    super();
+    this.targetSelector = targetSelector;
+    this.drpgBattleService = drpgBattleService;
+    this.combatService = combatService;
+  }
 
   @Override
   public String getKey() {
@@ -45,33 +50,22 @@ public class KillCommand implements PlayerCommand {
       return;
     }
 
-    // 2. 交給 Selector 處理複雜字串
-    // args 可能是 "red goblin", "elite soldier 2"
-    // TODO pvp的處理
-    Mob target = targetSelector.selectMob(room.getMobs(), args);
+    // 2. 交給 Selector 處理目標字串
+    Mob target = targetSelector.selectMob(room != null ? room.getMobs() : java.util.List.of(), args);
     if (target == null) {
       player.reply("這裡沒有看到 '" + args + "'。");
       return;
     }
-    // log.info("name:{} defense: {}", target.getTemplate().name(), target.defense);
 
-    // 發起戰鬥
+    // 3. 全面交由小隊戰鬥引擎接管 (SP-08: 5人小隊全員協同迎敵)
+    if (drpgBattleService != null) {
+      boolean started = drpgBattleService.startFieldBattle(player, target);
+      if (started) {
+        return;
+      }
+    }
+
+    // 防禦性 fallback：相容歷史單挑通道
     combatService.startCombat(player, target.getId());
-
-    // 【節奏控制】
-    // 攻擊者：立即獲得攻擊機會 (或是很短的延遲)
-    player.setNextAttackTime(System.currentTimeMillis());
-
-    // 被攻擊對象接收到被攻擊事件
-    target.onAttacked(player.getId());
-
-    // log.info("name:{} {}", self.getName(), self.getNickname());
-
-    // 訊息處理
-    String messageTemplate = ColorText.wrap(AnsiColor.RED, "$N對著$n喝道﹕「臭賊﹗今日不是你死就是我活﹗」");
-    room.broadcast(player.getId(), target.getId(), messageTemplate);
-    // for (Living receiver : room.getPlayers()) {
-    // MessageUtil.send(messageTemplate, self, target, receiver);
-    // }
   }
 }

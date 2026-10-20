@@ -111,7 +111,7 @@
 | **狀態效果與Buff (戰鬥子模組)** | 狀態生命週期、WoW式刷新、護盾最短優先、九大靈氣聚合HUD | [`後端_M3-1_BUFF`](./docs/manual/後端_M3-1_狀態效果與Buff結算模組_BUFF_AND_STATUS_EFFECTS.md) | [`前端_FE3_ARENA`](./docs/manual/前端_FE3_戰鬥擂台與特效引擎_BATTLE_ARENA_AND_FX.md) |
 | **小隊與陣法** | 5人隊制、五維屬性、道心SAN、Gambit AI、陣法排位 | [`後端_M4_PARTY`](./docs/manual/後端_M4_小隊生靈與陣法模組_PARTY_AND_FORMATION.md) | [`前端_FE5_MODALS`](./docs/manual/前端_FE5_小隊裝備與存檔彈窗_PARTY_EQUIPMENT_AND_MODALS.md) |
 | **修煉與境界** | 境界晉升、經驗曲線、自由配點、技能屬性縮放 | [`後端_M5_PROGRESSION`](./docs/manual/後端_M5_技能境界與修煉模組_SKILL_AND_PROGRESSION.md) | [`前端_FE5_MODALS`](./docs/manual/前端_FE5_小隊裝備與存檔彈窗_PARTY_EQUIPMENT_AND_MODALS.md) |
-| **背包與經濟** | 30格行囊、5+2部位裝備、堆疊合算、貨棧買賣 | [`後端_M6_ECONOMY`](./docs/manual/後端_M6_物品背包與經濟模組_ITEM_AND_ECONOMY.md) | [`前端_FE5_MODALS`](./docs/manual/前端_FE5_小隊裝備與存檔彈窗_PARTY_EQUIPMENT_AND_MODALS.md) |
+| **背包與經濟** | 40格行囊、5+2部位裝備、堆疊合算、貨棧買賣 | [`後端_M6_ECONOMY`](./docs/manual/後端_M6_物品背包與經濟模組_ITEM_AND_ECONOMY.md) | [`前端_FE5_MODALS`](./docs/manual/前端_FE5_小隊裝備與存檔彈窗_PARTY_EQUIPMENT_AND_MODALS.md) |
 | **模板資料庫** | JSON 全域掃描、快取管理、開機自我校驗 | [`後端_M7_TEMPLATES`](./docs/manual/後端_M7_資料驅動模板模組_DATA_DRIVEN_TEMPLATES.md) | *(完全由後端驅動)* |
 | **存檔與持久化** | SaveData JSON 單一真相源、槽位輪轉、原子替換 | [`後端_M8_SAVE`](./docs/manual/後端_M8_存檔與歷史快照模組_SAVE_AND_PERSISTENCE.md) | [`前端_FE5_MODALS`](./docs/manual/前端_FE5_小隊裝備與存檔彈窗_PARTY_EQUIPMENT_AND_MODALS.md) |
 | **通訊與狀態管線** | VirtualActor 信箱、MudContext 治理、全域事件委派 | [`後端_M9_ACTOR`](./docs/manual/後端_M9_虛擬執行緒Actor通訊模組_ACTOR_AND_PROTOCOL.md) | [`前端_FE1_PIPELINE`](./docs/manual/前端_FE1_核心狀態與事件管線_CORE_STATE_AND_PIPELINE.md) |
@@ -141,7 +141,7 @@
 ---
 
 ## 7. 最新測試與健康狀況基準 (Latest Health Benchmark)
-* **全量測試基準**：2026-10-15，全專案 **304 項單元與整合測試 100% 綠燈全數通過**（0 失敗、0 錯誤）。
+* **全量測試基準**：2026-10-20，全專案 **324 項單元與整合測試 100% 綠燈全數通過**（78 個測試類別，0 失敗、0 錯誤）。
 * **架構看門狗健康狀態 (`ArchitectureGuardrailsTest`)**：
   - `GUARD-01`：`new TemplateCatalog()` 靜默 fallback 數量鎖定在 **26 處**基準內；`GameConfig.getInstance()` 靜態存取鎖定在 12 處基準內；Clean Architecture 領域層依賴反轉 0 違規。
   - `GUARD-02`：核心戰鬥迴圈（`DrpgCombatLoop`）中文硬編碼特例檢查 0 違規。

@@ -8,6 +8,7 @@ import { store } from './core/state-store.js';
 import { sendCmd, sendStep, sendTownMove, handleDpad } from './core/cmd-dispatcher.js';
 import * as constants from './core/constants.js';
 import * as uiUtils from './core/ui-utils.js';
+import { connectWebSocket, sendWsCommand } from './network/websocket.js';
 
 import { renderTownNav, normalizeTownCapability } from './panels/town-panel.js';
 import { renderMinimap, applyRadarPosition, updateRadarModeBtn, toggleRadarPosition, toggleRadarViewMode } from './panels/dungeon-panel.js';
@@ -805,6 +806,7 @@ if (typeof window !== 'undefined') {
 }
 
 function setupApp() {
+  connectWebSocket();
   initKeyboardControls();
   initEventDelegation();
   initMessageLogControls();

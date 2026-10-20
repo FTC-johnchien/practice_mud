@@ -9,7 +9,12 @@ import java.util.function.Consumer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
+import com.example.htmlmud.domain.actor.impl.Room;
+import com.example.htmlmud.domain.model.enums.MobRank;
+import com.example.htmlmud.protocol.util.AnsiColor;
+import com.example.htmlmud.protocol.util.ColorText;
 import com.example.htmlmud.domain.dungeon.dto.BattleEnemyViewDto;
 import com.example.htmlmud.domain.dungeon.dto.BattleViewDto;
 import com.example.htmlmud.domain.dungeon.dto.ActiveBuffDto;
@@ -439,6 +444,136 @@ public class DrpgBattleService {
       player.reply("⚡【充能完畢】陣法靈威已充至 100 點！全員戰鬥能量充盈！");
       pushDrpgState(player, pos, null);
     }
+  }
+
+  /**
+   * 野外/危險區域遭遇戰入口：全面由 5 人小隊戰鬥引擎接管迎敵 (SP-08)
+   */
+  public boolean startFieldBattle(Player player, Mob targetMob) {
+    if (player == null || targetMob == null) {
+      return false;
+    }
+    if (isInBattle(player)) {
+      player.reply("【戰鬥】當前已在戰鬥交鋒之中！");
+      return false;
+    }
+    Room room = player.getCurrentRoom();
+    if (room != null && room.hasFlag(com.example.htmlmud.domain.model.enums.RoomFlag.SAFE_ZONE)) {
+      player.reply("此處乃安全祥和之地，嚴禁動武！");
+      return false;
+    }
+
+    Party party = partyService.getOrCreateParty(player.getName());
+
+    MobTemplate optTpl = targetMob.getTemplate();
+    if (optTpl == null && targetMob.getTemplateId() != null) {
+      optTpl = templateReader.findMob(targetMob.getTemplateId()).orElse(null);
+    }
+
+    String name = targetMob.getName();
+    int maxHp = targetMob.getStats() != null && targetMob.getStats().getMaxHp() > 0
+        ? targetMob.getStats().getMaxHp()
+        : (optTpl != null && optTpl.maxHp() > 0 ? optTpl.maxHp() : 200);
+    int currentHp = targetMob.getStats() != null && targetMob.getStats().getHp() > 0
+        ? targetMob.getStats().getHp()
+        : maxHp;
+    int minDmg = targetMob.getEffectiveMinDamage() > 0
+        ? targetMob.getEffectiveMinDamage()
+        : (optTpl != null && optTpl.minDamage() > 0 ? optTpl.minDamage() : 10);
+    int maxDmg = targetMob.getEffectiveMaxDamage() >= minDmg
+        ? targetMob.getEffectiveMaxDamage()
+        : (optTpl != null && optTpl.maxDamage() > 0 ? optTpl.maxDamage() : 20);
+    int def = targetMob.getEffectiveDefense() > 0
+        ? targetMob.getEffectiveDefense()
+        : (optTpl != null && optTpl.defense() > 0 ? optTpl.defense() : 5);
+    int dex = targetMob.getEffectiveDex() > 0
+        ? targetMob.getEffectiveDex()
+        : (optTpl != null && optTpl.dex() > 0 ? optTpl.dex() : 10);
+    long atkSpeed = targetMob.getAttackSpeed() > 0
+        ? targetMob.getAttackSpeed()
+        : (optTpl != null && optTpl.attackSpeed() > 0 ? optTpl.attackSpeed() : 2200);
+    int xp = (optTpl != null && optTpl.expReward() > 0) ? optTpl.expReward() : 40;
+
+    List<String> drops = new ArrayList<>();
+    if (optTpl != null && optTpl.loot() != null) {
+      for (var loot : optTpl.loot()) {
+        if (ThreadLocalRandom.current().nextDouble() <= loot.chance()) {
+          drops.add(loot.itemId());
+        }
+      }
+    }
+
+    BattleEnemy enemy = BattleEnemy.builder()
+        .id(targetMob.getId())
+        .templateId(targetMob.getTemplateId() != null ? targetMob.getTemplateId() : targetMob.getId())
+        .name(name)
+        .hp(currentHp)
+        .maxHp(maxHp)
+        .minDamage(minDmg)
+        .maxDamage(maxDmg)
+        .defense(def)
+        .dex(dex)
+        .rank(optTpl != null && optTpl.rank() != null ? optTpl.rank() : MobRank.NORMAL)
+        .row(RowPosition.FRONT)
+        .attackIntervalMs(atkSpeed)
+        .nextAttackTime(System.currentTimeMillis() + ThreadLocalRandom.current().nextLong(150, 400))
+        .alive(true)
+        .xp(xp)
+        .dropItemId(drops.isEmpty() ? null : drops.get(0))
+        .dropItemIds(drops)
+        .build();
+
+    String battleId = "town-combat-" + player.getName() + "-" + System.currentTimeMillis();
+    BattleContext ctx = BattleContext.builder()
+        .battleId(battleId)
+        .playerId(player.getName())
+        .party(party)
+        .enemies(new ArrayList<>(List.of(enemy)))
+        .state(BattleState.FIGHTING)
+        .selectedTargetIndex(0)
+        .build();
+
+    // 戰鬥結束連動大世界生靈移除與狀態標記
+    ctx.setOnBattleEnd(state -> {
+      if (state == BattleState.VICTORY) {
+        if (targetMob.isValid()) {
+          Room r = targetMob.getCurrentRoom();
+          if (r != null) {
+            r.removeMob(targetMob.getId());
+            r.broadcast(player.getId(), targetMob.getId(), "\u001B[1;30m💀 $N 倒地身亡，化作一縷青煙消散於天地之間...\u001B[0m");
+          }
+          if (targetMob.getStats() != null) {
+            targetMob.getStats().setHp(0);
+          }
+          targetMob.setPosture(com.example.htmlmud.domain.model.enums.LivingPosture.DEAD);
+          targetMob.markInvalid();
+          targetMob.stop();
+        }
+      }
+    });
+
+    long now = System.currentTimeMillis();
+    for (PartyMember m : party.getMembers()) {
+      m.resetThreat();
+      m.setNextAttackTime(now + ThreadLocalRandom.current().nextLong(600, 1600));
+    }
+
+    activeBattles.put(player.getName(), ctx);
+    if (player.getId() != null) {
+      activeBattles.put(player.getId(), ctx);
+    }
+    activeBattles.put(targetMob.getId(), ctx);
+
+    if (room != null) {
+      String messageTemplate = ColorText.wrap(AnsiColor.RED, "$N對著$n喝道﹕「臭賊﹗今日不是你死就是我活﹗」");
+      room.broadcast(player.getId(), targetMob.getId(), messageTemplate);
+    }
+    broadcastLog(player, ctx, "\n\u001B[1;31m⚔️【遭遇戰鬥】小隊全員拔劍結陣，迎戰【" + name + "】！\u001B[0m");
+
+    pushDrpgState(player, null, ctx);
+
+    combatLoop.startBattleLoop(player, ctx, null, activeBattles, p -> pushDrpgState(p, null, ctx));
+    return true;
   }
 
   public void startBattle(Player player, DungeonPosition pos, List<String> mobTemplateIds) {

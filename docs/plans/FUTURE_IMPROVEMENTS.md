@@ -48,7 +48,7 @@
 - [ ] **路徑 T: 實體深拷貝加固、Fallback 棘輪清零與雙持久化收斂** (§20 全項) — **Priority: P1 / P2 (DEEPCOPY-01 已完成)**
 - [x] **路徑 U: 全專案綜合審查後續與紅線治理藍圖** (§21 全項) — **Priority: P0 ~ P3 (2026-10-15 制定，P0/P1/P2 死代碼與紅線清理已完成，304 測試全綠燈)**
 - [ ] **路徑 V: 全專案大一統與現代化演進戰略五大戰線** (§22 全項) — **Priority: P1 ~ P3 (2026-10-15 全文件對齊版，當前微任務落地請參閱根目錄 [ACTIVE_TASKS.md](../../ACTIVE_TASKS.md))**
-- [ ] **路徑 W: 文件權威來源、交叉一致性與現代遊戲規劃治理** (§23 全項) — **Priority: P1（審查建議已整合；詳見 [Codex_Review.md](../references/Codex_Review.md) 與 [Copilot_Review.md](../references/Copilot_Review.md)）**
+- [ ] **路徑 W: 文件權威來源、交叉一致性與三方審查全面整合治理 (Tri-Review Masterplan)** (§23 全項) — **Priority: P0 ~ P2（綜合 Codex、Copilot 與 Claude 審查報告，對齊代碼現況與純單機單體演進）**
 - [ ] **路徑 X: 純單機單體化演進戰略：多人機制、雙軌架構與膠水代碼全域收斂藍圖** (§24 全項) — **Priority: P0 ~ P2（單人轉型核心戰役）**
 
 ---
@@ -880,12 +880,18 @@ flowchart TD
 | **P3** | PERSIST-01 | H2 CharacterEntity.inventory 標記棄用與單機存檔收斂 | 持久化架構整潔度 | §20.3 | 🔲 待執行 |
 | **P1** | DATA-DRIVEN-COMBAT-01 | 全域九大天道傷害類型、Poise 罡氣破防條與五行抗性資料驅動 | 戰鬥機制配置化 | §20.4 | ✅ 已完成 (2026-10-14) |
 | **P0** | GUARD-02 | 核心戰鬥迴圈禁止中文特例比對看門狗測試 (ArchitectureGuardrailsTest) | 專案第一紅線防衛 | §20.5 | ✅ 已完成 (2026-10-14) |
-| **P0** | EQUIP-SLOT-CLEAN-01 | 清除裝備槽位中文名稱模糊硬編碼 (FE-02 第一紅線整治) | 前端健壯性與紅線守護 | §21.2 | 🔲 待執行 |
-| **P0** | DOC-CONSISTENCY-01 | 全專案文件現況與目錄結構同步 (UI_PAGE_STRUCTURE §4 重寫 + ARCHITECTURE §3 補齊) | 文件治理 | §21.1 | 🔲 待執行 |
-| **P1** | DATA-03-REVISIT | 落實地牢出入口 exitRoomId 與 Tooltip 配置化 (DungeonFloor + legend) | 地牢 100% 配置化 | §21.3 | 🔲 待執行 |
-| **P1** | SHOP-FALLBACK-01 | 移除 ShopCommand 客棧名稱比對與偽商店 Fallback | 商店資料驅動純度 | §21.4 | 🔲 待執行 |
-| **P2** | DEADCODE-01 | 清理 PlayerLoginListener 註解死代碼、QuestEventListener 語法與 legacy 巨石備份 | 代碼庫整潔度 | §21.5 | 🔲 待執行 |
+| **P0** | EQUIP-SLOT-CLEAN-01 | 清除裝備槽位中文名稱模糊硬編碼 (FE-02 第一紅線整治) | 前端健壯性與紅線守護 | §21.2 | ✅ 已完成 (2026-10-15) |
+| **P0** | DOC-CONSISTENCY-01 | 全專案文件現況與目錄結構同步 (UI_PAGE_STRUCTURE §4 重寫 + ARCHITECTURE §3 補齊) | 文件治理 | §21.1 | ✅ 已完成 (2026-10-15) |
+| **P1** | DATA-03-REVISIT | 落實地牢出入口 exitRoomId 與 Tooltip 配置化 (DungeonFloor + legend) | 地牢 100% 配置化 | §21.3 | ✅ 已完成 (2026-10-15) |
+| **P1** | SHOP-FALLBACK-01 | 移除 ShopCommand 客棧名稱比對與偽商店 Fallback | 商店資料驅動純度 | §21.4 | ✅ 已完成 (2026-10-15) |
+| **P2** | DEADCODE-01 | 清理 PlayerLoginListener 註解死代碼、QuestEventListener 語法與 legacy 巨石備份 | 代碼庫整潔度 | §21.5 | ✅ 已完成 (2026-10-15) |
 | **P3** | QUEST-DATA-01 | 任務劇情引擎資料化 (MozhuMinesQuestListener 泛化為 QuestTemplate) | 任務架構演進 | §21.7 | 🔲 待執行 |
+| **P0** | DOC-FACT-01 | 消除已除役服務殘留與代碼現況同步 (SkillBridgeService/ScopedValue/v3/324測試) | 文件與代碼真實性 | §23.3 | ✅ 已完成 (2026-10-20) |
+| **P1** | DOC-ENUM-01 | 全域遊戲詞彙表分層與裝備枚舉對齊 (EquipmentSlot 5+2 / DamageType vs 靈氣) | 語意與契約一致性 | §23.4 | ✅ 已完成 (2026-10-20) |
+| **P1** | DOC-CAP-01 | 小隊公共行囊容量全域標準裁定 (拍板採方案 A：40 格全域同步) | 數值平衡與契約 | §23.5 | ✅ 已完成 (2026-10-20) |
+| **P1** | DOC-WS-01 | 前端 WebSocket 模組化獨立成檔、指數退避重連與單機連線合理化 | 前端通訊健壯性 | §23.6 | ✅ 已完成 (2026-10-20) |
+| **P2** | DOC-ROADMAP-01 | 收斂 16 本模組手冊重複路線圖至總待辦 | 文件體系維護性 | §23.7 | 🔲 待執行 |
+| **P0** | DOC-REJECT-01 | 三方審查不合理／過度設計項目明確否決宣告 (外部腳本/跨服/萬能解析器/15s Ping) | 架構紅線守衛 | §23.10 | ✅ 已否決除役 |
 
 ## 🧭 19. 2026-10-13 Copilot 審查後續：Buff 契約與可靠性護欄 (Review Follow-ups)
 
@@ -1165,9 +1171,15 @@ flowchart TD
 
 ---
 
-## 📝 23. 文件權威來源、交叉一致性與現代遊戲規劃治理 (Documentation & Game Planning Governance) — Priority: P1（待決議）
+## 📝 23. 文件權威來源、交叉一致性與三方審查全面整合治理 (Documentation, Code Convergence & Tri-Review Masterplan) — Priority: P0 ~ P2（待決議）
 
-> **來源**：2026-10-15 全部 `docs/**/*.md` 與指定架構／任務文件審查。詳細分析見參考審查報告 [`docs/references/Codex_Review.md`](../references/Codex_Review.md) 與 [`docs/references/Copilot_Review.md`](../references/Copilot_Review.md)。本節綜合兩份審查稿之具體建議，作為專案文件體系與遊戲規劃之後續治理藍圖。
+> **來源與背景**：  
+> 本章節為專案三大外部審查報告的**總集成規劃樞紐**，全面整合：  
+> 1. [`Codex_Review.md`](../references/Codex_Review.md)（2026-10-15）：文件 SSoT 權責、四級狀態標記、可玩垂直切片、避免無界資料化。  
+> 2. [`Copilot_Review.md`](../references/Copilot_Review.md)（2026-10-15）：相對死鏈定位、心跳週期分層、schemaVersion 歷史清理、單機 vs 遠期邊界。  
+> 3. [`Claude_Review.md`](../references/Claude_Review.md)（2026-10-20）：實地代碼交叉校驗（除役服務殘留清繳、`ScopedValue` 與 `schemaVersion=3` 同步、行囊容量裁定）、存檔原子替換、測試分層加速（下沉純單元測試）、日誌虛擬滾動與不合理項目否決審計。  
+> 
+> 旨在徹底消滅高速迭代中產生的「文檔膨脹與代碼漂移」，確立不可動搖的權威規格，並為後續純單機 DRPG 玩法落地提供清晰防線。
 
 ### 23.1 DOC-LINK-01：修復文件相對連結並建立連結自動檢查機制 — ✅ 已修復 (2026-10-16)
 - 核對並修復 `FUTURE_IMPROVEMENTS.md` 中歷史審查稿引用（清理 9 處不存在的 `Copilot_Code_Review.md` 引用）與 8 處錯誤的相對代碼路徑（`../src/` $\to$ `../../src/`）。
@@ -1175,51 +1187,107 @@ flowchart TD
 - **驗收**：全專案 Markdown 檔案無失效相對連結；歷史審查稿具備有效連結或清楚標示已除役。
 
 ### 23.2 DOC-SSOT-01：定義單一權威來源 (SSoT) 與四級狀態標籤規範
-- 確立每類資訊的唯一權威文件：
-  - `GEMINI.md`：專案最高憲法、第一紅線、不可動搖保護鎖。
-  - `ACTIVE_TASKS.md`：唯一當前迭代微任務看板。
-  - `ARCHITECTURE.md`：現行系統邊界、Clean Architecture 與 DDD 依賴方向。
-  - `docs/manual/`：經核對之模組契約、API、DTO 與配置。
+- **唯一權威文件職責劃分**：
+  - `GEMINI.md`：專案最高憲法、第一紅線、不可動搖保護鎖（任何規範衝突以此為準）。
+  - `ACTIVE_TASKS.md`：唯一當前迭代執行微任務看板（Checkbox 工作流）。
+  - `ARCHITECTURE.md`：現行系統邊界、Clean Architecture、DDD 與無鎖並發唯一來源。
+  - `docs/manual/`：經核對且已實作之模組契約、API、DTO 與配置說明（不維護獨立未來路線圖）。
   - `docs/overview/`：全域導覽指引，不定義第二套規格。
-  - `docs/plans/FUTURE_IMPROVEMENTS.md`：候選改善與演進總待辦。
-  - `CHANGELOG.md`：歷史交付歷程與驗收證據。
-  - `docs/references/`：外部靈感與非規範性參考審查報告。
-- 引入四級內容狀態標記：【現行已驗證】、【已決議待實作】、【候選提案】、【歷史／已除役】，避免將遠期藍圖誤讀為現行實作。
+  - `docs/plans/FUTURE_IMPROVEMENTS.md`：候選改善、未決議提案與 P0~P3 演進總待辦唯一來源。
+  - `CHANGELOG.md`：歷史交付歷程、重大重構與驗收證據唯一來源。
+  - `docs/references/`：外部靈感與非規範性參考審查報告（未決議前不具規範力）。
+- **四級內容狀態標記**：
+  - 【現行已驗證】(Verified Live Spec)：具備代碼與測試 100% 綠燈支撐之現行規格。
+  - 【已決議待實作】(Decided Backlog)：已獲決議並拆解於 `ACTIVE_TASKS.md` 之迭代任務。
+  - 【候選提案】(Candidate Proposal)：收錄於本文件待排期或技術討論之提案，採將來式語態。
+  - 【歷史／已除役】(Historical / Decommissioned)：已除役之 legacy 代碼或過渡設計。
 - **驗收**：跨文件事實皆能對齊單一來源；手冊與概覽全面標註狀態標籤。
 
-### 23.3 DOC-ROADMAP-01：收斂模組手冊重複路線圖至中央總待辦
-- 將 15 本模組手冊（後端 M1~M9、前端 FE-1~FE-6）中重複分散的「未來演進」章節收斂至本文件，模組手冊僅保留模組契約、現行行為與指向總待辦的超連結。
-- 待辦任務統一標準格式：唯一 ID、玩家或工程問題、優先級、前置依賴、非目標、驗收條件、測試量測方法與狀態。
-- **驗收**：模組手冊回歸純粹規格說明；中央總待辦成為唯一候選任務來源。
+### 23.3 DOC-FACT-01：【P0 緊急】消除已除役服務殘留與代碼現況同步 (Decommissioned Residue & Fact Synchronization) — ✅ 已完成 (2026-10-20)
+- **背景與痛點**：
+  在 Path X (SP-01 ~ SP-07) 演進中，大量膠水代碼與雙軌實體已被重構或物理刪除，但多份核心架構文件與模組手冊未能及時同步，造成嚴重「文檔描述了已刪除代碼」的誤導風險。
+- **具體整治行動清單**：
+  1. **清除 `SkillBridgeService` 歷史殘留**：
+     - 代碼於 SP-07 已徹底刪除 `SkillBridgeService.java`，改為大一統技能模型 [`UnifiedSkill`](../../src/main/java/com/example/htmlmud/domain/party/model/UnifiedSkill.java) 原地升級與縮放。
+     - 必須全面修訂 [`ARCHITECTURE.md:119`](../../ARCHITECTURE.md#L119)、[`MODULES_MAP.md:125`](../overview/MODULES_MAP.md#L125)、[`後端_M5:27`](../manual/後端_M5_技能境界與修煉模組_SKILL_AND_PROGRESSION.md#L27) 與 [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md)，移除所有 `SkillBridgeService` 陳述，指引至 `UnifiedSkill` 與 `PartyMember.skills`。
+  2. **同步 `MudContext` 為 Java 25 `ScopedValue`**：
+     - 代碼 [`MudContext.java`](../../src/main/java/com/example/htmlmud/domain/context/MudContext.java) 實際已全面升級為 Java 25 `ScopedValue<Player>`。
+     - 修訂 [`後端_M9:48`](../manual/後端_M9_虛擬執行緒Actor通訊模組_ACTOR_AND_PROTOCOL.md#L48)，糾正過時的「基於 `InheritableThreadLocal`」描述，補充說明 `ScopedValue.runWhere(...)` 之不可變與安全無洩漏生命週期。
+  3. **同步 `SaveData` 為 `CURRENT_SCHEMA_VERSION = 3`**：
+     - 代碼 [`SaveData.java:21`](../../src/main/java/com/example/htmlmud/domain/save/model/SaveData.java#L21) 於 SP-03 已升級至 v3（移除 `personalInventory` 雙寫）。
+     - 修訂 [`後端_M8:41`](../manual/後端_M8_存檔與歷史快照模組_SAVE_AND_PERSISTENCE.md#L41) 範例 JSON 為 `"schemaVersion": 3`，並在手冊中明確記載 `SaveMigrationPipeline` 之 2 $\to$ 3 遷移路徑與個人物品自動合流入公共行囊機制。修訂 [`ARCHITECTURE_SUMMARY.md:94`](../overview/ARCHITECTURE_SUMMARY.md#L94) 之版本描述。
+  4. **全域校準測試基準數字為 324 項全綠燈**：
+     - 全專案目前實測基準為 **324 項測試 100% 綠燈**（78 個測試類別）。
+     - 同步更新 [`GEMINI.md:144`](../../GEMINI.md#L144) 與 [`QUICKSTART.md:33`](../overview/QUICKSTART.md#L33) 記載之 304 項滯後數字。
+- **驗收**：全專案無任何指向已刪除類別（如 `SkillBridgeService`）之失效文檔指針；所有類別技術規格與實際代碼 100% 吻合。
 
-### 23.4 DOC-GLOSSARY-01：建立全域遊戲詞彙表、前端三維度與契約對齊
-- **共用詞彙字典**：
-  - 五維屬性：根骨 (CON)、敏捷 (AGI)、靈性 (INT)、神識 (PER)、定力 (WIL)。
-  - 五大資源：氣血 (HP)、真元 (MP)、精力 (SP)、道心 (SAN)、罡氣 (Poise)。
-  - 戰鬥概念分層：明確劃分「傷害類型 (`DamageType`: 斬擊/穿刺/鈍擊/道法)」、「天道元素家族 (九大靈氣: 金/木/水/火/土/風/雷/陰/陽)」、「狀態標籤 (`StatusTags`: STUN, SILENCE, POISON)」與「Buff 分類 (`BuffType`: HOT, DOT, SHIELD, STAT_MOD)」。
-- **前端三維度術語消歧**：
-  - 6 大前端核心 JS 模組（`app.js`, `pipeline.js`, `battle-panel.js` 等）。
-  - 7 大視覺舞台區塊 Panels（`town-panel`, `dungeon-viewport`, `battle-panel`, `party-hud` 等）。
-  - 7 層樣式串流 CSS Tokens（`style-01-tokens` 至 `style-07-themes`）。
-- **心跳排程明確化**：
-  - `WorldPulse`（世界生靈 Tick）：3,000ms。
-  - `CombatLoop`（戰鬥 ATB / GCD Tick）：200ms。
-  - `WebSocket`（保持連線 Ping-Pong）：30s。
-- **鍵位標準規範**：WASD 步進轉向、I/L 探查與撤離、M 地圖、Esc 關閉/退出。
-- **驗收**：手冊與程式庫 enum、DTO、常數 100% 吻合。
+### 23.4 DOC-ENUM-01：【P1 重要】全域遊戲詞彙表分層與裝備枚舉對齊 (Canonical Vocabulary & Enum Alignment) — ✅ 已完成 (2026-10-20)
+- **落地改動成果 (2026-10-20)**：
+  1. **裝備槽位枚舉全域對齊 (5+2 結構)**：
+     - 代碼唯一真相源為 [`EquipmentSlot.java`](../../src/main/java/com/example/htmlmud/domain/model/enums/EquipmentSlot.java)：`MAIN_HAND, OFF_HAND, HEAD, BODY, FEET, ACCESSORY_1, ACCESSORY_2`。
+     - 修訂 [`後端_M6:27-46`](../manual/後端_M6_物品背包與經濟模組_ITEM_AND_ECONOMY.md#L27-L46)、[`前端_FE5:41-62`](../manual/前端_FE5_小隊裝備與存檔彈窗_PARTY_EQUIPMENT_AND_MODALS.md#L41-L62)、[`UI_PAGE_STRUCTURE.md:324`](../UI_PAGE_STRUCTURE.md#L324) 與 [`ARCHITECTURE_SUMMARY.md:56`](../overview/ARCHITECTURE_SUMMARY.md#L56)，徹底清除殘留之舊版 `EquipSlot`（`ACCESSORY, RING, WEAPON`）陳述，確立雙飾品（本命法寶/輔佐靈寶）標準。
+  2. **戰鬥概念四層分離字典 (Combat Canonical Taxonomy)**：
+     - 於 [`後端_M3:88-160`](../manual/後端_M3_核心戰鬥引擎模組_COMBAT_ENGINE.md#L88-L160) 正式確立四層架構專章，終結過去元素與傷害類型混淆：
+       - **第 1 層：底層傷害類型 [`DamageType`](../../src/main/java/com/example/htmlmud/domain/model/enums/DamageType.java)**（20 種繼承樹：`PHYSICAL` 派生 `SLASH/PIERCE/BLUNT/METAL`；`MAGIC` 派生 `FIRE/ICE/WATER/LIGHTNING/WIND/EARTH/WOOD/POISON/HOLY/DARK`；特殊 `SONIC/TRUE`）。
+       - **第 2 層：天道元素家族 (九大靈氣)**（五行天道：金木水火土；乾坤氣象：風雷；陰陽造化：陰煞純陽；對應抗性與「順成人逆成仙」> 100% 逆流回血契約）。
+       - **第 3 層：狀態效果標籤 (Status / Skill Mechanism Tags)**（控場打斷矩陣：`STUN, SILENCE, SEAL, CONTROL, INTERRUPT`；戰術行為：`ATTACK, SPELL, HEAL, DEFENSE, AOE, TAUNT, CLEANSE, DISPEL, PARRY`）。
+       - **第 4 層：底層 Buff 分類 [`BuffCategory`](../../src/main/java/com/example/htmlmud/domain/model/enums/BuffCategory.java)**（引擎底層結算生命週期：`SHIELD, HOT, DOT, STAT_MODIFIER, CONTROL`）。
+  3. **時間心跳層級排程字典 (Timing & Heartbeat Hierarchy)**：
+     - 在 [`後端_M3:11-45`](../manual/後端_M3_核心戰鬥引擎模組_COMBAT_ENGINE.md#L11-L45) 與 [`後端_M3-1:50`](../manual/後端_M3-1_狀態效果與Buff結算模組_BUFF_AND_STATUS_EFFECTS.md#L50) 校準戰鬥迴圈心跳為 **500ms**（修正錯誤的 200ms）。
+     - 清楚劃分階層：`WorldPulse.pulse()`（底層定時器 100ms 輪詢）$\to$ `DrpgCombatLoop`（戰鬥虛擬執行緒迴圈 500ms）$\to$ `BuffSettlementService`（狀態結算 1 Tick = 500ms）$\to$ 世界生靈刷新（3,000ms）。
+- **驗收**：手冊對裝備槽位、傷害類型、元素靈氣、狀態標籤與排程頻率之描述 100% 吻合代碼現況，零模糊歧義。
 
-### 23.5 DOC-SLICE-01：玩法垂直切片驅動與純單機單體規劃
-- **純單機單體決策**：已正式決議專注於「純單機單體 (Single-Player Modular Monolith)」，徹底全盤除役多人在線、分散式 Actor、Protobuf 二進位串流與動態外掛熱更，專注於「一個人的單機 DRPG 沉浸體驗」。
-- 以「城鎮整備 $\to$ 地牢探索 $\to$ 戰鬥抉擇 $\to$ 戰利品／成長 $\to$ 安全撤離／存檔」為核心垂直切片閉環，每一階段明確玩家目標、選擇風險、反制手段與失敗代價。
-- 玩法提案先回答「玩家面臨什麼問題、核心樂趣何在、如何透過原型驗證」，杜絕純技術名詞堆疊。
-- 驗收條件拒絕模糊詞彙（如「更刺激」、「永遠 60 FPS」），轉化為可觀察、可量測的具體測試（如「可打斷窗口為吟唱前 60%」、「怪物意圖可讀性」）。
-- 無障礙、弱網復原與 `@media (prefers-reduced-motion)` 列為互動機能的一級需求。
-- **驗收**：所有新增玩法規劃具備完整垂直切片說明與可量測之驗收標準。
+### 23.5 DOC-CAP-01：【P1 重要】小隊公共行囊容量全域標準裁定 (Party Inventory Capacity Canonicalization) — ✅ 已完成 (2026-10-20 拍板採方案 A)
+- **現狀差距與裁定結果**：
+  - 原代碼實作 `DEFAULT_CAPACITY = 30;`，部分手冊記錄為 40 格，造成跨文件與代碼常數漂移。
+  - **決策結果**：**已拍板採方案 A（全域統一升級為 40 格）**。
+    - 理由：5 人滿編小隊擁有 5×(5+2)=35 個裝備槽位，40 格行囊提供地牢冒險、刷寶掉落與備用裝備更寬裕流暢的冒險體驗。
+    - 落地改動：[`PartyInventory.java`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyInventory.java) 常數升級為 `DEFAULT_CAPACITY = 40;`；同步更新前端 `index.html`、`bag-drawer.js`、`後端_M6`、`前端_FE1`、`前端_FE5`、`QUICKSTART.md`、`README.md` 與全域手冊。
+- **驗收**：代碼常數、UI 渲染上限、所有文檔與測試斷言格數 100% 同步一致為 40 格。
 
-### 23.6 DOC-SYNC-01：易變數值快照化與自動代碼產生／檢查
+### 23.6 DOC-WS-01：【P1 重要】前端 WebSocket 通訊實況對齊與健壯性重構 (Frontend WebSocket Modularization & Reconnect) — ✅ 已完成 (2026-10-20)
+- **現狀差距**：
+  - 手冊 [`前端_FE1`](../manual/前端_FE1_核心狀態與事件管線_CORE_STATE_AND_PIPELINE.md) 宣稱存在獨立模組 `static/js/network/websocket.js`，且具備 15 秒文字 Ping 與指數退避重連。
+  - 實際上連線由早期 `index.html` 內嵌腳本建立，斷線重連邏輯被註解，且無 Ping 機制。
+- **落地改動成果 (2026-10-20)**：
+  1. **獨立模組抽離**：新建 [`src/main/resources/static/js/network/websocket.js`](../../src/main/resources/static/js/network/websocket.js)，封裝連線建立、指令序列化發送、被動斷線監聽與向後相容掛載（`window.send = sendWsCommand; window.connect = connectWebSocket;`）。
+  2. **指數退避斷線重連**：實裝健全的退避重試演算法（$1\text{s} \to 2\text{s} \to 4\text{s} \to 8\text{s} \to 15\text{s}$ 上限），斷線時友好提示倒數秒數；連線平滑恢復時主動發送 `saves quiet` 刷新存檔與世界最新狀態。
+  3. **模組化入口整合**：在 [`app.js`](../../src/main/resources/static/js/app.js) 的 `setupApp()` 啟動連線，並於 [`cmd-dispatcher.js`](../../src/main/resources/static/js/core/cmd-dispatcher.js) 優先導入 `sendWsCommand`。
+  4. **嚴格 CSP 規範達標**：徹底移除 [`index.html`](../../src/main/resources/static/index.html) 尾部 33 行內嵌 `<script>` 區塊，完全消除內嵌網路連線腳本。
+  5. **單機心跳合理化**：恪守架構決策二與純單機單體定位，除役本地 15 秒文字 Ping，改為被動依賴原生協議與 `onclose` 事件，達成零 CPU 浪費之事件驅動架構。
+  6. **手冊權威對齊**：已同步修訂技術手冊 [`前端_FE1`](../manual/前端_FE1_核心狀態與事件管線_CORE_STATE_AND_PIPELINE.md) 第 4 節與代表檔案清單。
+- **驗收**：`index.html` 零內嵌連線腳本；後端 324 項測試 100% 綠燈；前端通訊管線模組化與重連邏輯完整具備。
+
+### 23.7 DOC-ROADMAP-01：收斂 16 本模組手冊重複路線圖至中央總待辦
+- **痛點**：16 本模組手冊各自在第 6~9 節維護數百行的「未來架構演進規劃」，與中央總待辦本文件大量重複，更新時極易顧此失彼。
+- **方針**：
+  - 將 16 本手冊中的未來規劃收斂精簡為指向本文件的超連結與一句話定位。
+  - 模組手冊專注於：職責邊界、現行契約、核心類別、JSON 結構與驗收測試依據。
+- **驗收**：所有待辦項目統整至本文件，模組手冊行數大幅精簡，不再作為第二個路線圖來源。
+
+### 23.8 DOC-SLICE-01：玩法垂直切片驅動與純單機單體規劃
+- 堅持「專注於一個人的純單機單體遊戲」架構決策。
+- 圍繞核心五階段垂直切片閉環推進：
+  $$\text{城鎮整備} \to \text{迷宮步進} \to \text{魂系博弈戰鬥} \to \text{戰利品成長} \to \text{安全撤離／存檔}$$
+- 每項新玩法設計明確規定：玩家目標、操作選擇、失敗代價、視覺回饋與可觀察的 DoD（如「可打斷窗口為前搖前 60%」）。
+- 無障礙、弱網復原與 `@media (prefers-reduced-motion)` 列為互動機能一級需求。
+- **驗收**：所有新增玩法規劃具備完整垂直切片說明與可量測驗收。
+
+### 23.9 DOC-SYNC-01：易變數值快照化與自動代碼產生／檢查
 - 測試總數、檔案大小、效能百分比等易變數據附帶測量日期與環境依據，未實測者明確標記為目標。
-- 評估由 Java 列舉與 JSON Schema 自動生成手冊中的 DTO、枚舉與設定表格，減少手動同步錯誤。
+- 評估後續透過自研測試工具或腳本自動校驗 DTO、枚舉與文檔表格之一致性。
 - **驗收**：關鍵易變數值具備測試依據或自動生成機制。
+
+### 23.10 DOC-REJECT-01：【架構紅線】三方審查不合理／過度設計項目明確否決宣告 (Decommissioned & Rejected Items Audit)
+經由審慎評估，為確保團隊專注於純單機極致樂趣，以下來自歷史參考文件或外部建議的項目被正式**否決／確認除役**，不納入待辦事項：
+1. ❌ **Groovy / Lua 外部動態腳本熱更 SPI**（見於早期草稿 `game-config-architecture.txt`）：
+   - **否決原因**：專案已確立以 Java 25 現代特性與靜態 JSON 為核心。動態腳本引擎（如 GraalVM）會引入類別加載洩漏、執行緒上下文穿透與難以除錯的複雜度，嚴重違背「拒絕過度設計」之專案第一鐵律。
+2. ❌ **多人在線、跨服同步、Redis Pub/Sub、Protobuf 二進位串流**：
+   - **否決原因**：專案已全面定調為「純單機單體 DRPG」。本機 WebMVC REST API 與 WebSocket JSON 足夠輕量高效，無需承擔分散式系統的網路複雜度。
+3. ❌ **無界資料化 / 萬能 JSON 直譯器 (Unbounded JSON Parser)**：
+   - **否決原因**：恪守專案第一紅線「機制由引擎通用實作，資料只管數值與標籤」。避免試圖在 JSON 內部實作圖靈完備的自製虛擬機或通用狀態機解析器，避免系統淪為不可維護的黑盒。
+4. ❌ **單機 Localhost 高頻 15 秒文字 Ping/Pong 保活**：
+   - **否決原因**：單機環境下本機 WebSocket 連線無雲端網關超時問題，高頻 Ping 徒增虛擬執行緒無效喚醒。聚焦於斷線自動重連與會話接管即可。
 
 ---
 
@@ -1342,19 +1410,18 @@ flowchart TD
 
 ### 24.4 階段 3：P2 級戰鬥引擎雙軌大一統與共享經濟 (Combat & Economy Unification)
 
-#### 1. SP-08: 戰鬥引擎收斂與 5 人小隊全域協同 (Combat Engine Unification) — Priority: P2
-- **問題現狀**：目前城鎮與野外採用 MUD [`CombatService.java`](../../src/main/java/com/example/htmlmud/domain/service/CombatService.java)（主角一人單挑，隊友看戲）；地牢採用 DRPG [`DrpgBattleService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgBattleService.java)（5人小隊滿編戰術戰鬥），戰鬥規則與體驗嚴重分裂。
+#### 1. SP-08: 戰鬥引擎收斂與 5 人小隊全域協同 (Combat Engine Unification) — Priority: P2 (已完成 ✅)
+- **問題現狀**：原本城鎮與野外採用 MUD [`CombatService.java`](../../src/main/java/com/example/htmlmud/domain/service/CombatService.java)（主角一人單挑，隊友看戲）；地牢採用 DRPG [`DrpgBattleService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgBattleService.java)（5人小隊滿編戰術戰鬥），戰鬥規則與體驗嚴重分裂。
 - **涉及檔案**：
   - [`KillCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/KillCommand.java)
   - [`CombatService.java`](../../src/main/java/com/example/htmlmud/domain/service/CombatService.java)
   - [`DrpgBattleService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgBattleService.java)
-- **改動方針**：
-  1. 將城鎮與野外探索模式明確定性：
-     - 城鎮區域：100% 安全區（SAFE_ZONE），專注於 NPC 對話、任務承接、客棧休憩與貨棧交易。
-     - 野外與危險區域：遭遇野怪時，呼叫核心戰鬥引擎，由 5 人滿編小隊共同迎敵（支援陣法、站位與隊友戰術 AI）。
-  2. 廢止舊 MUD `CombatService` 獨立的輪詢傷害計算，全域戰鬥統歸核心戰鬥引擎。
-- **驗收標準 (DoD)**：
-  - 戰鬥規則完全統一；玩家率領的 5 人隊伍在任何戰鬥中皆協同作戰；消除雙軌戰鬥維護成本。
+  - [`FieldCombatPartyUnificationTest.java`](../../src/test/java/com/example/htmlmud/FieldCombatPartyUnificationTest.java)
+- **落地成果**：
+  1. `DrpgBattleService` 實裝 `startFieldBattle(Player, Mob)`，野外遭遇戰由 5 人小隊全員依照站位、陣法與戰術 AI 協同迎敵。
+  2. `BattleContext` 新增 `onBattleEnd` 回呼，大捷時掉落物直入 40 格小隊公共行囊，隊員獲得修為經驗與熟練度原地增長，發布任務事件並同步移除/標記大世界房間 Mob。
+  3. `KillCommand` 與 `CombatService.startCombat` 全面委派至小隊戰鬥引擎，`TargetSelector` 自動過濾死亡怪防禦性防護。
+  4. 新增 `FieldCombatPartyUnificationTest`，全專案 327 項測試 100% 綠燈零回歸破壞。
 
 #### 2. SP-09: 全隊共享經濟與小隊資產化 (Unified Party Economy & Coin) — Priority: P2
 - **問題現狀**：金幣/靈石目前分散於各成員的 `LivingStats.coin`，但道具則放入小隊公共行囊；商店扣款扣主角個人，缺少小隊公共金庫概念。
@@ -1382,7 +1449,7 @@ flowchart TD
 | **Step 5** | **SP-05** | WebSocket 多開連線自動接管唯一主角，杜絕存檔覆寫競爭 | **P1** | 中 | **已完成 (320綠燈) ✅** |
 | **Step 6** | **SP-06** | 技能模型合一 (`UnifiedSkill`)，消除 MUD/DRPG 技能定義割裂 | **P2** | 中高 | **已完成 (324綠燈) ✅** |
 | **Step 7** | **SP-07** | 徹底除役 `SkillBridgeService` 翻譯縮放膠水代碼 | **P2** | 中 | **已完成 (324綠燈) ✅** |
-| **Step 8** | **SP-08** | 戰鬥引擎大一統，野外戰鬥全面對齊 5 人小隊協同作戰 | **P2** | 高 | **待執行 ⏳** |
+| **Step 8** | **SP-08** | 戰鬥引擎大一統，野外戰鬥全面對齊 5 人小隊協同作戰 | **P2** | 高 | **已完成 (327綠燈) ✅** |
 | **Step 9** | **SP-09** | 小隊共享金庫與經濟體系大一統 | **P2** | 低 | **待執行 ⏳** |
 
 

@@ -100,7 +100,7 @@ practice_mud/
 - ⚔️ **[後端 M3. 核心戰鬥引擎手冊](docs/manual/後端_M3_核心戰鬥引擎模組_COMBAT_ENGINE.md)**：半即時 ATB 輪詢、圓桌判定公式、罡氣削韌破防、九大五行抗性與逆流回血。
 - 👥 **[後端 M4. 小隊、生靈與陣法模組手冊](docs/manual/後端_M4_小隊生靈與陣法模組_PARTY_AND_FORMATION.md)**：5 人小隊編制、道基五維、道心 SAN 值異變、夥伴招募與陣法自動排位。
 - ⚡ **[後端 M5. 技能、境界與修煉模組手冊](docs/manual/後端_M5_技能境界與修煉模組_SKILL_AND_PROGRESSION.md)**：境界突破曲線、自由屬性點分配、技能動態屬性縮放 (Skill Scaling)。
-- 📦 **[後端 M6. 物品、背包與經濟模組手冊](docs/manual/後端_M6_物品背包與經濟模組_ITEM_AND_ECONOMY.md)**：30 格小隊儲物袋、裝備槽位枚舉契約、貨棧買賣與靈藥消耗。
+- 📦 **[後端 M6. 物品、背包與經濟模組手冊](docs/manual/後端_M6_物品背包與經濟模組_ITEM_AND_ECONOMY.md)**：40 格小隊儲物袋、裝備槽位枚舉契約、貨棧買賣與靈藥消耗。
 - 🗄️ **[後端 M7. 100% 資料驅動系統手冊](docs/manual/後端_M7_資料驅動模板模組_DATA_DRIVEN_TEMPLATES.md)**：JSON 檔案目錄佈局、TemplateRepository 快取、開機完整性自我校驗。
 - 💾 **[後端 M8. 存檔與持久化架構手冊](docs/manual/後端_M8_存檔與歷史快照模組_SAVE_AND_PERSISTENCE.md)**：單機 SaveData JSON 單一真相源、五大槽位與自動存檔、壞檔備份防護。
 - 🧵 **[後端 M9. 虛擬執行緒 Actor 通訊手冊](docs/manual/後端_M9_虛擬執行緒Actor通訊模組_ACTOR_AND_PROTOCOL.md)**：Java 21/25 Virtual Threads 實踐、VirtualActor 信箱隔離、MudContext 治理與 WebSocket 全狀態契約。

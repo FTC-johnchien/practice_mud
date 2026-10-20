@@ -47,7 +47,7 @@ graph TD
     end
 
     BuffJSON -.->|加載| Apply
-    CombatLoop -->|200ms~500ms Tick| Tick
+    CombatLoop -->|500ms Tick| Tick
     Apply --> EntityLayer
     Tick --> EntityLayer
     EntityLayer --> Shield

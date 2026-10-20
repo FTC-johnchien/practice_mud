@@ -116,7 +116,6 @@ com.example.htmlmud/
 │   │   ├── RoomService.java             #   房間服務 (進出/廣播/觀察)
 │   │   ├── RoomMovementService.java     #   房間移動服務
 │   │   ├── SkillService.java            #   技能解算服務
-│   │   ├── SkillBridgeService.java      #   MUD↔DRPG 技能語意橋接
 │   │   ├── XpProgressionService.java    #   經驗值與等級成長
 │   │   ├── CharacterSyncService.java    #   角色狀態同步服務
 │   │   └── TemplateCatalog.java         #   模板目錄 (TemplateReader 實作)
@@ -169,7 +168,7 @@ com.example.htmlmud/
 │   │   └── service/PartyService.java    #   小隊管理服務
 │   │
 │   └── save/                            # 存檔領域子域
-│       ├── model/SaveData.java          #   存檔聚合根模型 (schemaVersion v2)
+│       ├── model/SaveData.java          #   存檔聚合根模型 (schemaVersion v3)
 │       ├── dto/SaveSlotDto.java         #   存檔槽位 DTO
 │       └── service/SaveGameService.java #   存讀檔與版本平滑遷移服務
 │
@@ -292,7 +291,7 @@ resources/data/
 
 1. **物品單一真相源**：所有物品集中於 `data/` 定義，透過 Adapter 投影至 MUD `GameItem` 或 DRPG 行囊，嚴禁兩套重複規則。
 2. **穩定角色識別**：以強型別值物件 `CharacterId` 作為跨系統唯一識別，配合雙重索引別名 (Dual-Index Alias) 杜絕狀態分裂。
-3. **技能語意橋接 (`SkillBridgeService`)**：MUD 武學等級與心法即時投影為 DRPG 戰術技能，戰後成果透過 `awardCombatSkillXp` 回饋 MUD 熟練度。
+3. **大一統技能模型 (`UnifiedSkill`)**：戰術數值（CD、倍率、消耗、反制標籤）與修煉境界（熟練度、道法等級、敘事文本）於小隊隊員模型中內聚合一（`PartyMember.skills`），除役脆弱的跨系統橋接翻譯膠水。
 4. **小隊編制規範**：小隊出戰人數上限嚴格定調為 **5 人 (`Party.MAX_PARTY_SIZE = 5`)**。
 5. **一次擲骰圓桌判定 (`DefenseResolver`)**：
    - 防禦結算淘汰連續 `if-else`，採用單一隨機浮點數 $[0.0, 1.0)$ 依累積區間結算：
