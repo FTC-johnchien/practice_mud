@@ -20,7 +20,7 @@ import com.example.htmlmud.domain.party.model.TacticsRule;
 import com.example.htmlmud.domain.party.model.TacticsTarget;
 import com.example.htmlmud.domain.party.service.PartyService;
 import com.example.htmlmud.domain.repository.TemplateReader;
-import com.example.htmlmud.domain.service.TemplateCatalog;
+import com.example.htmlmud.domain.repository.TemplateCatalog;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -34,7 +34,7 @@ public class PartyCommand implements PlayerCommand {
   private final com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService;
   private final com.example.htmlmud.domain.world.GameStateBroadcastService broadcastService;
   private final TemplateReader templateReader;
-  private final com.example.htmlmud.domain.service.XpProgressionService xpProgressionService;
+  private final com.example.htmlmud.domain.progression.service.XpProgressionService xpProgressionService;
 
   @org.springframework.beans.factory.annotation.Autowired
   public PartyCommand(PartyService partyService, DungeonManager dungeonManager,
@@ -42,14 +42,14 @@ public class PartyCommand implements PlayerCommand {
       com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService,
       com.example.htmlmud.domain.world.GameStateBroadcastService broadcastService,
       TemplateReader templateReader,
-      @org.springframework.beans.factory.annotation.Autowired(required = false) com.example.htmlmud.domain.service.XpProgressionService xpProgressionService) {
+      @org.springframework.beans.factory.annotation.Autowired(required = false) com.example.htmlmud.domain.progression.service.XpProgressionService xpProgressionService) {
     this.partyService = partyService;
     this.dungeonManager = dungeonManager;
     this.dungeonNavigator = dungeonNavigator;
     this.battleService = battleService;
     this.broadcastService = broadcastService;
     this.templateReader = templateReader != null ? templateReader : new TemplateCatalog();
-    this.xpProgressionService = xpProgressionService != null ? xpProgressionService : new com.example.htmlmud.domain.service.XpProgressionService(this.templateReader);
+    this.xpProgressionService = xpProgressionService != null ? xpProgressionService : new com.example.htmlmud.domain.progression.service.XpProgressionService(this.templateReader);
   }
 
   public PartyCommand(PartyService partyService, DungeonManager dungeonManager,
@@ -60,7 +60,7 @@ public class PartyCommand implements PlayerCommand {
     this(partyService, dungeonManager, dungeonNavigator, battleService, broadcastService, templateReader, null);
   }
 
-  public com.example.htmlmud.domain.service.XpProgressionService getXpProgressionService() {
+  public com.example.htmlmud.domain.progression.service.XpProgressionService getXpProgressionService() {
     return xpProgressionService;
   }
 

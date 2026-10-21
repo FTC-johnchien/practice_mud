@@ -14,7 +14,7 @@ import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.infra.server.MudWebSocketHandler;
 import com.example.htmlmud.infra.server.SessionRegistry;
 import com.example.htmlmud.domain.actor.impl.Player;
-import com.example.htmlmud.domain.service.PlayerService;
+import com.example.htmlmud.domain.actor.service.PlayerService;
 import com.example.htmlmud.domain.world.WorldManager;
 import com.example.htmlmud.application.service.GameCommandService;
 import com.example.htmlmud.infra.monitor.GameMetrics;
@@ -64,7 +64,7 @@ public class NetworkSecurityAndPersistenceDrainTest {
   void testCommandRateLimitingPerSecond() throws Exception {
     PlayerService playerService = Mockito.mock(PlayerService.class);
     @SuppressWarnings("unchecked")
-    org.springframework.beans.factory.ObjectProvider<com.example.htmlmud.domain.service.LivingService> livingProvider =
+    org.springframework.beans.factory.ObjectProvider<com.example.htmlmud.domain.actor.service.LivingService> livingProvider =
         Mockito.mock(org.springframework.beans.factory.ObjectProvider.class);
     Mockito.when(playerService.getLivingServiceProvider()).thenReturn(livingProvider);
 

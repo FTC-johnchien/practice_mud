@@ -10,9 +10,9 @@ import com.example.htmlmud.domain.model.template.ClassTemplate;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.service.PartyService;
-import com.example.htmlmud.domain.service.CharacterSyncService;
+import com.example.htmlmud.domain.actor.service.CharacterSyncService;
 import com.example.htmlmud.domain.world.GameStateBroadcastService;
-import com.example.htmlmud.domain.service.XpProgressionService;
+import com.example.htmlmud.domain.progression.service.XpProgressionService;
 import lombok.extern.slf4j.Slf4j;
 
 /**

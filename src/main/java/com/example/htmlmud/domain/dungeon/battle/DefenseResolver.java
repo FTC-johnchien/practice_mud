@@ -55,14 +55,14 @@ public class DefenseResolver {
   private final com.example.htmlmud.domain.repository.TemplateReader templateReader;
 
   public DefenseResolver() {
-    this(null, new com.example.htmlmud.domain.service.TemplateCatalog());
+    this(null, new com.example.htmlmud.domain.repository.TemplateCatalog());
   }
 
   @Autowired
   public DefenseResolver(@Autowired(required = false) GameConfig gameConfig,
                          @Autowired(required = false) com.example.htmlmud.domain.repository.TemplateReader templateReader) {
     this.gameConfig = gameConfig;
-    this.templateReader = templateReader != null ? templateReader : new com.example.htmlmud.domain.service.TemplateCatalog();
+    this.templateReader = templateReader != null ? templateReader : new com.example.htmlmud.domain.repository.TemplateCatalog();
   }
 
   /**

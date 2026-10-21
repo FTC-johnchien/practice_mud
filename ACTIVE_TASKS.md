@@ -6,37 +6,38 @@
 
 ---
 
-## 📌 當前焦點里程碑：路徑 Y — 單機語意純化與全域硬編碼大清剿 (SP-PURITY & DATA-CORE)
+## 📌 當前焦點里程碑：Milestone F1-03 — 看門狗棘輪全面清零，消除 26 處 new TemplateCatalog() 靜默 fallback
 
-- **長遠藍圖**：[`FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) 第 25 章《單機語意純化與全域硬編碼大清剿》
-- **核心目標**：徹底消除房間內「其他玩家廣播」等非單機多人殘留語意，清除客棧 `contains("inn")`、商店掌櫃福伯台詞、道核固定數值與全域出生地硬編碼，守衛專案第一紅線（100% 資料驅動），維持全專案 331+ 測試全綠。
+- **長遠藍圖**：[`FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) 第 22 章《戰線一：核心雙軌大一統與領域潔淨治理 (F1-03)》
+- **核心目標**：全面掃除 `src/main/java` 中歷史殘留的 26 處 `new TemplateCatalog()` 靜默 fallback，徹底落實 Spring 建構子依賴注入與不可變參數傳遞，將 `ArchitectureGuardrailsTest` 看門狗棘輪閾值降為 0，實現架構零破窗。
 
 ### 📋 微任務清單 (Micro-Tasks)
 
-- [x] **Task 1 (SP-PURITY-01): 房間廣播通道與多人遍歷舊代碼徹底除役**
-  - 物理刪除 `RoomService.java` 中標註 `@Deprecated` 之 `broadcastJson(List<Player>, ...)` 與 `broadcastToOthers(List<Player>, ...)`。
-  - 將各指令與實體中語意混淆之 `room.broadcastToOthers(...)` 收斂為純粹單機環境事件或主角通知，去除無意義的排他性廣播。
-  - 清理 `WorldManager.java` 底部註解殘留之 20 行死代碼。
-  - 校準 `README.md` 測試數量指標（315 -> 331+）。
-  - 驗收測試全數通過，全專案 331 項測試維持 100% 綠燈。
-- [x] **Task 2 (DATA-CORE-01): 房間安全區標籤化與全域出生點 GameConfig 統一驅動**
-  - 消除 `RestCommand` 與 `GameStateBroadcastService` 中寫死字串 `id.contains("inn")`，改以 `RoomFlag.SAFE_ZONE` 判定。
-  - 消除 `SaveGameService` 與 `DungeonCommand` 中寫死字串 `"newbie_village:inn"`，全面改由注入之 `gameConfig.getDefaults().getPlayer().getSpawnRoomId()` 驅動。
-  - 在 `DataIntegrityValidator` 擴充地牢 `exitRoomId` 拓撲校驗，消除首領地塊 hardcoded `"mozhu_mines:boss_song_tianheng"`。
-  - 新增 `DataCoreIntegrityTest` 專屬整合測試，全專案 335 項測試維持 100% 綠燈。
-- [x] **Task 3 (DATA-CORE-02): 商店 NPC 身份動態化、道核技能反查與夥伴列表配置化**
-  - 重構 `ShopCommand`：依據 `shop.npcId()` 查詢真實掌櫃名稱與台詞，徹底消除所有商店寫死「掌櫃福伯擦著汗道」、「客官要進墨竹山吧？」。
-  - 重構 `Party.useItemOnMember` 中 `LEARN_SKILL`：自 `TemplateReader` 動態反查技能範本數值，消滅 `cooldownMs(6000)` 與 `damageMultiplier(1.8)` 寫死數值。
-  - 重構 `PartyService` 夥伴招募失敗提示：自 `templateReader.getAllCompanions()` 動態產出可用夥伴清單。
-  - 擴充 `DataCoreIntegrityTest` 測試驗證，全專案 337 項測試維持 100% 綠燈。
-- [x] **Task 4 (DATA-GUARD-03): 前端地塊動態 Tooltip 與看門狗棘輪加固**
-  - `dungeon-panel.js` 懸停 title 優先讀取 DTO 地塊動態名稱，消除「玄岩石壁」寫死符號推論。
-  - 清理 `Player.java` 與 `Living.java` 中的 `GameConfig.getInstance()`，收緊 `ArchitectureGuardrailsTest` 棘輪閾值至 3。
-  - 全專案 338 項測試維持 100% 綠燈。
+- [ ] **Task 1 (F1-03-SERVICE): Spring 託管服務與命令的 TemplateReader 依賴注入加固**
+  - 清理 `PartyCommand`, `CharacterSyncService`, `DrpgBattleService`, `DrpgEnemyTacticsService`, `DrpgRewardService`, `PartyService`, `DrpgTemplateAdapter`, `MudTemplateAdapter` 的 fallback 實例化。
+- [ ] **Task 2 (F1-03-DTO-ENTITY): 實體與模板類別靜態重載消除 new TemplateCatalog()**
+  - 清理 `BattleEnemy`, `PartyInventory`, `PartyMember`, `ShopTemplate`, `MessageFactory` 中的 fallback 實例化。
+- [ ] **Task 3 (F1-03-DRPG-STATE): DrpgStateDto 視圖構造全面對齊 TemplateReader 顯式傳遞**
+  - 清理 `DrpgStateDto` 中 7 處 `new TemplateCatalog()`。
+- [ ] **Task 4 (F1-03-GUARD-ZERO): 架構看門狗棘輪閥值歸零與全量回歸驗收**
+  - 將 `ArchitectureGuardrailsTest.java` 棘輪閾值由 26 降至 0。
+  - 全專案 338+ 測試 100% 綠燈通過。
 
 ---
 
 ## 🏆 已完成里程碑 (Completed Milestones)
+
+- [x] **Milestone 3 — 後端領域層 Package 結構按業務模組收斂 (F1-02)**
+  - Task 1 (F1-02-PROGRESSION): 修為與境界服務收斂至 `domain.progression.service`。
+  - Task 2 (F1-02-COMBAT): 核心戰鬥引擎服務收斂至 `domain.combat.service`。
+  - Task 3 (F1-02-ACTOR): 生靈主體與角色代理服務收斂至 `domain.actor.service`。
+  - Task 4 (F1-02-ADAPTER & VERIFY): 範本目錄與適配器收斂至 `domain.repository`，338 測試全綠。
+
+- [x] **Milestone Path Y — 單機語意純化與全域硬編碼大清剿 (SP-PURITY-01 ~ DATA-GUARD-03)**
+  - Task 1: 房間廣播通道與多人遍歷舊代碼徹底除役，死代碼清理 (SP-PURITY-01)。
+  - Task 2: 房間安全區標籤化與全域出生點 GameConfig 統一驅動 (DATA-CORE-01)。
+  - Task 3: 商店 NPC 身份動態化、道核技能反查與夥伴列表配置化 (DATA-CORE-02)。
+  - Task 4: 前端地塊動態 Tooltip 支援與看門狗棘輪加固至 3 處 (DATA-GUARD-03)，全專案 338 測試全綠。
 
 - [x] **Milestone Path X — 純單機單體化演進戰略：多人機制、雙軌架構與膠水代碼全域收斂 (SP-01 ~ SP-09)**
   - Task 1 (SP-01): 刪除 `TellCommand` 多人私聊與 `findPlayerByName`。

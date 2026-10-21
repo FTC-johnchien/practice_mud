@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.service;
+package com.example.htmlmud.domain.combat.service;
 
 import java.util.concurrent.ThreadLocalRandom;
 

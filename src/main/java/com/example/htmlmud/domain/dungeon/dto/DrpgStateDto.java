@@ -12,7 +12,7 @@ import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.model.FormationTemplate;
 import com.example.htmlmud.domain.repository.TemplateReader;
-import com.example.htmlmud.domain.service.TemplateCatalog;
+import com.example.htmlmud.domain.repository.TemplateCatalog;
 
 public record DrpgStateDto(
     String type,

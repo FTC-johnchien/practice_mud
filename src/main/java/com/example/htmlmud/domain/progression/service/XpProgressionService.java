@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.service;
+package com.example.htmlmud.domain.progression.service;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

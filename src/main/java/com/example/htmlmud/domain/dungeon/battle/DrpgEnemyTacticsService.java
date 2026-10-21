@@ -11,7 +11,7 @@ import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.model.RowPosition;
 import com.example.htmlmud.domain.party.model.TacticsRule;
 import com.example.htmlmud.domain.repository.TemplateReader;
-import com.example.htmlmud.domain.service.TemplateCatalog;
+import com.example.htmlmud.domain.repository.TemplateCatalog;
 import com.example.htmlmud.domain.util.RandomUtil;
 import lombok.extern.slf4j.Slf4j;
 

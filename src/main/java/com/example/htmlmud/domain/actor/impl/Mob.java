@@ -14,7 +14,7 @@ import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.template.MobTemplate;
 import com.example.htmlmud.domain.repository.TemplateReader;
 import com.example.htmlmud.domain.model.vo.DamageSource;
-import com.example.htmlmud.domain.service.MobService;
+import com.example.htmlmud.domain.actor.service.MobService;
 import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.MessageFactory;
 import com.example.htmlmud.protocol.MudMessage;

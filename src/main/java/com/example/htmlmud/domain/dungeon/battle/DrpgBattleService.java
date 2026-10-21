@@ -33,9 +33,9 @@ import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.model.RowPosition;
 import com.example.htmlmud.domain.party.service.PartyService;
 import com.example.htmlmud.domain.repository.TemplateReader;
-import com.example.htmlmud.domain.service.CharacterSyncService;
-import com.example.htmlmud.domain.service.TemplateCatalog;
-import com.example.htmlmud.domain.service.XpProgressionService;
+import com.example.htmlmud.domain.actor.service.CharacterSyncService;
+import com.example.htmlmud.domain.repository.TemplateCatalog;
+import com.example.htmlmud.domain.progression.service.XpProgressionService;
 import lombok.extern.slf4j.Slf4j;
 
 /**

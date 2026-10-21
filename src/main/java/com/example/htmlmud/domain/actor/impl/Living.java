@@ -22,7 +22,7 @@ import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.LivingPosture;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.domain.model.vo.DamageSource;
-import com.example.htmlmud.domain.service.LivingService;
+import com.example.htmlmud.domain.actor.service.LivingService;
 import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.MudMessage;
 import lombok.Getter;

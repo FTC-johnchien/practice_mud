@@ -24,7 +24,7 @@ import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
 import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.service.PartyService;
-import com.example.htmlmud.domain.service.PlayerService;
+import com.example.htmlmud.domain.actor.service.PlayerService;
 import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

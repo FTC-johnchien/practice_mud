@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.service;
+package com.example.htmlmud.domain.actor.service;
 
 import com.example.htmlmud.domain.event.PlayerEvents;
 import lombok.RequiredArgsConstructor;

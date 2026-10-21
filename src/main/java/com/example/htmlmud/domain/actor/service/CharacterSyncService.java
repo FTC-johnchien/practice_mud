@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.service;
+package com.example.htmlmud.domain.actor.service;
 
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.actor.impl.Player;
@@ -7,6 +7,8 @@ import com.example.htmlmud.domain.dungeon.battle.BattleOutcomeApplier;
 import com.example.htmlmud.domain.dungeon.battle.BattleParticipantSnapshot;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.party.model.PartyMember;
+import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.domain.repository.TemplateCatalog;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -18,13 +20,13 @@ import lombok.extern.slf4j.Slf4j;
 public class CharacterSyncService {
 
   private final BattleOutcomeApplier outcomeApplier;
-  private final com.example.htmlmud.domain.repository.TemplateReader templateReader;
+  private final TemplateReader templateReader;
   private final org.springframework.beans.factory.ObjectProvider<LivingService> livingServiceProvider;
 
   @org.springframework.beans.factory.annotation.Autowired
   public CharacterSyncService(
       @org.springframework.beans.factory.annotation.Autowired(required = false) BattleOutcomeApplier outcomeApplier,
-      @org.springframework.beans.factory.annotation.Autowired(required = false) com.example.htmlmud.domain.repository.TemplateReader templateReader,
+      @org.springframework.beans.factory.annotation.Autowired(required = false) TemplateReader templateReader,
       @org.springframework.beans.factory.annotation.Autowired(required = false) org.springframework.beans.factory.ObjectProvider<LivingService> livingServiceProvider) {
     this.outcomeApplier = outcomeApplier != null ? outcomeApplier : new BattleOutcomeApplier();
     this.templateReader = templateReader;

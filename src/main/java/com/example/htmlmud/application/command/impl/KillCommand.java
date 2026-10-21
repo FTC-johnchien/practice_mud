@@ -8,8 +8,8 @@ import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.dungeon.battle.DrpgBattleService;
-import com.example.htmlmud.domain.service.CombatService;
-import com.example.htmlmud.domain.service.TargetSelector;
+import com.example.htmlmud.domain.combat.service.CombatService;
+import com.example.htmlmud.domain.combat.service.TargetSelector;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

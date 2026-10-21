@@ -1,6 +1,6 @@
 package com.example.htmlmud.domain.world;
 
-import com.example.htmlmud.domain.service.TargetSelector;
+import com.example.htmlmud.domain.combat.service.TargetSelector;
 import com.example.htmlmud.domain.service.MessageUtil;
 
 import static java.util.stream.Collectors.counting;

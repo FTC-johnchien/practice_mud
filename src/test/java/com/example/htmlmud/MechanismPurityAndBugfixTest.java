@@ -16,7 +16,7 @@ import com.example.htmlmud.domain.party.model.PartyItemSlot;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.service.PartyService;
 import com.example.htmlmud.domain.save.service.SaveGameService;
-import com.example.htmlmud.domain.service.TemplateCatalog;
+import com.example.htmlmud.domain.repository.TemplateCatalog;
 
 import com.example.htmlmud.domain.model.enums.DamageType;
 import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;

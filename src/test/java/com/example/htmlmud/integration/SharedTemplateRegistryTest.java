@@ -10,9 +10,9 @@ import org.springframework.test.context.ActiveProfiles;
 
 import com.example.htmlmud.domain.model.template.ItemTemplate;
 import com.example.htmlmud.domain.model.template.SkillTemplate;
-import com.example.htmlmud.domain.service.DrpgTemplateAdapter;
-import com.example.htmlmud.domain.service.MudTemplateAdapter;
-import com.example.htmlmud.domain.service.TemplateCatalog;
+import com.example.htmlmud.domain.repository.DrpgTemplateAdapter;
+import com.example.htmlmud.domain.repository.MudTemplateAdapter;
+import com.example.htmlmud.domain.repository.TemplateCatalog;
 
 @SpringBootTest
 @ActiveProfiles("test")

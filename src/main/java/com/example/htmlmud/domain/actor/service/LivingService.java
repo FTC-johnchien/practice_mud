@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.service;
+package com.example.htmlmud.domain.actor.service;
 
 import java.util.List;
 import java.util.Map;
@@ -6,6 +6,10 @@ import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
+import com.example.htmlmud.domain.combat.service.CombatService;
+import com.example.htmlmud.domain.combat.service.SkillService;
+import com.example.htmlmud.domain.progression.service.XpProgressionService;
+import com.example.htmlmud.domain.service.MessageUtil;
 import com.example.htmlmud.domain.world.GameStateBroadcastService;
 import com.example.htmlmud.domain.world.WorldManager;
 import com.example.htmlmud.domain.port.WorldEntityFactoryPort;
@@ -154,18 +158,11 @@ public class LivingService {
 
     // 檢查是否還活著
     if (!self.isValid()) {
-      // log.info("{} 已經死亡，無法受傷", self.getName());
       return;
     }
 
     // 透過 Buffable 護盾扣除與扣除 HP
     self.takeDamage(amount);
-
-    // for test----------------------------------------------------------------------------------
-
-    // room.broadcast("log:" + self.getName() + " 目前 HP: " + self.getStats().getHp() + "/"
-    // + self.getStats().getMaxHp());
-    // for test----------------------------------------------------------------------------------
 
     // 檢查是否死亡
     if (self.isDead()) {
@@ -173,15 +170,6 @@ public class LivingService {
 
       // 終止戰鬥並移出戰鬥名單
       combatService.endCombat(self);
-
-      // Room room = self.getCurrentRoom();
-
-      // 先判斷 self 是 player 還是 mob 然後將其移出房間，避免後續的攻擊還持續的打到已死亡的對象
-      // if (self instanceof Player player) {
-      // room.removePlayer(player.getId());
-      // } else if (self instanceof Mob mob) {
-      // room.removeMob(mob.getId());
-      // }
 
       // 發送 self 死亡事件
       self.onDeath(attackerId);
@@ -300,12 +288,9 @@ public class LivingService {
 
   public void heal(Living self, int amount) {
     if (!self.isValid()) {
-      // log.info("{} 已經死亡，無法治療", name);
       return;
     }
 
-    // reply(this.stats.getGender().getYou() + "回復了 " + amount + " 點 HP 目前 " + stats.getHp() + " / "
-    // + stats.getMaxHp());
     self.getStats().setHp(Math.min(self.getStats().getHp() + amount, self.getStats().getMaxHp()));
   }
 
@@ -314,7 +299,6 @@ public class LivingService {
   public boolean equip(Living self, GameItem item) {
 
     // 1. 取得 ItemTemplate (需要依賴 Service 或是 Item 本身帶有 slot 資訊)
-    // 假設 GameItem 已經從 Template 複製了 slot 資訊，或者這裡去查 Template
     ItemTemplate tpl = item.getTemplate();
     if (tpl.type() != ItemType.WEAPON && tpl.type() != ItemType.SHIELD
         && tpl.type() != ItemType.ARMOR && tpl.type() != ItemType.ACCESSORY) {
@@ -330,7 +314,6 @@ public class LivingService {
 
     // 2. 檢查該部位是否已經有裝備？如果有，先脫下來 (Swap)
     if (self.getStats().equipment.containsKey(slot)) {
-      // GameItem oldItem = state.equipment.get(slot);
       unequip(self, slot); // 先脫舊的
       if (self.getStats().equipment.containsKey(slot)) {
         if (self instanceof Player player) {
@@ -342,7 +325,6 @@ public class LivingService {
     }
 
     // 3. 從背包移除該物品
-    // 注意：這裡假設 inventory 是 Mutable List
     if (!self.getInventory().remove(item)) {
 
       if (self instanceof Player player) {

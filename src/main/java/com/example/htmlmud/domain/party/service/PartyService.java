@@ -23,7 +23,7 @@ import com.example.htmlmud.domain.model.template.ItemTemplate;
 import com.example.htmlmud.domain.party.model.PartyItemSlot;
 import com.example.htmlmud.domain.party.model.PartyInventory;
 import com.example.htmlmud.domain.repository.TemplateReader;
-import com.example.htmlmud.domain.service.TemplateCatalog;
+import com.example.htmlmud.domain.repository.TemplateCatalog;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 

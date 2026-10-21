@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.service;
+package com.example.htmlmud.domain.repository;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -8,7 +8,6 @@ import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.template.ItemTemplate;
 import com.example.htmlmud.domain.model.template.SkillTemplate;
 import com.example.htmlmud.domain.party.model.PartyItemSlot;
-import com.example.htmlmud.domain.repository.TemplateReader;
 
 /**
  * 負責 MUD 運行時實體與靜態模板之間的轉換與適配。

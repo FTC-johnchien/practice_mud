@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.service.perform;
+package com.example.htmlmud.domain.combat.service.perform;
 
 import com.example.htmlmud.domain.actor.impl.Living;
 

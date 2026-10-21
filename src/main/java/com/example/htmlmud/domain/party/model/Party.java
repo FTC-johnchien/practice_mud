@@ -563,7 +563,7 @@ public class Party {
     if (inventory != null && inventory.getTemplateReader() != null) {
       return inventory.getTemplateReader();
     }
-    return new com.example.htmlmud.domain.service.TemplateCatalog();
+    return new com.example.htmlmud.domain.repository.TemplateCatalog();
   }
 }
 

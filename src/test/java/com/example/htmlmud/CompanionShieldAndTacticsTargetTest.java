@@ -95,7 +95,7 @@ class CompanionShieldAndTacticsTargetTest {
     assertThat(blessSkill.isShield()).isTrue();
 
     // 執行護盾技能
-    DrpgCombatLoop combatLoop = new DrpgCombatLoop(tacticsService, new DrpgRewardService(new com.example.htmlmud.domain.service.TemplateCatalog(), null), new DefenseResolver());
+    DrpgCombatLoop combatLoop = new DrpgCombatLoop(tacticsService, new DrpgRewardService(new com.example.htmlmud.domain.repository.TemplateCatalog(), null), new DefenseResolver());
     Player player = mock(Player.class);
     when(player.getName()).thenReturn("tester_shield");
     when(player.isValid()).thenReturn(true);

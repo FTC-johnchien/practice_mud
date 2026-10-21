@@ -108,17 +108,34 @@ com.example.htmlmud/
 │   │   ├── CombatPresentation.java      #   雙模呈現投影 (MUD 文字敘事 + Web 結構化事件)
 │   │   └── Combatant.java               #   大一統戰鬥參與者介面 (繼承 Buffable)
 │   │
-│   ├── service/                         # 領域服務 (無狀態業務邏輯)
+│   ├── world/                           # 世界與探索模組 (M1)
 │   │   ├── WorldManager.java            #   世界管理器 (房間管理與生命週期)
+│   │   ├── RoomService.java             #   房間服務 (進出/廣播/觀察)
+│   │   └── RoomMovementService.java     #   房間移動服務
+│   │
+│   ├── progression/service/             # 修為進程與境界模組 (M5)
+│   │   ├── XpProgressionService.java    #   經驗值與等級成長
+│   │   └── XpService.java               #   經驗值結算
+│   │
+│   ├── combat/service/                  # 核心戰鬥引擎模組 (M3)
 │   │   ├── CombatService.java           #   MUD 即時戰鬥引擎
+│   │   ├── SkillService.java            #   技能解算服務
+│   │   ├── SkillCostService.java        #   技能消耗判定
+│   │   ├── TargetSelector.java          #   目標選擇器
+│   │   └── BodyPartSelector.java        #   部位判定器
+│   │
+│   ├── actor/service/                   # 生靈主體與角色代理模組 (M4)
 │   │   ├── LivingService.java           #   生靈通用服務 (裝備/受傷/死亡)
 │   │   ├── PlayerService.java           #   玩家專屬服務 (登入/斷線/復活)
-│   │   ├── RoomService.java             #   房間服務 (進出/廣播/觀察)
-│   │   ├── RoomMovementService.java     #   房間移動服務
-│   │   ├── SkillService.java            #   技能解算服務
-│   │   ├── XpProgressionService.java    #   經驗值與等級成長
-│   │   ├── CharacterSyncService.java    #   角色狀態同步服務
-│   │   └── TemplateCatalog.java         #   模板目錄 (TemplateReader 實作)
+│   │   ├── MobService.java              #   怪物服務
+│   │   ├── LivingStateService.java      #   生靈狀態事件
+│   │   └── CharacterSyncService.java    #   角色狀態同步服務
+│   │
+│   ├── repository/                      # 領域倉庫與範本目錄 (M7)
+│   │   ├── TemplateReader.java          #   模板唯讀抽象契約
+│   │   ├── TemplateCatalog.java         #   模板目錄 (TemplateReader 實作)
+│   │   ├── DrpgTemplateAdapter.java     #   DRPG 範本適配器
+│   │   └── MudTemplateAdapter.java      #   MUD 範本適配器
 │   │
 │   ├── event/                           # 領域事件骨幹 (EVENT-01)
 │   │   ├── MobEvents.java               #   怪物事件 (MobDead)
@@ -130,9 +147,6 @@ com.example.htmlmud/
 │   │
 │   ├── validation/                      # 啟動期拓撲校驗與看門狗
 │   │   └── DataIntegrityValidator.java  #   資料完整性校驗器
-│   │
-│   ├── repository/                      # 領域唯讀介面
-│   │   └── TemplateReader.java          #   模板唯讀抽象契約
 │   │
 │   ├── factory/                         # 領域工廠
 │   │   └── ItemFactory.java             #   標準物品工廠 (ItemInstance / PartyItemSlot 生成)

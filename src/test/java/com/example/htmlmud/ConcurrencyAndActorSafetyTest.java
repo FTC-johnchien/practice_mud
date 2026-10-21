@@ -24,7 +24,7 @@ import com.example.htmlmud.domain.actor.core.VirtualActor;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.model.entity.LivingStats;
-import com.example.htmlmud.domain.service.PlayerService;
+import com.example.htmlmud.domain.actor.service.PlayerService;
 import com.example.htmlmud.domain.world.WorldManager;
 
 @SpringBootTest

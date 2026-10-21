@@ -1,11 +1,12 @@
-package com.example.htmlmud.domain.service;
+package com.example.htmlmud.domain.combat.service;
 
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.domain.service.BodyPartSelector;
+import com.example.htmlmud.domain.progression.service.XpProgressionService;
+import com.example.htmlmud.domain.progression.service.XpService;
 import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
@@ -76,20 +77,17 @@ public class CombatService {
    */
   public void tick(long currentTick, long now) {
     // 只遍歷「正在戰鬥」的生物，效率極高
-    // log.info("tick combatants: {}" + combatants.size());
     var drpgService = drpgBattleServiceProvider != null ? drpgBattleServiceProvider.getIfAvailable() : null;
     for (Living actor : combatants) {
 
       // 檢查是否正在戰鬥，或已被 DRPG 小隊戰鬥接管
       if (!actor.isValid() || !actor.isInCombat() || (drpgService != null && (drpgService.isInBattle(actor.getId()) || (actor instanceof Player p && drpgService.isInBattle(p))))) {
-        // log.info("actor.isInCombat:false name:{}", actor.getName());
         endCombat(actor);
         continue;
       }
 
       // 檢查攻擊冷卻時間 (CD)
       if (now < actor.getNextAttackTime()) {
-        // log.info("actor.nextAttackTime:{} now:{}", actor.nextAttackTime, now);
         continue;
       }
 
@@ -102,10 +100,8 @@ public class CombatService {
       }
 
       // 檢查戰鬥目標是有效
-      // Living target = actor.getCombatTarget().orElse(null);
       if (target == null || !target.isValid()
           || !target.getCurrentRoom().equals(actor.getCurrentRoom())) {
-        // log.info("actor.combatTarget 無效 actor.name:{} isValid:{} isDead:{}", actor.getName(),
         endCombat(actor); // 對手不見了，脫離戰鬥
         continue;
       }
@@ -164,7 +160,6 @@ public class CombatService {
 
     // 【加入名單】
     combatants.add(self);
-    // log.info(self.getName() + " 進入戰鬥名單！");
   }
 
   /**
@@ -180,20 +175,6 @@ public class CombatService {
     // 【移出名單】
     combatants.remove(self);
   }
-
-
-
-  // ---------------------------------------------------------------------------------------------
-
-
-
-  // ---------------------------------------------------------------------------------------------
-
-
-
-  // ---------------------------------------------------------------------------------------------
-
-
 
   /**
    * 執行基礎原始傷害計算 (武器物理/法術基值 - 目標護甲防禦，加浮動)
@@ -218,23 +199,7 @@ public class CombatService {
         minDmg, maxDmg, defender.getEffectiveDefense(), attacker.getRank(), variance);
   }
 
-
-
-  // ---------------------------------------------------------------------------------------------
-
-
-
-  // ---------------------------------------------------------------------------------------------
-
-
-
-  // ---------------------------------------------------------------------------------------------
-
-
-
   private void performAttackRound(Living self, Living target, long now) {
-    // log.info("performAttackRound now:{}", now);
-
     // 使用虛擬執行緒處理每一次的攻擊，這樣可以使用 Thread.sleep 而不阻塞主引擎
     Thread.ofVirtual().name("CombatRound-" + self.getId()).start(() -> {
       try {
@@ -253,7 +218,6 @@ public class CombatService {
 
           // 範圍攻擊
           if (skill.getTemplate().getTags().contains("AOE")) {
-            // 優化：直接在取得列表後過濾掉自己，不使用會導致報錯的 remove()
             List<Living> targets = self.getCurrentRoom().getLivings().stream()
                 .filter(l -> !l.getId().equals(self.getId())).toList();
 
@@ -292,7 +256,6 @@ public class CombatService {
       }
     });
   }
-
 
   private void performAttack(Living self, Living target, ActiveSkillResult skill,
       MoveAction action) {
@@ -418,31 +381,6 @@ public class CombatService {
       player.sendJson(new com.example.htmlmud.domain.dungeon.dto.BattleEventsDto("town-combat-" + player.getName(), List.of(event)));
     }
   }
-
-
-
-  // ---------------------------------------------------------------------------------------------
-
-
-
-  // ---------------------------------------------------------------------------------------------
-
-
-
-  // ---------------------------------------------------------------------------------------------
-
-
-
-  // ---------------------------------------------------------------------------------------------
-
-
-
-  // ---------------------------------------------------------------------------------------------
-
-
-
-  // ---------------------------------------------------------------------------------------------
-
 
   /**
    * 計算並設定下一次可攻擊的時間點。 引入約 ±20% 的隨機浮動，增加戰鬥節奏的自然感。

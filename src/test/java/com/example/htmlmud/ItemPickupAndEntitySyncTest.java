@@ -23,8 +23,8 @@ import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.service.PartyService;
 import com.example.htmlmud.domain.save.service.SaveGameService;
 import com.example.htmlmud.domain.actor.core.MessageOutput;
-import com.example.htmlmud.domain.service.PlayerService;
-import com.example.htmlmud.domain.service.TargetSelector;
+import com.example.htmlmud.domain.actor.service.PlayerService;
+import com.example.htmlmud.domain.combat.service.TargetSelector;
 import com.example.htmlmud.domain.world.WorldManager;
 
 @SpringBootTest
@@ -52,7 +52,7 @@ class ItemPickupAndEntitySyncTest {
   private GetCommand getCommand;
 
   @Autowired
-  private com.example.htmlmud.domain.service.LivingService livingService;
+  private com.example.htmlmud.domain.actor.service.LivingService livingService;
 
   @Test
   @DisplayName("驗證 TargetSelector 支援 UUID 與模板 ID 精準匹配")

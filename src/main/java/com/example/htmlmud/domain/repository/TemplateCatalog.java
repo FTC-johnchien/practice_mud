@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.service;
+package com.example.htmlmud.domain.repository;
 
 import java.util.Collections;
 import java.util.Map;
@@ -21,7 +21,6 @@ import com.example.htmlmud.domain.model.template.SkillTemplate;
 import com.example.htmlmud.domain.model.template.ZoneTemplate;
 import com.example.htmlmud.domain.party.model.FormationTemplate;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.repository.TemplateReader;
 
 @Primary
 @Service

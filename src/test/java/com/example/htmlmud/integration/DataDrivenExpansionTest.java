@@ -157,7 +157,7 @@ public class DataDrivenExpansionTest {
   }
 
   @Autowired
-  private com.example.htmlmud.domain.service.PlayerService playerService;
+  private com.example.htmlmud.domain.actor.service.PlayerService playerService;
 
   @Test
   @DisplayName("6. 驗證貨棧批量購買指令 (buy bread 3 / buy 1 2) 與靈石扣減、行囊堆疊")

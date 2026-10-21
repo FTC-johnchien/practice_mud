@@ -11,7 +11,7 @@ import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.enums.Direction;
-import com.example.htmlmud.domain.service.TargetSelector;
+import com.example.htmlmud.domain.combat.service.TargetSelector;
 import com.example.htmlmud.protocol.MudMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

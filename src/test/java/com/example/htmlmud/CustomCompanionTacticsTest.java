@@ -17,7 +17,7 @@ import org.mockito.ArgumentCaptor;
 import com.example.htmlmud.application.command.impl.PartyCommand;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.context.MudContext;
-import com.example.htmlmud.domain.service.TemplateCatalog;
+import com.example.htmlmud.domain.repository.TemplateCatalog;
 import com.example.htmlmud.domain.dungeon.battle.BattleContext;
 import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
 import com.example.htmlmud.domain.dungeon.battle.DrpgBattleService;

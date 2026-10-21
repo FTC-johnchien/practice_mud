@@ -61,7 +61,7 @@ public class SaveGameService {
   private GameStateBroadcastService broadcastService;
 
   @Autowired(required = false)
-  private ObjectProvider<com.example.htmlmud.domain.service.CharacterSyncService> characterSyncServiceProvider;
+  private ObjectProvider<com.example.htmlmud.domain.actor.service.CharacterSyncService> characterSyncServiceProvider;
 
   @Autowired(required = false)
   private com.example.htmlmud.config.GameConfig gameConfig;

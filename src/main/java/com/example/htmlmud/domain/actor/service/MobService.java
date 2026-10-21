@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.service;
+package com.example.htmlmud.domain.actor.service;
 
 import java.util.List;
 import java.util.Map;

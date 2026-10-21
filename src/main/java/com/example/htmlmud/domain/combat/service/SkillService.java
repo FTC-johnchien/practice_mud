@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.service;
+package com.example.htmlmud.domain.combat.service;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
@@ -42,16 +42,6 @@ public class SkillService {
     // 例如：SWORD -> basic_sword, UNARMED -> basic_fist
     return templateReader.findDefaultSkill(category);
   }
-
-  // 取得當前使用的攻擊招式 TODO skillId可能為null
-  // public CombatAction getCombatAction(LivingActor self, SkillCategory category) {
-  // String skillId = self.getEnabledSkillId(category);
-  // SkillTemplate tpl = templateRepo.getSkill(skillId);
-
-  // // 從 actions 列表中隨機挑一個 (或者依等級循序挑選)
-  // List<CombatAction> actions = tpl.getActions();
-  // return actions.get(ThreadLocalRandom.current().nextInt(actions.size()));
-  // }
 
   // --- 玩家指令介面 ---
   public void enableSkill(Living self, SkillCategory category, String skillId) {
@@ -131,13 +121,7 @@ public class SkillService {
    * 取得當前自動攻擊要用的技能 由子類別決定邏輯
    */
   public ActiveSkillResult getAutoAttackSkill(Living self) {
-    // 玩家的邏輯：委託給 SkillManager 處理
-    // SkillManager 會處理 Enable, Learned, Auto-Learn
-    // return getCombatSkill(self, self.getMainHandType());
-
-
     String skillId = resolveAutoAttackSkillId(self);
-    // log.info("name:{} skillId:{}", self.getName(), skillId);
 
     // 1. 取得技能模板
     SkillTemplate skillTemplate = templateReader.requireSkill(skillId);
@@ -148,7 +132,6 @@ public class SkillService {
     // 2. 【關鍵】動態捏造技能狀態
     // 怪物的技能等級 = 怪物自身等級 (或是怪物等級 * 1.2 之類的強度調整)
     SkillEntry virtualEntry = new SkillEntry(skillId);
-    // log.info("name:{} getLevel:{}", self.getName(), self.getLevel());
     virtualEntry.setLevel(self.getLevel());
 
     // 標記為虛擬/臨時，這樣戰鬥結算時不會給它加經驗值
@@ -156,7 +139,6 @@ public class SkillService {
 
     return new ActiveSkillResult(skillTemplate, virtualEntry);
   }
-
 
   /**
    * 決定要用哪一招 (優先級判定)
@@ -198,10 +180,8 @@ public class SkillService {
 
     // 先找 enabled 的技能
     String skillId = self.getEnabledSkillId(category);
-    // log.info("resolveCombatSkillId name:{} skillId:{}", self.getName(), skillId);
 
     if (skillId != null) {
-
       // 防呆：如果 enable 了但其實沒學過 (理論上 enable 指令會擋，但做個保險)
       if (self.getLearnedSkills().get(skillId) == null) {
         self.getEnabledSkills().remove(category); // 移除錯誤設定
@@ -212,9 +192,7 @@ public class SkillService {
     }
 
     // 檢查種族是否有設定 nature attack (Race Default)
-    // log.info("resolveCombatSkillId name:{} race:{}", self.getName(), self.getStats().getRace());
     RaceTemplate race = templateReader.findRace(self.getStats().getRace()).orElse(null);
-    // log.info("resolveCombatSkillId name:{} race:{}", self.getName(), race);
     switch (category) {
       case DODGE -> {
         if (race != null && race.combat() != null && race.combat().naturalDodge() != null) {

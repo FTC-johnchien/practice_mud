@@ -70,7 +70,7 @@ public class TemplateRepository implements TemplateRegistryPort {
     MOB_BASIC_SKILL_IDS.put(SkillCategory.DODGE, "mob_basic_dodge");
     MOB_BASIC_SKILL_IDS.put(SkillCategory.PARRY, "mob_basic_parry");
 
-    com.example.htmlmud.domain.service.TemplateCatalog.setDefaultReaderSupplier(TemplateRepository::new);
+    com.example.htmlmud.domain.repository.TemplateCatalog.setDefaultReaderSupplier(TemplateRepository::new);
   }
 
   public TemplateRepository() {
