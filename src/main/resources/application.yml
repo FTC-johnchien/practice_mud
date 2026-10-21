@@ -43,6 +43,7 @@ game:
         purify_talisman: 2
         steel_blade: 1
         standard_spear: 1
+        torch: 3
   combat:
     default-gcd-ms: 1500
     base-hit-chance: 0.80

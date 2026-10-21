@@ -92,6 +92,12 @@ export function populateTileAppearance(cell, symbol, gx, gy, customName = null) 
       cell.innerText = '▲';
       cell.title = customName ? `${customName} ${coordSuffix}` : `機關陷阱 ${coordSuffix}`;
       break;
+    case 'P':
+    case 'S':
+      cell.classList.add('cell-spring');
+      cell.innerText = '♨';
+      cell.title = customName ? `${customName} ${coordSuffix}` : `靈泉地窟 ${coordSuffix}`;
+      break;
     case '>':
       cell.classList.add('cell-stairs');
       cell.innerText = '▼';
@@ -135,6 +141,15 @@ export function renderMinimap(dungeon) {
     const dangerInfo = dangerMap[dungeon.dangerStatus] || dangerMap['CALM'];
     const dangerLevel = dungeon.dangerLevel || 0;
 
+    const torchLight = typeof dungeon.torchLight === 'number' ? dungeon.torchLight : 100;
+    const torchStatus = dungeon.torchStatus || (torchLight > 50 ? 'BRIGHT' : (torchLight > 0 ? 'DIM' : 'DARKNESS'));
+    const torchMap = {
+      'BRIGHT': { label: '🔥 明亮', cls: 'torch-bright' },
+      'DIM': { label: '🕯️ 昏暗', cls: 'torch-dim' },
+      'DARKNESS': { label: '🌑 黑暗 (扣SAN)', cls: 'torch-darkness' }
+    };
+    const torchInfo = torchMap[torchStatus] || torchMap['BRIGHT'];
+
     infoHeader.innerHTML = `
       <div class="floor-header-row">
         <span class="floor-title">🏛️ ${escapeHtml(dungeon.floorName || '')}</span>
@@ -148,7 +163,24 @@ export function renderMinimap(dungeon) {
         </div>
         <span class="danger-val-text">${dangerLevel}%</span>
       </div>
+      <div class="torch-gauge-row">
+        <span class="torch-status-badge ${torchInfo.cls}">${torchInfo.label}</span>
+        <div class="torch-bar-track" title="火把光明度: ${torchLight}/100">
+          <div class="torch-bar-fill ${torchInfo.cls}" style="width: ${torchLight}%"></div>
+        </div>
+        <span class="torch-val-text">${torchLight}%</span>
+        <button type="button" class="torch-light-btn" onclick="window.cmd && window.cmd('dungeon torch')" title="消耗行囊火把或10靈石點火照亮 (dungeon torch)">🔥 點火</button>
+      </div>
     `;
+  }
+
+  const radarPanel = document.getElementById('dungeon-radar-panel');
+  if (radarPanel) {
+    if (dungeon.torchStatus === 'DARKNESS' || dungeon.torchLight === 0) {
+      radarPanel.classList.add('torch-darkness-vignette');
+    } else {
+      radarPanel.classList.remove('torch-darkness-vignette');
+    }
   }
 
   if (forwardInspect) {

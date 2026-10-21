@@ -718,6 +718,7 @@ public class PartyMember implements Combatant {
     }
   }
 
+
   @Override
   public List<ActiveBuff> getActiveBuffs() {
     if (activeBuffs == null) {

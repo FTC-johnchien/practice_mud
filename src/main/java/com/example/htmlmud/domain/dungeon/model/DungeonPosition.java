@@ -4,6 +4,28 @@ import lombok.Data;
 
 @Data
 public class DungeonPosition {
+  public enum TorchStatus {
+    BRIGHT("火光充足", "🔥"),
+    DIM("殘焰微光", "🕯️"),
+    DARKNESS("絕對黑暗", "🌑");
+
+    private final String description;
+    private final String icon;
+
+    TorchStatus(String description, String icon) {
+      this.description = description;
+      this.icon = icon;
+    }
+
+    public String getDescription() {
+      return description;
+    }
+
+    public String getIcon() {
+      return icon;
+    }
+  }
+
   private String floorId;
   private GridCoord coord;
   private GridDirection facing;
@@ -11,6 +33,7 @@ public class DungeonPosition {
   private int width;
   private int height;
   private int dangerLevel = 0;
+  private int torchLight = 100;
   private final java.util.Set<GridCoord> openedChests = new java.util.HashSet<>();
 
   public DungeonPosition(String floorId, int startX, int startY, GridDirection facing, int width, int height) {
@@ -21,6 +44,7 @@ public class DungeonPosition {
     this.height = height;
     this.visited = new boolean[height][width];
     this.dangerLevel = 0;
+    this.torchLight = 100;
     revealAround(startX, startY, 1);
   }
 
@@ -52,6 +76,26 @@ public class DungeonPosition {
     if (dangerLevel < 70) return "CAUTION";
     if (dangerLevel < 90) return "DANGER";
     return "ENCOUNTER";
+  }
+
+  public int consumeTorch(int delta) {
+    this.torchLight = Math.max(0, this.torchLight - delta);
+    return this.torchLight;
+  }
+
+  public int restoreTorch(int amount) {
+    this.torchLight = Math.min(100, Math.max(0, this.torchLight + amount));
+    return this.torchLight;
+  }
+
+  public void resetTorch() {
+    this.torchLight = 100;
+  }
+
+  public TorchStatus getTorchStatus() {
+    if (this.torchLight > 50) return TorchStatus.BRIGHT;
+    if (this.torchLight >= 20) return TorchStatus.DIM;
+    return TorchStatus.DARKNESS;
   }
 
   public boolean isChestOpened(int x, int y) {

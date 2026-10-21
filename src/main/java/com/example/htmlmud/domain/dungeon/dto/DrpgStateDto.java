@@ -79,7 +79,10 @@ public record DrpgStateDto(
           pos.getDangerLevel(),
           pos.getDangerStatus(),
           openedChests,
-          tileNames
+          tileNames,
+          pos.getTorchLight(),
+          pos.getTorchStatus() != null ? pos.getTorchStatus().name() : "BRIGHT",
+          pos.getTorchStatus() != null ? pos.getTorchStatus().getIcon() : "🔥"
       );
     }
 
@@ -536,8 +539,31 @@ public record DrpgStateDto(
       int dangerLevel,
       String dangerStatus,
       boolean[][] openedChests,
-      String[][] tileNames
+      String[][] tileNames,
+      int torchLight,
+      String torchStatus,
+      String torchIcon
   ) {
+    public DungeonViewDto(
+        String floorId,
+        String floorName,
+        int x,
+        int y,
+        String direction,
+        String directionArrow,
+        int width,
+        int height,
+        String[][] tiles,
+        boolean[][] visited,
+        String forwardInspection,
+        int dangerLevel,
+        String dangerStatus,
+        boolean[][] openedChests,
+        String[][] tileNames
+    ) {
+      this(floorId, floorName, x, y, direction, directionArrow, width, height, tiles, visited, forwardInspection, dangerLevel, dangerStatus, openedChests, tileNames, 100, "BRIGHT", "🔥");
+    }
+
     public DungeonViewDto(
         String floorId,
         String floorName,
@@ -554,7 +580,7 @@ public record DrpgStateDto(
         String dangerStatus,
         boolean[][] openedChests
     ) {
-      this(floorId, floorName, x, y, direction, directionArrow, width, height, tiles, visited, forwardInspection, dangerLevel, dangerStatus, openedChests, null);
+      this(floorId, floorName, x, y, direction, directionArrow, width, height, tiles, visited, forwardInspection, dangerLevel, dangerStatus, openedChests, null, 100, "BRIGHT", "🔥");
     }
   }
 

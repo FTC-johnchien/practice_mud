@@ -65,6 +65,10 @@ public class DungeonManager {
     }
   }
 
+  public void clearPositions() {
+    playerPositions.clear();
+  }
+
   public DungeonPosition getOrCreatePosition(com.example.htmlmud.domain.model.vo.CharacterId characterId, String floorId) {
     return characterId != null ? getOrCreatePosition(characterId.value(), floorId) : getOrCreatePosition("default", floorId);
   }

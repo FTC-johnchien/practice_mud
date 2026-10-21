@@ -62,13 +62,57 @@ public class DungeonNavigator {
   }
 
   public String inspectForward(DungeonFloor floor, DungeonPosition pos) {
-    GridCoord front = pos.getCoord().step(pos.getFacing());
-    if (!floor.isInBounds(front)) {
-      return "正前方是冰冷死寂的迷宮邊緣禁制。";
+    if (floor == null || pos == null) {
+      return "";
     }
-    DungeonTile tile = floor.getTile(front);
-    return "凝神望去，正前方 1 步處是【" + tile.getName() + "】(" + tile.getType().getSymbol() + ")。"
-        + (tile.getDescription() != null ? " " + tile.getDescription() : "");
+    DungeonPosition.TorchStatus status = pos.getTorchStatus() != null ? pos.getTorchStatus() : DungeonPosition.TorchStatus.BRIGHT;
+    int maxSteps = switch (status) {
+      case BRIGHT -> 3;
+      case DIM -> 2;
+      case DARKNESS -> 1;
+    };
+
+    StringBuilder sb = new StringBuilder();
+    boolean blocked = false;
+    for (int step = 1; step <= maxSteps; step++) {
+      GridCoord target = pos.getCoord().step(pos.getFacing(), step);
+      if (!floor.isInBounds(target)) {
+        if (step == 1) {
+          sb.append("正前方是冰冷死寂的迷宮邊緣禁制。");
+        } else {
+          sb.append(String.format(" 向前延伸至 %d 步處已抵達迷宮邊緣禁制。", step));
+        }
+        blocked = true;
+        break;
+      }
+      DungeonTile tile = floor.getTile(target);
+      String tileName = (tile != null && tile.getName() != null && !tile.getName().isBlank())
+          ? tile.getName()
+          : (tile != null ? tile.getType().getDefaultName() : "未知區域");
+      String symbol = tile != null ? tile.getType().getSymbol() : "?";
+
+      if (step == 1) {
+        sb.append("凝神望去，正前方 1 步處是【").append(tileName).append("】(").append(symbol).append(")。");
+        if (tile != null && tile.getDescription() != null && !tile.getDescription().isBlank()) {
+          sb.append(" ").append(tile.getDescription());
+        }
+      } else {
+        sb.append(String.format(" 視線穿透火光，前方 %d 步依稀可見【%s】(%s)。", step, tileName, symbol));
+      }
+
+      if (tile != null && !tile.isPassable()) {
+        blocked = true;
+        break;
+      }
+    }
+
+    if (status == DungeonPosition.TorchStatus.DARKNESS) {
+      sb.append(" [🌑 絕對黑暗：火光熄滅，視距僅限身前一尺]");
+    } else if (status == DungeonPosition.TorchStatus.DIM && !blocked) {
+      sb.append(" [🕯️ 殘焰微光：照度衰減，深處隱入迷霧]");
+    }
+
+    return sb.toString().trim();
   }
 
   public String renderAsciiMap(DungeonFloor floor, DungeonPosition pos) {

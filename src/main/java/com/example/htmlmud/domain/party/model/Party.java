@@ -512,6 +512,15 @@ public class Party {
   }
 
   @JsonIgnore
+  public PartyMember getFrontRowMember() {
+    if (members == null || members.isEmpty()) return null;
+    return members.stream()
+        .filter(m -> m.isAlive() && m.getRow() == RowPosition.FRONT)
+        .findFirst()
+        .orElse(getLeader());
+  }
+
+  @JsonIgnore
   public boolean isAllDead() {
     return members.stream().noneMatch(PartyMember::isAlive);
   }

@@ -8,6 +8,23 @@
 
 ## 📌 最新里程碑 (Latest Releases)
 
+### [2026-10-21] Milestone F1-05：地牢生存火把明滅與步進機關陷阱 (Dungeon Torch & Step Traps, P1)
+- **地牢火把光明度核心模型與步進消耗機制 (Task 1)**：
+  - `DungeonPosition.java` 實裝 `torchLight`（0~100 照度值）與照度階級枚舉 `TorchStatus`（`BRIGHT` >50, `DIM` 1~50, `DARKNESS` 0）。
+  - `DungeonCommand.java` 步進自動扣減 1 點光明度；`DIM` 狀態警戒靈壓加速 1.5 倍；`DARKNESS` 狀態警戒加速 2.0 倍、每步扣減全員 5 點 SAN 值並觸發 25% 暗影妖邪突襲。
+  - 實裝 `dungeon light` / `dungeon torch`：優先消耗行囊火把道具補滿照度，亦可消耗 10 靈石燃靈補光，且支援在戰鬥中緊急點火照明。
+- **光明度動態視距與射線阻擋遮擋 (Task 2)**：
+  - `DungeonNavigator.java` 動態多步射線探測：`BRIGHT` 探測 3 步、`DIM` 探測 2 步、`DARKNESS` 僅探測 1 步，且遇牆壁自動阻斷前方視野遮擋。
+  - `DrpgStateDto.java` 與 `DungeonViewDto` 擴充 `torchLight`、`torchStatus`、`torchIcon` 動態同步至前端。
+- **地牢多元機關陷阱與先鋒屬性檢定 (Task 3)**：
+  - 地牢資料拓撲加入靈泉地窟（`P`, 太玄清心靈泉）與淬毒暗弩陷阱（`^`）。
+  - 暗弩機關觸發小隊先鋒（如鐵牛）身法 (DEX >= 12) 敏捷規避檢定，成功全員無傷，失敗先鋒受重創全員扣 SAN。
+  - 靈泉地窟未枯竭時自動滋養全員（+50 HP, +30 MP, +15 SAN）並標記枯竭狀態；鎖鏈暗門支援臂力 (STR >= 12) 破拆與工具破門獲得戰氣。
+- **前端雷達照度視覺化與全量驗證 (Task 4)**：
+  - `dungeon-panel.js` 實裝火把狀態 badge、照度漸層進度條、即時百分比與【🔥 點火】按鈕；在絕對黑暗狀態為地牢面板即時疊加暗紫色邊緣暗影暈影特效 (`.torch-darkness-vignette`)。
+  - 地塊渲染擴充靈泉地窟（`♨`，天藍色微光樣式）。
+  - 編寫專屬整合測試 `DungeonTorchAndTrapTest`（5 項測試 100% 綠燈），全專案 343 項測試全數綠燈通過。
+
 ### [2026-10-21] Milestone F1-04：前端歷史樣式巨石 `style.css` (122 KB) 安全除役
 - **歷史樣式巨石物理移除**：
   - 物理刪除根目錄 122 KB 巨石樣式 `static/css/style.css`，全系統 100% 運行於 `style-01` ~ `style-07` 七層樣式串流。

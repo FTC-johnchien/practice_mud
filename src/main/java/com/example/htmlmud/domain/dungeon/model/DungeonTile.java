@@ -19,6 +19,7 @@ public class DungeonTile {
     DOOR("+", "封魔石門", true),
     TREASURE("$", "古修遺骸", true),
     TRAP("~", "深淵蝕骨黏液", true),
+    SPRING("P", "靈泉地窟", true),
     STAIRS_DOWN(">", "下行幽邃古階", true),
     STAIRS_UP("<", "上行生路石階", true),
     EVENT("!", "神秘古仙石碑", true),

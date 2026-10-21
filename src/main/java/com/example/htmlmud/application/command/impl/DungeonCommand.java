@@ -19,6 +19,8 @@ import com.example.htmlmud.domain.dungeon.service.DungeonNavigator;
 import com.example.htmlmud.domain.model.template.ItemTemplate;
 import com.example.htmlmud.domain.model.template.MobTemplate;
 import com.example.htmlmud.domain.party.model.Party;
+import com.example.htmlmud.domain.party.model.PartyInventory;
+import com.example.htmlmud.domain.party.model.PartyItemSlot;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.service.PartyService;
 import com.example.htmlmud.domain.repository.TemplateReader;
@@ -72,6 +74,9 @@ public class DungeonCommand implements PlayerCommand {
   public void execute(String args) {
     Player self = MudContext.currentPlayer();
     String input = args != null ? args.trim().toLowerCase() : "";
+    if (input.startsWith("dungeon ")) {
+      input = input.substring(8).trim();
+    }
 
     // 處理 enter / switch 指令：例如 "dungeon enter mozhu_mines_b1f" 或 "dungeon switch taiyin"
     if (input.startsWith("enter") || input.startsWith("switch")) {
@@ -164,6 +169,13 @@ public class DungeonCommand implements PlayerCommand {
       }
     }
 
+    // 處理點燃火把指令 (戰鬥或非戰鬥中皆可使用火把照明)
+    if (input.equals("light") || input.equals("torch") || input.equals("burn torch")) {
+      handleLightTorch(self, floor, pos);
+      broadcastDrpgState(self, floor, pos);
+      return;
+    }
+
     if (battleService.isInBattle(self.getName())) {
       self.reply("\u001B[1;31m⚠️ 戰鬥交鋒中，無法隨意移步！請點擊【⚔️ 迎戰】進攻或【🏃 遁地撤退】！\u001B[0m");
       broadcastDrpgState(self, floor, pos);
@@ -208,6 +220,10 @@ public class DungeonCommand implements PlayerCommand {
         self.reply(res.message() + "\n" + dungeonNavigator.inspectForward(floor, pos));
         broadcastDrpgState(self, floor, pos);
       }
+      case "light", "torch", "burn torch" -> {
+        handleLightTorch(self, floor, pos);
+        broadcastDrpgState(self, floor, pos);
+      }
       case "look", "inspect" -> {
         self.reply(dungeonNavigator.inspectForward(floor, pos));
         broadcastDrpgState(self, floor, pos);
@@ -227,6 +243,7 @@ public class DungeonCommand implements PlayerCommand {
             + "  dungeon enter [地牢代號]   - 踏入指定地牢 (如 mozhu_mines_b1f)\n"
             + "  dungeon leave              - 在向上階梯處撤出地牢回到地表\n"
             + "  dungeon list               - 列出當前開放的所有地牢\n"
+            + "  dungeon light / torch      - 點燃新火把補滿照度 (無火把可消耗 10 靈石燃靈應急)\n"
             + "  step w / forward           - 向前邁步 (探索/遇敵檢定)\n"
             + "  step s / back              - 向後退步\n"
             + "  step a / left              - 向左轉 90 度\n"
@@ -237,13 +254,83 @@ public class DungeonCommand implements PlayerCommand {
     }
   }
 
+  private void handleLightTorch(Player self, DungeonFloor floor, DungeonPosition pos) {
+    if (pos.getTorchLight() >= 100) {
+      self.reply("🔥 當前火把光芒旺盛（照度 100%），無需更換火把。");
+      return;
+    }
+
+    Party party = partyService.getOrCreateParty(self.getName());
+    PartyInventory inv = party != null ? party.getInventory() : null;
+    PartyItemSlot torchSlot = null;
+    if (inv != null && inv.getSlots() != null) {
+      for (PartyItemSlot slot : inv.getSlots()) {
+        if (slot.getItemId() != null && (slot.getItemId().equalsIgnoreCase("torch")
+            || slot.getItemId().endsWith(":torch")
+            || (slot.getName() != null && slot.getName().contains("火把")))) {
+          torchSlot = slot;
+          break;
+        }
+      }
+    }
+
+    if (torchSlot != null) {
+      torchSlot.setCount(torchSlot.getCount() - 1);
+      if (torchSlot.getCount() <= 0) {
+        inv.getSlots().remove(torchSlot);
+      }
+      pos.resetTorch();
+      self.reply("\n\u001B[1;32m🔥【點燃火把】你自隊伍行囊取出一支松木火把引燃，溫暖熾熱的火光驅散了逼仄的陰冷！（火把照度已回滿 100%）\u001B[0m\n");
+    } else if (party != null && party.getCoin() >= 10) {
+      party.deductCoin(10);
+      pos.restoreTorch(60);
+      self.reply("\n\u001B[1;33m✨【燃靈照影】隊伍行囊中無可用火把！你消耗 10 靈石掐訣運轉微光真火，勉強照亮周遭（照度提升至 " + pos.getTorchLight() + "%）！建議前往雜貨鋪採買火把備用。\u001B[0m\n");
+    } else {
+      self.reply("\n\u001B[1;31m❌ 行囊中無可用火把，且靈石不足（需 10 靈石運轉燃靈術），無法點亮光源！請小心摸黑前行！\u001B[0m\n");
+    }
+  }
+
   private void handlePostMovement(Player self, DungeonFloor floor, DungeonPosition pos, StepResult res) {
     if (!res.success()) {
       return;
     }
 
-    // 1. 警戒度累積與暗雷檢定
-    int delta = ThreadLocalRandom.current().nextInt(8, 17);
+    // 1. 火把光明度消耗與照度效應
+    int prevTorch = pos.getTorchLight();
+    int newTorch = pos.consumeTorch(1);
+    DungeonPosition.TorchStatus status = pos.getTorchStatus();
+
+    if (prevTorch > 50 && newTorch <= 50) {
+      self.reply("\n\u001B[1;33m🔥【火光漸黯】油脂漸罄，火光搖曳不定（照度：" + newTorch + "%），陰冷氣息自黑暗中緩緩逼近……\u001B[0m");
+    } else if (prevTorch >= 20 && newTorch < 20) {
+      self.reply("\n\u001B[1;31m🌑【火光熄滅】火把已燃盡！周遭陷入伸手不見五指的絕對黑暗（照度：" + newTorch + "%）！\u001B[0m");
+    }
+
+    // 2. 警戒度累積與暗雷檢定
+    int baseDelta = ThreadLocalRandom.current().nextInt(8, 17);
+    int delta = baseDelta;
+    if (status == DungeonPosition.TorchStatus.DIM) {
+      delta = (int) Math.round(baseDelta * 1.5);
+    } else if (status == DungeonPosition.TorchStatus.DARKNESS) {
+      delta = baseDelta * 2;
+      // 黑暗環境侵蝕道心：扣減小隊全體 5 點 SAN
+      Party party = partyService.getOrCreateParty(self.getName());
+      if (party != null && party.getMembers() != null) {
+        for (PartyMember m : party.getMembers()) {
+          m.consumeSan(5);
+        }
+      }
+      self.reply("\u001B[1;35m💀【黑暗侵蝕】身處絕對黑暗之中，低語與未知陰影侵蝕理智！全隊道心動搖 (-5 SAN)！\u001B[0m");
+
+      // 黑暗中額外 25% 機率直接觸發暗影突襲
+      if (ThreadLocalRandom.current().nextInt(100) < 25) {
+        self.reply("\u001B[1;31m⚠️【黑暗突襲】黑暗深處傳來暴虐殺意，蟄伏於暗影中的妖邪發動了突襲！\u001B[0m");
+        triggerRandomEncounter(self, floor, pos);
+        pos.resetDanger();
+        return;
+      }
+    }
+
     int danger = pos.addDanger(delta);
     if (danger >= 100) {
       triggerRandomEncounter(self, floor, pos);
@@ -251,7 +338,7 @@ public class DungeonCommand implements PlayerCommand {
       return;
     }
 
-    // 2. 特殊地塊踩點事件
+    // 3. 特殊地塊踩點事件
     handleTileEvent(self, floor, pos);
   }
 
@@ -323,11 +410,62 @@ public class DungeonCommand implements PlayerCommand {
       }
       case TRAP -> {
         Party party = partyService.getOrCreateParty(self.getName());
-        for (PartyMember m : party.getMembers()) {
-          m.takeDamage(15);
-          m.consumeSan(5);
+        PartyMember vanguard = party != null ? party.getFrontRowMember() : null;
+        if (vanguard == null && party != null && !party.getMembers().isEmpty()) {
+          vanguard = party.getLeader();
+        }
+
+        boolean isCrossbowTrap = tile.getName() != null && (tile.getName().contains("弩") || tile.getName().contains("暗箭") || tile.getName().contains("機關"));
+
+        if (isCrossbowTrap && vanguard != null) {
+          int dex = vanguard.getEffectiveDex();
+          int dc = 12; // 先鋒敏捷免傷門檻
+          if (dex >= dc) {
+            self.reply("\n\u001B[1;32m🛡️【機關檢定通過】前方地磚凹陷，數十道淬毒暗弩呼嘯暴射！\n"
+                + "先鋒【" + vanguard.getName() + "】身法如電 (身法: " + dex + " ≥ " + dc + ")，揮舞兵刃護住要害將弩箭盡數格開！全隊毫髮無傷！\u001B[0m\n");
+            return;
+          } else {
+            vanguard.takeDamage(25);
+            for (PartyMember m : party.getMembers()) {
+              if (m != vanguard) {
+                m.takeDamage(10);
+              }
+              m.consumeSan(5);
+            }
+            self.reply("\n\u001B[1;31m⚠️【暗弩陷阱觸發】前方地磚凹陷，數十道淬毒暗弩呼嘯暴射！\n"
+                + "先鋒【" + vanguard.getName() + "】閃避不及 (身法: " + dex + " < " + dc + ")，首當其衝受創 (-25 HP)！小隊餘人波及 (-10 HP, -5 SAN)！\u001B[0m\n");
+            return;
+          }
+        }
+
+        // 常規深淵煞氣/泥沼陷阱
+        if (party != null && party.getMembers() != null) {
+          for (PartyMember m : party.getMembers()) {
+            m.takeDamage(15);
+            m.consumeSan(5);
+          }
         }
         self.reply("\n\u001B[1;35m⚠️【觸發陷阱】地面突然陷落，菌絲煞氣噴湧！全隊受到 15 點腐蝕傷害，道心動搖 (-5 SAN)！\u001B[0m\n");
+      }
+      case SPRING -> {
+        Party party = partyService.getOrCreateParty(self.getName());
+        if (!tile.isTriggered()) {
+          tile.setTriggered(true);
+          if (party != null && party.getMembers() != null) {
+            for (PartyMember m : party.getMembers()) {
+              if (m.isAlive()) {
+                m.heal(50);
+                m.restoreMp(30);
+                m.restoreSan(15);
+              }
+            }
+          }
+          self.reply("\n\u001B[1;36m⛲【滋養靈泉】石壁縫隙中湧出清澈溫潤的太玄靈泉，靈霧氤氳！\n"
+              + "小隊全體痛飲靈水，氣血 (+50 HP)、真元 (+30 MP) 湧動，道心大定 (+15 SAN)！\u001B[0m\n");
+          broadcastDrpgState(self, floor, pos);
+        } else {
+          self.reply("\n【靈泉地窟】泉眼靈氣已然耗盡，僅餘淺淺泉水，無法再次獲取滋養。\n");
+        }
       }
       case STAIRS_DOWN -> {
         self.reply("\n\u001B[1;36m🏛️【" + tile.getName() + "】" + tile.getDescription() + "\u001B[0m\n");
@@ -336,7 +474,26 @@ public class DungeonCommand implements PlayerCommand {
         self.reply("\n\u001B[1;32m🪜【" + tile.getName() + "】" + tile.getDescription() + " (輸入 'dungeon leave' 可返回地表)\u001B[0m\n");
       }
       case DOOR -> {
-        self.reply("\n\u001B[1;32m🚪【" + tile.getName() + "】" + tile.getDescription() + "\u001B[0m\n");
+        Party party = partyService.getOrCreateParty(self.getName());
+        PartyMember vanguard = party != null ? party.getFrontRowMember() : null;
+        boolean isChainedDoor = tile.getName() != null && (tile.getName().contains("鎖鏈") || tile.getName().contains("暗門"));
+        if (isChainedDoor && !tile.isTriggered()) {
+          int str = vanguard != null ? vanguard.getEffectiveStr() : 10;
+          boolean hasTool = party != null && party.getInventory().getSlots().stream()
+              .anyMatch(s -> s.getItemId().contains("pickaxe") || s.getItemId().contains("key"));
+          if (str >= 12 || hasTool) {
+            tile.setTriggered(true);
+            if (vanguard != null) {
+              vanguard.gainSp(20);
+            }
+            String toolDesc = str >= 12 ? "先鋒神力貫注兵刃 (臂力: " + str + " ≥ 12)" : "運用隊伍行囊中的開山破拆工具";
+            self.reply("\n\u001B[1;33m🚪💥【破拆鎖鏈暗門】" + toolDesc + "，一聲巨響斬斷精鋼鎖鏈，沉重暗門應聲洞開！先鋒士氣大振 (+20 戰氣)！\u001B[0m\n");
+          } else {
+            self.reply("\n\u001B[1;31m🚪🔒【鎖鏈暗門緊閉】重玄精鋼鎖鏈纏繞緊閉！先鋒臂力不足 (需臂力 ≥ 12，當前: " + str + ")，且行囊中無破拆工具，無法強開！\u001B[0m\n");
+          }
+        } else {
+          self.reply("\n\u001B[1;32m🚪【" + tile.getName() + "】" + tile.getDescription() + "\u001B[0m\n");
+        }
       }
       case EVENT -> {
         self.reply("\n\u001B[1;36m📜【" + tile.getName() + "】" + tile.getDescription() + "\u001B[0m\n");
