@@ -11,7 +11,6 @@ import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.model.RowPosition;
 import com.example.htmlmud.domain.party.model.TacticsRule;
 import com.example.htmlmud.domain.repository.TemplateReader;
-import com.example.htmlmud.domain.repository.TemplateCatalog;
 import com.example.htmlmud.domain.util.RandomUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,7 +26,7 @@ public class DrpgEnemyTacticsService {
 
   @Autowired
   public DrpgEnemyTacticsService(TemplateReader templateReader, com.example.htmlmud.domain.party.service.FormationEngine formationEngine) {
-    this.templateReader = templateReader != null ? templateReader : new TemplateCatalog();
+    this.templateReader = templateReader;
     this.formationEngine = formationEngine != null ? formationEngine : new com.example.htmlmud.domain.party.service.FormationEngine();
   }
 

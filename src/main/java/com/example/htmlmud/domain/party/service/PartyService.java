@@ -1,5 +1,6 @@
 package com.example.htmlmud.domain.party.service;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +24,6 @@ import com.example.htmlmud.domain.model.template.ItemTemplate;
 import com.example.htmlmud.domain.party.model.PartyItemSlot;
 import com.example.htmlmud.domain.party.model.PartyInventory;
 import com.example.htmlmud.domain.repository.TemplateReader;
-import com.example.htmlmud.domain.repository.TemplateCatalog;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,7 +54,7 @@ public class PartyService {
   }
 
   public PartyService() {
-    this(new TemplateCatalog(), null);
+    this((TemplateReader) null, null);
   }
 
   public Party getOrCreateParty(com.example.htmlmud.domain.model.vo.CharacterId characterId) {
@@ -105,7 +105,7 @@ public class PartyService {
 
   @PostConstruct
   public void initDefaultFormations() {
-    Map<String, FormationTemplate> repoFormations = templateReader.getAllFormations();
+    Map<String, FormationTemplate> repoFormations = templateReader != null ? templateReader.getAllFormations() : Collections.emptyMap();
     if (repoFormations != null && !repoFormations.isEmpty()) {
       formationRegistry.putAll(repoFormations);
     } else {

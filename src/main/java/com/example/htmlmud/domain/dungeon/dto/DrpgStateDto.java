@@ -12,7 +12,6 @@ import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.model.FormationTemplate;
 import com.example.htmlmud.domain.repository.TemplateReader;
-import com.example.htmlmud.domain.repository.TemplateCatalog;
 
 public record DrpgStateDto(
     String type,
@@ -28,11 +27,11 @@ public record DrpgStateDto(
   }
 
   public static DrpgStateDto of(DungeonFloor floor, DungeonPosition pos, String forwardInspection, Party party) {
-    return of(floor, pos, forwardInspection, party, null, new TemplateCatalog());
+    return of(floor, pos, forwardInspection, party, null, party != null ? party.getTemplateReader() : null);
   }
 
   public static DrpgStateDto of(DungeonFloor floor, DungeonPosition pos, String forwardInspection, Party party, BattleViewDto battle) {
-    return of(floor, pos, forwardInspection, party, battle, new TemplateCatalog());
+    return of(floor, pos, forwardInspection, party, battle, party != null ? party.getTemplateReader() : null);
   }
 
   public static DrpgStateDto of(DungeonFloor floor, DungeonPosition pos, String forwardInspection,
@@ -101,7 +100,7 @@ public record DrpgStateDto(
       Party party
   ) {
     return ofTown(zoneId, zoneName, roomId, roomName, description, safeZone, exits, npcs, items, party, null,
-        new TemplateCatalog());
+        party != null ? party.getTemplateReader() : null);
   }
 
   public static DrpgStateDto ofTown(
@@ -118,7 +117,7 @@ public record DrpgStateDto(
       BattleViewDto battle
   ) {
     return ofTown(zoneId, zoneName, roomId, roomName, description, safeZone, exits, npcs, items, party, battle,
-        new TemplateCatalog());
+        party != null ? party.getTemplateReader() : null);
   }
 
   public static DrpgStateDto ofTown(
@@ -141,14 +140,14 @@ public record DrpgStateDto(
   }
 
   public static PartyViewDto toPartyViewDto(Party party) {
-    return toPartyViewDto(party, new TemplateCatalog());
+    return toPartyViewDto(party, party != null ? party.getTemplateReader() : null);
   }
 
   public static PartyViewDto toPartyViewDto(Party party, TemplateReader templateReaderInput) {
     if (party == null || party.getMembers() == null) return null;
     final TemplateReader templateReader = (templateReaderInput != null)
         ? templateReaderInput
-        : new TemplateCatalog();
+        : (party.getTemplateReader() != null ? party.getTemplateReader() : null);
     List<PartyMemberViewDto> memberViews = new ArrayList<>();
     for (int memberIdx = 0; memberIdx < party.getMembers().size(); memberIdx++) {
       PartyMember m = party.getMembers().get(memberIdx);
@@ -240,7 +239,7 @@ public record DrpgStateDto(
       String basicSkillId = m.getEffectiveBasicSkillId();
       String basicSkillName = null;
       if (customStanceId != null) {
-        var customSkillOpt = templateReader.findSkill(customStanceId);
+        var customSkillOpt = templateReader != null ? templateReader.findSkill(customStanceId) : java.util.Optional.<com.example.htmlmud.domain.model.template.SkillTemplate>empty();
         basicSkillName = customSkillOpt.map(com.example.htmlmud.domain.model.template.SkillTemplate::getName).orElse(customStanceId);
       }
 
@@ -249,7 +248,7 @@ public record DrpgStateDto(
       List<PartyStanceSkillDto> availableStances = new ArrayList<>();
 
       // 角色已學的該武器分類套路 (若有，排除 basic_* 佔位)
-      if (m.getLearnedStances() != null) {
+      if (m.getLearnedStances() != null && templateReader != null) {
         for (String stId : m.getLearnedStances()) {
           if (stId.startsWith("basic_")) continue; // 排除基礎招式佔位
           var skOpt = templateReader.findSkill(stId);
@@ -279,7 +278,7 @@ public record DrpgStateDto(
       }
 
       List<PartyPassiveSkillDto> availablePassives = new ArrayList<>();
-      if (m.getLearnedStances() != null) {
+      if (m.getLearnedStances() != null && templateReader != null) {
         for (String stId : m.getLearnedStances()) {
           if (stId.startsWith("basic_")) continue; // 排除基礎招式佔位
           var skOpt = templateReader.findSkill(stId);
@@ -808,17 +807,17 @@ public record DrpgStateDto(
       String description
   ) {
     public static TacticsRuleViewDto of(com.example.htmlmud.domain.party.model.TacticsRule r, com.example.htmlmud.domain.party.model.PartyMember m) {
-      return of(r, m, new TemplateCatalog());
+      return of(r, m, m != null ? m.getTemplateReader() : null);
     }
 
     public static TacticsRuleViewDto of(com.example.htmlmud.domain.party.model.TacticsRule r,
         com.example.htmlmud.domain.party.model.PartyMember m, TemplateReader templateReader) {
       if (r == null) return null;
       String skillName = r.getSkillId();
-      var skOpt = templateReader.findSkill(r.getSkillId());
+      var skOpt = (templateReader != null && r.getSkillId() != null) ? templateReader.findSkill(r.getSkillId()) : java.util.Optional.<com.example.htmlmud.domain.model.template.SkillTemplate>empty();
       if (skOpt.isPresent()) {
         skillName = skOpt.get().getName();
-      } else if (m.getSkills() != null) {
+      } else if (m != null && m.getSkills() != null) {
         skillName = m.getSkills().stream()
             .filter(s -> s.getId().equalsIgnoreCase(r.getSkillId()))
             .map(com.example.htmlmud.domain.party.model.PartyMemberSkill::getName)

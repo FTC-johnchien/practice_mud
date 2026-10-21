@@ -18,7 +18,7 @@ class PartyFormationTest {
 
   @BeforeEach
   void setUp() {
-    partyService = new PartyService();
+    partyService = new PartyService(new com.example.htmlmud.domain.repository.TemplateCatalog());
     partyService.initDefaultFormations();
     party = partyService.createInitialParty("李長生");
   }

@@ -130,7 +130,7 @@ public class MultiWeaponAndStanceTest {
     // 4. BattleEnemy fromTemplate 正確攜帶 race
     var mobOpt = templateRepository.getMob("wild_rat");
     assertThat(mobOpt).isPresent();
-    BattleEnemy enemy = BattleEnemy.fromTemplate("e-1", mobOpt.get(), null, null);
+    BattleEnemy enemy = BattleEnemy.fromTemplate("e-1", mobOpt.get(), null, null, templateRepository);
     assertThat(enemy.getRace()).isEqualTo("rat");
   }
 

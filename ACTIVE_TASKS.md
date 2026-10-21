@@ -13,13 +13,13 @@
 
 ### 📋 微任務清單 (Micro-Tasks)
 
-- [ ] **Task 1 (F1-03-SERVICE): Spring 託管服務與命令的 TemplateReader 依賴注入加固**
+- [x] **Task 1 (F1-03-SERVICE): Spring 託管服務與命令的 TemplateReader 依賴注入加固**
   - 清理 `PartyCommand`, `CharacterSyncService`, `DrpgBattleService`, `DrpgEnemyTacticsService`, `DrpgRewardService`, `PartyService`, `DrpgTemplateAdapter`, `MudTemplateAdapter` 的 fallback 實例化。
-- [ ] **Task 2 (F1-03-DTO-ENTITY): 實體與模板類別靜態重載消除 new TemplateCatalog()**
+- [x] **Task 2 (F1-03-DTO-ENTITY): 實體與模板類別靜態重載消除 new TemplateCatalog()**
   - 清理 `BattleEnemy`, `PartyInventory`, `PartyMember`, `ShopTemplate`, `MessageFactory` 中的 fallback 實例化。
-- [ ] **Task 3 (F1-03-DRPG-STATE): DrpgStateDto 視圖構造全面對齊 TemplateReader 顯式傳遞**
-  - 清理 `DrpgStateDto` 中 7 處 `new TemplateCatalog()`。
-- [ ] **Task 4 (F1-03-GUARD-ZERO): 架構看門狗棘輪閥值歸零與全量回歸驗收**
+- [x] **Task 3 (F1-03-DRPG-STATE): DrpgStateDto 視圖構造全面對齊 TemplateReader 顯式傳遞**
+  - 清理 `DrpgStateDto` 中 7 處 `new TemplateCatalog()`，改為 `party.getTemplateReader()` 與顯式傳入。
+- [x] **Task 4 (F1-03-GUARD-ZERO): 架構看門狗棘輪閥值歸零與全量回歸驗收**
   - 將 `ArchitectureGuardrailsTest.java` 棘輪閾值由 26 降至 0。
   - 全專案 338+ 測試 100% 綠燈通過。
 

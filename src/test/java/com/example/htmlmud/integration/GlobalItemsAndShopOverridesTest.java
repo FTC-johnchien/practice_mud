@@ -186,14 +186,14 @@ public class GlobalItemsAndShopOverridesTest {
         .filter(g -> "bread".equalsIgnoreCase(g.id()))
         .findFirst().orElseThrow();
     assertThat(bread.getEffectiveStock()).isEqualTo(-1);
-    assertThat(bread.getEffectivePrice()).isEqualTo(2);
+    assertThat(bread.getEffectivePrice(templateRepository)).isEqualTo(2);
 
     // 驗證金創藥膏限量 10 盒
     ShopItemTemplate salve = innShop.goods().stream()
         .filter(g -> "salve".equalsIgnoreCase(g.id()))
         .findFirst().orElseThrow();
     assertThat(salve.getEffectiveStock()).isEqualTo(10);
-    assertThat(salve.getEffectivePrice()).isEqualTo(8);
+    assertThat(salve.getEffectivePrice(templateRepository)).isEqualTo(8);
 
     // 驗證鐵鎬商品載入、限量 5 把且關聯全域物品
     ShopItemTemplate pickaxe = innShop.goods().stream()
@@ -201,7 +201,7 @@ public class GlobalItemsAndShopOverridesTest {
         .findFirst().orElseThrow();
     assertThat(pickaxe.templateId()).isIn("miner_pickaxe", "newbie_village:miner_pickaxe");
     assertThat(pickaxe.getEffectiveStock()).isEqualTo(5);
-    assertThat(pickaxe.getEffectivePrice()).isEqualTo(25);
+    assertThat(pickaxe.getEffectivePrice(templateRepository)).isEqualTo(25);
     assertThat(templateRepository.getItem(pickaxe.templateId())).isPresent();
     assertThat(templateRepository.getItem(pickaxe.templateId()).get().name()).contains("鶴嘴鋤");
   }

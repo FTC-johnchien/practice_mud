@@ -82,7 +82,7 @@ class TaiyinTombDungeonTest {
   void testChestAndTrapMechanics() {
     DungeonManager dungeonManager = new DungeonManager();
     dungeonManager.init();
-    PartyService partyService = new PartyService();
+    PartyService partyService = new PartyService(new com.example.htmlmud.domain.repository.TemplateCatalog());
     partyService.initDefaultFormations();
 
     DungeonFloor floor = dungeonManager.getFloor("taiyin_tomb_b1f");

@@ -19,7 +19,7 @@ public class MudTemplateAdapter {
 
   @Autowired
   public MudTemplateAdapter(TemplateReader templateReader) {
-    this.templateReader = templateReader != null ? templateReader : new TemplateCatalog();
+    this.templateReader = templateReader;
   }
 
   public MudTemplateAdapter() {
@@ -27,11 +27,11 @@ public class MudTemplateAdapter {
   }
 
   public Optional<ItemTemplate> findItem(String itemId) {
-    return templateReader.findItem(itemId);
+    return templateReader != null ? templateReader.findItem(itemId) : Optional.empty();
   }
 
   public Optional<SkillTemplate> findSkill(String skillId) {
-    return templateReader.findSkill(skillId);
+    return templateReader != null ? templateReader.findSkill(skillId) : Optional.empty();
   }
 
   /**

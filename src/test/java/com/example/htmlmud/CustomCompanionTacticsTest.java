@@ -18,6 +18,7 @@ import com.example.htmlmud.application.command.impl.PartyCommand;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.repository.TemplateCatalog;
+import com.example.htmlmud.domain.repository.TemplateReader;
 import com.example.htmlmud.domain.dungeon.battle.BattleContext;
 import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
 import com.example.htmlmud.domain.dungeon.battle.DrpgBattleService;
@@ -53,12 +54,13 @@ class CustomCompanionTacticsTest {
     dungeonManager = new DungeonManager();
     dungeonManager.init();
 
-    partyService = new PartyService();
+    TemplateReader templateReader = new TemplateCatalog();
+    partyService = new PartyService(templateReader);
     partyService.initDefaultFormations();
 
-    battleService = new DrpgBattleService(partyService, dungeonManager, new DungeonNavigator());
+    battleService = new DrpgBattleService(partyService, dungeonManager, new DungeonNavigator(), templateReader);
     broadcastService = mock(GameStateBroadcastService.class);
-    partyCommand = new PartyCommand(partyService, dungeonManager, new DungeonNavigator(), battleService, broadcastService, new TemplateCatalog());
+    partyCommand = new PartyCommand(partyService, dungeonManager, new DungeonNavigator(), battleService, broadcastService, templateReader);
 
     dummyPlayer = mock(Player.class);
     when(dummyPlayer.getName()).thenReturn("tester");

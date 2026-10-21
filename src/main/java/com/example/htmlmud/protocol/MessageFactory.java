@@ -9,7 +9,6 @@ import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.service.HealthStatusUtil;
 import com.example.htmlmud.domain.repository.TemplateReader;
-import com.example.htmlmud.domain.repository.TemplateCatalog;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -63,13 +62,10 @@ public class MessageFactory {
    * 觀察Mob (Look Mob)
    */
   public static MudMessage<?> mobDetail(Mob mob) {
-    return mobDetail(mob, new TemplateCatalog());
+    return mobDetail(mob, null);
   }
 
   public static MudMessage<?> mobDetail(Mob mob, TemplateReader templateReader) {
-    if (templateReader == null) {
-      templateReader = new TemplateCatalog();
-    }
     log.info("mobDetail mobId:{}", mob.getTemplate().id());
     String noun = mob.getStats().getGender().getHe();
     String lookDesc = mob.getTemplate().lookDescription().replace("$N", noun);
@@ -82,9 +78,12 @@ public class MessageFactory {
         .getHealthStatus(mob.getStats().getHp(), mob.getStats().getMaxHp()).replace("$N", noun);
 
     // 取出裝備的 GameItem 的 name(alias)
-    List<String> itemNames = mob.getTemplate().equipment().values().stream()
-        .map(templateReader::findItem).flatMap(Optional::stream)
-        .map(item -> item.name() + "(" + item.aliases().get(0) + ")").toList();
+    List<String> itemNames = (templateReader != null && mob.getTemplate().equipment() != null)
+        ? mob.getTemplate().equipment().values().stream()
+            .map(templateReader::findItem).flatMap(Optional::stream)
+            .map(item -> item.name() + (item.aliases() != null && !item.aliases().isEmpty() ? "(" + item.aliases().get(0) + ")" : ""))
+            .toList()
+        : List.of();
 
     Map<String, Object> data =
         Map.of("id", mob.getTemplate().aliases().get(0), "name", mob.getName(), "gender",

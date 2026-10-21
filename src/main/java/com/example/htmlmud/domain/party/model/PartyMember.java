@@ -5,7 +5,6 @@ import java.util.Map;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.repository.TemplateReader;
-import com.example.htmlmud.domain.repository.TemplateCatalog;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
@@ -1012,13 +1011,14 @@ public class PartyMember implements Combatant {
     if (this.classId == null || this.classId.isBlank()) {
       return java.util.Optional.empty();
     }
-    return getTemplateReader().findClass(this.classId);
+    TemplateReader tr = getTemplateReader();
+    if (tr == null) {
+      return java.util.Optional.empty();
+    }
+    return tr.findClass(this.classId);
   }
 
-  private TemplateReader getTemplateReader() {
-    if (templateReader == null) {
-      templateReader = new TemplateCatalog();
-    }
+  public TemplateReader getTemplateReader() {
     return templateReader;
   }
 

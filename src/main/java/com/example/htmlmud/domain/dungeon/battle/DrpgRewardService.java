@@ -22,7 +22,6 @@ import com.example.htmlmud.domain.party.model.PartyItemSlot;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.repository.TemplateReader;
 import com.example.htmlmud.domain.actor.service.CharacterSyncService;
-import com.example.htmlmud.domain.repository.TemplateCatalog;
 import com.example.htmlmud.domain.progression.service.XpProgressionService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,12 +47,12 @@ public class DrpgRewardService {
       @Autowired(required = false) XpProgressionService xpProgressionService,
       @Autowired(required = false) CharacterSyncService characterSyncService,
       @Autowired(required = false) com.example.htmlmud.domain.factory.ItemFactory itemFactory) {
-    this.templateReader = templateReader != null ? templateReader : new TemplateCatalog();
+    this.templateReader = templateReader;
     this.dungeonManager = dungeonManager;
     this.eventPublisher = eventPublisher;
     this.xpProgressionService = xpProgressionService != null ? xpProgressionService : new XpProgressionService(this.templateReader);
     this.characterSyncService = characterSyncService != null ? characterSyncService : new CharacterSyncService();
-    this.itemFactory = itemFactory != null ? itemFactory : new com.example.htmlmud.domain.factory.ItemFactory(this.templateReader);
+    this.itemFactory = itemFactory != null ? itemFactory : (this.templateReader != null ? new com.example.htmlmud.domain.factory.ItemFactory(this.templateReader) : null);
   }
 
   public DrpgRewardService(TemplateReader templateReader, DungeonManager dungeonManager) {

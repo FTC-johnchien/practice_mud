@@ -111,7 +111,7 @@ public class MobRankAndClassificationTest {
     var songOpt = templateRepository.getMob("boss_song_tianheng");
     assertThat(songOpt).isPresent();
 
-    BattleEnemy bossEnemy = BattleEnemy.fromTemplate("enemy_song", songOpt.get(), RowPosition.FRONT, null);
+    BattleEnemy bossEnemy = BattleEnemy.fromTemplate("enemy_song", songOpt.get(), RowPosition.FRONT, null, templateRepository);
     assertThat(bossEnemy).isNotNull();
     assertThat(bossEnemy.getRank()).isEqualTo(MobRank.BOSS);
     assertThat(bossEnemy.isUnique()).isTrue();
@@ -120,7 +120,7 @@ public class MobRankAndClassificationTest {
     var ratOpt = templateRepository.getMob("wild_rat");
     assertThat(ratOpt).isPresent();
 
-    BattleEnemy ratEnemy = BattleEnemy.fromTemplate("enemy_rat", ratOpt.get(), RowPosition.FRONT, null);
+    BattleEnemy ratEnemy = BattleEnemy.fromTemplate("enemy_rat", ratOpt.get(), RowPosition.FRONT, null, templateRepository);
     assertThat(ratEnemy).isNotNull();
     assertThat(ratEnemy.getRank()).isEqualTo(MobRank.NORMAL);
     assertThat(ratEnemy.isUnique()).isFalse();

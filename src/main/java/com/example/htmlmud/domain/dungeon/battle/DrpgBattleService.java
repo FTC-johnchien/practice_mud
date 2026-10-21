@@ -34,7 +34,6 @@ import com.example.htmlmud.domain.party.model.RowPosition;
 import com.example.htmlmud.domain.party.service.PartyService;
 import com.example.htmlmud.domain.repository.TemplateReader;
 import com.example.htmlmud.domain.actor.service.CharacterSyncService;
-import com.example.htmlmud.domain.repository.TemplateCatalog;
 import com.example.htmlmud.domain.progression.service.XpProgressionService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -68,7 +67,7 @@ public class DrpgBattleService {
     this.partyService = partyService;
     this.dungeonManager = dungeonManager;
     this.dungeonNavigator = dungeonNavigator != null ? dungeonNavigator : new DungeonNavigator();
-    this.templateReader = templateReader != null ? templateReader : new TemplateCatalog();
+    this.templateReader = java.util.Objects.requireNonNull(templateReader, "templateReader must not be null");
     this.tacticsService = tacticsService != null ? tacticsService : new DrpgEnemyTacticsService(this.templateReader);
     this.rewardService = rewardService != null ? rewardService : new DrpgRewardService(this.templateReader, this.dungeonManager);
     this.combatLoop = combatLoop != null ? combatLoop : new DrpgCombatLoop(this.tacticsService, this.rewardService);
@@ -87,13 +86,9 @@ public class DrpgBattleService {
     this(partyService, dungeonManager, dungeonNavigator, templateReader, null, null, null, null);
   }
 
-  public DrpgBattleService(PartyService partyService, DungeonManager dungeonManager) {
-    this(partyService, dungeonManager, new DungeonNavigator(), new TemplateCatalog());
-  }
-
   public DrpgBattleService(PartyService partyService, DungeonManager dungeonManager,
-      DungeonNavigator dungeonNavigator) {
-    this(partyService, dungeonManager, dungeonNavigator, new TemplateCatalog());
+      TemplateReader templateReader) {
+    this(partyService, dungeonManager, new DungeonNavigator(), templateReader);
   }
 
   public void setStateBroadcaster(Consumer<Player> stateBroadcaster) {

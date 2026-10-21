@@ -47,10 +47,10 @@ class ArchitectureGuardrailsTest {
           });
     }
 
-    // 歷史基線已自 35 -> 33 處收斂至 26 處，後續 Phase 1/2 清理時逐步縮小此閾值直至歸零
+    // F1-03 看門狗棘輪全面清零：歷史殘留的 26 處 new TemplateCatalog() 靜默 fallback 已全數消除完畢，嚴格清零守護
     assertThat(violations.size())
-        .as("禁止新增 new TemplateCatalog() 靜默 fallback，發現新增呼叫：\n" + String.join("\n", violations))
-        .isLessThanOrEqualTo(26);
+        .as("禁止任何 new TemplateCatalog() 靜默 fallback，發現違規呼叫：\n" + String.join("\n", violations))
+        .isLessThanOrEqualTo(0);
   }
 
   @Test

@@ -41,11 +41,12 @@ class DrpgBattleDecompositionTest {
     dungeonManager = new DungeonManager();
     dungeonManager.init();
 
-    partyService = new PartyService();
+    TemplateCatalog templateCatalog = new TemplateCatalog();
+    partyService = new PartyService(templateCatalog);
     partyService.initDefaultFormations();
 
-    tacticsService = new DrpgEnemyTacticsService(new TemplateCatalog());
-    rewardService = new DrpgRewardService(new TemplateCatalog(), dungeonManager);
+    tacticsService = new DrpgEnemyTacticsService(templateCatalog);
+    rewardService = new DrpgRewardService(templateCatalog, dungeonManager);
     combatLoop = new DrpgCombatLoop(tacticsService, rewardService);
 
     battleService = new DrpgBattleService(

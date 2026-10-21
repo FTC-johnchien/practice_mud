@@ -8,7 +8,30 @@
 
 ## 📌 最新里程碑 (Latest Releases)
 
-### [2026-10-15] 文件體系與現代遊戲規劃審查建議
+### [2026-10-21] Milestone F1-03：看門狗棘輪全面清零，消除 26 處 `new TemplateCatalog()` 靜默 fallback
+- **架構看門狗棘輪全面歸零 (`ArchitectureGuardrailsTest`)**：
+  - `ArchitectureGuardrailsTest.java` 中的 `new TemplateCatalog()` 違規檢測閾值正式由 26 降為 0 (`.isLessThanOrEqualTo(0)`)，達成專案代碼庫中零靜默 Fallback 歷史性突破。
+- **Spring 核心託管服務與命令注入加固 (Task 1)**：
+  - 重構 `PartyCommand`, `CharacterSyncService`, `DrpgBattleService`, `DrpgEnemyTacticsService`, `DrpgRewardService`, `PartyService`, `DrpgTemplateAdapter`, `MudTemplateAdapter`，徹底移除無參或 fallback 建構邏輯，強制落實 `TemplateReader` 顯式依賴注入。
+- **實體、模板與視圖模型解耦 (Task 2 & Task 3)**：
+  - `BattleEnemy.java`：移除無 `TemplateReader` 的 4 參數過載，消除內部私建目錄。
+  - `PartyInventory.java`：消除 `createFromTemplate` 與 `getTemplateReader` 中的目錄實例化，改以 `party.getTemplateReader()` 與安全 fallback 處理。
+  - `PartyMember.java`：`getTemplateReader()` 回歸純屬性讀取，`getClassTemplate()` 與被動心法全面導入空防禦。
+  - `ShopTemplate.java`：移除 3 處無參 `getEffective*` 方法，全面依賴 `templateReader` 顯式傳入。
+  - `MessageFactory.java`：`mobDetail` 徹底移除 fallback 目錄實例化，引入安全流式投影防禦。
+  - `DrpgStateDto.java`：7 處 `new TemplateCatalog()` 全數替換為 `party.getTemplateReader()` 與顯式傳遞，並加固套路/心法流式映射防禦。
+- **測試體系與全量回歸驗證 (Task 4)**：
+  - 更新 10+ 個單元/整合測試顯式傳入 `templateRepository`/`templateReader`。
+  - 全專案 338 項測試 100% 綠燈全數通過。
+
+### [2026-10-21] Milestone F1-02：後端領域層 Service 包結構按業務模組收斂
+- **後端領域層模組化重構**：
+  - 修為與境界服務收斂至 `domain.progression.service` (`XpProgressionService`, `XpService`)。
+  - 核心戰鬥引擎服務收斂至 `domain.combat.service` (`CombatService`, `SkillService`, `SkillCostService`, `BodyPartSelector`, `TargetSelector`, `perform/*`)。
+  - 生靈主體與角色服務收斂至 `domain.actor.service` (`PlayerService`, `MobService`, `LivingService`, `LivingStateService`, `CharacterSyncService`)。
+  - 範本目錄與適配器收斂至 `domain.repository` (`TemplateCatalog`, `DrpgTemplateAdapter`, `MudTemplateAdapter`)。
+  - 同步更新架構圖譜 `ARCHITECTURE.md`，338 項測試全綠通過。
+
 - **建立文件審查報告 (`Copilot_Review.md`)**：
   - 審查 `docs/` 現有 Markdown 文件及指定的 `ACTIVE_TASKS.md`、`ARCHITECTURE.md`、`UI_PAGE_STRUCTURE.md`。
   - 彙整權威來源、規格狀態、交叉一致性、可驗收遊戲規劃、可擴充性及文件自動檢查建議；本報告屬候選建議，不代表設計已核准。

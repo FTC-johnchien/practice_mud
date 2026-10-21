@@ -1069,8 +1069,12 @@ flowchart TD
   - `domain.progression`：`XpProgressionService`、`SkillBridgeService`
   - `domain.economy`：`ShopCommand`、`InventoryService`
 
-#### 3. F1-03：看門狗棘輪清零 (26 處 fallback 歸零)
-- 將 `ArchitectureGuardrailsTest` 中目前尚存的 26 處 `new TemplateCatalog()` 靜默 fallback 透過 Spring Bean 建構子必填注入徹底收斂至 0，全面消除反射性潛在缺陷。
+#### 3. ✅ [已完成] F1-03：看門狗棘輪清零 (26 處 fallback 歸零)
+- **落地進度**：已於 2026-10-21 完成。
+  1. 徹底消除全專案 `src/main/java` 中歷史殘留的 26 處 `new TemplateCatalog()` 靜默 fallback。
+  2. 核心服務 (`PartyCommand`, `CharacterSyncService`, `DrpgBattleService`, `DrpgEnemyTacticsService`, `DrpgRewardService`, `PartyService`, `DrpgTemplateAdapter`, `MudTemplateAdapter`) 全面落實 `TemplateReader` 顯式建構子注入。
+  3. 實體與視圖模型 (`BattleEnemy`, `PartyInventory`, `PartyMember`, `ShopTemplate`, `MessageFactory`, `DrpgStateDto`) 全面改為 `party.getTemplateReader()` 或傳入參數，消除隱式目錄實例化。
+  4. `ArchitectureGuardrailsTest.java` 棘輪閾值由 26 降為 0，實現架構零破窗與 338 項測試 100% 綠燈通過。
 
 #### 4. F1-04：前端歷史樣式巨石 `style.css` (122 KB) 安全除役
 - 驗證 `index.html` 與各視圖完全運行於 `style-01` ~ `style-07` 七層樣式串流，安全封存並刪除 122 KB 死代碼巨石。

@@ -11,7 +11,6 @@ import com.example.htmlmud.domain.model.enums.MobRank;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.domain.model.template.MobTemplate;
 import com.example.htmlmud.domain.repository.TemplateReader;
-import com.example.htmlmud.domain.repository.TemplateCatalog;
 import com.example.htmlmud.domain.party.model.RowPosition;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -341,10 +340,6 @@ public class BattleEnemy implements Combatant, Buffable {
       dropItemIds.add(dropItemId);
     }
     return dropItemIds;
-  }
-
-  public static BattleEnemy fromTemplate(String id, MobTemplate tpl, RowPosition row, String dropId) {
-    return fromTemplate(id, tpl, row, dropId, new TemplateCatalog());
   }
 
   @Builder.Default

@@ -7,7 +7,6 @@ import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.domain.model.template.ItemTemplate;
 import com.example.htmlmud.domain.repository.TemplateReader;
-import com.example.htmlmud.domain.repository.TemplateCatalog;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
@@ -137,25 +136,22 @@ public class PartyInventory {
   }
 
   public static PartyItemSlot createFromTemplate(String templateId, int count) {
-    return createFromTemplate(templateId, count, new TemplateCatalog());
+    return createFromTemplate(templateId, count, null);
   }
 
   public static PartyItemSlot createFromTemplate(String templateId, int count,
       TemplateReader templateReader) {
     String slotId = "slot-" + UUID.randomUUID().toString().substring(0, 8);
-    var opt = templateReader.findItem(templateId);
-
-    if (opt.isPresent()) {
-      return PartyItemSlot.fromItemTemplate(opt.get(), count, slotId);
+    if (templateReader != null) {
+      var opt = templateReader.findItem(templateId);
+      if (opt.isPresent()) {
+        return PartyItemSlot.fromItemTemplate(opt.get(), count, slotId);
+      }
     }
-
     return PartyItemSlot.createFallback(templateId, count);
   }
 
   public TemplateReader getTemplateReader() {
-    if (templateReader == null) {
-      templateReader = new TemplateCatalog();
-    }
     return templateReader;
   }
 }

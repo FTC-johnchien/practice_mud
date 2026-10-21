@@ -20,7 +20,6 @@ import com.example.htmlmud.domain.party.model.TacticsRule;
 import com.example.htmlmud.domain.party.model.TacticsTarget;
 import com.example.htmlmud.domain.party.service.PartyService;
 import com.example.htmlmud.domain.repository.TemplateReader;
-import com.example.htmlmud.domain.repository.TemplateCatalog;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -48,7 +47,7 @@ public class PartyCommand implements PlayerCommand {
     this.dungeonNavigator = dungeonNavigator;
     this.battleService = battleService;
     this.broadcastService = broadcastService;
-    this.templateReader = templateReader != null ? templateReader : new TemplateCatalog();
+    this.templateReader = java.util.Objects.requireNonNull(templateReader, "templateReader must not be null");
     this.xpProgressionService = xpProgressionService != null ? xpProgressionService : new com.example.htmlmud.domain.progression.service.XpProgressionService(this.templateReader);
   }
 

@@ -8,7 +8,6 @@ import com.example.htmlmud.domain.dungeon.battle.BattleParticipantSnapshot;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.repository.TemplateReader;
-import com.example.htmlmud.domain.repository.TemplateCatalog;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -96,7 +95,7 @@ public class CharacterSyncService {
 
     // 技能大一統同步 (SP-06 / SP-07)：直接將 Player 的 UnifiedSkill 同步至 PartyMember 隊長
     if (player.getLearnedSkills() != null && !player.getLearnedSkills().isEmpty()) {
-      var reader = this.templateReader != null ? this.templateReader : new TemplateCatalog();
+      var reader = this.templateReader;
       for (var entry : player.getLearnedSkills().values()) {
         if (entry != null && entry.getSkillId() != null) {
           boolean updated = false;

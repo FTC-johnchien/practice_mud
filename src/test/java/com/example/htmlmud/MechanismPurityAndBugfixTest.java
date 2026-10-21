@@ -137,7 +137,7 @@ public class MechanismPurityAndBugfixTest {
     assertThat(dollTpl.poise()).isEqualTo(25);
     assertThat(dollTpl.resistances()).containsEntry("DARK", 0.3).containsEntry("FIRE", -0.25);
 
-    BattleEnemy enemy = BattleEnemy.fromTemplate("e-1", dollTpl, com.example.htmlmud.domain.party.model.RowPosition.FRONT, null);
+    BattleEnemy enemy = BattleEnemy.fromTemplate("e-1", dollTpl, com.example.htmlmud.domain.party.model.RowPosition.FRONT, null, templateReader);
     assertThat(enemy.getPoise()).isEqualTo(25);
     assertThat(enemy.getMaxPoise()).isEqualTo(25);
     assertThat(enemy.getResistance(DamageType.DARK)).isEqualTo(0.3);
