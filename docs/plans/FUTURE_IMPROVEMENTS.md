@@ -1076,8 +1076,11 @@ flowchart TD
   3. 實體與視圖模型 (`BattleEnemy`, `PartyInventory`, `PartyMember`, `ShopTemplate`, `MessageFactory`, `DrpgStateDto`) 全面改為 `party.getTemplateReader()` 或傳入參數，消除隱式目錄實例化。
   4. `ArchitectureGuardrailsTest.java` 棘輪閾值由 26 降為 0，實現架構零破窗與 338 項測試 100% 綠燈通過。
 
-#### 4. F1-04：前端歷史樣式巨石 `style.css` (122 KB) 安全除役
-- 驗證 `index.html` 與各視圖完全運行於 `style-01` ~ `style-07` 七層樣式串流，安全封存並刪除 122 KB 死代碼巨石。
+#### 4. ✅ [已完成] F1-04：前端歷史樣式巨石 `style.css` (122 KB) 安全除役
+- **落地進度**：已於 2026-10-21 完成。
+  1. 驗證主遊戲 `index.html` 100% 運行於 `style-01` ~ `style-07` 七層樣式流。
+  2. 將存檔備份頁面 `singleplayer_v1.html` 的 CSS 引用升級為模組化七層樣式。
+  3. 物理安全刪除 122 KB 之死代碼巨石 `static/css/style.css`，手冊與架構指標全數同步。
 
 #### 5. F1-05：地牢生存火把明滅與步進機關陷阱 (Dungeon Torch & Step Traps, P1)
 - **機制設計**：

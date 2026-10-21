@@ -344,7 +344,7 @@ export const UiUtils = {
 | **裝備槽位判定** | `party-equipment-tab.js` 曾包含中文關鍵字推測 | 🟢 已整治 | 2026-10-15 已徹底拔除 `name.includes(...)`，全面回歸 `equipSlot` 資料驅動。 | §21.2 |
 | **地塊懸停提示** | `dungeon-panel.js` 寫死「青岡石壁/古仙棺槨」 | 🟠 中危 | 墨竹礦坑等地貌顯示太陰地貌名稱，需改由地牢 JSON `legend` 動態讀取。 | §21.3 |
 | **頂底模組未獨立** | `header-panel.js` / `footer-bar.js` 未獨立成檔 | 🟡 輕微 | 頂部導航與底部操作列代碼目前內嵌於 `app.js` 與 `index.html`，待抽離為獨立視圖。 | UI-4 |
-| **歷史備份檔案殘存** | `css/style.css` (122 KB) 與 `static/legacy/` 未除役 | 🟡 輕微 | `index.html` 已改讀模組化 CSS，舊巨石檔案屬於冗餘備份，需擇期清理。 | §21.5 |
+| **歷史備份檔案殘存** | `css/style.css` (122 KB) 已徹底除役 | 🟢 已整治 | `index.html` 100% 運行於七層樣式串流，舊巨石檔案已物理刪除，legacy 檔案已重新對齊。 | §21.5 / F1-04 |
 | **共用核心掛載** | `mud-core.js` 與 `mud-ui.js` 仍以全域 script 載入 | 🟡 輕微 | 未完全轉型為 ES6 module import，全域暴露 `window.send`。 | §10.3 |
 
 ---

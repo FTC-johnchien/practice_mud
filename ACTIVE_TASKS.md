@@ -6,26 +6,41 @@
 
 ---
 
-## 📌 當前焦點里程碑：Milestone F1-03 — 看門狗棘輪全面清零，消除 26 處 new TemplateCatalog() 靜默 fallback
+## 📌 當前焦點里程碑：Milestone F1-05 — 地牢生存火把明滅與步進機關陷阱 (Dungeon Torch & Step Traps, P1)
 
-- **長遠藍圖**：[`FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) 第 22 章《戰線一：核心雙軌大一統與領域潔淨治理 (F1-03)》
-- **核心目標**：全面掃除 `src/main/java` 中歷史殘留的 26 處 `new TemplateCatalog()` 靜默 fallback，徹底落實 Spring 建構子依賴注入與不可變參數傳遞，將 `ArchitectureGuardrailsTest` 看門狗棘輪閾值降為 0，實現架構零破窗。
+- **長遠藍圖**：[`FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) 第 22 章《戰線一：核心雙軌大一統與領域潔淨治理 (F1-05)》
+- **核心目標**：實裝火把光明度（Torch Light 0~100）步進衰減與照度等級（BRIGHT/DIM/DARKNESS），視距動態明滅，絕對黑暗扣 SAN 與突襲；多元化地牢地塊機關（暗弩陷阱、靈泉地窟、鎖鏈暗門）與先鋒屬性檢定，賦予單人地牢每一步前進的資源管理緊張感。
 
 ### 📋 微任務清單 (Micro-Tasks)
 
-- [x] **Task 1 (F1-03-SERVICE): Spring 託管服務與命令的 TemplateReader 依賴注入加固**
-  - 清理 `PartyCommand`, `CharacterSyncService`, `DrpgBattleService`, `DrpgEnemyTacticsService`, `DrpgRewardService`, `PartyService`, `DrpgTemplateAdapter`, `MudTemplateAdapter` 的 fallback 實例化。
-- [x] **Task 2 (F1-03-DTO-ENTITY): 實體與模板類別靜態重載消除 new TemplateCatalog()**
-  - 清理 `BattleEnemy`, `PartyInventory`, `PartyMember`, `ShopTemplate`, `MessageFactory` 中的 fallback 實例化。
-- [x] **Task 3 (F1-03-DRPG-STATE): DrpgStateDto 視圖構造全面對齊 TemplateReader 顯式傳遞**
-  - 清理 `DrpgStateDto` 中 7 處 `new TemplateCatalog()`，改為 `party.getTemplateReader()` 與顯式傳入。
-- [x] **Task 4 (F1-03-GUARD-ZERO): 架構看門狗棘輪閥值歸零與全量回歸驗收**
-  - 將 `ArchitectureGuardrailsTest.java` 棘輪閾值由 26 降至 0。
-  - 全專案 338+ 測試 100% 綠燈通過。
+- [ ] **Task 1 (F1-05-TORCH-CORE): 地牢火把光明度核心模型與步進消耗機制**
+  - `DungeonPosition` 新增 `torchLight` (0~100) 與 `torchStatus` (BRIGHT, DIM, DARKNESS)。
+  - 步進位移自動衰減火把；DIM 遇敵危險加速；DARKNESS 每步扣減全隊 5 點 SAN 與突襲檢定。
+  - `DungeonCommand` 實裝 `dungeon light` / `dungeon torch` 使用火把物資補光。
+- [ ] **Task 2 (F1-05-VISION-RAYCAST): 光明度動態視距與 DRPG 視圖狀態傳輸**
+  - `DungeonNavigator.inspectForward` 與前方偵測依照度動態縮減視距 (3步 -> 2步 -> 1步)。
+  - `DungeonViewDto` 與 `DrpgStateDto` 擴充 `torchLight`、`torchStatus` 欄位供前端接收。
+- [ ] **Task 3 (F1-05-TRAP-SPRING): 地牢多元機關陷阱與先鋒屬性檢定**
+  - 擴充暗弩陷阱（先鋒身法/防禦檢定免傷）、靈泉地窟（氣血/真元/SAN 滋養泉水）、鎖鏈暗門（消耗工具或強行破拆）。
+  - `DungeonCommand.handleTileEvent` 完善對應機關觸發邏輯。
+- [ ] **Task 4 (F1-05-FE-RADAR & VERIFY): 前端雷達照度介面與全量整合驗證**
+  - 前端 `dungeon-panel.js` 渲染火把狀態與照度指示條。
+  - 編寫專屬整合測試 `DungeonTorchAndTrapTest`，全量 338+ 測試 100% 綠燈通過。
 
 ---
 
 ## 🏆 已完成里程碑 (Completed Milestones)
+
+- [x] **Milestone F1-04 — 前端歷史樣式巨石 `style.css` (122 KB) 安全除役**
+  - 物理安全刪除 122 KB 之 `static/css/style.css`，全系統 100% 運行於 `style-01` ~ `style-07` 七層樣式流。
+  - 存檔歷史頁面 `singleplayer_v1.html` 同步對齊為引用七層樣式流。
+  - 同步更新前端技術手冊 `前端_FE6` 與 `UI_PAGE_STRUCTURE.md`，全專案 338 項測試全綠通過。
+
+- [x] **Milestone F1-03 — 看門狗棘輪全面清零，消除 26 處 new TemplateCatalog() 靜默 fallback**
+  - 核心服務強制落實 TemplateReader 建構子依賴注入 (PartyService, DrpgBattleService 等)。
+  - 實體與視圖模型消除內部私建目錄反模式 (BattleEnemy, PartyInventory, DrpgStateDto)。
+  - 架構看門狗 ArchitectureGuardrailsTest 違規閾值由 26 降為 0，實現架構零破窗。
+  - 全專案 338 項測試 100% 綠燈通過。
 
 - [x] **Milestone 3 — 後端領域層 Package 結構按業務模組收斂 (F1-02)**
   - Task 1 (F1-02-PROGRESSION): 修為與境界服務收斂至 `domain.progression.service`。

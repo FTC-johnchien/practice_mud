@@ -8,6 +8,12 @@
 
 ## 📌 最新里程碑 (Latest Releases)
 
+### [2026-10-21] Milestone F1-04：前端歷史樣式巨石 `style.css` (122 KB) 安全除役
+- **歷史樣式巨石物理移除**：
+  - 物理刪除根目錄 122 KB 巨石樣式 `static/css/style.css`，全系統 100% 運行於 `style-01` ~ `style-07` 七層樣式串流。
+  - 存檔歷史頁面 `singleplayer_v1.html` 同步對齊為引用七層樣式流。
+  - 同步更新前端技術手冊 `前端_FE6` 與 `UI_PAGE_STRUCTURE.md`，全專案 338 項測試全綠通過。
+
 ### [2026-10-21] Milestone F1-03：看門狗棘輪全面清零，消除 26 處 `new TemplateCatalog()` 靜默 fallback
 - **架構看門狗棘輪全面歸零 (`ArchitectureGuardrailsTest`)**：
   - `ArchitectureGuardrailsTest.java` 中的 `new TemplateCatalog()` 違規檢測閾值正式由 26 降為 0 (`.isLessThanOrEqualTo(0)`)，達成專案代碼庫中零靜默 Fallback 歷史性突破。
