@@ -29,9 +29,10 @@
   - 重構 `Party.useItemOnMember` 中 `LEARN_SKILL`：自 `TemplateReader` 動態反查技能範本數值，消滅 `cooldownMs(6000)` 與 `damageMultiplier(1.8)` 寫死數值。
   - 重構 `PartyService` 夥伴招募失敗提示：自 `templateReader.getAllCompanions()` 動態產出可用夥伴清單。
   - 擴充 `DataCoreIntegrityTest` 測試驗證，全專案 337 項測試維持 100% 綠燈。
-- [ ] **Task 4 (DATA-GUARD-03): 前端地塊動態 Tooltip 與看門狗棘輪加固**
+- [x] **Task 4 (DATA-GUARD-03): 前端地塊動態 Tooltip 與看門狗棘輪加固**
   - `dungeon-panel.js` 懸停 title 優先讀取 DTO 地塊動態名稱，消除「玄岩石壁」寫死符號推論。
-  - 清理 `Player.java` 與 `Living.java` 中的 `GameConfig.getInstance()`，收緊 `ArchitectureGuardrailsTest` 棘輪閾值。
+  - 清理 `Player.java` 與 `Living.java` 中的 `GameConfig.getInstance()`，收緊 `ArchitectureGuardrailsTest` 棘輪閾值至 3。
+  - 全專案 338 項測試維持 100% 綠燈。
 
 ---
 

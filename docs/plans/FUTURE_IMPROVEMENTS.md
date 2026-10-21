@@ -1518,7 +1518,7 @@ flowchart TD
 | **SP-PURITY-01** | 房間廣播通道收斂為單機通知，刪除 `@Deprecated` 多玩家方法與死代碼，對齊測試指標 | **P1** | `Room`, `RoomService`, `WorldManager` | **已完成 (331 測試全綠 ✅)** |
 | **DATA-CORE-01** | 客棧安全區改為 `RoomFlag.SAFE_ZONE`，全域出生點與地牢撤離統一 `GameConfig` 驅動 | **P1** | `RestCommand`, `SaveGameService`, `DungeonCommand` | **已完成 (335 測試全綠 ✅)** |
 | **DATA-CORE-02** | 商店掌櫃動態稱謂與台詞，道核領悟反查技能範本，夥伴招募提示動態產出 | **P1** | `ShopCommand`, `Party`, `PartyService` | **已完成 (337 測試全綠 ✅)** |
-| **DATA-GUARD-03** | 前端地塊動態 Tooltip 支援，清理 `GameConfig.getInstance()`，收緊看門狗棘輪 | **P1** | `dungeon-panel.js`, `Living`, `Player`, `Guardrails` | 待執行 |
+| **DATA-GUARD-03** | 前端地塊動態 Tooltip 支援，清理 `GameConfig.getInstance()`，收緊看門狗棘輪 | **P1** | `dungeon-panel.js`, `Living`, `Player`, `Guardrails` | **已完成 (338 測試全綠 ✅)** |
 
 
 

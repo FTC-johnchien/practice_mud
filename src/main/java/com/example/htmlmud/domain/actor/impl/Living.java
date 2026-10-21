@@ -424,7 +424,10 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> implement
     }
 
     // 赤手空拳 (由 GameConfig 驅動)
-    return GameConfig.getInstance().getCombat().getUnarmedAttackSpeedMs();
+    if (livingService != null && livingService.getGameConfig() != null && livingService.getGameConfig().getCombat() != null) {
+      return livingService.getGameConfig().getCombat().getUnarmedAttackSpeedMs();
+    }
+    return 1000L;
   }
 
   public int getAttacksPerRound() {

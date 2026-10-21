@@ -42,6 +42,7 @@ public record DrpgStateDto(
       int w = floor.getWidth();
       int h = floor.getHeight();
       String[][] tileSymbols = new String[h][w];
+      String[][] tileNames = new String[h][w];
       boolean[][] visited = new boolean[h][w];
 
       boolean[][] openedChests = new boolean[h][w];
@@ -53,8 +54,12 @@ public record DrpgStateDto(
           openedChests[y][x] = isOpened;
           if (tile != null && tile.getType() == DungeonTile.TileType.TREASURE && isOpened) {
             tileSymbols[y][x] = "◇";
+            tileNames[y][x] = "已開啟的古修遺骸";
           } else {
             tileSymbols[y][x] = tile != null ? tile.getType().getSymbol() : "#";
+            tileNames[y][x] = (tile != null && tile.getName() != null && !tile.getName().isBlank())
+                ? tile.getName()
+                : (tile != null ? tile.getType().getDefaultName() : "未知玄岩");
           }
           visited[y][x] = pos.isVisited(x, y);
         }
@@ -74,7 +79,8 @@ public record DrpgStateDto(
           forwardInspection != null ? forwardInspection : "",
           pos.getDangerLevel(),
           pos.getDangerStatus(),
-          openedChests
+          openedChests,
+          tileNames
       );
     }
 
@@ -530,8 +536,28 @@ public record DrpgStateDto(
       String forwardInspection,
       int dangerLevel,
       String dangerStatus,
-      boolean[][] openedChests
-  ) {}
+      boolean[][] openedChests,
+      String[][] tileNames
+  ) {
+    public DungeonViewDto(
+        String floorId,
+        String floorName,
+        int x,
+        int y,
+        String direction,
+        String directionArrow,
+        int width,
+        int height,
+        String[][] tiles,
+        boolean[][] visited,
+        String forwardInspection,
+        int dangerLevel,
+        String dangerStatus,
+        boolean[][] openedChests
+    ) {
+      this(floorId, floorName, x, y, direction, directionArrow, width, height, tiles, visited, forwardInspection, dangerLevel, dangerStatus, openedChests, null);
+    }
+  }
 
   public record PartyItemSlotViewDto(
       String slotId,

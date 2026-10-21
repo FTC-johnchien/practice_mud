@@ -155,6 +155,27 @@ class DataCoreIntegrityTest {
     assertThat(learned.getCooldownMs()).isEqualTo(15000L);
   }
 
+  @Test
+  @DisplayName("DATA-GUARD-03: DRPG 地牢視圖狀態包含動態地塊名稱陣列 tileNames")
+  void testDungeonStateDtoContainsDynamicTileNames() {
+    com.example.htmlmud.domain.dungeon.service.DungeonManager dungeonManager =
+        new com.example.htmlmud.domain.dungeon.service.DungeonManager();
+    dungeonManager.init();
+
+    com.example.htmlmud.domain.dungeon.model.DungeonFloor floor = dungeonManager.getFloor("taiyin_tomb_b1f");
+    assertThat(floor).isNotNull();
+
+    com.example.htmlmud.domain.dungeon.model.DungeonPosition pos =
+        new com.example.htmlmud.domain.dungeon.model.DungeonPosition(floor.getId(), 1, 1, com.example.htmlmud.domain.dungeon.model.Direction.NORTH, 10, 10);
+
+    var dto = com.example.htmlmud.domain.dungeon.dto.DrpgStateDto.of(floor, pos, "前方視野", null);
+    assertThat(dto.dungeon()).isNotNull();
+    assertThat(dto.dungeon().tileNames()).isNotNull();
+    assertThat(dto.dungeon().tileNames().length).isEqualTo(10);
+    assertThat(dto.dungeon().tileNames()[0].length).isEqualTo(10);
+    assertThat(dto.dungeon().tileNames()[0][0]).isNotBlank();
+  }
+
   @org.junit.jupiter.api.AfterEach
   void tearDown() {
     partyService.clearCache();

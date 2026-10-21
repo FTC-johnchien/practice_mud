@@ -66,7 +66,9 @@ public final class Player extends Living {
     if (classId != null && !classId.isBlank()) {
       return classId;
     }
-    String cfgClass = com.example.htmlmud.config.GameConfig.getInstance().getDefaults().getPlayer().getDefaultClassId();
+    String cfgClass = (service != null && service.getGameConfig() != null && service.getGameConfig().getDefaults() != null && service.getGameConfig().getDefaults().getPlayer() != null)
+        ? service.getGameConfig().getDefaults().getPlayer().getDefaultClassId()
+        : null;
     return (cfgClass != null && !cfgClass.isBlank()) ? cfgClass : "SWORDSMAN";
   }
 
@@ -127,7 +129,9 @@ public final class Player extends Living {
     String pid = (playerId != null && !playerId.isBlank() && !playerId.equals("p-single"))
         ? playerId
         : name;
-    var playerDefaults = GameConfig.getInstance().getDefaults().getPlayer();
+    var playerDefaults = (playerService != null && playerService.getGameConfig() != null && playerService.getGameConfig().getDefaults() != null && playerService.getGameConfig().getDefaults().getPlayer() != null)
+        ? playerService.getGameConfig().getDefaults().getPlayer()
+        : new com.example.htmlmud.config.GameConfig.PlayerDefaults();
     LivingStats stats = new LivingStats();
     stats.setHp(playerDefaults.getInitialHp());
     stats.setMaxHp(playerDefaults.getInitialHp());
@@ -349,7 +353,10 @@ public final class Player extends Living {
    * @param duration 如果是 0，則使用預設值
    */
   public void triggerGcd(int duration) {
-    int actualDuration = (duration > 0) ? duration : GameConfig.getInstance().getCombat().getDefaultGcdMs();
+    int defaultGcd = (service != null && service.getGameConfig() != null && service.getGameConfig().getCombat() != null)
+        ? service.getGameConfig().getCombat().getDefaultGcdMs()
+        : 1200;
+    int actualDuration = (duration > 0) ? duration : defaultGcd;
     this.gcdEndTimestamp = System.currentTimeMillis() + actualDuration;
   }
 

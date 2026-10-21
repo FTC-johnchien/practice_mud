@@ -60,51 +60,53 @@ export function updateRadarModeBtn() {
 }
 
 /**
- * 輔助方法：依符號取得地塊樣式與圖標
+ * 輔助方法：依符號取得地塊樣式與圖標 (優先使用 DTO 傳遞之動態名稱)
  */
-export function populateTileAppearance(cell, symbol, gx, gy) {
+export function populateTileAppearance(cell, symbol, gx, gy, customName = null) {
+  const coordSuffix = `(${gx}, ${gy})`;
   switch (symbol) {
     case '#':
       cell.classList.add('cell-wall');
       cell.innerText = '█';
-      cell.title = `玄岩石壁 (${gx}, ${gy})`;
+      cell.title = customName ? `${customName} ${coordSuffix}` : `玄岩石壁 ${coordSuffix}`;
       break;
     case '+':
       cell.classList.add('cell-door');
       cell.innerText = '☩';
-      cell.title = `石門 (${gx}, ${gy})`;
+      cell.title = customName ? `${customName} ${coordSuffix}` : `石門 ${coordSuffix}`;
       break;
     case '$':
     case '◆':
       cell.classList.add('cell-chest');
       cell.innerText = '◆';
-      cell.title = `密封寶箱 (${gx}, ${gy})`;
+      cell.title = customName ? `${customName} ${coordSuffix}` : `密封寶箱 ${coordSuffix}`;
       break;
     case '◇':
       cell.classList.add('cell-chest-opened');
       cell.innerText = '◇';
-      cell.title = `已開啟寶箱 (${gx}, ${gy})`;
+      cell.title = customName ? `${customName} ${coordSuffix}` : `已開啟寶箱 ${coordSuffix}`;
       break;
     case '^':
+    case '~':
       cell.classList.add('cell-trap');
       cell.innerText = '▲';
-      cell.title = `機關陷阱 (${gx}, ${gy})`;
+      cell.title = customName ? `${customName} ${coordSuffix}` : `機關陷阱 ${coordSuffix}`;
       break;
     case '>':
       cell.classList.add('cell-stairs');
       cell.innerText = '▼';
-      cell.title = `向下階梯 (${gx}, ${gy})`;
+      cell.title = customName ? `${customName} ${coordSuffix}` : `向下階梯 ${coordSuffix}`;
       break;
     case '<':
       cell.classList.add('cell-stairs-up');
       cell.innerText = '▲';
-      cell.title = `向上階梯/出口 (${gx}, ${gy})`;
+      cell.title = customName ? `${customName} ${coordSuffix}` : `向上階梯/出口 ${coordSuffix}`;
       break;
     case '.':
     default:
       cell.classList.add('cell-path');
       cell.innerText = '·';
-      cell.title = `通路 (${gx}, ${gy})`;
+      cell.title = customName ? `${customName} ${coordSuffix}` : `通路 ${coordSuffix}`;
       break;
   }
 }
@@ -209,7 +211,8 @@ export function renderMinimap(dungeon) {
             cell.innerText = '░';
             cell.title = `未探知迷霧 (${gx}, ${gy})`;
           } else {
-            populateTileAppearance(cell, symbol, gx, gy);
+            const tileName = (dungeon.tileNames && dungeon.tileNames[gy]) ? dungeon.tileNames[gy][gx] : null;
+            populateTileAppearance(cell, symbol, gx, gy, tileName);
           }
         }
         gridContainer.appendChild(cell);
@@ -243,7 +246,8 @@ export function renderMinimap(dungeon) {
             cell.innerText = '░';
             cell.title = `未探知迷霧 (${x}, ${y})`;
           } else {
-            populateTileAppearance(cell, symbol, x, y);
+            const tileName = (dungeon.tileNames && dungeon.tileNames[y]) ? dungeon.tileNames[y][x] : null;
+            populateTileAppearance(cell, symbol, x, y, tileName);
           }
         }
         gridContainer.appendChild(cell);

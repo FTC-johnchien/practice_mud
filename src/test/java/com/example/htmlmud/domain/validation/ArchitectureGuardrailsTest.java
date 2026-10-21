@@ -80,10 +80,10 @@ class ArchitectureGuardrailsTest {
           });
     }
 
-    // 歷史基線為 10 處，禁止新增
+    // 歷史基線已自 12 處收緊至 3 處 (僅餘 SaveGameService, PartyService, DungeonCommand 建構子安全防禦)，禁止新增
     assertThat(violations.size())
         .as("禁止新增 GameConfig.getInstance() 靜態呼叫，應使用 Spring 建構子依賴注入：\n" + String.join("\n", violations))
-        .isLessThanOrEqualTo(12);
+        .isLessThanOrEqualTo(3);
   }
 
   @Test
