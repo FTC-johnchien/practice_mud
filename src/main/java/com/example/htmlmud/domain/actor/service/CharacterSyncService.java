@@ -11,8 +11,9 @@ import com.example.htmlmud.domain.repository.TemplateReader;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 負責 Player (MUD 實體) 與 PartyMember (DRPG 隊長實體) 之間的數值同步與單一真相源維護。
- * 採用 Snapshot 與 Outcome 模型，杜絕併發共享參照與競態條件。
+ * 負責 Player (MUD 空間代理實體) 與 PartyMember (DRPG 隊長實體 / 唯一真相源) 之間的單向屬性投影。
+ * 遵循 F1-01 架構規範：PartyMember 與 Party.inventory 為唯一真實角色與行囊 (SSoT)，
+ * Player 僅為世界空間導航與 WebSocket 通訊代理，禁止在其內部維護雙軌業務狀態。
  */
 @Slf4j
 @Service

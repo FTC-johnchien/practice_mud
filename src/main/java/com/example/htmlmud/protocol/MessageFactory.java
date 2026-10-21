@@ -43,12 +43,23 @@ public class MessageFactory {
         HealthStatusUtil.getHealthStatus(player.getStats().getHp(), player.getStats().getMaxHp())
             .replace("$N", noun);
 
-    // 取出裝備的 GameItem 的 name(alias)
-    List<String> itemNames =
-        player.getStats().getEquipment().values().stream()
-            .map(item -> item.getName()
-                + (item.getAliases().isEmpty() ? "" : "(" + item.getAliases().get(0) + ")"))
-            .toList();
+    // 取出裝備的真實名稱 (優先從小隊隊長真實裝備讀取)
+    List<String> itemNames;
+    var ps = (player.getService() != null) ? player.getService().getPartyService() : null;
+    var party = (ps != null) ? ps.getOrCreateParty(player.getName()) : null;
+    if (party != null && party.getLeader() != null && party.getLeader().getEquipment() != null) {
+      itemNames = party.getLeader().getEquipment().values().stream()
+          .filter(slot -> slot != null && !slot.isEmpty())
+          .map(com.example.htmlmud.domain.party.model.PartyItemSlot::getName)
+          .toList();
+    } else if (player.getStats() != null && player.getStats().getEquipment() != null) {
+      itemNames = player.getStats().getEquipment().values().stream()
+          .map(item -> item.getName()
+              + (item.getAliases().isEmpty() ? "" : "(" + item.getAliases().get(0) + ")"))
+          .toList();
+    } else {
+      itemNames = List.of();
+    }
 
     Map<String, Object> data = Map.of("id", player.getName(), "name",
         player.getNickname() != null ? player.getNickname() : player.getName(),

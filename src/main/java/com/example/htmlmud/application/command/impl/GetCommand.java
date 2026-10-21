@@ -81,12 +81,8 @@ public class GetCommand implements PlayerCommand {
         player.reply("你仔細翻檢了這具殘骸，裡面已無任何可用之物，殘骸隨風化作塵土消散。");
         // 殘骸不入背包，自然消散
       } else {
-        // 2. 一般實體物品拾取 (全面直接存入小隊道途行囊 - 大一統模型)
+        // 2. 一般實體物品拾取 (全面直接存入小隊道途行囊 - 大一統單一真相源)
         if (party != null && party.getInventory() != null && party.getInventory().addGameItem(pickItem)) {
-          // 同步維護 player.getInventory() 以兼顧既有空間代理視圖與單元測試相容
-          if (!player.getInventory().contains(pickItem)) {
-            player.getInventory().add(pickItem);
-          }
           player.reply("📦 你拾起了 " + pickItem.getDisplayName() + "，已妥善收入【小隊行囊】！");
         } else if (party == null || party.getInventory() == null) {
           // 兜底防禦：若無小隊實體則存入 player 隨身背包

@@ -8,6 +8,28 @@
 
 ## 📌 最新里程碑 (Latest Releases)
 
+### [2026-10-21] Milestone F1-01：Player 徹底降級為純空間代理與實體雙寫徹底清零 (Unified Character Core, P1)
+- **Player 背包與物品操作委派化與雙寫清零 (Task 1)**：
+  - 重構 `GetCommand.java` 與 `DropCommand.java`，拾取與丟棄物品 100% 只操作 `party.getInventory()`，徹底移除歷史殘留對 `player.getInventory()` 的同步雙寫，徹底根除雙軌假帳。
+  - `PartyItemSlot.java` 新增領域狀態輔助方法 `isEmpty()`，提升槽位有效性判讀純度。
+  - `DrpgBattleService.java` 重構穿戴裝備邏輯，保留使用個人隨身物品穿戴時自動流轉至小隊裝備、消除個人物品之過渡機制。
+  - `WorldFactory.createCorpse` 玩家死亡掉落物品優先從小隊公共行囊提取，若無隊員則安全 fallback。
+  - 更新 `DualTierInventoryAndStashTest.java` 契合 F1-01 規範，驗證拾取散落物品直入小隊行囊。
+- **裝備槽位單一真相源落地與動態委派 (Task 2)**：
+  - `MessageFactory.java` 裝備展示清單優先從小隊隊長真實裝備（`party.getLeader().getEquipment()`）讀取，不再讀取 `player.getStats().getEquipment()` 投影。
+  - `Player.java` 覆寫 `getMainHandWeapon()` 與 `getOffHandEquip()`，優先動態委派小隊隊長真實法寶槽位，確保戰鬥反擊、破防與屬性判定與真實佩戴裝備完全一致。
+- **CharacterSyncService 邊界純淨化與單向投影 (Task 3)**：
+  - 重構 `CharacterSyncService.java` Javadoc 確立空間代理單一真相源邊界，確認其僅作為唯讀單向投影鏡像服務，消除雙向淺拷貝競爭。
+  - 驗證 JSON 存讀檔管線純淨維持 `Party.inventory` 與 `PartyMember.equipment` (schemaVersion 3)，不持久化空間代理私有集合。
+- **專屬大一統整合測試與全量 348 測試回歸 (Task 4)**：
+  - 編寫專屬整合測試 `UnifiedCharacterCoreTest.java`（5/5 綠燈），涵蓋：
+    1. `testPickAndDropOperatesOnlyOnPartyInventory`: 拾取與丟棄僅進出小隊公共行囊，`player.getInventory()` 零雙寫。
+    2. `testPlayerWeaponsDelegateToPartyLeader`: 主手武器與副手法寶動態委派小隊隊長真實槽位。
+    3. `testMessageFactoryEquipmentReflectsPartyLeader`: 裝備展示訊息 100% 反映小隊隊長真實佩戴法寶。
+    4. `testDrpgEquipConsumesPartyInventoryDirectly`: 戰鬥穿裝直接消耗小隊公共行囊，不產生個人假帳。
+    5. `testSaveAndLoadMaintainsSingleSourceOfTruth`: 存檔與讀檔管線維持 `Party.inventory` 為唯一真相源。
+  - 全專案 348 項測試 100% 綠燈全數通過 (`Tests run: 348, Failures: 0, Errors: 0, Skipped: 0`)。
+
 ### [2026-10-21] Milestone F1-05：地牢生存火把明滅與步進機關陷阱 (Dungeon Torch & Step Traps, P1)
 - **地牢火把光明度核心模型與步進消耗機制 (Task 1)**：
   - `DungeonPosition.java` 實裝 `torchLight`（0~100 照度值）與照度階級枚舉 `TorchStatus`（`BRIGHT` >50, `DIM` 1~50, `DARKNESS` 0）。

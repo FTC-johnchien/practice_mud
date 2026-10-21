@@ -1045,7 +1045,7 @@ public class DrpgBattleService {
     }
 
     String realSlotId = resolveSlotId(party, slotIdOrIndex);
-    // 支援自個人隨身行囊穿戴法寶 (UNIFY-02)
+    // 支援自個人隨身行囊穿戴法寶並自動流轉至小隊裝備 (自動消滅假帳)
     if (realSlotId == null && memberIdx == 0 && player != null && player.getInventory() != null) {
       com.example.htmlmud.domain.model.entity.GameItem personalMatch = null;
       for (var it : player.getInventory()) {

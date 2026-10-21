@@ -1011,7 +1011,7 @@ flowchart TD
 
 | 戰線代號 | 核心規劃項目 | 優先級 | 主管後端手冊 (Java 25) | 主管前端手冊 (ES6/CSS) | 全域概覽對齊文件 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **F1-01** | `Player` 與 `PartyMember` 雙軌實體大一統 | **P1** | [`後端_M1`](../manual/後端_M1_探索與世界模組_WORLD_AND_EXPLORATION.md) / [`後端_M4`](../manual/後端_M4_小隊生靈與陣法模組_PARTY_AND_FORMATION.md) | [`前端_FE5`](../manual/前端_FE5_小隊裝備與存檔彈窗_PARTY_EQUIPMENT_AND_MODALS.md) | [`MODULES_MAP.md`](../overview/MODULES_MAP.md) |
+| **F1-01** | `Player` 與 `PartyMember` 雙軌實體大一統 ✅ *(已完成)* | **P1** | [`後端_M1`](../manual/後端_M1_探索與世界模組_WORLD_AND_EXPLORATION.md) / [`後端_M4`](../manual/後端_M4_小隊生靈與陣法模組_PARTY_AND_FORMATION.md) | [`前端_FE5`](../manual/前端_FE5_小隊裝備與存檔彈窗_PARTY_EQUIPMENT_AND_MODALS.md) | [`MODULES_MAP.md`](../overview/MODULES_MAP.md) |
 | **F1-02** | 後端領域層 Service 包結構按業務模組拆分 | **P1** | [`後端_M1`](../manual/後端_M1_探索與世界模組_WORLD_AND_EXPLORATION.md) ~ [`M6`](../manual/後端_M6_物品背包與經濟模組_ITEM_AND_ECONOMY.md) | *(無關)* | [`ARCHITECTURE.md`](../../ARCHITECTURE.md) |
 | **F1-03** | 看門狗棘輪全面清零 (26 處 fallback 歸零) | **P1** | [`後端_M7`](../manual/後端_M7_資料驅動模板模組_DATA_DRIVEN_TEMPLATES.md) | *(無關)* | [`ARCHITECTURE_SUMMARY.md`](../overview/ARCHITECTURE_SUMMARY.md) |
 | **F1-04** | 前端歷史樣式巨石 `style.css` (122 KB) 安全除役 | **P2** | *(無關)* | [`前端_FE6`](../manual/前端_FE6_七層樣式串流與視覺主題_CSS_TOKENS_AND_THEMES.md) | [`FRONTEND_LAYOUT_GUIDE.md`](../overview/FRONTEND_LAYOUT_GUIDE.md) |
@@ -1035,7 +1035,7 @@ flowchart TD
 
 ### 22.1 戰線一：核心雙軌大一統與領域潔淨治理 (P1)
 
-#### 1. F1-01：`Player` 與 `PartyMember` 雙軌實體大一統 (Unified Character Core)
+#### 1. F1-01：`Player` 與 `PartyMember` 雙軌實體大一統 (Unified Character Core) ✅ [已完成]
 - **痛點根因**：
   - MUD 端 `Player`（繼承 `Living` VirtualActor）與 DRPG 端 `PartyMember`（POJO）雙軌並立，兩套背包、兩套裝備。
   - 僅在進入/離開地牢戰鬥時透過 `CharacterSyncService` 進行單向屬性拷貝，換裝與 Buff 無法互通。
@@ -1051,14 +1051,15 @@ flowchart TD
       
       subgraph SpatialWorld ["世界空間交互 (World Spatial Layer)"]
           PL["Player (空間代理 Actor / Spatial Proxy)"]
-          PL -.->|引用隊長實體| PM
+          PL -.->|動態委派隊長真實槽位| PM
           PL --> Room["Room 空間座標 / 拓撲導航"]
       end
   ```
-- **具體實施步驟**：
-  1. `Player` 不再獨立持有 `inventory` 與 `equipment`，內部直接委派給小隊隊長 `party.getLeader()`。
-  2. 徹底廢止 `CharacterSyncService` 的淺拷貝邏輯，消除雙寫與「兩本假帳」。
-  3. MUD 模式遭怪襲擊時，自動召喚當前小隊編制，無縫套用 DRPG 戰鬥引擎與陣法孔位。
+- **落地實施成果 (2026-10-21)**：
+  1. **背包雙寫清零 (Task 1)**：重構 `GetCommand` 與 `DropCommand`，拾取與丟棄 100% 只操作 `party.getInventory()`，徹底移除對 `player.getInventory()` 的同步雙寫；`DrpgBattleService` 穿裝自動消除個人隨身背包過渡物品；`WorldFactory.createCorpse` 玩家死亡掉落物品優先從小隊行囊提取。
+  2. **裝備單一真相源 (Task 2)**：`MessageFactory` 裝備展示改為優先從小隊隊長真實裝備（`party.getLeader().getEquipment()`）讀取；`Player` 覆寫 `getMainHandWeapon()` 與 `getOffHandEquip()` 動態委派隊長真實法寶槽位。
+  3. **同步服務純淨化 (Task 3)**：`CharacterSyncService` 確立為唯讀單向投影鏡像服務，消除雙向淺拷貝競爭；存讀檔管線確認僅存小隊行囊與成員裝備 (schemaVersion 3)。
+  4. **專屬整合測試驗收 (Task 4)**：新增專屬整合測試 `UnifiedCharacterCoreTest.java`（5/5 綠燈），涵蓋拾取丟棄只進出小隊行囊零雙寫、主副手武器動態委派隊長真實槽位、MessageFactory 反映真實裝備、戰鬥穿裝直扣小隊行囊、存讀檔大一統驗證。全專案 348 項測試 100% 綠燈通過。
 
 #### 2. F1-02：後端領域層 Service 包結構按業務模組拆分
 - **現狀問題**：`com.example.htmlmud.domain.service` 平鋪 10+ 個跨領域服務，缺乏領域邊界。

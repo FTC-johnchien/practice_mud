@@ -75,14 +75,6 @@ public class DropCommand implements PlayerCommand {
         droppedItem.setAmount(1);
         room.dropItem(droppedItem);
       }
-      // 同步移除 player.getInventory() 中的對應物品 (若存在)
-      if (player.getInventory() != null) {
-        var optItem = targetSelector.selectItem(player.getInventory(), keyword);
-        if (optItem != null) {
-          player.getInventory().remove(optItem);
-        }
-      }
-
       player.reply("🗑️ $N從小隊行囊丟下了 " + partySlot.getName());
       if (broadcastService != null) {
         broadcastService.broadcastState(player);

@@ -6,20 +6,35 @@
 
 ---
 
-## 📌 當前焦點里程碑：Milestone 待決策 / 下一步規劃中
+## 📌 當前焦點里程碑：Milestone F2-01 — 敵方行動預告蓄力條與即時反制打斷 (Combat React, COMBAT-REACT-01, P1)
 
-- **長遠藍圖**：[`FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md)
-- **待確認推進項目**：
-  - **選項 A (推薦)**：**Milestone F2-01 — 敵方行動預告蓄力條與即時反制打斷 (Combat React, COMBAT-REACT-01, P1)**
-    - 怪物強力招式蓄力前搖 (`castTimeMs`)、前端即時施法進度條、破防/打斷窗口（`STUN`, `SILENCE`, `PARRY`）引發失衡。
-  - **選項 B**：**Milestone F1-01 — Player 徹底降級為純空間代理與實體雙寫清零 (P1)**
-    - `Player` 不再獨立持有 `inventory` 與 `equipment`，統一委派 `party.getLeader()`，消除雙寫。
-  - **選項 C**：**Milestone F3-05 — 隊友自動戰術 Gambit 規則鏈引擎 (Companion Gambit AI Chains, P1)**
-    - 戰術條件觸發鏈，沉著續航/攻堅打斷預設，免除多角色手忙腳亂。
+- **長遠藍圖**：[`FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) 第 22.2 章《戰線二：戰鬥深度突破與動態沉浸博弈 (F2-01)》
+- **核心目標**：在 DRPG 半即時戰鬥中引入敵方強力招式前搖吟唱 (Casting Window)，支援前端視覺化蓄力條預告；玩家與隊友可於窗口期內打出帶有 `STUN`、`SILENCE`、`PARRY` 或高 Poise 破防打斷技，觸發失衡中斷與虛弱，大幅提升戰鬥博弈深度。
+
+### 📋 微任務清單 (Micro-Tasks)
+
+- [ ] **Task 1 (F2-01-CAST-MODEL): 技能與敵方行動前搖/可打斷模型擴充**
+  - 在 `SkillDefinition.java` / `UnifiedSkill.java` 擴充 `castTimeMs`（吟唱蓄力時間）、`interruptible`（是否可被打斷標籤）。
+  - 在 `MobTemplate.java` 與 `BattleEnemy.java` 擴充敵方蓄力招式設定與當前施法狀態結構 (`CastingState` / `currentCastingSkill`)。
+- [ ] **Task 2 (F2-01-CAST-LOOP): 戰鬥迴圈吟唱窗口推進與打斷判定**
+  - 在 `DrpgCombatLoop` 與 `CombatService` 實裝敵人施法前搖計時窗口；在吟唱期間敵方持續推進蓄力進度。
+  - 結算受擊時若判定帶有控制或打斷標籤（`STUN`, `SILENCE`, `PARRY`, 或罡氣破防），立刻中斷吟唱並進入短暫破防失衡狀態。
+- [ ] **Task 3 (F2-01-REACT-ACTION): 玩家與小隊反制技能與戰況廣播**
+  - 擴充玩家/隊友反制招式（如 `太白斷空`、`震天撼地`、格擋偏架），成功打斷時發布 `COMBAT_INTERRUPT` 戰鬥事件。
+  - DTO 擴充 `DrpgCombatantDto` 支援 `castingSkillId`、`castingProgress`、`interruptible` 即時下發。
+- [ ] **Task 4 (F2-01-FE-CASTBAR & VERIFY): 前端蓄力條特效渲染與專屬測試驗證**
+  - 前端 `drpg-renderer.js` / `battle-panel.js` 於敵方血條上方實裝青藍色/猩紅色動態蓄力條 (`.casting-bar`) 與打斷特效 (`⚡ 打斷!`)。
+  - 編寫專屬整合測試 `CombatReactInterruptTest.java`，並跑通全量 348+ 測試回歸。
 
 ---
 
 ## 🏆 已完成里程碑 (Completed Milestones)
+
+- [x] **Milestone F1-01 — Player 徹底降級為純空間代理與實體雙寫徹底清零 (Unified Character Core, P1)**
+  - Task 1 (F1-01-PROXY-DELEGATE): 重構 `GetCommand` 與 `DropCommand`，拾取/丟棄 100% 只操作 `party.getInventory()`，移除對 `player.getInventory()` 的雙寫；`WorldFactory.createCorpse` 玩家死亡掉落物品優先從小隊行囊提取。
+  - Task 2 (F1-01-EQUIP-UNIFY): `MessageFactory` 裝備展示優先讀取小隊隊長真實裝備；`Player` 覆寫 `getMainHandWeapon()` 與 `getOffHandEquip()` 動態委派隊長真實槽位。
+  - Task 3 (F1-01-SYNC-SLIM): `CharacterSyncService` 確立為唯讀單向投影鏡像服務，消除雙向淺拷貝競爭；存讀檔管線確認僅存小隊行囊與成員裝備 (schemaVersion 3)。
+  - Task 4 (F1-01-VERIFY): 新增專屬整合測試 `UnifiedCharacterCoreTest.java`（5/5 綠燈），全專案 348 項測試 100% 綠燈通過。
 
 - [x] **Milestone F1-05 — 地牢生存火把明滅與步進機關陷阱 (Dungeon Torch & Step Traps, P1)**
   - Task 1 (F1-05-TORCH-CORE): 實裝火把光明度核心模型 (`torchLight` 0~100)、照度等級 (`BRIGHT`/`DIM`/`DARKNESS`)、步進消耗、黑暗扣減 5 點 SAN 與突襲、`dungeon light / torch` 補光機制。

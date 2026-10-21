@@ -341,6 +341,38 @@ public final class Player extends Living {
   }
 
   /**
+   * 覆寫主手武器查詢：優先委派小隊隊長真實裝備槽位 (MAIN_HAND)。
+   */
+  @Override
+  public GameItem getMainHandWeapon() {
+    var ps = (service != null) ? service.getPartyService() : null;
+    var party = (ps != null) ? ps.getOrCreateParty(getName()) : null;
+    if (party != null && party.getLeader() != null && party.getLeader().getEquipment() != null) {
+      var slot = party.getLeader().getEquipment().get(com.example.htmlmud.domain.model.enums.EquipmentSlot.MAIN_HAND);
+      if (slot != null && !slot.isEmpty()) {
+        return slot.toGameItem(manager != null ? manager.getTemplateReader() : null);
+      }
+    }
+    return super.getMainHandWeapon();
+  }
+
+  /**
+   * 覆寫副手裝備查詢：優先委派小隊隊長真實裝備槽位 (OFF_HAND)。
+   */
+  @Override
+  public GameItem getOffHandEquip() {
+    var ps = (service != null) ? service.getPartyService() : null;
+    var party = (ps != null) ? ps.getOrCreateParty(getName()) : null;
+    if (party != null && party.getLeader() != null && party.getLeader().getEquipment() != null) {
+      var slot = party.getLeader().getEquipment().get(com.example.htmlmud.domain.model.enums.EquipmentSlot.OFF_HAND);
+      if (slot != null && !slot.isEmpty()) {
+        return slot.toGameItem(manager != null ? manager.getTemplateReader() : null);
+      }
+    }
+    return super.getOffHandEquip();
+  }
+
+  /**
    * 檢查是否受到 GCD 限制
    */
   public boolean isOnGcd() {

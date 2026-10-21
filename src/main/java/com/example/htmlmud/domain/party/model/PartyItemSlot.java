@@ -86,6 +86,10 @@ public class PartyItemSlot {
     return itemType == ItemType.CONSUMABLE || itemType == ItemType.MATERIAL;
   }
 
+  public boolean isEmpty() {
+    return itemId == null || itemId.isBlank() || count <= 0;
+  }
+
   public static PartyItemSlot fromDefinition(ItemDefinition d) {
     return fromDefinition(d, 1, null);
   }

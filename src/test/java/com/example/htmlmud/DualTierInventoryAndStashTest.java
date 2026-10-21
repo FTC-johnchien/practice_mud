@@ -104,11 +104,11 @@ class DualTierInventoryAndStashTest {
       getCommand.execute(finalItem.getId());
     });
 
-    // 1. 個人隨身行囊視圖已獲得此物品
-    assertThat(player.getInventory()).anyMatch(it -> it.getName().contains("鋼刀") || it.getId().equals("steel_blade"));
-
-    // 2. 小隊公共行囊亦已同步獲得該物品 (大一統單一真相源)
+    // 1. 小隊公共行囊已獲得該物品 (大一統單一真相源)
     assertThat(party.getInventory().getSlots()).anyMatch(s -> s.getItemId().contains("steel_blade") || s.getName().contains("鋼刀"));
+
+    // 2. F1-01 消除雙寫：散落物品直入小隊公共行囊，個人行囊不再留存雙寫假帳
+    assertThat(player.getInventory()).noneMatch(it -> it.getName().contains("鋼刀") || it.getId().equals("steel_blade"));
   }
 
   @Test
