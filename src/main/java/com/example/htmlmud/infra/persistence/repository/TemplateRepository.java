@@ -20,6 +20,7 @@ import com.example.htmlmud.domain.model.template.ClassTemplate;
 import com.example.htmlmud.domain.model.template.QuestTemplate;
 import com.example.htmlmud.domain.model.template.ShopTemplate;
 import com.example.htmlmud.domain.party.model.FormationTemplate;
+import com.example.htmlmud.domain.party.model.GambitPreset;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
 import com.example.htmlmud.domain.port.TemplateRegistryPort;
 import com.example.htmlmud.domain.repository.TemplateReader;
@@ -43,6 +44,7 @@ public class TemplateRepository implements TemplateRegistryPort {
   private final Map<String, CompanionTemplate> companionTemplates = new ConcurrentHashMap<>();
   private final Map<String, FormationTemplate> formationTemplates = new ConcurrentHashMap<>();
   private final Map<String, PartyMemberSkill> partySkillTemplates = new ConcurrentHashMap<>();
+  private final Map<String, GambitPreset> gambitPresets = new ConcurrentHashMap<>();
   private final Map<String, String> skillAliasMap = new ConcurrentHashMap<>();
   private final Map<String, ClassTemplate> classTemplates = new ConcurrentHashMap<>();
   private final Map<String, ShopTemplate> shopTemplates = new ConcurrentHashMap<>();
@@ -87,6 +89,7 @@ public class TemplateRepository implements TemplateRegistryPort {
     companionTemplates.clear();
     formationTemplates.clear();
     partySkillTemplates.clear();
+    gambitPresets.clear();
     classTemplates.clear();
     shopTemplates.clear();
     questTemplates.clear();
@@ -103,6 +106,16 @@ public class TemplateRepository implements TemplateRegistryPort {
         }
       } catch (Exception e) {
         log.error("Failed to load data/party/party_skills.json", e);
+      }
+    }
+    if (gambitPresets.isEmpty()) {
+      try (var is = TemplateRepository.class.getClassLoader().getResourceAsStream("data/party/gambit_presets.json")) {
+        if (is != null) {
+          java.util.List<GambitPreset> presets = mapper.readValue(is, new com.fasterxml.jackson.core.type.TypeReference<java.util.List<GambitPreset>>() {});
+          for (GambitPreset p : presets) addGambitPreset(p);
+        }
+      } catch (Exception e) {
+        log.error("Failed to load data/party/gambit_presets.json", e);
       }
     }
     if (companionTemplates.isEmpty()) {
@@ -513,5 +526,23 @@ public class TemplateRepository implements TemplateRegistryPort {
   @Override
   public Map<String, QuestTemplate> getAllQuests() {
     return Collections.unmodifiableMap(questTemplates);
+  }
+
+  // --- Gambit Preset ---
+  public void addGambitPreset(GambitPreset preset) {
+    if (preset != null && preset.getId() != null) {
+      gambitPresets.put(preset.getId(), preset);
+    }
+  }
+
+  @Override
+  public Optional<GambitPreset> findGambitPreset(String presetId) {
+    if (presetId == null) return Optional.empty();
+    return Optional.ofNullable(gambitPresets.get(presetId));
+  }
+
+  @Override
+  public Map<String, GambitPreset> getAllGambitPresets() {
+    return Collections.unmodifiableMap(gambitPresets);
   }
 }

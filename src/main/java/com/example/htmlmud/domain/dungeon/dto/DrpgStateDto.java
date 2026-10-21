@@ -395,7 +395,8 @@ public record DrpgStateDto(
           m.getMaxPoise(),
           m.isPoiseBroken(),
           m.getTotalShield(),
-          m.getActiveBuffs() != null ? m.getActiveBuffs().stream().map(ActiveBuffDto::fromActiveBuff).toList() : List.of()
+          m.getActiveBuffs() != null ? m.getActiveBuffs().stream().map(ActiveBuffDto::fromActiveBuff).toList() : List.of(),
+          m.isGambitEnabled()
       ));
     }
 
@@ -790,7 +791,8 @@ public record DrpgStateDto(
       int maxPoise,
       boolean isPoiseBroken,
       int shield,
-      List<ActiveBuffDto> activeBuffs
+      List<ActiveBuffDto> activeBuffs,
+      boolean gambitEnabled
   ) {
     public PartyMemberViewDto(
         String id, String name, String roleTitle, String row,
@@ -816,7 +818,7 @@ public record DrpgStateDto(
           isOnGcd, remainingGcdMs, isCasting, castingSkillName, castingDurationMs, castingRemainingMs,
           formationSlotName, formationSlotRequiredRow, formationSlotBonus, formationSlotActive, gridX, gridY,
           sp, maxSp, Math.min(5, sp / 20), 5,
-          100, 100, false, 0, List.of());
+          100, 100, false, 0, List.of(), true);
     }
   }
 
@@ -830,8 +832,25 @@ public record DrpgStateDto(
       String skillId,
       String skillName,
       boolean enabled,
-      String description
+      String description,
+      String actionType,
+      String itemId
   ) {
+    public TacticsRuleViewDto(
+        int priority,
+        String condition,
+        String conditionLabel,
+        int conditionValue,
+        String target,
+        String targetLabel,
+        String skillId,
+        String skillName,
+        boolean enabled,
+        String description
+    ) {
+      this(priority, condition, conditionLabel, conditionValue, target, targetLabel, skillId, skillName, enabled, description, "SKILL", null);
+    }
+
     public static TacticsRuleViewDto of(com.example.htmlmud.domain.party.model.TacticsRule r, com.example.htmlmud.domain.party.model.PartyMember m) {
       return of(r, m, m != null ? m.getTemplateReader() : null);
     }
@@ -860,7 +879,9 @@ public record DrpgStateDto(
           r.getSkillId(),
           skillName,
           r.isEnabled(),
-          r.formatDescription(skillName)
+          r.formatDescription(skillName),
+          r.getActionType() != null ? r.getActionType().name() : "SKILL",
+          r.getItemId()
       );
     }
   }

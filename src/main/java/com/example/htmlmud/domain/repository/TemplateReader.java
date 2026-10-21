@@ -85,4 +85,12 @@ public interface TemplateReader {
   default Map<String, com.example.htmlmud.domain.model.template.QuestTemplate> getAllQuests() {
     return Map.of();
   }
+
+  default java.util.Optional<com.example.htmlmud.domain.party.model.GambitPreset> findGambitPreset(String presetId) {
+    return java.util.Optional.empty();
+  }
+
+  default Map<String, com.example.htmlmud.domain.party.model.GambitPreset> getAllGambitPresets() {
+    return Map.of();
+  }
 }

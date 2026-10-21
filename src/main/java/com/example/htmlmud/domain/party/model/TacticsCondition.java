@@ -15,6 +15,11 @@ public enum TacticsCondition {
   ALLY_HAS_DEBUFF("隊友身中異常", ""),
   ALLY_IS_CONTROLLED("隊友受控場限制", ""),
   SELF_LACKS_SHIELD("自身缺少護盾", ""),
+  ENEMY_IS_CASTING("敵方正在施法蓄力", ""),
+  ENEMY_CASTING_INTERRUPTIBLE("敵方處於可打斷施法中", ""),
+  ENEMY_POISE_BROKEN("敵方處於破防失衡狀態", ""),
+  ENEMY_HP_LESS_THAN("敵方氣血低於", "%"),
+  ALLY_SAN_LESS_THAN("隊友道心低於", "%"),
   ALWAYS("無條件施展", "");
 
   private final String label;

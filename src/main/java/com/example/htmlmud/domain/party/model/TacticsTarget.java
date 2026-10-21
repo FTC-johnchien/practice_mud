@@ -15,6 +15,9 @@ public enum TacticsTarget {
   MEMBER_5("隊員 #5"),
   BACK_ROW_ALLY("後衛隊友"),
   CURRENT_ENEMY("當前集火目標"),
+  CASTING_ENEMY("正在吟唱的敵怪"),
+  POISE_BROKEN_ENEMY("破防失衡的敵怪"),
+  LOWEST_HP_ENEMY("氣血最低敵怪"),
   ALL_ENEMIES("全體敵怪"),
   ALL_ALLIES("全體隊友");
 

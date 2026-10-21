@@ -186,6 +186,16 @@ public class TemplateCatalog implements TemplateReader {
     return templateReader != null ? templateReader.resolveSkillAlias(skillId) : null;
   }
 
+  @Override
+  public Optional<com.example.htmlmud.domain.party.model.GambitPreset> findGambitPreset(String presetId) {
+    return templateReader != null ? templateReader.findGambitPreset(presetId) : Optional.empty();
+  }
+
+  @Override
+  public Map<String, com.example.htmlmud.domain.party.model.GambitPreset> getAllGambitPresets() {
+    return templateReader != null ? templateReader.getAllGambitPresets() : Collections.emptyMap();
+  }
+
   private Optional<String> normalize(String rawId) {
     if (rawId == null) {
       return Optional.empty();

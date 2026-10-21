@@ -26,15 +26,21 @@ export function handleTacticsCondChange() {
   const valLabel = document.getElementById('t-builder-val-label');
   if (!condEl || !valEl) return;
   const cond = condEl.value;
-  if (cond === 'ALWAYS' || cond === 'ENEMY_IS_BOSS' || cond === 'ALLY_HAS_DEBUFF' || cond === 'ALLY_IS_CONTROLLED' || cond === 'SELF_LACKS_SHIELD') {
+  if (cond === 'ALWAYS' || cond === 'ENEMY_IS_BOSS' || cond === 'ALLY_HAS_DEBUFF'
+      || cond === 'ALLY_IS_CONTROLLED' || cond === 'SELF_LACKS_SHIELD'
+      || cond === 'ENEMY_IS_CASTING' || cond === 'ENEMY_CASTING_INTERRUPTIBLE'
+      || cond === 'ENEMY_POISE_BROKEN') {
     valEl.style.display = 'none';
     if (valLabel) valLabel.style.display = 'none';
   } else {
     valEl.style.display = 'inline-block';
     if (valLabel) valLabel.style.display = 'inline-block';
-    if (cond === 'ALLY_HP_LESS_THAN' || cond === 'SELF_HP_LESS_THAN') {
+    if (cond === 'ALLY_HP_LESS_THAN' || cond === 'SELF_HP_LESS_THAN' || cond === 'ENEMY_HP_LESS_THAN') {
       if (valLabel) valLabel.innerText = '氣血 (%):';
-      valEl.value = 50;
+      valEl.value = cond === 'ENEMY_HP_LESS_THAN' ? 30 : 50;
+    } else if (cond === 'ALLY_SAN_LESS_THAN') {
+      if (valLabel) valLabel.innerText = '道心 (點):';
+      valEl.value = 40;
     } else if (cond === 'RESOURCE_GTE') {
       if (valLabel) valLabel.innerText = '資源 (點):';
       valEl.value = 30;
@@ -118,7 +124,12 @@ export function renderMemberTactics(m, idx) {
 
           <label style="font-size:13px;color:#94a3b8;">觸發條件：</label>
           <select id="t-builder-cond" onchange="window.handleTacticsCondChange()" style="font-size:13px;">
+            <option value="ENEMY_CASTING_INTERRUPTIBLE">敵怪蓄力吟唱中 (可中斷)</option>
+            <option value="ENEMY_IS_CASTING">敵怪施法引導中 (任何吟唱)</option>
+            <option value="ENEMY_POISE_BROKEN">敵怪破防失衡 (虛弱期)</option>
+            <option value="ENEMY_HP_LESS_THAN">敵怪氣血低於 (%)</option>
             <option value="ALLY_HP_LESS_THAN">隊友氣血低於 (%)</option>
+            <option value="ALLY_SAN_LESS_THAN">隊友道心低於 (點)</option>
             <option value="SELF_HP_LESS_THAN">自身氣血低於 (%)</option>
             <option value="ALLY_HAS_DEBUFF">隊友身中異常 (中Debuff/劇毒)</option>
             <option value="ALLY_IS_CONTROLLED">隊友受控場限制 (眩暈/定身)</option>
@@ -135,14 +146,17 @@ export function renderMemberTactics(m, idx) {
         <div class="tactics-builder-row">
           <label style="font-size:13px;color:#94a3b8;">目標：</label>
           <select id="t-builder-target" style="font-size:13px;">
-            <option value="FRONT_ROW_ALLY">前排隊友 (Tank)</option>
+            <option value="CASTING_ENEMY">吟唱蓄力中之敵怪</option>
+            <option value="POISE_BROKEN_ENEMY">破防失衡之敵怪</option>
+            <option value="LOWEST_HP_ENEMY">氣血最低之敵怪</option>
+            <option value="CURRENT_ENEMY">當前集火目標</option>
+            <option value="ALL_ENEMIES">全體敵怪</option>
             <option value="LOWEST_HP_ALLY">氣血最低隊友</option>
+            <option value="FRONT_ROW_ALLY">前排隊友 (Tank)</option>
             <option value="LEADER">小隊隊長</option>
             <option value="SELF">自身</option>
             ${memberOptionsHtml}
             <option value="BACK_ROW_ALLY">後排隊友</option>
-            <option value="CURRENT_ENEMY">當前集火目標</option>
-            <option value="ALL_ENEMIES">全體敵怪</option>
             <option value="ALL_ALLIES">全體隊友</option>
           </select>
 
@@ -197,14 +211,29 @@ export function renderMemberTactics(m, idx) {
     `;
   }
 
+  const isGambitOn = m.gambitEnabled !== false;
+  const gambitStatusBadge = isGambitOn
+    ? `<span style="color:#22c55e;font-size:12px;font-weight:600;margin-left:8px;">🟢 自動戰術鏈：已開啟</span>`
+    : `<span style="color:#ef4444;font-size:12px;font-weight:600;margin-left:8px;">⚪ 自動戰術鏈：已關閉（僅普攻）</span>`;
+
   return `
     <div class="tactics-container">
       <div class="tactics-header-banner">
         <div>
-          <div class="tactics-banner-title">🎯 同伴戰鬥方針設定 (Gambit AI)</div>
+          <div class="tactics-banner-title">🎯 同伴戰鬥方針設定 (Gambit AI)${gambitStatusBadge}</div>
           <div class="tactics-banner-desc">戰鬥中輪到該同伴行動時，將依優先級序號 (#1, #2, #3...) 由上至下判定條件，首條滿足者即刻施展。</div>
         </div>
-        <div class="tactics-banner-actions">
+        <div class="tactics-banner-actions" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <button class="act-btn btn-sm ${isGambitOn ? 'btn-gray' : 'btn-green'}" type="button" onclick="send('party tactics ${idx} gambit')">
+            ${isGambitOn ? '⏸️ 關閉Gambit' : '⚡ 開啟Gambit'}
+          </button>
+          <select class="act-btn btn-sm" onchange="if(this.value){send('party tactics ${idx} preset ' + this.value);this.value='';}" style="background:#1e293b;color:#f8fafc;border:1px solid #475569;padding:4px 6px;cursor:pointer;">
+            <option value="">📜 套用戰術範本...</option>
+            <option value="interrupt_focus">⚡ 斷法攻堅 (反制特化)</option>
+            <option value="emergency_sustain">🌿 急救續航 (道心醫修)</option>
+            <option value="guardian_tank">🛡️ 守禦護坦 (金湯鐵壁)</option>
+            <option value="poise_burst">💥 破防爆發 (狂暴強攻)</option>
+          </select>
           <button class="act-btn btn-blue btn-sm" type="button" onclick="window.toggleAddTacticsForm(true)">➕ 新增方針</button>
           <button class="act-btn btn-sm" type="button" onclick="send('party tactics ${idx} reset')">🔄 重置預設</button>
           <button class="act-btn btn-red btn-sm" type="button" onclick="send('party tactics ${idx} clear')">🗑️ 清空方針</button>

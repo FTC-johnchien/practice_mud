@@ -20,11 +20,24 @@ public class TacticsRule {
   @Builder.Default
   private TacticsTarget target = TacticsTarget.LOWEST_HP_ALLY;
   private String skillId;
+  private String itemId;
+  @Builder.Default
+  private GambitActionType actionType = GambitActionType.SKILL;
   @Builder.Default
   private boolean enabled = true;
 
   public String formatDescription(String skillName) {
-    String sName = (skillName != null && !skillName.isEmpty()) ? skillName : skillId;
+    String actionName;
+    if (actionType == GambitActionType.ITEM) {
+      actionName = "使用藥品 " + (itemId != null ? itemId : "");
+    } else if (actionType == GambitActionType.DEFENSE) {
+      actionName = "防禦招架";
+    } else if (actionType == GambitActionType.ATTACK) {
+      actionName = "普通攻擊";
+    } else {
+      actionName = (skillName != null && !skillName.isEmpty()) ? skillName : (skillId != null ? skillId : "戰術招式");
+    }
+
     String condStr = switch (condition) {
       case ALLY_HP_LESS_THAN -> "隊友氣血 < " + conditionValue + "%";
       case SELF_HP_LESS_THAN -> "自身氣血 < " + conditionValue + "%";
@@ -37,10 +50,16 @@ public class TacticsRule {
       case ALLY_HAS_DEBUFF -> "隊友身中異常/減益";
       case ALLY_IS_CONTROLLED -> "隊友處於受控/封咒狀態";
       case SELF_LACKS_SHIELD -> "自身未具備護盾";
+      case ENEMY_IS_CASTING -> "敵方正在施法蓄力";
+      case ENEMY_CASTING_INTERRUPTIBLE -> "敵方處於可打斷施法中";
+      case ENEMY_POISE_BROKEN -> "敵方處於破防失衡狀態";
+      case ENEMY_HP_LESS_THAN -> "敵方氣血 < " + conditionValue + "%";
+      case ALLY_SAN_LESS_THAN -> "隊友道心 < " + conditionValue + "%";
       case ALWAYS -> "總是施展";
       default -> condition != null ? condition.getLabel() : "未明條件";
     };
-    return String.format("#%d [%s] 當【%s】對【%s】施展【%s】",
-        priority, enabled ? "啟用" : "停用", condStr, target.getLabel(), sName);
+    return String.format("#%d [%s] 當【%s】對【%s】%s【%s】",
+        priority, enabled ? "啟用" : "停用", condStr, target != null ? target.getLabel() : "目標",
+        actionType == GambitActionType.ITEM ? "" : "施展", actionName);
   }
 }

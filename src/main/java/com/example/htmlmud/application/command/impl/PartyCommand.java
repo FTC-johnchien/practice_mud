@@ -486,8 +486,47 @@ public class PartyCommand implements PlayerCommand {
           self.reply("優先級序號必須為整數！");
         }
       }
+      case "gambit" -> {
+        if (parts.length >= 4) {
+          String opt = parts[3].toLowerCase();
+          if ("on".equals(opt) || "true".equals(opt) || "enable".equals(opt)) {
+            m.setGambitEnabled(true);
+            self.reply("【自動戰術】已開啟隊員「" + m.getName() + "」的 Gambit 自動戰術鏈。");
+          } else if ("off".equals(opt) || "false".equals(opt) || "disable".equals(opt)) {
+            m.setGambitEnabled(false);
+            self.reply("【自動戰術】已關閉隊員「" + m.getName() + "」的 Gambit 自動戰術鏈（隊友將僅執行常規普攻）。");
+          } else {
+            self.reply("用法: party tactics " + mIdx + " gambit on|off");
+          }
+        } else {
+          m.setGambitEnabled(!m.isGambitEnabled());
+          self.reply("【自動戰術】隊員「" + m.getName() + "」的 Gambit 自動戰術鏈已" + (m.isGambitEnabled() ? "開啟" : "關閉") + "。");
+        }
+        broadcastDrpgState(self);
+      }
+      case "preset" -> {
+        if (parts.length < 4 || "list".equalsIgnoreCase(parts[3])) {
+          var allPresets = templateReader.getAllGambitPresets();
+          StringBuilder sb = new StringBuilder("【戰術範本庫】可用預設範本：\n");
+          allPresets.values().forEach(p -> {
+            sb.append("  - [").append(p.getId()).append("] ").append(p.getIcon() != null ? p.getIcon() + " " : "").append(p.getName()).append("：").append(p.getDescription()).append("\n");
+          });
+          sb.append("套用指令: party tactics ").append(mIdx).append(" preset <範本ID>");
+          self.reply(sb.toString());
+          return;
+        }
+        String presetId = parts[3].trim().toLowerCase();
+        var presetOpt = templateReader.findGambitPreset(presetId);
+        if (presetOpt.isEmpty()) {
+          self.reply("找不到戰術範本「" + presetId + "」！請輸入 party tactics " + mIdx + " preset list 查看可用清單。");
+          return;
+        }
+        m.applyGambitPreset(presetOpt.get());
+        self.reply("【戰術套用成功】已為隊員「" + m.getName() + "」套用戰術範本【" + presetOpt.get().getName() + "】！共套用 " + m.getTactics().size() + " 條規則。");
+        broadcastDrpgState(self);
+      }
       default -> {
-        self.reply("未知的戰術指令「" + sub + "」。可用子指令: reset, clear, add, delete, toggle");
+        self.reply("未知的戰術指令「" + sub + "」。可用子指令: reset, clear, add, delete, toggle, gambit, preset");
       }
     }
   }

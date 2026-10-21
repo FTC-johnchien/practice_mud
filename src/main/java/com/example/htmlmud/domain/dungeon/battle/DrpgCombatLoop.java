@@ -639,6 +639,11 @@ public class DrpgCombatLoop {
       return false;
     }
 
+    // 若隊員已停用戰術方針 (Gambit Disabled)，不自動觸發戰術
+    if (!member.isGambitEnabled()) {
+      return false;
+    }
+
     // 若隊員處於全域冷卻 (GCD) 或正在引導施法中，暫不觸發戰術方針
     if (member.isOnGcd() || member.isCasting()) {
       return false;
@@ -684,7 +689,14 @@ public class DrpgCombatLoop {
 
       // 若為長吟唱法術，進入施法狀態機
       if (skill.getCastTimeMs() > 0) {
-        member.startCasting(skill, -1, skill.getCastTimeMs());
+        int castingTargetIdx = -1;
+        if (rule.getTarget() != null) {
+          BattleEnemy et = tacticsService.resolveEnemyTarget(ctx, rule.getTarget());
+          if (et != null) {
+            castingTargetIdx = ctx.getEnemies().indexOf(et);
+          }
+        }
+        member.startCasting(skill, castingTargetIdx, skill.getCastTimeMs());
         broadcastLog(player, ctx, "\u001B[1;36m🌀【戰術方針】" + member.getName() + " 開始凝氣運轉【" + skill.getName() + "】... (需 "
             + String.format("%.1f", skill.getCastTimeMs() / 1000.0) + " 秒)\u001B[0m");
         if (skill.isTriggersGcd()) {
@@ -1062,10 +1074,15 @@ public class DrpgCombatLoop {
         if (ctx.isAllEnemiesDead()) ctx.setState(BattleState.VICTORY);
       } else {
         BattleEnemy target = null;
-        if (targetIdx >= 0 && targetIdx < ctx.getEnemies().size() && ctx.getEnemies().get(targetIdx).isAlive()) {
-          target = ctx.getEnemies().get(targetIdx);
-        } else {
-          target = (member.getRow() == RowPosition.FRONT) ? ctx.getFrontTargetEnemy() : ctx.getTargetEnemy();
+        if (tacticsTarget != null) {
+          target = tacticsService.resolveEnemyTarget(ctx, tacticsTarget);
+        }
+        if (target == null || !target.isAlive()) {
+          if (targetIdx >= 0 && targetIdx < ctx.getEnemies().size() && ctx.getEnemies().get(targetIdx).isAlive()) {
+            target = ctx.getEnemies().get(targetIdx);
+          } else {
+            target = (member.getRow() == RowPosition.FRONT) ? ctx.getFrontTargetEnemy() : ctx.getTargetEnemy();
+          }
         }
         if (target != null && target.isAlive()) {
           int rawDmg = (int) (tacticsService.calculatePlayerDamage(member, target) * skill.getDamageMultiplier());

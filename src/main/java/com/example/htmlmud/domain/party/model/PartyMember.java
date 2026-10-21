@@ -139,6 +139,8 @@ public class PartyMember implements Combatant {
 
   // 戰術方針規則清單 (Tactics / Gambit Rules)
   @Builder.Default
+  private boolean gambitEnabled = true;
+  @Builder.Default
   private java.util.List<TacticsRule> tactics = new java.util.concurrent.CopyOnWriteArrayList<>();
 
   // Phase 11: 全域冷卻 (GCD) 與施法狀態機 (Casting FSM)
@@ -1028,6 +1030,14 @@ public class PartyMember implements Combatant {
     return getClassTemplate().map(com.example.htmlmud.domain.model.template.ClassTemplate::name).orElse(this.roleTitle);
   }
 
+  public boolean isGambitEnabled() {
+    return gambitEnabled;
+  }
+
+  public void setGambitEnabled(boolean gambitEnabled) {
+    this.gambitEnabled = gambitEnabled;
+  }
+
   public synchronized java.util.List<TacticsRule> getTactics() {
     if (tactics == null) {
       tactics = new java.util.concurrent.CopyOnWriteArrayList<>();
@@ -1056,6 +1066,22 @@ public class PartyMember implements Combatant {
     if (skills == null || skills.isEmpty()) return;
 
     int p = 1;
+    // 0. 反制打斷技能預設規則 (若招式具備 STUN 或 INTERRUPT 標籤，置於最頂層優先順序)
+    for (PartyMemberSkill s : skills) {
+      boolean isCounter = s.isStun() || (s.getTags() != null && (s.getTags().contains("INTERRUPT") || s.getTags().contains("SILENCE")));
+      if (isCounter) {
+        addTacticsRule(TacticsRule.builder()
+            .priority(p++)
+            .condition(TacticsCondition.ENEMY_CASTING_INTERRUPTIBLE)
+            .conditionValue(0)
+            .target(TacticsTarget.CASTING_ENEMY)
+            .skillId(s.getId())
+            .actionType(GambitActionType.SKILL)
+            .enabled(true)
+            .build());
+      }
+    }
+
     // 1. 治療招式預設規則
     for (PartyMemberSkill s : skills) {
       if (s.isHeal()) {
@@ -1065,6 +1091,7 @@ public class PartyMember implements Combatant {
             .conditionValue(45)
             .target(TacticsTarget.LOWEST_HP_ALLY)
             .skillId(s.getId())
+            .actionType(GambitActionType.SKILL)
             .enabled(true)
             .build());
       }
@@ -1132,6 +1159,57 @@ public class PartyMember implements Combatant {
             .skillId(s.getId())
             .enabled(true)
             .build());
+      }
+    }
+  }
+
+  /**
+   * 套用戰術範本 (Gambit Preset)，將策略鏈智慧匹配至隊員現有技能組
+   */
+  public void applyGambitPreset(GambitPreset preset) {
+    if (preset == null || preset.getRules() == null) return;
+    this.tactics.clear();
+    for (GambitPreset.GambitPresetRule ruleDef : preset.getRules()) {
+      String matchedSkillId = null;
+      if (this.skills != null && !this.skills.isEmpty()) {
+        if (ruleDef.getPreferredTag() != null) {
+          String tag = ruleDef.getPreferredTag().toUpperCase();
+          matchedSkillId = this.skills.stream()
+              .filter(s -> {
+                if ("INTERRUPT".equals(tag) && (s.isStun() || (s.getTags() != null && (s.getTags().contains("INTERRUPT") || s.getTags().contains("SILENCE") || s.getTags().contains("STUN"))))) return true;
+                if ("HEAL".equals(tag) && s.isHeal()) return true;
+                if ("SHIELD".equals(tag) && s.isShield()) return true;
+                if ("TAUNT".equals(tag) && s.isTaunt()) return true;
+                if ("CLEANSE".equals(tag) && (s.getSanRestore() > 0 || (s.getTags() != null && s.getTags().contains("CLEANSE")))) return true;
+                if ("BURST".equals(tag) && (s.getDamageMultiplier() >= 1.5 || (s.getTags() != null && (s.getTags().contains("BURST") || s.getTags().contains("FINISHER"))))) return true;
+                return s.getTags() != null && s.getTags().stream().anyMatch(t -> t.equalsIgnoreCase(tag));
+              })
+              .map(PartyMemberSkill::getId)
+              .findFirst()
+              .orElse(null);
+        }
+        if (matchedSkillId == null && ruleDef.getFallbackSkillId() != null) {
+          boolean hasFallback = this.skills.stream().anyMatch(s -> s.getId().equalsIgnoreCase(ruleDef.getFallbackSkillId()));
+          if (hasFallback) {
+            matchedSkillId = ruleDef.getFallbackSkillId();
+          }
+        }
+        if (matchedSkillId == null && ruleDef.getCondition() == TacticsCondition.ALWAYS) {
+          matchedSkillId = this.skills.get(0).getId();
+        }
+      }
+
+      if (matchedSkillId != null) {
+        TacticsRule rule = TacticsRule.builder()
+            .priority(ruleDef.getPriority())
+            .condition(ruleDef.getCondition())
+            .conditionValue(ruleDef.getConditionValue())
+            .target(ruleDef.getTarget())
+            .actionType(ruleDef.getActionType() != null ? ruleDef.getActionType() : GambitActionType.SKILL)
+            .skillId(matchedSkillId)
+            .enabled(true)
+            .build();
+        this.addTacticsRule(rule);
       }
     }
   }

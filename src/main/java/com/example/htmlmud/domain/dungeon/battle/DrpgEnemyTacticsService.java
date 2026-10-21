@@ -268,6 +268,23 @@ public class DrpgEnemyTacticsService {
 
       case SELF_LACKS_SHIELD -> member.getTotalShield() <= 0;
 
+      case ENEMY_IS_CASTING -> ctx.getEnemies().stream()
+          .anyMatch(e -> e.isAlive() && e.isCasting());
+
+      case ENEMY_CASTING_INTERRUPTIBLE -> ctx.getEnemies().stream()
+          .anyMatch(e -> e.isAlive() && e.isCasting() && e.isInterruptible());
+
+      case ENEMY_POISE_BROKEN -> ctx.getEnemies().stream()
+          .anyMatch(e -> e.isAlive() && e.isPoiseBroken());
+
+      case ENEMY_HP_LESS_THAN -> ctx.getEnemies().stream()
+          .filter(BattleEnemy::isAlive)
+          .anyMatch(e -> e.getMaxHp() > 0 && ((double) e.getHp() / e.getMaxHp() * 100.0 <= rule.getConditionValue()));
+
+      case ALLY_SAN_LESS_THAN -> ctx.getParty().getMembers().stream()
+          .filter(PartyMember::isAlive)
+          .anyMatch(m -> m.getCurrentSan() <= rule.getConditionValue());
+
       case ALWAYS -> true;
     };
   }
@@ -316,7 +333,7 @@ public class DrpgEnemyTacticsService {
   }
 
   /**
-   * 根據戰術方針或手動指定，解析小隊中的友方目標 (支援 Tank、隊長、指定成員、血量最低隊友、身中異常隊友、自身等)
+   * 根據戰術方針或手動指定，解析小隊中的友方目標 (支援 Tank、隊長、指定成員、血量最低隊友、身中異常隊友、道心低隊友、自身等)
    */
   public PartyMember resolveAllyTarget(BattleContext ctx, PartyMember caster, TacticsRule rule, int manualTargetIdx) {
     if (rule != null && (rule.getTarget() == null || rule.getTarget() == com.example.htmlmud.domain.party.model.TacticsTarget.LOWEST_HP_ALLY || rule.getTarget() == com.example.htmlmud.domain.party.model.TacticsTarget.ALL_ALLIES)) {
@@ -334,9 +351,45 @@ public class DrpgEnemyTacticsService {
             .filter(m -> m.isControlled() || m.isSilenced() || m.getActiveBuffs().stream().anyMatch(b -> b.getCategory() == com.example.htmlmud.domain.model.enums.BuffCategory.CONTROL))
             .findFirst();
         if (controlled.isPresent()) return controlled.get();
+      } else if (rule.getCondition() == com.example.htmlmud.domain.party.model.TacticsCondition.ALLY_SAN_LESS_THAN && ctx != null && ctx.getParty() != null) {
+        var lowSan = ctx.getParty().getMembers().stream()
+            .filter(PartyMember::isAlive)
+            .filter(m -> m.getCurrentSan() <= rule.getConditionValue())
+            .min(java.util.Comparator.comparingInt(PartyMember::getCurrentSan));
+        if (lowSan.isPresent()) return lowSan.get();
       }
     }
     return resolveAllyTarget(ctx, caster, rule != null ? rule.getTarget() : null, manualTargetIdx);
+  }
+
+  /**
+   * 根據戰術目標解析敵方目標 (支援打斷吟唱敵怪、破防敵怪、最低氣血敵怪等)
+   */
+  public BattleEnemy resolveEnemyTarget(BattleContext ctx, com.example.htmlmud.domain.party.model.TacticsTarget target) {
+    if (ctx == null || ctx.getEnemies() == null || target == null) {
+      return null;
+    }
+    return switch (target) {
+      case CASTING_ENEMY -> {
+        var interruptible = ctx.getEnemies().stream()
+            .filter(e -> e.isAlive() && e.isCasting() && e.isInterruptible())
+            .findFirst();
+        if (interruptible.isPresent()) yield interruptible.get();
+        yield ctx.getEnemies().stream()
+            .filter(e -> e.isAlive() && e.isCasting())
+            .findFirst().orElse(null);
+      }
+      case POISE_BROKEN_ENEMY -> ctx.getEnemies().stream()
+          .filter(e -> e.isAlive() && e.isPoiseBroken())
+          .findFirst().orElse(null);
+      case LOWEST_HP_ENEMY -> ctx.getEnemies().stream()
+          .filter(BattleEnemy::isAlive)
+          .min((a, b) -> Double.compare(
+              (double) a.getHp() / Math.max(1, a.getMaxHp()),
+              (double) b.getHp() / Math.max(1, b.getMaxHp())))
+          .orElse(null);
+      default -> null;
+    };
   }
 
   public PartyMember resolveAllyTarget(BattleContext ctx, PartyMember caster, com.example.htmlmud.domain.party.model.TacticsTarget target, int manualTargetIdx) {

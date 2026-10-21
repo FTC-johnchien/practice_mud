@@ -6,29 +6,22 @@
 
 ---
 
-## 📌 當前焦點里程碑：Milestone F3-05 — 隊友自動戰術 Gambit 規則鏈引擎 (Companion Gambit AI Chains, P1)
+## 📌 當前焦點里程碑：待規劃 / 請使用者選定下一里程碑 (Next Milestone Selection)
 
-- **長遠藍圖**：[`FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) 第 22.3 章《戰線三：小隊養成、武學演化與動態經濟 (F3-05)》
-- **核心目標**：借鑒 Final Fantasy XII 戰術 Gambit 體系，為招募同伴（鐵牛、凌霜、墨衍、燕青）建立基於優先級的條件觸發行為鏈（如：`[隊友氣血 < 35%] ➔ [施放回春術]`、`[目標處於吟唱蓄力中] ➔ [施放太白斷空 (打斷技)]`、`[前排隊友承傷過高] ➔ [金鐘護體]`），使半即時小隊戰鬥兼具策略深度與自動化流暢手感。
-
-### 📋 微任務清單 (Micro-Tasks)
-
-- [ ] **Task 1 (F3-05-GAMBIT-MODEL): Gambit 規則模型與資料驅動條件/動作枚舉**
-  - 定義 `GambitRule`、`GambitCondition`（目標範圍、閾值類型、比較運算子）與 `GambitAction` 領域模型。
-  - 在 `PartyMember.java` 擴充 `gambitRules` 優先級規則鏈列表與啟用/停用開關。
-- [ ] **Task 2 (F3-05-EVALUATOR): Gambit 條件評估器與戰術決策引擎**
-  - 實裝 `GambitEvaluatorService`，按順序評估夥伴規則鏈，精準匹配第一條滿足條件的動作與目標。
-  - 整合 `DrpgCombatLoop` 與 `DrpgEnemyTacticsService`，夥伴於冷卻完畢時優先執行 Gambit 決策。
-- [ ] **Task 3 (F3-05-PRESETS-DATA): 預設戰術範本庫與資料驅動配置**
-  - 在 `data/party/gambit_presets.json` 建立【急救續航】、【斷法攻堅】、【守禦護坦】、【全力爆發】等預設範本。
-  - 支援夥伴招募時自帶符合其門派特性的戰術預設。
-- [ ] **Task 4 (F3-05-FE-UI & VERIFY): 前端 Gambit 戰術配置面板與專屬測試驗證**
-  - 在小隊彈窗 (`party-modal.js`) 實裝 Gambit 規則拖曳排序、條件/動作下拉選單與預設一鍵套用介面。
-  - 編寫專屬整合測試 `CompanionGambitEngineTest.java`，跑通全量 353+ 測試回歸。
+- 可選推進項目（參照 [`FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md)）：
+  - **Milestone F2-02**: 罡氣破防與虛弱受擊暴擊連攜 (Poise Break & Stagger Vulnerability, P1)
+  - **Milestone F3-02**: 小隊共鳴陣法動態切換與陣眼奧義 (Formation Dynamic Resonances, P1)
+  - **Milestone F4-01**: 地牢動態戰場環境詞條與五行相剋 (Dungeon Affixes & Elemental Affinities, P1)
 
 ---
 
 ## 🏆 已完成里程碑 (Completed Milestones)
+
+- [x] **Milestone F3-05 — 隊友自動戰術 Gambit 規則鏈引擎 (Companion Gambit AI Chains, P1)**
+  - Task 1 (F3-05-GAMBIT-MODEL): 定義 `GambitRule`、`GambitActionType`、擴充 `TacticsCondition`（`ENEMY_IS_CASTING`, `ENEMY_CASTING_INTERRUPTIBLE`, `ENEMY_POISE_BROKEN`, `ENEMY_HP_LESS_THAN`, `ALLY_SAN_LESS_THAN`）與 `TacticsTarget`（`CASTING_ENEMY`, `POISE_BROKEN_ENEMY`, `LOWEST_HP_ENEMY`）；`PartyMember` 增加 `gambitEnabled` (預設 `true`) 開關，`initDefaultTactics` 自動將反制打斷技能（`taibai_interrupt` 或帶 `INTERRUPT` 標籤）配置為 Priority 1 最高優先級。
+  - Task 2 (F3-05-EVALUATOR): 擴充 `DrpgEnemyTacticsService.evaluateTacticsCondition` 實現新增戰術條件精準求值；實裝 `resolveEnemyTarget` 智慧解析打斷目標、破防弱點怪與最低氣血怪；`DrpgCombatLoop` 實裝 `gambitEnabled` 防護與戰術單體目標動態綁定。
+  - Task 3 (F3-05-PRESETS-DATA): 建立資料驅動戰術範本庫 `data/party/gambit_presets.json`（【斷法攻堅】、【急救續航】、【守禦護坦】、【破防爆發】）；`TemplateRepository` 與 `TemplateCatalog` 自動快取載入；`PartyMember.applyGambitPreset` 支援依同伴技能標籤智慧適配策略鏈；`PartyCommand` 擴充 `party tactics <idx> gambit on|off` 與 `party tactics <idx> preset <id>|list`。
+  - Task 4 (F3-05-FE-UI & VERIFY): 前端 `party-tactics-tab.js` 實裝 Gambit 自動戰術總開關狀態徽章、快速切換按鈕、戰術範本庫下拉選單與新增條件/目標選項；編寫專屬整合測試 `CompanionGambitEngineTest.java`（4/4 綠燈），全專案 357 項測試 100% 綠燈全數通過。
 
 - [x] **Milestone F2-01 — 敵方行動預告蓄力條與即時反制打斷 (Combat React, COMBAT-REACT-01, P1)**
   - Task 1 (F2-01-CAST-MODEL): `UnifiedSkill` 擴充 `getCastTimeMs()` / `isInterruptible()` 介面方法；`BattleEnemy` 實裝 `CastingState` 狀態枚舉 (`IDLE`/`CASTING`/`INTERRUPTED`/`COMPLETED`) 與當前施法招式結構。

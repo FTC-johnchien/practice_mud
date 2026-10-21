@@ -8,6 +8,23 @@
 
 ## 📌 最新里程碑 (Latest Releases)
 
+### [2026-10-21] Milestone F3-05：隊友自動戰術 Gambit 規則鏈引擎 (Companion Gambit AI Chains, P1)
+- **Gambit 領域模型與資料驅動條件/動作枚舉 (Task 1)**：
+  - 新增領域枚舉 `GambitActionType` (`SKILL`, `ITEM`, `DEFENSE`, `ATTACK`)，擴充 `TacticsRule` 支援 `actionType` 與 `itemId`。
+  - 擴充 `TacticsCondition` 新增 `ENEMY_IS_CASTING`、`ENEMY_CASTING_INTERRUPTIBLE`、`ENEMY_POISE_BROKEN`、`ENEMY_HP_LESS_THAN`、`ALLY_SAN_LESS_THAN`。
+  - 擴充 `TacticsTarget` 新增 `CASTING_ENEMY`、`POISE_BROKEN_ENEMY`、`LOWEST_HP_ENEMY`。
+  - 建立領域模型 `GambitRule` 並提供便利工廠方法（`ofInterrupt`、`ofHeal`、`ofEmergencySan`、`ofPoiseBrokenBurst`）；`PartyMember` 增加 `gambitEnabled` (預設 `true`) 開關，`initDefaultTactics` 自動將反制打斷技能配置為 Priority 1 最高優先級（目標為 `CASTING_ENEMY`）。
+- **戰術條件評估器與動態目標解析 (Task 2)**：
+  - `DrpgEnemyTacticsService.evaluateTacticsCondition` 補齊新增戰術條件求值邏輯；新增 `resolveEnemyTarget` 智慧解析蓄力吟唱中敵怪、破防失衡弱點怪與最低氣血怪；擴充 `resolveAllyTarget` 支援道心受損隊友精準鎖定。
+  - `DrpgCombatLoop` 在 `tryTriggerCompanionTactics` 中加入 `!member.isGambitEnabled()` 守護，並在單體傷害招式中動態綁定戰術目標。
+- **資料驅動戰術範本庫與指令擴充 (Task 3)**：
+  - 新建預設戰術範本庫 `data/party/gambit_presets.json`（收錄【斷法攻堅】、【急救續航】、【守禦護坦】、【破防爆發】4 大經典方針），建立 `GambitPreset` 模型。
+  - `TemplateRepository` 與 `TemplateCatalog` 自動快取載入，落實唯一真相源 (SSoT)。
+  - `PartyMember.applyGambitPreset` 支援依同伴技能標籤智慧適配策略鏈；`PartyCommand` 擴充 `party tactics <idx> gambit on|off` 與 `party tactics <idx> preset <id>|list`。
+- **前端配置介面與專屬測試驗證 (Task 4)**：
+  - 前端 `party-tactics-tab.js` 實裝 Gambit 自動戰術總開關狀態徽章、快速切換按鈕、戰術範本庫下拉選單與新增條件/目標選項。
+  - 編寫專屬整合測試 `CompanionGambitEngineTest.java`（4/4 綠燈），全專案 357 項測試 100% 綠燈通過。
+
 ### [2026-10-21] Milestone F2-01：敵方行動預告蓄力條與即時反制打斷 (Combat React, COMBAT-REACT-01, P1)
 - **技能與敵方行動前搖/可打斷模型擴充 (Task 1)**：
   - `UnifiedSkill.java` 介面擴充 `getCastTimeMs()` 與 `isInterruptible()` 預設契約，大一統修煉與戰鬥技能的施法屬性。

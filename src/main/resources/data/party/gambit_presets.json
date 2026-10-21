@@ -1,0 +1,169 @@
+[
+  {
+    "id": "interrupt_focus",
+    "name": "斷法攻堅",
+    "icon": "⚡⚔️",
+    "description": "反制打斷特化方針。敵方正在吟唱且可打斷時立即反制中斷，破防時全力重擊，殘血敵怪精準斬殺。",
+    "rules": [
+      {
+        "priority": 1,
+        "condition": "ENEMY_CASTING_INTERRUPTIBLE",
+        "conditionValue": 0,
+        "target": "CASTING_ENEMY",
+        "actionType": "SKILL",
+        "preferredTag": "INTERRUPT",
+        "fallbackSkillId": "taibai_interrupt"
+      },
+      {
+        "priority": 2,
+        "condition": "ENEMY_POISE_BROKEN",
+        "conditionValue": 0,
+        "target": "POISE_BROKEN_ENEMY",
+        "actionType": "SKILL",
+        "preferredTag": "BURST",
+        "fallbackSkillId": "sword_storm"
+      },
+      {
+        "priority": 3,
+        "condition": "ENEMY_HP_LESS_THAN",
+        "conditionValue": 30,
+        "target": "LOWEST_HP_ENEMY",
+        "actionType": "SKILL",
+        "preferredTag": "PIERCE",
+        "fallbackSkillId": "sword_pierce"
+      },
+      {
+        "priority": 4,
+        "condition": "ALWAYS",
+        "conditionValue": 0,
+        "target": "CURRENT_ENEMY",
+        "actionType": "SKILL",
+        "preferredTag": "ATTACK",
+        "fallbackSkillId": "sword_pierce"
+      }
+    ]
+  },
+  {
+    "id": "emergency_sustain",
+    "name": "急救續航",
+    "icon": "🌿💖",
+    "description": "醫修輔助續航方針。隊友瀕死急救、道心受損安撫、劇毒異常驅散，維持隊伍穩健存續。",
+    "rules": [
+      {
+        "priority": 1,
+        "condition": "ALLY_HP_LESS_THAN",
+        "conditionValue": 35,
+        "target": "LOWEST_HP_ALLY",
+        "actionType": "SKILL",
+        "preferredTag": "HEAL",
+        "fallbackSkillId": "divine_healing"
+      },
+      {
+        "priority": 2,
+        "condition": "ALLY_SAN_LESS_THAN",
+        "conditionValue": 40,
+        "target": "LOWEST_HP_ALLY",
+        "actionType": "SKILL",
+        "preferredTag": "CLEANSE",
+        "fallbackSkillId": "tranquil_mind"
+      },
+      {
+        "priority": 3,
+        "condition": "ALLY_HAS_DEBUFF",
+        "conditionValue": 0,
+        "target": "LOWEST_HP_ALLY",
+        "actionType": "SKILL",
+        "preferredTag": "CLEANSE",
+        "fallbackSkillId": "purify"
+      },
+      {
+        "priority": 4,
+        "condition": "ALLY_HP_LESS_THAN",
+        "conditionValue": 75,
+        "target": "LOWEST_HP_ALLY",
+        "actionType": "SKILL",
+        "preferredTag": "HEAL",
+        "fallbackSkillId": "divine_healing"
+      }
+    ]
+  },
+  {
+    "id": "guardian_tank",
+    "name": "守禦護坦",
+    "icon": "🛡️⛰️",
+    "description": "鐵壁肉盾守禦方針。第一時間打斷敵方法術、自身缺盾時即刻凝氣結印，多怪時嘲諷吸怪保衛後排。",
+    "rules": [
+      {
+        "priority": 1,
+        "condition": "ENEMY_CASTING_INTERRUPTIBLE",
+        "conditionValue": 0,
+        "target": "CASTING_ENEMY",
+        "actionType": "SKILL",
+        "preferredTag": "INTERRUPT",
+        "fallbackSkillId": "shield_slam"
+      },
+      {
+        "priority": 2,
+        "condition": "SELF_LACKS_SHIELD",
+        "conditionValue": 0,
+        "target": "SELF",
+        "actionType": "SKILL",
+        "preferredTag": "SHIELD",
+        "fallbackSkillId": "golden_shield"
+      },
+      {
+        "priority": 3,
+        "condition": "ENEMY_COUNT_GTE",
+        "conditionValue": 2,
+        "target": "CURRENT_ENEMY",
+        "actionType": "SKILL",
+        "preferredTag": "TAUNT",
+        "fallbackSkillId": "taunt_roar"
+      },
+      {
+        "priority": 4,
+        "condition": "ALWAYS",
+        "conditionValue": 0,
+        "target": "CURRENT_ENEMY",
+        "actionType": "SKILL",
+        "preferredTag": "BLUNT",
+        "fallbackSkillId": "heavy_strike"
+      }
+    ]
+  },
+  {
+    "id": "poise_burst",
+    "name": "破防爆發",
+    "icon": "💥🌪️",
+    "description": "合擊攻堅爆發方針。敵怪破防失衡時發動終結連擊，蓄滿靈氣時傾瀉高傷仙術。",
+    "rules": [
+      {
+        "priority": 1,
+        "condition": "ENEMY_POISE_BROKEN",
+        "conditionValue": 0,
+        "target": "POISE_BROKEN_ENEMY",
+        "actionType": "SKILL",
+        "preferredTag": "BURST",
+        "fallbackSkillId": "sword_storm"
+      },
+      {
+        "priority": 2,
+        "condition": "RESOURCE_GTE",
+        "conditionValue": 50,
+        "target": "LOWEST_HP_ENEMY",
+        "actionType": "SKILL",
+        "preferredTag": "AOE",
+        "fallbackSkillId": "sword_storm"
+      },
+      {
+        "priority": 3,
+        "condition": "ALWAYS",
+        "conditionValue": 0,
+        "target": "CURRENT_ENEMY",
+        "actionType": "SKILL",
+        "preferredTag": "ATTACK",
+        "fallbackSkillId": "sword_pierce"
+      }
+    ]
+  }
+]
