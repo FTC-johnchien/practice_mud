@@ -37,14 +37,30 @@ public class CombatFsmService {
       long durationMs,
       boolean interruptible
   ) {
-    if (enemy == null || !enemy.isAlive()) return;
-    enemy.startIntent(icon, actionName, type, scope, durationMs, interruptible);
-    log.debug("Monster [{}] entered CASTING state for [{}] (duration={}ms, interruptible={})",
-        enemy.getName(), actionName, durationMs, interruptible);
+    startEnemyCast(enemy, icon, actionName, type, scope, durationMs, interruptible, null);
   }
 
   /**
-   * 檢定技能是否具備打斷反制能力 (包含 STUN、SILENCE、CONTROL、SEAL 標籤或 stun 屬性)
+   * 啟動怪物蓄力施法階段 (CASTING) 並關聯具體技能 ID
+   */
+  public void startEnemyCast(
+      BattleEnemy enemy,
+      String icon,
+      String actionName,
+      String type,
+      String scope,
+      long durationMs,
+      boolean interruptible,
+      String skillId
+  ) {
+    if (enemy == null || !enemy.isAlive()) return;
+    enemy.startIntent(icon, actionName, type, scope, durationMs, interruptible, skillId);
+    log.debug("Monster [{}] entered CASTING state for [{}] (skillId={}, duration={}ms, interruptible={})",
+        enemy.getName(), actionName, skillId, durationMs, interruptible);
+  }
+
+  /**
+   * 檢定技能是否具備打斷反制能力 (包含 STUN、SILENCE、CONTROL、SEAL、PARRY、BREAK、INTERRUPT 標籤或 stun 屬性)
    */
   public boolean canInterrupt(PartyMemberSkill skill) {
     if (skill == null) return false;
@@ -55,7 +71,10 @@ public class CombatFsmService {
         if ("STUN".equalsIgnoreCase(tag)
             || "SILENCE".equalsIgnoreCase(tag)
             || "CONTROL".equalsIgnoreCase(tag)
-            || "SEAL".equalsIgnoreCase(tag)) {
+            || "SEAL".equalsIgnoreCase(tag)
+            || "PARRY".equalsIgnoreCase(tag)
+            || "BREAK".equalsIgnoreCase(tag)
+            || "INTERRUPT".equalsIgnoreCase(tag)) {
           return true;
         }
       }
@@ -78,7 +97,7 @@ public class CombatFsmService {
       return InterruptResult.notInterrupted();
     }
 
-    // 檢查技能是否具備打斷反制標籤 (STUN / SILENCE / CONTROL / SEAL)
+    // 檢查技能是否具備打斷反制標籤 (STUN / SILENCE / CONTROL / SEAL / PARRY / BREAK / INTERRUPT)
     if (!canInterrupt(skill)) {
       return InterruptResult.notInterrupted();
     }
@@ -108,5 +127,31 @@ public class CombatFsmService {
 
     log.debug("Interrupt successful: {} interrupted {}'s {}", casterName, enemyName, action);
     return new InterruptResult(true, action, stunMs, logMsg);
+  }
+
+  /**
+   * 罡氣破防打斷判定：若怪物在施法蓄力期間罡氣破防歸零 (Poise Broken)，即使普通攻擊亦可觸發中斷
+   */
+  public InterruptResult resolvePoiseBreakInterrupt(BattleEnemy enemy, PartyMember attacker) {
+    if (enemy == null || !enemy.isAlive()) {
+      return InterruptResult.notInterrupted();
+    }
+    // 檢查是否因罡氣破防而剛打斷了施法，或當前正處於施法且破防
+    String action = enemy.popLastBrokenCastingAction();
+    if (action == null && enemy.isCasting() && enemy.isInterruptible() && enemy.isPoiseBroken()) {
+      action = enemy.getCurrentAction();
+      enemy.triggerInterrupt("罡氣破防震散", 2500L);
+    }
+    if (action == null || action.isBlank()) {
+      return InterruptResult.notInterrupted();
+    }
+
+    String attackerName = (attacker != null) ? attacker.getName() : "隊伍";
+    String enemyName = enemy.getName();
+    String logMsg = "\u001B[1;31m⚡【罡氣破防打斷!】" + attackerName + " 猛烈攻勢震散【" + enemyName
+        + "】護體罡氣！打斷了【" + action + "】施法前搖，陷入嚴重失衡硬直！\u001B[0m";
+
+    log.debug("Poise break interrupt successful: {} interrupted {}'s {}", attackerName, enemyName, action);
+    return new InterruptResult(true, action, 2500L, logMsg);
   }
 }

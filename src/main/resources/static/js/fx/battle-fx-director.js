@@ -117,6 +117,9 @@ class BattleFxDirector {
             if (preset.impactFx) this.spawnFx(preset.impactFx, rect);
           } else if (outcome === 'ABSORBED') {
             this.spawnFx('fx-shield-block', rect);
+          } else if (outcome === 'INTERRUPTED' || outcome === 'INTERRUPT') {
+            this.spawnFx('fx-parry-sparks', rect);
+            if (preset.impactFx) this.spawnFx(preset.impactFx, rect);
           } else if (preset.impactFx) {
             this.spawnFx(preset.impactFx, rect);
           }
@@ -208,7 +211,9 @@ class BattleFxDirector {
       PARRIED: 'react-parry',
       DODGED: 'react-dodge',
       MISS: null,
-      ABSORBED: 'react-shield-hit'
+      ABSORBED: 'react-shield-hit',
+      INTERRUPTED: 'react-interrupted',
+      INTERRUPT: 'react-interrupted'
     }[outcome] || 'react-hit';
   }
 

@@ -245,6 +245,11 @@ public record SkillDefinition(
           SkillBridgeRule.of("sword_pierce", 1),
           SkillBridgeRule.of("sword_storm", 1)
       );
+      case "taibai_sword" -> List.of(
+          SkillBridgeRule.of("sword_pierce", 1),
+          SkillBridgeRule.of("taibai_interrupt", 1),
+          SkillBridgeRule.of("sword_storm", 3)
+      );
       case "basic_blade" -> List.of(
           SkillBridgeRule.of("sword_pierce", 1),
           SkillBridgeRule.of("tank_smash", 3)

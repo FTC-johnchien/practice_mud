@@ -54,6 +54,10 @@ public interface UnifiedSkill {
   List<String> getTags();
   List<String> getAllowedWeapons();
 
+  // === 施法蓄力與反制機制 (Combat React) ===
+  default long getCastTimeMs() { return 0L; }
+  default boolean isInterruptible() { return true; }
+
   // === 敘事文本 (招式動態播報) ===
   List<String> getMoves();
 }

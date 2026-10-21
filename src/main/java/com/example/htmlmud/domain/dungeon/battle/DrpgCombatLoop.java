@@ -465,7 +465,7 @@ public class DrpgCombatLoop {
 
           if (now >= enemy.getNextAttackTime()) {
             String preparedMove = enemy.getCurrentIntentName();
-            enemy.clearIntent();
+            enemy.finishCast();
             enemy.setNextAttackTime(now + enemy.getEffectiveAttackIntervalMs());
 
             PartyMember targetMember = tacticsService.selectPartyTarget(ctx, enemy);
@@ -1015,8 +1015,11 @@ public class DrpgCombatLoop {
               }
             }
 
-            // 蓄力打斷判定 (Milestone 1 / Task 2: Combat Engine FSM)
+            // 蓄力打斷判定 (Combat React: 標籤打斷 + 破防打斷)
             var interruptRes = combatFsmService.resolveSkillInterrupt(e, member, skill);
+            if (!interruptRes.interrupted() && e.isPoiseBroken()) {
+              interruptRes = combatFsmService.resolvePoiseBreakInterrupt(e, member);
+            }
             if (interruptRes.interrupted()) {
               broadcastLog(player, ctx, interruptRes.combatLog());
             }
@@ -1089,8 +1092,11 @@ public class DrpgCombatLoop {
             }
           }
 
-          // 蓄力打斷判定 (Milestone 1 / Task 2: Combat Engine FSM)
+          // 蓄力打斷判定 (Combat React: 標籤打斷 + 破防打斷)
           var interruptRes = combatFsmService.resolveSkillInterrupt(target, member, skill);
+          if (!interruptRes.interrupted() && target.isPoiseBroken()) {
+            interruptRes = combatFsmService.resolvePoiseBreakInterrupt(target, member);
+          }
           if (interruptRes.interrupted()) {
             broadcastLog(player, ctx, interruptRes.combatLog());
           }

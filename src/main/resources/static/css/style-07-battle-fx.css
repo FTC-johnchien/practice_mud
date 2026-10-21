@@ -84,6 +84,21 @@
   border-color: #f97316 !important;
 }
 
+.enemy-card.react-interrupted,
+.battle-party-grid-card.react-interrupted {
+  animation: react-interrupted-pulse 450ms ease-out;
+  box-shadow: 0 0 22px 5px rgba(250, 204, 21, 0.95), 0 0 35px rgba(239, 68, 68, 0.8) !important;
+  border-color: #facc15 !important;
+}
+
+@keyframes react-interrupted-pulse {
+  0% { transform: scale(1); filter: brightness(1); }
+  25% { transform: scale(0.92) rotate(-3deg); filter: brightness(2) drop-shadow(0 0 16px #facc15); }
+  50% { transform: scale(1.08) rotate(3deg); filter: brightness(1.7) drop-shadow(0 0 20px #ef4444); }
+  75% { transform: scale(0.97) rotate(-1deg); }
+  100% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+}
+
 @keyframes react-taunt-pulse {
   0% { transform: scale(1); filter: brightness(1); }
   50% { transform: scale(1.04); filter: brightness(1.3) drop-shadow(0 0 8px #f97316); }

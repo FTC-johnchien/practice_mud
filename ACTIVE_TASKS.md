@@ -6,29 +6,35 @@
 
 ---
 
-## 📌 當前焦點里程碑：Milestone F2-01 — 敵方行動預告蓄力條與即時反制打斷 (Combat React, COMBAT-REACT-01, P1)
+## 📌 當前焦點里程碑：Milestone F3-05 — 隊友自動戰術 Gambit 規則鏈引擎 (Companion Gambit AI Chains, P1)
 
-- **長遠藍圖**：[`FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) 第 22.2 章《戰線二：戰鬥深度突破與動態沉浸博弈 (F2-01)》
-- **核心目標**：在 DRPG 半即時戰鬥中引入敵方強力招式前搖吟唱 (Casting Window)，支援前端視覺化蓄力條預告；玩家與隊友可於窗口期內打出帶有 `STUN`、`SILENCE`、`PARRY` 或高 Poise 破防打斷技，觸發失衡中斷與虛弱，大幅提升戰鬥博弈深度。
+- **長遠藍圖**：[`FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) 第 22.3 章《戰線三：小隊養成、武學演化與動態經濟 (F3-05)》
+- **核心目標**：借鑒 Final Fantasy XII 戰術 Gambit 體系，為招募同伴（鐵牛、凌霜、墨衍、燕青）建立基於優先級的條件觸發行為鏈（如：`[隊友氣血 < 35%] ➔ [施放回春術]`、`[目標處於吟唱蓄力中] ➔ [施放太白斷空 (打斷技)]`、`[前排隊友承傷過高] ➔ [金鐘護體]`），使半即時小隊戰鬥兼具策略深度與自動化流暢手感。
 
 ### 📋 微任務清單 (Micro-Tasks)
 
-- [ ] **Task 1 (F2-01-CAST-MODEL): 技能與敵方行動前搖/可打斷模型擴充**
-  - 在 `SkillDefinition.java` / `UnifiedSkill.java` 擴充 `castTimeMs`（吟唱蓄力時間）、`interruptible`（是否可被打斷標籤）。
-  - 在 `MobTemplate.java` 與 `BattleEnemy.java` 擴充敵方蓄力招式設定與當前施法狀態結構 (`CastingState` / `currentCastingSkill`)。
-- [ ] **Task 2 (F2-01-CAST-LOOP): 戰鬥迴圈吟唱窗口推進與打斷判定**
-  - 在 `DrpgCombatLoop` 與 `CombatService` 實裝敵人施法前搖計時窗口；在吟唱期間敵方持續推進蓄力進度。
-  - 結算受擊時若判定帶有控制或打斷標籤（`STUN`, `SILENCE`, `PARRY`, 或罡氣破防），立刻中斷吟唱並進入短暫破防失衡狀態。
-- [ ] **Task 3 (F2-01-REACT-ACTION): 玩家與小隊反制技能與戰況廣播**
-  - 擴充玩家/隊友反制招式（如 `太白斷空`、`震天撼地`、格擋偏架），成功打斷時發布 `COMBAT_INTERRUPT` 戰鬥事件。
-  - DTO 擴充 `DrpgCombatantDto` 支援 `castingSkillId`、`castingProgress`、`interruptible` 即時下發。
-- [ ] **Task 4 (F2-01-FE-CASTBAR & VERIFY): 前端蓄力條特效渲染與專屬測試驗證**
-  - 前端 `drpg-renderer.js` / `battle-panel.js` 於敵方血條上方實裝青藍色/猩紅色動態蓄力條 (`.casting-bar`) 與打斷特效 (`⚡ 打斷!`)。
-  - 編寫專屬整合測試 `CombatReactInterruptTest.java`，並跑通全量 348+ 測試回歸。
+- [ ] **Task 1 (F3-05-GAMBIT-MODEL): Gambit 規則模型與資料驅動條件/動作枚舉**
+  - 定義 `GambitRule`、`GambitCondition`（目標範圍、閾值類型、比較運算子）與 `GambitAction` 領域模型。
+  - 在 `PartyMember.java` 擴充 `gambitRules` 優先級規則鏈列表與啟用/停用開關。
+- [ ] **Task 2 (F3-05-EVALUATOR): Gambit 條件評估器與戰術決策引擎**
+  - 實裝 `GambitEvaluatorService`，按順序評估夥伴規則鏈，精準匹配第一條滿足條件的動作與目標。
+  - 整合 `DrpgCombatLoop` 與 `DrpgEnemyTacticsService`，夥伴於冷卻完畢時優先執行 Gambit 決策。
+- [ ] **Task 3 (F3-05-PRESETS-DATA): 預設戰術範本庫與資料驅動配置**
+  - 在 `data/party/gambit_presets.json` 建立【急救續航】、【斷法攻堅】、【守禦護坦】、【全力爆發】等預設範本。
+  - 支援夥伴招募時自帶符合其門派特性的戰術預設。
+- [ ] **Task 4 (F3-05-FE-UI & VERIFY): 前端 Gambit 戰術配置面板與專屬測試驗證**
+  - 在小隊彈窗 (`party-modal.js`) 實裝 Gambit 規則拖曳排序、條件/動作下拉選單與預設一鍵套用介面。
+  - 編寫專屬整合測試 `CompanionGambitEngineTest.java`，跑通全量 353+ 測試回歸。
 
 ---
 
 ## 🏆 已完成里程碑 (Completed Milestones)
+
+- [x] **Milestone F2-01 — 敵方行動預告蓄力條與即時反制打斷 (Combat React, COMBAT-REACT-01, P1)**
+  - Task 1 (F2-01-CAST-MODEL): `UnifiedSkill` 擴充 `getCastTimeMs()` / `isInterruptible()` 介面方法；`BattleEnemy` 實裝 `CastingState` 狀態枚舉 (`IDLE`/`CASTING`/`INTERRUPTED`/`COMPLETED`) 與當前施法招式結構。
+  - Task 2 (F2-01-CAST-LOOP): `DrpgCombatLoop` 與 `CombatFsmService` 實裝施法前搖窗口、`resolveSkillInterrupt` 控制標籤打斷與 `resolvePoiseBreakInterrupt` 罡氣破防打斷；怪物攻擊結算落實 `finishCast()` 狀態流轉。
+  - Task 3 (F2-01-REACT-ACTION): `party_skills.json` 新增反制專屬技能 `taibai_interrupt`（太白斷空）；打斷成功發送 `HitOutcome.INTERRUPTED` 與戰況高亮廣播；DTO 完備支援蓄力進度與反制標籤。
+  - Task 4 (F2-01-FE-CASTBAR & VERIFY): 前端 `battle-panel.js` 動態蓄力條、`floating-text.js` 閃耀 `⚡ 打斷!` 浮動文字、`battle-fx-director.js` 與 `style-07-battle-fx.css` 實裝 `.react-interrupted` 震盪受擊光效；編寫專屬整合測試 `CombatReactInterruptTest`（5/5 綠燈），全專案 353 項測試 100% 綠燈通過。
 
 - [x] **Milestone F1-01 — Player 徹底降級為純空間代理與實體雙寫徹底清零 (Unified Character Core, P1)**
   - Task 1 (F1-01-PROXY-DELEGATE): 重構 `GetCommand` 與 `DropCommand`，拾取/丟棄 100% 只操作 `party.getInventory()`，移除對 `player.getInventory()` 的雙寫；`WorldFactory.createCorpse` 玩家死亡掉落物品優先從小隊行囊提取。

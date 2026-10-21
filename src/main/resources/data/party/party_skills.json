@@ -392,5 +392,31 @@
       "STAFF",
       "WAND"
     ]
+  },
+  {
+    "id": "taibai_interrupt",
+    "name": "太白斷空",
+    "icon": "⚡",
+    "description": "以神念凝聚一線劍氣直刺敵方經絡，造成 160% 物理傷害並強制打斷蓄力，附帶沉默 2 秒",
+    "costType": "COMBO",
+    "costValue": 2,
+    "cooldownMs": 6000,
+    "damageMultiplier": 1.6,
+    "damageType": "PIERCE",
+    "poiseDamage": 35,
+    "aoe": false,
+    "heal": false,
+    "taunt": false,
+    "stun": false,
+    "tags": [
+      "ATTACK",
+      "SWORD",
+      "INTERRUPT",
+      "SILENCE",
+      "METAL"
+    ],
+    "allowedWeapons": [
+      "SWORD"
+    ]
   }
 ]

@@ -8,6 +8,21 @@
 
 ## 📌 最新里程碑 (Latest Releases)
 
+### [2026-10-21] Milestone F2-01：敵方行動預告蓄力條與即時反制打斷 (Combat React, COMBAT-REACT-01, P1)
+- **技能與敵方行動前搖/可打斷模型擴充 (Task 1)**：
+  - `UnifiedSkill.java` 介面擴充 `getCastTimeMs()` 與 `isInterruptible()` 預設契約，大一統修煉與戰鬥技能的施法屬性。
+  - `BattleEnemy.java` 引入施法狀態枚舉 `CastingState` (`IDLE`, `CASTING`, `INTERRUPTED`, `COMPLETED`)、`currentCastingSkillId` 與 `lastBrokenCastingAction`，提供嚴謹的狀態流轉與破防被打斷動作追蹤。
+- **戰鬥迴圈吟唱窗口推進與打斷判定 (Task 2)**：
+  - `DrpgCombatLoop.java` 在敵方行動前搖時推進蓄力進度，並於普通攻擊與技能結算中全面導入 `resolveSkillInterrupt` 控制標籤打斷與 `resolvePoiseBreakInterrupt` 罡氣破防打斷機制。
+  - 怪物蓄力攻擊結算落實 `finishCast()` 轉為 `COMPLETED`，確保未被打斷的蓄力招式能精準釋放。
+- **玩家與小隊反制技能與戰況廣播 (Task 3)**：
+  - `party_skills.json` 新增專屬反制打斷技能 `taibai_interrupt`（太白斷空，造成 160% 穿刺傷害並帶有 `INTERRUPT` 與 `SILENCE` 標籤）；`SkillDefinition.java` 擴充 `taibai_sword` 橋接映射。
+  - 結算受擊時發布帶有 `HitOutcome.INTERRUPTED` 的戰鬥事件與 ANSI 高亮彩色戰報，即時告知怪物罡氣潰散與失衡力竭。
+- **前端蓄力條特效渲染與專屬測試驗證 (Task 4)**：
+  - 前端 `battle-panel.js` 動態渲染青藍/猩紅蓄力條、可斷/霸體標籤與剩餘倒數秒數；`floating-text.js` 彈出高亮金黃色 `⚡ 打斷！` 浮動文字。
+  - `battle-fx-director.js` 與 `style-07-battle-fx.css` 實裝 `.react-interrupted` 劇烈震動與雷電受擊光效。
+  - 新增專屬整合測試 `CombatReactInterruptTest.java`（5/5 綠燈），全專案 353 項測試 100% 綠燈通過。
+
 ### [2026-10-21] Milestone F1-01：Player 徹底降級為純空間代理與實體雙寫徹底清零 (Unified Character Core, P1)
 - **Player 背包與物品操作委派化與雙寫清零 (Task 1)**：
   - 重構 `GetCommand.java` 與 `DropCommand.java`，拾取與丟棄物品 100% 只操作 `party.getInventory()`，徹底移除歷史殘留對 `player.getInventory()` 的同步雙寫，徹底根除雙軌假帳。

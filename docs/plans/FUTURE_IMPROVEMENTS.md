@@ -1015,7 +1015,7 @@ flowchart TD
 | **F1-02** | 後端領域層 Service 包結構按業務模組拆分 | **P1** | [`後端_M1`](../manual/後端_M1_探索與世界模組_WORLD_AND_EXPLORATION.md) ~ [`M6`](../manual/後端_M6_物品背包與經濟模組_ITEM_AND_ECONOMY.md) | *(無關)* | [`ARCHITECTURE.md`](../../ARCHITECTURE.md) |
 | **F1-03** | 看門狗棘輪全面清零 (26 處 fallback 歸零) | **P1** | [`後端_M7`](../manual/後端_M7_資料驅動模板模組_DATA_DRIVEN_TEMPLATES.md) | *(無關)* | [`ARCHITECTURE_SUMMARY.md`](../overview/ARCHITECTURE_SUMMARY.md) |
 | **F1-04** | 前端歷史樣式巨石 `style.css` (122 KB) 安全除役 | **P2** | *(無關)* | [`前端_FE6`](../manual/前端_FE6_七層樣式串流與視覺主題_CSS_TOKENS_AND_THEMES.md) | [`FRONTEND_LAYOUT_GUIDE.md`](../overview/FRONTEND_LAYOUT_GUIDE.md) |
-| **F2-01** | 敵方行動預告蓄力條與即時反制打斷 (Combat React) | **P1** | [`後端_M3`](../manual/後端_M3_核心戰鬥引擎模組_COMBAT_ENGINE.md) | [`前端_FE3`](../manual/前端_FE3_戰鬥擂台與特效引擎_BATTLE_ARENA_AND_FX.md) | [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md) |
+| **F2-01** | 敵方行動預告蓄力條與即時反制打斷 (Combat React) ✅ *(已完成)* | **P1** | [`後端_M3`](../manual/後端_M3_核心戰鬥引擎模組_COMBAT_ENGINE.md) | [`前端_FE3`](../manual/前端_FE3_戰鬥擂台與特效引擎_BATTLE_ARENA_AND_FX.md) | [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md) |
 | **F2-02** | 首領多階段血條與狂暴轉階段機制 (Boss Phases) | **P2** | [`後端_M3`](../manual/後端_M3_核心戰鬥引擎模組_COMBAT_ENGINE.md) | [`前端_FE3`](../manual/前端_FE3_戰鬥擂台與特效引擎_BATTLE_ARENA_AND_FX.md) | [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md) |
 | **F2-03** | 十二時辰更迭與微氣候生態動態遇敵 | **P2** | [`後端_M1`](../manual/後端_M1_探索與世界模組_WORLD_AND_EXPLORATION.md) / [`後端_M2`](../manual/後端_M2_DRPG網格地牢模組_DRPG_DUNGEON.md) | [`前端_FE2`](../manual/前端_FE2_DRPG視口與雷達渲染器_DRPG_VIEWPORT_RENDERER.md) / [`前端_FE4`](../manual/前端_FE4_城鎮中樞與動作列面板_TOWN_HUB_AND_ACTION_BAR.md) | [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md) |
 | **F2-04** | 道心異化深淵靈視 (Sanity Breakdown) | **P2** | [`後端_M4`](../manual/後端_M4_小隊生靈與陣法模組_PARTY_AND_FORMATION.md) | [`前端_FE3`](../manual/前端_FE3_戰鬥擂台與特效引擎_BATTLE_ARENA_AND_FX.md) | [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md) |
@@ -1096,12 +1096,16 @@ flowchart TD
 
 ### 22.2 戰線二：戰鬥深度突破與動態沉浸博弈 (P1 ~ P2)
 
-#### 1. F2-01：敵方行動預告蓄力條與即時反制打斷 (Combat React, COMBAT-REACT-01)
+#### 1. F2-01：敵方行動預告蓄力條與即時反制打斷 (Combat React, COMBAT-REACT-01) ✅ [已完成]
 - **機制設計**：
   - 怪物強力招式配置 `castTimeMs` 與 `interruptible` 標籤。
   - 怪物進入 `CASTING` 施法前搖，前端 FE-3 即時展示青藍色/猩紅色蓄力進度條。
-  - 玩家或同伴 Gambit 在吟唱窗口內打出帶有 `STUN`（眩暈）、`SILENCE`（沉默）或 `PARRY`（精準偏架）招式，觸發失衡打斷（`⚡ 打斷!`），造成怪物破防並進入虛弱狀態。
-- **當前落地**：已建立為 [`ACTIVE_TASKS.md`](../../ACTIVE_TASKS.md) 之 **Milestone 1** 進行中任務。
+  - 玩家或同伴 Gambit 在吟唱窗口內打出帶有 `STUN`（眩暈）、`SILENCE`（沉默）、`PARRY`（精準偏架）或高 Poise 破防招式，觸發失衡打斷（`⚡ 打斷!`），造成怪物破防並進入虛弱狀態。
+- **落地實施成果 (2026-10-21)**：
+  1. **模型擴充 (Task 1)**：`UnifiedSkill.java` 增加 `getCastTimeMs()` 與 `isInterruptible()` 介面方法；`BattleEnemy.java` 引入施法狀態枚舉 `CastingState` (`IDLE`, `CASTING`, `INTERRUPTED`, `COMPLETED`) 與 `lastBrokenCastingAction` 破防中斷追蹤。
+  2. **戰鬥迴圈與狀態機 (Task 2)**：`DrpgCombatLoop` 與 `CombatFsmService` 支援控制標籤反制打斷 (`resolveSkillInterrupt`) 與罡氣破防打斷 (`resolvePoiseBreakInterrupt`)；怪物攻擊結算完備呼叫 `finishCast()`。
+  3. **反制招式與戰況廣播 (Task 3)**：`party_skills.json` 實裝反制專屬技能 `taibai_interrupt`（太白斷空）；打斷成功即時推送 `HitOutcome.INTERRUPTED` 與彩色戰報。
+  4. **前端視覺與專屬驗證 (Task 4)**：`battle-panel.js` 實裝動態蓄力條與可斷/霸體標籤；`floating-text.js` 與 `style-07-battle-fx.css` 實裝 `⚡ 打斷！` 浮動文字與 `.react-interrupted` 劇烈震動光效；編寫專屬整合測試 `CombatReactInterruptTest.java`（5/5 綠燈），全專案 353 項測試 100% 綠燈通過。
 
 #### 2. F2-02：首領多階段血條與狂暴轉階段機制 (Boss Phases & Enrage)
 - 首領氣血跌至 70%、30% 時觸發轉階段（Phase Transition）：清除當前負面 Debuff、更換狂暴招式池、場景光影異化並召喚護法雜兵。

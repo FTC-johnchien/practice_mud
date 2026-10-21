@@ -68,8 +68,9 @@ export function spawnFloatingText(layer, rect, hit, ev) {
         text = '🛡️ 護盾吸收';
         break;
       case 'INTERRUPT':
+      case 'INTERRUPTED':
         cls.push('ft-interrupt');
-        text = '⚡ 打斷！';
+        text = hit.amount > 0 ? `⚡ 打斷！ -${hit.amount}` : '⚡ 打斷！';
         break;
       default:
         if (ev.type === 'SHIELD') {

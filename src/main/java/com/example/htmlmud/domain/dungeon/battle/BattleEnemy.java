@@ -102,7 +102,17 @@ public class BattleEnemy implements Combatant, Buffable {
   private String dodgeSkillId;
   private String parrySkillId;
 
-  // Telegraph / Intent 欄位 (ENEMY-INTENT-01)
+  // Telegraph / Intent / Casting 欄位 (ENEMY-INTENT-01 & F2-01 COMBAT-REACT-01)
+  public enum CastingState {
+    IDLE,
+    CASTING,
+    INTERRUPTED,
+    COMPLETED
+  }
+
+  @Builder.Default
+  private CastingState castingState = CastingState.IDLE;
+  private String currentCastingSkillId;
   private String currentIntentIcon;
   private String currentIntentName;
   @Builder.Default
@@ -118,6 +128,11 @@ public class BattleEnemy implements Combatant, Buffable {
   @Builder.Default
   private boolean interruptible = true;
 
+  public void startIntent(String icon, String name, String type, String scope, long durationMs, boolean interruptible, String skillId) {
+    this.currentCastingSkillId = skillId;
+    startIntent(icon, name, type, scope, durationMs, interruptible);
+  }
+
   public void startIntent(String icon, String name, String type, String scope, long durationMs, boolean interruptible) {
     this.currentIntentIcon = icon;
     this.currentIntentName = name;
@@ -127,21 +142,43 @@ public class BattleEnemy implements Combatant, Buffable {
     this.castStartTime = System.currentTimeMillis();
     this.isCasting = this.castDurationMs > 0;
     this.interruptible = interruptible;
+    this.castingState = this.isCasting ? CastingState.CASTING : CastingState.IDLE;
   }
 
   public void startIntent(String icon, String name, String type, String scope, long durationMs) {
     startIntent(icon, name, type, scope, durationMs, this.interruptible);
   }
 
+  public void finishCast() {
+    this.castingState = CastingState.COMPLETED;
+    clearIntent();
+  }
+
   public void clearIntent() {
     this.currentIntentIcon = null;
     this.currentIntentName = null;
+    this.currentCastingSkillId = null;
     this.currentIntentType = "PHYSICAL";
     this.intentTargetScope = "SINGLE";
     this.isCasting = false;
     this.castDurationMs = 0;
     this.castStartTime = 0;
     this.interruptible = true;
+    if (this.castingState == CastingState.CASTING) {
+      this.castingState = CastingState.IDLE;
+    }
+  }
+
+  public CastingState getCastingState() {
+    return castingState != null ? castingState : (isCasting ? CastingState.CASTING : CastingState.IDLE);
+  }
+
+  public String getCurrentCastingSkillId() {
+    return currentCastingSkillId;
+  }
+
+  public void setCurrentCastingSkillId(String skillId) {
+    this.currentCastingSkillId = skillId;
   }
 
   public long getCastRemainingMs() {
@@ -179,6 +216,13 @@ public class BattleEnemy implements Combatant, Buffable {
   }
 
   private String lastInterruptReason;
+  private String lastBrokenCastingAction;
+
+  public String popLastBrokenCastingAction() {
+    String act = this.lastBrokenCastingAction;
+    this.lastBrokenCastingAction = null;
+    return act;
+  }
 
   /**
    * 觸發施法反制打斷：重置蓄力、破防失衡、進入力竭狀態
@@ -187,6 +231,7 @@ public class BattleEnemy implements Combatant, Buffable {
     if (!isCasting || !interruptible) {
       return false;
     }
+    this.castingState = CastingState.INTERRUPTED;
     clearIntent();
     triggerPoiseBreak();
     if (stunDurationMs > 0) {
@@ -374,6 +419,11 @@ public class BattleEnemy implements Combatant, Buffable {
     this.poiseBroken = true;
     this.poise = 0;
     this.poiseBrokenTicksRemaining = 14; // 7 秒 (14 Ticks) 力竭期
+    if (this.isCasting) {
+      this.lastBrokenCastingAction = (this.currentIntentName != null ? this.currentIntentName : "蓄力招式");
+      this.castingState = CastingState.INTERRUPTED;
+      this.lastInterruptReason = "罡氣破防震散";
+    }
     clearIntent(); // 打斷大招與施法意圖
   }
 
