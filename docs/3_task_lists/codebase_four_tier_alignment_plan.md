@@ -14,10 +14,10 @@
 
 | 層級與文檔核心契約 | 代碼實況 (Code Reality) | 狀態 | 核心脫節檔案與影響範圍 |
 | :--- | :--- | :---: | :--- |
-| **Level 1: 需求與願景層**<br>• 賽博修仙四大流派<br>• 去文字指令化純單機<br>• 世界觀克蘇魯外神卵鞘 | • 技能模型與資料仍為傳統武道修仙<br>• 前端底部仍殘留文字指令按鈕與輸入框<br>• 敵怪文本與任務仍偏傳統古風武俠 | 🟡<br>需推進 | • `PartyMemberSkill.java`<br>• `index.html:651-661`<br>• `party_skills.json`<br>• `zones/` 各區文本 |
-| **Level 2: 模組與規格層**<br>• `M1`/`M7`: 選單式營地設施<br>• `M3`: 罡氣削韌、精神護盾<br>• `ITEM_SCHEMA`: 隨機詞綴庫<br>• `SKILL_SCHEMA`: 超頻階級 | • 營地目錄仍以舊 MUD `rooms.json` 存放<br>• 戰鬥心跳仍有 40% 機率隊友背刺<br>• 裝備僅有固定加成，無隨機詞綴池結構<br>• 技能尚未擴充 `overclockTier` 等欄位 | 🔴<br>重點治理 | • `DrpgCombatLoop.java:230-320`<br>• `PartyItemSlot.java`<br>• `PartyMemberSkill.java`<br>• `data/zones/newbie_village/` |
+| **Level 1: 需求與願景層**<br>• 賽博修仙四大流派<br>• 去文字指令化純單機<br>• 世界觀克蘇魯外神卵鞘 | • 技能模型已支援四大流派與超頻階級<br>• 前端常規視圖文字指令輸入框已徹底下架<br>• 敵怪文本與任務正向外神卵鞘垂直切片推進 | 🟢<br>已對齊 | • `PartyMemberSkill.java` ✅<br>• `index.html` ✅<br>• `party_skills.json` ✅<br>• `zones/` 後續擴充 |
+| **Level 2: 模組與規格層**<br>• `M1`/`M7`: 選單式營地設施<br>• `M3`: 罡氣削韌、精神護盾<br>• `ITEM_SCHEMA`: 隨機詞綴庫<br>• `SKILL_SCHEMA`: 超頻階級 | • 心魔背刺隊友已徹底拔除，轉為精神萎靡<br>• 隨機詞綴結構 (`ItemAffix`) 與屬性累加已落地<br>• 技能實體已具備流派、超頻與連攜角色<br>• 營地目錄正待由 `rooms.json` 轉型為選單設施 | 🟡<br>持續收斂 | • `DrpgCombatLoop.java` ✅<br>• `PartyItemSlot.java` ✅<br>• `ItemAffix.java` ✅<br>• `data/zones/newbie_village/` 待推進 |
 | **Level 3: 全局任務清單層**<br>• 純單機典範確立<br>• 多人廣播與房間位移除役<br>• 技術債與硬編碼清剿 | • 後端類別仍殘留 `broadcastToOthers`<br>• 仍存在未完全配置化之怪物與地牢 fallback | 🟡<br>收斂中 | • `Mob.java`, `Room.java`<br>• `RoomService.java`<br>• `DungeonService.java` |
-| **Level 4: 當前焦點看板層**<br>• VS-01: 序章第一人稱垂直切片<br>• 373+ 單元測試 100% 綠燈 | • 現有 373 項測試全綠，具備極佳護欄<br>• 需在無損既有測試前提下重構背刺與資料 | 🟢<br>底座健全 | • `PartyInventoryAndMadnessTest.java`<br>• `AllTests (373 tests passed)` |
+| **Level 4: 當前焦點看板層**<br>• VS-01: 序章第一人稱垂直切片<br>• 375+ 單元測試 100% 綠燈 | • 現有 375 項測試全綠，護欄持續擴充<br>• 核心模型已站穩，全力支撐 VS-01 序章落地 | 🟢<br>底座健全 | • `CyberSkillAndItemAffixTest.java` ✅<br>• `AllTests (375 tests passed)` |
 
 ---
 
@@ -33,20 +33,20 @@
     3. 清理未使用的 `selectRandomTeammateExcept` 死代碼。
   - **交付標準**：徹底消除戰鬥中心魔背刺隊友的挫敗機制。✅ 已落地完成 (373 測試全綠)
 
-- [ ] **Task 1.2 (ALIGN-SKILL-SCHEMA): 技能實體擴充四大賽博流派與超頻階級 (對齊 L1/L2 SKILL_SCHEMA)**
+- [x] **Task 1.2 (ALIGN-SKILL-SCHEMA): 技能實體擴充四大賽博流派與超頻階級 (對齊 L1/L2 SKILL_SCHEMA)**
   - **目標檔案**：[`PartyMemberSkill.java`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyMemberSkill.java)、`party_skills.json`
   - **執行動作**：
-    1. 在 `PartyMemberSkill` 擴充 `School` 流派枚舉（`HACKER`, `BIOCHEMICAL`, `MECHANICAL`, `PSIONIC`）。
-    2. 新增 `overclockTier`（超頻階級 0~3）、`comboRole`（`PRIMER` / `DETONATOR` / `NONE`）欄位。
-    3. 更新基礎技能配置檔，對齊《賽博修仙技能規格》。
-  - **交付標準**：技能模型具備完整的賽博特工戰技定義能力。
+    1. 在 `PartyMemberSkill` 擴充 `CyberSchool` 流派枚舉（`CYBER_HACK`, `GENE_BIO`, `MECHA_CULT`, `VOID_PSI`）。
+    2. 新增 `overclockTier`（超頻階級 0~3）、`comboRole`（`PRIMER` / `DETONATOR` / `NONE`）欄位與 `cyberLore` 文本。
+    3. 在 `party_skills.json` 注入首批賽博特工戰技【神經超頻步】與【強殖角質刃】。
+  - **交付標準**：技能模型具備完整的賽博特工戰技定義能力。✅ 已落地完成 (375 測試全綠)
 
-- [ ] **Task 1.3 (ALIGN-ITEM-AFFIX): 裝備模型支援隨機詞綴池 (對齊 L2 M6 / ITEM_SCHEMA)**
-  - **目標檔案**：[`PartyItemSlot.java`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyItemSlot.java)、[`ItemDefinition.java`](../../src/main/java/com/example/htmlmud/domain/item/model/ItemDefinition.java)
+- [x] **Task 1.3 (ALIGN-ITEM-AFFIX): 裝備模型支援隨機詞綴池 (對齊 L2 M6 / ITEM_SCHEMA)**
+  - **目標檔案**：[`PartyItemSlot.java`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyItemSlot.java)、[`ItemAffix.java`](../../src/main/java/com/example/htmlmud/domain/item/model/ItemAffix.java)
   - **執行動作**：
-    1. 擴充裝備欄位支援 `affixes`（前綴與後綴清單，包含屬性詞條、抗性、削韌倍率）。
-    2. 定義 7 階稀有度（白、綠、藍、紫、金、紅、彩）之詞綴數量上限。
-  - **交付標準**：裝備系統具備刷寶遊戲核心的隨機詞綴承載能力。
+    1. 建立 `ItemAffix` 實體，支援 `PREFIX`（前綴）與 `SUFFIX`（後綴）雙向修飾。
+    2. 在 `PartyItemSlot` 擴充隨機詞綴清單、削韌強度 (`poiseBreakPower`)、需求等級與動態合成名稱與屬性累加計算。
+  - **交付標準**：裝備系統具備刷寶遊戲核心的隨機詞綴承載能力。✅ 已落地完成 (375 測試全綠)
 
 ---
 

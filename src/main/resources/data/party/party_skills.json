@@ -577,5 +577,56 @@
     "minPartyAlive": 2,
     "requiredFormation": null,
     "formationEnergyCost": 50
+  },
+  {
+    "id": "skill_neural_overclock_step",
+    "name": "神經超頻步",
+    "icon": "⚡👣",
+    "description": "特工晶片向運動神經束注入瞬時超頻電流，身法如鬼魅位移，劍鋒精準直刺敵方詠唱破綻。",
+    "school": "CYBER_HACK",
+    "overclockTier": 1,
+    "comboRole": "PRIMER",
+    "costType": "SP",
+    "costValue": 20,
+    "gcdMs": 800,
+    "castTimeMs": 0,
+    "cooldownMs": 4000,
+    "damageMultiplier": 1.4,
+    "damageType": "PHYSICAL",
+    "poiseDamage": 25,
+    "aoe": false,
+    "heal": false,
+    "allowedWeapons": [],
+    "tags": [
+      "CYBER_HACK",
+      "PRIMER",
+      "INTERRUPT"
+    ],
+    "cyberLore": "特工晶片向運動神經束注入瞬時超頻電流，身法如鬼魅位移，劍鋒精準直刺敵方詠唱破綻。"
+  },
+  {
+    "id": "skill_bio_keratin_blade",
+    "name": "強殖角質刃",
+    "icon": "🧬🗡️",
+    "description": "激活外神母體退化基因，手臂骨骼瞬間刺出漆黑幾丁質刃鋒，對破防弱點造成毀滅引爆。",
+    "school": "GENE_BIO",
+    "overclockTier": 1,
+    "comboRole": "DETONATOR",
+    "costType": "SP",
+    "costValue": 35,
+    "gcdMs": 1000,
+    "castTimeMs": 0,
+    "cooldownMs": 5000,
+    "damageMultiplier": 2.2,
+    "damageType": "POISON",
+    "poiseDamage": 45,
+    "aoe": false,
+    "heal": false,
+    "allowedWeapons": [],
+    "tags": [
+      "GENE_BIO",
+      "DETONATOR"
+    ],
+    "cyberLore": "激活外神母體退化基因，手臂骨骼瞬間刺出漆黑幾丁質刃鋒，對破防弱點造成毀滅引爆。"
   }
 ]

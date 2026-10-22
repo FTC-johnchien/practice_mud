@@ -37,7 +37,9 @@
 - [x] **Milestone DEC-ALIGN — 四層級文檔對齊與代碼歷史毒瘤清剿 (Four-Tier Alignment & Legacy Purge, P1)**
   - Task 1 (DEC-01-COMBAT / ALIGN-COMBAT-SAN): 重構 `DrpgCombatLoop.java`，徹底拔除隊員 40% 心魔背刺攻擊隊友與畸變體變身敵方首領邏輯，落地純單機精神萎靡 Debuff (-15% 傷害輸出)，清理 `selectRandomTeammateExcept` 死代碼。
   - Task 2 (DEC-02-HTML / ALIGN-FE-CMD-PURGE): 徹底下架 `index.html` 底部文字指令輸入框 (`#cmd-input-container`) 與操作列按鈕 (`toggle-cmd-input`)，`app.js` 導向開發者終端，介面 100% 按鈕與 WASD 走格化。
-  - Task 3 (ALIGN-TEST-VERIFY): 執行 `.\test.ps1`，全專案 373 項單元與整合測試 100% 綠燈通過，無損回歸。
+  - Task 3 (ALIGN-SKILL-SCHEMA): 在 `PartyMemberSkill` 擴充四大賽博修仙流派 (`CyberSchool`)、超頻階級 (`overclockTier`)、連攜角色 (`ComboRole`) 與雙重疊影文本，並在 `party_skills.json` 注入首批賽博特工戰技【神經超頻步】與【強殖角質刃】。
+  - Task 4 (ALIGN-ITEM-AFFIX): 建立隨機詞綴實體 `ItemAffix` (PREFIX/SUFFIX)，在 `PartyItemSlot` 支援詞綴池動態掛載、合成名稱格式化與動態數值累加計算。
+  - Task 5 (ALIGN-TEST-VERIFY): 撰寫專屬測試 `CyberSkillAndItemAffixTest.java`，執行 `.\test.ps1`，全專案 375 項單元與整合測試 100% 綠燈通過。
 
 - [x] **Milestone F3-01 — 古仙陣法動態連攜合擊技與共鳴印記 (Cross Combos & Formation Resonance, P1)**
   - Task 1 (F3-01-COMBO-MODEL): 在 `CombatRules.java` 中建立純函數式跨隊員動態連攜判定 `evaluateCrossComboStep` 與 `CrossComboResolution` 模型，支援 3.5s 連攜時間窗口、同目標接力檢定、雙星合璧 (+25% 傷, +15 削韌)、三才混元 (+50% 傷, +25 削韌, +5 SAN)、四象誅仙 (+100% 傷, +40 削韌, +10 SAN, 終結技就緒)。

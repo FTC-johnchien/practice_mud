@@ -57,6 +57,86 @@ public class PartyItemSlot {
   @Builder.Default
   private int bonusSan = 0;
 
+  // === Level 2 ITEM_SCHEMA 隨機詞綴與賽博特工規格 ===
+  @Builder.Default
+  private java.util.List<com.example.htmlmud.domain.item.model.ItemAffix> affixes = new java.util.ArrayList<>();
+  @Builder.Default
+  private int poiseBreakPower = 0; // 戰鬥削韌強度
+  @Builder.Default
+  private int requiredLevel = 1;
+  private String cyberLore; // 科技底層/背景設定描述
+
+  public void addAffix(com.example.htmlmud.domain.item.model.ItemAffix affix) {
+    if (affix == null) return;
+    if (this.affixes == null) {
+      this.affixes = new java.util.ArrayList<>();
+    }
+    this.affixes.add(affix);
+  }
+
+  public String getDisplayNameWithAffixes() {
+    if (affixes == null || affixes.isEmpty()) {
+      return name;
+    }
+    String prefixStr = affixes.stream()
+        .filter(a -> a.type() == com.example.htmlmud.domain.item.model.ItemAffix.AffixType.PREFIX)
+        .map(com.example.htmlmud.domain.item.model.ItemAffix::name)
+        .findFirst().orElse("");
+    String suffixStr = affixes.stream()
+        .filter(a -> a.type() == com.example.htmlmud.domain.item.model.ItemAffix.AffixType.SUFFIX)
+        .map(com.example.htmlmud.domain.item.model.ItemAffix::name)
+        .findFirst().orElse("");
+    return prefixStr + (name != null ? name : "") + suffixStr;
+  }
+
+  public int getTotalBonusMinDamage() {
+    int sum = bonusMinDamage;
+    if (affixes != null) {
+      for (var a : affixes) {
+        if ("bonusMinDamage".equals(a.statKey()) || "physicalAttack".equals(a.statKey())) {
+          sum += (int) a.value();
+        }
+      }
+    }
+    return sum;
+  }
+
+  public int getTotalBonusMaxDamage() {
+    int sum = bonusMaxDamage;
+    if (affixes != null) {
+      for (var a : affixes) {
+        if ("bonusMaxDamage".equals(a.statKey()) || "physicalAttack".equals(a.statKey())) {
+          sum += (int) a.value();
+        }
+      }
+    }
+    return sum;
+  }
+
+  public int getTotalBonusDefense() {
+    int sum = bonusDefense;
+    if (affixes != null) {
+      for (var a : affixes) {
+        if ("bonusDefense".equals(a.statKey()) || "armor".equals(a.statKey())) {
+          sum += (int) a.value();
+        }
+      }
+    }
+    return sum;
+  }
+
+  public int getTotalPoiseBreakPower() {
+    int sum = poiseBreakPower;
+    if (affixes != null) {
+      for (var a : affixes) {
+        if ("poiseBreakPower".equals(a.statKey())) {
+          sum += (int) a.value();
+        }
+      }
+    }
+    return sum;
+  }
+
   public boolean isConsumable() {
     return itemType == ItemType.CONSUMABLE || "SKILL_CORE".equals(subType);
   }

@@ -1,0 +1,124 @@
+package com.example.htmlmud;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import com.example.htmlmud.domain.item.model.ItemAffix;
+import com.example.htmlmud.domain.model.enums.EquipmentSlot;
+import com.example.htmlmud.domain.model.enums.ItemType;
+import com.example.htmlmud.domain.party.model.PartyItemSlot;
+import com.example.htmlmud.domain.party.model.PartyMemberSkill;
+import com.example.htmlmud.domain.party.model.PartyMemberSkill.ComboRole;
+import com.example.htmlmud.domain.party.model.PartyMemberSkill.CyberSchool;
+import com.example.htmlmud.domain.party.service.PartyService;
+
+@SpringBootTest
+class CyberSkillAndItemAffixTest {
+
+  @Autowired
+  private PartyService partyService;
+
+  @Test
+  @DisplayName("測試賽博修仙技能模型：四大流派、超頻階級與 Primer/Detonator 連攜角色判定")
+  void testCyberSkillModelAndSchools() {
+    PartyMemberSkill hackSkill = PartyMemberSkill.builder()
+        .id("skill_neural_overclock_step")
+        .name("神經超頻步")
+        .school(CyberSchool.CYBER_HACK)
+        .overclockTier(1)
+        .comboRole(ComboRole.PRIMER)
+        .poiseDamage(25)
+        .damageMultiplier(1.4)
+        .cyberLore("特工晶片向運動神經束注入瞬時超頻電流。")
+        .build();
+
+    assertThat(hackSkill.getSchool()).isEqualTo(CyberSchool.CYBER_HACK);
+    assertThat(hackSkill.getOverclockTier()).isEqualTo(1);
+    assertThat(hackSkill.isPrimer()).isTrue();
+    assertThat(hackSkill.isDetonator()).isFalse();
+    assertThat(hackSkill.getPoiseDamage()).isEqualTo(25);
+    assertThat(hackSkill.getCyberLore()).contains("特工晶片");
+
+    PartyMemberSkill bioSkill = PartyMemberSkill.builder()
+        .id("skill_bio_keratin_blade")
+        .name("強殖角質刃")
+        .school(CyberSchool.GENE_BIO)
+        .overclockTier(2)
+        .comboRole(ComboRole.DETONATOR)
+        .poiseDamage(45)
+        .damageMultiplier(2.2)
+        .build();
+
+    assertThat(bioSkill.getSchool()).isEqualTo(CyberSchool.GENE_BIO);
+    assertThat(bioSkill.getOverclockTier()).isEqualTo(2);
+    assertThat(bioSkill.isPrimer()).isFalse();
+    assertThat(bioSkill.isDetonator()).isTrue();
+    assertThat(bioSkill.getDamageMultiplier()).isEqualTo(2.2);
+  }
+
+  @Test
+  @DisplayName("測試裝備隨機詞綴池 (ItemAffix)：前綴後綴名稱組合與動態屬性疊加結算")
+  void testItemAffixesAndDynamicBonusCalculation() {
+    // 構造一把基礎青銅古劍
+    PartyItemSlot sword = PartyItemSlot.builder()
+        .slotId("slot-test-sword")
+        .itemId("bronze_sword")
+        .name("青銅古劍")
+        .equipSlot(EquipmentSlot.MAIN_HAND)
+        .itemType(ItemType.WEAPON)
+        .bonusMinDamage(10)
+        .bonusMaxDamage(15)
+        .bonusDefense(2)
+        .poiseBreakPower(20)
+        .build();
+
+    assertThat(sword.getDisplayNameWithAffixes()).isEqualTo("青銅古劍");
+    assertThat(sword.getTotalBonusMinDamage()).isEqualTo(10);
+    assertThat(sword.getTotalBonusMaxDamage()).isEqualTo(15);
+    assertThat(sword.getTotalBonusDefense()).isEqualTo(2);
+    assertThat(sword.getTotalPoiseBreakPower()).isEqualTo(20);
+
+    // 附加前綴：超頻透鏡之 (+5 物理攻擊)
+    ItemAffix prefix = ItemAffix.builder()
+        .id("affix_overclock_prefix")
+        .type(ItemAffix.AffixType.PREFIX)
+        .name("超頻透鏡之")
+        .statKey("physicalAttack")
+        .value(5.0)
+        .build();
+    sword.addAffix(prefix);
+
+    // 附加後綴：干擾頻譜 (+10 削韌強度, +3 護甲)
+    ItemAffix suffixPoise = ItemAffix.builder()
+        .id("affix_jam_suffix")
+        .type(ItemAffix.AffixType.SUFFIX)
+        .name("干擾頻譜")
+        .statKey("poiseBreakPower")
+        .value(10.0)
+        .build();
+    ItemAffix suffixArmor = ItemAffix.builder()
+        .id("affix_armor_suffix")
+        .type(ItemAffix.AffixType.SUFFIX)
+        .name("之厚重")
+        .statKey("armor")
+        .value(3.0)
+        .build();
+    sword.addAffix(suffixPoise);
+    sword.addAffix(suffixArmor);
+
+    // 驗證動態合成名稱包含前綴與後綴
+    assertThat(sword.getDisplayNameWithAffixes()).contains("超頻透鏡之青銅古劍");
+    assertThat(sword.getDisplayNameWithAffixes()).contains("干擾頻譜");
+
+    // 驗證屬性動態累加
+    assertThat(sword.getTotalBonusMinDamage()).isEqualTo(15); // 10 + 5
+    assertThat(sword.getTotalBonusMaxDamage()).isEqualTo(20); // 15 + 5
+    assertThat(sword.getTotalBonusDefense()).isEqualTo(5);    // 2 + 3
+    assertThat(sword.getTotalPoiseBreakPower()).isEqualTo(30); // 20 + 10
+  }
+}

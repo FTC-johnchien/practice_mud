@@ -120,14 +120,39 @@ public class PartyMemberSkill implements UnifiedSkill {
     return defense || (tags != null && tags.contains("DEFENSE"));
   }
 
+  public enum CyberSchool {
+    NONE,        // 傳統/未指定
+    CYBER_HACK,  // 黑客劫持 (神經超頻、算力逆流、破綻打斷)
+    GENE_BIO,    // 強殖生化 (外神同化、甲殼強殖、異形毒素)
+    MECHA_CULT,  // 機械修真 (經脈義體化、高頻電弧、過載重創)
+    VOID_PSI     // 虛數靈能 (量子道心、空間折疊、虛空湮滅)
+  }
+
+  public enum ComboRole {
+    NONE,
+    PRIMER,
+    DETONATOR
+  }
+
+  // === Level 2 SKILL_SCHEMA 賽博四大流派、超頻階級與連攜角色 ===
+  @Builder.Default
+  private CyberSchool school = CyberSchool.NONE;
+  @Builder.Default
+  private int overclockTier = 0; // 0~3
+  @Builder.Default
+  private ComboRole comboRole = ComboRole.NONE;
+  private String cyberLore;
+
   @Override
   public boolean isDetonator() {
-    return (tags != null && (tags.contains("DETONATOR") || tags.contains("DETONATE")));
+    return comboRole == ComboRole.DETONATOR
+        || (tags != null && (tags.contains("DETONATOR") || tags.contains("DETONATE")));
   }
 
   @Override
   public boolean isPrimer() {
-    return (buffConfig != null && buffConfig.category() == com.example.htmlmud.domain.model.enums.BuffCategory.PRIMER)
+    return comboRole == ComboRole.PRIMER
+        || (buffConfig != null && buffConfig.category() == com.example.htmlmud.domain.model.enums.BuffCategory.PRIMER)
         || (tags != null && (tags.contains("PRIMER") || tags.contains("SOUL_REND")));
   }
 
