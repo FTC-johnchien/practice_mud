@@ -72,6 +72,7 @@ public class DungeonFloorLoader {
   public static class LegendItemJson {
     private String type;
     private String name;
+    @com.fasterxml.jackson.annotation.JsonAlias("loreDescription")
     private String description;
     private Boolean passable;
     private String eventId;
@@ -87,6 +88,7 @@ public class DungeonFloorLoader {
     private int y;
     private String type;
     private String name;
+    @com.fasterxml.jackson.annotation.JsonAlias("loreDescription")
     private String description;
     private Boolean passable;
     private String eventId;

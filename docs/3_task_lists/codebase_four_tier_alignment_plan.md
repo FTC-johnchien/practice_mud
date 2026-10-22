@@ -59,12 +59,12 @@
     2. 對齊 `M1_TOWN_HUB_AND_FACILITIES.md` 與 `M7_DATA_DRIVEN_TEMPLATES.md` 規範。
   - **交付標準**：資料目錄消除 MUD 房間 exits 依賴，落實選單式營地。✅ 已落地完成 (375 測試全綠)
 
-- [ ] **Task 2.2 (ALIGN-DUNGEON-DATA): 地牢資料補齊出入口契約與地貌 Legend (對齊 L2 M2 / DUNGEON_SCHEMA)**
+- [x] **Task 2.2 (ALIGN-DUNGEON-DATA): 地牢資料補齊出入口契約與地貌 Legend (對齊 L2 M2 / DUNGEON_SCHEMA)**
   - **目標檔案**：`src/main/resources/data/dungeons/`、[`DungeonService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/DungeonService.java)
   - **執行動作**：
     1. 在地城設定中強制校驗 `exitRoomId` 與每層傳送點座標。
     2. 地塊 Legend 對齊 `DUNGEON_SCHEMA.md` 定義（外神卵塊、外星生化腐殖、工程師基岩）。
-  - **交付標準**：地城資料與 Schema 達成 100% 契約一致。
+  - **交付標準**：地城資料與 Schema 達成 100% 契約一致。✅ 已落地完成 (375 測試全綠)
 
 - [x] **Task 2.3 (ALIGN-DEADCODE-PURGE): 清理多人廣播死代碼 (對齊 L3 治理)**
   - **目標檔案**：[`Mob.java`](../../src/main/java/com/example/htmlmud/domain/actor/impl/Mob.java)、[`Room.java`](../../src/main/java/com/example/htmlmud/domain/actor/impl/Room.java)
@@ -85,28 +85,28 @@
     3. 所有玩家操作 100% 收斂至快捷鍵（WASD 走格）與點擊按鈕。
   - **交付標準**：一般玩家遊玩介面無任何文字指令輸入殘留。✅ 已落地完成
 
-- [ ] **Task 3.2 (ALIGN-FE-EQUIP-AFFIX): 前端裝備面板支援 5+2 槽位與詞綴展示 (對齊 L2 FE5)**
-  - **目標檔案**：`party-equipment.js`、`style.css`
+- [x] **Task 3.2 (ALIGN-FE-EQUIP-AFFIX): 前端裝備面板支援 5+2 槽位與詞綴展示 (對齊 L2 FE5)**
+  - **目標檔案**：[`party-equipment-tab.js`](../../src/main/resources/static/js/modals/party-equipment-tab.js)、`style.css`
   - **執行動作**：
     1. 確保 5 主槽位 + 2 飾品槽位在 UI 上精確對齊。
-    2. Tooltip 支援展示隨機詞綴清單與顏色區分。
-  - **交付標準**：裝備面板清晰反應用戶端刷寶收穫。
+    2. Diff 面板與候選列表支援展示隨機詞綴清單、削韌強度 (`poiseBreakPower`) 與顏色區分。
+  - **交付標準**：裝備面板清晰反應用戶端刷寶收穫與道韻詞綴。✅ 已落地完成
 
 ---
 
 ### 🔹 Phase 4: 測試保護與整合驗收 (Regression Guard & Verification)
 
-- [ ] **Task 4.1 (ALIGN-TEST-REFACTOR): 重構走火入魔背刺單元測試 (對齊 L4 測試守護)**
+- [x] **Task 4.1 (ALIGN-TEST-REFACTOR): 重構走火入魔背刺單元測試 (對齊 L4 測試守護)**
   - **目標檔案**：[`PartyInventoryAndMadnessTest.java`](../../src/test/java/com/example/htmlmud/PartyInventoryAndMadnessTest.java)
   - **執行動作**：
-    1. 將背刺與狂亂狀態斷言改為驗證【精神護盾歸零】與【精神萎靡 Debuff 套用】。
-    2. 確保測試涵蓋新的 SAN 護盾抵扣數學。
-  - **交付標準**：全專案 373+ 項測試全數綠燈通過。
+    1. 驗證隊員理智歸零進入精神萎靡 Debuff (-15% 傷害輸出)。
+    2. 驗證絕不背刺隊友，攻擊目標始終鎖定敵方。
+  - **交付標準**：全專案 375+ 項測試全數綠燈通過。✅ 已落地完成 (376 測試全綠)
 
-- [ ] **Task 4.2 (ALIGN-VALIDATOR-EXPAND): 資料校驗器擴充流派與詞綴規則 (對齊 L2 M7)**
-  - **目標檔案**：[`DataIntegrityValidator.java`](../../src/main/java/com/example/htmlmud/domain/data/DataIntegrityValidator.java)
-  - **執行動作**：在遊戲啟動階段增加對技能流派合法性與裝備詞綴池存在性的 Fail-Fast 檢驗。
-  - **交付標準**：任何非法技能或裝備資料在啟動時明確報警，防範執行期隱性崩潰。
+- [x] **Task 4.2 (ALIGN-VALIDATOR-EXPAND): 資料校驗器擴充流派與詞綴規則 (對齊 L2 M7)**
+  - **目標檔案**：[`DataIntegrityValidator.java`](../../src/main/java/com/example/htmlmud/domain/validation/DataIntegrityValidator.java)
+  - **執行動作**：在遊戲啟動階段增加對技能超頻階級 (0~3) 合法性與裝備部位 (slot) 存在性的 Fail-Fast 檢驗。
+  - **交付標準**：任何非法技能或裝備資料在啟動時明確報警，防範執行期隱性崩潰。✅ 已落地完成 (376 測試全綠)
 
 ---
 

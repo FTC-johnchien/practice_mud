@@ -119,6 +119,9 @@ public class DataIntegrityValidator implements ApplicationRunner {
       if (item.name() == null || item.name().isBlank()) {
         warnings.add("物品 [" + item.id() + "] 名稱為空！");
       }
+      if (item.equipmentProp() != null && item.equipmentProp().slot() == null) {
+        warnings.add("裝備物品 [" + item.id() + "] 未指定裝備部位 (slot)！");
+      }
     }
     return items.size();
   }
@@ -410,6 +413,10 @@ public class DataIntegrityValidator implements ApplicationRunner {
     for (var psk : partySkills.values()) {
       if (psk.getId() == null || psk.getId().isBlank()) {
         errors.add("發現 ID 為空的小隊技能模板！");
+        continue;
+      }
+      if (psk.getOverclockTier() < 0 || psk.getOverclockTier() > 3) {
+        errors.add("小隊技能 [" + psk.getId() + "] 超頻階級 overclockTier (" + psk.getOverclockTier() + ") 超出合法範圍 [0, 3]！");
       }
     }
     return count + partySkills.size();

@@ -1074,9 +1074,11 @@ export function renderEquipmentDiffPickerView(party) {
       const isSelected = (it.slotId === picker.selectedSlotId);
       let statsParts = [];
       if (it.bonusMinDamage || it.bonusMaxDamage) statsParts.push(`攻 +${it.bonusMinDamage}~${it.bonusMaxDamage}`);
+      if (it.poiseBreakPower) statsParts.push(`削韌 +${it.poiseBreakPower}`);
       if (it.bonusDefense) statsParts.push(`防 +${it.bonusDefense}`);
       if (it.bonusHp) statsParts.push(`血 +${it.bonusHp}`);
       if (it.bonusSan) statsParts.push(`心 +${it.bonusSan}`);
+      if (it.affixes && it.affixes.length > 0) statsParts.push(`✨ 詞綴×${it.affixes.length}`);
       const statsStr = statsParts.length > 0 ? statsParts.join(' ‧ ') : '基礎裝備';
 
       return `
@@ -1223,10 +1225,25 @@ export function renderEquipmentDiffPickerView(party) {
           <div style="font-size:14px;font-weight:bold;color:#cbd5e1;margin-bottom:6px;">📊 屬性變化比較：</div>
           ${renderDiffMetric('物理攻擊 (最小)', curItem?.bonusMinDamage, selectedCandidate.bonusMinDamage)}
           ${renderDiffMetric('物理攻擊 (最大)', curItem?.bonusMaxDamage, selectedCandidate.bonusMaxDamage)}
+          ${renderDiffMetric('削韌破防強度', curItem?.poiseBreakPower, selectedCandidate.poiseBreakPower)}
           ${renderDiffMetric('護甲防禦', curItem?.bonusDefense, selectedCandidate.bonusDefense)}
           ${renderDiffMetric('氣血加成', curItem?.bonusHp, selectedCandidate.bonusHp)}
           ${renderDiffMetric('道心增幅', curItem?.bonusSan, selectedCandidate.bonusSan)}
         </div>
+
+        <!-- 隨機道韻詞綴展示 (Affix Pool) -->
+        ${(selectedCandidate.affixes && selectedCandidate.affixes.length > 0) ? `
+          <div style="background:#1e293b;border:1px solid #d97706;border-radius:6px;padding:10px 14px;font-size:13px;">
+            <div style="font-weight:bold;color:#fbbf24;margin-bottom:6px;">✨ 隨機道韻詞綴 (${selectedCandidate.affixes.length})：</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              ${selectedCandidate.affixes.map(af => `
+                <span style="background:rgba(251,191,36,0.15);border:1px solid #d97706;color:#fde047;padding:2px 8px;border-radius:4px;font-size:12px;">
+                  ${af.type === 'PREFIX' ? '【前綴】' : '【後綴】'} ${af.name || ''}
+                </span>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
 
         <!-- 功法契合性提示 -->
         ${stanceCheckHtml}

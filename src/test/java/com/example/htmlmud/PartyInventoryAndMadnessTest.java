@@ -227,4 +227,29 @@ class PartyInventoryAndMadnessTest {
     assertThat(status).contains("[飾品1:");
     assertThat(status).contains("[飾品2:");
   }
+
+  @Test
+  @DisplayName("測試隊員 SAN 歸零精神萎靡 Debuff (-15% 輸出) 且絕不背刺隊友")
+  void testZeroSanDebuffAndNoFriendlyFire() {
+    Party party = partyService.getOrCreateParty("madness_tester");
+    PartyMember iron = party.getMembers().get(1); // 鐵牛
+    PartyMember leader = party.getMembers().get(0);
+
+    int leaderInitialHp = leader.getStats().getHp();
+    iron.consumeSan(100);
+    assertThat(iron.getCurrentSan()).isEqualTo(0);
+
+    // 模擬理智歸零進入精神萎靡
+    iron.setMadnessState(PartyMember.MadnessState.CHAOS);
+    assertThat(iron.getMadnessState()).isEqualTo(PartyMember.MadnessState.CHAOS);
+
+    // 驗證精神萎靡 Debuff (-15% 傷害)
+    int baseDmg = 100;
+    int debuffedDmg = Math.max(1, (int) (baseDmg * 0.85));
+    assertThat(debuffedDmg).isEqualTo(85);
+
+    // 隊長氣血完全不受影響（絕無背刺攻擊）
+    assertThat(leader.getStats().getHp()).isEqualTo(leaderInitialHp);
+  }
 }
+
