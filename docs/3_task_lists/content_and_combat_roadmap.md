@@ -15,7 +15,7 @@
 
 ## ⚔️ 13. 敵方行動預告、反制窗口與首領階段 (Readable & Reactive Combat) — Priority: P1 / P2
 
-> **來源**：2026-10-05 Codex 戰鬥呈現檢視；最新整體發展建議見 [`docs/references/Copilot_Review.md`](../references/Copilot_Review.md) §四。
+> **來源**：2026-10-05 Codex 戰鬥呈現檢視；最新整體發展建議見 [`docs/0_archive/references/Copilot_Review.md`](../0_archive/references/Copilot_Review.md) §四。
 > **核心目標**：讓玩家能讀懂敵方下一步、使用既有戰鬥資源反制，並將招式／首領階段維持在資料驅動規則內；先完成一個普通敵人與一個首領的垂直切片，不先引入 Lua 或大型行為樹框架。
 
 ### 13.1 敵方技能效果與預告狀態 (ENEMY-ACTION-01) (P1)
@@ -62,11 +62,11 @@
 ### 15.1 ✅ [已完成] 戰鬥視覺化：敵方意圖預告 (Intent Icon) 與卡片蓄力唱條 (Cast Bar) (ENEMY-INTENT-01) (P1)
 - **現狀核對**：原本敵方處於意圖盲盒狀態，怪物下一動何時出手、鎖定誰、施展什麼技能在命中前毫無圖形預兆，只能在 Log 洗版。
 - **落地進度**：已於 2026-10-08 完成。
-  1. **後端行動週期 (Telegraph Phase)**：[`DrpgCombatLoop.java`](./src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java) 導入攻擊前 1500ms 預告窗口；[`BattleEnemy.java`](./src/main/java/com/example/htmlmud/domain/dungeon/battle/BattleEnemy.java) 狀態機支援 `startIntent`、`clearIntent` 與 `getCastRemainingMs()`；遭受眩暈時自動中斷施法。
+  1. **後端行動週期 (Telegraph Phase)**：[`DrpgCombatLoop.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java) 導入攻擊前 1500ms 預告窗口；[`BattleEnemy.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/BattleEnemy.java) 狀態機支援 `startIntent`、`clearIntent` 與 `getCastRemainingMs()`；遭受眩暈時自動中斷施法。
   2. **視圖數據傳遞向後相容 (`BattleEnemyViewDto`)**：提供完整意圖欄位與既有 19 欄位重載相容建構子，維持 100% 舊代碼與測試相容。
   3. **敵方意圖圖標 (Intent Badge)**：怪物卡片（1x1、2x2、3x3、1x3、1x5）全數渲染 `.enemy-intent-container`，即時呈現意圖圖示（🗡️普攻、⚔️重擊、🔥/⚡法術、👁️深淵）、招式名稱、鎖定目標標籤（`➔ 隊員名`）與斷招標籤（`可斷`）。
   4. **敵方蓄力條 (Enemy Cast Bar)**：蓄力招式呈現動態進度條 `.enemy-cast-track` 與 `.enemy-cast-fill`，重擊與深淵蓄力自帶 `.intent-danger-telegraph` 危險紅色脈衝呼吸邊框，打斷或攻擊釋放後即時平滑移除。
-  5. **單元測試驗證**：專屬 [`EnemyIntentTest.java`](./src/test/java/com/example/htmlmud/EnemyIntentTest.java) 測試綠燈，全專案 252 項測試 100% 綠燈通過。
+  5. **單元測試驗證**：專屬 [`EnemyIntentTest.java`](../../src/test/java/com/example/htmlmud/EnemyIntentTest.java) 測試綠燈，全專案 252 項測試 100% 綠燈通過。
 
 ### 15.2 ✅ [已完成] 戰況與狀態視覺化：護盾血條疊層 (Shield Bar)、DoT 脈衝與 Buff 倒數光圈 (COMBAT-VFX-STATUS-02) (P1)
 - **現狀核對**：原本卡片僅有靜態文字秒數，護盾缺乏視覺張力，異常狀態缺乏呼吸動態。
@@ -100,9 +100,9 @@
 ### 15.6 ✅ [已完成] 戰鬥結算翻牌與修仙境界突破視覺化 (BATTLE-RESULT-01) (P2)
 - **現狀痛點**：戰鬥勝利後，經驗獲取與道具掉落全數以條列式文字輸出在 Log；境界突破（Lv Up）僅輸出「【金光灌頂】隊員突破境界！」。
 - **落地進度**：已於 2026-10-08 完成。
-  1. **結構化結算事件 (`BattleVictoryDto`)**：後端 [`DrpgRewardService.java`](./src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java) 於大捷時發布 `BattleVictoryDto`，攜帶戰鬥 ID、全員修為、靈石獲得、隊員突破明細與掉落物清單；文字 Log 全面收斂為單行摘要。
-  2. **戰後結算模態視窗 (`#battle-victory-modal`)**：於 [`index.html`](./src/main/resources/static/index.html) 與 [`style-07-battle-fx.css`](./src/main/resources/static/css/style-07-battle-fx.css) 打造金色暗調仙俠結算視窗，支援自適應呼吸光暈動畫、Space / Enter / Esc 快速關閉與聚焦。
-  3. **全員修為長條充能與境界突破光環**：[`victory-modal.js`](./src/main/resources/static/js/modals/victory-modal.js) 即時渲染隊員修為成長條平滑充能；升級隊員展現金色「✨ 境界突破！ Lv.X ➔ Lv.Y」徽章與數值成長說明。
+  1. **結構化結算事件 (`BattleVictoryDto`)**：後端 [`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java) 於大捷時發布 `BattleVictoryDto`，攜帶戰鬥 ID、全員修為、靈石獲得、隊員突破明細與掉落物清單；文字 Log 全面收斂為單行摘要。
+  2. **戰後結算模態視窗 (`#battle-victory-modal`)**：於 [`index.html`](../../src/main/resources/static/index.html) 與 [`style-07-battle-fx.css`](../../src/main/resources/static/css/style-07-battle-fx.css) 打造金色暗調仙俠結算視窗，支援自適應呼吸光暈動畫、Space / Enter / Esc 快速關閉與聚焦。
+  3. **全員修為長條充能與境界突破光環**：[`victory-modal.js`](../../src/main/resources/static/js/modals/victory-modal.js) 即時渲染隊員修為成長條平滑充能；升級隊員展現金色「✨ 境界突破！ Lv.X ➔ Lv.Y」徽章與數值成長說明。
   4. **戰利品 3D 翻牌動態 (3D Card Flip)**：背面為太極道紋「☯️ 秘寶封印」，支援 200ms 階梯式自動翻牌與「全部翻開」按鈕；正面依物品品質（凡品/下品/中品/上品/極品）呈現對應邊框流光色彩。
   5. **無障礙降級與併發隔離**：支援 `prefers-reduced-motion`；完善戰鬥虛擬執行緒中斷與測試隔離，全專案 250 項測試 100% 綠燈通過。
 

@@ -1,13 +1,13 @@
 # 專案歷史架構改善與演進紀錄庫 (Consolidated Future Improvements History)
 
 > **文件定位與目的**：
-> 本文件收錄《道祖是克蘇魯》專案自創立以來所有**已落地、已驗收並全數通過單元與整合測試（373+ 測試全綠燈）**之架構改善、模型解耦、性能調優、存檔加固與單機單體化戰役。  
-> 未來待實施之動態演化任務與純單機 DRPG 規劃，請參閱現行 👉 [**`FUTURE_IMPROVEMENTS.md`**](FUTURE_IMPROVEMENTS.md)。
+> 本文件收錄《道祖是克蘇魯》專案自創立以來所有**已落地、已驗收並全數通過單元與整合測試（376+ 測試全綠燈）**之架構改善、模型解耦、性能調優、存檔加固與單機單體化戰役。  
+> 未來待實施之動態演化任務與純單機 DRPG 規劃，請參閱現行 👉 [**`FUTURE_IMPROVEMENTS.md`**](../3_task_lists/FUTURE_IMPROVEMENTS.md)。
 
 ---
 
 ## 📌 歷史演進指針 (Navigation)
-- 👉 最新版本發布與詳細版本紀錄：請參閱 [**`CHANGELOG.md`**](CHANGELOG.md)。
+- 👉 最新版本發布與詳細版本紀錄：請參閱 [**`CHANGELOG.md`**](../../CHANGELOG.md)。
 - 👉 當前開發單一焦點與微任務：請參閱 [**`../4_active_tasks/ACTIVE_TASKS.md`**](../4_active_tasks/ACTIVE_TASKS.md)。
 
 ---

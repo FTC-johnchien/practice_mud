@@ -150,12 +150,12 @@ stateDiagram-v2
 ---
 
 ## 🔗 六、相關手冊索引
-- ⚡ 核心狀態與事件委派：[`docs/manual/前端_FE1_核心狀態與事件管線_CORE_STATE_AND_PIPELINE.md`](../manual/前端_FE1_核心狀態與事件管線_CORE_STATE_AND_PIPELINE.md)
-- 🗺️ DRPG 視口與雷達手冊：[`docs/manual/前端_FE2_DRPG視口與雷達渲染器_DRPG_VIEWPORT_RENDERER.md`](../manual/前端_FE2_DRPG視口與雷達渲染器_DRPG_VIEWPORT_RENDERER.md)
-- ⚔️ 戰鬥擂台與特效手冊：[`docs/manual/前端_FE3_戰鬥擂台與特效引擎_BATTLE_ARENA_AND_FX.md`](../manual/前端_FE3_戰鬥擂台與特效引擎_BATTLE_ARENA_AND_FX.md)
-- 🏛️ 城鎮中樞與動作列表冊：[`docs/manual/前端_FE4_城鎮中樞與動作列面板_TOWN_HUB_AND_ACTION_BAR.md`](../manual/前端_FE4_城鎮中樞與動作列面板_TOWN_HUB_AND_ACTION_BAR.md)
-- 👥 小隊彈窗與存檔手冊：[`docs/manual/前端_FE5_小隊裝備與存檔彈窗_PARTY_EQUIPMENT_AND_MODALS.md`](../manual/前端_FE5_小隊裝備與存檔彈窗_PARTY_EQUIPMENT_AND_MODALS.md)
-- 🎨 七層樣式串流手冊：[`docs/manual/前端_FE6_七層樣式串流與視覺主題_CSS_TOKENS_AND_THEMES.md`](../manual/前端_FE6_七層樣式串流與視覺主題_CSS_TOKENS_AND_THEMES.md)
+- ⚡ 核心狀態與事件委派：[`FE1_CORE_STATE_AND_PIPELINE.md`](FE1_CORE_STATE_AND_PIPELINE.md)
+- 🗺️ DRPG 視口與雷達手冊：[`FE2_DRPG_VIEWPORT_RENDERER.md`](FE2_DRPG_VIEWPORT_RENDERER.md)
+- ⚔️ 戰鬥擂台與特效手冊：[`FE3_BATTLE_ARENA_AND_FX.md`](FE3_BATTLE_ARENA_AND_FX.md)
+- 🏛️ 城鎮中樞與動作列表冊：[`FE4_TOWN_HUB_AND_ACTION_BAR.md`](FE4_TOWN_HUB_AND_ACTION_BAR.md)
+- 👥 小隊彈窗與存檔手冊：[`FE5_PARTY_EQUIPMENT_AND_MODALS.md`](FE5_PARTY_EQUIPMENT_AND_MODALS.md)
+- 🎨 七層樣式串流手冊：[`FE6_CSS_TOKENS_AND_THEMES.md`](FE6_CSS_TOKENS_AND_THEMES.md)
 
 ---
 

@@ -65,7 +65,7 @@ graph TD
   - `src/main/resources/data/hub/facilities.json`, `data/hub/dialogues.json`
 
 ### 2. M2: DRPG 網格地牢模組 (DRPG Dungeon)
-- 📖 **詳細技術手冊**：[`後端_M2_DRPG網格地牢模組_DRPG_DUNGEON.md`](../manual/後端_M2_DRPG網格地牢模組_DRPG_DUNGEON.md)
+- 📖 **詳細技術手冊**：[`backend/M2_DRPG_DUNGEON.md`](backend/M2_DRPG_DUNGEON.md)
 - **核心職責**：
   - 負責第一人稱地下城走格子探索，管理樓層座標（`GridCoord`）與朝向（`GridDirection`）。
   - 解算前方三步視野透視（`inspectForward`）與暗黑迷霧踩格探索記錄（`visited` 矩陣）。
@@ -77,7 +77,7 @@ graph TD
   - `src/main/resources/data/dungeons/*.json`
 
 ### 3. M3: 核心戰鬥引擎模組 (Combat Engine)
-- 📖 **詳細技術手冊**：[`後端_M3_核心戰鬥引擎模組_COMBAT_ENGINE.md`](../manual/後端_M3_核心戰鬥引擎模組_COMBAT_ENGINE.md)
+- 📖 **詳細技術手冊**：[`backend/M3_COMBAT_ENGINE.md`](backend/M3_COMBAT_ENGINE.md)
 - **核心職責**：
   - **半即時迴圈**：基於 200ms Tick 頻率推進戰鬥時間線，處理敵人攻擊間隔與玩家小隊技能 GCD/吟唱。
   - **圓桌判定演算法**：優先級單次骰算（未命中 ➔ 閃避 ➔ 招架 ➔ 暴擊 ➔ 普通命中）。
@@ -91,7 +91,7 @@ graph TD
   - `src/main/resources/data/party/party_skills.json`, `data/zones/*/mobs.json`
 
 ### 3.1 M3-1: 狀態效果與 Buff 結算模組 (Buff & Status Effects)
-- 📖 **詳細技術手冊**：[`後端_M3-1_狀態效果與Buff結算模組_BUFF_AND_STATUS_EFFECTS.md`](../manual/後端_M3-1_狀態效果與Buff結算模組_BUFF_AND_STATUS_EFFECTS.md)
+- 📖 **詳細技術手冊**：[`backend/M3_1_BUFF_AND_STATUS_EFFECTS.md`](backend/M3_1_BUFF_AND_STATUS_EFFECTS.md)
 - **核心職責**：
   - 管理生靈（玩家主角、小隊同伴、敵怪）狀態生命週期，支援限時心跳與 `PERMANENT_DURATION = -1` 常駐陣法光環。
   - WoW 式具名刷新策略：持續時間重置、層數累加、護盾取較大值、多重護盾「最短時效優先抵扣」。
@@ -105,11 +105,11 @@ graph TD
   - `src/main/resources/data/party/party_skills.json`, `data/buffs/`
 
 ### 4. M4: 小隊、生靈與陣法模組 (Party, Living & Formation)
-- 📖 **詳細技術手冊**：[`後端_M4_小隊生靈與陣法模組_PARTY_AND_FORMATION.md`](../manual/後端_M4_小隊生靈與陣法模組_PARTY_AND_FORMATION.md)
+- 📖 **詳細技術手冊**：[`backend/M4_PARTY_AND_FORMATION.md`](backend/M4_PARTY_AND_FORMATION.md)
 - **核心職責**：
   - 5 人標準小隊編制（2 前衛、1 中衛、2 後衛）。
   - 道基五維屬性體系（體質 HP、真元 MP、神識/暴擊、根骨/防禦、身法/速度）。
-  - 道心理智（SAN 值）異變機制：面對不可名狀神魔時扣減 SAN，低於閾值觸發瘋狂低語與屬性紊亂。
+  - 外神精神侵蝕防護罩（SAN 護盾）：身處無火把幽冥承受侵蝕抵扣，歸零進入精神萎靡 Debuff，絕不背刺叛變。
   - 夥伴招募好感度與戰陣編排（九宮八卦陣、北斗七星陣等不同陣形帶來的攻防加成）。
 - **代表類別**：
   - `PartyService`, `Party`, `PartyMember`, `LivingService`, `FormationEngine`
@@ -117,7 +117,7 @@ graph TD
   - `src/main/resources/data/formations/formations.json`, `data/companions/default_companions.json`
 
 ### 5. M5: 技能、境界與修煉模組 (Skill & Progression)
-- 📖 **詳細技術手冊**：[`後端_M5_技能境界與修煉模組_SKILL_AND_PROGRESSION.md`](../manual/後端_M5_技能境界與修煉模組_SKILL_AND_PROGRESSION.md)
+- 📖 **詳細技術手冊**：[`backend/M5_SKILL_AND_PROGRESSION.md`](backend/M5_SKILL_AND_PROGRESSION.md)
 - **核心職責**：
   - 技能學習、真元消耗檢定、冷卻時間（CD）與通用冷卻（GCD）管制。
   - 大一統動態屬性縮放（`UnifiedSkill` / `PartyMemberSkill`）：在保留 Buff、削韌、五行標籤的前提下，根據施法者道基五維與修煉境界動態縮放威力。
@@ -128,7 +128,7 @@ graph TD
   - `src/main/resources/data/classes/classes.json`, `data/skills.json`
 
 ### 6. M6: 物品、背包與經濟模組 (Item, Inventory & Economy)
-- 📖 **詳細技術手冊**：[`後端_M6_物品背包與經濟模組_ITEM_AND_ECONOMY.md`](../manual/後端_M6_物品背包與經濟模組_ITEM_AND_ECONOMY.md)
+- 📖 **詳細技術手冊**：[`backend/M6_ITEM_AND_ECONOMY.md`](backend/M6_ITEM_AND_ECONOMY.md)
 - **核心職責**：
   - 裝備槽位管理（武器 `MAIN_HAND`/`OFF_HAND`、頭部 `HEAD`、胸甲 `BODY`、鞋子 `FEET`、飾品 `ACCESSORY_1`/`ACCESSORY_2` 5+2 結構）。
   - 40 格小隊共用儲物袋（`PartyInventory`）與堆疊機制。
@@ -139,7 +139,7 @@ graph TD
   - `src/main/resources/data/items.json`, `data/zones/*/shops.json`
 
 ### 7. M7: 100% 資料驅動模板模組 (Data-Driven Templates)
-- 📖 **詳細技術手冊**：[`後端_M7_資料驅動模板模組_DATA_DRIVEN_TEMPLATES.md`](../manual/後端_M7_資料驅動模板模組_DATA_DRIVEN_TEMPLATES.md)
+- 📖 **詳細技術手冊**：[`backend/M7_DATA_DRIVEN_TEMPLATES.md`](backend/M7_DATA_DRIVEN_TEMPLATES.md)
 - **核心職責**：
   - 專案第一紅線基石：遊戲所有數據（地圖、怪物、物品、技能、商店、任務、陣法）完全脫離 Java 代碼。
   - 啟動時自動掃描解析所有 JSON 資源，維護於高效唯讀快取。
@@ -151,7 +151,7 @@ graph TD
   - `src/main/resources/data/**/*.json`
 
 ### 8. M8: 存檔與歷史快照模組 (Save & Persistence)
-- 📖 **詳細技術手冊**：[`後端_M8_存檔與歷史快照模組_SAVE_AND_PERSISTENCE.md`](../manual/後端_M8_存檔與歷史快照模組_SAVE_AND_PERSISTENCE.md)
+- 📖 **詳細技術手冊**：[`backend/M8_SAVE_AND_PERSISTENCE.md`](backend/M8_SAVE_AND_PERSISTENCE.md)
 - **核心職責**：
   - 確立以 `SaveData` JSON 為唯一單一真相源（Single Source of Truth），徹底淘汰複雜的關聯資料庫 Schema。
   - 五大獨立存檔槽位（`slot_1` ~ `slot_5`）與專屬自動存檔（`slot_auto`）。
@@ -178,7 +178,7 @@ graph TD
 ## 🎨 三、前端 6 大表現模組 (Vanilla Modular)
 
 > 💡 **整體佈局與主視圖切換指南**：  
-> 請參見專屬手冊 **[`FRONTEND_LAYOUT_GUIDE.md`](FRONTEND_LAYOUT_GUIDE.md)**，詳解五大版塊空間骨架、三大主舞台互斥呈現、五大場景模組配置與狀態轉移矩陣。
+> 請參見專屬手冊 **[`FRONTEND_LAYOUT_GUIDE.md`](frontend/FRONTEND_LAYOUT_GUIDE.md)**，詳解五大版塊空間骨架、三大主舞台互斥呈現、五大場景模組配置與狀態轉移矩陣。
 
 前端採用現代純原生模組化架構（Vanilla JS + Vanilla CSS），完全零肥大框架依賴：
 

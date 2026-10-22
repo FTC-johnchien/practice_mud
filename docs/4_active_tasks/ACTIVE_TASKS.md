@@ -32,8 +32,8 @@
   - **驗收標準**：地圖資料 100% 通過 `DataIntegrityValidator` 檢驗；進入地城時第一人稱描述精準呈現克蘇魯外神卵鞘地質異變。
 
 - [ ] **Task 2 (VS-01-AGENT-HUD): 主角特工晶片 HUD 視界 (12%...) 與道基五維初始潛能點加點 (世界觀 + 角色養成)**
-  - **目標檔案**：[`Player.java`](../../src/main/java/com/example/htmlmud/domain/actor/impl/Player.java)、[`PartyMember.java`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyMember.java)、[`party-overview-tab.js`](../../src/main/resources/static/js/modals/party-overview-tab.js)
-  - **契約規範**：對齊 Level 2 `M4_CHARACTER_GROWTH_AND_REALMS.md`；隊長初始加載「特工覺醒度 12%」，分配 5 點自由道基潛能點（力道、身法、根骨、神識、定力）。
+  - **目標檔案**：[`Player.java`](../../src/main/java/com/example/htmlmud/domain/actor/impl/Player.java)、[`PartyMember.java`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyMember.java)、`party-overview-tab.js` (預計於 `src/main/resources/static/js/modals/` 模組化新建或擴充 `party-modal.js`)
+  - **契約規範**：對齊 Level 2 [`M4_PARTY_AND_FORMATION.md`](../2_specifications/backend/M4_PARTY_AND_FORMATION.md)（道基五維體系）與 [`M5_SKILL_AND_PROGRESSION.md`](../2_specifications/backend/M5_SKILL_AND_PROGRESSION.md)（潛能點與成長曲線）；隊長初始加載「特工覺醒度 12%」，分配 5 點自由道基潛能點（體質、真元、神識、根骨、身法）。
   - **驗收標準**：後端提供潛能點分配 Action 與 DTO 投影，加點即時轉化為 HP/MP/攻防速五維屬性；前端隊伍面板提供直觀加點 UI；專屬單元測試綠燈。
 
 - [ ] **Task 3 (VS-01-CYBER-SKILLS): 首批賽博特工戰技資料驅動配置【神經超頻步】與【強殖角質刃】(戰鬥爽快 + 技能組合)**

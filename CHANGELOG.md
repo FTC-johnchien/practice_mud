@@ -425,8 +425,8 @@
 
 ### [2026-10-02] 文檔治理四體系落地與架構收斂
 - **規範治理**：在 [`GEMINI.md`](./GEMINI.md) 確立三大開發鐵律（未決定與待辦第一時間入庫 `FUTURE_IMPROVEMENTS.md`、每次變更必記 `CHANGELOG.md`、每次變更必 Review `ARCHITECTURE.md`）。
-- **架構整併**：將 `docs/PROJECT_STRUCTURE.md` 與 `plans/README.md` 之檔案結構與 AI 鐵律整併入 [`ARCHITECTURE.md`](./ARCHITECTURE.md)，消除雙頭馬車。
-- **前端視圖規範化**：產出 [`docs/UI_PAGE_STRUCTURE.md`](./docs/UI_PAGE_STRUCTURE.md)，確立 7 大模組化視圖、Data-Driven 鐵律與共用工具庫規格。
+- **架構整併**：將 `docs/PROJECT_STRUCTURE.md` 與 `plans/README.md` 之檔案結構與 AI 鐵律整併入 [`ARCHITECTURE_SUMMARY.md`](docs/2_specifications/ARCHITECTURE_SUMMARY.md)，消除雙頭馬車。
+- **前端視圖規範化**：產出 [`docs/2_specifications/frontend/UI_PAGE_STRUCTURE.md`](docs/2_specifications/frontend/UI_PAGE_STRUCTURE.md)，確立 7 大模組化視圖、Data-Driven 鐵律與共用工具庫規格。
 - **純粹化待辦清單**：清理 `FUTURE_IMPROVEMENTS.md` 歷史完成項，專注未來 P0~P3 路線圖。
 - **歷史歸檔**：將 `WALKTHROUGH.md` 與 `main_menu_refactor_plan.md` 完整收斂至本文件後安全歸檔。
 

@@ -16,7 +16,7 @@
 
 ## ⚡ 11. 測試工程分層加速與可觀測性加固 (Testing & Observability) — Priority: P3
 
-> **來源**：歷史檢視（Claude／Codex）；本次測試執行限制與治理建議見 [`docs/references/Copilot_Review.md`](../references/Copilot_Review.md) §五、§四。
+> **來源**：歷史檢視（Claude／Codex）；本次測試執行限制與治理建議見 [`docs/0_archive/references/Copilot_Review.md`](../0_archive/references/Copilot_Review.md) §五、§四。
 > **核心目標**：測試架構下沉為純單元測試提高執行效率；補齊關鍵指標與稽核日誌。
 
 ### 11.1 測試套件分層與純單元測試下沉 (P3)
@@ -50,7 +50,7 @@
   3. **地牢切換別名硬編碼**：[`DungeonCommand.java:L74-83`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L74-L83) 中，`switch taiyin` / `switch mozhu` 以字串比對直接映射為指定樓層。
   4. **陷阱數值與提示文字硬編碼**：[`DungeonCommand.java:L295-298`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L295-L298) 陷阱扣除固定 15 HP、5 SAN，且提示寫死「菌絲煞氣噴湧」（太陰古塚踩陷阱亦出現礦坑菌絲文字）。
   5. **[已完成] 殘留 65 行手刻地圖生成器**：原 `DungeonManager.java` 中的 `buildTombB1F()` 已徹底物理刪除，全系統 100% 由 `resources/data/dungeons/*.json` 資料驅動。 ✅
-  6. **區域載入清單退回硬編碼**：[`WorldManager.java:L100, L104`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/service/WorldManager.java#L100) 於動態掃描失敗時退回硬編碼清單 `List.of("newbie_village", "mozhu_mines", "snow", "silverleaf", "taiyin_tomb")`。
+  6. **區域載入清單退回硬編碼**：`WorldManager.java`（歷史代碼，已除役）於動態掃描失敗時曾退回硬編碼清單 `List.of("newbie_village", "mozhu_mines", "snow", "silverleaf", "taiyin_tomb")`。
 - **改善方案**：
   - 在 `DungeonFloor` 與 `dungeons/*.json` 擴充 `entranceRoomId`、`exitRoomId`、`defaultLootPool`、`trapDamage`、`trapSanCost`、`trapMessage`。
   - 徹底移除 `DungeonManager.buildTombB1F()` 手刻代碼，100% 由 JSON 檔案驅動（已完成 ✅）。
@@ -61,7 +61,7 @@
   2. **[CANCELLED] 走火入魔 CHAOS 異變機制**：原隊員背刺（40% 機率）與畸變 Boss 走火入魔機制已依專案核心決策徹底除役取消，相關代碼在純單機單體化演進中已徹底拔除。
   3. **首領專屬掉落物寫死代碼注入**：[`DrpgRewardService.java:L189-214`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java#L189-L214) 擊殺首領 `boss_song_tianheng` 時，直接在代碼中手動建構並塞入戰利品 `【黑曜骨鐮】` 與 `【長老黑話玉牌】`，而非透過怪物模板本身的 `loot` 掉落表。
   4. **技能橋接規則寫死 switch 查表**：[`SkillDefinition.java:L225-285`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/definition/SkillDefinition.java#L225-L285) 透過 60 行 `switch-case` 寫死 MUD 技能映射至 DRPG 技能的對照關係，並維護靜態字串陣列 `CANONICAL_MUD_SKILLS`。
-  5. **屬性補正依賴 ID 前綴字串比對**：[`SkillBridgeService.java:L156-160`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/service/SkillBridgeService.java#L156-L160) 靠 `base.getId().startsWith("taoist_") || base.getId().startsWith("star_")` 判定是否為法術補正（INT+WIS），而非讀取技能模板的 `scaleStat` 或 tags（`MAGIC` vs `PHYSICAL`）。
+  5. **屬性補正依賴 ID 前綴字串比對**：`SkillBridgeService.java`（已徹底物理刪除除役）曾靠 `base.getId().startsWith("taoist_") || base.getId().startsWith("star_")` 判定是否為法術補正，現由技能定義與流派標籤統一驅動。
   6. **戰鬥時限政策與閒置熔斷衝突**：[`BattleContext.java:L45, L67`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/BattleContext.java#L45-L67) `maxDurationMs` 固定 5 分鐘熔斷，即使玩家持續積極操作仍會逾時中斷，未與 10 分鐘無操作 AFK 閒置熔斷解耦。
 - **改善方案**：
   - 將試道傀儡與大型敵怪移入 `mobs.json`，在 `MobTemplate` 支援 `width`、`height`、`rowIdx`、`colIdx`。
@@ -86,7 +86,7 @@
   1. **地牢 Tile 懸停文字固定為太陰地貌**：[`dungeon-panel.js:L67-97`](file:///c:/Workspace/my_practice/practice_mud/src/main/resources/static/js/panels/dungeon-panel.js#L67-L97) 符號 `#` 寫死「青岡石壁」，`+` 寫死「封印石門」，`$` 寫死「古仙棺槨寶箱」，`^` 寫死「深淵黏液陷阱」。在墨竹礦坑探索時懸停仍顯示太陰古塚的地貌名。
   2. **裝備槽位以中文名稱硬編碼模糊推測**：[`party-equipment-tab.js:L54-61`](file:///c:/Workspace/my_practice/practice_mud/src/main/resources/static/js/modals/party-equipment-tab.js#L54-L61) 判斷裝備槽位時，大量使用 `name.includes('冠') || name.includes('盔')`、`name.includes('靴')`、`name.includes('戒')` 等中文關鍵字比對作為 fallback。
   3. **任務事件為單一特例 Java 監聽器**：[`MozhuMinesQuestListener.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/listener/MozhuMinesQuestListener.java) 以硬編碼監聽 `boss_song_tianheng` 並輸出 20 行台詞，全專案無通用任務資料模型；[`QuestEventListener.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/listener/QuestEventListener.java) 僅有 `System.out.println`。
-  4. **殘留死代碼**：[`PlayerLoginListener.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/listener/PlayerLoginListener.java) 全檔案皆為註解代碼。
+  4. **殘留死代碼**：`PlayerLoginListener.java`（全檔案曾皆為註解代碼，已徹底物理刪除清理）。
 - **改善方案**：
   - 前端地塊 Tooltip 改由後端 DTO 攜帶動態 `tileName`。
   - 裝備嚴格依據 `equipSlot` 判定，啟動拓撲校驗器確保所有裝備皆有正確部位。
@@ -98,7 +98,7 @@
 
 ## 🧭 19. 2026-10-13 Copilot 審查後續：Buff 契約與可靠性護欄 (Review Follow-ups)
 
-> **來源**：[`docs/references/Copilot_Review.md`](../references/Copilot_Review.md)。以下項目是本次靜態審查發現，尚未代表已決議的行為設計或已完成修復；實作前仍須以現行程式碼、部署設定與測試再次驗收。
+> **來源**：[`docs/0_archive/references/Copilot_Review.md`](../0_archive/references/Copilot_Review.md)。以下項目是本次靜態審查發現，尚未代表已決議的行為設計或已完成修復；實作前仍須以現行程式碼、部署設定與測試再次驗收。
 
 ### 19.1 ASYNC-03：持久化提交與停機生命週期原子化 — ✅ 已完成 (2026-10-13)
 
@@ -114,7 +114,7 @@
 
 ### 19.3 BUFF-01：Buff 契約與共用結算切片 — ✅ 已完成 (2026-10-13)
 
-- **權威手冊**：參閱 [`後端_M3-1_狀態效果與Buff結算模組_BUFF_AND_STATUS_EFFECTS.md`](../manual/後端_M3-1_狀態效果與Buff結算模組_BUFF_AND_STATUS_EFFECTS.md)，歷史規劃書已全面升格為正式模組手冊並收斂除役。
+- **權威手冊**：參閱 [`M3_1_BUFF_AND_STATUS_EFFECTS.md`](../2_specifications/backend/M3_1_BUFF_AND_STATUS_EFFECTS.md)，歷史規劃書已全面升格為正式模組手冊並收斂除役。
 - **Phase 1 核心生命週期與數值機制**：實裝 `PERMANENT_DURATION = -1` 常駐陣法不消退、WoW 階梯短時間護盾優先吸收、罡氣破防條（Poise Gauge）削韌減傷與失衡大招打斷、五行法術抗性 $>100\%$ 逆流回血。
 - **Phase 2 控場門控與打斷**：收斂 `Buffable.isControlled()` 與 `isSilenced()`，打斷普通攻擊、技能吟唱與 1500ms 意圖預告。
 - **Phase 3 視覺投影與屬性圖示聚合 HUD**：前後端 DTO 串接 `ActiveBuffDto`，前端 `buff-hud-helper.js` 實現極簡 `[🧪 54/s x3]`、`[🛡️ 120]` 聚合 HUD 與 Tooltip，1600x900 角色道基詳細面板補齊「☯️ 道身加持與狀態」。

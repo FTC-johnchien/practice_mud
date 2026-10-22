@@ -55,15 +55,15 @@ docs/
 │   ├── tech_debt_and_hardening.md # 底層技術債治理、硬編碼清剿與系統加固藍圖
 │   ├── four_tier_alignment_and_execution_plan.md # 四層級穿透性對齊與純單機典範治理清單
 │   ├── codebase_four_tier_alignment_plan.md # 程式碼與四層級文檔全域對齊執行清單
-│   ├── decommission_audit_and_remediation_tasks.md # 未竟除役項目實地查驗與代碼治理清單
-│   ├── future_improvements_history.md # 歷史已完成落地之架構改善庫 (Phase 0~25)
-│   └── CHANGELOG.md              # 歷史版本交付變更記錄
+│   ├── codebase_audit_and_alignment_tasks.md # 程式碼與文件一致性全域審查待辦清單
+│   └── decommission_audit_and_remediation_tasks.md # 未竟除役項目實地查驗與代碼治理清單
 │
 ├── 4_active_tasks/              # Level 4: 當前焦點與微任務看板層 (Current Iteration & Sprint)
 │   ├── ACTIVE_TASKS.md           # 當前單一焦點微任務看板 (每次對話 1 Micro-Task)
 │   └── SPRINT_GOAL.md            # 當前衝刺目標對齊聲明 (防偏離校準錨點)
 │
 └── 0_archive/                   # 封存歷史參考資料 (Historical References & Legacy Manuals)
+    └── future_improvements_history.md # 歷史已完成落地之架構改善庫 (Phase 0~25)
 ```
 
 ---
@@ -89,16 +89,18 @@ docs/
   - [前端手冊庫 (frontend/)](./2_specifications/frontend/)
 
 ### 🔹 Level 3: Task Lists (全局待辦與路線圖層)
-- **定位**：記錄宏觀 Roadmap、演進戰線、候選功能儲備與已完成歷史。
+- **定位**：記錄宏觀 Roadmap、演進戰線、候選功能儲備。
 - **核心文件**：
   - [全局演進戰略總表 (FUTURE_IMPROVEMENTS.md)](./3_task_lists/FUTURE_IMPROVEMENTS.md)（~140行，導覽中樞）
   - [戰鬥爽快與內容藍圖 (content_and_combat_roadmap.md)](./3_task_lists/content_and_combat_roadmap.md)（去文字化、五大核心目標中長程拓展）
   - [底層技術債與加固藍圖 (tech_debt_and_hardening.md)](./3_task_lists/tech_debt_and_hardening.md)（硬編碼清剿、測試加速、護欄加固）
   - [四層級對齊與治理清單 (four_tier_alignment_and_execution_plan.md)](./3_task_lists/four_tier_alignment_and_execution_plan.md)（資料架構契約、零 MUD 殘留）
   - [代碼全域對齊執行清單 (codebase_four_tier_alignment_plan.md)](./3_task_lists/codebase_four_tier_alignment_plan.md)（戰鬥/技能/裝備/資料/前端落地）
+  - [全域審查待辦清單 (codebase_audit_and_alignment_tasks.md)](./3_task_lists/codebase_audit_and_alignment_tasks.md)（營地中樞服務化/路徑校準/存檔與協定）
   - [未竟除役查驗治理清單 (decommission_audit_and_remediation_tasks.md)](./3_task_lists/decommission_audit_and_remediation_tasks.md)（背刺魔化/指令框代碼清剿）
-  - [已完成改善歷史庫 (future_improvements_history.md)](./3_task_lists/future_improvements_history.md)（Phase 0~25 落地歸檔）
-  - [變更日誌 (CHANGELOG.md)](./3_task_lists/CHANGELOG.md)
+- **歷史與封存指針**：
+  - [專案版本交付記錄 (CHANGELOG.md)](../CHANGELOG.md)（專案根目錄標準規範）
+  - [已完成改善歷史庫 (future_improvements_history.md)](./0_archive/future_improvements_history.md)（Phase 0~25 落地歸檔）
 
 ### 🔹 Level 4: Active Tasks (當前微任務與看板層)
 - **定位**：微觀敏捷執行層，遵循單一焦點原則，每次對話僅聚焦一個 Micro-Task。

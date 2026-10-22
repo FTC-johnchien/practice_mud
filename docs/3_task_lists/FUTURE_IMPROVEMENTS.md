@@ -8,8 +8,8 @@
 > - 🎯 **四層級對齊與純單機 DRPG 典範治理清單**：請參閱 👉 [**`four_tier_alignment_and_execution_plan.md`**](four_tier_alignment_and_execution_plan.md)
 > - 📊 **程式碼與四層級文檔全域對齊執行清單**：請參閱 👉 [**`codebase_four_tier_alignment_plan.md`**](codebase_four_tier_alignment_plan.md)
 > - 🔍 **未竟除役項目查驗與代碼治理清單**：請參閱 👉 [**`decommission_audit_and_remediation_tasks.md`**](decommission_audit_and_remediation_tasks.md)
-> - 📜 **歷史已完成落地之 Phase 0~25 任務庫**：請參閱 👉 [**`future_improvements_history.md`**](future_improvements_history.md)
-> - 📜 **歷史版本發布與詳細變更紀錄**：請參閱 👉 [**`CHANGELOG.md`**](CHANGELOG.md)
+> - 📜 **歷史已完成落地之 Phase 0~25 任務庫**：請參閱 👉 [**`future_improvements_history.md`**](../0_archive/future_improvements_history.md)
+> - 📜 **歷史版本發布與詳細變更紀錄**：請參閱 👉 [**`CHANGELOG.md`**](../../CHANGELOG.md)
 
 ---
 
@@ -39,7 +39,7 @@
 ## 🧭 後續推薦實施路徑 (Next Evolution Paths)
 
 > 💡 **歷史已完成與封存戰線**：
-> - 歷史大量基礎設施（路徑 0、A、B、C、D、E、F、G、H、L、N、U、X）已全數落地並通過 373+ 測試，詳情請查閱 [`future_improvements_history.md`](future_improvements_history.md)。
+> - 歷史大量基礎設施（路徑 0、A、B、C、D、E、F、G、H、L、N、U、X）已全數落地並通過 376+ 測試，詳情請查閱 [`future_improvements_history.md`](../0_archive/future_improvements_history.md)。
 > - 歷史 MUD 雙軌割裂分析（原路徑 Q、R）與早期三方審查表（原路徑 V、W）已正式除役並移入 [`../0_archive/`](../0_archive/) 封存。
 
 ### 🌟 領域一：純單機 Hack-and-slash 戰鬥與內容推進 (詳見 [`content_and_combat_roadmap.md`](content_and_combat_roadmap.md))

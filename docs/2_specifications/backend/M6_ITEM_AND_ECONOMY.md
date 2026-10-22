@@ -26,7 +26,7 @@
 
 ## 🛡️ 二、裝備槽位與純資料驅動契約 (EquipmentSlot 5+2 結構)
 
-嚴格遵循專案第一紅線，前端與後端換裝邏輯**完全拋棄中文名稱推測**，全面依賴 [`EquipmentSlot`](../../src/main/java/com/example/htmlmud/domain/model/enums/EquipmentSlot.java) 枚舉（JSON / DTO 序列化欄位為 `equipSlot`）：
+嚴格遵循專案第一紅線，前端與後端換裝邏輯**完全拋棄中文名稱推測**，全面依賴 [`EquipmentSlot`](../../../src/main/java/com/example/htmlmud/domain/model/enums/EquipmentSlot.java) 枚舉（JSON / DTO 序列化欄位為 `equipSlot`）：
 
 ```java
 public enum EquipmentSlot {

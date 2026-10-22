@@ -105,7 +105,7 @@ graph LR
 ### 2. 裝備單一擁有權與零延遲投影 (Equipment Projection)
 - 7 大部位裝備（武器、衣服、護腕、腰帶、鞋履、護符、法寶）由小隊成員實體真實擁有。
 - `EquipCommand` 支援一鍵檢視與配置全隊 5 名成員的 7 槽裝備。
-- 隊長裝備變更時，透過 [`CharacterSyncService.syncEquipmentFromPartyToPlayer`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/service/CharacterSyncService.java) 進行 0ms 零延遲鏡像投影並即時重算衍生戰鬥屬性，徹底廢止歷史 `CompletableFuture` 5 秒超時阻塞。
+- 隊長裝備變更時，透過 [`CharacterSyncService.syncEquipmentFromPartyToPlayer`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/actor/service/CharacterSyncService.java) 進行 0ms 零延遲鏡像投影並即時重算衍生戰鬥屬性，徹底廢止歷史 `CompletableFuture` 5 秒超時阻塞。
 
 ### 3. 戰鬥結算與真實屬性同步
 - 戰後經驗值、升級、修為成長直接記入 `PartyMember`。

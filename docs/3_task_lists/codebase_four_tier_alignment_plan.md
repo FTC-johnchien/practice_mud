@@ -60,7 +60,7 @@
   - **交付標準**：資料目錄消除 MUD 房間 exits 依賴，落實選單式營地。✅ 已落地完成 (375 測試全綠)
 
 - [x] **Task 2.2 (ALIGN-DUNGEON-DATA): 地牢資料補齊出入口契約與地貌 Legend (對齊 L2 M2 / DUNGEON_SCHEMA)**
-  - **目標檔案**：`src/main/resources/data/dungeons/`、[`DungeonService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/DungeonService.java)
+  - **目標檔案**：`src/main/resources/data/dungeons/`、[`DungeonManager.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/service/DungeonManager.java)
   - **執行動作**：
     1. 在地城設定中強制校驗 `exitRoomId` 與每層傳送點座標。
     2. 地塊 Legend 對齊 `DUNGEON_SCHEMA.md` 定義（外神卵塊、外星生化腐殖、工程師基岩）。

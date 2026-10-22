@@ -10,7 +10,7 @@
 
 本模組作為戰鬥與生靈狀態的核心樞紐，確立以下五大原則：
 
-1. **唯一真相來源 (SSoT)**：所有攻防屬性修正、傷害減免與逆流抗性計算，一律委託 [`CombatRules`](../../src/main/java/com/example/htmlmud/domain/combat/CombatRules.java)，嚴禁平行造輪子。
+1. **唯一真相來源 (SSoT)**：所有攻防屬性修正、傷害減免與逆流抗性計算，一律委託 [`CombatRules`](../../../src/main/java/com/example/htmlmud/domain/combat/CombatRules.java)，嚴禁平行造輪子。
 2. **契約驅動生命週期**：廢除 `-1` 魔術數字模糊語意，明確劃分 `TIMED`（限時心跳）與 `PERMANENT`（常駐光環）。
 3. **多重護盾最短優先**：受創時依剩餘秒數最短的護盾優先吸收，容量耗盡立即破裂，防止數值無限堆疊。
 4. **極簡資料投影 (Aggregated HUD)**：前端嚴禁用文字 Log 正則表達式猜測狀態，一律讀取後端推送之 `activeBuffs` 結構化資料，並在戰鬥卡片以「標準屬性圖示 + 聚合每秒數值」展現，懸浮顯示來源明細。
@@ -148,7 +148,7 @@ public void decrementTick() {
 針對五行法術與陰煞傷害（`METAL` 金、`WOOD` 木、`WATER` 水、`FIRE` 火、`EARTH` 土，以及陰煞 `CORRUPT`）：
 - 穿透物理護甲，直接檢驗目標的五行抗性。
 - 抗性數值 `resistance` 可透過裝備、丹藥、符籙與 Buff 堆疊超越 1.0 (100%)。
-- **抗性折算與逆流回血契約**（實作於 [`CombatRules.resolveResistance`](../../src/main/java/com/example/htmlmud/domain/combat/CombatRules.java)）：
+- **抗性折算與逆流回血契約**（實作於 [`CombatRules.resolveResistance`](../../../src/main/java/com/example/htmlmud/domain/combat/CombatRules.java)）：
   ```java
   public static ResistanceResult resolveResistance(int rawDamage, DamageType type, double resistance) {
       if (rawDamage <= 0) return new ResistanceResult(0, 0);

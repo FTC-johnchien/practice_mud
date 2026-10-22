@@ -42,7 +42,7 @@ $$\text{ScaledDamage} = \text{BaseDamage} \times (1.0 + (\text{SkillLevel} - 1) 
 
 ## 🧬 三、賽博特工四大流派與晶片超頻技能規範 (Cyber Cultivation Trees)
 
-依據 L1 [`CYBERPUNK_CULTIVATION_SPEC.md`](../1_requirements/CYBERPUNK_CULTIVATION_SPEC.md)，主角與特工小隊技能體系映射為四大賽博修仙流派：
+依據 L1 [`CYBERPUNK_CULTIVATION_SPEC.md`](../../1_requirements/CYBERPUNK_CULTIVATION_SPEC.md)，主角與特工小隊技能體系映射為四大賽博修仙流派：
 
 | 流派名稱 | 賽博核心能力 | 修仙對應體系 | 核心機制與縮放屬性 | 代表戰技 (VS-01 起) |
 | :--- | :--- | :--- | :--- | :--- |

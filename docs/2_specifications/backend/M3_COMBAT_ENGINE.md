@@ -109,7 +109,7 @@ sequenceDiagram
 └────────────────────┴───────────────────────────────────────────────────┘
 ```
 
-### 1. 第一層：底層傷害類型 [`DamageType`](../../src/main/java/com/example/htmlmud/domain/model/enums/DamageType.java)（20 種繼承樹）
+### 1. 第一層：底層傷害類型 [`DamageType`](../../../src/main/java/com/example/htmlmud/domain/model/enums/DamageType.java)（20 種繼承樹）
 代碼中以單一繼承樹組織，支援 `type.is(parent)` 多態檢定：
 - **`PHYSICAL` (物理根類別)**：
   - `SLASH`（揮砍）：刀劍類鋒刃斬擊。
@@ -142,7 +142,7 @@ sequenceDiagram
 - **控場反制標籤**：`STUN`（眩暈/硬直）、`SILENCE`（沉默/封咒）、`SEAL`（封印/鎮魔）、`CONTROL`（通用受控）、`INTERRUPT`（通用反制打斷）。
 - **戰術行為標籤**：`ATTACK`（普攻）、`SPELL`（法術）、`HEAL`（治療）、`DEFENSE`（防護）、`AOE`（群體）、`TAUNT`（嘲諷）、`CLEANSE`（淨化）、`DISPEL`（驅散）、`PARRY`（偏斜招架）。
 
-### 4. 第四層：底層 Buff 分類 [`BuffCategory`](../../src/main/java/com/example/htmlmud/domain/model/enums/BuffCategory.java)
+### 4. 第四層：底層 Buff 分類 [`BuffCategory`](../../../src/main/java/com/example/htmlmud/domain/model/enums/BuffCategory.java)
 引擎底層核心運算的分流憑據，規範生命週期與結算邏輯：
 - `SHIELD`：傷害吸收護盾（耗盡即破碎提前失效）。
 - `HOT`：週期性治療 (Heal over Time)。
@@ -151,7 +151,7 @@ sequenceDiagram
 - `CONTROL`：強制控場限制（受 `Buffable.isControlled()` / `isSilenced()` 全入口門控）。
 
 ### 5. 傷害抗性折減與「順成人，逆成仙」逆流回血契約
-實作於 [`CombatRules.resolveResistance`](../../src/main/java/com/example/htmlmud/domain/combat/CombatRules.java)：
+實作於 [`CombatRules.resolveResistance`](../../../src/main/java/com/example/htmlmud/domain/combat/CombatRules.java)：
 
 ```java
 public static ResistanceResult resolveResistance(int rawDamage, DamageType type, double resistance)
@@ -180,7 +180,7 @@ public static ResistanceResult resolveResistance(int rawDamage, DamageType type,
 
 > 📖 **權威專屬手冊**：  
 > 生靈之狀態效果、Buff/Debuff 狀態機、WoW 式刷新與層數堆疊、多重護盾吸收優先序、控場門控、罡氣破防條（Poise Break）攻防博弈、九大天道靈氣五行抗性與逆流回血、以及屬性圖示聚合 HUD 契約，已收斂獨立為本戰鬥引擎之專屬子模組手冊：  
-> 👉 **請詳閱 [`後端_M3-1_狀態效果與Buff結算模組_BUFF_AND_STATUS_EFFECTS.md`](後端_M3-1_狀態效果與Buff結算模組_BUFF_AND_STATUS_EFFECTS.md)**。
+> 👉 **請詳閱 [`M3_1_BUFF_AND_STATUS_EFFECTS.md`](M3_1_BUFF_AND_STATUS_EFFECTS.md)**。
 
 本戰鬥引擎（M3）透過 `BuffSettlementService` 與 `Buffable` 介面與 M3-1 子模組緊密整合：
 1. **時間線驅動**：`DrpgCombatLoop` 於每輪 Tick 呼叫 `BuffSettlementService.processTicks(entity)` 推進狀態倒數與結算持續傷害/治療 (DoT/HoT)。
