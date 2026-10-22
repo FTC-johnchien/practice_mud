@@ -17,7 +17,7 @@
 | **Level 1: 需求與願景層**<br>• 賽博修仙四大流派<br>• 去文字指令化純單機<br>• 世界觀克蘇魯外神卵鞘 | • 技能模型已支援四大流派與超頻階級<br>• 前端常規視圖文字指令輸入框已徹底下架<br>• 敵怪文本與任務正向外神卵鞘垂直切片推進 | 🟢<br>已對齊 | • `PartyMemberSkill.java` ✅<br>• `index.html` ✅<br>• `party_skills.json` ✅<br>• `zones/` 後續擴充 |
 | **Level 2: 模組與規格層**<br>• `M1`/`M7`: 選單式營地設施<br>• `M3`: 罡氣削韌、精神護盾<br>• `ITEM_SCHEMA`: 隨機詞綴庫<br>• `SKILL_SCHEMA`: 超頻階級 | • 心魔背刺隊友已徹底拔除，轉為精神萎靡<br>• 隨機詞綴結構 (`ItemAffix`) 與屬性累加已落地<br>• 技能實體已具備流派、超頻與連攜角色<br>• 營地選單機能設施 `facilities.json` 正式落盤 | 🟢<br>已對齊 | • `DrpgCombatLoop.java` ✅<br>• `PartyItemSlot.java` ✅<br>• `ItemAffix.java` ✅<br>• `data/zones/newbie_village/facilities.json` ✅ |
 | **Level 3: 全局任務清單層**<br>• 純單機典範確立<br>• 多人廣播與房間位移除役<br>• 技術債與硬編碼清剿 | • `Room.broadcast` 純單機便捷方法落地<br>• `Mob.sayToRoom` 徹底解除 `broadcastToOthers` 多人依賴 | 🟢<br>已純化 | • `Mob.java` ✅<br>• `Room.java` ✅<br>• 舊 MUD 廣播死代碼已出清 |
-| **Level 4: 當前焦點看板層**<br>• VS-01: 序章第一人稱垂直切片<br>• 375+ 單元測試 100% 綠燈 | • 現有 375 項測試全綠，護欄持續擴充<br>• 核心模型已站穩，全力支撐 VS-01 序章落地 | 🟢<br>底座健全 | • `CyberSkillAndItemAffixTest.java` ✅<br>• `AllTests (375 tests passed)` |
+| **Level 4: 當前焦點看板層**<br>• VS-01: 序章第一人稱垂直切片<br>• 376+ 單元測試 100% 綠燈 | • 現有 376 項測試全綠，護欄持續擴充<br>• 核心模型已站穩，全力支撐 VS-01 序章落地 | 🟢<br>底座健全 | • `CyberSkillAndItemAffixTest.java` ✅<br>• `AllTests (376 tests passed)` |
 
 ---
 
@@ -26,7 +26,7 @@
 ### 🔹 Phase 1: 核心戰鬥與角色數值模型對齊 (Combat & Character Domain)
 
 - [x] **Task 1.1 (ALIGN-COMBAT-SAN): 移除隊員背刺，落地精神護盾與萎靡 Debuff (對齊 L1/L2 M3)**
-  - **目標檔案**：[`DrpgCombatLoop.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java)、[`PartyMember.java`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyMember.java)、[`SealCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/SealCommand.java)
+  - **目標檔案**：[`DrpgCombatLoop.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java)、[`PartyMember.java`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyMember.java)、`SealCommand.java`（已物理安全刪除除役）
   - **執行動作**：
     1. 拔除 `DrpgCombatLoop:230-320` 中隊員 SAN 歸零後的 `CHAOS` 走火入魔檢定與 40% 心魔背刺隊友邏輯。
     2. 落實文檔規範：SAN 耗盡僅施加【精神萎靡】Debuff（降低 15% 輸出），絕不叛變背刺隊友。

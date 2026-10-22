@@ -39,21 +39,25 @@
 
 ### 🔹 Phase 2: 演進清單與微任務看板量化對齊 (Roadmap & Active Task Alignment)
 
-- [ ] **Task 2.1 (TOWN-FACILITY-ROADMAP): 補齊營地機能設施中長程演進規劃**
-  - **執行動作**：在 [`content_and_combat_roadmap.md`](content_and_combat_roadmap.md) 中為 M1 規劃的五大營地機能設施（裝備工坊分解重鑄、特工晶片實驗室、道場天賦加點、醫療站基因強殖）排定階段性演進節奏。
-  - **驗收標準**：營地設施之擴充藍圖與五大核心目標（角色養成、裝備收集）完全契合。
+- [x] **Task 2.1 (TOWN-FACILITY-ROADMAP): 補齊營地機能設施中長程演進規劃**
+  - **執行動作**：在 [`content_and_combat_roadmap.md`](content_and_combat_roadmap.md) 中為 M1 規劃的五大營地機能設施（天工百煉坊、賽博晶片實驗室、太華傳功道場、回春草堂醫療站、星門地牢傳送陣）排定三階段演進節奏。
+  - **驗收標準**：營地設施之擴充藍圖與五大核心目標（角色養成、裝備收集）完全契合。✅ 已落地完成
 
-- [ ] **Task 2.2 (VS-01-DOD-QUANTIFY): Milestone VS-01 驗收標準精準量化**
-  - **執行動作**：在 [`ACTIVE_TASKS.md`](../4_active_tasks/ACTIVE_TASKS.md) 中將 Milestone VS-01（第一章序幕垂直切片）的驗收標準與全新 Schema 深度綁定，明確標記增量測試驗收守護（守護既有 373 項測試全綠）。
-  - **驗收標準**：Task 1 ~ Task 4 具備明確的資料範本與斷言依據。
+- [x] **Task 2.2 (VS-01-DOD-QUANTIFY): Milestone VS-01 驗收標準精準量化**
+  - **執行動作**：在 [`ACTIVE_TASKS.md`](../4_active_tasks/ACTIVE_TASKS.md) 中將 Milestone VS-01（第一章序幕垂直切片）的驗收標準與全新 Schema (`DUNGEON_SCHEMA`、`ITEM_SCHEMA`、`SKILL_SCHEMA`) 深度綁定，明確標記增量測試驗收守護（守護既有 376 項測試全綠）。
+  - **驗收標準**：Task 1 ~ Task 4 具備明確的資料範本與斷言依據。✅ 已落地完成
 
 ---
 
 ### 🔹 Phase 3: 全域清查與專案品質守護 (Continuous Inspection)
 
-- [ ] **Task 3.1 (CUSTOM-INSPECTION): 使用者指示之特定領域深入清查**
-  - **執行動作**：依據使用者後續指定之清查項目（如特定代碼模組、設定資料完整性、或特定前後端對齊），執行嚴謹審查並擬定處置方案。
-  - **驗收標準**：全域無死角對齊純單機 Hack-and-slash DRPG 專案第一紅線。
+- [x] **Task 3.1 (CUSTOM-INSPECTION): 使用者指示之特定領域深入清查與歷史毒瘤清剿 (方案 1 落地)**
+  - **執行動作**：依據使用者指令優先執行「方案 1」假除役收尾與硬編碼死代碼清剿：
+    1. 物理刪除 `SealCommand.java` 封印術指令；
+    2. `PartyMember.MadnessState` 精簡為 `SANE` 與 `CHAOS`（精神萎靡，-15% 輸出），拔除 `SEALED`、`ABERRANT`、`DEAD_MEAT`；
+    3. `DrpgRewardService` 拔除戰後隊員除名死代碼；
+    4. `DungeonManager` 徹底物理刪除 65 行手刻地圖代碼 `buildTombB1F()`。
+  - **驗收標準**：全域無死角對齊純單機 Hack-and-slash DRPG 專案第一紅線，376/376 測試 100% 綠燈全數通過。✅ 已落地完成
 
 ---
 
@@ -61,5 +65,6 @@
 
 1. **零 MUD 殘留**：`docs/` 現行生效目錄中絕不出現任何房間位移、文字命令行或多人會話術語。
 2. **契約先行 (Spec-Driven)**：所有資料結構必有 Schema 規格對應，實作代碼嚴禁憑空發明 JSON 欄位。
-3. **綠燈守護 (Zero Regression)**：任何調整均不影響全量測試通過率（維持 373+ 測試 100% 綠燈）。
+3. **綠燈守護 (Zero Regression)**：任何調整均不影響全量測試通過率（維持 376+ 測試 100% 綠燈）。
 4. **極致輕量 (Strict Conciseness)**：除 CHANGELOG 與 history 外，所有文件嚴格壓制在 300 行以內。
+

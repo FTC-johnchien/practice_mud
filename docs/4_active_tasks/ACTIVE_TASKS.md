@@ -22,13 +22,34 @@
 
 - **核心目標對齊**：依據三大戰略與【五大核心目標】（世界觀介紹、戰鬥爽快、技能組合、裝備收集、角色養成），徹底取消道心崩潰魔化設計，打造首個完整閉環的純單機 Hack-and-slash DRPG 序章！
 - **背景設定融合**：主角在黑煞宗地底奴役通鋪甦醒，特工晶片加載 12%，在萬年母神卵鞘地殼深處面臨塌陷與退化妖獸，收集黑煞煞石，反殺密室修士並繳獲千星科技加密追蹤晶片。
+- **資料契約綁定**：全任務 100% 依循 `DUNGEON_SCHEMA.md`、`ITEM_SCHEMA.md` 與 `SKILL_SCHEMA.md`，全量測試維持 376+ 測試 100% 綠燈守護。
 
 ### 📋 微任務清單 (Micro-Tasks)
 
 - [ ] **Task 1 (VS-01-LORE-GEOLOGY): 黑煞宗地底礦脈地質與外神卵鞘偽地殼環境重塑 (世界觀介紹)**
+  - **目標檔案**：`src/main/resources/data/dungeons/mozhu_mines_b1f.json`、[`DUNGEON_SCHEMA.md`](../2_specifications/data_schemas/DUNGEON_SCHEMA.md)
+  - **契約規範**：依循 `DUNGEON_SCHEMA.md` 規範 10x10 地牢網格，注入外神卵塊 (`E`)、偽地殼生化腐殖 (`B`)、工程師基岩 (`#`) 地貌 Legend、遇敵率 (`encounterRate=0.15`) 與事件點 (`events`)。
+  - **驗收標準**：地圖資料 100% 通過 `DataIntegrityValidator` 檢驗；進入地城時第一人稱描述精準呈現克蘇魯外神卵鞘地質異變。
+
 - [ ] **Task 2 (VS-01-AGENT-HUD): 主角特工晶片 HUD 視界 (12%...) 與道基五維初始潛能點加點 (世界觀 + 角色養成)**
+  - **目標檔案**：[`Player.java`](../../src/main/java/com/example/htmlmud/domain/actor/impl/Player.java)、[`PartyMember.java`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyMember.java)、[`party-overview-tab.js`](../../src/main/resources/static/js/modals/party-overview-tab.js)
+  - **契約規範**：對齊 Level 2 `M4_CHARACTER_GROWTH_AND_REALMS.md`；隊長初始加載「特工覺醒度 12%」，分配 5 點自由道基潛能點（力道、身法、根骨、神識、定力）。
+  - **驗收標準**：後端提供潛能點分配 Action 與 DTO 投影，加點即時轉化為 HP/MP/攻防速五維屬性；前端隊伍面板提供直觀加點 UI；專屬單元測試綠燈。
+
 - [ ] **Task 3 (VS-01-CYBER-SKILLS): 首批賽博特工戰技資料驅動配置【神經超頻步】與【強殖角質刃】(戰鬥爽快 + 技能組合)**
-- [ ] **Task 4 (VS-01-LOOT-CHIP): 首領掉落【千星科技加密追蹤晶片】與隨機詞綴裝備掉落驗收 (裝備收集 + 373+ 測試)**
+  - **目標檔案**：`src/main/resources/data/party/party_skills.json`、[`SKILL_SCHEMA.md`](../2_specifications/data_schemas/SKILL_SCHEMA.md)
+  - **契約規範**：依循 `SKILL_SCHEMA.md` 規範：
+    - `neuro_overclock_step`（神經超頻步）：流派 `CYBER_HACK`、超頻 `tier=1`、`comboRole=PRIMER`、破防削韌 15、提供閃避/急速 Buff。
+    - `bio_carapace_blade`（強殖角質刃）：流派 `GENE_BIO`、超頻 `tier=1`、`comboRole=DETONATOR`、破防削韌 25、引爆 Primer 造成 1.5x 爆裂。
+  - **驗收標準**：`DataIntegrityValidator` 啟動檢驗零警告；在 `DrpgCombatLoop` 戰鬥中能穩定發動 Primer 裂魂標記與 Detonator 引爆震盪衝擊波。
+
+- [ ] **Task 4 (VS-01-LOOT-CHIP): 首領掉落【千星科技加密追蹤晶片】與隨機詞綴裝備掉落驗收 (裝備收集 + 376+ 測試守護)**
+  - **目標檔案**：`src/main/resources/data/items/items.json`、[`ITEM_SCHEMA.md`](../2_specifications/data_schemas/ITEM_SCHEMA.md)、[`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java)
+  - **契約規範**：依循 `ITEM_SCHEMA.md` 規範：
+    - 黑煞宗礦脈首領（監工/密室修士）掉落專屬任務道核 `thousand_stars_tracking_chip`（千星科技加密追蹤晶片）。
+    - 戰鬥結算掉落武器/防具自動隨機掛載前綴與後綴詞條（例如：`超頻的黑煞短匕` 附帶 +15 削韌強度）。
+  - **驗收標準**：`victory-modal.js` 結算視窗金色 3D 翻牌正確呈現晶片與隨機詞綴裝備；`.\test.ps1` 既有 376 項測試 100% 綠燈守護。
+
 
 ---
 
