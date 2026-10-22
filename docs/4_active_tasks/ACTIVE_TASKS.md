@@ -40,6 +40,8 @@
   - Task 3 (ALIGN-SKILL-SCHEMA): 在 `PartyMemberSkill` 擴充四大賽博修仙流派 (`CyberSchool`)、超頻階級 (`overclockTier`)、連攜角色 (`ComboRole`) 與雙重疊影文本，並在 `party_skills.json` 注入首批賽博特工戰技【神經超頻步】與【強殖角質刃】。
   - Task 4 (ALIGN-ITEM-AFFIX): 建立隨機詞綴實體 `ItemAffix` (PREFIX/SUFFIX)，在 `PartyItemSlot` 支援詞綴池動態掛載、合成名稱格式化與動態數值累加計算。
   - Task 5 (ALIGN-TEST-VERIFY): 撰寫專屬測試 `CyberSkillAndItemAffixTest.java`，執行 `.\test.ps1`，全專案 375 項單元與整合測試 100% 綠燈通過。
+  - Task 6 (ALIGN-TOWN-DATA): 在 `data/zones/newbie_village/` 建立營地選單機能設施 `facilities.json`（工坊、晶片實驗室、道場、醫療站、傳送門），對齊 Level 2 M1/M7 規格。
+  - Task 7 (ALIGN-DEADCODE-PURGE): 在 `Room.java` 實裝純單機 `broadcast(String message)` 便捷方法，徹底拔除 `Mob.java` 對多人 `broadcastToOthers` 的呼叫。
 
 - [x] **Milestone F3-01 — 古仙陣法動態連攜合擊技與共鳴印記 (Cross Combos & Formation Resonance, P1)**
   - Task 1 (F3-01-COMBO-MODEL): 在 `CombatRules.java` 中建立純函數式跨隊員動態連攜判定 `evaluateCrossComboStep` 與 `CrossComboResolution` 模型，支援 3.5s 連攜時間窗口、同目標接力檢定、雙星合璧 (+25% 傷, +15 削韌)、三才混元 (+50% 傷, +25 削韌, +5 SAN)、四象誅仙 (+100% 傷, +40 削韌, +10 SAN, 終結技就緒)。

@@ -312,6 +312,10 @@ public class Room extends VirtualActor<RoomMessage> {
     this.send(new RoomMessage.Broadcast(actorId, targetId, message));
   }
 
+  public void broadcast(String message) {
+    this.send(new RoomMessage.Broadcast(null, null, message));
+  }
+
   public void broadcastJson(MudMessage<Object> message) {
     this.send(new RoomMessage.BroadcastJson(message));
   }

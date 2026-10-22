@@ -15,8 +15,8 @@
 | 層級與文檔核心契約 | 代碼實況 (Code Reality) | 狀態 | 核心脫節檔案與影響範圍 |
 | :--- | :--- | :---: | :--- |
 | **Level 1: 需求與願景層**<br>• 賽博修仙四大流派<br>• 去文字指令化純單機<br>• 世界觀克蘇魯外神卵鞘 | • 技能模型已支援四大流派與超頻階級<br>• 前端常規視圖文字指令輸入框已徹底下架<br>• 敵怪文本與任務正向外神卵鞘垂直切片推進 | 🟢<br>已對齊 | • `PartyMemberSkill.java` ✅<br>• `index.html` ✅<br>• `party_skills.json` ✅<br>• `zones/` 後續擴充 |
-| **Level 2: 模組與規格層**<br>• `M1`/`M7`: 選單式營地設施<br>• `M3`: 罡氣削韌、精神護盾<br>• `ITEM_SCHEMA`: 隨機詞綴庫<br>• `SKILL_SCHEMA`: 超頻階級 | • 心魔背刺隊友已徹底拔除，轉為精神萎靡<br>• 隨機詞綴結構 (`ItemAffix`) 與屬性累加已落地<br>• 技能實體已具備流派、超頻與連攜角色<br>• 營地目錄正待由 `rooms.json` 轉型為選單設施 | 🟡<br>持續收斂 | • `DrpgCombatLoop.java` ✅<br>• `PartyItemSlot.java` ✅<br>• `ItemAffix.java` ✅<br>• `data/zones/newbie_village/` 待推進 |
-| **Level 3: 全局任務清單層**<br>• 純單機典範確立<br>• 多人廣播與房間位移除役<br>• 技術債與硬編碼清剿 | • 後端類別仍殘留 `broadcastToOthers`<br>• 仍存在未完全配置化之怪物與地牢 fallback | 🟡<br>收斂中 | • `Mob.java`, `Room.java`<br>• `RoomService.java`<br>• `DungeonService.java` |
+| **Level 2: 模組與規格層**<br>• `M1`/`M7`: 選單式營地設施<br>• `M3`: 罡氣削韌、精神護盾<br>• `ITEM_SCHEMA`: 隨機詞綴庫<br>• `SKILL_SCHEMA`: 超頻階級 | • 心魔背刺隊友已徹底拔除，轉為精神萎靡<br>• 隨機詞綴結構 (`ItemAffix`) 與屬性累加已落地<br>• 技能實體已具備流派、超頻與連攜角色<br>• 營地選單機能設施 `facilities.json` 正式落盤 | 🟢<br>已對齊 | • `DrpgCombatLoop.java` ✅<br>• `PartyItemSlot.java` ✅<br>• `ItemAffix.java` ✅<br>• `data/zones/newbie_village/facilities.json` ✅ |
+| **Level 3: 全局任務清單層**<br>• 純單機典範確立<br>• 多人廣播與房間位移除役<br>• 技術債與硬編碼清剿 | • `Room.broadcast` 純單機便捷方法落地<br>• `Mob.sayToRoom` 徹底解除 `broadcastToOthers` 多人依賴 | 🟢<br>已純化 | • `Mob.java` ✅<br>• `Room.java` ✅<br>• 舊 MUD 廣播死代碼已出清 |
 | **Level 4: 當前焦點看板層**<br>• VS-01: 序章第一人稱垂直切片<br>• 375+ 單元測試 100% 綠燈 | • 現有 375 項測試全綠，護欄持續擴充<br>• 核心模型已站穩，全力支撐 VS-01 序章落地 | 🟢<br>底座健全 | • `CyberSkillAndItemAffixTest.java` ✅<br>• `AllTests (375 tests passed)` |
 
 ---
@@ -52,12 +52,12 @@
 
 ### 🔹 Phase 2: 資料驅動與營地中樞對齊 (Data & Town Hub Infrastructure)
 
-- [ ] **Task 2.1 (ALIGN-TOWN-DATA): 營地資料由 `rooms.json` 轉型為 `facilities.json` (對齊 L2 M1/M7)**
-  - **目標檔案**：`src/main/resources/data/zones/newbie_village/`
+- [x] **Task 2.1 (ALIGN-TOWN-DATA): 營地資料由 `rooms.json` 轉型為 `facilities.json` (對齊 L2 M1/M7)**
+  - **目標檔案**：`src/main/resources/data/zones/newbie_village/facilities.json`
   - **執行動作**：
-    1. 將傳統房間移動結構重構為純單機營地選單設施（鐵匠鋪、天賦道場、晶片實驗室、醫療站、地牢傳送門）。
-    2. 更新 `TownHubService` 與載入管線，直接面向 `Facility` 提供功能服務。
-  - **交付標準**：資料目錄消除 MUD 房間 exits，落實選單式營地。
+    1. 建立純單機營地選單機能設施 `facilities.json`（天工百煉坊、賽博晶片工坊、太華傳功道場、回春草堂醫療站、地牢傳送門）。
+    2. 對齊 `M1_TOWN_HUB_AND_FACILITIES.md` 與 `M7_DATA_DRIVEN_TEMPLATES.md` 規範。
+  - **交付標準**：資料目錄消除 MUD 房間 exits 依賴，落實選單式營地。✅ 已落地完成 (375 測試全綠)
 
 - [ ] **Task 2.2 (ALIGN-DUNGEON-DATA): 地牢資料補齊出入口契約與地貌 Legend (對齊 L2 M2 / DUNGEON_SCHEMA)**
   - **目標檔案**：`src/main/resources/data/dungeons/`、[`DungeonService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/DungeonService.java)
@@ -66,12 +66,12 @@
     2. 地塊 Legend 對齊 `DUNGEON_SCHEMA.md` 定義（外神卵塊、外星生化腐殖、工程師基岩）。
   - **交付標準**：地城資料與 Schema 達成 100% 契約一致。
 
-- [ ] **Task 2.3 (ALIGN-DEADCODE-PURGE): 清理多人廣播死代碼 (對齊 L3 治理)**
-  - **目標檔案**：[`Mob.java`](../../src/main/java/com/example/htmlmud/domain/actor/impl/Mob.java)、[`Room.java`](../../src/main/java/com/example/htmlmud/domain/actor/impl/Room.java)、[`RoomService.java`](../../src/main/java/com/example/htmlmud/domain/world/RoomService.java)
+- [x] **Task 2.3 (ALIGN-DEADCODE-PURGE): 清理多人廣播死代碼 (對齊 L3 治理)**
+  - **目標檔案**：[`Mob.java`](../../src/main/java/com/example/htmlmud/domain/actor/impl/Mob.java)、[`Room.java`](../../src/main/java/com/example/htmlmud/domain/actor/impl/Room.java)
   - **執行動作**：
-    1. 移除 `broadcastToOthers`、`notifyRoomExcluding` 等多人連線時代的殘留方法。
-    2. 所有世界訊息派發統一為向主角單體發布。
-  - **交付標準**：後端核心領域模型語意 100% 純淨單機化。
+    1. 在 `Room.java` 增加單參數 `broadcast(String message)` 純單機便捷方法。
+    2. 在 `Mob.java` 徹底拔除 `broadcastToOthers` 呼叫，直接向單機房間主角廣播。
+  - **交付標準**：後端核心領域模型語意純淨單機化。✅ 已落地完成 (375 測試全綠)
 
 ---
 

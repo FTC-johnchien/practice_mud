@@ -1,0 +1,58 @@
+[
+  {
+    "id": "fac_forge",
+    "name": "天工百煉坊",
+    "facilityType": "FORGE",
+    "icon": "🔨",
+    "description": "黑市鐵匠以高熱靈火熔煉異形殘骸與廢棄晶片，可分解法寶、強化護甲與洗鍊隨機詞綴。",
+    "npcId": "weaponsmith",
+    "npcName": "百煉鐵匠",
+    "actions": ["SALVAGE", "UPGRADE", "REFORGE_AFFIX"],
+    "isOpen": true
+  },
+  {
+    "id": "fac_chip_lab",
+    "name": "賽博義體與晶片工坊",
+    "facilityType": "CHIP_LAB",
+    "icon": "🧬",
+    "description": "暗室中閃爍著千星殖民巨企的螢幕微光，為隊員開闢神經插槽，安裝特工超頻晶片。",
+    "npcId": "cyber_engineer",
+    "npcName": "叛逃工程師",
+    "actions": ["OVERCLOCK", "SOCKET_CHIP", "REMOVE_CHIP"],
+    "isOpen": true
+  },
+  {
+    "id": "fac_dojo",
+    "name": "太華傳功道場",
+    "facilityType": "DOJO",
+    "icon": "🥋",
+    "description": "古仙法碑聳立於此，支援黑客、生化、機械、靈能四大流派洗點重構與 Gambit 自動戰術方針配置。",
+    "npcId": "dojo_master",
+    "npcName": "傳功長老",
+    "actions": ["RESET_TALENTS", "CONFIGURE_GAMBIT", "LEARN_SKILLS"],
+    "isOpen": true
+  },
+  {
+    "id": "fac_clinic",
+    "name": "回春草堂與強殖醫療站",
+    "facilityType": "CLINIC",
+    "icon": "🌿",
+    "description": "熬煮靈草與古神抗體的靜謐醫館，提供全隊氣血真元補滿、消除精神萎靡與整裝補給。",
+    "npcId": "apothecary",
+    "npcName": "草堂醫師",
+    "actions": ["FULL_RESTORE", "PURIFY_SAN", "BUY_SUPPLIES"],
+    "isOpen": true
+  },
+  {
+    "id": "fac_dungeon_portal",
+    "name": "地牢傳送門",
+    "facilityType": "DUNGEON_GATE",
+    "icon": "🌀",
+    "description": "通往黑煞宗礦脈、太陰古塚與深淵卵鞘的空間裂隙中樞，可選擇出征樓層與小隊陣法。",
+    "npcId": "portal_guide",
+    "npcName": "裂隙引路人",
+    "targetDungeons": ["mozhu_mines", "taiyin_tomb_b1f"],
+    "actions": ["SELECT_DUNGEON", "ENTER_EXPEDITION"],
+    "isOpen": true
+  }
+]

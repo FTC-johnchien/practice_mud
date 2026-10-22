@@ -352,7 +352,7 @@ public final class Mob extends Living {
   public void sayToRoom(String content) {
     Room room = getCurrentRoom();
     if (room != null && content != null && !content.isBlank()) {
-      room.broadcastToOthers(this.getId(), this.getName() + "說道：「" + content + "」");
+      room.broadcast(this.getName() + "說道：「" + content + "」");
     }
   }
 

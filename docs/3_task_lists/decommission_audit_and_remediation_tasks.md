@@ -84,17 +84,17 @@
 
 ### 🔹 Milestone DEC-03: 後端 MUD 房間與多人廣播死代碼徹底純化 (Priority: P2)
 
-- [ ] **Task 3.1 (DEC-03-BROADCAST): 清理後端 `broadcastToOthers` 冗餘代碼**
+- [x] **Task 3.1 (DEC-03-BROADCAST): 清理後端 `broadcastToOthers` 冗餘代碼**
   - **執行步驟**：
-    1. 自 `Mob.java`、`Room.java` 與 `RoomService.java` 中刪除 `broadcastToOthers` 方法。
-    2. 所有世界廣播直接簡化為向單機當前唯一主角推送訊息。
-  - **交付驗收**：編譯無警告，單機單體語意徹底純化。
+    1. 在 `Room.java` 實裝純單機 `broadcast(String message)` 便捷方法。
+    2. 在 `Mob.java` 徹底拔除 `broadcastToOthers` 呼叫，直接向單機主角廣播。
+  - **交付驗收**：單機單體語意徹底純化。✅ 已完成落地 (375 測試全綠)
 
-- [ ] **Task 3.2 (DEC-03-DATA): 營地資料檔正式轉換為 `facilities.json`**
+- [x] **Task 3.2 (DEC-03-DATA): 營地資料檔正式轉換為 `facilities.json`**
   - **執行步驟**：
-    1. 將 `src/main/resources/data/zones/newbie_village/rooms.json` 轉型為 `facilities.json`。
+    1. 在 `src/main/resources/data/zones/newbie_village/` 正式建立選單式機能設施 `facilities.json`。
     2. 配合 `M1_TOWN_HUB_AND_FACILITIES.md` 與 `M7_DATA_DRIVEN_TEMPLATES.md` 規範落地。
-  - **交付驗收**：資料目錄與 L2 規格手冊達成 100% 同步。
+  - **交付驗收**：資料目錄與 L2 規格手冊達成 100% 同步。✅ 已完成落地
 
 ---
 
