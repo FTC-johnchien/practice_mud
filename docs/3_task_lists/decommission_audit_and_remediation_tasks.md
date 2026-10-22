@@ -45,11 +45,11 @@
 
 ### 🔹 Milestone DEC-01: 道心魔化與隊友背刺機制代碼徹底清理 (Priority: P1)
 
-- [ ] **Task 1.1 (DEC-01-COMBAT): 重構 `DrpgCombatLoop.java` 戰鬥循環**
+- [x] **Task 1.1 (DEC-01-COMBAT): 重構 `DrpgCombatLoop.java` 戰鬥循環**
   - **執行步驟**：
     1. 移除 lines 230-320 中隊員 SAN 歸零後的 `CHAOS` 走火入魔檢定與 40% 心魔背刺攻擊隊友邏輯。
-    2. 將 SAN 重新定義為「精神侵蝕護盾」：SAN 耗盡時僅給予隊員【精神萎靡】Debuff（降低 15% 輸出與 10 點削韌防禦），絕不發生隊友背刺與失控叛變。
-  - **交付驗收**：戰鬥中心跳循環無任何背刺隊友代碼執行。
+    2. 將 SAN 重新定義為「精神護盾」：SAN 耗盡時僅給予隊員【精神萎靡】Debuff（降低 15% 輸出），絕不發生隊友背刺與失控叛變。
+  - **交付驗收**：戰鬥中心跳循環無任何背刺隊友代碼執行。✅ 已完成落地 (373 測試全綠)
 
 - [ ] **Task 1.2 (DEC-01-MODEL): 簡化 `PartyMember.java` 實體與除役封印術**
   - **執行步驟**：
@@ -67,12 +67,12 @@
 
 ### 🔹 Milestone DEC-02: 前端 MUD 文字指令輸入框與操作列按鈕徹底下架 (Priority: P2)
 
-- [ ] **Task 2.1 (DEC-02-HTML): 下架 `index.html` 底部文字指令框**
+- [x] **Task 2.1 (DEC-02-HTML): 下架 `index.html` 底部文字指令框**
   - **執行步驟**：
     1. 自 `index.html` 操作列移除 `<button data-action="toggle-cmd-input">⌨️ 指令</button>` 按鈕。
     2. 移除 `#cmd-input-container` 展開式容器。
     3. 保留按 `~` 鍵呼出的 `#dev-console` 作為開發者專用偵錯控制台，玩家日常遊玩介面 100% 走格與按鈕化。
-  - **交付驗收**：常規遊戲視圖完全消除文字指令輸入框。
+  - **交付驗收**：常規遊戲視圖完全消除文字指令輸入框。✅ 已完成落地
 
 - [ ] **Task 2.2 (DEC-02-JS): 精簡 `app.js` 與 `cmd-dispatcher.js`**
   - **執行步驟**：

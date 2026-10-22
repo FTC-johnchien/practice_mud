@@ -648,17 +648,9 @@
         <span id="footer-hint-text" class="footer-hint-text">💡 WASD: 移動 ‧ 羅盤點擊 ‧ I: 探查 ‧ R: 調息 ‧ B: 行囊 ‧ C: 選單 ‧ 1~5: 招式</span>
       </div>
 
-      <!-- 右段：指令輸入框開關與常駐按鈕 -->
+      <!-- 右段：開發者終端常駐按鈕 -->
       <div class="footer-right-tools">
-        <button class="act-btn footer-btn" data-action="toggle-cmd-input" title="開啟文字指令框">⌨️ 指令</button>
         <button class="act-btn footer-btn" data-action="toggle-dev-console" title="打開開發者終端 (~)">🔧 (~)</button>
-      </div>
-
-      <!-- 展開型指令輸入列 -->
-      <div id="cmd-input-container" class="input-container hidden">
-        <input type="text" id="cmd-input" class="cmd-input-field" placeholder="輸入文字指令 (例如: look, buy, cast, rest)，按 Esc 關閉..." autocomplete="off">
-        <button class="send-btn" data-action="handle-enter">發送</button>
-        <button class="drawer-close-btn" data-action="toggle-cmd-input" style="padding: 2px 8px; margin-left: 4px;">✕</button>
       </div>
     </footer>
   </div>

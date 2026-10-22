@@ -753,17 +753,10 @@ export function initEventDelegation() {
       case 'clear-log':
         clearLog();
         break;
-      case 'toggle-cmd-input': {
-        const wrap = document.getElementById('cmd-input-container');
-        const input = document.getElementById('cmd-input');
-        if (wrap) {
-          const isHidden = wrap.classList.toggle('hidden');
-          if (!isHidden && input) {
-            input.focus();
-          }
-        }
+      case 'toggle-cmd-input':
+        // 已徹底除役文字指令輸入框，導向開發者終端
+        toggleDevConsole();
         break;
-      }
       case 'handle-enter':
         if (window.handleEnter) window.handleEnter();
         break;

@@ -227,105 +227,19 @@ public class DrpgCombatLoop {
           if (now >= member.getNextAttackTime()) {
             member.setNextAttackTime(now + member.getEffectiveAttackIntervalMs());
 
-            // 走火入魔檢定 (非主角隊員)
+            // 精神萎靡檢定 (非主角隊員)
             boolean isLeader = (player != null && member.getName().equals(player.getName()));
             if (!isLeader) {
-              // 若 SAN <= 0 且原本正常，踏入走火入魔第一階段 (CHAOS)
+              // 若 SAN <= 0 且原本正常，進入精神萎靡狀態 (CHAOS)
               if (member.getCurrentSan() <= 0 && member.getMadnessState() == PartyMember.MadnessState.SANE) {
                 member.setMadnessState(PartyMember.MadnessState.CHAOS);
                 member.setAberrationCounter(0);
-                broadcastLog(player, ctx, "\u001B[1;35m⚠️【走火入魔】" + member.getName() + " 的道心徹底歸零！古神囈語侵入靈府，雙目泛起血光，進入走火入魔混亂期！異變計數器開始攀升！\u001B[0m");
+                broadcastLog(player, ctx, "\u001B[1;33m⚠️【精神萎靡】" + member.getName() + " 的理智徹底耗盡！陷入精神萎靡狀態（攻擊威力降低 15%）！\u001B[0m");
               }
 
-              // 若處於 SEALED 封印鎮魔狀態，無法出招，暫停計數
+              // 若處於 SEALED 封印鎮魔狀態，無法出招
               if (member.getMadnessState() == PartyMember.MadnessState.SEALED) {
                 continue;
-              }
-
-              // 若處於 CHAOS 走火入魔混亂期：每回合累加異變計數器
-              if (member.getMadnessState() == PartyMember.MadnessState.CHAOS) {
-                int addProgress = ThreadLocalRandom.current().nextInt(15, 30);
-                member.setAberrationCounter(member.getAberrationCounter() + addProgress);
-
-                broadcastLog(player, ctx, "\u001B[1;35m👁️【古神低語・異變攀升】" + member.getName() + " 神識渙散，皮膚下肉瘤蠕動，異變進度達 " + member.getAberrationCounter() + "%！\u001B[0m");
-
-                // (3) 異變進度達 100% -> 徹底異化為深淵首領
-                if (member.getAberrationCounter() >= 100) {
-                  member.setMadnessState(PartyMember.MadnessState.ABERRATION);
-                  member.setAlive(false); // 移出我方活人隊伍
-
-                  int bossHp = Math.max(200, member.getStats().getMaxHp() * 10);
-                  PartyMemberSkill firstSkill = !member.getSkills().isEmpty() ? member.getSkills().get(0) : null;
-                  String sId = firstSkill != null ? firstSkill.getId() : "sword_pierce";
-                  String sName = firstSkill != null ? firstSkill.getName() : "道種遺學";
-
-                  BattleEnemy boss = BattleEnemy.builder()
-                      .id("aberration-" + member.getId())
-                      .templateId("taiyin:aberration_boss")
-                      .name("【深淵畸變體・" + member.getName() + "】")
-                      .hp(bossHp)
-                      .maxHp(bossHp)
-                      .minDamage(member.getEffectiveMinDamage() * 2)
-                      .maxDamage(member.getEffectiveMaxDamage() * 2 + 10)
-                      .defense(member.getEffectiveDefense() + 6)
-                      .dex(12)
-                      .row(RowPosition.FRONT)
-                      .attackIntervalMs(2000)
-                      .nextAttackTime(now + 1000)
-                      .alive(true)
-                      .xp(250)
-                      .dropItemId("core_" + member.getId() + "_" + sId)
-                      .droppedDaoSkillId(sId)
-                      .droppedDaoSkillName(sName)
-                      .droppedDaoMemberName(member.getName())
-                      .build();
-
-                  ctx.getEnemies().add(boss);
-                  broadcastLog(player, ctx, "\n\u001B[1;35m⚡⚡【不可名狀畸變・降世】深淵裂隙撕開！" + member.getName() + " 的肉身徹底畸變為域外古神眷族【深淵畸變體・" + member.getName() + "】！氣血暴增 10 倍 (" + bossHp + " HP)！狂暴敵對！\u001B[0m\n");
-                  continue;
-                }
-
-                // (4) 混亂出手：傷害暴增 100% (x2.0)，40% 背刺隊友
-                if (ThreadLocalRandom.current().nextInt(100) < 40) {
-                  PartyMember victim = selectRandomTeammateExcept(ctx.getParty(), member);
-                  if (victim != null && victim.isAlive()) {
-                    int baseDmg = ThreadLocalRandom.current().nextInt(member.getEffectiveMinDamage(), member.getEffectiveMaxDamage() + 1);
-                    int rawDmg = (int) (Math.max(1, baseDmg - victim.getEffectiveDefense()) * 2.0);
-                    victim.takeDamage(rawDmg);
-                    broadcastLog(player, ctx, "\u001B[1;31m🩸【心魔背刺】" + member.getName() + " 神智癲狂，竟將身旁的 " + victim.getName() + " 視為妖邪，魔焰暴增 100% 狠下殺手，造成 " + rawDmg + " 點重創！\u001B[0m");
-                    if (!victim.isAlive()) {
-                      handlePartyMemberDeath(player, ctx, victim);
-                    }
-                    continue;
-                  }
-                } else {
-                  // 60% 狂轟敵方
-                  BattleEnemy target = (member.getRow() == RowPosition.FRONT) ? ctx.getFrontTargetEnemy() : ctx.getTargetEnemy();
-                  if (target != null && target.isAlive()) {
-                    boolean isStaggerCrit = target.isPoiseBroken();
-                    int baseDmg = tacticsService.calculatePlayerDamage(member, target);
-                    int boostedDmg = baseDmg * 2;
-                    if (isStaggerCrit) {
-                      boostedDmg = com.example.htmlmud.domain.combat.CombatRules.applyPoiseBreakCrit(boostedDmg, true);
-                    }
-                    target.takeDamage(boostedDmg);
-                    checkAndTriggerPhaseTransition(player, ctx, target);
-                    if (isStaggerCrit) {
-                      broadcastLog(player, ctx, "\u001B[1;31m💥【破防重創!】🔥【魔道凶威】" + member.getName() + " 狂亂暴怒，爆發走火入魔煞氣直取力竭要害，對【" + target.getName() + "】造成 " + boostedDmg + " 點致命暴擊打擊！\u001B[0m");
-                    } else {
-                      broadcastLog(player, ctx, "\u001B[1;35m🔥【魔道凶威】" + member.getName() + " 狂亂暴怒，爆發走火入魔之煞氣，對【" + target.getName() + "】造成 " + boostedDmg + " 點雙倍狂暴打擊！\u001B[0m");
-                    }
-                    if (!target.isAlive()) {
-                      broadcastLog(player, ctx, "\u001B[1;32m💥【" + target.getName() + "】被斬殺倒地！\u001B[0m");
-                      ctx.checkEnemyRowAdvancement();
-                      if (ctx.isAllEnemiesDead()) {
-                        ctx.setState(BattleState.VICTORY);
-                        break;
-                      }
-                    }
-                    continue;
-                  }
-                }
               }
             }
 
@@ -342,6 +256,10 @@ public class DrpgCombatLoop {
             if (target != null && target.isAlive()) {
               boolean isStaggerCrit = target.isPoiseBroken();
               int dmg = tacticsService.calculatePlayerDamage(member, target);
+              // 若處於精神萎靡狀態，威力衰減 15%
+              if (member.getMadnessState() == PartyMember.MadnessState.CHAOS) {
+                dmg = Math.max(1, (int) (dmg * 0.85));
+              }
               if (isStaggerCrit) {
                 dmg = com.example.htmlmud.domain.combat.CombatRules.applyPoiseBreakCrit(dmg, true);
               }
@@ -1223,15 +1141,6 @@ public class DrpgCombatLoop {
         e.addThreat(memberId, threatPerEnemy);
       }
     }
-  }
-
-  private PartyMember selectRandomTeammateExcept(Party party, PartyMember self) {
-    if (party == null || party.getMembers() == null) return null;
-    List<PartyMember> candidates = party.getMembers().stream()
-        .filter(m -> m != self && m.isAlive())
-        .toList();
-    if (candidates.isEmpty()) return null;
-    return candidates.get(ThreadLocalRandom.current().nextInt(candidates.size()));
   }
 
   private void handlePartyMemberDeath(Player player, BattleContext ctx, PartyMember member) {

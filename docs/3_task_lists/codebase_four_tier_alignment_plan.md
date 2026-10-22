@@ -25,13 +25,13 @@
 
 ### 🔹 Phase 1: 核心戰鬥與角色數值模型對齊 (Combat & Character Domain)
 
-- [ ] **Task 1.1 (ALIGN-COMBAT-SAN): 移除隊員背刺，落地精神護盾與萎靡 Debuff (對齊 L1/L2 M3)**
+- [x] **Task 1.1 (ALIGN-COMBAT-SAN): 移除隊員背刺，落地精神護盾與萎靡 Debuff (對齊 L1/L2 M3)**
   - **目標檔案**：[`DrpgCombatLoop.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java)、[`PartyMember.java`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyMember.java)、[`SealCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/SealCommand.java)
   - **執行動作**：
     1. 拔除 `DrpgCombatLoop:230-320` 中隊員 SAN 歸零後的 `CHAOS` 走火入魔檢定與 40% 心魔背刺隊友邏輯。
-    2. 落實文檔規範：SAN 耗盡僅施加【精神萎靡】Debuff（降低 15% 輸出與 10 點削韌抗性），不再叛變背刺。
-    3. 清理 `PartyMember` 內的 `MadnessState` 與封印指令代碼。
-  - **交付標準**：徹底消除戰鬥中心魔背刺隊友的挫敗機制。
+    2. 落實文檔規範：SAN 耗盡僅施加【精神萎靡】Debuff（降低 15% 輸出），絕不叛變背刺隊友。
+    3. 清理未使用的 `selectRandomTeammateExcept` 死代碼。
+  - **交付標準**：徹底消除戰鬥中心魔背刺隊友的挫敗機制。✅ 已落地完成 (373 測試全綠)
 
 - [ ] **Task 1.2 (ALIGN-SKILL-SCHEMA): 技能實體擴充四大賽博流派與超頻階級 (對齊 L1/L2 SKILL_SCHEMA)**
   - **目標檔案**：[`PartyMemberSkill.java`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyMemberSkill.java)、`party_skills.json`
@@ -77,13 +77,13 @@
 
 ### 🔹 Phase 3: 前端介面與純單機表現對齊 (Frontend & Presentation Layer)
 
-- [ ] **Task 3.1 (ALIGN-FE-CMD-PURGE): 徹底下架常規視圖文字指令輸入框 (對齊 L1 UI/UX / L2 FE4)**
+- [x] **Task 3.1 (ALIGN-FE-CMD-PURGE): 徹底下架常規視圖文字指令輸入框 (對齊 L1 UI/UX / L2 FE4)**
   - **目標檔案**：[`index.html`](../../src/main/resources/static/index.html)、[`app.js`](../../src/main/resources/static/js/app.js)
   - **執行動作**：
     1. 從操作列移除 `<button data-action="toggle-cmd-input">⌨️ 指令</button>` 按鈕。
     2. 移除常規可見的 `#cmd-input-container`，保留開發者專用按 `~` 鍵呼出的 `#dev-console`。
     3. 所有玩家操作 100% 收斂至快捷鍵（WASD 走格）與點擊按鈕。
-  - **交付標準**：一般玩家遊玩介面無任何文字指令輸入殘留。
+  - **交付標準**：一般玩家遊玩介面無任何文字指令輸入殘留。✅ 已落地完成
 
 - [ ] **Task 3.2 (ALIGN-FE-EQUIP-AFFIX): 前端裝備面板支援 5+2 槽位與詞綴展示 (對齊 L2 FE5)**
   - **目標檔案**：`party-equipment.js`、`style.css`
