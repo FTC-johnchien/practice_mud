@@ -6,21 +6,27 @@
 
 ---
 
-## 📌 當前焦點里程碑：Milestone F2-05 — 複合靈氣連鎖反應與狀態引爆 (Elemental Reactions & Primer/Detonator, P1)
+## 📌 當前焦點里程碑：Milestone F3-01 — 古仙陣法動態連攜合擊技與共鳴印記 (Cross Combos & Formation Resonance, P1)
 
-- **長遠藍圖**：[`FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) 第 22.2 章《戰線二：戰鬥深度突破與動態沉浸博弈 (F2-05)》
-- **背景設定融合**：靈脈流動與天地五行/陰陽煞氣相互催化；當目標身中相生相剋靈氣（如冰霜與烈焰爆裂超載、雷水感電傳導、陰陽混沌湮滅破防）時，引爆高額傷害並削韌失衡。
+- **長遠藍圖**：[`FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) 第 22.3 章《戰線三：道法境界、同伴生態與古神詞綴 (F3-01)》
+- **背景設定融合**：各陣位弟子以特定招式先後擊中目標觸發「道法連攜合擊 (Cross Combos)」，陣眼修士引導全隊陣法真元，爆發天地共鳴合擊。
 
 ### 📋 微任務清單 (Micro-Tasks)
 
-- [ ] **Task 1 (F2-05-REACTION-RULE): 五行複合靈氣反應矩陣與結算公式**
-- [ ] **Task 2 (F2-05-PRIMER-DETONATE): 裂魂印記 (Primer) 與引爆戰技 (Detonator) 引擎機制**
-- [ ] **Task 3 (F2-05-COMBAT-INTEGRATE): 戰鬥迴圈連鎖跳算與全隊元素廣播**
-- [ ] **Task 4 (F2-05-FE-VFX & VERIFY): 前端元素反應爆裂特效與全量測試**
+- [ ] **Task 1 (F3-01-COMBO-MODEL): 陣法動態連攜隊列與先導觸發檢定模型**
+- [ ] **Task 2 (F3-01-RESONANCE-RESOLVER): 陣眼共鳴印記累加與終結絕技發動引擎**
+- [ ] **Task 3 (F3-01-DATA-TEMPLATES): 全域陣法合擊技能資料驅動設定 (party_skills.json)**
+- [ ] **Task 4 (F3-01-FE-PRESENTATION & VERIFY): 前端連攜合擊提示橫幅與全量測試驗證**
 
 ---
 
 ## 🏆 已完成里程碑 (Completed Milestones)
+
+- [x] **Milestone F2-05 — 複合靈氣連鎖反應與狀態引爆 (Elemental Reactions & Primer/Detonator, P1)**
+  - Task 1 (F2-05-REACTION-RULE): 在 `CombatRules.java` 中建立九大天道靈氣純函數式元素反應判定與結算模型（`VAPORIZE` 2.0x 傷害 +20 削韌、`ELECTRO_CHARGED` 1.5x 傷害 +10 削韌 800ms 微眩暈與行傳導、`CHAOS_ANNIHILATION` 1.5x 傷害 +50 削韌強制失衡、`COMBUSTION` 1.8x 傷害 +15 削韌），支援精準 Buff 消耗。
+  - Task 2 (F2-05-PRIMER-DETONATE): 建立裂魂印記 (Primer) 與引爆戰技 (Detonator) 機制；擴充 `BuffCategory.PRIMER` 與 `UnifiedSkill.isDetonator()` / `isPrimer()`，命中帶有 Primer 目標時瞬間結算剩餘 DoT 總傷害並生成 50% 全場震盪衝擊波。
+  - Task 3 (F2-05-COMBAT-INTEGRATE): 在 `DrpgCombatLoop` 單體與 AOE 技能結算中全面整合元素反應與裂魂印爆，包含同排電弧跳躍打擊、全場衝擊波波及、對應 Buff 移除與彩色戰報廣播；在 `party_skills.json` 擴充三昧真火、玄冰寒煞、幽冥劇毒技能，並為穿心瞬影 (Primer) 與裂地崩山 (Detonator) 賦予引爆機制。
+  - Task 4 (F2-05-FE-VFX & VERIFY): 前端 `style-07-battle-fx.css` 與 `floating-text.js` 實裝 5 大反應專屬彩色浮動大字 (`.ft-vaporize`, `.ft-electro`, `.ft-chaos`, `.ft-combustion`, `.ft-detonation`)；撰寫專屬測試集 `ElementalReactionAndDetonateTest.java`（7/7 綠燈），全專案 368 項測試 100% 綠燈通過。
 
 - [x] **Milestone F2-02 — 罡氣破防重創與首領多階段狂暴轉階段 (Poise Break & Boss Phases, P1)**
   - Task 1 (F2-02-POISE-STAGGER-CRIT): 在 `CombatRules.java` 實裝 `applyPoiseBreakCrit`，當目標處於 `isPoiseBroken()` 時 100% 暴擊 (`HitOutcome.CRIT`) 享受 1.5 倍致命傷害，在 `DrpgCombatLoop` 與 `ComboResolver` 中單體、群攻、合擊與狂暴打擊全面支援並輸出彩色高亮 `💥【破防重創!】` 戰報。

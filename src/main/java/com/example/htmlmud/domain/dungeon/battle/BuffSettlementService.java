@@ -114,7 +114,7 @@ public class BuffSettlementService {
       int baseHeal = cfg.healPerTick() > 0 ? cfg.healPerTick() : 15;
       double pctHeal = cfg.healPercentPerTick() > 0 ? cfg.healPercentPerTick() : 0.0;
       val = Math.max(baseHeal, (int) (target.getMaxHp() * pctHeal));
-    } else if (cfg.category() == BuffCategory.DOT) {
+    } else if (cfg.category() == BuffCategory.DOT || cfg.category() == BuffCategory.PRIMER) {
       val = cfg.damagePerTick() > 0 ? cfg.damagePerTick() : 12;
     }
 

@@ -1038,6 +1038,12 @@ public class DrpgCombatLoop {
               e.heal(healAmt);
               broadcastLog(player, ctx, "\u001B[1;36m   ↳ ☯️【靈氣逆流】" + e.getName() + " 吸收 " + dt + " 威能，反獲治療 " + healAmt + " 點氣血！\u001B[0m");
             } else {
+              int[] dmgRef = new int[]{dmg};
+              int[] poiseDmgRef = new int[]{skill.getPoiseDamage()};
+              resolveElementalReactionAndDetonation(player, ctx, member, skill, e, dt, dmgRef, poiseDmgRef);
+              dmg = dmgRef[0];
+              int finalPoiseDmg = poiseDmgRef[0];
+
               e.takeDamage(dmg);
               checkAndTriggerPhaseTransition(player, ctx, e);
               if (isStaggerCrit) {
@@ -1045,11 +1051,11 @@ public class DrpgCombatLoop {
               } else {
                 broadcastLog(player, ctx, "\u001B[1;36m   ↳ 擊中【" + e.getName() + "】造成 " + dmg + " 點傷害！\u001B[0m");
               }
+              if (finalPoiseDmg > 0) {
+                e.applyPoiseDamage(finalPoiseDmg);
+              }
             }
 
-            if (skill.getPoiseDamage() > 0) {
-              e.applyPoiseDamage(skill.getPoiseDamage());
-            }
             if (skill.getBuffConfig() != null && e.isAlive()) {
               ActiveBuff debuff = buffSettlementService.createActiveBuffFromConfig(skill.getBuffConfig(), e, member.getId(), skill.getId());
               if (debuff != null) {
@@ -1131,6 +1137,12 @@ public class DrpgCombatLoop {
             target.heal(healAmt);
             broadcastLog(player, ctx, "\u001B[1;36m" + tag + "☯️【靈氣逆流】" + target.getName() + " 運轉道體，將【" + skill.getName() + "】之 " + dt + " 威能吸收，反獲治療 " + healAmt + " 點氣血！\u001B[0m");
           } else {
+            int[] dmgRef = new int[]{dmg};
+            int[] poiseDmgRef = new int[]{skill.getPoiseDamage()};
+            resolveElementalReactionAndDetonation(player, ctx, member, skill, target, dt, dmgRef, poiseDmgRef);
+            dmg = dmgRef[0];
+            int finalPoiseDmg = poiseDmgRef[0];
+
             target.takeDamage(dmg);
             checkAndTriggerPhaseTransition(player, ctx, target);
             if (isStaggerCrit) {
@@ -1138,11 +1150,11 @@ public class DrpgCombatLoop {
             } else {
               broadcastLog(player, ctx, "\u001B[1;33m" + tag + "🔥 " + member.getName() + " 施展【" + skill.getName() + "】，直取【" + target.getName() + "】要害，造成 " + dmg + " 點打擊！\u001B[0m");
             }
+            if (finalPoiseDmg > 0) {
+              target.applyPoiseDamage(finalPoiseDmg);
+            }
           }
 
-          if (skill.getPoiseDamage() > 0) {
-            target.applyPoiseDamage(skill.getPoiseDamage());
-          }
           if (skill.getBuffConfig() != null && target.isAlive()) {
             ActiveBuff debuff = buffSettlementService.createActiveBuffFromConfig(skill.getBuffConfig(), target, member.getId(), skill.getId());
             if (debuff != null) {
@@ -1288,6 +1300,82 @@ public class DrpgCombatLoop {
     enemy.setNextAttackTime(now + 400L);
   }
 
+  /**
+   * 結算元素反應與裂魂印爆 (F2-05)
+   */
+  private void resolveElementalReactionAndDetonation(
+      Player player, BattleContext ctx, PartyMember member, PartyMemberSkill skill,
+      BattleEnemy target, DamageType dt, int[] dmgRef, int[] poiseDmgRef
+  ) {
+    if (target == null || !target.isAlive() || ctx == null) return;
+
+    // 1. 元素反應判定 (火+冰/水 -> 氣化爆裂, 雷+水/冰 -> 感電傳導, 暗+光 -> 混沌湮滅, 火+毒 -> 三昧燎原)
+    var reactionResult = com.example.htmlmud.domain.combat.CombatRules.evaluateElementalReaction(
+        dt, dmgRef[0], poiseDmgRef[0], target.getActiveBuffs());
+    if (reactionResult.hasReaction()) {
+      dmgRef[0] = reactionResult.damage();
+      poiseDmgRef[0] = reactionResult.poiseDamage();
+      if (reactionResult.logMessage() != null) {
+        broadcastLog(player, ctx, "   ↳ " + reactionResult.logMessage());
+      }
+      if (reactionResult.stunDurationMs() > 0) {
+        target.applyStun(reactionResult.stunDurationMs());
+      }
+      if (reactionResult.consumedBuffId() != null) {
+        target.getActiveBuffs().removeIf(b -> b.getId().equals(reactionResult.consumedBuffId()));
+      }
+      // 感電傳導：若 chainToRow 則對同排其他存活敵怪施加傳導打擊
+      if (reactionResult.chainToRow()) {
+        int chainDmg = Math.max(1, (int) Math.round(dmgRef[0] * 0.5));
+        for (BattleEnemy allyEnemy : ctx.getEnemies()) {
+          if (allyEnemy != target && allyEnemy.isAlive() && allyEnemy.getRow() == target.getRow()) {
+            allyEnemy.takeDamage(chainDmg);
+            allyEnemy.applyPoiseDamage(10);
+            broadcastLog(player, ctx, "\u001B[1;36m      ⚡【電弧跳躍】雷煞電弧蔓延至同排【"
+                + allyEnemy.getName() + "】，造成 " + chainDmg + " 點感電傳導傷害！\u001B[0m");
+            checkAndTriggerPhaseTransition(player, ctx, allyEnemy);
+            if (!allyEnemy.isAlive()) {
+              broadcastLog(player, ctx, "\u001B[1;32m💥【" + allyEnemy.getName() + "】在連鎖電弧中灰飛煙滅！\u001B[0m");
+              ctx.checkEnemyRowAdvancement();
+            }
+          }
+        }
+      }
+    }
+
+    // 2. 裂魂印記 (Primer) 與引爆戰技 (Detonator) 判定
+    boolean isDetonator = (skill != null && skill.isDetonator());
+    var detonationResult = com.example.htmlmud.domain.combat.CombatRules.evaluateDetonation(
+        isDetonator, 0, target.getActiveBuffs());
+    if (detonationResult.triggered()) {
+      dmgRef[0] += detonationResult.singleTargetDamage();
+      poiseDmgRef[0] += detonationResult.bonusPoiseDamage();
+      if (detonationResult.logMessage() != null) {
+        broadcastLog(player, ctx, "   ↳ " + detonationResult.logMessage());
+      }
+      if (detonationResult.consumedBuffIds() != null && !detonationResult.consumedBuffIds().isEmpty()) {
+        target.getActiveBuffs().removeIf(b -> detonationResult.consumedBuffIds().contains(b.getId()));
+      }
+      // 全場衝擊波 (AOE Shockwave)
+      if (detonationResult.aoeDamage() > 0) {
+        int aoeDmg = detonationResult.aoeDamage();
+        for (BattleEnemy otherEnemy : ctx.getEnemies()) {
+          if (otherEnemy != target && otherEnemy.isAlive()) {
+            otherEnemy.takeDamage(aoeDmg);
+            otherEnemy.applyPoiseDamage(15);
+            broadcastLog(player, ctx, "\u001B[1;31m      🌊【衝擊波波及】全場衝擊波震盪，【"
+                + otherEnemy.getName() + "】承受 " + aoeDmg + " 點餘波震盪！\u001B[0m");
+            checkAndTriggerPhaseTransition(player, ctx, otherEnemy);
+            if (!otherEnemy.isAlive()) {
+              broadcastLog(player, ctx, "\u001B[1;32m💥【" + otherEnemy.getName() + "】被震盪衝擊波粉碎！\u001B[0m");
+              ctx.checkEnemyRowAdvancement();
+            }
+          }
+        }
+      }
+    }
+  }
+
   private void broadcastLog(Player player, BattleContext ctx, String log) {
     if (ctx != null) {
       ctx.addLog(log);
@@ -1297,3 +1385,4 @@ public class DrpgCombatLoop {
     }
   }
 }
+

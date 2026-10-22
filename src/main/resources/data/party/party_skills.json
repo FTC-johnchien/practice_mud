@@ -160,7 +160,7 @@
     "id": "tank_smash",
     "name": "裂地崩山",
     "icon": "🔨",
-    "description": "揮舞玄重鎚重砸前排，造成 200% 鈍擊傷害並震懾暈眩 2 秒",
+    "description": "揮舞玄重鎚重砸前排，造成 200% 鈍擊傷害並震懾暈眩 2 秒；若命中帶有【裂魂印記】目標，將引爆全場毀滅衝擊波！",
     "costType": "RAGE",
     "costValue": 60,
     "cooldownMs": 12000,
@@ -177,7 +177,8 @@
       "CONTROL",
       "STUN",
       "EARTH",
-      "BLUNT"
+      "BLUNT",
+      "DETONATOR"
     ],
     "allowedWeapons": [
       "BLUNT",
@@ -249,7 +250,7 @@
     "id": "rogue_shadow_strike",
     "name": "穿心瞬影",
     "icon": "⚡",
-    "description": "化作殘影直刺敵方弱點，造成 220% 暴擊傷害",
+    "description": "化作殘影直刺敵方弱點，造成 220% 暴擊傷害並附加【裂魂印記】",
     "costType": "COMBO",
     "costValue": 2,
     "cooldownMs": 3000,
@@ -263,8 +264,19 @@
     "tags": [
       "ATTACK",
       "DAGGER",
-      "CRIT"
+      "CRIT",
+      "PRIMER"
     ],
+    "buffConfig": {
+      "id": "buff_soul_primer",
+      "name": "裂魂印記",
+      "icon": "🩸",
+      "type": "DEBUFF",
+      "category": "PRIMER",
+      "durationSeconds": 15,
+      "damagePerTick": 25,
+      "maxStacks": 3
+    },
     "allowedWeapons": [
       "DAGGER"
     ]
@@ -273,7 +285,7 @@
     "id": "rogue_seven_star",
     "name": "七曜絕殺",
     "icon": "🌟",
-    "description": "消耗 5 層連擊點，瞬間打出 5 連穿刺總計 450% 毀滅性爆發！",
+    "description": "消耗 5 層連擊點，瞬間打出 5 連穿刺總計 450% 毀滅性爆發；可引爆目標裂魂印記！",
     "costType": "COMBO",
     "costValue": 5,
     "cooldownMs": 10000,
@@ -287,7 +299,8 @@
     "tags": [
       "ATTACK",
       "DAGGER",
-      "BURST"
+      "BURST",
+      "DETONATOR"
     ],
     "allowedWeapons": [
       "DAGGER"
@@ -417,6 +430,123 @@
     ],
     "allowedWeapons": [
       "SWORD"
+    ]
+  },
+  {
+    "id": "spell_samadhi_fire",
+    "name": "三昧真火",
+    "icon": "🔥",
+    "description": "引動九天純陽離火灼燒敵方，造成 180% 火焰法術傷害並附帶灼燒",
+    "costType": "MP",
+    "costValue": 35,
+    "cooldownMs": 6000,
+    "damageMultiplier": 1.8,
+    "damageType": "FIRE",
+    "castTimeMs": 1000,
+    "interruptible": true,
+    "poiseDamage": 20,
+    "aoe": false,
+    "heal": false,
+    "taunt": false,
+    "stun": false,
+    "tags": [
+      "SPELL",
+      "FIRE"
+    ],
+    "buffConfig": {
+      "id": "buff_fire_burn",
+      "name": "真火灼燒",
+      "icon": "🔥",
+      "element": "FIRE",
+      "type": "DEBUFF",
+      "category": "DOT",
+      "durationSeconds": 10,
+      "tickIntervalSeconds": 2,
+      "damagePerTick": 18,
+      "maxStacks": 3
+    },
+    "allowedWeapons": [
+      "STAFF",
+      "WAND",
+      "UNARMED"
+    ]
+  },
+  {
+    "id": "spell_xuanbing_frost",
+    "name": "玄冰寒芒",
+    "icon": "❄️",
+    "description": "凝聚極北玄冰之氣貫穿敵人，造成 170% 冰系傷害並附帶玄冰寒煞",
+    "costType": "MP",
+    "costValue": 35,
+    "cooldownMs": 6000,
+    "damageMultiplier": 1.7,
+    "damageType": "ICE",
+    "castTimeMs": 1000,
+    "interruptible": true,
+    "poiseDamage": 22,
+    "aoe": false,
+    "heal": false,
+    "taunt": false,
+    "stun": false,
+    "tags": [
+      "SPELL",
+      "ICE"
+    ],
+    "buffConfig": {
+      "id": "buff_ice_chill",
+      "name": "玄冰寒煞",
+      "icon": "❄️",
+      "element": "ICE",
+      "type": "DEBUFF",
+      "category": "DOT",
+      "durationSeconds": 10,
+      "tickIntervalSeconds": 2,
+      "damagePerTick": 14,
+      "maxStacks": 3
+    },
+    "allowedWeapons": [
+      "STAFF",
+      "WAND",
+      "UNARMED"
+    ]
+  },
+  {
+    "id": "spell_nether_poison",
+    "name": "幽冥毒蠱",
+    "icon": "🧪",
+    "description": "催動幽冥百毒蝕骨靈氣，造成 160% 毒煞傷害並附帶劇烈毒煞",
+    "costType": "MP",
+    "costValue": 30,
+    "cooldownMs": 5000,
+    "damageMultiplier": 1.6,
+    "damageType": "POISON",
+    "castTimeMs": 800,
+    "interruptible": true,
+    "poiseDamage": 18,
+    "aoe": false,
+    "heal": false,
+    "taunt": false,
+    "stun": false,
+    "tags": [
+      "SPELL",
+      "POISON"
+    ],
+    "buffConfig": {
+      "id": "buff_poison_dot",
+      "name": "幽冥劇毒",
+      "icon": "🧪",
+      "element": "POISON",
+      "type": "DEBUFF",
+      "category": "DOT",
+      "durationSeconds": 12,
+      "tickIntervalSeconds": 2,
+      "damagePerTick": 16,
+      "maxStacks": 3
+    },
+    "allowedWeapons": [
+      "STAFF",
+      "WAND",
+      "DAGGER"
     ]
   }
 ]

@@ -58,6 +58,18 @@ public interface UnifiedSkill {
   default long getCastTimeMs() { return 0L; }
   default boolean isInterruptible() { return true; }
 
+  // === 元素反應與引爆機制 (Milestone F2-05) ===
+  default boolean isDetonator() {
+    List<String> tags = getTags();
+    return tags != null && (tags.contains("DETONATOR") || tags.contains("DETONATE"));
+  }
+
+  default boolean isPrimer() {
+    List<String> tags = getTags();
+    return tags != null && (tags.contains("PRIMER") || tags.contains("SOUL_REND"));
+  }
+
   // === 敘事文本 (招式動態播報) ===
   List<String> getMoves();
 }
+

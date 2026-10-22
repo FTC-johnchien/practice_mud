@@ -1,15 +1,19 @@
 package com.example.htmlmud.domain.combat;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import com.example.htmlmud.config.GameConfig;
 import com.example.htmlmud.domain.dungeon.battle.DefenseResolver.DefenseOutcome;
 import com.example.htmlmud.domain.dungeon.battle.DefenseResolver.DefenseResolution;
 import com.example.htmlmud.domain.model.config.MoveAction;
+import com.example.htmlmud.domain.model.enums.BuffCategory;
 import com.example.htmlmud.domain.model.enums.DamageType;
 import com.example.htmlmud.domain.model.enums.MobRank;
 import com.example.htmlmud.domain.model.template.SkillTemplate;
 import com.example.htmlmud.domain.party.model.CombatResourceType;
+import com.example.htmlmud.domain.dungeon.battle.ActiveBuff;
+
 
 /**
  * 跨系統核心戰鬥規則與純函式數學演算法 (UNIFY-03 CombatRules SSoT)
@@ -60,7 +64,194 @@ public final class CombatRules {
   }
 
   /**
+   * 九大天道靈氣複合連鎖反應類型 (F2-05)
+   */
+  public enum ElementalReaction {
+    NONE("", "", 1.0, 0),
+    VAPORIZE("【氣化爆裂】", "💥 冰火相衝，水汽蒸騰引發劇烈爆鳴！", 2.0, 20),
+    ELECTRO_CHARGED("【感電傳導】", "⚡ 雷水激盪，狂暴電弧跳躍傳導！", 1.5, 10),
+    CHAOS_ANNIHILATION("【太極混沌湮滅】", "☯️ 陰陽交泰，太極混沌強制湮滅破罡！", 1.5, 50),
+    COMBUSTION("【三昧燎原】", "🔥 烈火遇毒，三昧真火爆裂灼燒！", 1.8, 15);
+
+    private final String title;
+    private final String description;
+    private final double damageMultiplier;
+    private final int bonusPoiseDamage;
+
+    ElementalReaction(String title, String description, double damageMultiplier, int bonusPoiseDamage) {
+      this.title = title;
+      this.description = description;
+      this.damageMultiplier = damageMultiplier;
+      this.bonusPoiseDamage = bonusPoiseDamage;
+    }
+
+    public String getTitle() { return title; }
+    public String getDescription() { return description; }
+    public double getDamageMultiplier() { return damageMultiplier; }
+    public int getBonusPoiseDamage() { return bonusPoiseDamage; }
+  }
+
+  /**
+   * 元素複合連鎖反應結算結果 (F2-05)
+   */
+  public record ElementalReactionResult(
+      ElementalReaction reaction,
+      int damage,
+      int poiseDamage,
+      long stunDurationMs,
+      boolean chainToRow,
+      String logMessage,
+      String consumedBuffId
+  ) {
+    public boolean hasReaction() {
+      return reaction != null && reaction != ElementalReaction.NONE;
+    }
+
+    public static ElementalReactionResult none(int damage, int basePoiseDamage) {
+      return new ElementalReactionResult(ElementalReaction.NONE, damage, basePoiseDamage, 0L, false, null, null);
+    }
+  }
+
+  /**
+   * 結算九大天道靈氣複合連鎖反應 (F2-05)
+   * 當攻擊元素與目標身上已有的靈氣狀態碰撞時，觸發元素反應質變。
+   */
+  public static ElementalReactionResult evaluateElementalReaction(
+      DamageType incomingType,
+      int rawDamage,
+      int basePoiseDamage,
+      List<ActiveBuff> targetBuffs
+  ) {
+    if (incomingType == null || targetBuffs == null || targetBuffs.isEmpty() || rawDamage <= 0) {
+      return ElementalReactionResult.none(rawDamage, basePoiseDamage);
+    }
+
+    for (ActiveBuff buff : targetBuffs) {
+      if (buff == null || buff.isExpired()) continue;
+      String el = buff.getElement();
+      if (el == null || el.isBlank() || "NONE".equalsIgnoreCase(el)) continue;
+      String upperEl = el.toUpperCase();
+
+      // 1. 火 + 冰/水 -> 【氣化爆裂 (Vaporize)】
+      if ((incomingType == DamageType.FIRE && ("ICE".equals(upperEl) || "WATER".equals(upperEl)))
+          || ((incomingType == DamageType.ICE || incomingType == DamageType.WATER) && "FIRE".equals(upperEl))) {
+        var r = ElementalReaction.VAPORIZE;
+        int dmg = Math.max(1, (int) Math.round(rawDamage * r.getDamageMultiplier()));
+        int pDmg = basePoiseDamage + r.getBonusPoiseDamage();
+        String log = "\u001B[1;33m" + r.getTitle() + r.getDescription() + " 造成 " + dmg + " 點穿透打擊！\u001B[0m";
+        return new ElementalReactionResult(r, dmg, pDmg, 0L, false, log, buff.getId());
+      }
+
+      // 2. 雷 + 水/冰 -> 【感電傳導 (Electro-Charged)】
+      if ((incomingType == DamageType.LIGHTNING && ("WATER".equals(upperEl) || "ICE".equals(upperEl)))
+          || ((incomingType == DamageType.WATER || incomingType == DamageType.ICE) && "LIGHTNING".equals(upperEl))) {
+        var r = ElementalReaction.ELECTRO_CHARGED;
+        int dmg = Math.max(1, (int) Math.round(rawDamage * r.getDamageMultiplier()));
+        int pDmg = basePoiseDamage + r.getBonusPoiseDamage();
+        String log = "\u001B[1;36m" + r.getTitle() + r.getDescription() + " 電弧跳躍，造成 " + dmg + " 點連鎖打擊！\u001B[0m";
+        return new ElementalReactionResult(r, dmg, pDmg, 800L, true, log, buff.getId());
+      }
+
+      // 3. 陰煞/暗 + 純陽/光 -> 【太極混沌湮滅 (Chaos Annihilation)】
+      if (((incomingType == DamageType.HOLY || incomingType == DamageType.LIGHT) && ("DARK".equals(upperEl) || "CORRUPT".equals(upperEl)))
+          || ((incomingType == DamageType.DARK || incomingType == DamageType.CORRUPT) && ("HOLY".equals(upperEl) || "LIGHT".equals(upperEl)))) {
+        var r = ElementalReaction.CHAOS_ANNIHILATION;
+        int dmg = Math.max(1, (int) Math.round(rawDamage * r.getDamageMultiplier()));
+        int pDmg = basePoiseDamage + r.getBonusPoiseDamage();
+        String log = "\u001B[1;35m" + r.getTitle() + r.getDescription() + " 強制削減 " + r.getBonusPoiseDamage() + " 點罡氣，造成 " + dmg + " 點湮滅重創！\u001B[0m";
+        return new ElementalReactionResult(r, dmg, pDmg, 0L, false, log, buff.getId());
+      }
+
+      // 4. 火 + 毒/木 -> 【三昧燎原 (Combustion)】
+      if ((incomingType == DamageType.FIRE && ("POISON".equals(upperEl) || "WOOD".equals(upperEl)))
+          || ((incomingType == DamageType.POISON || incomingType == DamageType.WOOD) && "FIRE".equals(upperEl))) {
+        var r = ElementalReaction.COMBUSTION;
+        int dmg = Math.max(1, (int) Math.round(rawDamage * r.getDamageMultiplier()));
+        int pDmg = basePoiseDamage + r.getBonusPoiseDamage();
+        String log = "\u001B[1;31m" + r.getTitle() + r.getDescription() + " 毒煞燃爆，造成 " + dmg + " 點劇烈烈焰衝擊！\u001B[0m";
+        return new ElementalReactionResult(r, dmg, pDmg, 0L, false, log, buff.getId());
+      }
+    }
+
+    return ElementalReactionResult.none(rawDamage, basePoiseDamage);
+  }
+
+  /**
+   * 裂魂印記 (Primer) 與引爆戰技 (Detonator) 結算結果 (F2-05)
+   */
+  public record DetonationResult(
+      boolean triggered,
+      int singleTargetDamage,
+      int aoeDamage,
+      int bonusPoiseDamage,
+      List<String> consumedBuffIds,
+      String logMessage
+  ) {
+    public static DetonationResult none() {
+      return new DetonationResult(false, 0, 0, 0, List.of(), null);
+    }
+  }
+
+  /**
+   * 結算裂魂印記與引爆戰技之連鎖引爆 (F2-05)
+   * 命中帶有 PRIMER 印記的目標時，瞬間提早結算目標體內所有 DoT 剩餘總傷害，
+   * 並將其轉化為劇烈單體爆發與全場 AOE 衝擊波。
+   */
+  public static DetonationResult evaluateDetonation(
+      boolean isDetonator,
+      int baseDetonationBonus,
+      List<ActiveBuff> targetBuffs
+  ) {
+    if (!isDetonator || targetBuffs == null || targetBuffs.isEmpty()) {
+      return DetonationResult.none();
+    }
+
+    // 尋找 PRIMER 印記
+    ActiveBuff primerBuff = null;
+    for (ActiveBuff b : targetBuffs) {
+      if (b == null || b.isExpired()) continue;
+      if (b.getCategory() == BuffCategory.PRIMER
+          || (b.getEffectType() != null && "PRIMER".equalsIgnoreCase(b.getEffectType().name()))
+          || (b.getId() != null && b.getId().toLowerCase().contains("primer"))) {
+        primerBuff = b;
+        break;
+      }
+    }
+
+    if (primerBuff == null) {
+      return DetonationResult.none();
+    }
+
+    List<String> consumedBuffIds = new ArrayList<>();
+    consumedBuffIds.add(primerBuff.getId());
+
+    int totalDotDamage = 0;
+    for (ActiveBuff b : targetBuffs) {
+      if (b == null || b.isExpired()) continue;
+      if (b.getCategory() == BuffCategory.DOT) {
+        int interval = Math.max(1, b.getTickIntervalTicks());
+        int remainingJumps = Math.max(1, (b.getRemainingTicks() + interval - 1) / interval);
+        int dotTotal = b.getValue() * Math.max(1, b.getStacks()) * remainingJumps;
+        totalDotDamage += dotTotal;
+        consumedBuffIds.add(b.getId());
+      }
+    }
+
+    int primerBase = Math.max(30, primerBuff.getValue() * Math.max(1, primerBuff.getStacks()));
+    int singleTargetDamage = totalDotDamage + primerBase + Math.max(0, baseDetonationBonus);
+    int aoeDamage = (int) Math.round(singleTargetDamage * 0.5);
+    int bonusPoiseDamage = 35;
+
+    String log = "\u001B[1;31m💥【裂魂印爆】引爆戰技擊碎【" + primerBuff.getName() + "】！提前結算 "
+        + totalDotDamage + " 點殘存毒煞，瞬間爆發 " + singleTargetDamage + " 點重創並掀起 "
+        + aoeDamage + " 點全場震盪衝擊波！\u001B[0m";
+
+    return new DetonationResult(true, singleTargetDamage, aoeDamage, bonusPoiseDamage, consumedBuffIds, log);
+  }
+
+  /**
    * 抗性折減與逆流回血結算結果 (BUFF-01 & UNIFY-03)
+
    */
   public record ResistanceResult(int damage, int heal) {}
 

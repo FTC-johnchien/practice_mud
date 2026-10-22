@@ -120,6 +120,18 @@ public class PartyMemberSkill implements UnifiedSkill {
     return defense || (tags != null && tags.contains("DEFENSE"));
   }
 
+  @Override
+  public boolean isDetonator() {
+    return (tags != null && (tags.contains("DETONATOR") || tags.contains("DETONATE")));
+  }
+
+  @Override
+  public boolean isPrimer() {
+    return (buffConfig != null && buffConfig.category() == com.example.htmlmud.domain.model.enums.BuffCategory.PRIMER)
+        || (tags != null && (tags.contains("PRIMER") || tags.contains("SOUL_REND")));
+  }
+
+
   @Builder.Default
   private boolean synergy = false;
   @Builder.Default

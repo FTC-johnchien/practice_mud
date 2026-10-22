@@ -86,7 +86,25 @@ export function spawnFloatingText(layer, rect, hit, ev) {
           const dmgType = (ev.damageType || 'PHYSICAL').toUpperCase();
           cls.push(DMG_COLORS[dmgType] || 'dmg-phys');
 
-          if (hit.absorbed > 0 && hit.amount > 0) {
+          if (hit.reaction || ev.reaction) {
+            const rx = (hit.reaction || ev.reaction).toUpperCase();
+            if (rx.includes('VAPORIZE') || rx.includes('氣化')) {
+              cls.push('ft-crit', 'ft-vaporize');
+              text = `💥 氣化爆裂! -${hit.amount}`;
+            } else if (rx.includes('ELECTRO') || rx.includes('感電')) {
+              cls.push('ft-crit', 'ft-electro');
+              text = `⚡ 感電傳導! -${hit.amount}`;
+            } else if (rx.includes('CHAOS') || rx.includes('混沌')) {
+              cls.push('ft-crit', 'ft-chaos');
+              text = `☯️ 混沌湮滅! -${hit.amount}`;
+            } else if (rx.includes('COMBUSTION') || rx.includes('燎原')) {
+              cls.push('ft-crit', 'ft-combustion');
+              text = `🔥 三昧燎原! -${hit.amount}`;
+            } else if (rx.includes('DETONAT') || rx.includes('引爆')) {
+              cls.push('ft-crit', 'ft-detonation');
+              text = `🩸 裂魂引爆! -${hit.amount}`;
+            }
+          } else if (hit.absorbed > 0 && hit.amount > 0) {
             text = `🛡️ 破盾 -${hit.amount}`;
           } else if (outcome === 'CRIT') {
             cls.push('ft-crit', 'ft-stagger-crit');
@@ -144,4 +162,48 @@ export function spawnInterruptFloatingText(layer, rect) {
   el.addEventListener('animationend', () => el.remove(), { once: true });
   layer.appendChild(el);
 }
+
+/**
+ * 專屬元素複合反應與裂魂印爆 FCT 浮動大字生成 (Milestone F2-05)
+ */
+export function spawnElementalReactionFloatingText(layer, rect, reactionType, amount) {
+  if (!layer || !rect) return;
+  const el = document.createElement('div');
+  const cls = ['ftext', 'ft-crit'];
+  let text = '';
+
+  const rx = (reactionType || '').toUpperCase();
+  if (rx.includes('VAPORIZE') || rx.includes('氣化')) {
+    cls.push('ft-vaporize');
+    text = amount > 0 ? `💥 氣化爆裂! -${amount}` : '💥 氣化爆裂!';
+  } else if (rx.includes('ELECTRO') || rx.includes('感電')) {
+    cls.push('ft-electro');
+    text = amount > 0 ? `⚡ 感電傳導! -${amount}` : '⚡ 感電傳導!';
+  } else if (rx.includes('CHAOS') || rx.includes('混沌')) {
+    cls.push('ft-chaos');
+    text = amount > 0 ? `☯️ 混沌湮滅! -${amount}` : '☯️ 混沌湮滅!';
+  } else if (rx.includes('COMBUSTION') || rx.includes('燎原')) {
+    cls.push('ft-combustion');
+    text = amount > 0 ? `🔥 三昧燎原! -${amount}` : '🔥 三昧燎原!';
+  } else if (rx.includes('DETONAT') || rx.includes('引爆')) {
+    cls.push('ft-detonation');
+    text = amount > 0 ? `🩸 裂魂引爆! -${amount}` : '🩸 裂魂引爆!';
+  } else {
+    cls.push('ft-crit');
+    text = amount > 0 ? `💥 靈氣質變! -${amount}` : '💥 靈氣質變!';
+  }
+
+  el.className = cls.join(' ');
+  el.textContent = text;
+
+  const posX = rect.x + (rect.w / 2);
+  const posY = rect.y + (rect.h * 0.15);
+
+  el.style.left = `${posX}px`;
+  el.style.top = `${posY}px`;
+
+  el.addEventListener('animationend', () => el.remove(), { once: true });
+  layer.appendChild(el);
+}
+
 
