@@ -51,17 +51,18 @@
     2. 將 SAN 重新定義為「精神護盾」：SAN 耗盡時僅給予隊員【精神萎靡】Debuff（降低 15% 輸出），絕不發生隊友背刺與失控叛變。
   - **交付驗收**：戰鬥中心跳循環無任何背刺隊友代碼執行。✅ 已完成落地 (373 測試全綠)
 
-- [ ] **Task 1.2 (DEC-01-MODEL): 簡化 `PartyMember.java` 實體與除役封印術**
+- [x] **Task 1.2 (DEC-01-MODEL): 簡化 `PartyMember.java` 實體與除役封印術**
   - **執行步驟**：
-    1. 移除 `PartyMember.MadnessState`（`CHAOS`, `SEALED`, `ABERRANT`）與 `aberrationCounter` 欄位。
-    2. 移除 `SealCommand.java`（太上鎮魔封印術）。
-  - **交付驗收**：`PartyMember` 領域模型乾淨純粹，無魔化狀態機殘留。
+    1. 精簡 `PartyMember.MadnessState`（純化為 SANE / CHAOS 精神萎靡），拔除 SEALED、ABERRATION、DEAD_MEAT。
+    2. 物理刪除 `SealCommand.java`（太上鎮魔封印術），並自 `BattleCommand` 與 `DrpgBattleService` 移除封印術邏輯。
+    3. `DrpgRewardService` 戰後清理徹底拔除隊員除名代碼，純單機隊員資產永久保全。
+  - **交付驗收**：`PartyMember` 領域模型純淨化，封印術代碼清零。✅ 已完成落地 (376 測試全綠)
 
-- [ ] **Task 1.3 (DEC-01-TESTS): 重構單元測試集並確保 373+ 測試全綠**
+- [x] **Task 1.3 (DEC-01-TESTS): 重構單元測試集並確保 376+ 測試全綠**
   - **執行步驟**：
-    1. 將 `PartyInventoryAndMadnessTest.java` 重構為 `PartyInventoryAndSanityShieldTest.java`。
-    2. 將原走火入魔與封印術測試用例，改為驗證「SAN 精神護盾抵扣與耗盡 Debuff 結算」。
-  - **交付驗收**：`.\test.ps1` 執行無損通過，373+ 測試 100% 綠燈。
+    1. `PartyInventoryAndMadnessTest.java` 移除封印術測試，改為驗證精神萎靡 Debuff 與清心符解除萎靡恢復澄澈。
+    2. `DrpgBattleDecompositionTest.java` 驗證戰後小隊編制無損保全。
+  - **交付驗收**：`.\test.ps1` 執行無損通過，376 測試 100% 綠燈。✅ 已完成落地 (376 測試全綠)
 
 ---
 

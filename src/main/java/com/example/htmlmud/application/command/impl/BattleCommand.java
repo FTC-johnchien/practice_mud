@@ -70,14 +70,6 @@ public class BattleCommand implements PlayerCommand {
           self.reply("請輸入有效的目標編號！");
         }
       }
-    } else if (input.startsWith("seal ") || input.startsWith("封印 ")) {
-      String sub = input.replaceFirst("^(seal|封印)\\s+", "").trim();
-      try {
-        int idx = Integer.parseInt(sub);
-        battleService.sealTarget(self, idx, pos);
-      } catch (NumberFormatException e) {
-        self.reply("請輸入有效的封印目標編號！");
-      }
     } else if (input.equals("flee") || input.equals("escape") || input.equals("run") || input.equals("遁地")) {
       battleService.flee(self, pos);
     } else if (input.equals("ult") || input.equals("cast") || input.equals("奧義")) {

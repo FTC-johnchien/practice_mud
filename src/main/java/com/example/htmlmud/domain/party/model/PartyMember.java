@@ -107,11 +107,8 @@ public class PartyMember implements Combatant {
   }
 
   public enum MadnessState {
-    SANE,         // 正常
-    CHAOS,        // 第一階段：走火入魔混亂期 (SAN == 0, 計數中)
-    SEALED,       // 封印鎮魔狀態 (計數暫停, 定身無法行動)
-    ABERRATION,   // 第二階段：徹底異變古神眷族 (HP x10, 敵對狂暴)
-    DEAD_MEAT     // 血肉崩潰 (第一階段自殘至死, 永久陣亡)
+    SANE,         // 神智清明 (SAN > 0)
+    CHAOS         // 精神萎靡 (SAN <= 0, 攻擊威力降低 15%)
   }
 
   @Builder.Default
@@ -357,14 +354,8 @@ public class PartyMember implements Combatant {
   }
 
   public String getSanityStatus() {
-    if (madnessState == MadnessState.ABERRATION) {
-      return "【不可名狀畸變】";
-    }
-    if (madnessState == MadnessState.SEALED) {
-      return "【鎮魔封印中】";
-    }
-    if (madnessState == MadnessState.CHAOS) {
-      return "【走火入魔 " + aberrationCounter + "%】";
+    if (madnessState == MadnessState.CHAOS || currentSan <= 0) {
+      return "【精神萎靡】";
     }
     double ratio = (double) currentSan / maxSan;
     if (ratio >= 0.8) {

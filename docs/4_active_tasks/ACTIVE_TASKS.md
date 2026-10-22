@@ -45,6 +45,7 @@
   - Task 8 (ALIGN-DUNGEON-DATA): 地牢資料 `mozhu_mines_b1f.json` 與 `taiyin_tomb_b1f.json` 補齊 `exitRoomId` 出口契約，並將地貌 Legend 對齊《世界觀聖經》與 `DUNGEON_SCHEMA.md`（外神卵鞘、工程師基岩與外星生化腐殖），`DungeonFloorLoader` 支援 `loreDescription` 別名。
   - Task 9 (ALIGN-FE-EQUIP-AFFIX): 前端 `party-equipment-tab.js` 裝備挑選與 Diff 面板全面支援削韌破防強度 (`poiseBreakPower`) 與隨機道韻詞綴清單展示，精準對齊 5+2 槽位體系。
   - Task 10 (ALIGN-TEST-AND-VALIDATOR): `PartyInventoryAndMadnessTest.java` 增加隊員理智歸零精神萎靡 Debuff (-15% 輸出) 且絕不背刺隊友之單元測試；`DataIntegrityValidator.java` 擴充超頻階級 (0~3) 與裝備槽位合法性啟動期 Fail-Fast 檢驗。全專案 376 測試 100% 綠燈通過。
+  - Task 11 (PURGE-SEAL-AND-HARDCODE): 物理刪除 `SealCommand.java` 封印術指令；`PartyMember.MadnessState` 精簡為純粹的 SANE 與 CHAOS (精神萎靡)；`DrpgRewardService` 拔除戰後隊員除名代碼；`DungeonManager` 刪除 65 行手刻地圖 `buildTombB1F()` 全面資料驅動。376 測試全綠。
 
 - [x] **Milestone F3-01 — 古仙陣法動態連攜合擊技與共鳴印記 (Cross Combos & Formation Resonance, P1)**
   - Task 1 (F3-01-COMBO-MODEL): 在 `CombatRules.java` 中建立純函數式跨隊員動態連攜判定 `evaluateCrossComboStep` 與 `CrossComboResolution` 模型，支援 3.5s 連攜時間窗口、同目標接力檢定、雙星合璧 (+25% 傷, +15 削韌)、三才混元 (+50% 傷, +25 削韌, +5 SAN)、四象誅仙 (+100% 傷, +40 削韌, +10 SAN, 終結技就緒)。

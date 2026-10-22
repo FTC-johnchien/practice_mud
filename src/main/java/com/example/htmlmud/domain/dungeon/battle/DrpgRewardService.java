@@ -109,7 +109,7 @@ public class DrpgRewardService {
     List<com.example.htmlmud.domain.dungeon.dto.BattleVictoryDto.MemberLevelUpDto> levelUpDtos = new ArrayList<>();
     var xpService = getXpProgressionService();
     for (PartyMember m : ctx.getParty().getMembers()) {
-      if (m.isAlive() && m.getMadnessState() != PartyMember.MadnessState.DEAD_MEAT) {
+      if (m.isAlive()) {
         int oldLvl = m.getLevel();
         var res = xpService.awardExp(m, totalXp);
         if (res.isLeveledUp()) {
@@ -330,30 +330,11 @@ public class DrpgRewardService {
   }
 
   /**
-   * 戰後狀態清理 (解開封印 / 清除死肉與異變同伴)
+   * 戰後狀態清理
    */
   public void postBattleCleanup(Player player, BattleContext ctx) {
     if (ctx == null || ctx.getParty() == null) return;
-    Party party = ctx.getParty();
-
-    // 1. 解開封印 (恢復正常，SAN +20，計數器歸零)
-    for (PartyMember m : party.getMembers()) {
-      if (m.getMadnessState() == PartyMember.MadnessState.SEALED) {
-        m.setMadnessState(PartyMember.MadnessState.SANE);
-        m.setAberrationCounter(0);
-        m.restoreSan(20);
-        broadcastLog(player, ctx, "\u001B[1;34m🔓【鎮魔解印】戰鬥平息，解開 " + m.getName() + " 的鎖神符！煞氣受清氣沖刷漸漸退去，道心重獲安寧 (+20 SAN，當前: " + m.getCurrentSan() + ")，異變計數清零！\u001B[0m");
-      }
-    }
-
-    // 2. 清理永久陣亡者 (DEAD_MEAT 或 ABERRATION)
-    List<PartyMember> deadOrAberrant = party.getMembers().stream()
-        .filter(m -> m.getMadnessState() == PartyMember.MadnessState.DEAD_MEAT || m.getMadnessState() == PartyMember.MadnessState.ABERRATION)
-        .toList();
-    for (PartyMember m : deadOrAberrant) {
-      broadcastLog(player, ctx, "\u001B[1;31m💀【小隊除名】" + m.getName() + " 已身消道殞或墮入域外深淵，徹底除名於小隊編制！\u001B[0m");
-    }
-    party.getMembers().removeIf(m -> m.getMadnessState() == PartyMember.MadnessState.DEAD_MEAT || m.getMadnessState() == PartyMember.MadnessState.ABERRATION);
+    // 純單機模式下隊員資產永久保全，不執行任何隊員除名操作
   }
 
   private void broadcastLog(Player player, BattleContext ctx, String msg) {

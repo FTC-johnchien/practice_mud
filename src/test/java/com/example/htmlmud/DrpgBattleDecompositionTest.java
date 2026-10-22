@@ -128,14 +128,13 @@ class DrpgBattleDecompositionTest {
   }
 
   @Test
-  @DisplayName("測試 DrpgRewardService：戰後清理鎮魔封印狀態 (恢復道心 +20 SAN，清除異變計數)")
-  void testPostBattleUnsealing() {
+  @DisplayName("測試 DrpgRewardService：戰後隊員資產永久保全 (純單機絕不執行隊員除名)")
+  void testPostBattleMemberPreservation() {
     Party party = partyService.createFullParty("tester");
     PartyMember iron = party.getMembers().get(1);
 
-    iron.setMadnessState(PartyMember.MadnessState.SEALED);
-    iron.setAberrationCounter(65);
-    iron.setCurrentSan(10);
+    iron.setCurrentSan(0);
+    iron.setMadnessState(PartyMember.MadnessState.CHAOS);
 
     BattleContext ctx = BattleContext.builder()
         .battleId("b-clean")
@@ -143,11 +142,11 @@ class DrpgBattleDecompositionTest {
         .enemies(List.of(BattleEnemy.builder().id("m").alive(false).build()))
         .build();
 
+    int memberCountBefore = party.getMembers().size();
     rewardService.postBattleCleanup(dummyPlayer, ctx);
 
-    assertThat(iron.getMadnessState()).isEqualTo(PartyMember.MadnessState.SANE);
-    assertThat(iron.getAberrationCounter()).isZero();
-    assertThat(iron.getCurrentSan()).isEqualTo(30);
+    // 驗證小隊編制無損保全
+    assertThat(party.getMembers().size()).isEqualTo(memberCountBefore);
   }
 
   @Test

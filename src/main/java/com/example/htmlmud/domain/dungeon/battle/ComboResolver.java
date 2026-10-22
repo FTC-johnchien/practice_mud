@@ -109,11 +109,7 @@ public class ComboResolver {
    */
   public boolean isHealthyCombatant(PartyMember m) {
     if (m == null || !m.isAlive()) return false;
-    PartyMember.MadnessState st = m.getMadnessState();
-    return st != PartyMember.MadnessState.SEALED
-        && st != PartyMember.MadnessState.CHAOS
-        && st != PartyMember.MadnessState.ABERRATION
-        && st != PartyMember.MadnessState.DEAD_MEAT;
+    return m.getMadnessState() != PartyMember.MadnessState.CHAOS;
   }
 
   /**

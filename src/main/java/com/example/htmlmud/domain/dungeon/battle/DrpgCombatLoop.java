@@ -233,13 +233,7 @@ public class DrpgCombatLoop {
               // 若 SAN <= 0 且原本正常，進入精神萎靡狀態 (CHAOS)
               if (member.getCurrentSan() <= 0 && member.getMadnessState() == PartyMember.MadnessState.SANE) {
                 member.setMadnessState(PartyMember.MadnessState.CHAOS);
-                member.setAberrationCounter(0);
                 broadcastLog(player, ctx, "\u001B[1;33m⚠️【精神萎靡】" + member.getName() + " 的理智徹底耗盡！陷入精神萎靡狀態（攻擊威力降低 15%）！\u001B[0m");
-              }
-
-              // 若處於 SEALED 封印鎮魔狀態，無法出招
-              if (member.getMadnessState() == PartyMember.MadnessState.SEALED) {
-                continue;
               }
             }
 

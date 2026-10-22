@@ -114,7 +114,7 @@ class PartyInventoryAndMadnessTest {
   }
 
   @Test
-  @DisplayName("測試第一階段走火入魔 (CHAOS) 與清心符解除心魔")
+  @DisplayName("測試第一階段走火入魔精神萎靡 (CHAOS) 與清心符解除萎靡")
   void testChaosMadnessAndPurifyRecovery() {
     Party party = partyService.getOrCreateParty("madness_tester");
     PartyMember iron = party.getMembers().get(1); // 鐵牛 (非主角)
@@ -122,10 +122,9 @@ class PartyInventoryAndMadnessTest {
     iron.consumeSan(100);
     assertThat(iron.getCurrentSan()).isEqualTo(0);
 
-    // 設定走火入魔第一階段
+    // 設定走火入魔第一階段 (精神萎靡)
     iron.setMadnessState(PartyMember.MadnessState.CHAOS);
-    iron.setAberrationCounter(25);
-    assertThat(iron.getSanityStatus()).contains("走火入魔 25%");
+    assertThat(iron.getSanityStatus()).contains("精神萎靡");
 
     // 使用清心符回復道心，若 SAN > 0 解除走火入魔
     PartyItemSlot talisman = party.getInventory().getSlots().stream()
@@ -136,23 +135,28 @@ class PartyInventoryAndMadnessTest {
     String res = party.useItemOnMember(talisman.getSlotId(), 1);
     assertThat(res).contains("走火入魔狀態解除");
     assertThat(iron.getMadnessState()).isEqualTo(PartyMember.MadnessState.SANE);
-    assertThat(iron.getAberrationCounter()).isEqualTo(0);
     assertThat(iron.getCurrentSan()).isGreaterThan(0);
   }
 
   @Test
-  @DisplayName("測試太上鎮魔封印術 (SEALED) 凍結異變進度")
-  void testSealMemberAction() {
+  @DisplayName("測試精神萎靡 Debuff 狀態下使用清心符即刻恢復清明")
+  void testPurifyTalismanRestoresClarity() {
     Party party = partyService.getOrCreateParty("madness_tester");
+    party.getInventory().addItem("purify_talisman", 1);
     PartyMember iron = party.getMembers().get(1);
 
     iron.consumeSan(100);
     iron.setMadnessState(PartyMember.MadnessState.CHAOS);
-    iron.setAberrationCounter(50);
+    assertThat(iron.getSanityStatus()).contains("精神萎靡");
 
-    battleService.sealTarget(dummyPlayer, 1, dungeonPos);
-    assertThat(iron.getMadnessState()).isEqualTo(PartyMember.MadnessState.SEALED);
-    assertThat(iron.getSanityStatus()).contains("鎮魔封印中");
+    PartyItemSlot talisman = party.getInventory().getSlots().stream()
+        .filter(s -> "RESTORE_SAN".equals(s.getEffectType()))
+        .findFirst().orElse(null);
+    assertThat(talisman).isNotNull();
+
+    party.useItemOnMember(talisman.getSlotId(), 1);
+    assertThat(iron.getMadnessState()).isEqualTo(PartyMember.MadnessState.SANE);
+    assertThat(iron.getSanityStatus()).doesNotContain("精神萎靡");
   }
 
   @Test

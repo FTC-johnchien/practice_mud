@@ -980,45 +980,6 @@ public class DrpgBattleService {
     rewardService.resolveVictory(player, ctx, pos, activeBattles, p -> pushDrpgState(p, pos, null));
   }
 
-  public void sealTarget(Player player, int targetIdx, DungeonPosition pos) {
-    Party party = partyService.getOrCreateParty(player.getName());
-    BattleContext ctx = activeBattles.get(player.getName());
-
-    // 1. 戰鬥中可封印敵方古神畸變體
-    if (ctx != null && !ctx.isOver() && targetIdx >= 0 && targetIdx < ctx.getEnemies().size()) {
-      BattleEnemy e = ctx.getEnemies().get(targetIdx);
-      if (e.isAlive() && e.getId().startsWith("aberration-")) {
-        e.applyStun(99999999L);
-        broadcastLog(player, ctx, "\u001B[1;34m🔒【太上鎮魔大篆】天師金符凌空鎮壓！【" + e.getName() + "】全身畸變肉瘤被死死封禁，失去所有反抗與行動能力！\u001B[0m");
-        pushDrpgState(player, pos, ctx);
-        return;
-      }
-    }
-
-    // 2. 封印走火入魔的我方隊友
-    if (targetIdx >= 0 && targetIdx < party.getMembers().size()) {
-      PartyMember m = party.getMembers().get(targetIdx);
-      if (m.getName().equals(player.getName())) {
-        player.reply("【鎮魔】身為隊長，道心受浩然天罡守護，無需對自己施展封印術！");
-        return;
-      }
-      if (m.getMadnessState() == PartyMember.MadnessState.CHAOS) {
-        m.setMadnessState(PartyMember.MadnessState.SEALED);
-        broadcastLog(player, ctx, "\u001B[1;34m🔒【太上鎮魔符】施展封印秘術！" + m.getName() + " 眉心貼上鎖神靈符，異變計數器凍結在 " + m.getAberrationCounter() + "%！暫時失去所有行動能力，直到戰鬥結束方可解封！\u001B[0m");
-        pushDrpgState(player, pos, ctx);
-        return;
-      } else if (m.getMadnessState() == PartyMember.MadnessState.SEALED) {
-        player.reply(m.getName() + " 當前已處於封印鎮魔狀態！");
-        return;
-      } else {
-        player.reply(m.getName() + " 並未走火入魔，無須施展鎮魔封印。");
-        return;
-      }
-    }
-
-    player.reply("無效的封印目標編號！可封印走火入魔的隊友 (0~5)，或戰場上的深淵畸變體！");
-  }
-
   public void useItem(Player player, String slotIdOrIndex, int memberIdx, DungeonPosition pos) {
     Party party = partyService.getOrCreateParty(player.getName());
     BattleContext ctx = activeBattles.get(player.getName());

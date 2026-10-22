@@ -49,11 +49,11 @@
   2. **怪物與掉落物備用池寫死**：[`DungeonCommand.java:L34-48`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L34-L48) 靜態常數寫死 `TOMB_MOBS`（4 種太陰怪）與 `TOMB_ITEMS`（6 種太陰古塚道具），當樓層或寶箱未設定掉落時直接 fallback 至太陰資料。
   3. **地牢切換別名硬編碼**：[`DungeonCommand.java:L74-83`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L74-L83) 中，`switch taiyin` / `switch mozhu` 以字串比對直接映射為指定樓層。
   4. **陷阱數值與提示文字硬編碼**：[`DungeonCommand.java:L295-298`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L295-L298) 陷阱扣除固定 15 HP、5 SAN，且提示寫死「菌絲煞氣噴湧」（太陰古塚踩陷阱亦出現礦坑菌絲文字）。
-  5. **殘留 65 行手刻地圖生成器**：[`DungeonManager.java:L136-200`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/service/DungeonManager.java#L136-L200) 中的 `buildTombB1F()` 在 Java 內用二維陣列手工雕刻 10x10 地牢地圖與文字，而 `resources/data/dungeons/taiyin_tomb_b1f.json` 已經存在，此備用代碼為冗餘且未同步的硬編碼。
+  5. **[已完成] 殘留 65 行手刻地圖生成器**：原 `DungeonManager.java` 中的 `buildTombB1F()` 已徹底物理刪除，全系統 100% 由 `resources/data/dungeons/*.json` 資料驅動。 ✅
   6. **區域載入清單退回硬編碼**：[`WorldManager.java:L100, L104`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/service/WorldManager.java#L100) 於動態掃描失敗時退回硬編碼清單 `List.of("newbie_village", "mozhu_mines", "snow", "silverleaf", "taiyin_tomb")`。
 - **改善方案**：
   - 在 `DungeonFloor` 與 `dungeons/*.json` 擴充 `entranceRoomId`、`exitRoomId`、`defaultLootPool`、`trapDamage`、`trapSanCost`、`trapMessage`。
-  - 徹底移除 `DungeonManager.buildTombB1F()` 手刻代碼，100% 由 JSON 檔案驅動。
+  - 徹底移除 `DungeonManager.buildTombB1F()` 手刻代碼，100% 由 JSON 檔案驅動（已完成 ✅）。
 
 ### 16.2 戰鬥與技能數值硬編碼盤查 (DATA-04 / COMB-03) (P1)
 - **現狀問題**：
