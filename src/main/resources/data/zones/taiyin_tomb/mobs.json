@@ -93,6 +93,8 @@
     "poise": 110,
     "castTimeMs": 1800,
     "interruptible": true,
+    "maxPhases": 2,
+    "phaseThresholds": [50],
     "resistances": {
       "PHYSICAL": 0.2,
       "SLASH": 0.25,

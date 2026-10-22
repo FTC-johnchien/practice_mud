@@ -95,6 +95,18 @@ public class BattleEnemy implements Combatant, Buffable {
   @Builder.Default
   private long tauntedUntil = 0;
 
+  // 首領多階段與狂暴狀態模型 (Milestone F2-02)
+  @Builder.Default
+  private int currentPhase = 1;
+  @Builder.Default
+  private int maxPhases = 1;
+  @Builder.Default
+  private List<Integer> phaseThresholds = new ArrayList<>();
+  @Builder.Default
+  private boolean isEnraged = false;
+  @Builder.Default
+  private double enrageSpeedMultiplier = 1.3;
+
   @Builder.Default
   private Map<EquipmentSlot, String> equipment = new HashMap<>();
   @Builder.Default
@@ -335,6 +347,8 @@ public class BattleEnemy implements Combatant, Buffable {
 
     long configuredCastDuration = tpl.castTimeMs() > 0 ? tpl.castTimeMs() : 0L;
     boolean isInterruptible = tpl.interruptible() != null ? tpl.interruptible() : true;
+    List<Integer> thresholds = tpl.phaseThresholds() != null ? new ArrayList<>(tpl.phaseThresholds()) : new ArrayList<>();
+    int maxP2 = tpl.maxPhases() > 0 ? tpl.maxPhases() : (thresholds.isEmpty() ? 1 : thresholds.size() + 1);
 
     return BattleEnemy.builder()
         .id(id)
@@ -348,6 +362,10 @@ public class BattleEnemy implements Combatant, Buffable {
         .poise(maxP)
         .maxPoise(maxP)
         .resistances(resMap)
+        .currentPhase(1)
+        .maxPhases(maxP2)
+        .phaseThresholds(thresholds)
+        .isEnraged(false)
         .minDamage(minD)
         .maxDamage(maxD)
         .defense(def)
@@ -444,6 +462,50 @@ public class BattleEnemy implements Combatant, Buffable {
       }
     }
     return null;
+  }
+
+  /**
+   * 檢測是否滿足轉階段條件 (F2-02)
+   * 回傳轉入的新階段 (若未轉階段則回傳 -1)
+   */
+  public int checkPhaseTransition() {
+    if (maxPhases <= 1 || phaseThresholds == null || phaseThresholds.isEmpty() || hp <= 0 || maxHp <= 0) {
+      return -1;
+    }
+    int hpPct = (int) Math.round(((double) hp / maxHp) * 100.0);
+    int targetPhase = currentPhase;
+    for (int i = currentPhase - 1; i < phaseThresholds.size(); i++) {
+      if (hpPct <= phaseThresholds.get(i)) {
+        targetPhase = i + 2;
+      } else {
+        break;
+      }
+    }
+    if (targetPhase > currentPhase) {
+      return targetPhase;
+    }
+    return -1;
+  }
+
+  /**
+   * 執行轉階段 (F2-02)：
+   * 提升階段、清除 Debuff、重聚罡氣且上限提升 25%、進入狂暴狀態 (若是最後階段)
+   */
+  public void transitionToPhase(int newPhase) {
+    this.currentPhase = newPhase;
+    if (this.currentPhase >= this.maxPhases) {
+      this.isEnraged = true;
+    }
+    if (this.activeBuffs != null) {
+      this.activeBuffs.removeIf(b -> !b.isPermanent() &&
+          (b.getType() == com.example.htmlmud.domain.model.enums.BuffType.DEBUFF
+           || b.getCategory() == com.example.htmlmud.domain.model.enums.BuffCategory.DOT
+           || b.getCategory() == com.example.htmlmud.domain.model.enums.BuffCategory.CONTROL));
+    }
+    this.stunnedUntil = 0;
+    this.maxPoise = (int) Math.round(this.maxPoise * 1.25);
+    recoverPoise();
+    clearIntent();
   }
 
   @Override
@@ -613,6 +675,9 @@ public class BattleEnemy implements Combatant, Buffable {
 
   public long getEffectiveAttackIntervalMs() {
     double speedPct = getStatModifierSum("SPEED_PCT");
+    if (this.isEnraged) {
+      speedPct += 0.30;
+    }
     if (speedPct != 0) {
       return Math.max(500, (long) Math.round(this.attackIntervalMs * Math.max(0.2, 1.0 - speedPct)));
     }

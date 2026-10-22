@@ -51,6 +51,15 @@ public final class CombatRules {
   }
 
   /**
+   * 結算攻擊力竭破防 (Poise Broken / Stagger) 之敵怪加成 (F2-02)：
+   * 若目標處於破防狀態，享受 1.5 倍致命暴擊傷害倍率。
+   */
+  public static int applyPoiseBreakCrit(int rawDamage, boolean isPoiseBroken) {
+    if (!isPoiseBroken) return rawDamage;
+    return Math.max(1, (int) Math.round(rawDamage * 1.5));
+  }
+
+  /**
    * 抗性折減與逆流回血結算結果 (BUFF-01 & UNIFY-03)
    */
   public record ResistanceResult(int damage, int heal) {}

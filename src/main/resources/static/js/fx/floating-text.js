@@ -42,7 +42,10 @@ export function spawnFloatingText(layer, rect, hit, ev) {
   let text = '';
 
   const outcome = hit.outcome || 'HIT';
-  if (ev.damageType === 'TAUNT' || ev.fxKey === 'taunt_roar' || outcome === 'TAUNT') {
+  if (ev.skillId === 'phase_transition') {
+    cls.push('ft-interrupt');
+    text = ev.fxKey === 'boss_enraged' ? '⚡⚡ 超載狂暴！' : '⚡ 氣浪震退！';
+  } else if (ev.damageType === 'TAUNT' || ev.fxKey === 'taunt_roar' || outcome === 'TAUNT') {
     cls.push('ft-taunt');
     text = '💢 仇恨鎖定';
   } else {
@@ -86,8 +89,8 @@ export function spawnFloatingText(layer, rect, hit, ev) {
           if (hit.absorbed > 0 && hit.amount > 0) {
             text = `🛡️ 破盾 -${hit.amount}`;
           } else if (outcome === 'CRIT') {
-            cls.push('ft-crit');
-            text = `暴擊！-${hit.amount}`;
+            cls.push('ft-crit', 'ft-stagger-crit');
+            text = `💥 破防重創! -${hit.amount}`;
           } else {
             text = `-${hit.amount}`;
           }

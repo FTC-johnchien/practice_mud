@@ -84,6 +84,10 @@
     "interruptible": true,
     "hitRate": 16,
     "defense": 6,
+    "poise": 400,
+    "maxPoise": 400,
+    "maxPhases": 3,
+    "phaseThresholds": [70, 30],
     "description": "昔日氣宇軒昂的墨竹山外門首徒宋天衡，如今身軀嚴重膨脹畸變，背後撕裂出兩對巨大骨刺，整條右臂化作滴淌腐蝕濁血的泣血巨爪！",
     "lookDescription": "他的面部五官已經半溶化，唯有一隻猩紅重瞳在黑暗中死死鎖定著你。",
     "dialogues": [

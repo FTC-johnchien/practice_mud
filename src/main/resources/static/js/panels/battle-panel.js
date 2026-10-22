@@ -196,6 +196,9 @@ export function renderBattleArena(battle) {
     const targetBadge = e.targetMemberName
       ? `<span class="enemy-aggro-badge" style="background:#450a0a; color:#fca5a5; border:1px solid #7f1d1d; padding:1px 4px; border-radius:3px; font-size:12px; white-space:nowrap;" title="仇恨鎖定：${safeTargetMember}">🎯${safeTargetMember}</span>`
       : '';
+    const phaseBadge = (e.maxPhases && e.maxPhases > 1)
+      ? `<span class="enemy-phase-badge ${e.isEnraged ? 'enraged' : ''}">P${e.currentPhase || 1}/${e.maxPhases}${e.isEnraged ? ' 狂暴' : ''}</span>`
+      : '';
     const stunBadge = e.isStunned
       ? `<span class="enemy-stun-badge" style="background:#422006; color:#fdba74; border:1px solid #9a3412; padding:1px 4px; border-radius:3px; font-size:12px;">💫 暈</span>`
       : '';
@@ -207,10 +210,18 @@ export function renderBattleArena(battle) {
 
     const isDanger = (e.isCasting && (e.intentType === 'HEAVY' || e.intentType === 'ABERRATION'));
     if (isDanger) card.classList.add('intent-danger-telegraph');
+    if (e.isEnraged) card.classList.add('boss-enraged-aura');
 
     const intentHtml = renderEnemyIntentAndCast(e);
     const shieldOverlayHtml = renderShieldOverlayHtml(e.hp, e.maxHp, e.shield);
     const poiseBarHtml = renderPoiseBarHtml(e.poise, e.maxPoise, e.isPoiseBroken);
+
+    let phaseMarkersHtml = '';
+    if (e.maxPhases > 1 && Array.isArray(e.phaseThresholds) && e.phaseThresholds.length > 0) {
+      phaseMarkersHtml = e.phaseThresholds.map(th =>
+        `<div class="hp-phase-marker" style="left: ${th}%;" title="階段閾值: ${th}%"></div>`
+      ).join('');
+    }
 
     if (w === 1 && h === 5) {
       // 1x5 貫通陣柱
@@ -219,6 +230,7 @@ export function renderBattleArena(battle) {
           <span class="large-enemy-badge" style="font-size:11px; padding:1px 4px; background:rgba(59,130,246,0.3); border:1px solid #3b82f6; color:#93c5fd;">🏛️ 1x5</span>
           <div class="enemy-badges-right" style="display:flex; gap:2px;">
             ${targetBadge}
+            ${phaseBadge}
             ${stunBadge}
             ${brokenBadge}
             ${buffsHtml}
@@ -232,6 +244,7 @@ export function renderBattleArena(battle) {
         <div class="enemy-hp-wrap large-hp-wrap" style="height:22px; border-radius:4px; overflow:hidden;" title="生命 HP: ${e.hp}/${e.maxHp}">
           <div class="enemy-hp-bar" style="width: ${hpPct}%; background: linear-gradient(90deg, #2563eb, #38bdf8);"></div>
           ${shieldOverlayHtml}
+          ${phaseMarkersHtml}
           <span class="enemy-hp-text" style="font-size:12px; font-weight:bold; text-shadow:0 1px 2px #000;">${e.hp}/${e.maxHp}</span>
         </div>
         ${poiseBarHtml}
@@ -243,6 +256,7 @@ export function renderBattleArena(battle) {
           <span class="large-enemy-badge" style="font-size:11px; padding:1px 4px; background:rgba(168,85,247,0.3); border:1px solid #a855f7; color:#c084fc;">⚡ 1x3</span>
           <div class="enemy-badges-right" style="display:flex; gap:2px;">
             ${targetBadge}
+            ${phaseBadge}
             ${stunBadge}
             ${brokenBadge}
             ${buffsHtml}
@@ -256,6 +270,7 @@ export function renderBattleArena(battle) {
         <div class="enemy-hp-wrap large-hp-wrap" style="height:20px; border-radius:4px; overflow:hidden;" title="生命 HP: ${e.hp}/${e.maxHp}">
           <div class="enemy-hp-bar" style="width: ${hpPct}%; background: linear-gradient(90deg, #7c3aed, #c084fc);"></div>
           ${shieldOverlayHtml}
+          ${phaseMarkersHtml}
           <span class="enemy-hp-text" style="font-size:12px; font-weight:bold; text-shadow:0 1px 2px #000;">${e.hp}/${e.maxHp}</span>
         </div>
         ${poiseBarHtml}
@@ -270,6 +285,7 @@ export function renderBattleArena(battle) {
           </div>
           <div class="enemy-badges-right" style="display:flex; gap:4px;">
             ${targetBadge}
+            ${phaseBadge}
             ${stunBadge}
             ${brokenBadge}
             ${buffsHtml}
@@ -282,6 +298,7 @@ export function renderBattleArena(battle) {
         <div class="enemy-hp-wrap large-hp-wrap" style="height:26px; border-radius:4px; overflow:hidden;" title="生命 HP: ${e.hp}/${e.maxHp}">
           <div class="enemy-hp-bar" style="width: ${hpPct}%; background: linear-gradient(90deg, #db2777, #f59e0b);"></div>
           ${shieldOverlayHtml}
+          ${phaseMarkersHtml}
           <span class="enemy-hp-text" style="font-size:14px; font-weight:bold; text-shadow:0 1px 3px #000;">HP ${e.hp}/${e.maxHp}</span>
         </div>
         ${poiseBarHtml}
@@ -296,6 +313,7 @@ export function renderBattleArena(battle) {
           </div>
           <div class="enemy-badges-right" style="display:flex; gap:4px;">
             ${targetBadge}
+            ${phaseBadge}
             ${stunBadge}
             ${brokenBadge}
             ${buffsHtml}
@@ -308,6 +326,7 @@ export function renderBattleArena(battle) {
         <div class="enemy-hp-wrap large-hp-wrap" style="height:22px; border-radius:4px; overflow:hidden;" title="生命 HP: ${e.hp}/${e.maxHp}">
           <div class="enemy-hp-bar" style="width: ${hpPct}%; background: linear-gradient(90deg, #dc2626, #f97316);"></div>
           ${shieldOverlayHtml}
+          ${phaseMarkersHtml}
           <span class="enemy-hp-text" style="font-size:13px; font-weight:bold; text-shadow:0 1px 2px #000;">HP ${e.hp}/${e.maxHp}</span>
         </div>
         ${poiseBarHtml}
@@ -319,6 +338,7 @@ export function renderBattleArena(battle) {
           <span class="enemy-name" style="font-size:13px; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;" title="${safeEnemyName}">${safeEnemyName}</span>
           <div class="enemy-badges-right" style="display:flex; gap:3px; flex-shrink:0;">
             ${targetBadge}
+            ${phaseBadge}
             ${stunBadge}
             ${brokenBadge}
             ${buffsHtml}
@@ -327,6 +347,7 @@ export function renderBattleArena(battle) {
         <div class="enemy-hp-wrap" style="height:20px; border-radius:3px; overflow:hidden;" title="生命 HP: ${e.hp}/${e.maxHp}">
           <div class="enemy-hp-bar" style="width: ${hpPct}%"></div>
           ${shieldOverlayHtml}
+          ${phaseMarkersHtml}
           <span class="enemy-hp-text" style="font-size:13px; font-weight:bold; text-shadow:0 1px 2px #000; white-space:nowrap;">HP ${e.hp}/${e.maxHp}</span>
         </div>
         ${poiseBarHtml}
@@ -363,6 +384,7 @@ export function renderBattleArena(battle) {
 
       const isDanger = (e.isCasting && (e.intentType === 'HEAVY' || e.intentType === 'ABERRATION'));
       card.classList.toggle('intent-danger-telegraph', Boolean(isDanger));
+      card.classList.toggle('boss-enraged-aura', Boolean(e.isEnraged));
 
       // 異常狀態呼吸光暈動態切換
       const allPulseClasses = ['status-pulse-poison', 'status-pulse-burn', 'status-pulse-frozen', 'status-pulse-stun', 'status-pulse-chaos'];
@@ -412,6 +434,20 @@ export function renderBattleArena(battle) {
         if (overflowLattice) overflowLattice.remove();
       }
 
+      // 多階段血條閾值節點 In-place 更新
+      if (hpWrap && e.maxPhases > 1 && Array.isArray(e.phaseThresholds)) {
+        let markers = hpWrap.querySelectorAll('.hp-phase-marker');
+        if (markers.length === 0) {
+          e.phaseThresholds.forEach(th => {
+            const m = document.createElement('div');
+            m.className = 'hp-phase-marker';
+            m.style.left = `${th}%`;
+            m.title = `階段閾值: ${th}%`;
+            hpWrap.appendChild(m);
+          });
+        }
+      }
+
       // 架勢條 In-place 更新
       let poiseWrap = card.querySelector('.poise-bar-wrap');
       if (!poiseWrap && hpWrap) {
@@ -440,6 +476,9 @@ export function renderBattleArena(battle) {
         const targetBadge = e.targetMemberName
           ? `<span class="enemy-aggro-badge" title="怪物當前仇恨鎖定目標">🎯 ${e.targetMemberName}</span>`
           : '';
+        const phaseBadge = (e.maxPhases && e.maxPhases > 1)
+          ? `<span class="enemy-phase-badge ${e.isEnraged ? 'enraged' : ''}">P${e.currentPhase || 1}/${e.maxPhases}${e.isEnraged ? ' 狂暴' : ''}</span>`
+          : '';
         const stunBadge = e.isStunned
           ? '<span class="enemy-stun-badge" title="眩暈不可行動">💫 暈</span>'
           : '';
@@ -447,7 +486,7 @@ export function renderBattleArena(battle) {
           ? '<span class="poise-broken-label" title="【力竭破防】架勢崩解！受傷加深 +35%，霸體失效！">破防</span>'
           : '';
         const buffsHtml = renderAggregatedBuffBadges(e.activeBuffs);
-        badgesRight.innerHTML = `${targetBadge}${stunBadge}${brokenBadge}${buffsHtml}`;
+        badgesRight.innerHTML = `${targetBadge}${phaseBadge}${stunBadge}${brokenBadge}${buffsHtml}`;
       }
 
       let intentContainer = card.querySelector('.enemy-intent-container');

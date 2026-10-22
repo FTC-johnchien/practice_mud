@@ -37,8 +37,59 @@ public record BattleEnemyViewDto(
     List<ActiveBuffDto> activeBuffs,
     String currentAction,
     int actionProgressPercent,
-    boolean interruptible
+    boolean interruptible,
+    int currentPhase,
+    int maxPhases,
+    List<Integer> phaseThresholds,
+    boolean isEnraged
 ) {
+  public BattleEnemyViewDto(
+      int index,
+      String id,
+      String name,
+      int hp,
+      int maxHp,
+      String row,
+      boolean alive,
+      boolean isTarget,
+      boolean isStunned,
+      String targetMemberId,
+      String targetMemberName,
+      int threat,
+      boolean isLarge,
+      int size,
+      String slot,
+      int rowIdx,
+      int colIdx,
+      int width,
+      int height,
+      String intentIcon,
+      String intentName,
+      String intentType,
+      String intentTargetScope,
+      boolean isCasting,
+      long castDurationMs,
+      long castRemainingMs,
+      boolean isInterruptible,
+      int poise,
+      int maxPoise,
+      boolean isPoiseBroken,
+      int shield,
+      List<ActiveBuffDto> activeBuffs,
+      String currentAction,
+      int actionProgressPercent,
+      boolean interruptible
+  ) {
+    this(
+        index, id, name, hp, maxHp, row, alive, isTarget, isStunned,
+        targetMemberId, targetMemberName, threat, isLarge, size, slot,
+        rowIdx, colIdx, width, height, intentIcon, intentName, intentType,
+        intentTargetScope, isCasting, castDurationMs, castRemainingMs, isInterruptible,
+        poise, maxPoise, isPoiseBroken, shield, activeBuffs,
+        currentAction, actionProgressPercent, interruptible,
+        1, 1, List.of(), false
+    );
+  }
   public BattleEnemyViewDto(
       int index,
       String id,

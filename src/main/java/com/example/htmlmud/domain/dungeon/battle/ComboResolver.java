@@ -190,21 +190,32 @@ public class ComboResolver {
         List<BattleHit> hits = new ArrayList<>();
         for (BattleEnemy e : ctx.getEnemies()) {
           if (e.isAlive()) {
-            e.takeDamage(baseDmg);
+            boolean isStaggerCrit = e.isPoiseBroken();
+            int dmg = isStaggerCrit ? com.example.htmlmud.domain.combat.CombatRules.applyPoiseBreakCrit(baseDmg, true) : baseDmg;
+            e.takeDamage(dmg);
+            if (e.isAlive() && e.checkPhaseTransition() > e.getCurrentPhase()) {
+              int nextPhase = e.checkPhaseTransition();
+              e.transitionToPhase(nextPhase);
+              if (e.isEnraged()) {
+                logBroadcaster.accept(player, "\u001B[1;31m⚡⚡⚡【超載狂暴・第 " + nextPhase + " 階段】" + e.getName() + " 體內能量核心超載狂暴，罡氣屏障重聚暴漲！\u001B[0m");
+              } else {
+                logBroadcaster.accept(player, "\u001B[1;33m⚡⚡【轉階段・第 " + nextPhase + " 階段】" + e.getName() + " 受創激怒，體內禁制崩解，重整旗鼓！\u001B[0m");
+              }
+            }
             if (skill.isStun()) {
               e.applyStun(skill.getStunDurationSeconds() > 0 ? skill.getStunDurationSeconds() * 1000L : 4000L);
             }
             int eIdx = ctx.getEnemies().indexOf(e);
             hits.add(new BattleHit(
                 new UnitRef(UnitRef.Side.ENEMY, e.getId(), eIdx >= 0 ? eIdx : 0),
-                HitOutcome.HIT,
-                baseDmg,
+                isStaggerCrit ? HitOutcome.CRIT : HitOutcome.HIT,
+                dmg,
                 0,
                 !e.isAlive()
             ));
           }
         }
-        logBroadcaster.accept(player, "\u001B[1;33m⚔️⚔️【小隊合擊】" + participantNames + " 氣機相融，聯手爆發【" + skill.getName() + "】！全體敵怪遭受 " + baseDmg + " 點毀滅打擊！\u001B[0m");
+        logBroadcaster.accept(player, "\u001B[1;33m⚔️⚔️【小隊合擊】" + participantNames + " 氣機相融，聯手爆發【" + skill.getName() + "】！全體敵怪遭受毀滅打擊！\u001B[0m");
         ctx.emit(new BattleEvent(
             ctx.nextEventSeq(),
             now,
@@ -221,12 +232,27 @@ public class ComboResolver {
       } else {
         BattleEnemy target = ctx.getTargetEnemy();
         if (target != null && target.isAlive()) {
-          target.takeDamage(baseDmg);
+          boolean isStaggerCrit = target.isPoiseBroken();
+          int dmg = isStaggerCrit ? com.example.htmlmud.domain.combat.CombatRules.applyPoiseBreakCrit(baseDmg, true) : baseDmg;
+          target.takeDamage(dmg);
+          if (target.isAlive() && target.checkPhaseTransition() > target.getCurrentPhase()) {
+            int nextPhase = target.checkPhaseTransition();
+            target.transitionToPhase(nextPhase);
+            if (target.isEnraged()) {
+              logBroadcaster.accept(player, "\u001B[1;31m⚡⚡⚡【超載狂暴・第 " + nextPhase + " 階段】" + target.getName() + " 體內能量核心超載狂暴，罡氣屏障重聚暴漲！\u001B[0m");
+            } else {
+              logBroadcaster.accept(player, "\u001B[1;33m⚡⚡【轉階段・第 " + nextPhase + " 階段】" + target.getName() + " 受創激怒，體內禁制崩解，重整旗鼓！\u001B[0m");
+            }
+          }
           if (skill.isStun()) {
             target.applyStun(skill.getStunDurationSeconds() > 0 ? skill.getStunDurationSeconds() * 1000L : 4000L);
           }
           int eIdx = ctx.getEnemies().indexOf(target);
-          logBroadcaster.accept(player, "\u001B[1;33m⚔️⚔️【小隊合擊】" + participantNames + " 凌空合擊，聯手發動【" + skill.getName() + "】！直貫【" + target.getName() + "】造成 " + baseDmg + " 點貫穿巨創！\u001B[0m");
+          if (isStaggerCrit) {
+            logBroadcaster.accept(player, "\u001B[1;31m💥【破防重創!】⚔️⚔️【小隊合擊】" + participantNames + " 凌空合擊，聯手發動【" + skill.getName() + "】！直取力竭要害，對【" + target.getName() + "】造成 " + dmg + " 點致命暴擊巨創！\u001B[0m");
+          } else {
+            logBroadcaster.accept(player, "\u001B[1;33m⚔️⚔️【小隊合擊】" + participantNames + " 凌空合擊，聯手發動【" + skill.getName() + "】！直貫【" + target.getName() + "】造成 " + dmg + " 點貫穿巨創！\u001B[0m");
+          }
           ctx.emit(new BattleEvent(
               ctx.nextEventSeq(),
               now,
@@ -240,8 +266,8 @@ public class ComboResolver {
               "combo_single",
               List.of(new BattleHit(
                   new UnitRef(UnitRef.Side.ENEMY, target.getId(), eIdx >= 0 ? eIdx : 0),
-                  HitOutcome.HIT,
-                  baseDmg,
+                  isStaggerCrit ? HitOutcome.CRIT : HitOutcome.HIT,
+                  dmg,
                   0,
                   !target.isAlive()
               ))

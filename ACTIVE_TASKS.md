@@ -6,16 +6,27 @@
 
 ---
 
-## 📌 當前焦點里程碑：待規劃 / 請使用者選定下一里程碑 (Next Milestone Selection)
+## 📌 當前焦點里程碑：Milestone F2-05 — 複合靈氣連鎖反應與狀態引爆 (Elemental Reactions & Primer/Detonator, P1)
 
-- 可選推進項目（參照 [`FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md)）：
-  - **Milestone F2-02**: 罡氣破防與虛弱受擊暴擊連攜 (Poise Break & Stagger Vulnerability, P1)
-  - **Milestone F3-02**: 小隊共鳴陣法動態切換與陣眼奧義 (Formation Dynamic Resonances, P1)
-  - **Milestone F4-01**: 地牢動態戰場環境詞條與五行相剋 (Dungeon Affixes & Elemental Affinities, P1)
+- **長遠藍圖**：[`FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) 第 22.2 章《戰線二：戰鬥深度突破與動態沉浸博弈 (F2-05)》
+- **背景設定融合**：靈脈流動與天地五行/陰陽煞氣相互催化；當目標身中相生相剋靈氣（如冰霜與烈焰爆裂超載、雷水感電傳導、陰陽混沌湮滅破防）時，引爆高額傷害並削韌失衡。
+
+### 📋 微任務清單 (Micro-Tasks)
+
+- [ ] **Task 1 (F2-05-REACTION-RULE): 五行複合靈氣反應矩陣與結算公式**
+- [ ] **Task 2 (F2-05-PRIMER-DETONATE): 裂魂印記 (Primer) 與引爆戰技 (Detonator) 引擎機制**
+- [ ] **Task 3 (F2-05-COMBAT-INTEGRATE): 戰鬥迴圈連鎖跳算與全隊元素廣播**
+- [ ] **Task 4 (F2-05-FE-VFX & VERIFY): 前端元素反應爆裂特效與全量測試**
 
 ---
 
 ## 🏆 已完成里程碑 (Completed Milestones)
+
+- [x] **Milestone F2-02 — 罡氣破防重創與首領多階段狂暴轉階段 (Poise Break & Boss Phases, P1)**
+  - Task 1 (F2-02-POISE-STAGGER-CRIT): 在 `CombatRules.java` 實裝 `applyPoiseBreakCrit`，當目標處於 `isPoiseBroken()` 時 100% 暴擊 (`HitOutcome.CRIT`) 享受 1.5 倍致命傷害，在 `DrpgCombatLoop` 與 `ComboResolver` 中單體、群攻、合擊與狂暴打擊全面支援並輸出彩色高亮 `💥【破防重創!】` 戰報。
+  - Task 2 (F2-02-BOSS-PHASES-MODEL): 擴充 `BattleEnemy.java` 與 `MobTemplate.java`，支援 `currentPhase`、`maxPhases`、`phaseThresholds`（如 `[70, 30]`）、`isEnraged` 與狂暴攻速加成 (+30%)；DTO 鏡像全面支援；在 `mozhu_mines/mobs.json` 配置畸變大師兄·宋天衡（3 階段，`[70, 30]` 閾值）與 `taiyin_tomb/mobs.json` 守墓道奴（2 階段）。
+  - Task 3 (F2-02-PHASE-TRANSITION-LOOP): `DrpgCombatLoop` 與 `ComboResolver` 受擊結算落實轉階段檢查與執行；跌破閾值觸發古代能量過載超載協議（震散全體負面 Debuff、解除眩暈、重聚罡氣且上限攀升 25%、震退打斷全隊員施法前搖並發送衝擊波事件）。
+  - Task 4 (F2-02-FE-UI & VERIFY): 前端 `battle-panel.js` 實裝階段徽章 (`.enemy-phase-badge`) 與血條閾值節點標記 (`.hp-phase-marker`)，狂暴首領渲染赤紅過載光環 (`.boss-enraged-aura`)；`floating-text.js` 彈出 `💥 破防重創!` 浮動文字與轉階段衝擊波橫幅；編寫專屬整合測試 `BossPhaseAndPoiseStaggerTest.java`（4/4 綠燈），全專案 361 項測試 100% 綠燈全數通過。
 
 - [x] **Milestone F3-05 — 隊友自動戰術 Gambit 規則鏈引擎 (Companion Gambit AI Chains, P1)**
   - Task 1 (F3-05-GAMBIT-MODEL): 定義 `GambitRule`、`GambitActionType`、擴充 `TacticsCondition`（`ENEMY_IS_CASTING`, `ENEMY_CASTING_INTERRUPTIBLE`, `ENEMY_POISE_BROKEN`, `ENEMY_HP_LESS_THAN`, `ALLY_SAN_LESS_THAN`）與 `TacticsTarget`（`CASTING_ENEMY`, `POISE_BROKEN_ENEMY`, `LOWEST_HP_ENEMY`）；`PartyMember` 增加 `gambitEnabled` (預設 `true`) 開關，`initDefaultTactics` 自動將反制打斷技能（`taibai_interrupt` 或帶 `INTERRUPT` 標籤）配置為 Priority 1 最高優先級。

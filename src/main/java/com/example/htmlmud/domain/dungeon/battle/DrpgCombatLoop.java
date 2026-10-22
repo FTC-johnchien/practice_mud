@@ -299,10 +299,19 @@ public class DrpgCombatLoop {
                   // 60% 狂轟敵方
                   BattleEnemy target = (member.getRow() == RowPosition.FRONT) ? ctx.getFrontTargetEnemy() : ctx.getTargetEnemy();
                   if (target != null && target.isAlive()) {
+                    boolean isStaggerCrit = target.isPoiseBroken();
                     int baseDmg = tacticsService.calculatePlayerDamage(member, target);
                     int boostedDmg = baseDmg * 2;
+                    if (isStaggerCrit) {
+                      boostedDmg = com.example.htmlmud.domain.combat.CombatRules.applyPoiseBreakCrit(boostedDmg, true);
+                    }
                     target.takeDamage(boostedDmg);
-                    broadcastLog(player, ctx, "\u001B[1;35m🔥【魔道凶威】" + member.getName() + " 狂亂暴怒，爆發走火入魔之煞氣，對【" + target.getName() + "】造成 " + boostedDmg + " 點雙倍狂暴打擊！\u001B[0m");
+                    checkAndTriggerPhaseTransition(player, ctx, target);
+                    if (isStaggerCrit) {
+                      broadcastLog(player, ctx, "\u001B[1;31m💥【破防重創!】🔥【魔道凶威】" + member.getName() + " 狂亂暴怒，爆發走火入魔煞氣直取力竭要害，對【" + target.getName() + "】造成 " + boostedDmg + " 點致命暴擊打擊！\u001B[0m");
+                    } else {
+                      broadcastLog(player, ctx, "\u001B[1;35m🔥【魔道凶威】" + member.getName() + " 狂亂暴怒，爆發走火入魔之煞氣，對【" + target.getName() + "】造成 " + boostedDmg + " 點雙倍狂暴打擊！\u001B[0m");
+                    }
                     if (!target.isAlive()) {
                       broadcastLog(player, ctx, "\u001B[1;32m💥【" + target.getName() + "】被斬殺倒地！\u001B[0m");
                       ctx.checkEnemyRowAdvancement();
@@ -328,8 +337,13 @@ public class DrpgCombatLoop {
                 ? ctx.getFrontTargetEnemy() : ctx.getTargetEnemy();
 
             if (target != null && target.isAlive()) {
+              boolean isStaggerCrit = target.isPoiseBroken();
               int dmg = tacticsService.calculatePlayerDamage(member, target);
+              if (isStaggerCrit) {
+                dmg = com.example.htmlmud.domain.combat.CombatRules.applyPoiseBreakCrit(dmg, true);
+              }
               target.takeDamage(dmg);
+              checkAndTriggerPhaseTransition(player, ctx, target);
               member.addThreat(dmg);
               target.addThreat(member.getId(), dmg);
 
@@ -365,11 +379,18 @@ public class DrpgCombatLoop {
                 default -> "👊";
               };
 
-              broadcastLog(player, ctx, icon + " " + member.getName() + " 施展【" + moveName + "】，擊中【" + target.getName() + "】造成 " + dmg + " 點傷害！");
+              if (isStaggerCrit) {
+                broadcastLog(player, ctx, "\u001B[1;31m💥【破防重創!】" + icon + " " + member.getName() + " 施展【" + moveName + "】直取要害，對力竭破防之【" + target.getName() + "】造成 " + dmg + " 點致命暴擊傷害！\u001B[0m");
+              } else {
+                broadcastLog(player, ctx, icon + " " + member.getName() + " 施展【" + moveName + "】，擊中【" + target.getName() + "】造成 " + dmg + " 點傷害！");
+              }
 
               int targetIdx = ctx.getEnemies().indexOf(target);
               int memberIdx = ctx.getParty().getMembers().indexOf(member);
               boolean isKilled = !target.isAlive();
+              com.example.htmlmud.domain.dungeon.battle.event.HitOutcome hitOutcome = isStaggerCrit
+                  ? com.example.htmlmud.domain.dungeon.battle.event.HitOutcome.CRIT
+                  : com.example.htmlmud.domain.dungeon.battle.event.HitOutcome.HIT;
               com.example.htmlmud.domain.dungeon.battle.event.BattleEvent atkEvent = new com.example.htmlmud.domain.dungeon.battle.event.BattleEvent(
                   ctx.nextEventSeq(),
                   now,
@@ -383,7 +404,7 @@ public class DrpgCombatLoop {
                   "weapon_" + wt.name().toLowerCase(),
                   java.util.List.of(new com.example.htmlmud.domain.dungeon.battle.event.BattleHit(
                       new com.example.htmlmud.domain.dungeon.battle.event.UnitRef(com.example.htmlmud.domain.dungeon.battle.event.UnitRef.Side.ENEMY, target.getId(), targetIdx >= 0 ? targetIdx : 0),
-                      com.example.htmlmud.domain.dungeon.battle.event.HitOutcome.HIT,
+                      hitOutcome,
                       dmg,
                       0,
                       isKilled
@@ -480,6 +501,7 @@ public class DrpgCombatLoop {
               // 破招反擊 (Riposte) 傷害結算
               if (defenseRes.riposteTriggered() && defenseRes.riposteDamage() > 0) {
                 enemy.takeDamage(defenseRes.riposteDamage());
+                checkAndTriggerPhaseTransition(player, ctx, enemy);
                 if (!enemy.isAlive()) {
                   broadcastLog(player, ctx, "\u001B[1;31m💀 " + enemy.getName() + " 被 " + targetMember.getName() + " 的破招突刺擊殺倒地！\u001B[0m");
                 }
@@ -1003,7 +1025,11 @@ public class DrpgCombatLoop {
         List<BattleHit> hits = new java.util.ArrayList<>();
         for (BattleEnemy e : ctx.getEnemies()) {
           if (e.isAlive()) {
+            boolean isStaggerCrit = e.isPoiseBroken();
             int rawDmg = (int) (tacticsService.calculatePlayerDamage(member, e) * skill.getDamageMultiplier());
+            if (isStaggerCrit) {
+              rawDmg = com.example.htmlmud.domain.combat.CombatRules.applyPoiseBreakCrit(rawDmg, true);
+            }
             var resResult = com.example.htmlmud.domain.combat.CombatRules.resolveResistance(rawDmg, dt, e.getResistance(dt));
             int dmg = resResult.damage();
             int healAmt = resResult.heal();
@@ -1013,7 +1039,12 @@ public class DrpgCombatLoop {
               broadcastLog(player, ctx, "\u001B[1;36m   ↳ ☯️【靈氣逆流】" + e.getName() + " 吸收 " + dt + " 威能，反獲治療 " + healAmt + " 點氣血！\u001B[0m");
             } else {
               e.takeDamage(dmg);
-              broadcastLog(player, ctx, "\u001B[1;36m   ↳ 擊中【" + e.getName() + "】造成 " + dmg + " 點傷害！\u001B[0m");
+              checkAndTriggerPhaseTransition(player, ctx, e);
+              if (isStaggerCrit) {
+                broadcastLog(player, ctx, "\u001B[1;31m   ↳ 💥【破防重創!】擊中力竭之【" + e.getName() + "】造成 " + dmg + " 點致命暴擊傷害！\u001B[0m");
+              } else {
+                broadcastLog(player, ctx, "\u001B[1;36m   ↳ 擊中【" + e.getName() + "】造成 " + dmg + " 點傷害！\u001B[0m");
+              }
             }
 
             if (skill.getPoiseDamage() > 0) {
@@ -1041,7 +1072,9 @@ public class DrpgCombatLoop {
             if (skill.isStun()) e.applyStun(skill.getStunDurationSeconds() * 1000L);
             boolean isKilled = !e.isAlive();
             int eIdx = ctx.getEnemies().indexOf(e);
-            HitOutcome hitOutcome = interruptRes.interrupted() ? HitOutcome.INTERRUPTED : HitOutcome.HIT;
+            HitOutcome hitOutcome = interruptRes.interrupted()
+                ? HitOutcome.INTERRUPTED
+                : (isStaggerCrit ? HitOutcome.CRIT : HitOutcome.HIT);
             hits.add(new BattleHit(
                 new UnitRef(UnitRef.Side.ENEMY, e.getId(), eIdx >= 0 ? eIdx : 0),
                 hitOutcome,
@@ -1085,7 +1118,11 @@ public class DrpgCombatLoop {
           }
         }
         if (target != null && target.isAlive()) {
+          boolean isStaggerCrit = target.isPoiseBroken();
           int rawDmg = (int) (tacticsService.calculatePlayerDamage(member, target) * skill.getDamageMultiplier());
+          if (isStaggerCrit) {
+            rawDmg = com.example.htmlmud.domain.combat.CombatRules.applyPoiseBreakCrit(rawDmg, true);
+          }
           var resResult = com.example.htmlmud.domain.combat.CombatRules.resolveResistance(rawDmg, dt, target.getResistance(dt));
           int dmg = resResult.damage();
           int healAmt = resResult.heal();
@@ -1095,7 +1132,12 @@ public class DrpgCombatLoop {
             broadcastLog(player, ctx, "\u001B[1;36m" + tag + "☯️【靈氣逆流】" + target.getName() + " 運轉道體，將【" + skill.getName() + "】之 " + dt + " 威能吸收，反獲治療 " + healAmt + " 點氣血！\u001B[0m");
           } else {
             target.takeDamage(dmg);
-            broadcastLog(player, ctx, "\u001B[1;33m" + tag + "🔥 " + member.getName() + " 施展【" + skill.getName() + "】，直取【" + target.getName() + "】要害，造成 " + dmg + " 點打擊！\u001B[0m");
+            checkAndTriggerPhaseTransition(player, ctx, target);
+            if (isStaggerCrit) {
+              broadcastLog(player, ctx, "\u001B[1;31m" + tag + "💥【破防重創!】🔥 " + member.getName() + " 施展【" + skill.getName() + "】直取力竭要害，對【" + target.getName() + "】造成 " + dmg + " 點致命暴擊傷害！\u001B[0m");
+            } else {
+              broadcastLog(player, ctx, "\u001B[1;33m" + tag + "🔥 " + member.getName() + " 施展【" + skill.getName() + "】，直取【" + target.getName() + "】要害，造成 " + dmg + " 點打擊！\u001B[0m");
+            }
           }
 
           if (skill.getPoiseDamage() > 0) {
@@ -1123,7 +1165,9 @@ public class DrpgCombatLoop {
           if (skill.isStun()) target.applyStun(skill.getStunDurationSeconds() * 1000L);
           boolean isKilled = !target.isAlive();
           int eIdx = ctx.getEnemies().indexOf(target);
-          HitOutcome singleOutcome = interruptRes.interrupted() ? HitOutcome.INTERRUPTED : HitOutcome.HIT;
+          HitOutcome singleOutcome = interruptRes.interrupted()
+              ? HitOutcome.INTERRUPTED
+              : (isStaggerCrit ? HitOutcome.CRIT : HitOutcome.HIT);
           BattleEvent singleSkillEvent = new BattleEvent(
               ctx.nextEventSeq(),
               now,
@@ -1184,6 +1228,64 @@ public class DrpgCombatLoop {
         broadcastLog(player, ctx, "\u001B[1;31m⚠️ " + breakMsg + "\u001B[0m");
       }
     }
+  }
+
+  private void checkAndTriggerPhaseTransition(Player player, BattleContext ctx, BattleEnemy enemy) {
+    if (enemy == null || !enemy.isAlive()) return;
+    int nextPhase = enemy.checkPhaseTransition();
+    if (nextPhase <= enemy.getCurrentPhase()) return;
+
+    enemy.transitionToPhase(nextPhase);
+    long now = System.currentTimeMillis();
+    int enemyIdx = ctx.getEnemies().indexOf(enemy);
+
+    // 震退打斷全體小隊成員施法與蓄力 (Shockwave Interrupt)
+    List<BattleHit> shockwaveHits = new java.util.ArrayList<>();
+    if (ctx.getParty() != null && ctx.getParty().getMembers() != null) {
+      for (int mIdx = 0; mIdx < ctx.getParty().getMembers().size(); mIdx++) {
+        var member = ctx.getParty().getMembers().get(mIdx);
+        if (member.isAlive()) {
+          member.setNextAttackTime(Math.max(member.getNextAttackTime(), now + 800L));
+          shockwaveHits.add(new BattleHit(
+              new UnitRef(UnitRef.Side.PARTY, member.getId(), mIdx),
+              HitOutcome.INTERRUPTED,
+              0,
+              0,
+              false
+          ));
+        }
+      }
+    }
+
+    String phaseTitle = enemy.isEnraged()
+        ? "⚡⚡⚡【超載狂暴・第 " + nextPhase + " 階段】"
+        : "⚡⚡【轉階段・第 " + nextPhase + " 階段】";
+
+    if (enemy.isEnraged()) {
+      broadcastLog(player, ctx, "\u001B[1;31m" + phaseTitle + enemy.getName() + " 體內古代能量核心狂暴過載！氣血跌破閾值，爆發毀滅性靈壓震退全隊！\u001B[0m");
+      broadcastLog(player, ctx, "\u001B[1;35m   ↳ 💥 震散全體負面狀態，罡氣屏障重聚暴漲至 " + enemy.getMaxPoise() + " 點，魔道攻速全面激化！\u001B[0m");
+    } else {
+      broadcastLog(player, ctx, "\u001B[1;33m" + phaseTitle + enemy.getName() + " 受創激怒，體內禁制崩解，爆發氣浪震退全隊！\u001B[0m");
+      broadcastLog(player, ctx, "\u001B[1;36m   ↳ 🛡️ 負面狀態全數淨化，罡氣屏障重聚攀升至 " + enemy.getMaxPoise() + " 點！\u001B[0m");
+    }
+
+    BattleEvent transitionEvent = new BattleEvent(
+        ctx.nextEventSeq(),
+        now,
+        BattleEventType.SKILL,
+        new UnitRef(UnitRef.Side.ENEMY, enemy.getId(), enemyIdx >= 0 ? enemyIdx : 0),
+        "phase_transition",
+        enemy.isEnraged() ? "超載狂暴" : "氣浪震退",
+        "NONE",
+        "ENERGY",
+        FxShape.ALL,
+        enemy.isEnraged() ? "boss_enraged" : "boss_phase_transition",
+        shockwaveHits
+    );
+    ctx.emit(transitionEvent);
+
+    // 激化立即出手或縮減下次出手前搖
+    enemy.setNextAttackTime(now + 400L);
   }
 
   private void broadcastLog(Player player, BattleContext ctx, String log) {

@@ -1177,7 +1177,11 @@ public class DrpgBattleService {
           buffDtos,
           e.getCurrentAction(),
           e.getActionProgressPercent(),
-          e.isInterruptible()
+          e.isInterruptible(),
+          e.getCurrentPhase(),
+          e.getMaxPhases(),
+          e.getPhaseThresholds() != null ? e.getPhaseThresholds() : List.of(),
+          e.isEnraged()
       ));
     }
     return new BattleViewDto(

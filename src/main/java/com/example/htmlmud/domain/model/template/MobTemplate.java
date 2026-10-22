@@ -89,12 +89,22 @@ public record MobTemplate(
 
     // 蓄力前搖與打斷屬性 (Milestone 1 / COMBAT-REACT-01)
     long castTimeMs,
-    Boolean interruptible
+    Boolean interruptible,
+
+    // 首領多階段與狂暴狀態模型 (Milestone F2-02)
+    int maxPhases,
+    List<Integer> phaseThresholds
 
 ) {
   public MobTemplate {
     if (interruptible == null) {
       interruptible = Boolean.TRUE;
+    }
+    if (phaseThresholds == null) {
+      phaseThresholds = List.of();
+    }
+    if (maxPhases <= 0) {
+      maxPhases = phaseThresholds.isEmpty() ? 1 : phaseThresholds.size() + 1;
     }
     if (lookDescription == null) {
       lookDescription = description;

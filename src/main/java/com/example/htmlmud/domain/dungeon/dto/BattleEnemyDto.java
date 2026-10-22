@@ -21,8 +21,37 @@ public record BattleEnemyDto(
     int poise,
     int maxPoise,
     boolean isPoiseBroken,
-    List<ActiveBuffDto> activeBuffs
+    List<ActiveBuffDto> activeBuffs,
+    int currentPhase,
+    int maxPhases,
+    List<Integer> phaseThresholds,
+    boolean isEnraged
 ) {
+  public BattleEnemyDto(
+      int index,
+      String id,
+      String name,
+      int hp,
+      int maxHp,
+      String currentAction,
+      int actionProgressPercent,
+      boolean isCasting,
+      long castDurationMs,
+      long castRemainingMs,
+      boolean interruptible,
+      int poise,
+      int maxPoise,
+      boolean isPoiseBroken,
+      List<ActiveBuffDto> activeBuffs
+  ) {
+    this(
+        index, id, name, hp, maxHp, currentAction, actionProgressPercent,
+        isCasting, castDurationMs, castRemainingMs, interruptible,
+        poise, maxPoise, isPoiseBroken, activeBuffs,
+        1, 1, List.of(), false
+    );
+  }
+
   public static BattleEnemyDto from(BattleEnemyViewDto v) {
     if (v == null) return null;
     return new BattleEnemyDto(
@@ -40,7 +69,11 @@ public record BattleEnemyDto(
         v.poise(),
         v.maxPoise(),
         v.isPoiseBroken(),
-        v.activeBuffs()
+        v.activeBuffs(),
+        v.currentPhase(),
+        v.maxPhases(),
+        v.phaseThresholds() != null ? v.phaseThresholds() : List.of(),
+        v.isEnraged()
     );
   }
 
@@ -64,7 +97,11 @@ public record BattleEnemyDto(
         e.getPoise(),
         e.getMaxPoise(),
         e.isPoiseBroken(),
-        buffs
+        buffs,
+        e.getCurrentPhase(),
+        e.getMaxPhases(),
+        e.getPhaseThresholds() != null ? e.getPhaseThresholds() : List.of(),
+        e.isEnraged()
     );
   }
 }
