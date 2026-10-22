@@ -2,21 +2,33 @@
 
 > **模式規範**：遵循 Spec-Driven Development 與 AI Agentic Workflow 最佳實踐。  
 > **單一焦點原則**：每次對話僅推進 **1 個 Micro-Task**，完成後進行測試驗證與手冊同步，並勾選為 `[x]`。  
-> **長遠演進參照**：宏觀藍圖與全局待辦已收錄於 👉 [`docs/plans/FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md)。
+> **長遠演進參照**：宏觀藍圖與全局待辦已收錄於 👉 [`docs/3_task_lists/FUTURE_IMPROVEMENTS.md`](../3_task_lists/FUTURE_IMPROVEMENTS.md)。
 
 ---
 
-## 📌 當前焦點里程碑：Milestone F2-04 — 道心異化深淵靈視與克系秘境機關 (Sanity Breakdown & Eldritch Sight, P1/P2)
+## 📌 當前狀態：文件對齊全面完工，Milestone VS-01 待命準備中 (Standby for VS-01)
 
-- **長遠藍圖**：[`FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) 第 22.2 章《戰線二：戰鬥深度突破與動態沉浸博弈 (F2-04)》
-- **背景設定融合**：修仙者道心 (SAN) 崩解至臨界值 (< 30%) 時，突破凡人感知限制，窺見常人無法看透之「不可名狀靈視 (Eldritch Sight)」，地牢浮現古神低語、隱藏古仙碑銘與深淵暗室機關。
+> **當前完成事項**：
+> 1. ✅ **需求層 (L1)**：確立五大核心目標（世界觀/戰鬥爽快/技能組合/裝備收集/角色養成）、純單機 Action-Tactical DRPG 典範、取消魔化懲罰。
+> 2. ✅ **規格層 (L2)**：後端 M1 重構為選單式營地設施手冊 (`M1_TOWN_HUB_AND_FACILITIES.md`)，前端 FE4 重構為營地中樞與動作列手冊 (`FE4_TOWN_HUB_AND_ACTION_BAR.md`)，M9 確立純單機狀態與動作管線，徹底清剿 MUD 房間與文字指令包袱。
+> 3. ✅ **任務庫 (L3)**：`FUTURE_IMPROVEMENTS.md` 置頂宣告典範轉移與歷史任務除役。
+> 4. ✅ **架構歸檔**：舊 manual / overview 等資料夾全數收斂歸檔至 `docs/0_archive/`。
+>
+> ⏳ **下一階段目標**：待使用者指示啟動 **Milestone VS-01 — 第一章序幕垂直切片：黑煞宗地底礦脈・採礦奴隸與特工覺醒 (Vertical Slice, P1)**。
+
+---
+
+## 📌 下一焦點里程碑：Milestone VS-01 — 第一章序幕垂直切片：黑煞宗地底礦脈・採礦奴隸與特工覺醒 (Vertical Slice, P1)
+
+- **核心目標對齊**：依據三大戰略與【五大核心目標】（世界觀介紹、戰鬥爽快、技能組合、裝備收集、角色養成），徹底取消道心崩潰魔化設計，打造首個完整閉環的純單機 Hack-and-slash DRPG 序章！
+- **背景設定融合**：主角在黑煞宗地底奴役通鋪甦醒，特工晶片加載 12%，在萬年母神卵鞘地殼深處面臨塌陷與退化妖獸，收集黑煞煞石，反殺密室修士並繳獲千星科技加密追蹤晶片。
 
 ### 📋 微任務清單 (Micro-Tasks)
 
-- [ ] **Task 1 (F2-04-SAN-BREAKDOWN-MODEL): 道心異化狀態機與靈視感知階級模型 (Normal, Whispering, Eldritch Sight)**
-- [ ] **Task 2 (F2-04-ELDRITCH-DISCOVERY): 地牢深淵暗室與古神秘銘探測引擎 (DungeonNavigator / Event)**
-- [ ] **Task 3 (F2-04-SAN-DATA-TEMPLATES): 古神低語與克系靈視遭遇資料驅動設定 (dialogue / events / items)**
-- [ ] **Task 4 (F2-04-FE-DISTORTION & VERIFY): 前端克系靈視視界畸變特效與全量測試驗證**
+- [ ] **Task 1 (VS-01-LORE-GEOLOGY): 黑煞宗地底礦脈地質與外神卵鞘偽地殼環境重塑 (世界觀介紹)**
+- [ ] **Task 2 (VS-01-AGENT-HUD): 主角特工晶片 HUD 視界 (12%...) 與道基五維初始潛能點加點 (世界觀 + 角色養成)**
+- [ ] **Task 3 (VS-01-CYBER-SKILLS): 首批賽博特工戰技資料驅動配置【神經超頻步】與【強殖角質刃】(戰鬥爽快 + 技能組合)**
+- [ ] **Task 4 (VS-01-LOOT-CHIP): 首領掉落【千星科技加密追蹤晶片】與隨機詞綴裝備掉落驗收 (裝備收集 + 373+ 測試)**
 
 ---
 
@@ -82,7 +94,7 @@
   - Task 4 (F1-02-ADAPTER & VERIFY): 範本目錄與適配器收斂至 `domain.repository`，338 測試全綠。
 
 - [x] **Milestone Path Y — 單機語意純化與全域硬編碼大清剿 (SP-PURITY-01 ~ DATA-GUARD-03)**
-  - Task 1: 房間廣播通道與多人遍歷舊代碼徹底除役，死代碼清理 (SP-PURITY-01)。
+  - Task 1: 房間廣播通道與多人遍歷舊代碼清理完畢 (SP-PURITY-01)。
   - Task 2: 房間安全區標籤化與全域出生點 GameConfig 統一驅動 (DATA-CORE-01)。
   - Task 3: 商店 NPC 身份動態化、道核技能反查與夥伴列表配置化 (DATA-CORE-02)。
   - Task 4: 前端地塊動態 Tooltip 支援與看門狗棘輪加固至 3 處 (DATA-GUARD-03)，全專案 338 測試全綠。
@@ -90,7 +102,7 @@
 - [x] **Milestone Path X — 純單機單體化演進戰略：多人機制、雙軌架構與膠水代碼全域收斂 (SP-01 ~ SP-09)**
   - Task 1 (SP-01): 刪除 `TellCommand` 多人私聊與 `findPlayerByName`。
   - Task 2 (SP-02): 廢止 `StashCommand` 雙向轉存，除役個人背包假帳。
-  - Task 3 (SP-03): 存檔寫入與載入徹底除役 `personalInventory` 雙寫 (schemaVersion=3)。
+  - Task 3 (SP-03): 存檔寫入與載入全面統一為小隊行囊 (schemaVersion=3)。
   - Task 4 (SP-04): `Room` 房間實體改為單一主角引用，除役多玩家廣播遍歷。
   - Task 5 (SP-05): WebSocket 多開連線自動接管唯一主角，杜絕存檔覆寫競爭。
   - Task 6 (SP-06): 技能模型合一 (`UnifiedSkill`)，消除 MUD/DRPG 技能定義割裂。
@@ -100,7 +112,7 @@
 
 - [x] **Milestone 2 — 核心雙軌實體大一統：Player 與 PartyMember 實體合一與單一真相源治理 (F1-01 / M1 / M4)**
   - Task 1: 行囊大一統 (Unified Party Inventory) — 消除個人 12 格限制與強制 stash 轉存，40 格小隊公共背包為唯一真相源。
-  - Task 2: 裝備與核心屬性大一統 (Unified Equipment & Stats) — 徹底除役 5 秒 CompletableFuture 超時阻塞，達成 0ms 零延遲鏡像投影。
+  - Task 2: 裝備與核心屬性大一統 (Unified Equipment & Stats) — 消除 5 秒 CompletableFuture 超時阻塞，達成 0ms 零延遲鏡像投影。
   - Task 3: 廢止 CharacterSyncService 偽 Outcome 拷貝 — 同步直接深度鏡像，修復線上運行時深層屬性被略過的缺陷。
   - Task 4: 測試驅動驗證 — 全專案 315 項測試 100% 綠燈通過。
   - Task 5: 模組技術手冊同步 — 更新後端 M1 與 M4 手冊。
