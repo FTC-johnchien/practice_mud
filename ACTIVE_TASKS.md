@@ -6,21 +6,27 @@
 
 ---
 
-## 📌 當前焦點里程碑：Milestone F3-01 — 古仙陣法動態連攜合擊技與共鳴印記 (Cross Combos & Formation Resonance, P1)
+## 📌 當前焦點里程碑：Milestone F2-04 — 道心異化深淵靈視與克系秘境機關 (Sanity Breakdown & Eldritch Sight, P1/P2)
 
-- **長遠藍圖**：[`FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) 第 22.3 章《戰線三：道法境界、同伴生態與古神詞綴 (F3-01)》
-- **背景設定融合**：各陣位弟子以特定招式先後擊中目標觸發「道法連攜合擊 (Cross Combos)」，陣眼修士引導全隊陣法真元，爆發天地共鳴合擊。
+- **長遠藍圖**：[`FUTURE_IMPROVEMENTS.md`](./docs/plans/FUTURE_IMPROVEMENTS.md) 第 22.2 章《戰線二：戰鬥深度突破與動態沉浸博弈 (F2-04)》
+- **背景設定融合**：修仙者道心 (SAN) 崩解至臨界值 (< 30%) 時，突破凡人感知限制，窺見常人無法看透之「不可名狀靈視 (Eldritch Sight)」，地牢浮現古神低語、隱藏古仙碑銘與深淵暗室機關。
 
 ### 📋 微任務清單 (Micro-Tasks)
 
-- [ ] **Task 1 (F3-01-COMBO-MODEL): 陣法動態連攜隊列與先導觸發檢定模型**
-- [ ] **Task 2 (F3-01-RESONANCE-RESOLVER): 陣眼共鳴印記累加與終結絕技發動引擎**
-- [ ] **Task 3 (F3-01-DATA-TEMPLATES): 全域陣法合擊技能資料驅動設定 (party_skills.json)**
-- [ ] **Task 4 (F3-01-FE-PRESENTATION & VERIFY): 前端連攜合擊提示橫幅與全量測試驗證**
+- [ ] **Task 1 (F2-04-SAN-BREAKDOWN-MODEL): 道心異化狀態機與靈視感知階級模型 (Normal, Whispering, Eldritch Sight)**
+- [ ] **Task 2 (F2-04-ELDRITCH-DISCOVERY): 地牢深淵暗室與古神秘銘探測引擎 (DungeonNavigator / Event)**
+- [ ] **Task 3 (F2-04-SAN-DATA-TEMPLATES): 古神低語與克系靈視遭遇資料驅動設定 (dialogue / events / items)**
+- [ ] **Task 4 (F2-04-FE-DISTORTION & VERIFY): 前端克系靈視視界畸變特效與全量測試驗證**
 
 ---
 
 ## 🏆 已完成里程碑 (Completed Milestones)
+
+- [x] **Milestone F3-01 — 古仙陣法動態連攜合擊技與共鳴印記 (Cross Combos & Formation Resonance, P1)**
+  - Task 1 (F3-01-COMBO-MODEL): 在 `CombatRules.java` 中建立純函數式跨隊員動態連攜判定 `evaluateCrossComboStep` 與 `CrossComboResolution` 模型，支援 3.5s 連攜時間窗口、同目標接力檢定、雙星合璧 (+25% 傷, +15 削韌)、三才混元 (+50% 傷, +25 削韌, +5 SAN)、四象誅仙 (+100% 傷, +40 削韌, +10 SAN, 終結技就緒)。
+  - Task 2 (F3-01-RESONANCE-RESOLVER): 在 `BattleContext.java` 擴充連攜步數、窗口過期時間與共鳴點數 (`resonancePoints`) 追蹤；在 `ComboResolver.java` 實裝 `processCrossCombo` 動態推進連攜與 `executeFormationFinisher` 天外合擊終結絕技發動引擎（消耗 3+ 點共鳴引爆全場巨創貫穿與團隊大回血回道心）；在 `DrpgCombatLoop.java` 全面注入管道。
+  - Task 3 (F3-01-DATA-TEMPLATES): 在 `party_skills.json` 建立資料驅動天外合擊終結技能 `combo_formation_finisher`（4.0x 傷害倍率、60 點破防削韌、+50 HP, +15 SAN）。
+  - Task 4 (F3-01-FE-PRESENTATION & VERIFY): 前端 `style-07-battle-fx.css` 與 `floating-text.js` 實裝階級連攜提示與天外合擊金紫流光字樣；編寫專屬整合測試 `CrossComboAndFormationResonanceTest.java`（5/5 綠燈），全專案 373 項測試 100% 綠燈通過。
 
 - [x] **Milestone F2-05 — 複合靈氣連鎖反應與狀態引爆 (Elemental Reactions & Primer/Detonator, P1)**
   - Task 1 (F2-05-REACTION-RULE): 在 `CombatRules.java` 中建立九大天道靈氣純函數式元素反應判定與結算模型（`VAPORIZE` 2.0x 傷害 +20 削韌、`ELECTRO_CHARGED` 1.5x 傷害 +10 削韌 800ms 微眩暈與行傳導、`CHAOS_ANNIHILATION` 1.5x 傷害 +50 削韌強制失衡、`COMBUSTION` 1.8x 傷害 +15 削韌），支援精準 Buff 消耗。

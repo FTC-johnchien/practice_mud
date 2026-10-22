@@ -86,8 +86,16 @@ export function spawnFloatingText(layer, rect, hit, ev) {
           const dmgType = (ev.damageType || 'PHYSICAL').toUpperCase();
           cls.push(DMG_COLORS[dmgType] || 'dmg-phys');
 
-          if (hit.reaction || ev.reaction) {
+          if (ev.skillId === 'combo_formation_finisher' || ev.fxKey === 'formation_finisher') {
+            cls.push('ft-crit', 'ft-formation-finisher');
+            text = `🌌⚡ 天外合擊! -${hit.amount}`;
+          } else if (hit.crossComboStep && hit.crossComboStep > 1) {
+            cls.push('ft-crit', 'ft-cross-combo');
+            const stepNames = ['', '先導', '雙星合璧', '三才混元', '四象誅仙'];
+            text = `⚡ ${stepNames[hit.crossComboStep] || '陣法連攜'}! -${hit.amount}`;
+          } else if (hit.reaction || ev.reaction) {
             const rx = (hit.reaction || ev.reaction).toUpperCase();
+
             if (rx.includes('VAPORIZE') || rx.includes('氣化')) {
               cls.push('ft-crit', 'ft-vaporize');
               text = `💥 氣化爆裂! -${hit.amount}`;

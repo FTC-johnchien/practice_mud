@@ -47,6 +47,9 @@ public class DrpgCombatLoop {
   private final com.example.htmlmud.domain.party.service.FormationEngine formationEngine;
   private final CombatFsmService combatFsmService;
   private final ExecutorService combatExecutor;
+  @Autowired(required = false)
+  private ComboResolver comboResolver = new ComboResolver();
+
 
   @Autowired
   public DrpgCombatLoop(
@@ -1374,7 +1377,19 @@ public class DrpgCombatLoop {
         }
       }
     }
+
+    // 3. 古仙陣法跨隊員連攜合擊判定 (F3-01 Cross Combos)
+    if (comboResolver != null) {
+      var comboRes = comboResolver.processCrossCombo(
+          player, ctx, member, target, dmgRef[0], poiseDmgRef[0],
+          (p, l) -> broadcastLog(p, ctx, l));
+      if (comboRes.chainAdvanced()) {
+        dmgRef[0] += comboRes.bonusDamage();
+        poiseDmgRef[0] += comboRes.bonusPoiseDamage();
+      }
+    }
   }
+
 
   private void broadcastLog(Player player, BattleContext ctx, String log) {
     if (ctx != null) {

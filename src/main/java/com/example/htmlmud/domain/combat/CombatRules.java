@@ -250,7 +250,85 @@ public final class CombatRules {
   }
 
   /**
+   * 古仙陣法連攜合擊判定結果 (F3-01)
+   */
+  public record CrossComboResolution(
+      boolean chainAdvanced,
+      int newStep,
+      int bonusDamage,
+      int bonusPoiseDamage,
+      int sanRestored,
+      boolean finisherReady,
+      String logMessage
+  ) {
+    public static CrossComboResolution none() {
+      return new CrossComboResolution(false, 0, 0, 0, 0, false, null);
+    }
+  }
+
+  /**
+   * 結算古仙陣法跨隊員動態連攜合擊 (F3-01)
+   * 當不同隊員在連攜時間窗口內接力攻擊相同目標時，推進連攜階數並爆發額外陣法殺傷。
+   */
+  public static CrossComboResolution evaluateCrossComboStep(
+      boolean hasActiveFormation,
+      int currentStep,
+      String lastActorId,
+      String actorId,
+      String actorName,
+      String targetId,
+      String lastTargetId,
+      long expiresAt,
+      long now,
+      int rawDamage,
+      int basePoiseDamage
+  ) {
+    if (!hasActiveFormation || targetId == null || actorId == null) {
+      return CrossComboResolution.none();
+    }
+
+    // 若逾時、非同目標或尚未起手：開啟第 1 階先導位
+    if (now > expiresAt || lastTargetId == null || !targetId.equals(lastTargetId) || currentStep <= 0) {
+      String log = "\u001B[1;36m⚔️【陣法先導・起式】" + actorName + " 踏準陣位率先破陣，鎖定氣機，陣法連攜時間窗口開啟！\u001B[0m";
+      return new CrossComboResolution(true, 1, 0, 5, 0, false, log);
+    }
+
+    // 在窗口內且同目標：同一人不能自我連攜，需由不同隊員接力
+    if (actorId.equals(lastActorId)) {
+      return new CrossComboResolution(false, currentStep, 0, 0, 0, false, null);
+    }
+
+    // 不同隊員接力出招：連攜階數推進 (2~4)
+    int newStep = Math.min(4, currentStep + 1);
+    int bonusDamage = 0;
+    int bonusPoise = 0;
+    int sanHeal = 0;
+    boolean finisherReady = false;
+    String log;
+
+    if (newStep == 2) {
+      bonusDamage = Math.max(5, (int) Math.round(rawDamage * 0.25));
+      bonusPoise = 15;
+      log = "\u001B[1;33m⚔️⚡【雙星合璧・連攜 2 階】" + actorName + " 接引陣位靈威乘勢突擊！額外造成 " + bonusDamage + " 點合擊傷害！\u001B[0m";
+    } else if (newStep == 3) {
+      bonusDamage = Math.max(10, (int) Math.round(rawDamage * 0.50));
+      bonusPoise = 25;
+      sanHeal = 5;
+      log = "\u001B[1;35m🌟⚡【三才混元・連攜 3 階】" + actorName + " 催動陣圖共鳴，天地人三才歸一！額外造成 " + bonusDamage + " 點暴裂巨創，全隊回穩 5 點道心！\u001B[0m";
+    } else {
+      bonusDamage = Math.max(20, (int) Math.round(rawDamage * 1.0));
+      bonusPoise = 40;
+      sanHeal = 10;
+      finisherReady = true;
+      log = "\u001B[1;31m🌌⚡⚡【四象誅仙・極意 4 階】" + actorName + " 爆發陣法通天殺意！額外造成 " + bonusDamage + " 點毀滅打擊，陣法共鳴臻至極限，陣眼天外終結技全面就緒！\u001B[0m";
+    }
+
+    return new CrossComboResolution(true, newStep, bonusDamage, bonusPoise, sanHeal, finisherReady, log);
+  }
+
+  /**
    * 抗性折減與逆流回血結算結果 (BUFF-01 & UNIFY-03)
+
 
    */
   public record ResistanceResult(int damage, int heal) {}

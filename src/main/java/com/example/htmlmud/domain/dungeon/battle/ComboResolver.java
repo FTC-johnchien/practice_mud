@@ -10,7 +10,10 @@ import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
 import com.example.htmlmud.domain.party.model.CombatResourceType;
+import com.example.htmlmud.domain.combat.CombatRules;
+import com.example.htmlmud.domain.combat.CombatRules.CrossComboResolution;
 import com.example.htmlmud.domain.dungeon.battle.event.BattleEvent;
+
 import com.example.htmlmud.domain.dungeon.battle.event.BattleEventType;
 import com.example.htmlmud.domain.dungeon.battle.event.BattleHit;
 import com.example.htmlmud.domain.dungeon.battle.event.FxShape;
@@ -282,4 +285,172 @@ public class ComboResolver {
 
     return true;
   }
+
+  /**
+   * 推進並結算古仙陣法跨隊員動態連攜 (F3-01)
+   */
+  public CrossComboResolution processCrossCombo(
+      Player player,
+      BattleContext ctx,
+      PartyMember actor,
+      BattleEnemy target,
+      int rawDamage,
+      int basePoiseDamage,
+      java.util.function.BiConsumer<Player, String> logBroadcaster
+  ) {
+    if (ctx == null || actor == null || target == null || !target.isAlive()) {
+      return CrossComboResolution.none();
+    }
+
+    Party party = ctx.getParty();
+    boolean hasActiveFormation = (party != null && party.getEquippedFormation() != null && !party.isFormationBroken());
+    long now = System.currentTimeMillis();
+
+    CrossComboResolution res = CombatRules.evaluateCrossComboStep(
+        hasActiveFormation,
+        ctx.getCrossComboStep(),
+        ctx.getCrossComboLastActorId(),
+        actor.getId(),
+        actor.getName(),
+        target.getId(),
+        ctx.getCrossComboTargetId(),
+        ctx.getCrossComboExpiresAt(),
+        now,
+        rawDamage,
+        basePoiseDamage
+    );
+
+    if (res.chainAdvanced()) {
+      ctx.setCrossComboStep(res.newStep());
+      ctx.setCrossComboLastActorId(actor.getId());
+      ctx.setCrossComboLastActorName(actor.getName());
+      ctx.setCrossComboTargetId(target.getId());
+      ctx.setCrossComboExpiresAt(now + 3500L); // 3.5 秒連攜窗口
+      ctx.addResonance(1);
+
+      if (res.sanRestored() > 0 && party != null) {
+        for (PartyMember m : party.getMembers()) {
+          if (m.isAlive()) {
+            m.restoreSan(res.sanRestored());
+          }
+        }
+      }
+
+      if (logBroadcaster != null && res.logMessage() != null) {
+        logBroadcaster.accept(player, "   ↳ " + res.logMessage());
+      }
+
+      if (res.finisherReady() && logBroadcaster != null) {
+        logBroadcaster.accept(player, "\u001B[1;36m✨✨【陣眼共鳴・萬法歸宗】陣法共鳴達最高層，陣眼修士引動天地真元，【古仙陣法・天外合擊終結絕技】全面就緒！\u001B[0m");
+      }
+    }
+
+    return res;
+  }
+
+  /**
+   * 釋放古仙陣法天外合擊終結絕技 (Formation Grand Finisher, F3-01)
+   * 需消耗陣法共鳴點數，由陣眼隊員引動全隊靈威爆發滅世天威。
+   */
+  public boolean executeFormationFinisher(
+      Player player,
+      BattleContext ctx,
+      PartyMember invoker,
+      java.util.function.BiConsumer<Player, String> logBroadcaster
+  ) {
+    if (ctx == null || ctx.isOver() || invoker == null || !invoker.isAlive()) {
+      return false;
+    }
+
+    Party party = ctx.getParty();
+    if (party == null || party.getEquippedFormation() == null || party.isFormationBroken()) {
+      if (logBroadcaster != null) {
+        logBroadcaster.accept(player, "\u001B[1;31m⚠️ 當前未裝備陣法或陣法已潰散，無法施展天外終結合擊！\u001B[0m");
+      }
+      return false;
+    }
+
+    int resonance = ctx.getResonancePoints();
+    if (resonance < 3) {
+      if (logBroadcaster != null) {
+        logBroadcaster.accept(player, "\u001B[1;33m⚠️ 陣法共鳴度不足（需至少 3 點，當前 " + resonance + " 點），無法召喚天外合擊！\u001B[0m");
+      }
+      return false;
+    }
+
+    // 重置共鳴度與連攜隊列
+    ctx.setResonancePoints(0);
+    ctx.resetCrossCombo();
+
+    // 匯聚全隊存活弟子攻擊力
+    List<PartyMember> aliveMembers = party.getAliveMembers();
+    int totalAtk = aliveMembers.stream().mapToInt(PartyMember::getEffectiveMaxDamage).sum();
+    double multiplier = 2.5 + (resonance * 0.5); // 3 點 = 4.0x, 4 點 = 4.5x, 5 點 = 5.0x
+    int finisherDamage = (int) Math.round(totalAtk * multiplier);
+    int poiseDmg = 50 + (resonance * 10);
+    int sanHeal = 15;
+    int hpHeal = 50;
+
+    // 全隊滋養回穩
+    for (PartyMember m : aliveMembers) {
+      m.heal(hpHeal);
+      m.restoreSan(sanHeal);
+    }
+
+    long now = System.currentTimeMillis();
+    int invokerIdx = party.getMembers().indexOf(invoker);
+    List<BattleHit> hits = new ArrayList<>();
+
+    for (BattleEnemy e : ctx.getEnemies()) {
+      if (e.isAlive()) {
+        boolean isStaggerCrit = e.isPoiseBroken();
+        int finalDmg = isStaggerCrit ? CombatRules.applyPoiseBreakCrit(finisherDamage, true) : finisherDamage;
+        e.takeDamage(finalDmg);
+        e.applyPoiseDamage(poiseDmg);
+
+        if (e.isAlive() && e.checkPhaseTransition() > e.getCurrentPhase()) {
+          int nextPhase = e.checkPhaseTransition();
+          e.transitionToPhase(nextPhase);
+        }
+
+        int eIdx = ctx.getEnemies().indexOf(e);
+        hits.add(new BattleHit(
+            new UnitRef(UnitRef.Side.ENEMY, e.getId(), eIdx >= 0 ? eIdx : 0),
+            isStaggerCrit ? HitOutcome.CRIT : HitOutcome.HIT,
+            finalDmg,
+            0,
+            !e.isAlive()
+        ));
+      }
+    }
+
+    String formationName = party.getEquippedFormation().getName();
+    if (logBroadcaster != null) {
+      logBroadcaster.accept(player, "\n\u001B[1;35m⚡⚡🌌【古仙陣法・天外合擊】陣眼 " + invoker.getName()
+          + " 踏動陣盤，引動《" + formationName + "》至高天道奧義！全隊共鳴威能破界傾瀉！\u001B[0m");
+      logBroadcaster.accept(player, "\u001B[1;36m   ↳ 萬千星煞天外墜落，對敵方全員造成 " + finisherDamage
+          + " 點天外毀滅打擊，削韌 " + poiseDmg + " 點！全體隊員沐浴靈光，回復 " + hpHeal + " 氣血與 " + sanHeal + " 點道心！\u001B[0m\n");
+    }
+
+    ctx.emit(new BattleEvent(
+        ctx.nextEventSeq(),
+        now,
+        BattleEventType.SKILL,
+        new UnitRef(UnitRef.Side.PARTY, invoker.getId(), invokerIdx >= 0 ? invokerIdx : 0),
+        "combo_formation_finisher",
+        "【天外合擊】" + formationName,
+        "FORMATION",
+        "HOLY",
+        FxShape.ALL,
+        "formation_finisher",
+        hits
+    ));
+
+    if (ctx.isAllEnemiesDead()) {
+      ctx.setState(BattleState.VICTORY);
+    }
+
+    return true;
+  }
 }
+

@@ -52,6 +52,30 @@ public class BattleContext {
   private long lastHeartbeat = System.currentTimeMillis();
   private java.util.function.Consumer<BattleState> onBattleEnd;
 
+  // === F3-01: 古仙陣法動態連攜隊列與共鳴度 (Cross Combos & Formation Resonance) ===
+  @Builder.Default
+  private int crossComboStep = 0;             // 當前連攜階數 (0: 未啟動, 1: 先導位, 2: 雙星合璧, 3: 三才混元, 4: 四象誅仙)
+  private String crossComboLastActorId;       // 上一出招隊員 ID
+  private String crossComboLastActorName;     // 上一出招隊員姓名
+  private String crossComboTargetId;          // 連攜鎖定目標 ID
+  @Builder.Default
+  private long crossComboExpiresAt = 0L;      // 連攜時間窗口 (預設出招後 3500ms)
+  @Builder.Default
+  private int resonancePoints = 0;            // 全隊共享陣法共鳴點數 (0~5 點)
+
+  public void addResonance(int amount) {
+    this.resonancePoints = Math.max(0, Math.min(5, this.resonancePoints + amount));
+  }
+
+  public void resetCrossCombo() {
+    this.crossComboStep = 0;
+    this.crossComboLastActorId = null;
+    this.crossComboLastActorName = null;
+    this.crossComboTargetId = null;
+    this.crossComboExpiresAt = 0L;
+  }
+
+
   public void touchActivity() {
     this.lastActivityTime = System.currentTimeMillis();
   }

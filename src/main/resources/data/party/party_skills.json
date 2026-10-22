@@ -548,5 +548,34 @@
       "WAND",
       "DAGGER"
     ]
+  },
+  {
+    "id": "combo_formation_finisher",
+    "name": "古仙陣法・天外合擊",
+    "icon": "🌌⚡",
+    "description": "陣眼修士引動全隊陣法真元，爆發天地共鳴滅世天威！造成全體敵怪巨額天外毀滅穿透打擊與破防，全隊回穩氣血與道心！",
+    "costType": "SP",
+    "costValue": 50,
+    "cooldownMs": 20000,
+    "damageMultiplier": 4.0,
+    "damageType": "HOLY",
+    "poiseDamage": 60,
+    "aoe": true,
+    "heal": true,
+    "healAmount": 50,
+    "sanRestore": 15,
+    "allowedWeapons": [],
+    "tags": [
+      "SPELL",
+      "HOLY",
+      "AOE",
+      "FORMATION_FINISHER",
+      "SYNERGY"
+    ],
+    "synergy": true,
+    "requiredClasses": [],
+    "minPartyAlive": 2,
+    "requiredFormation": null,
+    "formationEnergyCost": 50
   }
 ]

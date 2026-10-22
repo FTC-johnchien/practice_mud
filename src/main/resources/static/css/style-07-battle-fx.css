@@ -309,8 +309,27 @@
   animation: ft-crit-pop 1200ms cubic-bezier(0.18, 1.4, 0.3, 1) forwards;
 }
 
+/* --- 5.2 古仙陣法跨隊員連攜與天外合擊 FCT (Milestone F3-01) --- */
+.ftext.ft-cross-combo {
+  font-size: 32px;
+  font-weight: 900;
+  color: #38bdf8;
+  -webkit-text-stroke: 1.5px #0c4a6e;
+  filter: drop-shadow(0 0 14px rgba(56, 189, 248, 0.95)) drop-shadow(0 0 28px rgba(250, 204, 21, 0.85));
+  animation: ft-crit-pop 1100ms cubic-bezier(0.18, 1.35, 0.3, 1) forwards;
+}
+
+.ftext.ft-formation-finisher {
+  font-size: 38px;
+  font-weight: 900;
+  color: #fef08a;
+  -webkit-text-stroke: 2px #713f12;
+  filter: drop-shadow(0 0 20px rgba(254, 240, 138, 0.98)) drop-shadow(0 0 36px rgba(192, 132, 252, 0.95));
+  animation: ft-crit-pop 1300ms cubic-bezier(0.18, 1.45, 0.3, 1) forwards;
+}
 
 /* 6. 戰鬥視覺特效 (Weapon Impacts, Spells, AOE & Arena Shake) */
+
 .fx {
   position: absolute;
   pointer-events: none;
