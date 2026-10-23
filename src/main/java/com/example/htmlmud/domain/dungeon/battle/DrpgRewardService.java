@@ -17,9 +17,9 @@ import com.example.htmlmud.domain.dungeon.service.DungeonManager;
 import com.example.htmlmud.domain.event.MobEvents;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.template.model.ItemTemplate;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyItemSlot;
-import com.example.htmlmud.domain.party.model.PartyMember;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyItemSlot;
+import com.example.htmlmud.party.PartyMember;
 import com.example.htmlmud.template.TemplateReader;
 import com.example.htmlmud.domain.actor.service.CharacterSyncService;
 import com.example.htmlmud.domain.progression.service.XpProgressionService;
@@ -155,7 +155,7 @@ public class DrpgRewardService {
       long skillGain = Math.max(5, totalXp / 4);
       for (PartyMember m : ctx.getParty().getAliveMembers()) {
         if (m != null && m.getSkills() != null) {
-          for (com.example.htmlmud.domain.party.model.PartyMemberSkill s : m.getSkills()) {
+          for (com.example.htmlmud.party.PartyMemberSkill s : m.getSkills()) {
             int oldLevel = s.getLevel();
             s.addXp(skillGain);
             if (s.getLevel() > oldLevel && player != null && player.isValid()) {

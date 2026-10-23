@@ -3,7 +3,7 @@ package com.example.htmlmud.domain.combat;
 import com.example.htmlmud.domain.dungeon.battle.Buffable;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.enums.MobRank;
-import com.example.htmlmud.domain.party.model.RowPosition;
+import com.example.htmlmud.party.RowPosition;
 
 /**
  * 大一統戰鬥參與者抽象 (UNIFY-03 Universal Combatant)

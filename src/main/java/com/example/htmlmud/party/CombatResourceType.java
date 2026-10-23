@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.party.model;
+package com.example.htmlmud.party;
 
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.fasterxml.jackson.annotation.JsonCreator;

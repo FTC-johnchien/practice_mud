@@ -11,9 +11,9 @@ import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.context.MudContext;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.service.PartyService;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.PartyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

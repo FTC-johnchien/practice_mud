@@ -11,10 +11,10 @@ import com.example.htmlmud.domain.model.config.MoveMessage;
 import com.example.htmlmud.domain.model.entity.SkillEntry;
 import com.example.htmlmud.domain.model.enums.SkillType;
 import com.example.htmlmud.template.model.SkillTemplate;
-import com.example.htmlmud.domain.party.model.CombatResourceType;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.UnifiedSkill;
+import com.example.htmlmud.party.CombatResourceType;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.PartyMemberSkill;
+import com.example.htmlmud.party.UnifiedSkill;
 
 /**
  * 專屬驗收測試：SP-06 技能模型合一 (UnifiedSkill Model)

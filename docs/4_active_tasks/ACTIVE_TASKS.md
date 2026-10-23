@@ -33,7 +33,7 @@
   - **驗收標準**：地圖資料 100% 通過 `DataIntegrityValidator` 檢驗；進入地城時第一人稱描述精準呈現克蘇魯外神卵鞘地質異變。
 
 - [ ] **Task 2 (VS-01-AGENT-HUD): 主角特工晶片 HUD 視界 (12%...) 與道基五維初始潛能點加點 (世界觀 + 角色養成)**
-  - **目標檔案**：[`Player.java`](../../src/main/java/com/example/htmlmud/domain/actor/impl/Player.java)、[`PartyMember.java`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyMember.java)、`party-overview-tab.js` (預計於 `src/main/resources/static/js/modals/` 模組化新建或擴充 `party-modal.js`)
+  - **目標檔案**：[`Player.java`](../../src/main/java/com/example/htmlmud/domain/actor/impl/Player.java)、[`PartyMember.java`](../../src/main/java/com/example/htmlmud/party/PartyMember.java)、`party-overview-tab.js` (預計於 `src/main/resources/static/js/modals/` 模組化新建或擴充 `party-modal.js`)
   - **契約規範**：對齊 Level 2 [`M4_PARTY_AND_FORMATION.md`](../2_specifications/backend/M4_PARTY_AND_FORMATION.md)（道基五維體系）與 [`M5_SKILL_AND_PROGRESSION.md`](../2_specifications/backend/M5_SKILL_AND_PROGRESSION.md)（潛能點與成長曲線）；隊長初始加載「特工覺醒度 12%」，分配 5 點自由道基潛能點（體質、真元、神識、根骨、身法）。
   - **驗收標準**：後端提供潛能點分配 Action 與 DTO 投影，加點即時轉化為 HP/MP/攻防速五維屬性；前端隊伍面板提供直觀加點 UI；專屬單元測試綠燈。
 
@@ -55,6 +55,10 @@
 ---
 
 ## 🏆 已完成里程碑 (Completed Milestones)
+
+- [x] **Milestone REFACTOR-M4 — 模組 M4 冒險小隊與古仙陣法 Package-by-Feature 封裝 (Phase 3 Step R3.5)**
+  - Task 1 (PKG-M4-ENCAPSULATION): 依循依賴拓撲完成 M4 模組套件封裝，建立 `com.example.htmlmud.party` 獨立套件，將小隊聚合根 `Party`、隊員實體 `PartyMember`、陣法引擎 `FormationEngine`、公共行囊 `PartyInventory`、Gambit 戰術 AI 等 21 份類別全面收斂至新套件。
+  - Task 2 (PKG-M4-TEST-VERIFY): 全域業務指令與整合測試引用切換至 `com.example.htmlmud.party.*`，`CompanionGambitEngineTest`、`PartyInventoryAndMadnessTest`、`PartyFormationTest` 全數 100% 綠燈 (23/23)，全專案 393 項測試零回歸通過，文檔 368 個內部連結 100% 通過。
 
 - [x] **Milestone REFACTOR-M8 — 模組 M8 存檔與持久化管線 Package-by-Feature 封裝 (Phase 3 Step R3.4)**
   - Task 1 (PKG-M8-ENCAPSULATION): 依循依賴拓撲完成 M8 模組套件封裝，建立 `com.example.htmlmud.save` 獨立套件，將 `SaveGameService`、`SaveData`、`SaveSlotDto`、`SaveMigration`、`SaveMigrationPipeline`、`SaveCorruptedException` 統一收斂至新套件，徹底消解舊有 `domain.save.*` 子層混雜結構。

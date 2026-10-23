@@ -23,7 +23,7 @@
 - **文檔宣告**：`GAMEPLAY_CORE_LOOPS.md:5, 97`、`tech_debt_and_hardening.md:61`、`FUTURE_IMPROVEMENTS.md:28` 宣誓「徹底除役道心魔化與隊員背刺（40% 機率）機制，相關代碼在純單機單體化演進中已徹底拔除」。
 - **代碼實況 (已於 Milestone DEC-ALIGN 驗收清剿完畢 🟢)**：
   - [`DrpgCombatLoop.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java)：拔除隊員 SAN 歸零後的 40% 心魔背刺隊友邏輯，SAN 重新定義為精神護盾，歸零僅施加精神萎靡 Debuff (-15% 輸出)。
-  - [`PartyMember.java`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyMember.java)：`MadnessState` 精簡為 `SANE` 與 `CHAOS`（精神萎靡），拔除 `SEALED`、`ABERRANT`、`DEAD_MEAT`。
+  - [`PartyMember.java`](../../src/main/java/com/example/htmlmud/party/PartyMember.java)：`MadnessState` 精簡為 `SANE` 與 `CHAOS`（精神萎靡），拔除 `SEALED`、`ABERRANT`、`DEAD_MEAT`。
   - `SealCommand.java`：太上鎮魔封印術指令已**徹底物理刪除**。
   - [`PartyInventoryAndMadnessTest.java`](../../src/test/java/com/example/htmlmud/PartyInventoryAndMadnessTest.java)：單元測試重構為守護精神萎靡且絕不背刺隊友。
 

@@ -8,7 +8,7 @@ import com.example.htmlmud.template.TemplateReader;
 import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.template.model.ItemTemplate;
 import com.example.htmlmud.template.model.SkillTemplate;
-import com.example.htmlmud.domain.party.model.PartyItemSlot;
+import com.example.htmlmud.party.PartyItemSlot;
 
 /**
  * 負責 MUD 運行時實體與靜態模板之間的轉換與適配。

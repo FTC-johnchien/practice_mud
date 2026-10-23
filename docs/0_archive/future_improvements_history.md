@@ -499,7 +499,7 @@
 - **問題現狀**：技能體系存在兩套定義：MUD 端的 `SkillEntry`（修煉熟練度、境界等級）與 DRPG 端的 `PartyMemberSkill`（CD、傷害倍率、消耗、打斷標籤），導致新增一門技能需維護兩份範本資料。
 - **涉及檔案**：
   - [`SkillEntry.java`](../../src/main/java/com/example/htmlmud/domain/model/entity/SkillEntry.java)
-  - [`PartyMemberSkill.java`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyMemberSkill.java)
+  - [`PartyMemberSkill.java`](../../src/main/java/com/example/htmlmud/party/PartyMemberSkill.java)
   - [`skills.json`](../../src/main/resources/data/skills/skills.json)
 - **改動方針**：
   1. 建立大一統規範技能實體 `UnifiedSkill`（或擴充升級 `PartyMemberSkill`），同時包含：
@@ -543,7 +543,7 @@
 #### 2. SP-09: 全隊共享經濟與小隊資產化 (Unified Party Economy & Coin) — Priority: P2
 - **問題現狀**：金幣/靈石目前分散於各成員的 `LivingStats.coin`，但道具則放入小隊公共行囊；商店扣款扣主角個人，缺少小隊公共金庫概念。
 - **涉及檔案**：
-  - [`Party.java`](../../src/main/java/com/example/htmlmud/domain/party/model/Party.java)
+  - [`Party.java`](../../src/main/java/com/example/htmlmud/party/Party.java)
   - [`ShopCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/ShopCommand.java)
   - [`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java)
   - [`DungeonCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java)

@@ -19,10 +19,10 @@ import com.example.htmlmud.domain.dungeon.battle.DrpgRewardService;
 import com.example.htmlmud.domain.dungeon.model.Direction;
 import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
 import com.example.htmlmud.domain.dungeon.service.DungeonManager;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.model.RowPosition;
-import com.example.htmlmud.domain.party.service.PartyService;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.RowPosition;
+import com.example.htmlmud.party.PartyService;
 import com.example.htmlmud.template.TemplateCatalog;
 
 class DrpgBattleDecompositionTest {

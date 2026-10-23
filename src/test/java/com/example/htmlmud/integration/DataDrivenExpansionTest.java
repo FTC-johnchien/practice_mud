@@ -13,9 +13,9 @@ import com.example.htmlmud.template.model.ClassTemplate;
 import com.example.htmlmud.template.model.MobTemplate;
 import com.example.htmlmud.template.model.NpcCapability;
 import com.example.htmlmud.template.model.ShopTemplate;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.service.PartyService;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.PartyService;
 import com.example.htmlmud.template.TemplateRepository;
 import com.example.htmlmud.domain.actor.core.MessageOutput;
 import com.example.htmlmud.domain.actor.impl.Player;
@@ -178,16 +178,16 @@ public class DataDrivenExpansionTest {
       shopCommand.execute("buy bread 3");
       assertThat(testPlayer.getStats().getCoin()).isEqualTo(44);
       int count1 = party.getInventory().getSlots().stream()
-          .filter(s -> com.example.htmlmud.domain.party.model.PartyInventory.isSameItemId(s.getItemId(), "village_bread"))
-          .mapToInt(com.example.htmlmud.domain.party.model.PartyItemSlot::getCount).sum();
+          .filter(s -> com.example.htmlmud.party.PartyInventory.isSameItemId(s.getItemId(), "village_bread"))
+          .mapToInt(com.example.htmlmud.party.PartyItemSlot::getCount).sum();
       assertThat(count1).isEqualTo(3);
 
       // 2. 透過貨架編號 1 再購買 2 個
       shopCommand.execute("buy 1 2");
       assertThat(testPlayer.getStats().getCoin()).isEqualTo(40);
       int count2 = party.getInventory().getSlots().stream()
-          .filter(s -> com.example.htmlmud.domain.party.model.PartyInventory.isSameItemId(s.getItemId(), "village_bread"))
-          .mapToInt(com.example.htmlmud.domain.party.model.PartyItemSlot::getCount).sum();
+          .filter(s -> com.example.htmlmud.party.PartyInventory.isSameItemId(s.getItemId(), "village_bread"))
+          .mapToInt(com.example.htmlmud.party.PartyItemSlot::getCount).sum();
       assertThat(count2).isEqualTo(5);
     });
   }

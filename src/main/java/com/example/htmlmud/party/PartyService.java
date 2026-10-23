@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.party.service;
+package com.example.htmlmud.party;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -8,21 +8,10 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.template.model.SkillTemplate;
-import com.example.htmlmud.domain.party.model.EffectiveCombatStats;
-import com.example.htmlmud.domain.party.model.FormationSkill;
-import com.example.htmlmud.domain.party.model.FormationSlot;
-import com.example.htmlmud.domain.party.model.FormationTemplate;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.ResourceType;
-import com.example.htmlmud.domain.party.model.RowPosition;
 import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.template.model.CompanionTemplate;
 import com.example.htmlmud.template.model.ItemTemplate;
-import com.example.htmlmud.domain.party.model.PartyItemSlot;
-import com.example.htmlmud.domain.party.model.PartyInventory;
 import com.example.htmlmud.template.TemplateReader;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;

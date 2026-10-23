@@ -17,11 +17,11 @@ import com.example.htmlmud.domain.dungeon.battle.DefenseResolver;
 import com.example.htmlmud.domain.dungeon.battle.DrpgCombatLoop;
 import com.example.htmlmud.domain.dungeon.battle.DrpgEnemyTacticsService;
 import com.example.htmlmud.domain.dungeon.battle.DrpgRewardService;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.TacticsTarget;
-import com.example.htmlmud.domain.party.service.PartyService;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.PartyMemberSkill;
+import com.example.htmlmud.party.TacticsTarget;
+import com.example.htmlmud.party.PartyService;
 import com.example.htmlmud.template.TemplateReader;
 
 @SpringBootTest

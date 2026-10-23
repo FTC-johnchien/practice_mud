@@ -15,7 +15,7 @@ import com.example.htmlmud.domain.model.config.Mechanics;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.entity.SkillEntry;
 import com.example.htmlmud.template.model.SkillTemplate;
-import com.example.htmlmud.domain.party.model.PartyMember;
+import com.example.htmlmud.party.PartyMember;
 import com.example.htmlmud.domain.progression.service.XpProgressionService;
 import com.example.htmlmud.domain.progression.service.XpService;
 

@@ -13,8 +13,8 @@ import com.example.htmlmud.template.model.RoomTemplate;
 import com.example.htmlmud.template.model.ZoneTemplate;
 import com.example.htmlmud.template.model.ShopTemplate;
 import com.example.htmlmud.template.model.ClassTemplate;
-import com.example.htmlmud.domain.party.model.FormationTemplate;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
+import com.example.htmlmud.party.FormationTemplate;
+import com.example.htmlmud.party.PartyMemberSkill;
 
 public interface TemplateReader {
 
@@ -86,11 +86,11 @@ public interface TemplateReader {
     return Map.of();
   }
 
-  default java.util.Optional<com.example.htmlmud.domain.party.model.GambitPreset> findGambitPreset(String presetId) {
+  default java.util.Optional<com.example.htmlmud.party.GambitPreset> findGambitPreset(String presetId) {
     return java.util.Optional.empty();
   }
 
-  default Map<String, com.example.htmlmud.domain.party.model.GambitPreset> getAllGambitPresets() {
+  default Map<String, com.example.htmlmud.party.GambitPreset> getAllGambitPresets() {
     return Map.of();
   }
 }

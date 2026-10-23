@@ -9,9 +9,9 @@ import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
 import com.example.htmlmud.template.model.ItemTemplate;
 import com.example.htmlmud.template.model.MobTemplate;
 import com.example.htmlmud.template.model.SkillTemplate;
-import com.example.htmlmud.domain.party.model.PartyItemSlot;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.RowPosition;
+import com.example.htmlmud.party.PartyItemSlot;
+import com.example.htmlmud.party.PartyMemberSkill;
+import com.example.htmlmud.party.RowPosition;
 
 /**
  * 負責 DRPG 運行時實體（PartyItemSlot, BattleEnemy, PartyMemberSkill）與靜態模板之間的轉換與適配。

@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.Map;
 import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.Gender;
-import com.example.htmlmud.domain.party.model.CombatResourceType;
-import com.example.htmlmud.domain.party.model.RowPosition;
+import com.example.htmlmud.party.CombatResourceType;
+import com.example.htmlmud.party.RowPosition;
 import lombok.Builder;
 
 @Builder(toBuilder = true)

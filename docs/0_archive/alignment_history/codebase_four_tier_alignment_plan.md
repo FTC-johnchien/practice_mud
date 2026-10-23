@@ -26,7 +26,7 @@
 ### 🔹 Phase 1: 核心戰鬥與角色數值模型對齊 (Combat & Character Domain)
 
 - [x] **Task 1.1 (ALIGN-COMBAT-SAN): 移除隊員背刺，落地精神護盾與萎靡 Debuff (對齊 L1/L2 M3)**
-  - **目標檔案**：[`DrpgCombatLoop.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java)、[`PartyMember.java`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyMember.java)、`SealCommand.java`（已物理安全刪除除役）
+  - **目標檔案**：[`DrpgCombatLoop.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java)、[`PartyMember.java`](../../src/main/java/com/example/htmlmud/party/PartyMember.java)、`SealCommand.java`（已物理安全刪除除役）
   - **執行動作**：
     1. 拔除 `DrpgCombatLoop:230-320` 中隊員 SAN 歸零後的 `CHAOS` 走火入魔檢定與 40% 心魔背刺隊友邏輯。
     2. 落實文檔規範：SAN 耗盡僅施加【精神萎靡】Debuff（降低 15% 輸出），絕不叛變背刺隊友。
@@ -34,7 +34,7 @@
   - **交付標準**：徹底消除戰鬥中心魔背刺隊友的挫敗機制。✅ 已落地完成 (373 測試全綠)
 
 - [x] **Task 1.2 (ALIGN-SKILL-SCHEMA): 技能實體擴充四大賽博流派與超頻階級 (對齊 L1/L2 SKILL_SCHEMA)**
-  - **目標檔案**：[`PartyMemberSkill.java`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyMemberSkill.java)、`party_skills.json`
+  - **目標檔案**：[`PartyMemberSkill.java`](../../src/main/java/com/example/htmlmud/party/PartyMemberSkill.java)、`party_skills.json`
   - **執行動作**：
     1. 在 `PartyMemberSkill` 擴充 `CyberSchool` 流派枚舉（`CYBER_HACK`, `GENE_BIO`, `MECHA_CULT`, `VOID_PSI`）。
     2. 新增 `overclockTier`（超頻階級 0~3）、`comboRole`（`PRIMER` / `DETONATOR` / `NONE`）欄位與 `cyberLore` 文本。
@@ -42,7 +42,7 @@
   - **交付標準**：技能模型具備完整的賽博特工戰技定義能力。✅ 已落地完成 (375 測試全綠)
 
 - [x] **Task 1.3 (ALIGN-ITEM-AFFIX): 裝備模型支援隨機詞綴池 (對齊 L2 M6 / ITEM_SCHEMA)**
-  - **目標檔案**：[`PartyItemSlot.java`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyItemSlot.java)、[`ItemAffix.java`](../../src/main/java/com/example/htmlmud/domain/item/model/ItemAffix.java)
+  - **目標檔案**：[`PartyItemSlot.java`](../../src/main/java/com/example/htmlmud/party/PartyItemSlot.java)、[`ItemAffix.java`](../../src/main/java/com/example/htmlmud/domain/item/model/ItemAffix.java)
   - **執行動作**：
     1. 建立 `ItemAffix` 實體，支援 `PREFIX`（前綴）與 `SUFFIX`（後綴）雙向修飾。
     2. 在 `PartyItemSlot` 擴充隨機詞綴清單、削韌強度 (`poiseBreakPower`)、需求等級與動態合成名稱與屬性累加計算。

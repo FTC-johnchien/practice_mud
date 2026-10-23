@@ -14,7 +14,7 @@
   - `src/main/resources/data/global/classes.json`（境界階梯、基礎屬性與成長率）
 - **核心實體與服務**：
   - [`SkillDefinition.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/definition/SkillDefinition.java)（大一統技能核心定義）
-  - [`PartyMemberSkill.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/party/model/PartyMemberSkill.java)（賽博流派、超頻階級、ComboRole）
+  - [`PartyMemberSkill.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/PartyMemberSkill.java)（賽博流派、超頻階級、ComboRole）
   - [`XpProgressionService.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/progression/service/XpProgressionService.java)（修為經驗與等級計算）
 - **關聯驗證測試**：
   - [`CyberSkillAndItemAffixTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/CyberSkillAndItemAffixTest.java)（賽博技能流派與超頻 100% 綠燈）

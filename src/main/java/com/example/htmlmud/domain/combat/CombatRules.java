@@ -11,7 +11,7 @@ import com.example.htmlmud.domain.model.enums.BuffCategory;
 import com.example.htmlmud.domain.model.enums.DamageType;
 import com.example.htmlmud.domain.model.enums.MobRank;
 import com.example.htmlmud.template.model.SkillTemplate;
-import com.example.htmlmud.domain.party.model.CombatResourceType;
+import com.example.htmlmud.party.CombatResourceType;
 import com.example.htmlmud.domain.dungeon.battle.ActiveBuff;
 
 

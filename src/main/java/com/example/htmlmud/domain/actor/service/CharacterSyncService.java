@@ -6,7 +6,7 @@ import com.example.htmlmud.domain.dungeon.battle.BattleOutcome;
 import com.example.htmlmud.domain.dungeon.battle.BattleOutcomeApplier;
 import com.example.htmlmud.domain.dungeon.battle.BattleParticipantSnapshot;
 import com.example.htmlmud.domain.model.entity.LivingStats;
-import com.example.htmlmud.domain.party.model.PartyMember;
+import com.example.htmlmud.party.PartyMember;
 import com.example.htmlmud.template.TemplateReader;
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,7 +51,7 @@ public class CharacterSyncService {
    */
   public boolean syncEquipmentFromPartyToPlayer(PartyMember leader, Player player) {
     if (leader == null || player == null) return false;
-    java.util.Map<com.example.htmlmud.item.EquipmentSlot, com.example.htmlmud.domain.party.model.PartyItemSlot> equipment = leader.getEquipment();
+    java.util.Map<com.example.htmlmud.item.EquipmentSlot, com.example.htmlmud.party.PartyItemSlot> equipment = leader.getEquipment();
 
     if (player.getStats() != null && player.getStats().getEquipment() != null) {
       player.getStats().getEquipment().clear();

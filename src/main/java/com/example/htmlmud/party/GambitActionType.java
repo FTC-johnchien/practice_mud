@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.party.model;
+package com.example.htmlmud.party;
 
 /**
  * 戰術方針動作類型 (Gambit Action Type)

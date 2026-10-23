@@ -19,8 +19,8 @@ import com.example.htmlmud.domain.model.enums.DamageType;
 import com.example.htmlmud.domain.model.enums.ResourceType;
 import com.example.htmlmud.domain.model.enums.SkillType;
 import com.example.htmlmud.template.model.SkillTemplate;
-import com.example.htmlmud.domain.party.model.CombatResourceType;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
+import com.example.htmlmud.party.CombatResourceType;
+import com.example.htmlmud.party.PartyMemberSkill;
 import com.example.htmlmud.template.TemplateCatalog;
 
 public class CanonicalSkillModelTest {

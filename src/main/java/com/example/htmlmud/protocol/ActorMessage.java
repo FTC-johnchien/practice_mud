@@ -80,9 +80,9 @@ public sealed interface ActorMessage
       this(outcome, null);
     }
   }
-  record ProjectEquipment(java.util.Map<EquipmentSlot, com.example.htmlmud.domain.party.model.PartyItemSlot> equipment,
+  record ProjectEquipment(java.util.Map<EquipmentSlot, com.example.htmlmud.party.PartyItemSlot> equipment,
       CompletableFuture<Boolean> future) implements PlayerMessage {
-    public ProjectEquipment(java.util.Map<EquipmentSlot, com.example.htmlmud.domain.party.model.PartyItemSlot> equipment) {
+    public ProjectEquipment(java.util.Map<EquipmentSlot, com.example.htmlmud.party.PartyItemSlot> equipment) {
       this(equipment, null);
     }
   }

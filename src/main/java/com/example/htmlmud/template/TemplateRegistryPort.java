@@ -10,8 +10,8 @@ import com.example.htmlmud.template.model.RoomTemplate;
 import com.example.htmlmud.template.model.ShopTemplate;
 import com.example.htmlmud.template.model.SkillTemplate;
 import com.example.htmlmud.template.model.ZoneTemplate;
-import com.example.htmlmud.domain.party.model.FormationTemplate;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
+import com.example.htmlmud.party.FormationTemplate;
+import com.example.htmlmud.party.PartyMemberSkill;
 import com.example.htmlmud.template.TemplateReader;
 
 /**

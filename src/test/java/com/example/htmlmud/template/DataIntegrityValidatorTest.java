@@ -24,7 +24,7 @@ import com.example.htmlmud.template.model.RoomExit;
 import com.example.htmlmud.template.model.RoomTemplate;
 import com.example.htmlmud.template.model.ShopTemplate;
 import com.example.htmlmud.domain.dungeon.service.DungeonManager;
-import com.example.htmlmud.domain.party.model.FormationTemplate;
+import com.example.htmlmud.party.FormationTemplate;
 import com.example.htmlmud.template.TemplateReader;
 
 @SpringBootTest
@@ -114,8 +114,8 @@ class DataIntegrityValidatorTest {
   @DisplayName("GUARD-01: 模擬開局物資不存在於物品庫，精準報告錯誤")
   void testBrokenStartingSuppliesIntercepted() {
     TemplateReader mockReader = mock(TemplateReader.class);
-    com.example.htmlmud.domain.party.service.PartyService mockPartyService =
-        mock(com.example.htmlmud.domain.party.service.PartyService.class);
+    com.example.htmlmud.party.PartyService mockPartyService =
+        mock(com.example.htmlmud.party.PartyService.class);
     DataIntegrityValidator validator = new DataIntegrityValidator(mockReader);
     validator.setPartyService(mockPartyService);
     validator.setFailFast(false);

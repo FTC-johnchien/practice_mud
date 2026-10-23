@@ -18,10 +18,10 @@
    - 跨隊員連攜終結絕技（[`ComboResolver.executeFormationFinisher`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/ComboResolver.java)）。
    - 首領多階段血量門檻（`phaseThresholds` 與 `isEnraged`）與戰術求值器（`evaluateTacticsCondition`）。
 2. **角色道基、裝備與流派體系 (對齊 L1/L2 M4/M5/M6)**：
-   - 小隊共用 40 格儲物袋（[`PartyInventory.CAPACITY = 40`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyInventory.java) 單一真相源）。
+   - 小隊共用 40 格儲物袋（[`PartyInventory.CAPACITY = 40`](../../src/main/java/com/example/htmlmud/party/PartyInventory.java) 單一真相源）。
    - 5+2 裝備位架構（[`EquipmentSlot.ACCESSORY_1`](../../src/main/java/com/example/htmlmud/domain/model/enums/EquipmentSlot.java)、`ACCESSORY_2`）。
    - 隨機道韻裝備詞綴池（[`ItemAffix.java`](../../src/main/java/com/example/htmlmud/domain/item/model/ItemAffix.java) 支援前綴／後綴與動態屬性累加）。
-   - 四大賽博修仙流派（[`CyberSchool`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyMemberSkill.java)）與技能超頻階級（`overclockTier 0~3`）。
+   - 四大賽博修仙流派（[`CyberSchool`](../../src/main/java/com/example/htmlmud/party/PartyMemberSkill.java)）與技能超頻階級（`overclockTier 0~3`）。
 3. **純單機化去毒瘤與介面下架 (對齊 L1/L3/L4)**：
    - 外神侵蝕僅施加【精神萎靡】Debuff，心魔背刺隊友邏輯徹底清零。
    - 舊 MUD 封印術指令代碼物理徹底除役出清（`SealCommand.java` 刪除）。

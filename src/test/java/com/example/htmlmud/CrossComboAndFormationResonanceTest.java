@@ -15,11 +15,11 @@ import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
 import com.example.htmlmud.domain.dungeon.battle.ComboResolver;
 import com.example.htmlmud.domain.dungeon.battle.DrpgCombatLoop;
 import com.example.htmlmud.domain.model.entity.LivingStats;
-import com.example.htmlmud.domain.party.model.FormationTemplate;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.RowPosition;
+import com.example.htmlmud.party.FormationTemplate;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.PartyMemberSkill;
+import com.example.htmlmud.party.RowPosition;
 
 /**
  * Milestone F3-01 古仙陣法動態連攜合擊技與共鳴印記 (Cross Combos & Formation Resonance) 全面測試

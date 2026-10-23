@@ -24,7 +24,7 @@
 
 在遊戲中，一本「太陰玄冰訣」在練氣修士與金丹老怪手中釋放，威力截然不同。
 
-專案在 SP-06 / SP-07 階段正式確立**大一統技能模型** [`UnifiedSkill`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/party/model/UnifiedSkill.java) 與 [`PartyMemberSkill`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/party/model/PartyMemberSkill.java)，隊員直接持有技能，徹底除役中間翻譯層 `SkillBridgeService`：
+專案在 SP-06 / SP-07 階段正式確立**大一統技能模型** [`UnifiedSkill`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/UnifiedSkill.java) 與 [`PartyMemberSkill`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/PartyMemberSkill.java)，隊員直接持有技能，徹底除役中間翻譯層 `SkillBridgeService`：
 
 ### 1. 內聚合一的核心契約 (Unified Contract)
 大一統模型同時封裝三大面向：
@@ -54,8 +54,8 @@ $$\text{ScaledDamage} = \text{BaseDamage} \times (1.0 + (\text{SkillLevel} - 1) 
 
 | 項目 | 路徑 / 名稱 | 職責 |
 | :--- | :--- | :--- |
-| **大一統技能** | `com.example.htmlmud.domain.party.model.UnifiedSkill` | 修煉境界與戰術機制大一統介面 |
-| **隊員技能實體** | `com.example.htmlmud.domain.party.model.PartyMemberSkill` | 隊員專屬技能、熟練度成長與動態縮放 |
+| **大一統技能** | `com.example.htmlmud.party.UnifiedSkill` | 修煉境界與戰術機制大一統介面 |
+| **隊員技能實體** | `com.example.htmlmud.party.PartyMemberSkill` | 隊員專屬技能、熟練度成長與動態縮放 |
 | **經驗成長** | `com.example.htmlmud.domain.service.XpProgressionService` | 經驗分配、等級提升與屬性點獎勵 |
 | **真元消耗** | `com.example.htmlmud.domain.service.SkillCostService` | 施法檢定真元消耗與冷卻時間判定 |
 | **公式解算** | `com.example.htmlmud.domain.service.FormulaEvaluator` | 數值公式字串動態解析 |

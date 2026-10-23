@@ -14,10 +14,10 @@ import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.domain.model.enums.WeaponType;
 import com.example.htmlmud.template.model.SkillTemplate;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyItemSlot;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.service.PartyService;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyItemSlot;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.PartyService;
 import com.example.htmlmud.template.TemplateRepository;
 
 @SpringBootTest

@@ -19,8 +19,8 @@ import com.example.htmlmud.template.model.RoomTemplate;
 import com.example.htmlmud.template.model.ShopTemplate;
 import com.example.htmlmud.template.model.SkillTemplate;
 import com.example.htmlmud.template.model.ZoneTemplate;
-import com.example.htmlmud.domain.party.model.FormationTemplate;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
+import com.example.htmlmud.party.FormationTemplate;
+import com.example.htmlmud.party.PartyMemberSkill;
 
 @Primary
 @Service
@@ -187,12 +187,12 @@ public class TemplateCatalog implements TemplateReader {
   }
 
   @Override
-  public Optional<com.example.htmlmud.domain.party.model.GambitPreset> findGambitPreset(String presetId) {
+  public Optional<com.example.htmlmud.party.GambitPreset> findGambitPreset(String presetId) {
     return templateReader != null ? templateReader.findGambitPreset(presetId) : Optional.empty();
   }
 
   @Override
-  public Map<String, com.example.htmlmud.domain.party.model.GambitPreset> getAllGambitPresets() {
+  public Map<String, com.example.htmlmud.party.GambitPreset> getAllGambitPresets() {
     return templateReader != null ? templateReader.getAllGambitPresets() : Collections.emptyMap();
   }
 

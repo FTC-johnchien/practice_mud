@@ -17,7 +17,7 @@
   - [`ItemDefinition.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/item/ItemDefinition.java)（物品不可變規範模型）
   - [`ItemInstance.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/item/ItemInstance.java)（運行期道具實體）
   - [`ItemAffix.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/item/ItemAffix.java)（隨機詞綴實體：PREFIX / SUFFIX，動態屬性累加）
-  - [`PartyItemSlot.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/party/model/PartyItemSlot.java)（掛載詞綴之裝備插槽與動態命名）
+  - [`PartyItemSlot.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/PartyItemSlot.java)（掛載詞綴之裝備插槽與動態命名）
   - [`EquipmentSlot.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/item/EquipmentSlot.java)（5+2 裝備槽位枚舉）
   - [`ItemFactory.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/item/ItemFactory.java)（集中化道具工廠）
   - [`UnifiedPartyEconomyService.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/item/UnifiedPartyEconomyService.java)（小隊大一統共享經濟服務）

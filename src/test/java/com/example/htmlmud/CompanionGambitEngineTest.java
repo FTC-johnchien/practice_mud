@@ -18,16 +18,16 @@ import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
 import com.example.htmlmud.domain.dungeon.battle.CombatFsmService;
 import com.example.htmlmud.domain.dungeon.battle.DrpgCombatLoop;
 import com.example.htmlmud.domain.dungeon.battle.DrpgEnemyTacticsService;
-import com.example.htmlmud.domain.party.model.GambitActionType;
-import com.example.htmlmud.domain.party.model.GambitPreset;
-import com.example.htmlmud.domain.party.model.GambitRule;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.RowPosition;
-import com.example.htmlmud.domain.party.model.TacticsCondition;
-import com.example.htmlmud.domain.party.model.TacticsRule;
-import com.example.htmlmud.domain.party.model.TacticsTarget;
+import com.example.htmlmud.party.GambitActionType;
+import com.example.htmlmud.party.GambitPreset;
+import com.example.htmlmud.party.GambitRule;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.PartyMemberSkill;
+import com.example.htmlmud.party.RowPosition;
+import com.example.htmlmud.party.TacticsCondition;
+import com.example.htmlmud.party.TacticsRule;
+import com.example.htmlmud.party.TacticsTarget;
 import com.example.htmlmud.template.TemplateReader;
 
 /**

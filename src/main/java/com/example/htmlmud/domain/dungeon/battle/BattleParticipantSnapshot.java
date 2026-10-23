@@ -6,7 +6,7 @@ import java.util.Map;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.entity.SkillEntry;
-import com.example.htmlmud.domain.party.model.PartyMember;
+import com.example.htmlmud.party.PartyMember;
 
 /**
  * 戰鬥參與者不可變快照 (Immutable Battle Participant Snapshot)

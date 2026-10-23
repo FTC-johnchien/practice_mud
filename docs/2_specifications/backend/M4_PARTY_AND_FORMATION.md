@@ -61,7 +61,7 @@
 
 ## 🔮 三、古仙陣法引擎 (FormationEngine)
 
-陣法不僅是靜態名詞，而是帶有數學演算的即時加成引擎（[`FormationEngine.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/party/service/FormationEngine.java)）：
+陣法不僅是靜態名詞，而是帶有數學演算的即時加成引擎（[`FormationEngine.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/FormationEngine.java)）：
 
 ### 1. 存活孔位自動排位映射 (Auto-mapping)
 當戰鬥中某位隊員不幸陣亡時，陣法不會崩潰，而是觸發動態重映射：
@@ -123,8 +123,8 @@ graph LR
 | :--- | :--- | :--- |
 | **小隊服務** | `com.example.htmlmud.domain.service.PartyService` | 小隊創建、隊員招募、陣容調整 |
 | **生靈管理** | `com.example.htmlmud.domain.service.LivingService` | 生靈屬性快照、氣血扣除與死亡狀態 |
-| **陣法引擎** | `com.example.htmlmud.domain.party.service.FormationEngine` | 站位加成計算、存活孔位動態映射與破陣檢驗 |
-| **小隊模型** | `com.example.htmlmud.domain.party.model.Party` | 持有 5 人小隊隊員與小隊儲物袋 |
+| **陣法引擎** | `com.example.htmlmud.party.FormationEngine` | 站位加成計算、存活孔位動態映射與破陣檢驗 |
+| **小隊模型** | `com.example.htmlmud.party.Party` | 持有 5 人小隊隊員與小隊儲物袋 |
 | **資料設定** | `src/main/resources/data/formations/formations.json` | 陣法孔位、攻防係數與啟動門檻宣告 |
 | **資料設定** | `src/main/resources/data/companions/default_companions.json` | 初始可招募夥伴模板（鐵牛、凌霜等） |
 

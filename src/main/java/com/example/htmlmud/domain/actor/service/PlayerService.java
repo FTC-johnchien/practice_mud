@@ -54,13 +54,13 @@ public class PlayerService {
 
   private final ObjectProvider<CharacterSyncService> characterSyncServiceProvider;
 
-  private final ObjectProvider<com.example.htmlmud.domain.party.service.PartyService> partyServiceProvider;
+  private final ObjectProvider<com.example.htmlmud.party.PartyService> partyServiceProvider;
 
   public CharacterSyncService getCharacterSyncService() {
     return characterSyncServiceProvider != null ? characterSyncServiceProvider.getIfAvailable() : null;
   }
 
-  public com.example.htmlmud.domain.party.service.PartyService getPartyService() {
+  public com.example.htmlmud.party.PartyService getPartyService() {
     return partyServiceProvider != null ? partyServiceProvider.getIfAvailable() : null;
   }
 

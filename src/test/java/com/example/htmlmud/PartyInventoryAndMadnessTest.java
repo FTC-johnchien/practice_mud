@@ -16,12 +16,12 @@ import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
 import com.example.htmlmud.domain.dungeon.service.DungeonManager;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.enums.ItemType;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyItemSlot;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.CombatResourceType;
-import com.example.htmlmud.domain.party.service.PartyService;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyItemSlot;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.PartyMemberSkill;
+import com.example.htmlmud.party.CombatResourceType;
+import com.example.htmlmud.party.PartyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 

@@ -2,7 +2,7 @@ package com.example.htmlmud.domain.model.definition;
 
 import java.util.List;
 import com.example.htmlmud.domain.model.config.BuffConfig;
-import com.example.htmlmud.domain.party.model.CombatResourceType;
+import com.example.htmlmud.party.CombatResourceType;
 import lombok.Builder;
 
 /**

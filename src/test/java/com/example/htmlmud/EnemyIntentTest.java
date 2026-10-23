@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
 import com.example.htmlmud.domain.dungeon.dto.BattleEnemyViewDto;
-import com.example.htmlmud.domain.party.model.RowPosition;
+import com.example.htmlmud.party.RowPosition;
 
 class EnemyIntentTest {
 
@@ -163,14 +163,14 @@ class EnemyIntentTest {
     assertThat(boss.isPoiseBroken()).isFalse();
 
     // 2. 測試普通非控制技能無法打斷
-    com.example.htmlmud.domain.party.model.PartyMember warrior =
-        com.example.htmlmud.domain.party.model.PartyMember.builder()
+    com.example.htmlmud.party.PartyMember warrior =
+        com.example.htmlmud.party.PartyMember.builder()
             .id("warrior-1")
             .name("鐵面劍俠")
             .build();
 
-    com.example.htmlmud.domain.party.model.PartyMemberSkill normalSlash =
-        com.example.htmlmud.domain.party.model.PartyMemberSkill.builder()
+    com.example.htmlmud.party.PartyMemberSkill normalSlash =
+        com.example.htmlmud.party.PartyMemberSkill.builder()
             .id("sword_slash")
             .name("基礎劈砍")
             .tags(List.of("ATTACK", "PHYSICAL"))
@@ -181,8 +181,8 @@ class EnemyIntentTest {
     assertThat(boss.isCasting()).isTrue();
 
     // 3. 測試帶有 STUN / SILENCE 標籤的招式打斷判定
-    com.example.htmlmud.domain.party.model.PartyMemberSkill sealSpell =
-        com.example.htmlmud.domain.party.model.PartyMemberSkill.builder()
+    com.example.htmlmud.party.PartyMemberSkill sealSpell =
+        com.example.htmlmud.party.PartyMemberSkill.builder()
             .id("taoist_seal")
             .name("太陰定身符")
             .tags(List.of("SPELL", "CONTROL", "STUN", "SILENCE"))

@@ -9,9 +9,9 @@ import com.example.htmlmud.config.GameConfig;
 import com.example.htmlmud.domain.model.config.MoveAction;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.template.model.SkillTemplate;
-import com.example.htmlmud.domain.party.model.CombatResourceType;
-import com.example.htmlmud.domain.party.model.PartyItemSlot;
-import com.example.htmlmud.domain.party.model.PartyMember;
+import com.example.htmlmud.party.CombatResourceType;
+import com.example.htmlmud.party.PartyItemSlot;
+import com.example.htmlmud.party.PartyMember;
 
 /**
  * 戰鬥防禦與被動心法檢定解算器 (Generic Defense & Passive Resolver)

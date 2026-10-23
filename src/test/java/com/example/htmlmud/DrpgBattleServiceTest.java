@@ -14,10 +14,10 @@ import com.example.htmlmud.domain.dungeon.model.Direction;
 import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
 import com.example.htmlmud.domain.dungeon.service.DungeonManager;
 import com.example.htmlmud.domain.dungeon.battle.BattleState;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.model.CombatResourceType;
-import com.example.htmlmud.domain.party.service.PartyService;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.CombatResourceType;
+import com.example.htmlmud.party.PartyService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -102,7 +102,7 @@ class DrpgBattleServiceTest {
 
     // 1. 燕青/主角 COMBO 技能 (先裝備劍)
     leader.getEquipment().put(com.example.htmlmud.item.EquipmentSlot.MAIN_HAND,
-        com.example.htmlmud.domain.party.model.PartyItemSlot.builder()
+        com.example.htmlmud.party.PartyItemSlot.builder()
             .slotId("slot-sword")
             .itemId("iron_sword")
             .name("鐵劍")

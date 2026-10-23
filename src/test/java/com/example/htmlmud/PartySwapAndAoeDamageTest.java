@@ -16,13 +16,13 @@ import com.example.htmlmud.domain.dungeon.battle.DrpgCombatLoop;
 import com.example.htmlmud.domain.dungeon.battle.DrpgEnemyTacticsService;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.enums.MobRank;
-import com.example.htmlmud.domain.party.model.CombatResourceType;
-import com.example.htmlmud.domain.party.model.FormationSlot;
-import com.example.htmlmud.domain.party.model.FormationTemplate;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.RowPosition;
+import com.example.htmlmud.party.CombatResourceType;
+import com.example.htmlmud.party.FormationSlot;
+import com.example.htmlmud.party.FormationTemplate;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.PartyMemberSkill;
+import com.example.htmlmud.party.RowPosition;
 
 @SpringBootTest
 @ActiveProfiles("test")

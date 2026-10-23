@@ -2,10 +2,10 @@ package com.example.htmlmud.save;
 
 import java.util.HashSet;
 import java.util.Set;
-import com.example.htmlmud.domain.party.model.Party;
+import com.example.htmlmud.party.Party;
 import java.util.ArrayList;
 import java.util.List;
-import com.example.htmlmud.domain.party.model.PartyItemSlot;
+import com.example.htmlmud.party.PartyItemSlot;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

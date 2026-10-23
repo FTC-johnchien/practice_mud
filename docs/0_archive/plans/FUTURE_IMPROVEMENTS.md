@@ -519,8 +519,8 @@
 - **現狀問題**：
   1. **客棧安全區判定靠字串比對**：[`RestCommand.java:L47`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/RestCommand.java#L47) 以 `currentRoomId.contains("inn")` 判斷是否為客棧回滿狀態，而非檢查房間標籤 `RoomFlag.SAFE_ZONE` 或 `RoomTemplate.canRest`；野外調息值（HP 30, SAN 10, MP 20）與伏擊機率公式（`25 + danger * 0.5`）寫死。
   2. **商店台詞與身份全域寫死**：[`ShopCommand.java:L133-190`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/ShopCommand.java#L133-L190) 台詞全寫死「掌櫃福伯擦著汗道」、「客官要進墨竹山吧？帶足乾糧和清心靈茶才是保命上策！」，所有城鎮的所有商店皆變成了「福伯」且在賣墨竹山補給；庫存僅放記憶體且無 `sell` 典當收購功能。
-  3. **開局物資與預設心法寫死**：[`PartyService.java:L550-557`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/party/service/PartyService.java#L550-L557) 開局物資寫死 `taiyin_pill: 3`, `purify_talisman: 2` 等；L328-335 缺少心法預設補齊 `basic_dodge` 等；L519 提示訊息寫死可招募夥伴字串。
-  4. **道核領悟技能數值寫死**：[`Party.java:L59-68`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/party/model/Party.java#L59-L68) 使用道核領悟技能時，技能 CD (6000ms)、倍率 (1.8)、資源消耗 (2/30/35) 寫死，未由技能定義反查。
+  3. **開局物資與預設心法寫死**：[`PartyService.java:L550-557`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/PartyService.java#L550-L557) 開局物資寫死 `taiyin_pill: 3`, `purify_talisman: 2` 等；L328-335 缺少心法預設補齊 `basic_dodge` 等；L519 提示訊息寫死可招募夥伴字串。
+  4. **道核領悟技能數值寫死**：[`Party.java:L59-68`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/Party.java#L59-L68) 使用道核領悟技能時，技能 CD (6000ms)、倍率 (1.8)、資源消耗 (2/30/35) 寫死，未由技能定義反查。
   5. **重生點與開新遊戲預設房間寫死**：[`SaveGameService.java:L191, L461`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/save/service/SaveGameService.java#L191) 存檔與開闢新遊戲預設房間寫死 `"newbie_village:inn"`，未統一由 `GameConfig.getDefaults().getPlayer().getSpawnRoomId()` 驅動。
 - **改善方案**：
   - 客棧改以 `RoomFlag.SAFE_ZONE` 判定；商店台詞移入 `ShopTemplate` 或 `MobTemplate`。
@@ -660,11 +660,11 @@ flowchart TD
 
 | # | §16/§17 原述 | 實際程式碼狀況 | 影響 |
 | :---: | :--- | :--- | :--- |
-| 1 | DATA-01 已「徹底廢除 `"SWORDSMAN"` 字串硬編碼」 | 仍殘留 5 處：[`DefenseResolver.java:L133, L204`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DefenseResolver.java#L133) 以 `orElse("SWORDSMAN".equalsIgnoreCase(...))` 作 fallback；[`FormationTemplate.java:L71`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/party/model/FormationTemplate.java#L71) 有「TANK 需求可由 SWORDSMAN 滿足」特例；[`RoleCategory.java:L13, L51, L82`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/enums/RoleCategory.java#L13) 以 switch 寫死職業→職能映射；[`Player.java:L63-66`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/actor/impl/Player.java#L63-L66) 預設職業寫死 | DATA-01 狀態為「已完成」但有殘留；新增職業仍須改 Java |
+| 1 | DATA-01 已「徹底廢除 `"SWORDSMAN"` 字串硬編碼」 | 仍殘留 5 處：[`DefenseResolver.java:L133, L204`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DefenseResolver.java#L133) 以 `orElse("SWORDSMAN".equalsIgnoreCase(...))` 作 fallback；[`FormationTemplate.java:L71`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/FormationTemplate.java#L71) 有「TANK 需求可由 SWORDSMAN 滿足」特例；[`RoleCategory.java:L13, L51, L82`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/enums/RoleCategory.java#L13) 以 switch 寫死職業→職能映射；[`Player.java:L63-66`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/actor/impl/Player.java#L63-L66) 預設職業寫死 | DATA-01 狀態為「已完成」但有殘留；新增職業仍須改 Java |
 | 2 | `TOMB_ITEMS` 僅出現在 `DungeonCommand` | **共有 3 份複本**：[`DungeonCommand.java:L41`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L41)（ID 帶 `taiyin_tomb:` 前綴）、[`DrpgBattleService.java:L58`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgBattleService.java#L58)、[`DrpgRewardService.java:L37`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java#L37)（ID **不帶**前綴） | 同一份資料有兩種 ID 寫法，全靠 `TemplateRepository` 的後綴模糊比對才能運作 |
 | 3 | 首領硬編碼只有「宋天衡掉落」 | [`DrpgBattleService.startBossBattle():L547-562`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgBattleService.java#L547-L562) 對**所有**首領都套用固定 `dex(12)`、`xp(500)`、`dropItemId("mozhu_mines:black_obsidian_scythe")`，且忽略 `MobTemplate.expReward/loot`；L475-478 用 `templateId.contains("mozhu")` 決定掉落；[`DungeonCommand.java:L289`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L289) BOSS 地塊 fallback 寫死宋天衡 | 新增任何首領都會掉墨竹山鐮刀，屬功能 Bug，而不只是程式風格問題 |
 | 4 | 道核 ID 為 `"core_" + memberId + "_" + skillId` | 存在**三種**格式與兩套文案：`DrpgCombatLoop` 用 `core_{member}_{skill}`；[`ItemFactory.createDaoCore()`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/factory/ItemFactory.java#L80-L96) 用 `dao_core_{skill}` 且名為「凝煞道核」；`DrpgRewardService` fallback 也用 `dao_core_{skill}`，但名為「血肉道核」 | 同一物品因 Bean 是否注入而名稱不同；存檔與堆疊判斷不穩定 |
-| 5 | 裝備位於 `Living.equipment` | 實際有**三種表示法**：[`LivingStats.equipment`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/entity/LivingStats.java#L53)（`Map<EquipmentSlot, GameItem>`）、[`PartyMember.equipment`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/party/model/PartyMember.java#L107)（`Map<EquipmentSlot, PartyItemSlot>`）、[`BattleEnemy.equipment`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/BattleEnemy.java#L85)（`Map<EquipmentSlot, String>`） | UNIFY-02 已於 Commit `a18645a` 落地，確立 `PartyMember` 為 SSoT 並透過 Actor 信箱單向投影至 `Player.stats.equipment`（唯讀視圖） |
+| 5 | 裝備位於 `Living.equipment` | 實際有**三種表示法**：[`LivingStats.equipment`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/entity/LivingStats.java#L53)（`Map<EquipmentSlot, GameItem>`）、[`PartyMember.equipment`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/PartyMember.java#L107)（`Map<EquipmentSlot, PartyItemSlot>`）、[`BattleEnemy.equipment`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/BattleEnemy.java#L85)（`Map<EquipmentSlot, String>`） | UNIFY-02 已於 Commit `a18645a` 落地，確立 `PartyMember` 為 SSoT 並透過 Actor 信箱單向投影至 `Player.stats.equipment`（唯讀視圖） |
 | 6 | `buildTombB1F()` 是「未同步的冗餘」 | 真正的風險不在冗餘：它只在 JSON 全部載入失敗時啟用，會**把資源載入失敗掩蓋成「遊戲照常可玩」** | 應改為 fail-fast，而不只是刪除 |
 
 ### 18.2 §17 統一方案的架構風險 (Design Risks in UNIFY-*)
@@ -691,7 +691,7 @@ flowchart TD
 ### 18.3 §16/§17 未涵蓋的系統性問題 (Missed Systemic Issues)
 
 1. **靜默 fallback 反模式（比個別硬編碼更根本）**：
-   - 生產程式碼中有約 30 處 `new TemplateCatalog()`，分布在 Service 無參建構子、DTO（[`DrpgStateDto`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/dto/DrpgStateDto.java#L31)）、領域模型（[`PartyInventory`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/party/model/PartyInventory.java#L25)、`PartyMember`、`ShopTemplate`、`BattleEnemy`）與 `MessageFactory`。空的 Catalog 會讓物品名稱退化成 ID、技能查無資料，卻**不報錯**。
+   - 生產程式碼中有約 30 處 `new TemplateCatalog()`，分布在 Service 無參建構子、DTO（[`DrpgStateDto`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/dto/DrpgStateDto.java#L31)）、領域模型（[`PartyInventory`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/PartyInventory.java#L25)、`PartyMember`、`ShopTemplate`、`BattleEnemy`）與 `MessageFactory`。空的 Catalog 會讓物品名稱退化成 ID、技能查無資料，卻**不報錯**。
    - [`GameConfig.getInstance()`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/config/GameConfig.java#L34-L43) 靜態單例被 `Player`、`Living` 直接呼叫，並在建構子內覆寫 `INSTANCE`；在測試或多 Context 情境下，可能拿到未綁定 YAML 的預設值。
    - 多個核心協作者使用 `@Autowired(required = false)` 加延遲 `new`（`DrpgRewardService`、`CharacterSyncService`、`CombatService.buffSettlementService`），注入失敗時會悄悄改用沒有依賴的實例。
    - **修正（FALLBACK-01）**：從生產程式碼移除無參建構子與 `new TemplateCatalog()`，測試改用 `TestTemplates` fixture；`GameConfig` 改為建構子注入；必要依賴一律改成必填注入。
@@ -1223,7 +1223,7 @@ flowchart TD
   在 Path X (SP-01 ~ SP-07) 演進中，大量膠水代碼與雙軌實體已被重構或物理刪除，但多份核心架構文件與模組手冊未能及時同步，造成嚴重「文檔描述了已刪除代碼」的誤導風險。
 - **具體整治行動清單**：
   1. **清除 `SkillBridgeService` 歷史殘留**：
-     - 代碼於 SP-07 已徹底刪除 `SkillBridgeService.java`，改為大一統技能模型 [`UnifiedSkill`](../../src/main/java/com/example/htmlmud/domain/party/model/UnifiedSkill.java) 原地升級與縮放。
+     - 代碼於 SP-07 已徹底刪除 `SkillBridgeService.java`，改為大一統技能模型 [`UnifiedSkill`](../../src/main/java/com/example/htmlmud/party/UnifiedSkill.java) 原地升級與縮放。
      - 必須全面修訂 [`ARCHITECTURE.md:119`](../../ARCHITECTURE.md#L119)、[`MODULES_MAP.md:125`](../overview/MODULES_MAP.md#L125)、[`後端_M5:27`](../manual/後端_M5_技能境界與修煉模組_SKILL_AND_PROGRESSION.md#L27) 與 [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md)，移除所有 `SkillBridgeService` 陳述，指引至 `UnifiedSkill` 與 `PartyMember.skills`。
   2. **同步 `MudContext` 為 Java 25 `ScopedValue`**：
      - 代碼 [`MudContext.java`](../../src/main/java/com/example/htmlmud/domain/context/MudContext.java) 實際已全面升級為 Java 25 `ScopedValue<Player>`。
@@ -1257,7 +1257,7 @@ flowchart TD
   - 原代碼實作 `DEFAULT_CAPACITY = 30;`，部分手冊記錄為 40 格，造成跨文件與代碼常數漂移。
   - **決策結果**：**已拍板採方案 A（全域統一升級為 40 格）**。
     - 理由：5 人滿編小隊擁有 5×(5+2)=35 個裝備槽位，40 格行囊提供地牢冒險、刷寶掉落與備用裝備更寬裕流暢的冒險體驗。
-    - 落地改動：[`PartyInventory.java`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyInventory.java) 常數升級為 `DEFAULT_CAPACITY = 40;`；同步更新前端 `index.html`、`bag-drawer.js`、`後端_M6`、`前端_FE1`、`前端_FE5`、`QUICKSTART.md`、`README.md` 與全域手冊。
+    - 落地改動：[`PartyInventory.java`](../../src/main/java/com/example/htmlmud/party/PartyInventory.java) 常數升級為 `DEFAULT_CAPACITY = 40;`；同步更新前端 `index.html`、`bag-drawer.js`、`後端_M6`、`前端_FE1`、`前端_FE5`、`QUICKSTART.md`、`README.md` 與全域手冊。
 - **驗收**：代碼常數、UI 渲染上限、所有文檔與測試斷言格數 100% 同步一致為 40 格。
 
 ### 23.6 DOC-WS-01：【P1 重要】前端 WebSocket 通訊實況對齊與健壯性重構 (Frontend WebSocket Modularization & Reconnect) — ✅ 已完成 (2026-10-20)
@@ -1397,7 +1397,7 @@ flowchart TD
 - **問題現狀**：技能體系存在兩套定義：MUD 端的 `SkillEntry`（修煉熟練度、境界等級）與 DRPG 端的 `PartyMemberSkill`（CD、傷害倍率、消耗、打斷標籤），導致新增一門技能需維護兩份範本資料。
 - **涉及檔案**：
   - [`SkillEntry.java`](../../src/main/java/com/example/htmlmud/domain/model/entity/SkillEntry.java)
-  - [`PartyMemberSkill.java`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyMemberSkill.java)
+  - [`PartyMemberSkill.java`](../../src/main/java/com/example/htmlmud/party/PartyMemberSkill.java)
   - [`skills.json`](../../src/main/resources/data/skills/skills.json)
 - **改動方針**：
   1. 建立大一統規範技能實體 `UnifiedSkill`（或擴充升級 `PartyMemberSkill`），同時包含：
@@ -1441,7 +1441,7 @@ flowchart TD
 #### 2. SP-09: 全隊共享經濟與小隊資產化 (Unified Party Economy & Coin) — Priority: P2
 - **問題現狀**：金幣/靈石目前分散於各成員的 `LivingStats.coin`，但道具則放入小隊公共行囊；商店扣款扣主角個人，缺少小隊公共金庫概念。
 - **涉及檔案**：
-  - [`Party.java`](../../src/main/java/com/example/htmlmud/domain/party/model/Party.java)
+  - [`Party.java`](../../src/main/java/com/example/htmlmud/party/Party.java)
   - [`ShopCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/ShopCommand.java)
   - [`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java)
   - [`DungeonCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java)

@@ -161,10 +161,10 @@ graph BT
   - **歸整類別**：`SaveGameService`, `SaveData`, `SaveSlotDto`, `SaveMigration`, `SaveMigrationPipeline`, `SaveCorruptedException`
   - **驗收標準**：`SaveGameServiceTest`、`AsyncPersistenceLifecycleTest`、`DungeonDefeatSettlementTest` 全數 100% 綠燈，全專案 393 項測試零回歸通過。
 
-- [ ] **Step R3.5 (PKG-M4-PARTY): 模組 M4 - 冒險小隊與古仙陣法套件封裝**
+- [x] **Step R3.5 (PKG-M4-PARTY): 模組 M4 - 冒險小隊與古仙陣法套件封裝**
   - **目標套件**：`com.example.htmlmud.party`
-  - **歸整類別**：`PartyMember`, `PartyFormation`, `GambitRule`, `SanShield`, `DrpgPartyInventory`
-  - **驗收標準**：`mvn test -Dtest=CompanionGambitEngineTest,PartyInventoryAndMadnessTest` 100% 綠燈。
+  - **歸整類別**：`PartyMember`, `Party`, `PartyInventory`, `PartyItemSlot`, `FormationEngine`, `PartyService`, `GambitRule`, `FormationTemplate`, `UnifiedSkill`
+  - **驗收標準**：`CompanionGambitEngineTest`、`PartyInventoryAndMadnessTest`、`PartyFormationTest` 全數 100% 綠燈，全專案 393 項測試零回歸通過。
 
 - [ ] **Step R3.6 (PKG-M5-PROGRESSION): 模組 M5 - 技能體系與修為突破套件封裝**
   - **目標套件**：`com.example.htmlmud.progression`

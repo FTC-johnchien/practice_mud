@@ -11,11 +11,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.example.htmlmud.item.ItemAffix;
 import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
-import com.example.htmlmud.domain.party.model.PartyItemSlot;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill.ComboRole;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill.CyberSchool;
-import com.example.htmlmud.domain.party.service.PartyService;
+import com.example.htmlmud.party.PartyItemSlot;
+import com.example.htmlmud.party.PartyMemberSkill;
+import com.example.htmlmud.party.PartyMemberSkill.ComboRole;
+import com.example.htmlmud.party.PartyMemberSkill.CyberSchool;
+import com.example.htmlmud.party.PartyService;
 
 @SpringBootTest
 class CyberSkillAndItemAffixTest {

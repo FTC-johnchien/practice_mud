@@ -37,7 +37,7 @@ public class CombatService {
   private final XpProgressionService xpProgressionService;
   private final com.example.htmlmud.config.GameConfig gameConfig;
   private final com.example.htmlmud.domain.dungeon.battle.DefenseResolver defenseResolver;
-  private final org.springframework.beans.factory.ObjectProvider<com.example.htmlmud.domain.party.service.PartyService> partyServiceProvider;
+  private final org.springframework.beans.factory.ObjectProvider<com.example.htmlmud.party.PartyService> partyServiceProvider;
   private final org.springframework.beans.factory.ObjectProvider<com.example.htmlmud.domain.dungeon.battle.DrpgBattleService> drpgBattleServiceProvider;
 
   public CombatService(
@@ -47,7 +47,7 @@ public class CombatService {
       XpProgressionService xpProgressionService,
       com.example.htmlmud.config.GameConfig gameConfig,
       com.example.htmlmud.domain.dungeon.battle.DefenseResolver defenseResolver,
-      org.springframework.beans.factory.ObjectProvider<com.example.htmlmud.domain.party.service.PartyService> partyServiceProvider,
+      org.springframework.beans.factory.ObjectProvider<com.example.htmlmud.party.PartyService> partyServiceProvider,
       org.springframework.beans.factory.ObjectProvider<com.example.htmlmud.domain.dungeon.battle.DrpgBattleService> drpgBattleServiceProvider) {
     super();
     this.gameMetrics = gameMetrics;

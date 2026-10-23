@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.party.model;
+package com.example.htmlmud.party;
 
 import java.util.HashMap;
 import java.util.Map;

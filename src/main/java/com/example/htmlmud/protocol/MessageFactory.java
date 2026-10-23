@@ -50,7 +50,7 @@ public class MessageFactory {
     if (party != null && party.getLeader() != null && party.getLeader().getEquipment() != null) {
       itemNames = party.getLeader().getEquipment().values().stream()
           .filter(slot -> slot != null && !slot.isEmpty())
-          .map(com.example.htmlmud.domain.party.model.PartyItemSlot::getName)
+          .map(com.example.htmlmud.party.PartyItemSlot::getName)
           .toList();
     } else if (player.getStats() != null && player.getStats().getEquipment() != null) {
       itemNames = player.getStats().getEquipment().values().stream()

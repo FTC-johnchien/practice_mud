@@ -5,11 +5,11 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.CombatResourceType;
-import com.example.htmlmud.domain.party.model.RowPosition;
-import com.example.htmlmud.domain.party.model.TacticsRule;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.PartyMemberSkill;
+import com.example.htmlmud.party.CombatResourceType;
+import com.example.htmlmud.party.RowPosition;
+import com.example.htmlmud.party.TacticsRule;
 import com.example.htmlmud.template.TemplateReader;
 import com.example.htmlmud.domain.util.RandomUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -22,16 +22,16 @@ import lombok.extern.slf4j.Slf4j;
 public class DrpgEnemyTacticsService {
 
   private final TemplateReader templateReader;
-  private final com.example.htmlmud.domain.party.service.FormationEngine formationEngine;
+  private final com.example.htmlmud.party.FormationEngine formationEngine;
 
   @Autowired
-  public DrpgEnemyTacticsService(TemplateReader templateReader, com.example.htmlmud.domain.party.service.FormationEngine formationEngine) {
+  public DrpgEnemyTacticsService(TemplateReader templateReader, com.example.htmlmud.party.FormationEngine formationEngine) {
     this.templateReader = templateReader;
-    this.formationEngine = formationEngine != null ? formationEngine : new com.example.htmlmud.domain.party.service.FormationEngine();
+    this.formationEngine = formationEngine != null ? formationEngine : new com.example.htmlmud.party.FormationEngine();
   }
 
   public DrpgEnemyTacticsService(TemplateReader templateReader) {
-    this(templateReader, new com.example.htmlmud.domain.party.service.FormationEngine());
+    this(templateReader, new com.example.htmlmud.party.FormationEngine());
   }
 
   public DrpgEnemyTacticsService() {
@@ -336,8 +336,8 @@ public class DrpgEnemyTacticsService {
    * 根據戰術方針或手動指定，解析小隊中的友方目標 (支援 Tank、隊長、指定成員、血量最低隊友、身中異常隊友、道心低隊友、自身等)
    */
   public PartyMember resolveAllyTarget(BattleContext ctx, PartyMember caster, TacticsRule rule, int manualTargetIdx) {
-    if (rule != null && (rule.getTarget() == null || rule.getTarget() == com.example.htmlmud.domain.party.model.TacticsTarget.LOWEST_HP_ALLY || rule.getTarget() == com.example.htmlmud.domain.party.model.TacticsTarget.ALL_ALLIES)) {
-      if (rule.getCondition() == com.example.htmlmud.domain.party.model.TacticsCondition.ALLY_HAS_DEBUFF && ctx != null && ctx.getParty() != null) {
+    if (rule != null && (rule.getTarget() == null || rule.getTarget() == com.example.htmlmud.party.TacticsTarget.LOWEST_HP_ALLY || rule.getTarget() == com.example.htmlmud.party.TacticsTarget.ALL_ALLIES)) {
+      if (rule.getCondition() == com.example.htmlmud.party.TacticsCondition.ALLY_HAS_DEBUFF && ctx != null && ctx.getParty() != null) {
         var debuffed = ctx.getParty().getMembers().stream()
             .filter(PartyMember::isAlive)
             .filter(m -> m.getActiveBuffs().stream().anyMatch(b -> b.getCategory() == com.example.htmlmud.domain.model.enums.BuffCategory.DOT
@@ -345,13 +345,13 @@ public class DrpgEnemyTacticsService {
                 || b.getCategory() == com.example.htmlmud.domain.model.enums.BuffCategory.CONTROL))
             .findFirst();
         if (debuffed.isPresent()) return debuffed.get();
-      } else if (rule.getCondition() == com.example.htmlmud.domain.party.model.TacticsCondition.ALLY_IS_CONTROLLED && ctx != null && ctx.getParty() != null) {
+      } else if (rule.getCondition() == com.example.htmlmud.party.TacticsCondition.ALLY_IS_CONTROLLED && ctx != null && ctx.getParty() != null) {
         var controlled = ctx.getParty().getMembers().stream()
             .filter(PartyMember::isAlive)
             .filter(m -> m.isControlled() || m.isSilenced() || m.getActiveBuffs().stream().anyMatch(b -> b.getCategory() == com.example.htmlmud.domain.model.enums.BuffCategory.CONTROL))
             .findFirst();
         if (controlled.isPresent()) return controlled.get();
-      } else if (rule.getCondition() == com.example.htmlmud.domain.party.model.TacticsCondition.ALLY_SAN_LESS_THAN && ctx != null && ctx.getParty() != null) {
+      } else if (rule.getCondition() == com.example.htmlmud.party.TacticsCondition.ALLY_SAN_LESS_THAN && ctx != null && ctx.getParty() != null) {
         var lowSan = ctx.getParty().getMembers().stream()
             .filter(PartyMember::isAlive)
             .filter(m -> m.getCurrentSan() <= rule.getConditionValue())
@@ -365,7 +365,7 @@ public class DrpgEnemyTacticsService {
   /**
    * 根據戰術目標解析敵方目標 (支援打斷吟唱敵怪、破防敵怪、最低氣血敵怪等)
    */
-  public BattleEnemy resolveEnemyTarget(BattleContext ctx, com.example.htmlmud.domain.party.model.TacticsTarget target) {
+  public BattleEnemy resolveEnemyTarget(BattleContext ctx, com.example.htmlmud.party.TacticsTarget target) {
     if (ctx == null || ctx.getEnemies() == null || target == null) {
       return null;
     }
@@ -392,7 +392,7 @@ public class DrpgEnemyTacticsService {
     };
   }
 
-  public PartyMember resolveAllyTarget(BattleContext ctx, PartyMember caster, com.example.htmlmud.domain.party.model.TacticsTarget target, int manualTargetIdx) {
+  public PartyMember resolveAllyTarget(BattleContext ctx, PartyMember caster, com.example.htmlmud.party.TacticsTarget target, int manualTargetIdx) {
     if (ctx == null || ctx.getParty() == null || ctx.getParty().getMembers() == null) {
       return caster;
     }
@@ -404,7 +404,7 @@ public class DrpgEnemyTacticsService {
     }
 
     if (target == null) {
-      target = com.example.htmlmud.domain.party.model.TacticsTarget.LOWEST_HP_ALLY;
+      target = com.example.htmlmud.party.TacticsTarget.LOWEST_HP_ALLY;
     }
 
     return switch (target) {

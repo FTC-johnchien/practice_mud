@@ -73,8 +73,8 @@
 - **現狀問題**：
   1. **客棧安全區判定靠字串比對**：[`RestCommand.java:L47`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/RestCommand.java#L47) 以 `currentRoomId.contains("inn")` 判斷是否為客棧回滿狀態，而非檢查房間標籤 `RoomFlag.SAFE_ZONE` 或 `RoomTemplate.canRest`；野外調息值（HP 30, SAN 10, MP 20）與伏擊機率公式（`25 + danger * 0.5`）寫死。
   2. **商店台詞與身份全域寫死**：[`ShopCommand.java:L133-190`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/ShopCommand.java#L133-L190) 台詞全寫死「掌櫃福伯擦著汗道」、「客官要進墨竹山吧？帶足乾糧和清心靈茶才是保命上策！」，所有城鎮的所有商店皆變成了「福伯」且在賣墨竹山補給；庫存僅放記憶體且無 `sell` 典當收購功能。
-  3. **開局物資與預設心法寫死**：[`PartyService.java:L550-557`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/party/service/PartyService.java#L550-L557) 開局物資寫死 `taiyin_pill: 3`, `purify_talisman: 2` 等；L328-335 缺少心法預設補齊 `basic_dodge` 等；L519 提示訊息寫死可招募夥伴字串。
-  4. **道核領悟技能數值寫死**：[`Party.java:L59-68`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/party/model/Party.java#L59-L68) 使用道核領悟技能時，技能 CD (6000ms)、倍率 (1.8)、資源消耗 (2/30/35) 寫死，未由技能定義反查。
+  3. **開局物資與預設心法寫死**：[`PartyService.java:L550-557`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/PartyService.java#L550-L557) 開局物資寫死 `taiyin_pill: 3`, `purify_talisman: 2` 等；L328-335 缺少心法預設補齊 `basic_dodge` 等；L519 提示訊息寫死可招募夥伴字串。
+  4. **道核領悟技能數值寫死**：[`Party.java:L59-68`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/Party.java#L59-L68) 使用道核領悟技能時，技能 CD (6000ms)、倍率 (1.8)、資源消耗 (2/30/35) 寫死，未由技能定義反查。
   5. **重生點與開新遊戲預設房間寫死**：[`SaveGameService.java:L191, L461`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/save/service/SaveGameService.java#L191) 存檔與開闢新遊戲預設房間寫死 `"newbie_village:inn"`，未統一由 `GameConfig.getDefaults().getPlayer().getSpawnRoomId()` 驅動。
 - **改善方案**：
   - 客棧改以 `RoomFlag.SAFE_ZONE` 判定；商店台詞移入 `ShopTemplate` 或 `MobTemplate`。

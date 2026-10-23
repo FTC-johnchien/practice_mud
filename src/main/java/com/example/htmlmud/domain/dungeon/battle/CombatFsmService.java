@@ -2,8 +2,8 @@ package com.example.htmlmud.domain.dungeon.battle;
 
 import java.util.List;
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.PartyMemberSkill;
 import lombok.extern.slf4j.Slf4j;
 
 /**

@@ -6,10 +6,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import com.example.htmlmud.domain.model.entity.LivingStats;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.model.RowPosition;
-import com.example.htmlmud.domain.party.service.PartyService;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.RowPosition;
+import com.example.htmlmud.party.PartyService;
 
 class PartyFormationTest {
 
@@ -64,7 +64,7 @@ class PartyFormationTest {
     assertEquals(5, leader.getBaseDefense());
 
     // 天樞陣眼 slotIndex=0: attack x1.15, defense x1.10
-    com.example.htmlmud.domain.party.model.EffectiveCombatStats eff = party.calculateEffectiveStats(0);
+    com.example.htmlmud.party.EffectiveCombatStats eff = party.calculateEffectiveStats(0);
     assertNotNull(eff);
     assertEquals((int) Math.round(15 * 1.15), eff.minDamage());
     assertEquals((int) Math.round(25 * 1.15), eff.maxDamage());
@@ -216,7 +216,7 @@ class PartyFormationTest {
   @Test
   @DisplayName("測試 FormationEngine：隊員陣亡即時觸發破陣、清除 Buff 與靈威")
   void testFormationEngineBreakOnMemberDeath() {
-    var formationEngine = new com.example.htmlmud.domain.party.service.FormationEngine();
+    var formationEngine = new com.example.htmlmud.party.FormationEngine();
     var fiveElements = partyService.getFormation("formation_five_elements");
     assertNotNull(fiveElements);
 
@@ -248,7 +248,7 @@ class PartyFormationTest {
   @Test
   @DisplayName("測試 FormationEngine：存活成員自動排位映射 (Auto-mapping) 與換陣止血")
   void testFormationEngineAutoMappingOnSwitchToFourPersonFormation() {
-    var formationEngine = new com.example.htmlmud.domain.party.service.FormationEngine();
+    var formationEngine = new com.example.htmlmud.party.FormationEngine();
     var fourSymbols = partyService.getFormation("formation_four_symbols");
     assertNotNull(fourSymbols);
 

@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.party.model;
+package com.example.htmlmud.party;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,7 +6,6 @@ import com.example.htmlmud.domain.dungeon.battle.ActiveBuff;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.enums.BuffCategory;
 import com.example.htmlmud.item.EquipmentSlot;
-import com.example.htmlmud.domain.party.service.PartyService;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;

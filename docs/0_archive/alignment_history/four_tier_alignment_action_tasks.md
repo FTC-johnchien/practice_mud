@@ -47,7 +47,7 @@ graph TD
     - [`docs/2_specifications/data_schemas/SKILL_SCHEMA.md`](../2_specifications/data_schemas/SKILL_SCHEMA.md)
     - [`docs/4_active_tasks/ACTIVE_TASKS.md`](../4_active_tasks/ACTIVE_TASKS.md)
     - [`src/main/resources/data/party/party_skills.json`](../../src/main/resources/data/party/party_skills.json)
-    - [`src/main/java/com/example/htmlmud/domain/party/model/PartyMemberSkill.java`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyMemberSkill.java)
+    - [`src/main/java/com/example/htmlmud/party/PartyMemberSkill.java`](../../src/main/java/com/example/htmlmud/party/PartyMemberSkill.java)
   - **執行動作**：
     1. 統一所有文檔與代碼之技能唯一識別碼：`skill_neural_overclock_step`（神經超頻步）與 `skill_bio_keratin_blade`（強殖角質刃），破防削韌值確定為 25 與 45。
     2. 修正 L4 `ACTIVE_TASKS.md` Task 3 中的錯誤簡寫 ID（`neuro_overclock_step`、`bio_carapace_blade`）與過低削韌數值（15/25），杜絕規格超前或倒退。

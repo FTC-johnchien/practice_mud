@@ -21,13 +21,13 @@ import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.enums.BuffCategory;
 import com.example.htmlmud.domain.model.enums.BuffType;
 import com.example.htmlmud.domain.model.enums.EffectType;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.RowPosition;
-import com.example.htmlmud.domain.party.model.TacticsCondition;
-import com.example.htmlmud.domain.party.model.TacticsRule;
-import com.example.htmlmud.domain.party.model.TacticsTarget;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.PartyMemberSkill;
+import com.example.htmlmud.party.RowPosition;
+import com.example.htmlmud.party.TacticsCondition;
+import com.example.htmlmud.party.TacticsRule;
+import com.example.htmlmud.party.TacticsTarget;
 import com.example.htmlmud.template.TemplateReader;
 
 /**

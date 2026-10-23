@@ -708,8 +708,8 @@ public abstract sealed class Living extends VirtualActor<ActorMessage> implement
   }
 
   @Override
-  public com.example.htmlmud.domain.party.model.RowPosition getRow() {
-    return com.example.htmlmud.domain.party.model.RowPosition.FRONT;
+  public com.example.htmlmud.party.RowPosition getRow() {
+    return com.example.htmlmud.party.RowPosition.FRONT;
   }
 
   @Override

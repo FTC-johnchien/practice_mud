@@ -45,10 +45,10 @@ public class SkillEntry {
   /**
    * 轉換為大一統規範技能實體 (PartyMemberSkill)
    */
-  public com.example.htmlmud.domain.party.model.PartyMemberSkill toUnifiedSkill(
+  public com.example.htmlmud.party.PartyMemberSkill toUnifiedSkill(
       com.example.htmlmud.template.TemplateReader reader) {
     if (reader == null) {
-      return com.example.htmlmud.domain.party.model.PartyMemberSkill.builder()
+      return com.example.htmlmud.party.PartyMemberSkill.builder()
           .id(this.skillId)
           .name(this.skillId)
           .level(Math.max(1, this.level))
@@ -68,7 +68,7 @@ public class SkillEntry {
     // 查不到時查 MUD SkillTemplate 並自動適配
     var mudOpt = reader.findSkill(this.skillId);
     if (mudOpt.isPresent()) {
-      var skill = com.example.htmlmud.domain.party.model.PartyMemberSkill.fromSkillTemplate(mudOpt.get());
+      var skill = com.example.htmlmud.party.PartyMemberSkill.fromSkillTemplate(mudOpt.get());
       if (skill != null) {
         skill.setLevel(Math.max(1, this.level));
         skill.setXp(this.xp);
@@ -76,7 +76,7 @@ public class SkillEntry {
         return skill;
       }
     }
-    return com.example.htmlmud.domain.party.model.PartyMemberSkill.builder()
+    return com.example.htmlmud.party.PartyMemberSkill.builder()
         .id(this.skillId)
         .name(this.skillId)
         .level(Math.max(1, this.level))
@@ -88,7 +88,7 @@ public class SkillEntry {
   /**
    * 自大一統規範技能反向同步為 SkillEntry
    */
-  public static SkillEntry fromUnifiedSkill(com.example.htmlmud.domain.party.model.PartyMemberSkill skill) {
+  public static SkillEntry fromUnifiedSkill(com.example.htmlmud.party.PartyMemberSkill skill) {
     if (skill == null) return null;
     SkillEntry entry = new SkillEntry(skill.getId(), Math.max(1, skill.getLevel()));
     entry.setXp(skill.getXp());

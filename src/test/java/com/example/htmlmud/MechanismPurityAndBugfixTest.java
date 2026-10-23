@@ -10,17 +10,17 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyInventory;
-import com.example.htmlmud.domain.party.model.PartyItemSlot;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.service.PartyService;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyInventory;
+import com.example.htmlmud.party.PartyItemSlot;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.PartyService;
 import com.example.htmlmud.save.SaveGameService;
 import com.example.htmlmud.template.TemplateCatalog;
 
 import com.example.htmlmud.domain.model.enums.DamageType;
 import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
+import com.example.htmlmud.party.PartyMemberSkill;
 
 @SpringBootTest
 public class MechanismPurityAndBugfixTest {
@@ -137,7 +137,7 @@ public class MechanismPurityAndBugfixTest {
     assertThat(dollTpl.poise()).isEqualTo(25);
     assertThat(dollTpl.resistances()).containsEntry("DARK", 0.3).containsEntry("FIRE", -0.25);
 
-    BattleEnemy enemy = BattleEnemy.fromTemplate("e-1", dollTpl, com.example.htmlmud.domain.party.model.RowPosition.FRONT, null, templateReader);
+    BattleEnemy enemy = BattleEnemy.fromTemplate("e-1", dollTpl, com.example.htmlmud.party.RowPosition.FRONT, null, templateReader);
     assertThat(enemy.getPoise()).isEqualTo(25);
     assertThat(enemy.getMaxPoise()).isEqualTo(25);
     assertThat(enemy.getResistance(DamageType.DARK)).isEqualTo(0.3);

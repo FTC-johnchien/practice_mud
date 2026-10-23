@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import com.example.htmlmud.domain.party.model.Party;
+import com.example.htmlmud.party.Party;
 import com.example.htmlmud.item.UnifiedPartyEconomyService;
 
 /**

@@ -7,7 +7,7 @@ import com.example.htmlmud.item.ItemDefinition;
 import com.example.htmlmud.item.ItemInstance;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.template.model.ItemTemplate;
-import com.example.htmlmud.domain.party.model.PartyItemSlot;
+import com.example.htmlmud.party.PartyItemSlot;
 import com.example.htmlmud.template.TemplateReader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

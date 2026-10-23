@@ -8,9 +8,9 @@ import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.dungeon.battle.DrpgBattleService;
 import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
 import com.example.htmlmud.domain.dungeon.service.DungeonManager;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyItemSlot;
-import com.example.htmlmud.domain.party.service.PartyService;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyItemSlot;
+import com.example.htmlmud.party.PartyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

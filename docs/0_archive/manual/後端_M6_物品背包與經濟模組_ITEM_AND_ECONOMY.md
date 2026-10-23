@@ -85,7 +85,7 @@ public enum EquipmentSlot {
 
 | 項目 | 路徑 / 名稱 | 職責 |
 | :--- | :--- | :--- |
-| **小隊背包** | `com.example.htmlmud.domain.party.model.PartyInventory` | 40 格小隊儲物袋堆疊、存取與序列化 |
+| **小隊背包** | `com.example.htmlmud.party.PartyInventory` | 40 格小隊儲物袋堆疊、存取與序列化 |
 | **物品實體** | `com.example.htmlmud.domain.model.GameItem` | 靈物實例、耐久度、詞綴與五維加成 |
 | **槽位枚舉** | `com.example.htmlmud.domain.model.enums.EquipmentSlot` | 裝備欄位嚴格枚舉契約 (5+2 結構) |
 | **商店指令** | `com.example.htmlmud.application.command.impl.ShopCommand` | 貨棧清單列出、買入、賣出指令處理 |

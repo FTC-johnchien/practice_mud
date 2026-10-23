@@ -22,7 +22,7 @@ import com.example.htmlmud.template.model.RoomExit;
 import com.example.htmlmud.template.model.RoomTemplate;
 import com.example.htmlmud.template.model.ShopTemplate;
 import com.example.htmlmud.template.model.SpawnRule;
-import com.example.htmlmud.domain.party.model.FormationTemplate;
+import com.example.htmlmud.party.FormationTemplate;
 import com.example.htmlmud.domain.model.enums.RoleCategory;
 import com.example.htmlmud.template.TemplateReader;
 import lombok.AllArgsConstructor;
@@ -47,7 +47,7 @@ public class DataIntegrityValidator implements ApplicationRunner {
   private DungeonManager dungeonManager;
 
   @org.springframework.beans.factory.annotation.Autowired(required = false)
-  private com.example.htmlmud.domain.party.service.PartyService partyService;
+  private com.example.htmlmud.party.PartyService partyService;
 
   @Value("${game.validation.fail-fast:true}")
   private boolean failFast = true;
@@ -64,7 +64,7 @@ public class DataIntegrityValidator implements ApplicationRunner {
     this.dungeonManager = dungeonManager;
   }
 
-  public void setPartyService(com.example.htmlmud.domain.party.service.PartyService partyService) {
+  public void setPartyService(com.example.htmlmud.party.PartyService partyService) {
     this.partyService = partyService;
   }
 
@@ -409,7 +409,7 @@ public class DataIntegrityValidator implements ApplicationRunner {
       }
     }
 
-    Map<String, com.example.htmlmud.domain.party.model.PartyMemberSkill> partySkills = templateReader.getAllPartySkills();
+    Map<String, com.example.htmlmud.party.PartyMemberSkill> partySkills = templateReader.getAllPartySkills();
     for (var psk : partySkills.values()) {
       if (psk.getId() == null || psk.getId().isBlank()) {
         errors.add("發現 ID 為空的小隊技能模板！");

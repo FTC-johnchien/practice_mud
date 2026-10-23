@@ -18,11 +18,11 @@ import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
 import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
 import com.example.htmlmud.domain.dungeon.service.DungeonManager;
 import com.example.htmlmud.domain.dungeon.service.DungeonNavigator;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.CombatResourceType;
-import com.example.htmlmud.domain.party.service.PartyService;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.PartyMemberSkill;
+import com.example.htmlmud.party.CombatResourceType;
+import com.example.htmlmud.party.PartyService;
 import com.example.htmlmud.domain.world.GameStateBroadcastService;
 
 class PhaseOneMechanicsTest {

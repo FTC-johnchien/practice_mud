@@ -19,9 +19,9 @@ import com.example.htmlmud.domain.dungeon.battle.DefenseResolver;
 import com.example.htmlmud.domain.dungeon.battle.DefenseResolver.DefenseOutcome;
 import com.example.htmlmud.domain.dungeon.dto.DrpgStateDto;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.service.PartyService;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.PartyService;
 import com.example.htmlmud.template.TemplateReader;
 
 /**

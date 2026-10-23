@@ -12,13 +12,13 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.CombatResourceType;
-import com.example.htmlmud.domain.party.model.RowPosition;
-import com.example.htmlmud.domain.party.model.TacticsRule;
-import com.example.htmlmud.domain.party.model.TacticsTarget;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.PartyMemberSkill;
+import com.example.htmlmud.party.CombatResourceType;
+import com.example.htmlmud.party.RowPosition;
+import com.example.htmlmud.party.TacticsRule;
+import com.example.htmlmud.party.TacticsTarget;
 import com.example.htmlmud.domain.model.enums.BuffCategory;
 import com.example.htmlmud.domain.model.enums.BuffType;
 import com.example.htmlmud.domain.model.enums.DamageType;
@@ -44,7 +44,7 @@ public class DrpgCombatLoop {
   private final DrpgRewardService rewardService;
   private final DefenseResolver defenseResolver;
   private final BuffSettlementService buffSettlementService;
-  private final com.example.htmlmud.domain.party.service.FormationEngine formationEngine;
+  private final com.example.htmlmud.party.FormationEngine formationEngine;
   private final CombatFsmService combatFsmService;
   private final ExecutorService combatExecutor;
   @Autowired(required = false)
@@ -57,14 +57,14 @@ public class DrpgCombatLoop {
       DrpgRewardService rewardService,
       DefenseResolver defenseResolver,
       BuffSettlementService buffSettlementService,
-      com.example.htmlmud.domain.party.service.FormationEngine formationEngine,
+      com.example.htmlmud.party.FormationEngine formationEngine,
       CombatFsmService combatFsmService,
       @Qualifier("combatExecutor") @Autowired(required = false) ExecutorService combatExecutor) {
     this.tacticsService = tacticsService != null ? tacticsService : new DrpgEnemyTacticsService();
     this.rewardService = rewardService != null ? rewardService : new DrpgRewardService();
     this.defenseResolver = defenseResolver != null ? defenseResolver : new DefenseResolver();
     this.buffSettlementService = buffSettlementService != null ? buffSettlementService : new BuffSettlementService();
-    this.formationEngine = formationEngine != null ? formationEngine : new com.example.htmlmud.domain.party.service.FormationEngine();
+    this.formationEngine = formationEngine != null ? formationEngine : new com.example.htmlmud.party.FormationEngine();
     this.combatFsmService = combatFsmService != null ? combatFsmService : new CombatFsmService();
     this.combatExecutor = combatExecutor != null ? combatExecutor
         : Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("drpg-combat-fallback-", 0).factory());
@@ -75,32 +75,32 @@ public class DrpgCombatLoop {
       DrpgRewardService rewardService,
       DefenseResolver defenseResolver,
       BuffSettlementService buffSettlementService,
-      com.example.htmlmud.domain.party.service.FormationEngine formationEngine,
+      com.example.htmlmud.party.FormationEngine formationEngine,
       @Qualifier("combatExecutor") @Autowired(required = false) ExecutorService combatExecutor) {
     this(tacticsService, rewardService, defenseResolver, buffSettlementService, formationEngine, new CombatFsmService(), combatExecutor);
   }
 
   public DrpgCombatLoop(DrpgEnemyTacticsService tacticsService, DrpgRewardService rewardService,
       DefenseResolver defenseResolver, BuffSettlementService buffSettlementService,
-      com.example.htmlmud.domain.party.service.FormationEngine formationEngine) {
+      com.example.htmlmud.party.FormationEngine formationEngine) {
     this(tacticsService, rewardService, defenseResolver, buffSettlementService, formationEngine, null);
   }
 
   public DrpgCombatLoop(DrpgEnemyTacticsService tacticsService, DrpgRewardService rewardService,
       DefenseResolver defenseResolver, BuffSettlementService buffSettlementService) {
-    this(tacticsService, rewardService, defenseResolver, buffSettlementService, new com.example.htmlmud.domain.party.service.FormationEngine(), null);
+    this(tacticsService, rewardService, defenseResolver, buffSettlementService, new com.example.htmlmud.party.FormationEngine(), null);
   }
 
   public DrpgCombatLoop(DrpgEnemyTacticsService tacticsService, DrpgRewardService rewardService, DefenseResolver defenseResolver) {
-    this(tacticsService, rewardService, defenseResolver, new BuffSettlementService(), new com.example.htmlmud.domain.party.service.FormationEngine(), null);
+    this(tacticsService, rewardService, defenseResolver, new BuffSettlementService(), new com.example.htmlmud.party.FormationEngine(), null);
   }
 
   public DrpgCombatLoop(DrpgEnemyTacticsService tacticsService, DrpgRewardService rewardService) {
-    this(tacticsService, rewardService, new DefenseResolver(), new BuffSettlementService(), new com.example.htmlmud.domain.party.service.FormationEngine(), null);
+    this(tacticsService, rewardService, new DefenseResolver(), new BuffSettlementService(), new com.example.htmlmud.party.FormationEngine(), null);
   }
 
   public DrpgCombatLoop() {
-    this(new DrpgEnemyTacticsService(), new DrpgRewardService(), new DefenseResolver(), new BuffSettlementService(), new com.example.htmlmud.domain.party.service.FormationEngine(), null);
+    this(new DrpgEnemyTacticsService(), new DrpgRewardService(), new DefenseResolver(), new BuffSettlementService(), new com.example.htmlmud.party.FormationEngine(), null);
   }
 
   public BuffSettlementService getBuffSettlementService() {

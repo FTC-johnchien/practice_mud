@@ -11,9 +11,9 @@ import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
 import com.example.htmlmud.domain.dungeon.battle.BattleEnemy.CastingState;
 import com.example.htmlmud.domain.dungeon.battle.CombatFsmService;
 import com.example.htmlmud.domain.dungeon.dto.BattleEnemyViewDto;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.RowPosition;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.PartyMemberSkill;
+import com.example.htmlmud.party.RowPosition;
 
 /**
  * Milestone F2-01: 敵方行動預告蓄力條與即時反制打斷 (Combat React, COMBAT-REACT-01) 專屬整合測試

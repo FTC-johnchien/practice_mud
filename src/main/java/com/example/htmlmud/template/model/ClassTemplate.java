@@ -2,7 +2,7 @@ package com.example.htmlmud.template.model;
 
 import java.util.List;
 import java.util.Map;
-import com.example.htmlmud.domain.party.model.CombatResourceType;
+import com.example.htmlmud.party.CombatResourceType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 

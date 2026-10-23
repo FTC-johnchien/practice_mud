@@ -7,10 +7,10 @@ import java.util.Map;
 import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
 import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
 import com.example.htmlmud.domain.dungeon.model.DungeonTile;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.model.CombatResourceType;
-import com.example.htmlmud.domain.party.model.FormationTemplate;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.CombatResourceType;
+import com.example.htmlmud.party.FormationTemplate;
 import com.example.htmlmud.template.TemplateReader;
 
 public record DrpgStateDto(
@@ -381,7 +381,7 @@ public record DrpgStateDto(
           (party.isFormationActive() && party.getSlotForMember(memberIdx) != null
               ? party.getSlotForMember(memberIdx).getSpecialBonusDesc() : null),
           (party.isFormationActive() && party.getSlotForMember(memberIdx) != null
-              && (party.getSlotForMember(memberIdx).getRequiredRow() == com.example.htmlmud.domain.party.model.RowPosition.ANY
+              && (party.getSlotForMember(memberIdx).getRequiredRow() == com.example.htmlmud.party.RowPosition.ANY
                   || party.getSlotForMember(memberIdx).getRequiredRow() == m.getRow())),
           (party.isFormationActive() && party.getSlotForMember(memberIdx) != null
               ? party.getSlotForMember(memberIdx).getGridX() : Math.min(memberIdx, 4)),
@@ -609,7 +609,7 @@ public record DrpgStateDto(
       boolean armor,
       boolean equipment
   ) {
-    public static PartyItemSlotViewDto of(com.example.htmlmud.domain.party.model.PartyItemSlot s) {
+    public static PartyItemSlotViewDto of(com.example.htmlmud.party.PartyItemSlot s) {
       if (s == null) return null;
       return new PartyItemSlotViewDto(
           s.getSlotId(),
@@ -643,7 +643,7 @@ public record DrpgStateDto(
       int usedCount,
       List<PartyItemSlotViewDto> slots
   ) {
-    public static PartyInventoryViewDto of(com.example.htmlmud.domain.party.model.PartyInventory inv) {
+    public static PartyInventoryViewDto of(com.example.htmlmud.party.PartyInventory inv) {
       if (inv == null) return new PartyInventoryViewDto(30, 0, List.of());
       List<PartyItemSlotViewDto> slotDtos = inv.getSlots().stream()
           .map(PartyItemSlotViewDto::of)
@@ -851,12 +851,12 @@ public record DrpgStateDto(
       this(priority, condition, conditionLabel, conditionValue, target, targetLabel, skillId, skillName, enabled, description, "SKILL", null);
     }
 
-    public static TacticsRuleViewDto of(com.example.htmlmud.domain.party.model.TacticsRule r, com.example.htmlmud.domain.party.model.PartyMember m) {
+    public static TacticsRuleViewDto of(com.example.htmlmud.party.TacticsRule r, com.example.htmlmud.party.PartyMember m) {
       return of(r, m, m != null ? m.getTemplateReader() : null);
     }
 
-    public static TacticsRuleViewDto of(com.example.htmlmud.domain.party.model.TacticsRule r,
-        com.example.htmlmud.domain.party.model.PartyMember m, TemplateReader templateReader) {
+    public static TacticsRuleViewDto of(com.example.htmlmud.party.TacticsRule r,
+        com.example.htmlmud.party.PartyMember m, TemplateReader templateReader) {
       if (r == null) return null;
       String skillName = r.getSkillId();
       var skOpt = (templateReader != null && r.getSkillId() != null) ? templateReader.findSkill(r.getSkillId()) : java.util.Optional.<com.example.htmlmud.template.model.SkillTemplate>empty();
@@ -865,7 +865,7 @@ public record DrpgStateDto(
       } else if (m != null && m.getSkills() != null) {
         skillName = m.getSkills().stream()
             .filter(s -> s.getId().equalsIgnoreCase(r.getSkillId()))
-            .map(com.example.htmlmud.domain.party.model.PartyMemberSkill::getName)
+            .map(com.example.htmlmud.party.PartyMemberSkill::getName)
             .findFirst()
             .orElse(r.getSkillId());
       }

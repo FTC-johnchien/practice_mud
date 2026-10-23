@@ -17,8 +17,8 @@ import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.template.model.ItemTemplate;
 import com.example.htmlmud.domain.model.view.ItemView;
-import com.example.htmlmud.domain.party.model.PartyInventory;
-import com.example.htmlmud.domain.party.model.PartyItemSlot;
+import com.example.htmlmud.party.PartyInventory;
+import com.example.htmlmud.party.PartyItemSlot;
 import com.example.htmlmud.template.TemplateCatalog;
 
 public class CanonicalItemModelTest {

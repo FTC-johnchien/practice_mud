@@ -12,7 +12,7 @@ import com.example.htmlmud.domain.model.enums.MobKind;
 import com.example.htmlmud.domain.model.enums.MobRank;
 import com.example.htmlmud.template.model.CompanionTemplate;
 import com.example.htmlmud.template.model.MobTemplate;
-import com.example.htmlmud.domain.party.model.RowPosition;
+import com.example.htmlmud.party.RowPosition;
 import com.example.htmlmud.template.TemplateRepository;
 
 @SpringBootTest

@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.party.model;
+package com.example.htmlmud.party;
 
 /**
  * 戰術 Gambit 規則領域模型 (GambitRule)

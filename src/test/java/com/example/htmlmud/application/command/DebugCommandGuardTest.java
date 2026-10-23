@@ -17,7 +17,7 @@ import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
 import com.example.htmlmud.domain.dungeon.model.GridDirection;
 import com.example.htmlmud.domain.dungeon.service.DungeonManager;
 import com.example.htmlmud.domain.dungeon.service.DungeonNavigator;
-import com.example.htmlmud.domain.party.service.PartyService;
+import com.example.htmlmud.party.PartyService;
 import com.example.htmlmud.template.TemplateReader;
 import com.example.htmlmud.domain.world.GameStateBroadcastService;
 import com.example.htmlmud.domain.world.RoomMovementService;

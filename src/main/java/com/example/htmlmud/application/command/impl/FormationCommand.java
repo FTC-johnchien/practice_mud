@@ -10,10 +10,10 @@ import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
 import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
 import com.example.htmlmud.domain.dungeon.service.DungeonManager;
 import com.example.htmlmud.domain.dungeon.service.DungeonNavigator;
-import com.example.htmlmud.domain.party.model.FormationSkill;
-import com.example.htmlmud.domain.party.model.FormationTemplate;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.service.PartyService;
+import com.example.htmlmud.party.FormationSkill;
+import com.example.htmlmud.party.FormationTemplate;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public class FormationCommand implements PlayerCommand {
 
   private final PartyService partyService;
-  private final com.example.htmlmud.domain.party.service.FormationEngine formationEngine;
+  private final com.example.htmlmud.party.FormationEngine formationEngine;
   private final DungeonManager dungeonManager;
   private final DungeonNavigator dungeonNavigator;
   private final com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService;
@@ -56,13 +56,13 @@ public class FormationCommand implements PlayerCommand {
             int mIdx = Integer.parseInt(parts[1]);
             if (mIdx >= 0 && mIdx < party.getMembers().size()) {
               var m = party.getMembers().get(mIdx);
-              com.example.htmlmud.domain.party.model.RowPosition cur = m.getRow() != null
-                  ? m.getRow() : com.example.htmlmud.domain.party.model.RowPosition.FRONT;
+              com.example.htmlmud.party.RowPosition cur = m.getRow() != null
+                  ? m.getRow() : com.example.htmlmud.party.RowPosition.FRONT;
               var next = switch (cur) {
-                case FRONT -> com.example.htmlmud.domain.party.model.RowPosition.MIDDLE;
-                case MIDDLE -> com.example.htmlmud.domain.party.model.RowPosition.BACK;
-                case BACK -> com.example.htmlmud.domain.party.model.RowPosition.FRONT;
-                default -> com.example.htmlmud.domain.party.model.RowPosition.FRONT;
+                case FRONT -> com.example.htmlmud.party.RowPosition.MIDDLE;
+                case MIDDLE -> com.example.htmlmud.party.RowPosition.BACK;
+                case BACK -> com.example.htmlmud.party.RowPosition.FRONT;
+                default -> com.example.htmlmud.party.RowPosition.FRONT;
               };
               m.setRow(next);
               String rowName = switch (next) {

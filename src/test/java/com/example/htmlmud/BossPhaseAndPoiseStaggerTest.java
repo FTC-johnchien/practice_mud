@@ -18,7 +18,7 @@ import com.example.htmlmud.domain.model.enums.BuffCategory;
 import com.example.htmlmud.domain.model.enums.BuffType;
 import com.example.htmlmud.domain.model.enums.MobRank;
 import com.example.htmlmud.template.model.MobTemplate;
-import com.example.htmlmud.domain.party.model.RowPosition;
+import com.example.htmlmud.party.RowPosition;
 import com.example.htmlmud.template.TemplateReader;
 
 /**

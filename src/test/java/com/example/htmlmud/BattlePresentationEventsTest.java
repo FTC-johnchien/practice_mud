@@ -14,9 +14,9 @@ import com.example.htmlmud.domain.dungeon.battle.event.FxShape;
 import com.example.htmlmud.domain.dungeon.battle.event.HitOutcome;
 import com.example.htmlmud.domain.dungeon.battle.event.UnitRef;
 import com.example.htmlmud.domain.dungeon.dto.BattleEventsDto;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.PartyMemberSkill;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 
 class BattlePresentationEventsTest {

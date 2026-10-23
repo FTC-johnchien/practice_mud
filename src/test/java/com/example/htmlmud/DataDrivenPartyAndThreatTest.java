@@ -11,11 +11,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.example.htmlmud.domain.dungeon.battle.BattleContext;
 import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
 import com.example.htmlmud.domain.dungeon.battle.DrpgBattleService;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.RowPosition;
-import com.example.htmlmud.domain.party.service.PartyService;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.PartyMemberSkill;
+import com.example.htmlmud.party.RowPosition;
+import com.example.htmlmud.party.PartyService;
 import com.example.htmlmud.template.TemplateRepository;
 
 @SpringBootTest

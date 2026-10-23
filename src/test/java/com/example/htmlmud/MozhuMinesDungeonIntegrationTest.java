@@ -22,7 +22,7 @@ import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
 import com.example.htmlmud.domain.dungeon.model.DungeonTile;
 import com.example.htmlmud.domain.dungeon.service.DungeonManager;
 import com.example.htmlmud.domain.dungeon.service.DungeonNavigator;
-import com.example.htmlmud.domain.party.service.PartyService;
+import com.example.htmlmud.party.PartyService;
 import com.example.htmlmud.domain.actor.service.PlayerService;
 import com.example.htmlmud.domain.world.WorldManager;
 

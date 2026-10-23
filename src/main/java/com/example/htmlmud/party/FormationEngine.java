@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.party.service;
+package com.example.htmlmud.party;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,11 +8,6 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.dungeon.battle.ActiveBuff;
 import com.example.htmlmud.domain.model.enums.BuffCategory;
-import com.example.htmlmud.domain.party.model.FormationSlot;
-import com.example.htmlmud.domain.party.model.FormationTemplate;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.model.RowPosition;
 import lombok.extern.slf4j.Slf4j;
 
 /**

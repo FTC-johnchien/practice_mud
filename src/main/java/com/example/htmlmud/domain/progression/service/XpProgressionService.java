@@ -11,7 +11,7 @@ import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.entity.SkillEntry;
 import com.example.htmlmud.template.model.ClassTemplate;
 import com.example.htmlmud.template.model.SkillTemplate;
-import com.example.htmlmud.domain.party.model.PartyMember;
+import com.example.htmlmud.party.PartyMember;
 
 @Service
 public class XpProgressionService {

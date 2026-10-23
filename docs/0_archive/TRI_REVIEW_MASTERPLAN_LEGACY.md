@@ -230,7 +230,7 @@
   在 Path X (SP-01 ~ SP-07) 演進中，大量膠水代碼與雙軌實體已被重構或物理刪除，但多份核心架構文件與模組手冊未能及時同步，造成嚴重「文檔描述了已刪除代碼」的誤導風險。
 - **具體整治行動清單**：
   1. **清除 `SkillBridgeService` 歷史殘留**：
-     - 代碼於 SP-07 已徹底刪除 `SkillBridgeService.java`，改為大一統技能模型 [`UnifiedSkill`](../../src/main/java/com/example/htmlmud/domain/party/model/UnifiedSkill.java) 原地升級與縮放。
+     - 代碼於 SP-07 已徹底刪除 `SkillBridgeService.java`，改為大一統技能模型 [`UnifiedSkill`](../../src/main/java/com/example/htmlmud/party/UnifiedSkill.java) 原地升級與縮放。
      - 必須全面修訂 [`ARCHITECTURE.md:119`](../../ARCHITECTURE.md#L119)、[`MODULES_MAP.md:125`](../overview/MODULES_MAP.md#L125)、[`後端_M5:27`](../manual/後端_M5_技能境界與修煉模組_SKILL_AND_PROGRESSION.md#L27) 與 [`GAMEPLAY_OVERVIEW.md`](../overview/GAMEPLAY_OVERVIEW.md)，移除所有 `SkillBridgeService` 陳述，指引至 `UnifiedSkill` 與 `PartyMember.skills`。
   2. **同步 `MudContext` 為 Java 25 `ScopedValue`**：
      - 代碼 [`MudContext.java`](../../src/main/java/com/example/htmlmud/domain/context/MudContext.java) 實際已全面升級為 Java 25 `ScopedValue<Player>`。
@@ -264,7 +264,7 @@
   - 原代碼實作 `DEFAULT_CAPACITY = 30;`，部分手冊記錄為 40 格，造成跨文件與代碼常數漂移。
   - **決策結果**：**已拍板採方案 A（全域統一升級為 40 格）**。
     - 理由：5 人滿編小隊擁有 5×(5+2)=35 個裝備槽位，40 格行囊提供地牢冒險、刷寶掉落與備用裝備更寬裕流暢的冒險體驗。
-    - 落地改動：[`PartyInventory.java`](../../src/main/java/com/example/htmlmud/domain/party/model/PartyInventory.java) 常數升級為 `DEFAULT_CAPACITY = 40;`；同步更新前端 `index.html`、`bag-drawer.js`、`後端_M6`、`前端_FE1`、`前端_FE5`、`QUICKSTART.md`、`README.md` 與全域手冊。
+    - 落地改動：[`PartyInventory.java`](../../src/main/java/com/example/htmlmud/party/PartyInventory.java) 常數升級為 `DEFAULT_CAPACITY = 40;`；同步更新前端 `index.html`、`bag-drawer.js`、`後端_M6`、`前端_FE1`、`前端_FE5`、`QUICKSTART.md`、`README.md` 與全域手冊。
 - **驗收**：代碼常數、UI 渲染上限、所有文檔與測試斷言格數 100% 同步一致為 40 格。
 
 ### 23.6 DOC-WS-01：【P1 重要】前端 WebSocket 通訊實況對齊與健壯性重構 (Frontend WebSocket Modularization & Reconnect) — ✅ 已完成 (2026-10-20)

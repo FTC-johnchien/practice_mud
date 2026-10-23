@@ -13,9 +13,9 @@ import com.example.htmlmud.domain.dungeon.battle.CombatFsmService;
 import com.example.htmlmud.domain.dungeon.dto.BattleEnemyDto;
 import com.example.htmlmud.domain.dungeon.dto.BattleEnemyViewDto;
 import com.example.htmlmud.domain.dungeon.dto.CombatMobDto;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.party.model.RowPosition;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.PartyMemberSkill;
+import com.example.htmlmud.party.RowPosition;
 
 /**
  * 敵方行動預告蓄力條與打斷反制機制之專屬機制測試 (Milestone 1 - Task 3)

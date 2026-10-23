@@ -15,9 +15,9 @@ import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.model.enums.RoomFlag;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.party.service.PartyService;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyMember;
+import com.example.htmlmud.party.PartyService;
 import com.example.htmlmud.save.SaveGameService;
 import com.example.htmlmud.domain.actor.service.PlayerService;
 import com.example.htmlmud.domain.world.WorldManager;
@@ -128,8 +128,8 @@ class DataCoreIntegrityTest {
     PartyMember member = party.getMembers().get(0);
     int initialSkills = member.getSkills().size();
 
-    com.example.htmlmud.domain.party.model.PartyItemSlot daoCore =
-        com.example.htmlmud.domain.party.model.PartyItemSlot.builder()
+    com.example.htmlmud.party.PartyItemSlot daoCore =
+        com.example.htmlmud.party.PartyItemSlot.builder()
             .slotId("dao-core-slot-1")
             .itemId("dao_core_blade")
             .name("異變刀客道核")
@@ -145,7 +145,7 @@ class DataCoreIntegrityTest {
     assertThat(msg).contains("成功領悟掌握新絕學");
     assertThat(member.getSkills().size()).isEqualTo(initialSkills + 1);
 
-    com.example.htmlmud.domain.party.model.PartyMemberSkill learned = member.getSkills().stream()
+    com.example.htmlmud.party.PartyMemberSkill learned = member.getSkills().stream()
         .filter(s -> s.getId().equals("combo_blade_and_shadow"))
         .findFirst().orElse(null);
     assertThat(learned).isNotNull();

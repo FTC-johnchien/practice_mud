@@ -1,7 +1,7 @@
 package com.example.htmlmud.item;
 
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.domain.party.model.Party;
+import com.example.htmlmud.party.Party;
 import lombok.extern.slf4j.Slf4j;
 
 /**

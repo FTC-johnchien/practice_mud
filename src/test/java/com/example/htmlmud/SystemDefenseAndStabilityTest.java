@@ -31,8 +31,8 @@ import com.example.htmlmud.domain.dungeon.battle.DrpgCombatLoop;
 import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.enums.ItemType;
-import com.example.htmlmud.domain.party.model.Party;
-import com.example.htmlmud.domain.party.model.PartyMember;
+import com.example.htmlmud.party.Party;
+import com.example.htmlmud.party.PartyMember;
 import com.example.htmlmud.domain.world.WorldManager;
 
 @SpringBootTest
@@ -62,7 +62,7 @@ public class SystemDefenseAndStabilityTest {
     PartyMember member = PartyMember.builder()
         .id("test-stall-p")
         .name(playerName)
-        .row(com.example.htmlmud.domain.party.model.RowPosition.FRONT)
+        .row(com.example.htmlmud.party.RowPosition.FRONT)
         .stats(createStats(1000, 100))
         .attackIntervalMs(10000) // 超長攻擊間隔，模擬長久對峙
         .nextAttackTime(System.currentTimeMillis() + 10000)
