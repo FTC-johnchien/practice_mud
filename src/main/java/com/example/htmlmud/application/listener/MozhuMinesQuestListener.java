@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 墨竹山·道祖是克蘇魯 劇情任務監聽器
+ * 墨竹山·深淵仙途 劇情任務監聽器
  * 當擊倒畸變大師兄·宋天衡時，觸發「現代思維邏輯錨點格式化」與「秦劍師黑話玉牌」劇情事件
  */
 @Slf4j

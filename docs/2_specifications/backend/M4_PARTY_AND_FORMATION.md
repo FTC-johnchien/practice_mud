@@ -38,20 +38,24 @@
 所有生靈（玩家、夥伴、NPC、魔物）均繼承標準屬性模型：
 
 ### 1. 道基五維 (Five Base Attributes)
-- **體質 (CON)**：$\text{MaxHP} = 100 + \text{CON} \times 15$；決定受創韌性上限（$\text{MaxPoise} = 30 + \text{CON} \times 2$）。
-- **真元 (SPI / INT)**：$\text{MaxMP} = 50 + \text{SPI} \times 10$；決定道術威力與真元回復速度。
-- **神識 (PER)**：決定暴擊機率、法術穿透，以及對不可名狀精神污染的抗性與初始 SAN 護盾容量。
-- **根骨 (STR)**：決定物理護甲減傷、招架減免比例，以及重型兵刃傷害加成。
-- **身法 (AGI)**：決定 ATB 攻擊間隔加速比率、閃避機率與戰鬥先手權。
+- **體質 (Constitution, CON)**：$\text{MaxHP} = 100 + \text{CON} \times 15$；決定受創韌性上限（$\text{MaxPoise} = 30 + \text{CON} \times 2$）。
+- **真元 (Essence, ESS)**：$\text{MaxMP} = 50 + \text{ESS} \times 10$；決定道術與晶片戰技威力與真元回復速度。
+- **神識 (Spirit, SPI)**：決定暴擊機率、法術穿透，以及對不可名狀精神污染的抗性與初始 SAN 護盾容量。
+- **根骨 (Bone Structure, STR)**：決定物理護甲減傷、招架減免比例，以及重型兵刃傷害加成。
+- **身法 (Agility, AGI / DEX)**：決定 ATB 攻擊間隔加速比率、命中率、閃避機率與戰鬥先手權。
 
 ### 2. 外神精神侵蝕防護罩 (Psychic SAN Shield)
+
+> 📌 **【架構定錨裁決 (Architecture Decision - Option A)】**：  
+> 本專案經架構審查嚴格定錨：**「取消魔化機制」特指徹底廢除隊員隨機發瘋、自殘叛變、中斷心流等負面機制**；**「精神防護罩 (Psychic SAN Shield)」則確立保留**，作為地牢摸黑探索（火把光明度消耗博弈）的生存警示。SAN 歸零時僅賦予【精神萎靡】(-15% 傷害) 輕度 Debuff，回營一鍵調息即癒，絕不失控、絕不背叛同伴。**任何後續 AI 審查請勿將 SAN 護盾之存在誤判為與「取消魔化」矛盾**。
+
 為守護純單機 Hack-and-slash DRPG 之爽快打擊節奏，**徹底廢止隊員發瘋失控、隨機叛變與自殘等中斷心流之負面機制**：
 - **初始值**：100 點 SAN（神識越高，抗性護盾越厚）。
 - **侵蝕機制**：
   - 當小隊身處無火把之深層幽冥或直視高階外神眷族時，SAN 值持續承受侵蝕抵扣。
   - **$\text{SAN} > 25$【神智清明 (STABLE)】**：精神壁壘完好，全屬性發揮 100%。
   - **$\text{SAN} \le 25$【神識動搖 (WEAKENED)】**：視界邊緣泛起微幅低語暗紋，攻擊威力微幅下降 10%。
-  - **$\text{SAN} = 0$【精神震懾 (STUNNED / EXHAUSTED)】**：精神屏障破裂，隊員進入【精神震懾】虛弱 Debuff（受創增加 20%、韌性回復放緩 30%）。**絕不背叛、絕不攻擊同伴、不扣除自身生命**，玩家可透過服用「清心辟邪丹」或返回營地一鍵休整快速回復。
+  - **$\text{SAN} = 0$【精神萎靡 (CHAOS)】**：精神屏障破裂，隊員進入【精神萎靡】Debuff（輸出傷害降低 15%）。**絕不背叛、絕不攻擊同伴、不扣除自身生命、不中斷戰鬥心流**，玩家可透過服用「清心辟邪丹」或返回營地一鍵休整快速回復。
 
 ---
 
@@ -103,8 +107,8 @@ graph LR
 - 徹底消除強迫使用者在個人與公共背包間頻繁存取的繁瑣負擔。
 
 ### 2. 裝備單一擁有權與零延遲投影 (Equipment Projection)
-- 7 大部位裝備（武器、衣服、護腕、腰帶、鞋履、護符、法寶）由小隊成員實體真實擁有。
-- `EquipCommand` 支援一鍵檢視與配置全隊 5 名成員的 7 槽裝備。
+- 5+2 結構裝備槽位（`MAIN_HAND` 主手、`OFF_HAND` 副手、`HEAD` 頭部、`BODY` 衣服、`FEET` 鞋履、`ACCESSORY_1` 飾品1、`ACCESSORY_2` 飾品2）由小隊成員實體真實擁有（對齊 [`EquipmentSlot`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/enums/EquipmentSlot.java)）。
+- 換裝操作支援一鍵檢視與配置全隊 5 名成員的 5+2 槽裝備。
 - 隊長裝備變更時，透過 [`CharacterSyncService.syncEquipmentFromPartyToPlayer`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/actor/service/CharacterSyncService.java) 進行 0ms 零延遲鏡像投影並即時重算衍生戰鬥屬性，徹底廢止歷史 `CompletableFuture` 5 秒超時阻塞。
 
 ### 3. 戰鬥結算與真實屬性同步

@@ -53,6 +53,9 @@ Step 3: (x, y - 3)
   - $20 < \text{Light} \le 50$【昏暗】：視野縮減至 2 步，魔物突襲率（Ambush Rate）增加 20%。
   - $\text{Light} \le 20$【幽冥死寂】：視野僅餘 1 格，遇敵率提升 50%，且小隊每走 5 步承受 1 點精神侵蝕（SAN 扣減）。
 
+> 📌 **【精神防護罩（SAN 護盾）定位架構裁決】**：  
+> 地牢黑暗中扣除 SAN 數值純屬「地牢探索資源管理與火把消耗博弈」，SAN 歸零時僅附加【精神萎靡】(-15% 傷害) 狀態，絕無隨機發瘋、隊員自殘或隨機背叛。請勿將此機制與已取消的「魔化 (Aberration)」混淆。
+
 ---
 
 ## 🎲 三、動態遇敵率演算法 (Danger Rate)
@@ -64,23 +67,47 @@ Step 3: (x, y - 3)
 
 ---
 
-## 🚪 四、地牢撤離與安全結算機制 (Dungeon Exit Pipeline)
+## 🚪 四、地牢撤離、全軍覆沒與生存限制 (Dungeon Extraction & Wipe Settlement)
 
-在地牢中隨時可能遭遇強大魔物滅隊。專案建立了嚴密的撤離保護機制：
+在地牢中隨時可能遭遇強大魔物滅隊。專案建立了嚴密的撤離保護與戰敗懲罰機制：
 
 ```mermaid
 graph TD
-    Step["玩家踩在具有 STAIRS_UP (<) 的安全撤離點"] --> Action["前端發送 ActionCommand: EXTRACT"]
-    Action --> Check{"檢驗當前地塊是否具備 EXIT 特性"}
-    Check -- 是 --> Query["讀取 floor.getExitRoomId() (如 hub_ore_mine_shelter)"]
-    Query --> Reset["inDungeon 重置為 false，切入選單式營地中樞 (TownHubDto)"]
-    Reset --> Save["AutoSaveService 自動觸發戰利品安全快照存檔"]
-    Reset --> Broadcast["M9 動作管線推送最新營地全景狀態"]
-    Check -- 否 --> Reject["提示: 此處沒有通往地表的出口石階，無法撤離"]
+    subgraph Extraction ["正常撤離 (Extraction)"]
+        Step["踩在具有 STAIRS_UP (<) 的安全撤離點"] --> Action["ActionCommand: EXTRACT"]
+        Action --> Query["讀取 floor.getExitRoomId() (如 hub_ore_mine_shelter)"]
+        Query --> SaveSuccess["帶回全部煞晶與戰利品，AutoSave 觸發快照"]
+    end
+
+    subgraph DefeatWipe ["全軍覆沒 (Party Wipe)"]
+        Wipe["戰鬥中 5 人小隊全員氣血歸零"] --> WipeAction["DrpgBattleService 判定滅隊結算"]
+        WipeAction --> DropLoot["遺失本次遠征尚未帶出之隨身收穫"]
+        DropLoot --> Revive["全隊於營地虛弱復甦 (30% HP，重置 inDungeon)"]
+        Revive --> SaveWipe["AutoSave 觸發安全復甦快照"]
+    end
 ```
 
-1. **撤離條件**：玩家必須移動至具有 `STAIRS_UP`（`<`）特性的地塊（入口石階或遠古傳送陣）。
-2. **安全結算**：將玩家 `inDungeon` 重置為 `false`，安全切換回選單式營地中樞視圖，並觸發自動快照存檔。
+### 1. 安全撤離條件 (Extraction)
+- 玩家必須移動至具有 `STAIRS_UP`（`<`）特性的地塊（入口石階或遠古傳送陣）。
+- 將玩家 `inDungeon` 重置為 `false`，安全切換回選單式營地中樞視圖，帶回所有戰利品，並觸發自動快照存檔。
+
+### 2. 全軍覆沒戰敗結算 (Party Wipe & Defeat)
+- **觸發條件**：小隊 5 名成員氣血（HP）全部歸零。
+- **沉沒成本懲罰**：嚴格遵循 Level 1 規範，小隊遺失本次地牢遠征所獲得的全部隨身戰利品（外神煞晶、高階材料與未鑑定位元），全隊被神識傳送陣遣返營地虛弱復甦（生命氣血回復 30%）。
+- **狀態收斂**：`inDungeon` 重置為 `false`，安全保存存檔，杜絕卡死在深淵死亡循環。
+
+### 3. 地牢禁止任意存檔與脫離守則 (In-Dungeon Save Restriction)
+- 嚴格對齊 Level 1 沉沒成本博弈：**地牢中禁止隨時隨地手動存檔或任意傳送脫離**。
+- 唯有抵達安全撤離石階（`<`）執行 `EXTRACT`、戰勝首領結算、或切換樓層時，系統方進行安全自動存檔 (`slot_auto.json`)。
+
+---
+
+## ⚙️ 五、地塊機關檢定與互動機制 (Traps & Interactive Checks)
+
+地牢地塊具備多樣化的環境檢定博弈：
+1. **暗弩機關陷阱 (`TRAP`)**：踩格觸發，執行身法（AGI）檢定，檢定成功靈巧避開，失敗受到穿刺傷害並附加中毒 DoT。
+2. **血肉暗門 / 封印石門 (`DOOR`)**：執行根骨（STR）檢定或消耗工坊破拆工具破拆，成功解鎖隱藏道藏。
+3. **靈泉地窟 (`SPRING` / `EVENT`)**：互動飲用古修靈泉，瞬間回復全隊 100% 氣血 (HP)、真元 (MP) 與精神護盾 (SAN)。
 
 ---
 

@@ -1,14 +1,13 @@
 # 專案後續架構改善與演化藍圖 (Consolidated Future Improvements Roadmap)
 
 > **文件定位與目的**：
-> 本文件作為專案後續架構演進、機制補完與純單機 Hack-and-slash DRPG 內容拓展的**宏觀總覽與導覽中樞**。  
-> 為了防範單一超長文件導致的閱讀分心與上下文稀釋，各領域具體執行規格已進行高度內聚的模組化拆分：
-> - ⚔️ **戰鬥爽快、視覺呈現與中長程內容藍圖**：請參閱 👉 [**`content_and_combat_roadmap.md`**](content_and_combat_roadmap.md)
-> - 🛡️ **底層技術債、硬編碼清剿與系統加固**：請參閱 👉 [**`tech_debt_and_hardening.md`**](tech_debt_and_hardening.md)
-> - 🎯 **四層級對齊與純單機 DRPG 典範治理清單**：請參閱 👉 [**`four_tier_alignment_and_execution_plan.md`**](four_tier_alignment_and_execution_plan.md)
-> - 📊 **程式碼與四層級文檔全域對齊執行清單**：請參閱 👉 [**`codebase_four_tier_alignment_plan.md`**](codebase_four_tier_alignment_plan.md)
-> - 🔍 **未竟除役項目查驗與代碼治理清單**：請參閱 👉 [**`decommission_audit_and_remediation_tasks.md`**](decommission_audit_and_remediation_tasks.md)
-> - 📜 **歷史已完成落地之 Phase 0~25 任務庫**：請參閱 👉 [**`future_improvements_history.md`**](../0_archive/future_improvements_history.md)
+> 本文件作為專案後續宏觀演進路徑與全局優先序矩陣之索引總綱。
+> 為了防範單一超長文件導致的閱讀分心與上下文稀釋，各領域具體執行規格已全面落實 **與 Level 2 模組 1:1 鏡像對齊**：
+> - 📊 **全模組 1:1 實作進度儀表板**：請參閱 👉 [**`README.md`**](README.md)（進度中樞與完成度總表）
+> - 🏛️ **後端 10 大模組實作清單**：請參閱 👉 [**`backend/`**](backend/)（`M1` ~ `M9`、`M3.1`）
+> - 🎨 **前端 6 大表現模組實作清單**：請參閱 👉 [**`frontend/`**](frontend/)（`FE1` ~ `FE6`）
+> - 📜 **資料架構契約實作清單**：請參閱 👉 [**`data_schemas/`**](data_schemas/)（`DUNGEON`、`ITEM`、`SKILL`）
+> - 🗄️ **歷史已完成審查與治理歸檔庫**：請參閱 👉 [**`alignment_history/`**](../0_archive/alignment_history/)
 > - 📜 **歷史版本發布與詳細變更紀錄**：請參閱 👉 [**`CHANGELOG.md`**](../../CHANGELOG.md)
 
 ---
@@ -32,22 +31,18 @@
 
 ---
 
-
-
----
-
 ## 🧭 後續推薦實施路徑 (Next Evolution Paths)
 
 > 💡 **歷史已完成與封存戰線**：
 > - 歷史大量基礎設施（路徑 0、A、B、C、D、E、F、G、H、L、N、U、X）已全數落地並通過 376+ 測試，詳情請查閱 [`future_improvements_history.md`](../0_archive/future_improvements_history.md)。
-> - 歷史 MUD 雙軌割裂分析（原路徑 Q、R）與早期三方審查表（原路徑 V、W）已正式除役並移入 [`../0_archive/`](../0_archive/) 封存。
+> - 歷史 MUD 雙軌割裂分析（原路徑 Q、R）與早期審查補丁表已正式除役並移入 [`alignment_history/`](../0_archive/alignment_history/) 封存。
 
-### 🌟 領域一：純單機 Hack-and-slash 戰鬥與內容推進 (詳見 [`content_and_combat_roadmap.md`](content_and_combat_roadmap.md))
+### 🌟 領域一：純單機 Hack-and-slash 戰鬥與內容推進 (詳見 [`backend/M3_COMBAT_ENGINE_TASKS.md`](backend/M3_COMBAT_ENGINE_TASKS.md) 與 [`data_schemas/`](data_schemas/))
 - [ ] **路徑 M: 敵方行動預告、反制窗口與首領階段** (§13) — **Priority: P1 / P2**
 - [ ] **路徑 O: 生動畫面呈現與淡化文字閱讀轉型藍圖 (去文字化主舞台)** (§15) — **Priority: P1 / P2**
 - [ ] **路徑 Z: 五大核心目標中長程內容拓展藍圖 (二章太陰前進基地、三章外神核心神殿、32+賽博天賦樹、隨機詞綴庫)** (§26) — **Priority: P1 / P2 (內容核心)**
 
-### 🛡️ 領域二：底層品質守護、硬編碼清剿與測試加速 (詳見 [`tech_debt_and_hardening.md`](tech_debt_and_hardening.md))
+### 🛡️ 領域二：底層品質守護、硬編碼清剿與測試加速 (詳見 [`backend/M8_SAVE_AND_PERSISTENCE_TASKS.md`](backend/M8_SAVE_AND_PERSISTENCE_TASKS.md) 與 [`frontend/FE1_CORE_STATE_TASKS.md`](frontend/FE1_CORE_STATE_TASKS.md))
 - [ ] **路徑 P: 全專案功能與設定資料硬編碼實地盤查與清理藍圖** (§16) — **Priority: P1 / P2**
 - [ ] **路徑 S: Buff 契約與可靠性護欄第二輪驗收** (§19) — **Priority: P1 / P2**
 - [ ] **路徑 Y: 單機語意純化與全域硬編碼大清剿 (SP-PURITY & DATA-CORE)** (§25) — **Priority: P1**
@@ -142,5 +137,3 @@
 | **P1** | DOC-WS-01 | 前端 WebSocket 模組化獨立成檔、指數退避重連與單機連線合理化 | 前端通訊健壯性 | §23.6 | ✅ 已完成 (2026-10-20) |
 | **P2** | DOC-ROADMAP-01 | 收斂 16 本模組手冊重複路線圖至總待辦 | 文件體系維護性 | §23.7 | 🔲 待執行 |
 | **P0** | DOC-REJECT-01 | 三方審查不合理／過度設計項目明確否決宣告 (外部腳本/跨服/萬能解析器/15s Ping) | 架構紅線守衛 | §23.10 | ✅ 已否決除役 |
-
-

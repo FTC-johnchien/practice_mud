@@ -28,5 +28,20 @@
     "subType": "KEY_ITEM",
     "value": 100,
     "quality": "UNCOMMON"
+  },
+  {
+    "id": "item_chip_qianxing_tracker",
+    "name": "千星科技加密追蹤晶片",
+    "aliases": ["chip", "tracker", "晶片", "追蹤晶片", "千星晶片"],
+    "description": "自宋天衡畸變心核殘骸中剝離的千星殖民巨企加密特工晶片，指示燈仍以 12Hz 規律閃爍。",
+    "type": "KEY_ITEM",
+    "subType": "CHIP",
+    "stats": {
+      "slot": "ACCESSORY_2",
+      "speed": 8,
+      "poiseBreakPower": 12
+    },
+    "value": 500,
+    "quality": "RARE"
   }
 ]

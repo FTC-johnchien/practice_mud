@@ -16,7 +16,7 @@
 
 ## ⚡ 11. 測試工程分層加速與可觀測性加固 (Testing & Observability) — Priority: P3
 
-> **來源**：歷史檢視（Claude／Codex）；本次測試執行限制與治理建議見 [`docs/0_archive/references/Copilot_Review.md`](../0_archive/references/Copilot_Review.md) §五、§四。
+> **來源**：歷史檢視（Claude／Codex）；本次測試執行限制與治理建議見 [`docs/0_references/Copilot_Review.md`](../0_references/Copilot_Review.md) §五、§四。
 > **核心目標**：測試架構下沉為純單元測試提高執行效率；補齊關鍵指標與稽核日誌。
 
 ### 11.1 測試套件分層與純單元測試下沉 (P3)
@@ -98,7 +98,7 @@
 
 ## 🧭 19. 2026-10-13 Copilot 審查後續：Buff 契約與可靠性護欄 (Review Follow-ups)
 
-> **來源**：[`docs/0_archive/references/Copilot_Review.md`](../0_archive/references/Copilot_Review.md)。以下項目是本次靜態審查發現，尚未代表已決議的行為設計或已完成修復；實作前仍須以現行程式碼、部署設定與測試再次驗收。
+> **來源**：[`docs/0_references/Copilot_Review.md`](../0_references/Copilot_Review.md)。以下項目是本次靜態審查發現，尚未代表已決議的行為設計或已完成修復；實作前仍須以現行程式碼、部署設定與測試再次驗收。
 
 ### 19.1 ASYNC-03：持久化提交與停機生命週期原子化 — ✅ 已完成 (2026-10-13)
 

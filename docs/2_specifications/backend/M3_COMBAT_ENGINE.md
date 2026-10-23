@@ -270,7 +270,7 @@ public static ResistanceResult resolveResistance(int rawDamage, DamageType type,
 
 ### 3. ⚡ 效能與高頻運算最佳化 (Performance & Concurrency)
 - **高頻 Tick 零垃圾回收分配 (Zero-Allocation Tick Design)**：
-  戰鬥迴圈（每 200ms 一次）避免頻繁創建短命 `DamageResult`、`HitEvent` 物件，改採物件池（ThreadLocal Object Pool）或不可變 Record 複用，將戰鬥期間的 JVM Minor GC 頻率降至趨近於零，杜絕任何微小卡頓。
+  戰鬥迴圈（每 500ms 一次）避免頻繁創建短命 `DamageResult`、`HitEvent` 物件，改採物件池（ThreadLocal Object Pool）或不可變 Record 複用，將戰鬥期間的 JVM Minor GC 頻率降至趨近於零，杜絕任何微小卡頓。
 - **無鎖化生靈屬性並行結算**：多實體在場時，生靈 Buff 結算與 ATB 推進支援並行流（Parallel Stream）安全結算，高密度群怪戰鬥幀率極致平穩。
 
 ### 4. 🔌 可擴充性與模組化 (Extensibility & Modding)

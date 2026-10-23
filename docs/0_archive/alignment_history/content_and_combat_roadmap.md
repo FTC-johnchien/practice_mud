@@ -1,7 +1,7 @@
 # ⚔️ 戰鬥爽快、視覺轉型與五大核心目標內容藍圖 (Content & Combat Roadmap)
 
 > **文件定位與目的**：
-> 本文件專注於《道祖是克蘇魯》作為純單機 Hack-and-slash DRPG 的**戰鬥機制深化、前端生動去文字化視覺呈現，以及五大核心目標中長程內容推進主線**。  
+> 本文件專注於《深淵仙途》作為純單機 Hack-and-slash DRPG 的**戰鬥機制深化、前端生動去文字化視覺呈現，以及五大核心目標中長程內容推進主線**。  
 > 宏觀演進總表請參閱 👉 [`FUTURE_IMPROVEMENTS.md`](FUTURE_IMPROVEMENTS.md)。
 
 ---
@@ -15,7 +15,7 @@
 
 ## ⚔️ 13. 敵方行動預告、反制窗口與首領階段 (Readable & Reactive Combat) — Priority: P1 / P2
 
-> **來源**：2026-10-05 Codex 戰鬥呈現檢視；最新整體發展建議見 [`docs/0_archive/references/Copilot_Review.md`](../0_archive/references/Copilot_Review.md) §四。
+> **來源**：2026-10-05 Codex 戰鬥呈現檢視；最新整體發展建議見 [`docs/0_references/Copilot_Review.md`](../0_references/Copilot_Review.md) §四。
 > **核心目標**：讓玩家能讀懂敵方下一步、使用既有戰鬥資源反制，並將招式／首領階段維持在資料驅動規則內；先完成一個普通敵人與一個首領的垂直切片，不先引入 Lua 或大型行為樹框架。
 
 ### 13.1 敵方技能效果與預告狀態 (ENEMY-ACTION-01) (P1)

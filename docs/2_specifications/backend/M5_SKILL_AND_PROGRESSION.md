@@ -40,20 +40,39 @@ $$\text{ScaledDamage} = \text{BaseDamage} \times (1.0 + (\text{SkillLevel} - 1) 
 
 ---
 
-## 🧬 三、賽博特工四大流派與晶片超頻技能規範 (Cyber Cultivation Trees)
+## 🧬 三、賽博特工四大流派與 16 大標準神通矩陣 (Cyber Cultivation Trees)
 
-依據 L1 [`CYBERPUNK_CULTIVATION_SPEC.md`](../../1_requirements/CYBERPUNK_CULTIVATION_SPEC.md)，主角與特工小隊技能體系映射為四大賽博修仙流派：
+依據 Level 1《[CYBERPUNK_CULTIVATION_SPEC.md](../../1_requirements/CYBERPUNK_CULTIVATION_SPEC.md)》與 Level 2《[SKILL_SCHEMA.md](../data_schemas/SKILL_SCHEMA.md)》，全專案技能體系 1:1 映射為四大賽博修仙流派與 16 項神通契約。所有技能在前端預設**一律展示純正東方仙俠神通名稱**，並經由 `CognitiveProxyService` 隨特工晶片加載率動態解鎖賽博真相透鏡：
 
-| 流派名稱 | 賽博核心能力 | 修仙對應體系 | 核心機制與縮放屬性 | 代表戰技 (VS-01 起) |
-| :--- | :--- | :--- | :--- | :--- |
-| **虛空神經道**<br>(Neural Overclock) | 突觸超頻 / 子彈時間 | 太白劍氣 / 遁形空刃 | 身法 (AGI) 縮放，高頻普攻削韌，反制打斷 (Interrupt) | `cyber_step` (神經超頻步)<br>`taibai_interrupt` (太白斷空) |
-| **生化血肉道**<br>(Bio-Mutation) | 異形基因強殖 / 骨質外骨骼 | 荒古血煞 / 魔神不滅體 | 體質 (CON) 縮放，高額霸體，生命偷取與流血撕裂 (Bleed) | `flesh_blade` (強殖角質刃)<br>`flesh_carapace` (血煞甲冑) |
-| **重力巨力道**<br>(Graviton Bastion) | 重力錨定 / 質量透鏡衝擊 | 厚土撼地 / 混元巨力 | 根骨 (STR) 縮放，重型物理重擊，極致破防 (Poise Break) | `gravity_slam` (引力撼地震)<br>`kinetic_barrier` (混元動能盾) |
-| **太虛矩陣道**<br>(Void Matrix) | 算力超導 / 虛數溢出協議 | 九霄雷法 / 太虛靈火 | 真元/神識 (SPI/PER) 縮放，全場元素連鎖 (Combo) 與狀態引爆 | `overcharge_arc` (超導玄雷弧)<br>`nanite_infusion` (青木納米修復) |
+### 16 大標準神通清單 (對齊 L1 仙俠主要定名)
+
+| 技能代碼 (`id`) | 仙俠主稱謂 (`name`) | 流派 (`school`) | 階級 | 連攜角色 (`comboRole`) | 破防削韌 | 核心戰術機制 |
+| :--- | :--- | :---: | :---: | :---: | :---: | :--- |
+| `skill_neural_overclock_step` | **【燃魂溯光·剎那千秋步】** | `CYBER_HACK` | 1 | `PRIMER` | 25 | 突觸超頻，施加裂魂印記，自身極速 |
+| `skill_causal_hijack` | **【偷天換日·轉煞移因訣】** | `CYBER_HACK` | 2 | `NONE` (反制) | 30 | 劫持施法，命中 100% 打斷蓄力 |
+| `skill_packet_storm` | **【萬念俱雜·搜魂奪舍刺】** | `CYBER_HACK` | 2 | `PRIMER` | 20 | 高頻突刺，疊加感電傳導 DoT |
+| `skill_zero_day_strike` | **【九冥無間·破空斬魄芒】** | `CYBER_HACK` | 3 | `DETONATOR` | 45 | 致命破綻終結打擊，引爆 1.8x 爆裂 |
+| `skill_bio_keratin_blade` | **【化煞成罡·玄甲骨刃斬】** | `GENE_BIO` | 1 | `DETONATOR` | 45 | 強殖幾丁質重劈，引爆 1.5x 衝擊波 |
+| `skill_blood_siphon` | **【血影遁真·九幽嗜元魔經】** | `GENE_BIO` | 2 | `PRIMER` | 20 | 造成撕裂 DoT 並吸取 30% 氣血 |
+| `skill_flesh_aberration` | **【魔神降世·八臂修羅法身】** | `GENE_BIO` | 3 | `NONE` (霸體) | 0 | 進入 10s 鋼骨霸體，免疫控制，攻速 +40% |
+| `skill_hive_swarm` | **【萬毒噬心·腐仙百足針】** | `GENE_BIO` | 2 | `PRIMER` | 15 | 施加幽冥劇毒 DoT，降低目標防禦 20% |
+| `skill_gravity_anchor` | **【不動明王·九嶽鎮嶽印】** | `MECHA_CULT` | 1 | `NONE` (護坦) | 35 | 嘲諷全體敵怪，自身罡氣上限 +50% |
+| `skill_matter_crush` | **【裂地崩山·混元覆海錘】** | `MECHA_CULT` | 2 | `DETONATOR` | 55 | 巨力破防打擊，目標破防狀態下傷害翻倍 |
+| `skill_optical_camouflage` | **【鏡花水月·無相匿息咒】** | `MECHA_CULT` | 2 | `PRIMER` | 10 | 進入隱匿狀態，下一次打擊暴擊率 100% |
+| `skill_quantum_mirror` | **【兩儀逆轉·太虛乾坤罡】** | `MECHA_CULT` | 3 | `NONE` (反震) | 25 | 生成反傷力場，反彈 50% 物理傷害 |
+| `skill_null_pointer_collapse` | **【萬法皆空·大乘湮滅指】** | `VOID_PSI` | 3 | `DETONATOR` | 60 | 引爆目標全體 DoT，造成 2.5x 混沌湮滅 |
+| `skill_overcharge_arc` | **【九霄紫電·雷霆震煞術】** | `VOID_PSI` | 1 | `PRIMER` | 30 | 發射高壓電弧，同排敵人間連鎖跳躍 |
+| `skill_memory_wipe` | **【忘川秋水·醉夢前塵曲】** | `VOID_PSI` | 2 | `NONE` (控場) | 20 | 清空目標蓄力條並陷入 2.5s 眩暈 |
+| `skill_system_reboot` | **【金丹涅槃·枯木逢春訣】** | `VOID_PSI` | 3 | `NONE` (急救) | 0 | 全隊恢復 50% HP 並重置隊友技能冷卻 |
+
+### 靈識認知轉譯代理 (Cognitive Lore Proxy for Skills)
+- **初始狀態 (< 30%)**：技能面板、戰鬥日誌與戰術 HUD 100% 呈現仙俠神通名，無任何科技或賽博字眼。
+- **微光異象 (30% ~ 70%)**：技能懸停資訊卡偶現藍色 Glitch 微光，標註「神經超頻」、「引子/引爆」連攜標籤。
+- **科技覺醒 (> 70%)**：解鎖副標題，揭露【燃魂溯光·剎那千秋步】實為千星科技「神經突觸超頻協議」之底層真相。
 
 ### 特工晶片插槽與超頻技能裝配 (Chip Socketing)
 - **主動技能槽位**：每位隊員預設 4 個戰術法訣槽（`activeSkills[4]`）。
-- **特工晶片插槽**：主角前世特工晶片提供 2 個額外「超頻插槽（Overclock Sockets）」，可自由安裝戰利品繳獲的賽博晶片（如「子彈時間反制晶片」）。
+- **特工晶片插槽**：主角前世特工晶片提供 2 個額外「超頻插槽（Overclock Sockets）」，隨晶片加載進度（`agentChipLoad` 12% ➔ 100%）逐步解鎖。
 - **技能重置 (Zero-Cost Respec)**：在營地道場設施中洗點與更換技能完全零成本，鼓勵玩家自由測試技能 Synergy 構築。
 
 ---
@@ -64,7 +83,7 @@ $$\text{ScaledDamage} = \text{BaseDamage} \times (1.0 + (\text{SkillLevel} - 1) 
    - 預設 1000ms ~ 1500ms。
    - 施放大部分攻擊技能後，觸發小隊隊員的短暫停頓，防範按鍵連發與巨集作弊。
 2. **專屬冷卻 (Cooldown, CD)**：
-   - 高階仙術（如「九天玄煞斬」）具備 8 ~ 15 秒獨立冷卻，需在戰鬥中看準破防時機釋放。
+   - 高階仙術（如「萬法皆空·大乘湮滅指」）具備 8 ~ 15 秒獨立冷卻，需在戰鬥中看準破防時機釋放。
 
 ---
 
@@ -78,11 +97,11 @@ $$\text{ScaledDamage} = \text{BaseDamage} \times (1.0 + (\text{SkillLevel} - 1) 
 | **真元消耗** | `com.example.htmlmud.domain.service.SkillCostService` | 施法檢定真元消耗與冷卻時間判定 |
 | **公式解算** | `com.example.htmlmud.domain.service.FormulaEvaluator` | 數值公式字串動態解析 |
 | **資料設定** | `src/main/resources/data/classes/classes.json` | 境界階梯、各境界基礎屬性與成長率 |
-| **資料設定** | `src/main/resources/data/skills.json` | 通用仙法與心法基礎設定 |
+| **資料真值源** | `src/main/resources/data/party/party_skills.json` | 16 大標準賽博戰技資料庫（仙俠主稱謂） |
 
 ---
 
-## 🚀 五、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
+## 🚀 六、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
 
 為使技能與境界修煉體系具備現代 RPG 的 Build 構建自由度與修仙特色，確立以下四大演進方向：
 
@@ -99,7 +118,7 @@ $$\text{ScaledDamage} = \text{BaseDamage} \times (1.0 + (\text{SkillLevel} - 1) 
 
 ### 3. ⚡ 效能與記憶體最佳化 (Performance & Concurrency)
 - **時間戳無輪詢冷卻演算法 (Timestamp-based Cooldown)**：
-  摒棄過去每 200ms Tick 遍歷所有隊員技能進行 `cd -= 200` 的傳統輪詢做法，全面改為 `readyAtTimestamp = now() + cdMs`。判定時僅需一次長整數比較（`now >= readyAtTimestamp`），技能冷卻判定時間複雜度降為 $O(1)$，Tick 耗時降至微秒級。
+  摒棄過去每 500ms Tick 遍歷所有隊員技能進行 `cd -= 500` 的傳統輪詢做法，全面改為 `readyAtTimestamp = now() + cdMs`。判定時僅需一次長整數比較（`now >= readyAtTimestamp`），技能冷卻判定時間複雜度降為 $O(1)$，Tick 耗時降至微秒級。
 
 ### 4. 🔌 可擴充性與模組化 (Extensibility & Modding)
 - **心法招式銘刻與自創神通 (Skill Synthesis & Rune Socketing)**：

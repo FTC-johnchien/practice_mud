@@ -6,13 +6,13 @@
 
 ---
 
-## 📌 當前狀態：文件對齊全面完工，Milestone VS-01 待命準備中 (Standby for VS-01)
+## 📌 當前狀態：四層級架構與 Level 3 任務清單已全面落實 1:1 模組鏡像對齊，全模組進度看板已建立，VS-01 保持待命準備中 (Alignment & Governance Complete)
 
 > **當前完成事項**：
-> 1. ✅ **需求層 (L1)**：確立五大核心目標（世界觀/戰鬥爽快/技能組合/裝備收集/角色養成）、純單機 Action-Tactical DRPG 典範、取消魔化懲罰。
-> 2. ✅ **規格層 (L2)**：後端 M1 重構為選單式營地設施手冊 (`M1_TOWN_HUB_AND_FACILITIES.md`)，前端 FE4 重構為營地中樞與動作列手冊 (`FE4_TOWN_HUB_AND_ACTION_BAR.md`)，M9 確立純單機狀態與動作管線，徹底清剿 MUD 房間與文字指令包袱。
-> 3. ✅ **任務庫 (L3)**：`FUTURE_IMPROVEMENTS.md` 置頂宣告典範轉移與歷史任務除役。
-> 4. ✅ **架構歸檔**：舊 manual / overview 等資料夾全數收斂歸檔至 `docs/0_archive/`。
+> 1. ✅ **需求層 (L1)**：確立五大核心目標（世界觀/戰鬥爽快/技能組合/裝備收集/角色養成）、純單機 Action-Tactical DRPG 典範、SAN 護盾生存化與消除背刺魔化。
+> 2. ✅ **規格層 (L2)**：後端 10 大模組 (M1~M9, M3.1)、前端 6 大表現模組 (FE1~FE6)、3 大資料 Schema 契約全數完備並與程式碼單一真相源對齊。
+> 3. ✅ **任務庫 (L3)**：全面重構為與 L2 規格 1:1 鏡像對齊結構（`backend/` 10 個、`frontend/` 6 個、`data_schemas/` 3 個模組專屬實作清單），建立中央進度看板 [`README.md`](../3_task_lists/README.md) 與宏觀演進總綱 [`FUTURE_IMPROVEMENTS.md`](../3_task_lists/FUTURE_IMPROVEMENTS.md)；歷史審查清單完整歸檔至 `docs/0_archive/alignment_history/`。
+> 4. ✅ **架構歸檔與鏈結守護**：239 條文檔內部鏈結通過 `check-doc-links.ps1` 100% 驗證。
 >
 > ⏳ **下一階段目標**：待使用者指示啟動 **Milestone VS-01 — 第一章序幕垂直切片：黑煞宗地底礦脈・採礦奴隸與特工覺醒 (Vertical Slice, P1)**。
 
@@ -28,7 +28,7 @@
 
 - [ ] **Task 1 (VS-01-LORE-GEOLOGY): 黑煞宗地底礦脈地質與外神卵鞘偽地殼環境重塑 (世界觀介紹)**
   - **目標檔案**：`src/main/resources/data/dungeons/mozhu_mines_b1f.json`、[`DUNGEON_SCHEMA.md`](../2_specifications/data_schemas/DUNGEON_SCHEMA.md)
-  - **契約規範**：依循 `DUNGEON_SCHEMA.md` 規範 10x10 地牢網格，注入外神卵塊 (`E`)、偽地殼生化腐殖 (`B`)、工程師基岩 (`#`) 地貌 Legend、遇敵率 (`encounterRate=0.15`) 與事件點 (`events`)。
+  - **契約規範**：依循 `DUNGEON_SCHEMA.md` 規範 10x10 地牢網格，確認黑煞煞石岩壁 (`#`)、腐朽枕木坑道 (`.`)、避煞木門 (`D`)、雜役木箱 (`T`)、墨家殘碑 (`E`)、外神卵塊菌絲泥沼 (`X`)、虛月血肉祭壇首領房 (`B`) 地貌 Legend 與遇敵配置 (`encounters.dangerRate=15`)。
   - **驗收標準**：地圖資料 100% 通過 `DataIntegrityValidator` 檢驗；進入地城時第一人稱描述精準呈現克蘇魯外神卵鞘地質異變。
 
 - [ ] **Task 2 (VS-01-AGENT-HUD): 主角特工晶片 HUD 視界 (12%...) 與道基五維初始潛能點加點 (世界觀 + 角色養成)**
@@ -38,16 +38,16 @@
 
 - [ ] **Task 3 (VS-01-CYBER-SKILLS): 首批賽博特工戰技資料驅動配置【神經超頻步】與【強殖角質刃】(戰鬥爽快 + 技能組合)**
   - **目標檔案**：`src/main/resources/data/party/party_skills.json`、[`SKILL_SCHEMA.md`](../2_specifications/data_schemas/SKILL_SCHEMA.md)
-  - **契約規範**：依循 `SKILL_SCHEMA.md` 規範：
-    - `neuro_overclock_step`（神經超頻步）：流派 `CYBER_HACK`、超頻 `tier=1`、`comboRole=PRIMER`、破防削韌 15、提供閃避/急速 Buff。
-    - `bio_carapace_blade`（強殖角質刃）：流派 `GENE_BIO`、超頻 `tier=1`、`comboRole=DETONATOR`、破防削韌 25、引爆 Primer 造成 1.5x 爆裂。
-  - **驗收標準**：`DataIntegrityValidator` 啟動檢驗零警告；在 `DrpgCombatLoop` 戰鬥中能穩定發動 Primer 裂魂標記與 Detonator 引爆震盪衝擊波。
+  - **契約規範**：依循 `SKILL_SCHEMA.md` 規範，對齊 `party_skills.json` 序章核心戰技：
+    - `skill_neural_overclock_step`（神經超頻步）：流派 `CYBER_HACK`、超頻 `tier=1`、`comboRole=PRIMER`、破防削韌 25、提供急速與破綻打斷。
+    - `skill_bio_keratin_blade`（強殖角質刃）：流派 `GENE_BIO`、超頻 `tier=1`、`comboRole=DETONATOR`、破防削韌 45、引爆 Primer 造成 1.5x 爆裂。
+  - **驗收標準**：`DataIntegrityValidator` 啟動檢驗零警告；在 `DrpgCombatLoop` 戰鬥中驗證發動 Primer 裂魂標記與 Detonator 引爆震盪衝擊波。
 
 - [ ] **Task 4 (VS-01-LOOT-CHIP): 首領掉落【千星科技加密追蹤晶片】與隨機詞綴裝備掉落驗收 (裝備收集 + 376+ 測試守護)**
-  - **目標檔案**：`src/main/resources/data/items/items.json`、[`ITEM_SCHEMA.md`](../2_specifications/data_schemas/ITEM_SCHEMA.md)、[`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java)
+  - **目標檔案**：`src/main/resources/data/global/items/quest/quest_items.json`、[`ITEM_SCHEMA.md`](../2_specifications/data_schemas/ITEM_SCHEMA.md)、[`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java)
   - **契約規範**：依循 `ITEM_SCHEMA.md` 規範：
-    - 黑煞宗礦脈首領（監工/密室修士）掉落專屬任務道核 `thousand_stars_tracking_chip`（千星科技加密追蹤晶片）。
-    - 戰鬥結算掉落武器/防具自動隨機掛載前綴與後綴詞條（例如：`超頻的黑煞短匕` 附帶 +15 削韌強度）。
+    - 黑煞宗礦脈首領（密室畸變修士·宋天衡）掉落專屬任務道核 `item_chip_qianxing_tracker`（千星科技加密追蹤晶片）。
+    - 戰鬥結算掉落武器/防具自動隨機掛載前綴與後綴詞條（例如：`超頻的黑煞短匕` 附帶削韌強度）。
   - **驗收標準**：`victory-modal.js` 結算視窗金色 3D 翻牌正確呈現晶片與隨機詞綴裝備；`.\test.ps1` 既有 376 項測試 100% 綠燈守護。
 
 
@@ -161,12 +161,11 @@
 
 ## 🔮 後續備選里程碑 (Upcoming Milestones)
 
-### 📌 Milestone 3 — 後端領域層 Package 結構按模組收斂 (M1/M4/M5/M6)
-- **已完成 M1**: 探索與世界模組 (`domain.world`)
-- **待執行 M5/M4/M3**: 修為進程、生靈主體、戰鬥模組收斂。
+### 📌 Milestone VS-02 — 第二章：太陰古塚・生化道奴與古修士遺藏 (P2)
+- **核心內容**：推進至地牢 `taiyin_tomb_b1f.json`，挑戰雙階段守墓道奴，解鎖五大陣法動態切換與高級詞綴鍛造。
 
-### 📌 Milestone 4 — 前端歷史樣式巨石除役 (FE-6)
-- **目標**：完成 `static/css/style.css`（122 KB）歷史巨石安全移除，徹底切換至 `style-01` ~ `style-07` 七層樣式流。
+### 📌 Milestone VS-03 — 第三章：千星殖民巨艦墜毀核心・神經網絡逆向工程 (P2)
+- **核心內容**：探索飛船殘骸高危區域，解鎖特工晶片 50%+ 深度超頻與虛數靈能流派神通。
 
 ---
 
@@ -175,5 +174,6 @@
 任何一個 Micro-Task 標記為 `[x]` 前，必須無條件通過以下檢驗：
 1. **代碼實作**：100% 遵循「專案第一紅線（資料驅動、零硬編碼、深拷貝完整性）」。
 2. **測試驗證**：新增機制必須具備對應測試，且 `.\test.ps1` 全量執行 100% 綠燈全數通過。
-3. **文檔同步**：若涉及 API、DTO、配置結構變更，同步更新對應的 `docs/manual/` 模組手冊。
+3. **文檔同步**：若涉及 API、DTO、配置結構變更，同步更新對應的 `docs/2_specifications/` 模組手冊。
 4. **繁體中文**：所有註解、日誌、Commit 訊息一律使用標準繁體中文。
+5. **防漂移守護**：嚴格遵循 [`.agents/rules/documentation_alignment_guardrails.md`](../../.agents/rules/documentation_alignment_guardrails.md)，落實「單一真相源 (SSoT)」與「查證優先 (Evidence-First)」，任務卡嚴禁自創/重複抄寫數值，禁止提前假完成。

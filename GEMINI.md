@@ -49,6 +49,10 @@
         6. 待辦武器庫：[`docs/3_task_lists/FUTURE_IMPROVEMENTS.md`](./docs/3_task_lists/FUTURE_IMPROVEMENTS.md)（中長程藍圖與五大目標拓展路線唯一來源）。
         7. 歷史紀錄：[`docs/3_task_lists/CHANGELOG.md`](./docs/3_task_lists/CHANGELOG.md) 與 [`future_improvements_history.md`](./docs/3_task_lists/future_improvements_history.md)。
         8. 封存庫：[`docs/0_archive/`](./docs/0_archive/)（歷史審查與舊架構封存，不具規範力）。
+      - **三大層級遞進治理與使用者審批鐵律 (Mandatory Cascading Governance & User Approval Rules)**：
+        1. **`1_requirements` (L1) 為最主要規範**：當 L1 內容發生任何異動時，必須檢視現有 L2 文件是否涵蓋 L1 異動後的內容。若需新增或修改，AI 必須提供建議並由「使用者審批決定」後，方可執行 L2 文件的實質新增/修改。
+        2. **`2_specifications` (L2) 為 L1 內容的完整模組規劃**：當 L2 內容發生任何異動時，必須檢視現有 L3 文件是否涵蓋 L2 異動後的內容。若需新增或修改，AI 必須提供建議並由「使用者審批決定」後，方可執行 L3 文件的實質新增/修改。
+        3. **`3_task_lists` (L3) 為 L2 規格的 1:1 完整實作項目清單**：忠實記錄所有模組之落實現況、待辦與驗收標準。
       - **四級內容狀態標籤規範**：專案文件統一標註【現行已驗證】、【已決議待實作】、【候選提案】與【歷史／已除役】，避免將遠期藍圖誤當現行規格。
       - **待辦與未決事項第一時間入庫**：凡是在對話討論中提出但「未決定」、「待決議」或「待執行/待重構」的項目，**必須第一時間記錄至 [`docs/3_task_lists/FUTURE_IMPROVEMENTS.md`](./docs/3_task_lists/FUTURE_IMPROVEMENTS.md)**。
       - **每次新增/變更項目必記 Log**：**每次進行專案功能新增、程式碼重構、缺陷修復或規格變更時，必須同步將變更內容詳細登載到 [`docs/3_task_lists/CHANGELOG.md`](./docs/3_task_lists/CHANGELOG.md)**。
@@ -61,6 +65,18 @@
         3. **視覺呈現 100% 資料驅動 (Data-Driven VFX)**：意圖圖標、技能光效、NPC 立繪、法術軌跡一律於 JSON 配置（如 `intentIcon`, `portrait`, `vfxStyle`），嚴禁前端 JS 硬編碼名稱比對。
         4. **微動態與無障礙兼顧 (Reduced Motion)**：所有震動、受擊閃爍、位移微動畫必須相容 `@media (prefers-reduced-motion)`，提供降級靜態數值呈現。
         5. **杜絕半成品開發模式**：任何新機制落地，必須同步提供對應的 UI/UX 視覺呈現與微動畫！
+  11. **四層文件對齊與單一真相源防漂移鐵律 (Documentation Alignment & Anti-Drift Guardrails) — 🚨 極度重要**：
+      - **系統規則指針**：詳細約束已登錄為 Antigravity 工作區系統級規則：👉 [`.agents/rules/documentation_alignment_guardrails.md`](./.agents/rules/documentation_alignment_guardrails.md)。
+      - **單一真相源 (SSoT) 職責分工與動態演進準則**：
+        1. **L1 需求**：定義玩家體驗與世界觀哲學，不綁定易變的具體平衡數值（如冷卻毫秒、削韌精確數值），保持純粹設計彈性。
+        2. **L2 規格**：定義架構與 Schema 資料契約（欄位名、型別與結構）；若新機制需要補充 JSON 格式欄位，同步在此擴充契約。
+        3. **Data JSON（唯一動態數值庫與落盤載體）**：**100% 資料驅動是專案標準**。遊戲進行中所有數值來源一律以 JSON 為準。在專案討論與迭代過程中，進行技能/怪物/裝備的**新增、數值平衡調整（Buff/Nerf）或 JSON 格式補充**，**一律直接在 `data/**/*.json` 中落盤更新**，絕對禁止在 Java 代碼中寫死數值分支；一旦落盤，JSON 即為該數值的權威真相源。
+        4. **L4 任務卡**：
+           - **新增/調整類任務**：明確指出目標 JSON 檔案與預計配置之參數，並以「落盤至 JSON」作為交付依據。
+           - **驗證/既有機制任務**：嚴禁憑記憶捏造與現行 JSON 相衝突的舊數值，一律以 Canonical ID 指針引用，杜絕多處雙寫漂移。
+      - **查證優先原則 (Evidence-First)**：AI 撰寫或更新任務卡前，必須先使用 `grep_search` 或 `view_file` 查證現有程式碼與 JSON 中真實存在的檔案與行號，嚴禁憑記憶草擬。
+      - **防漂移看門狗守護**：文件搬移與重構後強制執行 `.\scripts\check-doc-links.ps1` 驗證無死鏈；全專案僅有 `ACTIVE_TASKS.md` 為唯一當前微觀看板，嚴禁在未落地前提前打勾。
+      - **內聚性豁免規範**：一般文件原則性 < 350 行；高內聚模組規格手冊（如 `M3_1_BUFF`、`MODULES_MAP`）明確豁免至 400 行，嚴禁形式主義切碎文件。
 
 ---
 

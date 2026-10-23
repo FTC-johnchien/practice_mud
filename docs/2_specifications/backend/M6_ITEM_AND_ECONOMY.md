@@ -81,16 +81,39 @@ public enum EquipmentSlot {
 
 ---
 
+## 🔍 三、多階靈識認知透鏡與動態轉譯管線 (Cognitive Item Lenses)
+
+為實踐「表層修仙，漸進揭示真相」原則，道具範本支援多階認知透鏡（`lenses`）：
+
+```json
+{
+  "id": "item_bio_keratin_chip",
+  "category": "MATERIAL",
+  "basePrice": 150,
+  "lenses": [
+    { "minProgress": 0,  "name": "一團怪物的血肉", "desc": "自地底礦脈妖物剝離的黏稠血肉，隱隱散發血腥溫熱。" },
+    { "minProgress": 35, "name": "幾丁質活性骨晶", "desc": "表面硬化且密布神經節點，握持時使前世靈骨隱隱發燙。" },
+    { "minProgress": 70, "name": "【強殖角質晶片·試作型】", "desc": "工程師二代仿生兵器組件，可於藏經閣鑲嵌解鎖戰技【強殖角質刃】。" }
+  ]
+}
+```
+
+- **轉譯機制**：組裝 `DrpgStateDto` 物品清單時，由 `CognitiveProxyService.filterItem(item, chipLoadingRate)` 動態選取符合當前特工晶片進度的 `name` 與 `desc`。
+- **故障特效 (Glitch FX)**：在進度處於臨界區間（如 30%~40% 或 65%~75%）時，DTO 會攜帶 `glitch: true` 標籤，前端自動觸發字元抖動與科技浮水印光斑。
+
+---
+
 ## 🔗 四、代表類別與資料設定檔
 
 | 項目 | 路徑 / 名稱 | 職責 |
 | :--- | :--- | :--- |
 | **小隊背包** | `com.example.htmlmud.domain.party.model.PartyInventory` | 40 格小隊儲物袋堆疊、存取與序列化 |
 | **物品實體** | `com.example.htmlmud.domain.model.GameItem` | 靈物實例、耐久度、詞綴與五維加成 |
+| **靈識轉譯代理** | `com.example.htmlmud.domain.world.service.CognitiveProxyService` | 依據晶片加載度動態過濾物品多階透鏡（`lenses`）名稱與描述 |
 | **槽位枚舉** | `com.example.htmlmud.domain.model.enums.EquipmentSlot` | 裝備欄位嚴格枚舉契約 (5+2 結構) |
 | **商店指令** | `com.example.htmlmud.application.command.impl.ShopCommand` | 貨棧清單列出、買入、賣出指令處理 |
 | **拾取丟棄** | `com.example.htmlmud.application.command.impl.DropCommand` | 地面物品拾取（`get`）與丟棄（`drop`） |
-| **資料設定** | `src/main/resources/data/items.json` | 全域裝備、法寶、丹藥與素材屬性模板 |
+| **資料設定** | `src/main/resources/data/items.json` | 全域裝備、法寶、丹藥與素材屬性模板（宣告 `lenses` 透鏡） |
 | **資料設定** | `src/main/resources/data/zones/*/shops.json` | 區域商店商品、價格與無限庫存宣告 |
 
 ---

@@ -1,8 +1,15 @@
 # 🧩 遊戲功能模組全景手冊 (Game Functional Modules Map)
 
 > **文件定位**：  
-> 本手冊自「功能模組／次系統（Subsystems）」的視角出發，將整個《道祖是克蘇魯》遊戲解構為清晰的功能模組拼圖。  
-> 幫助開發者與研究者快速掌握各模組的職責邊界、代表類別、設定檔位置與協同工作流。
+> 本手冊自「功能模組／次系統（Subsystems）」的視角出發，將整個《深淵仙途》遊戲解構為清晰的功能模組拼圖。  
+> 幫助開發者與研究者快速掌握各模組的職責邊界、代表類別、設定檔位置與協同工作流。  
+> 遊戲定位為**「純單機第一人稱地牢探索與爽快砍殺刷寶 RPG (Single-Player Hack-and-Slash DRPG)」**，堅決貫徹 **85% 砍殺刷寶 vs 15% 非侵入式背景世界觀** 準則。
+
+> [!IMPORTANT]
+> **三大層級遞進治理與使用者審批鐵律 (Mandatory Cascading Governance & User Approval Rules)**：
+> 1. **`1_requirements` (L1) 為最主要規範**：當 L1 內容發生任何異動時，必須檢視現有 L2 文件是否涵蓋 L1 異動後的內容。**若有需要進行新增或修改，AI 必須提供建議並由使用者決定是否新增/修改 L2 文件。**
+> 2. **`2_specifications` (L2) 為 L1 內容的完整模組規劃**：當 L2 內容發生任何異動時，必須檢視現有 L3 文件是否涵蓋 L2 異動後的內容。**若有需要進行新增或修改，AI 必須提供建議並由使用者決定是否新增/修改 L3 文件。**
+> 3. **`3_task_lists` (L3) 為 L2 規格的完整實作項目清單**。
 
 ---
 
@@ -56,11 +63,12 @@ graph TD
 ### 1. M1: 營地中樞與功能設施模組 (Town Hub & Facilities)
 - 📖 **詳細技術手冊**：[`backend/M1_TOWN_HUB_AND_FACILITIES.md`](backend/M1_TOWN_HUB_AND_FACILITIES.md)
 - **核心職責**：
-  - 管理安全營地（如黑煞宗採掘營、地下避難所）的選單式功能設施（裝備工坊、晶片實驗室、道場修煉、醫療站、地牢傳送門）。
+  - 管理安全營地（如黑煞宗採掘營、地下避難所）的選單式功能設施（百煉堂、靈台藏經閣、雜役演武道場、回春客棧、廢棄礦脈坑道）。
+  - **靈識認知轉譯代理 (`CognitiveProxyService`)**：依據特工晶片加載度（0%~100%），將底層科技設施與物品動態轉譯為對應之仙俠/解密表象。
   - 提供全隊一鍵休整、補給整備與冒險出征校驗。
   - 管理駐留生靈（NPC）劇情分支樹與對話任務分發，徹底淘汰 MUD 房間 exits 拓撲。
 - **代表類別**：
-  - `TownHubService`, `DialogueService`, `TownHubDto`
+  - `TownHubService`, `CognitiveProxyService`, `DialogueService`, `TownHubDto`
 - **資料設定來源**：
   - `src/main/resources/data/hub/facilities.json`, `data/hub/dialogues.json`
 
@@ -79,7 +87,7 @@ graph TD
 ### 3. M3: 核心戰鬥引擎模組 (Combat Engine)
 - 📖 **詳細技術手冊**：[`backend/M3_COMBAT_ENGINE.md`](backend/M3_COMBAT_ENGINE.md)
 - **核心職責**：
-  - **半即時迴圈**：基於 200ms Tick 頻率推進戰鬥時間線，處理敵人攻擊間隔與玩家小隊技能 GCD/吟唱。
+  - **半即時迴圈**：基於 500ms Tick 頻率推進戰鬥時間線，處理敵人攻擊間隔與玩家小隊技能 GCD/吟唱。
   - **圓桌判定演算法**：優先級單次骰算（未命中 ➔ 閃避 ➔ 招架 ➔ 暴擊 ➔ 普通命中）。
   - **罡氣削韌與破防（Poise System）**：攻擊扣減敵人韌性條，破防時觸發「虛弱受創」與傷害倍率加成。
   - **九大五行傷害與抗性結算**：物理 10% 保底穿透、五行抗性百分比折減，抗性 $>100\%$ 觸發靈氣逆流回血。
@@ -132,9 +140,10 @@ graph TD
 - **核心職責**：
   - 裝備槽位管理（武器 `MAIN_HAND`/`OFF_HAND`、頭部 `HEAD`、胸甲 `BODY`、鞋子 `FEET`、飾品 `ACCESSORY_1`/`ACCESSORY_2` 5+2 結構）。
   - 40 格小隊共用儲物袋（`PartyInventory`）與堆疊機制。
+  - **多階靈識認知透鏡 (`lenses`) 轉譯**：協同 `CognitiveProxyService`，根據知識與晶片加載度將素材由「一團怪物的血肉」動態解密為「工程師生化晶片」。
   - 貨棧買賣交易、貨幣（碎銀、靈石）扣除、消耗品使用（百草金創藥、辟邪靈茶）。
 - **代表類別**：
-  - `PartyInventory`, `PartyItemSlot`, `GameItem`, `ShopCommand`, `DropCommand`, `GetCommand`
+  - `PartyInventory`, `PartyItemSlot`, `GameItem`, `CognitiveProxyService`, `ShopCommand`, `DropCommand`, `GetCommand`
 - **資料設定來源**：
   - `src/main/resources/data/items.json`, `data/zones/*/shops.json`
 

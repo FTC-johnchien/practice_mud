@@ -36,39 +36,60 @@ graph TD
 
 ## 🏬 二、五大核心營地設施規格 (Facilities Specification)
 
-營地包含五大機能設施，全部採用 100% 資料驅動範本配置 (`facilities.json`)：
+為配合「表層仙俠，漸進揭示真相」原則（Option C），營地設施在介面卡牌與對話中**一律優先呈現東方仙俠風格稱謂**，底層掛接相應的 DRPG 業務邏輯：
 
-### 1. 裝備工坊 (The Forge & Scrap Workshop)
-- **職責**：
-  - **分解與提煉 (Salvage)**：將地牢刷出的廢棄法寶與賽博殘骸分解為強化合金與靈能晶石。
+### 1. 百煉堂 (The Forge & Scrap Workshop)
+- **表層仙俠語意**：宗門神兵古鐵百煉堂，長老爐火純青，傳承神兵開光與法寶注靈之法。
+- **實戰業務職責**：
+  - **分解與提煉 (Salvage)**：將地牢刷出的廢棄法寶與金屬殘骸分解為煉器玄鐵與靈石。
   - **數值強化 (Refinement)**：消耗礦石提升武器物理傷害與防具護甲韌性。
   - **詞綴重鑄 (Affix Reforge)**：洗鍊稀有裝備的隨機詞綴（如提升削韌效率、增加連鎖暴擊率）。
 
-### 2. 賽博晶片實驗室 (Cybernetic Chip Lab)
-- **職責**：
-  - **前世特工晶片調試 (Agent Core Overclock)**：消耗外神髓液與算力點數，提升主角特工晶片的核心超頻能力。
-  - **神經插槽鑲嵌 (Socketing)**：為隊員解鎖神經插槽，安裝特殊晶片（如「子彈時間反制插槽」、「元素共振超導晶片」）。
+### 2. 靈台藏經閣 (Cultivation Dojo & Chip Lab)
+- **表層仙俠語意**：宗門秘藏道統閣，供奉前世宿慧玉簡與通靈靈骨，由引路道者協助修士調試周天。
+- **實戰業務職責**：
+  - **前世道骨調試 (特工晶片超頻 Agent Core Overclock)**：消耗外神髓液與算力點數，提升主角特工晶片的核心超頻能力。
+  - **神經插槽鑲嵌 (Socketing)**：為隊員解鎖神經插槽，安裝特殊道骨晶片（如「子彈時間反制插槽」、「元素共振超導晶片」）。
+  - **天賦洗點與技能研習 (Skill Mastery)**：自由調整四大流派技能點數，零成本洗點以鼓勵自由構建 Build。
 
-### 3. 道場與傳功室 (Cultivation Dojo)
-- **職責**：
-  - **技能天賦樹重置與加點 (Skill Mastery)**：自由調整四大流派技能點數，零成本洗點以鼓勵玩家自由實驗技能構建（Synergy）。
+### 3. 雜役演武道場 (Combat Tactics & Gambit)
+- **表層仙俠語意**：外門雜役校場與同門宿營，提供弟子陣法磨合、戰陣演練與夥伴招募。
+- **實戰業務職責**：
+  - **夥伴招募與編制 (Party Roster)**：招募鐵牛、凌霜、燕青、墨衍，調配 5 人小隊名冊。
   - **連招戰術方針配置 (Gambit Auto-Tactics)**：設定隊員在半即時戰鬥中的 AI 觸發條件（如「敵方處於破防狀態時優先釋放重力裂變」）。
+  - **陣法調度 (Formation Engine)**：配置五行八卦陣法孔位與站位加成。
 
-### 4. 生化醫療站 (Biochemical Clinic)
-- **職責**：
-  - **基因修復與強化 (Gene Infusion)**：利用地牢採掘的外神卵鞘精華進行基因強殖，獲得永久被動屬性加成。
-  - **行囊補給配置 (Supplies Packing)**：出征前配置小隊火把數量、納米修復劑與興奮劑。
+### 4. 宗門外門集市 (Outer Sect Market & Smuggling Bazaar)
+- **表層仙俠語意**：黑煞宗外門雜役互市與私下黑市地攤，各路採掘散修銷贓換取靈石與丹藥之所。
+- **實戰業務職責**：
+  - **戰利品收購與銷贓 (Shop Sell)**：收購地牢中採集的黑煞石、妖獸幾丁質材料與未綁定裝備。
+  - **生存基礎物資補給 (Shop Buy)**：購買火把、金創藥、辟邪符籙與乾糧，支援地牢探險消耗品配額。
 
-### 5. 地牢傳送門 (Dungeon Extraction Portal)
-- **職責**：
+### 5. 回春客棧／通鋪柴房 (Clinic & Rest)
+- **表層仙俠語意**：礦脈下方的避煞客棧與雜役通鋪，燃點辟邪香，供修士調息吐納。
+- **實戰業務職責**：
+  - **一鍵打坐休整 (Rest & Full Recovery)**：全隊生命氣血 (HP)、真元法力 (MP) 與精神防護罩 (SAN) 瞬間回滿，解除【精神萎靡】狀態。
+  - **行囊補給配置 (Supplies Packing)**：出征前配置小隊火把數量、金創藥與辟邪符。
+
+### 6. 廢棄礦脈坑道 (Dungeon Extraction Portal)
+- **表層仙俠語意**：墨竹山封閉禁區與黑煞宗地底礦道入口，石階延伸向未知地底深淵。
+- **實戰業務職責**：
   - **區域選擇**：選擇進入目標地牢（如「黑煞宗地底礦脈・深坑一階」）。
   - **出征安全校驗**：檢查小隊是否編制完整、行囊是否有必要照明物資，確認後進入第一人稱 3D 走格子視圖。
 
 ---
 
+### 7. 靈識認知轉譯代理與漸進世界觀真相揭示機制 (Cognitive Lore Proxy)
+- **架構核心**：由後端 [`CognitiveProxyService`](#五代表類別與資料結構) 負責在組裝 `TownHubDto` 時進行動態認知過濾：
+  - **加載度 < 30% (愚昧求生·純仙俠)**：所有設施名稱與描述 100% 為東方修仙古風（百煉堂、靈台藏經閣、雜役演武道場、宗門外門集市、回春客棧、廢棄礦脈坑道），NPC 對話無任何賽博或外神名詞。
+  - **加載度 30% ~ 70% (知見初裂·異象微顯)**：點擊設施時，文字介面邊緣偶現微幅藍色螢幕光斑（Glitch FX），懸停描述中解鎖「活性幾丁質」、「靈流等離子殘痕」等過渡註記。
+  - **加載度 > 70% (真理洞察·科技覺醒)**：主角特工晶片算力覺醒，設施選單中解鎖「特工戰術分析視角」，揭露百煉堂實為工程師生化兵器組裝台、藏經閣實為千星科技神經元算法實驗室之真容。
+
+---
+
 ## 💬 三、NPC 劇情對話與任務分發機制 (Dialogue & Quests)
 
-NPC 交互徹底廢除 MUD 文字指令（如 `look npc`、`ask elder about sword`），全部由結構化 JSON 驅動：
+NPC 交互徹底廢除 MUD 文字指令（如 `look npc`、`ask elder about sword`），全部由結構化 JSON 驅動，且其對話文字同樣受 `CognitiveProxyService` 轉譯保護：
 
 ### 對話樹範本結構 (`dialogues.json`)
 ```json
@@ -77,11 +98,22 @@ NPC 交互徹底廢除 MUD 文字指令（如 `look npc`、`ask elder about swor
   "npcId": "elder_kuang_nu",
   "npcName": "採礦奴隸長老・鐵手",
   "avatar": "assets/npcs/elder_ironhand.webp",
-  "introText": "咳咳...小子，看你的眼神，你的神經晶片覺醒了？別出聲，宗門那幫執事就在礦井上方監視著...",
+  "introText": "咳咳...小子，看你的眼神，你的前世宿慧道骨覺醒了？別出聲，宗門那幫執事就在礦井上方監視著...",
+  "lenses": [
+    {
+      "minProgress": 0,
+      "text": "咳咳...小子，看你的眼神，你的前世宿慧道骨覺醒了？別出聲，宗門那幫執事就在礦井上方監視著..."
+    },
+    {
+      "minProgress": 70,
+      "text": "咳咳...小子，看你的瞳孔反射，你的特工神經晶片覺醒了？別出聲，千星科技與宗門執事就在礦井上方監視著...",
+      "glitch": true
+    }
+  ],
   "options": [
     {
       "optionId": "opt_ask_chip",
-      "text": "【詢問】你認得我腦中的晶片？",
+      "text": "【詢問】老人家，你認得我眉心這枚道骨？",
       "condition": "quest.vs01_awakening == ACTIVE",
       "nextDialogueId": "npc_elder_chip_secret"
     },
@@ -124,10 +156,11 @@ public record TownHubDto(
 | 項目 | 路徑 / 名稱 | 職責 |
 | :--- | :--- | :--- |
 | **營地服務** | `com.example.htmlmud.domain.service.TownHubService` | 設施路由、休整結算與傳送進入地牢 |
+| **靈識轉譯代理** | `com.example.htmlmud.domain.world.service.CognitiveProxyService` | 依據晶片加載度動態過濾設施、物品與技能的認知透鏡呈現 |
 | **對話服務** | `com.example.htmlmud.domain.service.DialogueService` | 劇情對話節點判定與獎勵派發 |
-| **設施資料** | `src/main/resources/data/hub/facilities.json` | 營地機能設施參數與解鎖條件 |
+| **設施資料** | `src/main/resources/data/hub/facilities.json` | 營地機能設施參數與解鎖條件（含三階透鏡名詞） |
 | **對話資料** | `src/main/resources/data/hub/dialogues.json` | NPC 劇情樹、分支選項與任務掛鉤 |
-| **狀態投影** | `com.example.htmlmud.adapter.dto.TownHubDto` | 傳遞至前端渲染之唯讀營地狀態 |
+| **狀態投影** | `com.example.htmlmud.adapter.dto.TownHubDto` | 傳遞至前端渲染之唯讀營地狀態（經 Proxy 轉譯） |
 
 ---
 

@@ -69,6 +69,18 @@ saves/
 }
 ```
 
+### 存檔安全鎖與覆滅結算協定 (Save Safeguards & Defeat Protocols)
+
+依據 Level 1《GAMEPLAY_CORE_LOOPS.md §5.4》，存檔系統嚴格落實單機 DRPG 生存張力與防作弊保護：
+
+1. **地牢手動存檔限制 (In-Dungeon Save Lock)**：
+   - 當小隊身處地牢深淵時（`inDungeon = true` 且當前座標非撤離點 `E` 或石階），前端存檔按鈕自動鎖定置灰，後端 ActionHandler 阻斷手動儲存請求。
+   - 玩家唯有在安全營地（`viewMode == TOWN`）或在地牢抵達撤離點石階時，方可進行手動存檔。
+2. **小隊覆滅結算與強制自動存檔 (Defeat Wipe & AutoSave Protocol)**：
+   - 當小隊在戰鬥或地牢中全員 HP 歸零覆滅時，觸發滅團結算：清空本次探索暫存未鑑定掉落物（已裝備物品與出發前行囊物資保留）。
+   - 小隊狀態強制重置回安全營地（`viewMode = TOWN`），全員以 30% 氣血虛弱復甦。
+   - 結算完成後，系統立即觸發原子性自動存檔至 `slot_auto.json`，杜絕玩家藉由強退遊戲逃避死亡懲罰。
+
 ---
 
 ## 🔄 三、版本治理與遷移機制 (Schema Versioning)

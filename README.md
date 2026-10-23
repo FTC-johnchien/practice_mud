@@ -1,13 +1,13 @@
-# ☯️ 道祖是克蘇魯 (Dao Ancestor is Cthulhu)
+# ☯️ 深淵仙途 (The Dao Protocol: Abyssal Overclock)
 ### 純單機賽博修仙 Hack-and-slash DRPG (Action-Tactical DRPG)
 
 [![Java](https://img.shields.io/badge/Java-21%20%2F%2025-orange.svg)](https://openjdk.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-green.svg)](https://spring.io/projects/spring-boot)
-[![Tests](https://img.shields.io/badge/Tests-373%20Passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-376%20Passed-brightgreen.svg)]()
 [![Architecture](https://img.shields.io/badge/Architecture-Pure%20Singleplayer%20DRPG%20%26%20100%25%20Data--Driven-blue.svg)]()
 
 > **遊戲簡介**：  
-> 《道祖是克蘇魯》是一款融合了**克蘇魯神話不可名狀恐怖**、**賽博巨企掠奪科技**與**東方古典修仙**的**純單機 Action-Tactical DRPG**。  
+> 《深淵仙途》是一款融合了**克蘇魯神話不可名狀恐怖**、**賽博巨企掠奪科技**與**東方古典修仙**的**純單機 Action-Tactical DRPG**。  
 > 玩家將扮演在黑煞宗地底礦脈通鋪甦醒的採礦奴隸——其體內加載著前世賽博特工晶片與異形強殖基因。在**「選單式營地中樞 (Town Hub)」**進行裝備鍛造分解、晶片超頻鑲嵌、道場洗點與小隊整備；在**「第一人稱 3D 網格地牢 (Grid Dungeon)」**中置身深邃幽冥走廊，消耗火把探索迷宮與避開機關陷阱；並在半即時戰鬥中藉由圓桌判定、罡氣削韌破防 (Poise Break)、反制打斷 (Interrupt)、元素連鎖與古仙陣法連攜合擊，體驗拳拳到肉、滿屏跳字的極致砍殺刷寶快感！
 
 ---

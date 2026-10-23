@@ -49,17 +49,29 @@
 }
 ```
 
-### 2. 戰鬥戰技施放動作 (`CAST_SKILL`)
+### 2. 地塊互動與撤離動作 (`INTERACT` / `EXTRACT`)
+```json
+{
+  "action": "INTERACT" // 調查當前地塊：開啟寶箱、解除機關陷阱、破拆暗門
+}
+```
+```json
+{
+  "action": "EXTRACT" // 當站在向上石階或傳送陣時安全撤離地牢，結算戰利品返回營地中樞
+}
+```
+
+### 3. 戰鬥戰技施放動作 (`CAST_SKILL`)
 ```json
 {
   "action": "CAST_SKILL",
   "actorId": "char-1",
-  "skillId": "skill_strike_1",
+  "skillId": "skill_neural_overclock_step",
   "targetId": "mob-001"
 }
 ```
 
-### 3. 陣眼終結技發動動作 (`FORMATION_FINISHER`)
+### 4. 陣眼終結技發動動作 (`FORMATION_FINISHER`)
 ```json
 {
   "action": "FORMATION_FINISHER",
@@ -67,22 +79,57 @@
 }
 ```
 
-### 4. 營地選單設施交互 (`TOWN_FACILITY`)
+### 5. 營地選單設施交互 (`TOWN_FACILITY`)
 ```json
 {
   "action": "TOWN_FACILITY",
-  "facility": "INN", // 可為 "INN" (客棧調息), "BLACKSMITH" (鐵匠注靈), "SHOP" (集市補給), "DUNGEON_ENTRANCE" (啟程出征)
-  "subAction": "REST"
+  "facility": "INN", // 可為 "INN" (客棧調息), "SHOP" (集市補給/買賣), "FORGE" (工坊注靈/強化), "DOJO" (道場洗點/Gambit), "LAB" (晶片超頻), "PORTAL" (傳送啟程)
+  "subAction": "REST", // 如 "REST", "BUY", "SELL", "REFORGE", "OVERCLOCK", "ENTER_DUNGEON"
+  "payload": { ... }
 }
 ```
 
-### 5. 裝備穿戴與小隊管理 (`EQUIP` / `PARTY_FORMATION`)
+### 6. NPC 劇情對話交互 (`INTERACT_NPC`)
+```json
+{
+  "action": "INTERACT_NPC",
+  "npcId": "elder_kuang_nu",
+  "optionId": "opt_ask_chip" // 選項 ID，或若初次對話則省略 optionId
+}
+```
+
+### 7. 裝備穿脫與物品使用 (`EQUIP` / `UNEQUIP` / `USE_ITEM`)
 ```json
 {
   "action": "EQUIP",
   "memberId": "char-1",
   "slot": "MAIN_HAND",
   "itemId": "item_black_alloy_blade"
+}
+```
+```json
+{
+  "action": "USE_ITEM",
+  "itemId": "item_torch", // 如火把點火回復光明度、辟邪靈茶回滿 SAN
+  "targetMemberId": "char-1"
+}
+```
+
+### 8. 道基五維潛能分配 (`ALLOCATE_POTENTIAL`)
+```json
+{
+  "action": "ALLOCATE_POTENTIAL",
+  "memberId": "char-1",
+  "attribute": "CON", // CON (體質), ESS (真元), SPI (神識), STR (根骨), AGI (身法)
+  "points": 1
+}
+```
+
+### 9. 本地存檔管理 (`SAVE_GAME` / `LOAD_GAME`)
+```json
+{
+  "action": "SAVE_GAME",
+  "slot": "slot_1" // slot_1 ~ slot_5
 }
 ```
 
