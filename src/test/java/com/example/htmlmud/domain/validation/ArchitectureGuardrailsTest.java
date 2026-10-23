@@ -122,7 +122,7 @@ class ArchitectureGuardrailsTest {
   @DisplayName("GUARD-02: 核心戰鬥迴圈 (DrpgCombatLoop) 絕對禁止硬編碼特例中文名稱字串比對 (Data-Driven Guardrail)")
   void testNoHardcodedSkillOrEntityNamesInCombatLoop() throws IOException {
     Path combatLoopPath = SRC_MAIN_JAVA.resolve("com").resolve("example").resolve("htmlmud")
-        .resolve("domain").resolve("dungeon").resolve("battle").resolve("DrpgCombatLoop.java");
+        .resolve("combat").resolve("DrpgCombatLoop.java");
     if (!Files.exists(combatLoopPath)) {
       return;
     }
@@ -147,6 +147,72 @@ class ArchitectureGuardrailsTest {
 
     assertThat(violations)
         .as("🚨 違反專案第一紅線：DrpgCombatLoop 出現硬編碼中文特例比對，必須改用 tags (如 CLEANSE) 或 Model 資料驅動！\n" + String.join("\n", violations))
+        .isEmpty();
+  }
+
+  @Test
+  @DisplayName("GUARD-03: 靜態範本層 (template) 絕對禁止反向依賴戰鬥層 (combat) 或地牢層 (dungeon)")
+  void testTemplateModuleDoesNotDependOnCombatOrDungeon() throws IOException {
+    Path templatePath = SRC_MAIN_JAVA.resolve("com").resolve("example").resolve("htmlmud").resolve("template");
+    if (!Files.exists(templatePath)) {
+      return;
+    }
+
+    List<String> illegalImports = new ArrayList<>();
+    try (Stream<Path> stream = Files.walk(templatePath)) {
+      stream.filter(Files::isRegularFile)
+          .filter(p -> p.toString().endsWith(".java"))
+          .forEach(file -> {
+            try {
+              List<String> lines = Files.readAllLines(file);
+              for (int i = 0; i < lines.size(); i++) {
+                String line = lines.get(i).trim();
+                if (line.startsWith("import") && (line.contains(".combat.") || line.contains(".dungeon."))) {
+                  illegalImports.add(file.getFileName() + ":" + (i + 1) + " -> " + line);
+                }
+              }
+            } catch (IOException e) {
+              throw new RuntimeException(e);
+            }
+          });
+    }
+
+    assertThat(illegalImports)
+        .as("靜態模板層反向依賴違規：template 禁止依賴 combat 或 dungeon：\n" + String.join("\n", illegalImports))
+        .isEmpty();
+  }
+
+  @Test
+  @DisplayName("GUARD-04: 營地機能 (town) 與物品體系 (item) 絕對禁止反向依賴戰鬥層 (combat) 或地牢層 (dungeon)")
+  void testTownAndItemModulesDoNotDependOnCombatOrDungeon() throws IOException {
+    List<String> targetPackages = List.of("town", "item");
+    List<String> illegalImports = new ArrayList<>();
+
+    for (String pkg : targetPackages) {
+      Path pkgPath = SRC_MAIN_JAVA.resolve("com").resolve("example").resolve("htmlmud").resolve(pkg);
+      if (!Files.exists(pkgPath)) continue;
+
+      try (Stream<Path> stream = Files.walk(pkgPath)) {
+        stream.filter(Files::isRegularFile)
+            .filter(p -> p.toString().endsWith(".java"))
+            .forEach(file -> {
+              try {
+                List<String> lines = Files.readAllLines(file);
+                for (int i = 0; i < lines.size(); i++) {
+                  String line = lines.get(i).trim();
+                  if (line.startsWith("import") && (line.contains(".combat.") || line.contains(".dungeon."))) {
+                    illegalImports.add(pkg + "/" + file.getFileName() + ":" + (i + 1) + " -> " + line);
+                  }
+                }
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            });
+      }
+    }
+
+    assertThat(illegalImports)
+        .as("基礎服務層反向依賴違規：town/item 禁止依賴 combat 或 dungeon：\n" + String.join("\n", illegalImports))
         .isEmpty();
   }
 }

@@ -11,13 +11,15 @@ import com.example.htmlmud.dungeon.DungeonFloor;
 import com.example.htmlmud.dungeon.DungeonPosition;
 import com.example.htmlmud.dungeon.DungeonTile;
 import com.example.htmlmud.dungeon.GridCoord;
+import com.example.htmlmud.template.DungeonValidatorPort;
+import com.example.htmlmud.template.TemplateReader;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-public class DungeonManager {
+public class DungeonManager implements DungeonValidatorPort {
 
   private final DungeonFloorLoader dungeonFloorLoader;
   private final Map<String, DungeonFloor> floorRegistry = new HashMap<>();
@@ -136,5 +138,71 @@ public class DungeonManager {
         floor.getWidth(),
         floor.getHeight()
     );
+  }
+
+  @Override
+  public int validateDungeons(TemplateReader templateReader, List<String> errors, List<String> warnings) {
+    List<String> floorIds = getAllFloorIds();
+    for (String floorId : floorIds) {
+      DungeonFloor floor = getFloor(floorId);
+      if (floor == null) continue;
+      if (floor.getStartCoord() == null) {
+        errors.add("地牢樓層 [" + floorId + "] 未設定起點坐標 (startCoord)！");
+      } else {
+        if (!floor.isInBounds(floor.getStartCoord())) {
+          errors.add("地牢樓層 [" + floorId + "] 起點坐標 (" + floor.getStartCoord().x() + ", "
+              + floor.getStartCoord().y() + ") 超出邊界！");
+        } else if (!floor.getTile(floor.getStartCoord()).isPassable()) {
+          errors.add("地牢樓層 [" + floorId + "] 起點坐標 (" + floor.getStartCoord().x() + ", "
+              + floor.getStartCoord().y() + ") 位於不可通行之障礙牆體！");
+        }
+      }
+      if (floor.getExitRoomId() != null && !floor.getExitRoomId().isBlank()) {
+        if (templateReader.findRoom(floor.getExitRoomId()).isEmpty()) {
+          errors.add("地牢樓層 [" + floorId + "] 撤退出口房間 [" + floor.getExitRoomId() + "] 不存在於房間庫！");
+        }
+      }
+      if (floor.getMobPool() != null) {
+        for (String mobId : floor.getMobPool()) {
+          if (mobId != null && !mobId.isBlank()) {
+            if (templateReader.findMob(mobId).isEmpty()) {
+              errors.add("地牢樓層 [" + floorId + "] 怪物池怪物 [" + mobId + "] 不存在於怪物庫！");
+            }
+          }
+        }
+      }
+
+      // 深度盤查樓層所有地塊之掉落物、首領與特殊事件怪物 (GUARD-01)
+      for (int y = 0; y < floor.getHeight(); y++) {
+        for (int x = 0; x < floor.getWidth(); x++) {
+          DungeonTile tile = floor.getTile(x, y);
+          if (tile == null) continue;
+          if (tile.getDrops() != null) {
+            for (String dropId : tile.getDrops()) {
+              if (dropId != null && !dropId.isBlank()) {
+                if (templateReader.findItem(dropId).isEmpty()) {
+                  errors.add("地牢樓層 [" + floorId + "] 坐標 (" + x + ", " + y + ") 掉落物 [" + dropId + "] 不存在於物品庫！");
+                }
+              }
+            }
+          }
+          if (tile.getType() == DungeonTile.TileType.BOSS) {
+            String bossId = tile.getEventId();
+            if (bossId == null || bossId.isBlank()) {
+              errors.add("地牢樓層 [" + floorId + "] 首領地塊 (" + x + ", " + y + ") 未配置 eventId (首領怪物 ID)！");
+            } else if (templateReader.findMob(bossId).isEmpty()) {
+              errors.add("地牢樓層 [" + floorId + "] 首領地塊 (" + x + ", " + y + ") 指定首領怪物 [" + bossId + "] 不存在於怪物庫！");
+            }
+          } else if (tile.getEventId() != null && !tile.getEventId().isBlank()) {
+            if (tile.getEventId().contains("boss_") || tile.getEventId().contains(":mob_") || tile.getEventId().contains("corrupted_")) {
+              if (templateReader.findMob(tile.getEventId()).isEmpty()) {
+                errors.add("地牢樓層 [" + floorId + "] 事件地塊 (" + x + ", " + y + ") 指定怪物 [" + tile.getEventId() + "] 不存在於怪物庫！");
+              }
+            }
+          }
+        }
+      }
+    }
+    return floorIds.size();
   }
 }

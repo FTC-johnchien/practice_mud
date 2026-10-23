@@ -56,6 +56,10 @@
 
 ## 🏆 已完成里程碑 (Completed Milestones)
 
+- [x] **Milestone REFACTOR-PHASE-4 — 階段四：舊代碼除役與架構看門狗 (Phase 4 Legacy Purge & Guardrails)**
+  - Task 1 (LEGACY-CODE-PURGE): 物理除役廢棄代碼：安全審查並移除未引用的過渡類別（`LivingStateService`、`infra.util.IdUtils`、`infra.util.RandomUtil`、`ExitDeserializer`、`RoomDescriptionDeserializer`）與歷史搬移後殘留之空目錄。
+  - Task 2 (ARCH-GUARDRAILS-STRENGTHEN): 強化模組依賴看門狗測試：新增 [`DungeonValidatorPort.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/template/DungeonValidatorPort.java) 介面反轉 `template` 對 `dungeon` 模組的依賴；在 [`ArchitectureGuardrailsTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/domain/validation/ArchitectureGuardrailsTest.java) 新增 GUARD-03（禁止 `template` 反向依賴 `combat`/`dungeon`）與 GUARD-04（禁止 `town`/`item` 反向依賴 `combat`/`dungeon`），修正 `DrpgCombatLoop` 套件路徑檢驗；全專案 395 項測試 100% 綠燈，文檔 368 個內部連結 100% 通過。
+
 - [x] **Milestone REFACTOR-M9 — 模組 M9 狀態管線與排程協定 Package-by-Feature 封裝 (Phase 3 Step R3.9)**
   - Task 1 (PKG-M9-ENCAPSULATION): 依循依賴拓撲完成 M9 模組套件封裝，建立 `com.example.htmlmud.pipeline` 獨立套件，將狀態廣播服務 `GameStateBroadcastService`、指令分發核心 `CommandDispatcher`、分發埠 `CommandDispatcherPort`、網路處理器 `MudWebSocketHandler` 與會話註冊表 `SessionRegistry` 統一收斂至獨立套件。
   - Task 2 (PKG-M9-TEST-VERIFY): 全域業務指令與整合測試引用切換至 `com.example.htmlmud.pipeline.*`，`SessionTakeoverAndSingletonProtagonistTest`、`NetworkSecurityAndPersistenceDrainTest` 全數 100% 綠燈 (7/7)，全專案 393 項測試零回歸通過，文檔 368 個內部連結 100% 通過。

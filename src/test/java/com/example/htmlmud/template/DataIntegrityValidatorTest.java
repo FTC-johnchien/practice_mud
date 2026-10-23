@@ -54,6 +54,7 @@ class DataIntegrityValidatorTest {
   void testDungeonTileBrokenDropsIntercepted() {
     TemplateReader mockReader = mock(TemplateReader.class);
     DungeonManager mockDungeonManager = mock(DungeonManager.class);
+    when(mockDungeonManager.validateDungeons(any(), any(), any())).thenCallRealMethod();
     DataIntegrityValidator validator = new DataIntegrityValidator(mockReader);
     validator.setDungeonManager(mockDungeonManager);
     validator.setFailFast(true);
@@ -224,6 +225,7 @@ class DataIntegrityValidatorTest {
   void testDungeonExitRoomAndBossIntegrity() {
     TemplateReader mockReader = mock(TemplateReader.class);
     DungeonManager mockDungeonManager = mock(DungeonManager.class);
+    when(mockDungeonManager.validateDungeons(any(), any(), any())).thenCallRealMethod();
     DataIntegrityValidator validator = new DataIntegrityValidator(mockReader);
     validator.setDungeonManager(mockDungeonManager);
     validator.setFailFast(false);
