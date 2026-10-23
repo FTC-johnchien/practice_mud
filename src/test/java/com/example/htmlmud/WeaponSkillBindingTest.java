@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
-import com.example.htmlmud.domain.model.enums.SkillCategory;
+import com.example.htmlmud.progression.SkillCategory;
 import com.example.htmlmud.domain.model.enums.WeaponType;
 import com.example.htmlmud.party.PartyItemSlot;
 import com.example.htmlmud.party.PartyMember;

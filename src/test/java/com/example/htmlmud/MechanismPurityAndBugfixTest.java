@@ -183,8 +183,8 @@ public class MechanismPurityAndBugfixTest {
     com.example.htmlmud.domain.model.entity.GameItem testItem = new com.example.htmlmud.domain.model.entity.GameItem();
     testItem.setId("item-test");
     original.equipment.put(com.example.htmlmud.item.EquipmentSlot.MAIN_HAND, testItem);
-    original.enabledSkills.put(com.example.htmlmud.domain.model.enums.SkillCategory.SWORD, "taiji_sword");
-    original.learnedSkills.put("taiji_sword", new com.example.htmlmud.domain.model.entity.SkillEntry("taiji_sword", 5));
+    original.enabledSkills.put(com.example.htmlmud.progression.SkillCategory.SWORD, "taiji_sword");
+    original.learnedSkills.put("taiji_sword", new com.example.htmlmud.progression.SkillEntry("taiji_sword", 5));
 
     com.example.htmlmud.domain.model.entity.LivingStats copy = original.deepCopy();
 
@@ -198,7 +198,7 @@ public class MechanismPurityAndBugfixTest {
     assertThat(copy.getResistance(DamageType.DARK)).isEqualTo(0.25);
     assertThat(copy.getCombatResource("charge")).isEqualTo(3);
     assertThat(copy.equipment).containsEntry(com.example.htmlmud.item.EquipmentSlot.MAIN_HAND, testItem);
-    assertThat(copy.enabledSkills).containsEntry(com.example.htmlmud.domain.model.enums.SkillCategory.SWORD, "taiji_sword");
+    assertThat(copy.enabledSkills).containsEntry(com.example.htmlmud.progression.SkillCategory.SWORD, "taiji_sword");
     assertThat(copy.learnedSkills).containsKey("taiji_sword");
 
     // 驗證獨立性 (防禦性拷貝，非共享同一 Map 參照)

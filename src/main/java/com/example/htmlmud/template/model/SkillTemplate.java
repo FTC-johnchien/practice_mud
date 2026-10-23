@@ -10,7 +10,7 @@ import com.example.htmlmud.domain.model.config.MoveAction;
 import com.example.htmlmud.domain.model.config.ScalingConfig;
 import com.example.htmlmud.domain.model.config.SynergiesConfig;
 import com.example.htmlmud.domain.model.config.UsageConfig;
-import com.example.htmlmud.domain.model.enums.SkillType;
+import com.example.htmlmud.progression.SkillType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
@@ -66,11 +66,11 @@ public class SkillTemplate {
   com.example.htmlmud.domain.model.config.BuffConfig buff;
 
   // DRPG 戰術技能解鎖橋接規則
-  List<com.example.htmlmud.domain.model.definition.SkillBridgeRule> bridges;
+  List<com.example.htmlmud.progression.SkillBridgeRule> bridges;
 
-  public com.example.htmlmud.domain.model.definition.SkillDefinition toDefinition() {
-    com.example.htmlmud.domain.model.definition.SkillDefinition def =
-        com.example.htmlmud.domain.model.definition.SkillDefinition.fromSkillTemplate(this);
+  public com.example.htmlmud.progression.SkillDefinition toDefinition() {
+    com.example.htmlmud.progression.SkillDefinition def =
+        com.example.htmlmud.progression.SkillDefinition.fromSkillTemplate(this);
     if (bridges != null && !bridges.isEmpty()) {
       return def.toBuilder().bridgeRules(bridges).build();
     }

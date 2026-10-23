@@ -18,7 +18,7 @@ import com.example.htmlmud.domain.dungeon.battle.DrpgEnemyTacticsService;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.model.config.Costs;
 import com.example.htmlmud.party.RowPosition;
-import com.example.htmlmud.domain.model.enums.SkillType;
+import com.example.htmlmud.progression.SkillType;
 import com.example.htmlmud.party.Party;
 import com.example.htmlmud.party.PartyMember;
 import com.example.htmlmud.party.PartyMemberSkill;

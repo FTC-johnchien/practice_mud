@@ -1,6 +1,6 @@
 package com.example.htmlmud.domain.model.skill.dto;
 
-import com.example.htmlmud.domain.model.entity.SkillEntry;
+import com.example.htmlmud.progression.SkillEntry;
 import com.example.htmlmud.template.model.SkillTemplate;
 
 /**

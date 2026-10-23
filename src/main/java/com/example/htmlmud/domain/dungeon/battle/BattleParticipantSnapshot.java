@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.model.entity.LivingStats;
-import com.example.htmlmud.domain.model.entity.SkillEntry;
+import com.example.htmlmud.progression.SkillEntry;
 import com.example.htmlmud.party.PartyMember;
 
 /**

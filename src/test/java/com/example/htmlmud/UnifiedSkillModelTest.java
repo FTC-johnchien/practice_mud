@@ -8,8 +8,8 @@ import org.junit.jupiter.api.Test;
 
 import com.example.htmlmud.domain.model.config.MoveAction;
 import com.example.htmlmud.domain.model.config.MoveMessage;
-import com.example.htmlmud.domain.model.entity.SkillEntry;
-import com.example.htmlmud.domain.model.enums.SkillType;
+import com.example.htmlmud.progression.SkillEntry;
+import com.example.htmlmud.progression.SkillType;
 import com.example.htmlmud.template.model.SkillTemplate;
 import com.example.htmlmud.party.CombatResourceType;
 import com.example.htmlmud.party.PartyMember;

@@ -17,7 +17,7 @@ import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.dungeon.battle.DefenseResolver;
 import com.example.htmlmud.domain.dungeon.battle.DefenseResolver.DefenseOutcome;
 import com.example.htmlmud.domain.model.entity.LivingStats;
-import com.example.htmlmud.domain.model.enums.SkillCategory;
+import com.example.htmlmud.progression.SkillCategory;
 import com.example.htmlmud.template.model.MobTemplate;
 import com.example.htmlmud.domain.actor.service.MobService;
 import com.example.htmlmud.domain.actor.service.PlayerService;
@@ -89,7 +89,7 @@ public class MudOneRollCombatTableTest {
   @Test
   @DisplayName("3.1-2: 驗證 MUD 玩家啟用身法技能且擲骰落入閃避區間時結算為 DODGED")
   void testMudLivingCombatTableDodge() {
-    player.getLearnedSkills().put("cloud_step", new com.example.htmlmud.domain.model.entity.SkillEntry("cloud_step", 1));
+    player.getLearnedSkills().put("cloud_step", new com.example.htmlmud.progression.SkillEntry("cloud_step", 1));
     player.getEnabledSkills().put(SkillCategory.DODGE, "cloud_step");
 
     // 擲骰 0.15 落入身法閃避區間
@@ -102,7 +102,7 @@ public class MudOneRollCombatTableTest {
   @Test
   @DisplayName("3.1-3: 驗證 MUD 玩家啟用招架技能且擲骰落入招架區間時結算為 PARRIED 且傷害減半")
   void testMudLivingCombatTableParry() {
-    player.getLearnedSkills().put("basic_parry", new com.example.htmlmud.domain.model.entity.SkillEntry("basic_parry", 1));
+    player.getLearnedSkills().put("basic_parry", new com.example.htmlmud.progression.SkillEntry("basic_parry", 1));
     player.getEnabledSkills().put(SkillCategory.PARRY, "basic_parry");
 
     // 不配身法，直接選定 0.20 落入 Parry 區間
@@ -131,9 +131,9 @@ public class MudOneRollCombatTableTest {
     player.getStats().setDex(999);
     player.getStats().setStr(999);
     player.getStats().setCon(999);
-    player.getLearnedSkills().put("cloud_step", new com.example.htmlmud.domain.model.entity.SkillEntry("cloud_step", 100));
+    player.getLearnedSkills().put("cloud_step", new com.example.htmlmud.progression.SkillEntry("cloud_step", 100));
     player.getEnabledSkills().put(SkillCategory.DODGE, "cloud_step");
-    player.getLearnedSkills().put("basic_parry", new com.example.htmlmud.domain.model.entity.SkillEntry("basic_parry", 100));
+    player.getLearnedSkills().put("basic_parry", new com.example.htmlmud.progression.SkillEntry("basic_parry", 100));
     player.getEnabledSkills().put(SkillCategory.PARRY, "basic_parry");
 
     // 擲骰 0.96 必定落入普通命中窗口 (95%~100%)

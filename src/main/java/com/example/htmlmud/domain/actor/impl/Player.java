@@ -21,7 +21,7 @@ import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.entity.PlayerRecord;
-import com.example.htmlmud.domain.model.entity.SkillEntry;
+import com.example.htmlmud.progression.SkillEntry;
 import com.example.htmlmud.domain.model.enums.Direction;
 import com.example.htmlmud.domain.actor.service.PlayerService;
 import com.example.htmlmud.domain.world.WorldManager;

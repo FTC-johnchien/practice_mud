@@ -34,7 +34,7 @@ import com.example.htmlmud.party.RowPosition;
 import com.example.htmlmud.party.PartyService;
 import com.example.htmlmud.template.TemplateReader;
 import com.example.htmlmud.domain.actor.service.CharacterSyncService;
-import com.example.htmlmud.domain.progression.service.XpProgressionService;
+import com.example.htmlmud.progression.XpProgressionService;
 import lombok.extern.slf4j.Slf4j;
 
 /**

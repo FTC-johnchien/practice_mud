@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.config.GameConfig;
 import com.example.htmlmud.domain.model.config.MoveAction;
-import com.example.htmlmud.domain.model.enums.SkillCategory;
+import com.example.htmlmud.progression.SkillCategory;
 import com.example.htmlmud.template.model.SkillTemplate;
 import com.example.htmlmud.party.CombatResourceType;
 import com.example.htmlmud.party.PartyItemSlot;

@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.progression.service;
+package com.example.htmlmud.progression;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.model.entity.LivingStats;
-import com.example.htmlmud.domain.model.entity.SkillEntry;
+import com.example.htmlmud.progression.SkillEntry;
 import com.example.htmlmud.template.model.ClassTemplate;
 import com.example.htmlmud.template.model.SkillTemplate;
 import com.example.htmlmud.party.PartyMember;

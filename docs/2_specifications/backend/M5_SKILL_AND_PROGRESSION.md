@@ -93,7 +93,7 @@ $$\text{ScaledDamage} = \text{BaseDamage} \times (1.0 + (\text{SkillLevel} - 1) 
 | :--- | :--- | :--- |
 | **大一統技能** | `com.example.htmlmud.party.UnifiedSkill` | 修煉境界與戰術機制大一統介面 |
 | **隊員技能實體** | `com.example.htmlmud.party.PartyMemberSkill` | 隊員專屬技能、熟練度成長與動態縮放 |
-| **經驗成長** | `com.example.htmlmud.domain.service.XpProgressionService` | 經驗分配、等級提升與屬性點獎勵 |
+| **經驗成長** | `com.example.htmlmud.progression.XpProgressionService` | 經驗分配、等級提升與屬性點獎勵 |
 | **真元消耗** | `com.example.htmlmud.domain.service.SkillCostService` | 施法檢定真元消耗與冷卻時間判定 |
 | **公式解算** | `com.example.htmlmud.domain.service.FormulaEvaluator` | 數值公式字串動態解析 |
 | **資料設定** | `src/main/resources/data/classes/classes.json` | 境界階梯、各境界基礎屬性與成長率 |

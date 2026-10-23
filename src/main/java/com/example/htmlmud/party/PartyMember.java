@@ -94,7 +94,7 @@ public class PartyMember implements Combatant {
   @Builder.Default
   private java.util.List<PartyMemberSkill> skills = new java.util.ArrayList<>();
   @Builder.Default
-  private java.util.Map<com.example.htmlmud.domain.model.enums.SkillCategory, String> enabledSkills = new java.util.concurrent.ConcurrentHashMap<>();
+  private java.util.Map<com.example.htmlmud.progression.SkillCategory, String> enabledSkills = new java.util.concurrent.ConcurrentHashMap<>();
   @Builder.Default
   private java.util.Set<String> learnedStances = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
@@ -824,7 +824,7 @@ public class PartyMember implements Combatant {
 
   public String getCustomEnabledBasicSkillId() {
     com.example.htmlmud.domain.model.enums.WeaponType wt = getMainHandWeaponType();
-    com.example.htmlmud.domain.model.enums.SkillCategory cat = toSkillCategory(wt);
+    com.example.htmlmud.progression.SkillCategory cat = toSkillCategory(wt);
     if (enabledSkills != null && enabledSkills.containsKey(cat)) {
       String customSkill = enabledSkills.get(cat);
       if (customSkill != null && !customSkill.isBlank() && !customSkill.startsWith("basic_")) {
@@ -847,7 +847,7 @@ public class PartyMember implements Combatant {
     return getTemplateReader().findSkill(skillId).orElse(null);
   }
 
-  public void enableSkill(com.example.htmlmud.domain.model.enums.SkillCategory category, String skillId) {
+  public void enableSkill(com.example.htmlmud.progression.SkillCategory category, String skillId) {
     if (enabledSkills == null) {
       enabledSkills = new java.util.concurrent.ConcurrentHashMap<>();
     }
@@ -874,70 +874,70 @@ public class PartyMember implements Combatant {
     return learnedStances;
   }
 
-  public static com.example.htmlmud.domain.model.enums.SkillCategory toSkillCategory(com.example.htmlmud.domain.model.enums.WeaponType wt) {
-    if (wt == null) return com.example.htmlmud.domain.model.enums.SkillCategory.UNARMED;
+  public static com.example.htmlmud.progression.SkillCategory toSkillCategory(com.example.htmlmud.domain.model.enums.WeaponType wt) {
+    if (wt == null) return com.example.htmlmud.progression.SkillCategory.UNARMED;
     return switch (wt) {
-      case SWORD -> com.example.htmlmud.domain.model.enums.SkillCategory.SWORD;
-      case BLADE, SABER, SCIMITAR, KATANA -> com.example.htmlmud.domain.model.enums.SkillCategory.BLADE;
-      case BLUNT, HAMMER, MACE, MAUL, CLUB, FLAIL -> com.example.htmlmud.domain.model.enums.SkillCategory.HAMMER;
-      case DAGGER, DIRK, KNIFE, STILETTO, DART, SHURIKEN, STONE, JAVELIN -> com.example.htmlmud.domain.model.enums.SkillCategory.DAGGER;
-      case STAFF -> com.example.htmlmud.domain.model.enums.SkillCategory.STAFF;
-      case WAND, ROD, SCEPTER -> com.example.htmlmud.domain.model.enums.SkillCategory.WAND;
-      case BOW, CROSSBOW -> com.example.htmlmud.domain.model.enums.SkillCategory.BOW;
-      case AXE, POLEAXE -> com.example.htmlmud.domain.model.enums.SkillCategory.AXE;
-      case POLEARM, HALBERD -> com.example.htmlmud.domain.model.enums.SkillCategory.POLEARM;
-      case SPEAR -> com.example.htmlmud.domain.model.enums.SkillCategory.SPEAR;
-      case WHIP, CHAIN, ROPE -> com.example.htmlmud.domain.model.enums.SkillCategory.WHIP;
-      case UNARMED -> com.example.htmlmud.domain.model.enums.SkillCategory.UNARMED;
-      default -> com.example.htmlmud.domain.model.enums.SkillCategory.UNARMED;
+      case SWORD -> com.example.htmlmud.progression.SkillCategory.SWORD;
+      case BLADE, SABER, SCIMITAR, KATANA -> com.example.htmlmud.progression.SkillCategory.BLADE;
+      case BLUNT, HAMMER, MACE, MAUL, CLUB, FLAIL -> com.example.htmlmud.progression.SkillCategory.HAMMER;
+      case DAGGER, DIRK, KNIFE, STILETTO, DART, SHURIKEN, STONE, JAVELIN -> com.example.htmlmud.progression.SkillCategory.DAGGER;
+      case STAFF -> com.example.htmlmud.progression.SkillCategory.STAFF;
+      case WAND, ROD, SCEPTER -> com.example.htmlmud.progression.SkillCategory.WAND;
+      case BOW, CROSSBOW -> com.example.htmlmud.progression.SkillCategory.BOW;
+      case AXE, POLEAXE -> com.example.htmlmud.progression.SkillCategory.AXE;
+      case POLEARM, HALBERD -> com.example.htmlmud.progression.SkillCategory.POLEARM;
+      case SPEAR -> com.example.htmlmud.progression.SkillCategory.SPEAR;
+      case WHIP, CHAIN, ROPE -> com.example.htmlmud.progression.SkillCategory.WHIP;
+      case UNARMED -> com.example.htmlmud.progression.SkillCategory.UNARMED;
+      default -> com.example.htmlmud.progression.SkillCategory.UNARMED;
     };
   }
 
-  public static com.example.htmlmud.domain.model.enums.SkillCategory resolveSkillCategory(com.example.htmlmud.template.model.SkillTemplate template) {
-    if (template == null) return com.example.htmlmud.domain.model.enums.SkillCategory.UNARMED;
+  public static com.example.htmlmud.progression.SkillCategory resolveSkillCategory(com.example.htmlmud.template.model.SkillTemplate template) {
+    if (template == null) return com.example.htmlmud.progression.SkillCategory.UNARMED;
 
     // 1. 優先依據標籤判定被動心法 (DODGE, PARRY, FORCE)
     if (template.getTags() != null) {
       if (template.getTags().contains("DODGE") || template.getTags().contains("EVASION")) {
-        return com.example.htmlmud.domain.model.enums.SkillCategory.DODGE;
+        return com.example.htmlmud.progression.SkillCategory.DODGE;
       }
       if (template.getTags().contains("PARRY")) {
-        return com.example.htmlmud.domain.model.enums.SkillCategory.PARRY;
+        return com.example.htmlmud.progression.SkillCategory.PARRY;
       }
       if (template.getTags().contains("FORCE")) {
-        return com.example.htmlmud.domain.model.enums.SkillCategory.FORCE;
+        return com.example.htmlmud.progression.SkillCategory.FORCE;
       }
       // 標籤亦直接標識武器分類 (如 BLADE, SWORD 等)
-      if (template.getTags().contains("BLADE")) return com.example.htmlmud.domain.model.enums.SkillCategory.BLADE;
-      if (template.getTags().contains("SWORD")) return com.example.htmlmud.domain.model.enums.SkillCategory.SWORD;
-      if (template.getTags().contains("SPEAR")) return com.example.htmlmud.domain.model.enums.SkillCategory.SPEAR;
-      if (template.getTags().contains("POLEARM")) return com.example.htmlmud.domain.model.enums.SkillCategory.POLEARM;
-      if (template.getTags().contains("STAFF")) return com.example.htmlmud.domain.model.enums.SkillCategory.STAFF;
-      if (template.getTags().contains("AXE")) return com.example.htmlmud.domain.model.enums.SkillCategory.AXE;
-      if (template.getTags().contains("HAMMER") || template.getTags().contains("BLUNT")) return com.example.htmlmud.domain.model.enums.SkillCategory.HAMMER;
-      if (template.getTags().contains("DAGGER")) return com.example.htmlmud.domain.model.enums.SkillCategory.DAGGER;
-      if (template.getTags().contains("BOW")) return com.example.htmlmud.domain.model.enums.SkillCategory.BOW;
-      if (template.getTags().contains("WHIP")) return com.example.htmlmud.domain.model.enums.SkillCategory.WHIP;
-      if (template.getTags().contains("WAND")) return com.example.htmlmud.domain.model.enums.SkillCategory.WAND;
+      if (template.getTags().contains("BLADE")) return com.example.htmlmud.progression.SkillCategory.BLADE;
+      if (template.getTags().contains("SWORD")) return com.example.htmlmud.progression.SkillCategory.SWORD;
+      if (template.getTags().contains("SPEAR")) return com.example.htmlmud.progression.SkillCategory.SPEAR;
+      if (template.getTags().contains("POLEARM")) return com.example.htmlmud.progression.SkillCategory.POLEARM;
+      if (template.getTags().contains("STAFF")) return com.example.htmlmud.progression.SkillCategory.STAFF;
+      if (template.getTags().contains("AXE")) return com.example.htmlmud.progression.SkillCategory.AXE;
+      if (template.getTags().contains("HAMMER") || template.getTags().contains("BLUNT")) return com.example.htmlmud.progression.SkillCategory.HAMMER;
+      if (template.getTags().contains("DAGGER")) return com.example.htmlmud.progression.SkillCategory.DAGGER;
+      if (template.getTags().contains("BOW")) return com.example.htmlmud.progression.SkillCategory.BOW;
+      if (template.getTags().contains("WHIP")) return com.example.htmlmud.progression.SkillCategory.WHIP;
+      if (template.getTags().contains("WAND")) return com.example.htmlmud.progression.SkillCategory.WAND;
     }
 
-    if (template.getType() == com.example.htmlmud.domain.model.enums.SkillType.REACTIVE) {
+    if (template.getType() == com.example.htmlmud.progression.SkillType.REACTIVE) {
       if (template.getId() != null && template.getId().contains("dodge")) {
-        return com.example.htmlmud.domain.model.enums.SkillCategory.DODGE;
+        return com.example.htmlmud.progression.SkillCategory.DODGE;
       }
       if (template.getId() != null && template.getId().contains("parry")) {
-        return com.example.htmlmud.domain.model.enums.SkillCategory.PARRY;
+        return com.example.htmlmud.progression.SkillCategory.PARRY;
       }
     }
-    if (template.getType() == com.example.htmlmud.domain.model.enums.SkillType.MAGIC) {
-      return com.example.htmlmud.domain.model.enums.SkillCategory.MAGIC;
+    if (template.getType() == com.example.htmlmud.progression.SkillType.MAGIC) {
+      return com.example.htmlmud.progression.SkillCategory.MAGIC;
     }
     if (template.getUsage() != null && template.getUsage().allowedWeapons() != null) {
-      com.example.htmlmud.domain.model.enums.SkillCategory fallbackCat = null;
+      com.example.htmlmud.progression.SkillCategory fallbackCat = null;
       for (var wt : template.getUsage().allowedWeapons()) {
         if (wt != null) {
           var cat = toSkillCategory(wt);
-          if (cat != com.example.htmlmud.domain.model.enums.SkillCategory.UNARMED) {
+          if (cat != com.example.htmlmud.progression.SkillCategory.UNARMED) {
             return cat;
           }
           fallbackCat = cat;
@@ -945,13 +945,13 @@ public class PartyMember implements Combatant {
       }
       if (fallbackCat != null) return fallbackCat;
     }
-    if (template.getType() == com.example.htmlmud.domain.model.enums.SkillType.UNARMED) {
-      return com.example.htmlmud.domain.model.enums.SkillCategory.UNARMED;
+    if (template.getType() == com.example.htmlmud.progression.SkillType.UNARMED) {
+      return com.example.htmlmud.progression.SkillCategory.UNARMED;
     }
-    return com.example.htmlmud.domain.model.enums.SkillCategory.FORCE;
+    return com.example.htmlmud.progression.SkillCategory.FORCE;
   }
 
-  public static boolean supportsSkillCategory(com.example.htmlmud.template.model.SkillTemplate template, com.example.htmlmud.domain.model.enums.SkillCategory cat) {
+  public static boolean supportsSkillCategory(com.example.htmlmud.template.model.SkillTemplate template, com.example.htmlmud.progression.SkillCategory cat) {
     if (template == null || cat == null) return false;
     if (resolveSkillCategory(template) == cat) return true;
     if (template.getTags() != null && template.getTags().contains(cat.name())) return true;
@@ -963,7 +963,7 @@ public class PartyMember implements Combatant {
     return false;
   }
 
-  public String getCustomEnabledPassiveSkillId(com.example.htmlmud.domain.model.enums.SkillCategory category) {
+  public String getCustomEnabledPassiveSkillId(com.example.htmlmud.progression.SkillCategory category) {
     if (enabledSkills != null && enabledSkills.containsKey(category)) {
       String id = enabledSkills.get(category);
       if (id != null && !id.isBlank() && !id.startsWith("basic_")) {
@@ -973,11 +973,11 @@ public class PartyMember implements Combatant {
     return null;
   }
 
-  public String getEnabledPassiveSkillId(com.example.htmlmud.domain.model.enums.SkillCategory category) {
+  public String getEnabledPassiveSkillId(com.example.htmlmud.progression.SkillCategory category) {
     return enabledSkills != null ? enabledSkills.get(category) : null;
   }
 
-  public com.example.htmlmud.template.model.SkillTemplate getEnabledPassive(com.example.htmlmud.domain.model.enums.SkillCategory category) {
+  public com.example.htmlmud.template.model.SkillTemplate getEnabledPassive(com.example.htmlmud.progression.SkillCategory category) {
     String id = getEnabledPassiveSkillId(category);
     return (id != null && getTemplateReader() != null) ? getTemplateReader().findSkill(id).orElse(null) : null;
   }

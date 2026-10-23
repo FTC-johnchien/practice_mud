@@ -166,10 +166,10 @@ graph BT
   - **歸整類別**：`PartyMember`, `Party`, `PartyInventory`, `PartyItemSlot`, `FormationEngine`, `PartyService`, `GambitRule`, `FormationTemplate`, `UnifiedSkill`
   - **驗收標準**：`CompanionGambitEngineTest`、`PartyInventoryAndMadnessTest`、`PartyFormationTest` 全數 100% 綠燈，全專案 393 項測試零回歸通過。
 
-- [ ] **Step R3.6 (PKG-M5-PROGRESSION): 模組 M5 - 技能體系與修為突破套件封裝**
+- [x] **Step R3.6 (PKG-M5-PROGRESSION): 模組 M5 - 技能體系與修為突破套件封裝**
   - **目標套件**：`com.example.htmlmud.progression`
-  - **歸整類別**：`SkillDefinition`, `PartyMemberSkill`, `CyberSchool`, `ComboRole`, `XpProgressionService`
-  - **驗收標準**：`mvn test -Dtest=CyberSkillAndItemAffixTest,XpProgressionServiceTest` 100% 綠燈。
+  - **歸整類別**：`SkillDefinition`, `XpProgressionService`, `XpService`, `DrpgSkillRules`, `MudSkillRules`, `SkillBridgeRule`, `SkillType`, `SkillCategory`, `SkillEntry`
+  - **驗收標準**：`CyberSkillAndItemAffixTest`、`XpProgressionServiceTest`、`CanonicalSkillModelTest` 全數 100% 綠燈，全專案 393 項測試零回歸通過。
 
 - [ ] **Step R3.7 (PKG-M2-DUNGEON): 模組 M2 - DRPG 網格地牢探索套件封裝**
   - **目標套件**：`com.example.htmlmud.dungeon`

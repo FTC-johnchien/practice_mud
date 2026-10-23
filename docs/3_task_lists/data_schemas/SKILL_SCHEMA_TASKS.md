@@ -13,7 +13,7 @@
   - `src/main/resources/data/party/party_skills.json`
 - **核心實體與載入模型**：
   - [`PartyMemberSkill.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/PartyMemberSkill.java)
-  - [`SkillDefinition.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/definition/SkillDefinition.java)
+  - [`SkillDefinition.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/progression/SkillDefinition.java)
 - **關聯驗證測試**：
   - [`CyberSkillAndItemAffixTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/CyberSkillAndItemAffixTest.java)（100% 綠燈）
 

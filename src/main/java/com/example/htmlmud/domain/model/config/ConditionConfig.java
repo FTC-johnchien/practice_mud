@@ -1,7 +1,7 @@
 package com.example.htmlmud.domain.model.config;
 
 import java.util.Map;
-import com.example.htmlmud.domain.model.enums.SkillCategory;
+import com.example.htmlmud.progression.SkillCategory;
 
 public record ConditionConfig(
 

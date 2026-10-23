@@ -56,6 +56,10 @@
 
 ## 🏆 已完成里程碑 (Completed Milestones)
 
+- [x] **Milestone REFACTOR-M5 — 模組 M5 技能體系與修為突破 Package-by-Feature 封裝 (Phase 3 Step R3.6)**
+  - Task 1 (PKG-M5-ENCAPSULATION): 依循依賴拓撲完成 M5 模組套件封裝，建立 `com.example.htmlmud.progression` 獨立套件，將 `SkillDefinition`、`XpProgressionService`、`XpService`、`DrpgSkillRules`、`MudSkillRules`、`SkillBridgeRule`、`SkillType`、`SkillCategory`、`SkillEntry` 統一收斂至獨立套件。
+  - Task 2 (PKG-M5-TEST-VERIFY): 全域業務指令與整合測試引用切換至 `com.example.htmlmud.progression.*`，`CyberSkillAndItemAffixTest`、`XpProgressionServiceTest`、`CanonicalSkillModelTest` 全數 100% 綠燈 (16/16)，全專案 393 項測試零回歸通過，文檔 368 個內部連結 100% 通過。
+
 - [x] **Milestone REFACTOR-M4 — 模組 M4 冒險小隊與古仙陣法 Package-by-Feature 封裝 (Phase 3 Step R3.5)**
   - Task 1 (PKG-M4-ENCAPSULATION): 依循依賴拓撲完成 M4 模組套件封裝，建立 `com.example.htmlmud.party` 獨立套件，將小隊聚合根 `Party`、隊員實體 `PartyMember`、陣法引擎 `FormationEngine`、公共行囊 `PartyInventory`、Gambit 戰術 AI 等 21 份類別全面收斂至新套件。
   - Task 2 (PKG-M4-TEST-VERIFY): 全域業務指令與整合測試引用切換至 `com.example.htmlmud.party.*`，`CompanionGambitEngineTest`、`PartyInventoryAndMadnessTest`、`PartyFormationTest` 全數 100% 綠燈 (23/23)，全專案 393 項測試零回歸通過，文檔 368 個內部連結 100% 通過。

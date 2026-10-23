@@ -13,11 +13,11 @@ import org.junit.jupiter.api.Test;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.model.config.Mechanics;
 import com.example.htmlmud.domain.model.entity.LivingStats;
-import com.example.htmlmud.domain.model.entity.SkillEntry;
+import com.example.htmlmud.progression.SkillEntry;
 import com.example.htmlmud.template.model.SkillTemplate;
 import com.example.htmlmud.party.PartyMember;
-import com.example.htmlmud.domain.progression.service.XpProgressionService;
-import com.example.htmlmud.domain.progression.service.XpService;
+import com.example.htmlmud.progression.XpProgressionService;
+import com.example.htmlmud.progression.XpService;
 
 public class XpProgressionServiceTest {
 

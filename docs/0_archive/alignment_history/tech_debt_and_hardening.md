@@ -60,7 +60,7 @@
   1. **試道傀儡 200+ 行手刻寫死**：[`DrpgBattleService.java:L193-400`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgBattleService.java#L193-L400) 的 `startTrainingBattle()` 用 200 多行代碼手刻 1x1 ~ 3x3 傀儡與陣樁的所有屬性與排位。
   2. **[CANCELLED] 走火入魔 CHAOS 異變機制**：原隊員背刺（40% 機率）與畸變 Boss 走火入魔機制已依專案核心決策徹底除役取消，相關代碼在純單機單體化演進中已徹底拔除。
   3. **首領專屬掉落物寫死代碼注入**：[`DrpgRewardService.java:L189-214`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java#L189-L214) 擊殺首領 `boss_song_tianheng` 時，直接在代碼中手動建構並塞入戰利品 `【黑曜骨鐮】` 與 `【長老黑話玉牌】`，而非透過怪物模板本身的 `loot` 掉落表。
-  4. **技能橋接規則寫死 switch 查表**：[`SkillDefinition.java:L225-285`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/definition/SkillDefinition.java#L225-L285) 透過 60 行 `switch-case` 寫死 MUD 技能映射至 DRPG 技能的對照關係，並維護靜態字串陣列 `CANONICAL_MUD_SKILLS`。
+  4. **技能橋接規則寫死 switch 查表**：[`SkillDefinition.java:L225-285`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/progression/SkillDefinition.java#L225-L285) 透過 60 行 `switch-case` 寫死 MUD 技能映射至 DRPG 技能的對照關係，並維護靜態字串陣列 `CANONICAL_MUD_SKILLS`。
   5. **屬性補正依賴 ID 前綴字串比對**：`SkillBridgeService.java`（已徹底物理刪除除役）曾靠 `base.getId().startsWith("taoist_") || base.getId().startsWith("star_")` 判定是否為法術補正，現由技能定義與流派標籤統一驅動。
   6. **戰鬥時限政策與閒置熔斷衝突**：[`BattleContext.java:L45, L67`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/BattleContext.java#L45-L67) `maxDurationMs` 固定 5 分鐘熔斷，即使玩家持續積極操作仍會逾時中斷，未與 10 分鐘無操作 AFK 閒置熔斷解耦。
 - **改善方案**：

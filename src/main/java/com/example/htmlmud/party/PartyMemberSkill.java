@@ -54,7 +54,7 @@ public class PartyMemberSkill implements UnifiedSkill {
   private int mpCost = 0;
   @Builder.Default
   private int hpCost = 0;
-  private com.example.htmlmud.domain.model.enums.SkillType skillType;
+  private com.example.htmlmud.progression.SkillType skillType;
   private String category; // WEAPON, CLASS, SPELL, COMBO, FORMATION, PASSIVE
   private long cooldownMs;
   @Builder.Default
@@ -330,11 +330,11 @@ public class PartyMemberSkill implements UnifiedSkill {
     }
 
     String category = "CLASS";
-    if (tpl.getType() == com.example.htmlmud.domain.model.enums.SkillType.PASSIVE) {
+    if (tpl.getType() == com.example.htmlmud.progression.SkillType.PASSIVE) {
       category = "PASSIVE";
-    } else if (tpl.getType() == com.example.htmlmud.domain.model.enums.SkillType.COMBO) {
+    } else if (tpl.getType() == com.example.htmlmud.progression.SkillType.COMBO) {
       category = "COMBO";
-    } else if (tpl.getType() == com.example.htmlmud.domain.model.enums.SkillType.FORMATION) {
+    } else if (tpl.getType() == com.example.htmlmud.progression.SkillType.FORMATION) {
       category = "FORMATION";
     } else if (!weapons.isEmpty()) {
       category = "WEAPON";

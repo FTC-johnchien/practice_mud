@@ -8,7 +8,7 @@ import com.example.htmlmud.item.ItemDefinition;
 import com.example.htmlmud.item.ItemInstance;
 import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
-import com.example.htmlmud.domain.model.enums.SkillCategory;
+import com.example.htmlmud.progression.SkillCategory;
 import com.example.htmlmud.template.model.ItemTemplate;
 import com.example.htmlmud.protocol.MessageFactory;
 import com.example.htmlmud.protocol.MudMessage;

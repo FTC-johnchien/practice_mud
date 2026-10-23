@@ -14,7 +14,7 @@ import com.example.htmlmud.domain.dungeon.service.DungeonManager;
 import com.example.htmlmud.domain.exception.DataValidationException;
 import com.example.htmlmud.domain.model.config.LootEntry;
 import com.example.htmlmud.item.EquipmentSlot;
-import com.example.htmlmud.domain.model.enums.SkillCategory;
+import com.example.htmlmud.progression.SkillCategory;
 import com.example.htmlmud.template.model.CompanionTemplate;
 import com.example.htmlmud.template.model.ItemTemplate;
 import com.example.htmlmud.template.model.MobTemplate;
@@ -384,9 +384,9 @@ public class DataIntegrityValidator implements ApplicationRunner {
         errors.add("發現 ID 為空的技能模板！");
         continue;
       }
-      com.example.htmlmud.domain.model.definition.SkillDefinition def = skill.toDefinition();
+      com.example.htmlmud.progression.SkillDefinition def = skill.toDefinition();
       if (def != null && def.hasBridgeRules()) {
-        for (com.example.htmlmud.domain.model.definition.SkillBridgeRule rule : def.bridgeRules()) {
+        for (com.example.htmlmud.progression.SkillBridgeRule rule : def.bridgeRules()) {
           String target = rule.targetDrpgSkillId();
           if (target != null && !target.isBlank()) {
             if (templateReader.findPartySkill(target).isEmpty() && templateReader.findSkill(target).isEmpty()) {
@@ -395,10 +395,10 @@ public class DataIntegrityValidator implements ApplicationRunner {
           }
         }
       }
-      List<com.example.htmlmud.domain.model.definition.SkillBridgeRule> defaultBridges =
-          com.example.htmlmud.domain.model.definition.SkillDefinition.resolveDefaultBridges(skill.getId());
+      List<com.example.htmlmud.progression.SkillBridgeRule> defaultBridges =
+          com.example.htmlmud.progression.SkillDefinition.resolveDefaultBridges(skill.getId());
       if (defaultBridges != null) {
-        for (com.example.htmlmud.domain.model.definition.SkillBridgeRule rule : defaultBridges) {
+        for (com.example.htmlmud.progression.SkillBridgeRule rule : defaultBridges) {
           String target = rule.targetDrpgSkillId();
           if (target != null && !target.isBlank()) {
             if (templateReader.findPartySkill(target).isEmpty() && templateReader.findSkill(target).isEmpty()) {

@@ -41,7 +41,7 @@ import com.example.htmlmud.domain.actor.service.CharacterSyncService;
 import com.example.htmlmud.domain.actor.service.LivingService;
 import com.example.htmlmud.domain.actor.service.PlayerService;
 import com.example.htmlmud.domain.world.WorldManager;
-import com.example.htmlmud.domain.progression.service.XpProgressionService;
+import com.example.htmlmud.progression.XpProgressionService;
 
 @SpringBootTest
 @Import(ActorOutcomeSyncAndEventBackboneTest.TestEventConfig.class)

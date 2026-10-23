@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.domain.exception.MudException;
-import com.example.htmlmud.domain.model.enums.SkillCategory;
+import com.example.htmlmud.progression.SkillCategory;
 import com.example.htmlmud.template.model.ItemTemplate;
 import com.example.htmlmud.template.model.MobTemplate;
 import com.example.htmlmud.template.model.RaceTemplate;

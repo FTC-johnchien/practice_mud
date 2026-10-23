@@ -6,7 +6,7 @@ import org.slf4j.MDC;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.combat.service.SkillService;
-import com.example.htmlmud.domain.progression.service.XpProgressionService;
+import com.example.htmlmud.progression.XpProgressionService;
 import com.example.htmlmud.domain.service.MessageUtil;
 import com.example.htmlmud.domain.world.WorldManager;
 import com.example.htmlmud.config.GuiBridge;

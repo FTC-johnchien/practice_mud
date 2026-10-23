@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.model.enums;
+package com.example.htmlmud.progression;
 
 public enum SkillCategory {
   // === 基礎戰鬥位 (根據手持武器自動切換) ===

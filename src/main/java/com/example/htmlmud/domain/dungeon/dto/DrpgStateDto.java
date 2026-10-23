@@ -246,7 +246,7 @@ public record DrpgStateDto(
         basicSkillName = customSkillOpt.map(com.example.htmlmud.template.model.SkillTemplate::getName).orElse(customStanceId);
       }
 
-      com.example.htmlmud.domain.model.enums.SkillCategory currentCat =
+      com.example.htmlmud.progression.SkillCategory currentCat =
           PartyMember.toSkillCategory(m.getMainHandWeaponType());
       List<PartyStanceSkillDto> availableStances = new ArrayList<>();
 
@@ -267,9 +267,9 @@ public record DrpgStateDto(
       // 3. 收集被動心法槽位與可用被動技能 (DODGE, PARRY, FORCE)
       // 若為 basic_* 視為預設底層機制，不放入 passiveSlots，使前端呈現 (無)
       Map<String, String> passiveSlots = new HashMap<>();
-      String curDodgeId = m.getCustomEnabledPassiveSkillId(com.example.htmlmud.domain.model.enums.SkillCategory.DODGE);
-      String curParryId = m.getCustomEnabledPassiveSkillId(com.example.htmlmud.domain.model.enums.SkillCategory.PARRY);
-      String curForceId = m.getCustomEnabledPassiveSkillId(com.example.htmlmud.domain.model.enums.SkillCategory.FORCE);
+      String curDodgeId = m.getCustomEnabledPassiveSkillId(com.example.htmlmud.progression.SkillCategory.DODGE);
+      String curParryId = m.getCustomEnabledPassiveSkillId(com.example.htmlmud.progression.SkillCategory.PARRY);
+      String curForceId = m.getCustomEnabledPassiveSkillId(com.example.htmlmud.progression.SkillCategory.FORCE);
       if (curDodgeId != null) {
         passiveSlots.put("DODGE", curDodgeId);
       }
@@ -288,9 +288,9 @@ public record DrpgStateDto(
           if (skOpt.isPresent()) {
             var sk = skOpt.get();
             var cat = PartyMember.resolveSkillCategory(sk);
-            if (cat == com.example.htmlmud.domain.model.enums.SkillCategory.DODGE ||
-                cat == com.example.htmlmud.domain.model.enums.SkillCategory.PARRY ||
-                cat == com.example.htmlmud.domain.model.enums.SkillCategory.FORCE) {
+            if (cat == com.example.htmlmud.progression.SkillCategory.DODGE ||
+                cat == com.example.htmlmud.progression.SkillCategory.PARRY ||
+                cat == com.example.htmlmud.progression.SkillCategory.FORCE) {
               String catName = switch (cat) {
                 case DODGE -> "身法心法";
                 case PARRY -> "招架護體";

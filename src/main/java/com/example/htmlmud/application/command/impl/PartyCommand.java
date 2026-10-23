@@ -33,7 +33,7 @@ public class PartyCommand implements PlayerCommand {
   private final com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService;
   private final com.example.htmlmud.domain.world.GameStateBroadcastService broadcastService;
   private final TemplateReader templateReader;
-  private final com.example.htmlmud.domain.progression.service.XpProgressionService xpProgressionService;
+  private final com.example.htmlmud.progression.XpProgressionService xpProgressionService;
 
   @org.springframework.beans.factory.annotation.Autowired
   public PartyCommand(PartyService partyService, DungeonManager dungeonManager,
@@ -41,14 +41,14 @@ public class PartyCommand implements PlayerCommand {
       com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService,
       com.example.htmlmud.domain.world.GameStateBroadcastService broadcastService,
       TemplateReader templateReader,
-      @org.springframework.beans.factory.annotation.Autowired(required = false) com.example.htmlmud.domain.progression.service.XpProgressionService xpProgressionService) {
+      @org.springframework.beans.factory.annotation.Autowired(required = false) com.example.htmlmud.progression.XpProgressionService xpProgressionService) {
     this.partyService = partyService;
     this.dungeonManager = dungeonManager;
     this.dungeonNavigator = dungeonNavigator;
     this.battleService = battleService;
     this.broadcastService = broadcastService;
     this.templateReader = java.util.Objects.requireNonNull(templateReader, "templateReader must not be null");
-    this.xpProgressionService = xpProgressionService != null ? xpProgressionService : new com.example.htmlmud.domain.progression.service.XpProgressionService(this.templateReader);
+    this.xpProgressionService = xpProgressionService != null ? xpProgressionService : new com.example.htmlmud.progression.XpProgressionService(this.templateReader);
   }
 
   public PartyCommand(PartyService partyService, DungeonManager dungeonManager,
@@ -59,7 +59,7 @@ public class PartyCommand implements PlayerCommand {
     this(partyService, dungeonManager, dungeonNavigator, battleService, broadcastService, templateReader, null);
   }
 
-  public com.example.htmlmud.domain.progression.service.XpProgressionService getXpProgressionService() {
+  public com.example.htmlmud.progression.XpProgressionService getXpProgressionService() {
     return xpProgressionService;
   }
 
@@ -167,7 +167,7 @@ public class PartyCommand implements PlayerCommand {
           if (skillId.equalsIgnoreCase("none") || skillId.equalsIgnoreCase("clear") || skillId.equalsIgnoreCase("unequip")) {
             if (parts.length > 3) {
               try {
-                var cat = com.example.htmlmud.domain.model.enums.SkillCategory.valueOf(parts[3].trim().toUpperCase());
+                var cat = com.example.htmlmud.progression.SkillCategory.valueOf(parts[3].trim().toUpperCase());
                 m.enableSkill(cat, null);
                 self.reply("【武學卸下】已卸下成員「" + m.getName() + "」的 [" + cat + "] 主修武學，還原為預設！");
               } catch (IllegalArgumentException e) {
@@ -213,10 +213,10 @@ public class PartyCommand implements PlayerCommand {
             return;
           }
           PartyMember m = party.getMembers().get(mIdx);
-          com.example.htmlmud.domain.model.enums.SkillCategory cat = null;
+          com.example.htmlmud.progression.SkillCategory cat = null;
           if (parts.length > 2) {
             try {
-              cat = com.example.htmlmud.domain.model.enums.SkillCategory.valueOf(parts[2].trim().toUpperCase());
+              cat = com.example.htmlmud.progression.SkillCategory.valueOf(parts[2].trim().toUpperCase());
             } catch (IllegalArgumentException ignored) {}
           }
           if (cat == null) {

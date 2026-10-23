@@ -5,15 +5,15 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.domain.progression.service.XpProgressionService;
-import com.example.htmlmud.domain.progression.service.XpService;
+import com.example.htmlmud.progression.XpProgressionService;
+import com.example.htmlmud.progression.XpService;
 import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.model.config.MoveAction;
 import com.example.htmlmud.domain.model.entity.LivingStats;
-import com.example.htmlmud.domain.model.entity.SkillEntry;
+import com.example.htmlmud.progression.SkillEntry;
 import com.example.htmlmud.domain.model.skill.dto.ActiveSkillResult;
 import com.example.htmlmud.template.model.SkillTemplate;
 import com.example.htmlmud.domain.model.vo.DamageSource;
@@ -286,7 +286,7 @@ public class CombatService {
     // 0. 檢查禁魔區域 (NO_MAGIC)
     if (self.getCurrentRoom() != null && self.getCurrentRoom().hasFlag(com.example.htmlmud.domain.model.enums.RoomFlag.NO_MAGIC)) {
       if (skill != null && skill.template() != null) {
-        boolean isMagic = skill.template().getType() == com.example.htmlmud.domain.model.enums.SkillType.MAGIC
+        boolean isMagic = skill.template().getType() == com.example.htmlmud.progression.SkillType.MAGIC
             || (skill.template().getTags() != null && (skill.template().getTags().contains("SPELL") || skill.template().getTags().contains("MAGIC")));
         if (isMagic) {
           if (self instanceof Player p) {

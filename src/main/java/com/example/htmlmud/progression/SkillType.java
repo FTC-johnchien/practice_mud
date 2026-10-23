@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.model.enums;
+package com.example.htmlmud.progression;
 
 public enum SkillType {
 

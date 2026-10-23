@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import com.example.htmlmud.domain.exception.MudException;
-import com.example.htmlmud.domain.model.enums.SkillCategory;
+import com.example.htmlmud.progression.SkillCategory;
 import com.example.htmlmud.template.model.ClassTemplate;
 import com.example.htmlmud.template.model.CompanionTemplate;
 import com.example.htmlmud.template.model.ItemTemplate;

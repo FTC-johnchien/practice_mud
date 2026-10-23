@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.model.definition;
+package com.example.htmlmud.progression;
 
 /**
  * MUD 技能達到指定等級時解鎖 DRPG 小隊技能之橋接規則 (可由 JSON 定義驅動)

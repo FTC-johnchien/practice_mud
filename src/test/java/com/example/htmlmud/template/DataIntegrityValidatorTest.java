@@ -99,7 +99,7 @@ class DataIntegrityValidatorTest {
         new com.example.htmlmud.template.model.SkillTemplate();
     brokenSkill.setId("custom_sword");
     brokenSkill.setName("自創劍法");
-    brokenSkill.setBridges(List.of(com.example.htmlmud.domain.model.definition.SkillBridgeRule.of("non_existent_drpg_skill", 1)));
+    brokenSkill.setBridges(List.of(com.example.htmlmud.progression.SkillBridgeRule.of("non_existent_drpg_skill", 1)));
 
     when(mockReader.getAllSkills()).thenReturn(Map.of("custom_sword", brokenSkill));
     when(mockReader.findPartySkill("non_existent_drpg_skill")).thenReturn(Optional.empty());

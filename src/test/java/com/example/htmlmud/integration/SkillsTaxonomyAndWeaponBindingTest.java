@@ -11,7 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
-import com.example.htmlmud.domain.model.enums.SkillCategory;
+import com.example.htmlmud.progression.SkillCategory;
 import com.example.htmlmud.domain.model.enums.WeaponType;
 import com.example.htmlmud.template.model.SkillTemplate;
 import com.example.htmlmud.party.Party;
@@ -50,7 +50,7 @@ public class SkillsTaxonomyAndWeaponBindingTest {
           .isPresent();
       SkillTemplate skill = skillOpt.get();
       assertThat(skill.getName()).isNotBlank();
-      if (skill.getType() != com.example.htmlmud.domain.model.enums.SkillType.PASSIVE) {
+      if (skill.getType() != com.example.htmlmud.progression.SkillType.PASSIVE) {
         assertThat(skill.getMoves()).isNotEmpty();
       }
     }

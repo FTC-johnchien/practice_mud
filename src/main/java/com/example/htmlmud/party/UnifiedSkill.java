@@ -1,7 +1,7 @@
 package com.example.htmlmud.party;
 
 import java.util.List;
-import com.example.htmlmud.domain.model.enums.SkillType;
+import com.example.htmlmud.progression.SkillType;
 
 /**
  * 大一統規範技能介面 (UnifiedSkill)

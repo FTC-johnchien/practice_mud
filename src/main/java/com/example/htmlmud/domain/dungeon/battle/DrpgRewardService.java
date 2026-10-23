@@ -22,7 +22,7 @@ import com.example.htmlmud.party.PartyItemSlot;
 import com.example.htmlmud.party.PartyMember;
 import com.example.htmlmud.template.TemplateReader;
 import com.example.htmlmud.domain.actor.service.CharacterSyncService;
-import com.example.htmlmud.domain.progression.service.XpProgressionService;
+import com.example.htmlmud.progression.XpProgressionService;
 import com.example.htmlmud.save.SaveGameService;
 import lombok.extern.slf4j.Slf4j;
 

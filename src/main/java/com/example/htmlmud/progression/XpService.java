@@ -1,8 +1,8 @@
-package com.example.htmlmud.domain.progression.service;
+package com.example.htmlmud.progression;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.domain.model.entity.SkillEntry;
+import com.example.htmlmud.progression.SkillEntry;
 import com.example.htmlmud.template.model.SkillTemplate;
 import lombok.extern.slf4j.Slf4j;
 

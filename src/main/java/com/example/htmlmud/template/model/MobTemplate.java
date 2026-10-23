@@ -7,7 +7,7 @@ import com.example.htmlmud.domain.model.config.LootEntry;
 import com.example.htmlmud.domain.model.enums.Gender;
 import com.example.htmlmud.domain.model.enums.MobKind;
 import com.example.htmlmud.domain.model.enums.MobRank;
-import com.example.htmlmud.domain.model.enums.SkillCategory;
+import com.example.htmlmud.progression.SkillCategory;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.Builder;
 

@@ -8,7 +8,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import com.example.htmlmud.domain.model.enums.DamageType;
 import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.MobRank;
-import com.example.htmlmud.domain.model.enums.SkillCategory;
+import com.example.htmlmud.progression.SkillCategory;
 import com.example.htmlmud.template.model.MobTemplate;
 import com.example.htmlmud.template.TemplateReader;
 import com.example.htmlmud.party.RowPosition;

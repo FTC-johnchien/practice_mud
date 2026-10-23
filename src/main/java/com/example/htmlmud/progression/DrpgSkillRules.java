@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.model.definition;
+package com.example.htmlmud.progression;
 
 import java.util.List;
 import com.example.htmlmud.domain.model.config.BuffConfig;
