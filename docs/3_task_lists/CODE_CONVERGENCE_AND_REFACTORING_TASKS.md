@@ -68,7 +68,7 @@ graph TD
 ### 🟢 階段一：核心功能與語意收斂 (Phase 1: Feature Convergence - M1 & Proxy)
 > **目的**：先讓營地（M1）具備自給自足的獨立業務類別，切斷對 MUD `Room` 的依賴，為後續抽包打下扎實基礎。
 
-- [ ] **Task C1-1 (COGNITIVE-PROXY-SERVICE): 實作靈識認知轉譯代理服務**
+- [x] **Task C1-1 (COGNITIVE-PROXY-SERVICE): 實作靈識認知轉譯代理服務**
   - **位置**：`com.example.htmlmud.domain.service.CognitiveProxyService`
   - **職責**：
     1. 接收字串、設施 DTO 或物品 DTO，以及小隊特工晶片加載率（`chipLoadingRate` 0~100）。
@@ -76,7 +76,7 @@ graph TD
     3. 解析多階 `lenses` 陣列，動態替換標題、說明與 `glitch` 標籤。
   - **測試驗證**：撰寫 `CognitiveProxyServiceTest.java`（驗證三階透鏡切換與邊界條件，綠燈）。
 
-- [ ] **Task C1-2 (TOWNHUB-SERVICE): 實作營地機能中樞服務與 DTO**
+- [x] **Task C1-2 (TOWNHUB-SERVICE): 實作營地機能中樞服務與 DTO**
   - **位置**：`com.example.htmlmud.domain.service.TownHubService` 與 `com.example.htmlmud.domain.model.TownHubDto`
   - **職責**：
     1. 載入 `data/zones/newbie_village/facilities.json`。
@@ -84,9 +84,10 @@ graph TD
     3. 提供設施清單查詢、設施點擊互動（打造、道場、晶片、醫療、傳送）與調息（回滿 HP/MP/SAN，清除精神萎靡）。
   - **測試驗證**：撰寫 `TownHubServiceTest.java`（驗證設施加載、調息結算與 DTO 輸出，綠燈）。
 
-- [ ] **Task C1-3 (TOWN-ACTIONS-DISPATCH): 收斂營地動作派發通道**
-  - **位置**：`CommandDispatcher.java` / `GameLoop.java`
+- [x] **Task C1-3 (TOWN-ACTIONS-DISPATCH): 收斂營地動作派發通道**
+  - **位置**：`CommandDispatcher.java` / `TownFacilityCommand.java`
   - **職責**：將前端點擊營地設施所發送的 `TOWN_FACILITY` 與 `CAMP_REST` 動作，直接由 `TownHubService` 處理並推送最新營地狀態，不經過任何舊 MUD 指令。
+  - **測試驗證**：撰寫 `TownFacilityCommandTest.java`（5/5 綠燈），整合至 `CommandDispatcher`。
 
 ---
 
@@ -107,10 +108,10 @@ graph TD
   - **職責**：在 `viewMode == DUNGEON` 且不在撤離點（`E` 或石階）時，阻斷主動存檔或脫離請求，提示「地脈煞氣擾動，唯有抵達脫離石階方可閉關存檔」。
   - **測試驗證**：單元測試驗證地牢中存檔阻斷、撤離點存檔成功。
 
-- [ ] **Task C2-3 (16-CANONICAL-SKILLS-DATA): 完整落地 16 大仙俠賽博戰技資料 (M5-3)**
+- [x] **Task C2-3 (16-CANONICAL-SKILLS-DATA): 完整落地 16 大仙俠賽博戰技資料 (M5-3)**
   - **位置**：`src/main/resources/data/party/party_skills.json`
   - **職責**：完整對齊 L2《SKILL_SCHEMA.md》第四節 16 大技能矩陣，配置標準仙俠展示名稱（如【偷天換日·轉煞移因訣】、【燃魂溯光·剎那千秋步】），精準綁定四大 `cyberSchool` 與 `comboRole`（PRIMER/DETONATOR）。
-  - **測試驗證**：`WorldDataIntegrityTest.java` 檢驗 16 大技能無警告，100% 綠燈。
+  - **測試驗證**：`WorldDataIntegrityTest.java` 與 `CyberSkillAndItemAffixTest.java` 檢驗 16 大技能無警告，100% 綠燈。
 
 ---
 

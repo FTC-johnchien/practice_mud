@@ -6,19 +6,20 @@
 
 ---
 
-## 📌 當前狀態：四層級架構與 Level 3 任務清單已全面落實 1:1 模組鏡像對齊，全模組進度看板已建立，VS-01 保持待命準備中 (Alignment & Governance Complete)
+## 📌 當前狀態：進入 Phase 2 第一章序幕垂直切片驗證 (Vertical Slice Phase 2 Active)
 
 > **當前完成事項**：
-> 1. ✅ **需求層 (L1)**：確立五大核心目標（世界觀/戰鬥爽快/技能組合/裝備收集/角色養成）、純單機 Action-Tactical DRPG 典範、SAN 護盾生存化與消除背刺魔化。
-> 2. ✅ **規格層 (L2)**：後端 10 大模組 (M1~M9, M3.1)、前端 6 大表現模組 (FE1~FE6)、3 大資料 Schema 契約全數完備並與程式碼單一真相源對齊。
-> 3. ✅ **任務庫 (L3)**：全面重構為與 L2 規格 1:1 鏡像對齊結構（`backend/` 10 個、`frontend/` 6 個、`data_schemas/` 3 個模組專屬實作清單），建立中央進度看板 [`README.md`](../3_task_lists/README.md) 與宏觀演進總綱 [`FUTURE_IMPROVEMENTS.md`](../3_task_lists/FUTURE_IMPROVEMENTS.md)；歷史審查清單完整歸檔至 `docs/0_archive/alignment_history/`。
-> 4. ✅ **架構歸檔與鏈結守護**：239 條文檔內部鏈結通過 `check-doc-links.ps1` 100% 驗證。
+> 1. ✅ **需求層 (L1)**：確立五大核心目標、純單機 85/15 刷寶黃金權重、SAN 護盾生存化（Option A）與靈識三階透鏡轉譯（Option C）。
+> 2. ✅ **規格層 (L2)**：後端 10 大模組 (M1~M9, M3.1)、前端 6 大表現模組 (FE1~FE6)、3 大資料 Schema 契約全數完備並 100% 涵蓋 L1。
+> 3. ✅ **任務庫 (L3)**：落實 1:1 鏡像對齊結構，確立專屬執行計畫 [`CODE_CONVERGENCE_AND_REFACTORING_TASKS.md`](../3_task_lists/CODE_CONVERGENCE_AND_REFACTORING_TASKS.md)。
+> 4. ✅ **治理憲法**：於全域文件定錨「三大層級遞進治理與使用者審批鐵律」，全量 388 項測試 100% 綠燈守護。
+> 5. ✅ **收斂里程碑 (CONV-01)**：三階靈識透鏡轉譯代理 (`CognitiveProxyService`)、營地機能中樞 (`TownHubService` / `TownHubDto`)、營地設施與調息派發 (`TownFacilityCommand`)、16 大標準賽博神通資料矩陣全數落地！
 >
-> ⏳ **下一階段目標**：待使用者指示啟動 **Milestone VS-01 — 第一章序幕垂直切片：黑煞宗地底礦脈・採礦奴隸與特工覺醒 (Vertical Slice, P1)**。
+> 🎯 **當前唯一推進焦點**：**Milestone VS-01 — 第一章序幕垂直切片：黑煞宗地底礦脈・採礦奴隸與特工覺醒 (Vertical Slice, P1)**。
 
 ---
 
-## 📌 下一焦點里程碑：Milestone VS-01 — 第一章序幕垂直切片：黑煞宗地底礦脈・採礦奴隸與特工覺醒 (Vertical Slice, P1)
+## 📌 當前焦點里程碑：Milestone VS-01 — 第一章序幕垂直切片：黑煞宗地底礦脈・採礦奴隸與特工覺醒 (Vertical Slice, P1)
 
 - **核心目標對齊**：依據三大戰略與【五大核心目標】（世界觀介紹、戰鬥爽快、技能組合、裝備收集、角色養成），徹底取消道心崩潰魔化設計，打造首個完整閉環的純單機 Hack-and-slash DRPG 序章！
 - **背景設定融合**：主角在黑煞宗地底奴役通鋪甦醒，特工晶片加載 12%，在萬年母神卵鞘地殼深處面臨塌陷與退化妖獸，收集黑煞煞石，反殺密室修士並繳獲千星科技加密追蹤晶片。
@@ -54,6 +55,12 @@
 ---
 
 ## 🏆 已完成里程碑 (Completed Milestones)
+
+- [x] **Milestone CONV-01 — 營地機能中樞與靈識透鏡核心服務收斂 (Town Hub & Cognitive Proxy Convergence, P1)**
+  - Task 1 (CONV-01-COGNITIVE-PROXY): 實作三階靈識認知轉譯代理服務 `CognitiveProxyService`（`<30%` 純仙俠表象、`30%~70%` 異象微顯 Glitch、`>70%` 科技覺醒），專屬測試 `CognitiveProxyServiceTest` 100% 綠燈。
+  - Task 2 (CONV-01-TOWNHUB-SERVICE): 實作營地機能中樞服務 `TownHubService` 與 DTO 投影 `TownHubDto`，加載 6 大設施契約，實裝全員一鍵調息休整（回滿 HP/MP/SAN，清除精神萎靡），`TownHubServiceTest` 100% 綠燈。
+  - Task 3 (CONV-01-TOWN-DISPATCH): 實作 `TownFacilityCommand` 派發器，收斂前端 `TOWN_FACILITY` 與 `CAMP_REST` 動作，徹底擺脫舊 MUD 房間 exits 拓撲；`RestCommand` 支援安全區委派，`TownFacilityCommandTest` 100% 綠燈。
+  - Task 4 (CONV-01-16-SKILLS-DATA): 完整落地 Level 1 十六項神通標準資料契約 (`party_skills.json`)，配置古典仙俠展示名稱（Option C）與底層科技疊影 (`cyberLore`)，`CyberSkillAndItemAffixTest` 與 `WorldDataIntegrityTest` 100% 綠燈通過。
 
 - [x] **Milestone DEC-ALIGN — 四層級文檔對齊與代碼歷史毒瘤清剿 (Four-Tier Alignment & Legacy Purge, P1)**
   - Task 1 (DEC-01-COMBAT / ALIGN-COMBAT-SAN): 重構 `DrpgCombatLoop.java`，徹底拔除隊員 40% 心魔背刺攻擊隊友與畸變體變身敵方首領邏輯，落地純單機精神萎靡 Debuff (-15% 傷害輸出)，清理 `selectRandomTeammateExcept` 死代碼。

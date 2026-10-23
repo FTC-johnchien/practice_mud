@@ -23,6 +23,9 @@ class CyberSkillAndItemAffixTest {
   @Autowired
   private PartyService partyService;
 
+  @Autowired
+  private com.example.htmlmud.infra.persistence.repository.TemplateRepository templateRepository;
+
   @Test
   @DisplayName("測試賽博修仙技能模型：四大流派、超頻階級與 Primer/Detonator 連攜角色判定")
   void testCyberSkillModelAndSchools() {
@@ -120,5 +123,48 @@ class CyberSkillAndItemAffixTest {
     assertThat(sword.getTotalBonusMaxDamage()).isEqualTo(20); // 15 + 5
     assertThat(sword.getTotalBonusDefense()).isEqualTo(5);    // 2 + 3
     assertThat(sword.getTotalPoiseBreakPower()).isEqualTo(30); // 20 + 10
+  }
+
+  @Test
+  @DisplayName("CONV-01-16-SKILLS-DATA: 驗證 16 大標準賽博神通資料矩陣均已成功載入且具備古典仙俠展示名稱與底層科技疊影")
+  void testCanonical16CyberSkillsLoadedFromData() {
+    String[] expectedSkillIds = {
+        "skill_mitm_transfer",
+        "skill_docker_sandbox",
+        "skill_ddos_flooding",
+        "skill_bruteforce_crack",
+        "skill_hotpatch_firmware",
+        "skill_neural_overclock_step",
+        "skill_shell_injection",
+        "skill_immuno_override",
+        "skill_glitch_texture",
+        "skill_pixel_mosaic",
+        "skill_deepfake_mirror",
+        "skill_framerate_lock",
+        "skill_null_pointer",
+        "skill_hard_reboot",
+        "skill_memory_leak",
+        "skill_format_drive"
+    };
+
+    for (String skillId : expectedSkillIds) {
+      PartyMemberSkill skill = templateRepository.getPartySkill(skillId).orElse(null);
+      assertThat(skill).as("技能 [%s] 應成功加載於 TemplateRepository", skillId).isNotNull();
+      assertThat(skill.getName()).as("技能 [%s] 應具備古典仙俠展示名稱（包含【】）", skillId)
+          .startsWith("【")
+          .endsWith("】");
+      assertThat(skill.getSchool()).as("技能 [%s] 應綁定四大賽博流派之一", skillId)
+          .isNotEqualTo(CyberSchool.NONE);
+      assertThat(skill.getCyberLore()).as("技能 [%s] 應具備底層科技疊影描述", skillId)
+          .isNotBlank();
+    }
+
+    // 驗證連攜先手與引爆手角色定義
+    assertThat(templateRepository.getPartySkill("skill_mitm_transfer").orElseThrow().isPrimer()).isTrue();
+    assertThat(templateRepository.getPartySkill("skill_ddos_flooding").orElseThrow().isDetonator()).isTrue();
+    assertThat(templateRepository.getPartySkill("skill_bruteforce_crack").orElseThrow().isDetonator()).isTrue();
+    assertThat(templateRepository.getPartySkill("skill_null_pointer").orElseThrow().isDetonator()).isTrue();
+    assertThat(templateRepository.getPartySkill("skill_memory_leak").orElseThrow().isPrimer()).isTrue();
+    assertThat(templateRepository.getPartySkill("skill_format_drive").orElseThrow().isDetonator()).isTrue();
   }
 }

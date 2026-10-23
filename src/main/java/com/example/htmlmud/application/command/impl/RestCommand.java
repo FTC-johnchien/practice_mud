@@ -29,9 +29,15 @@ public class RestCommand implements PlayerCommand {
   private final com.example.htmlmud.domain.world.GameStateBroadcastService broadcastService;
   @org.springframework.beans.factory.annotation.Autowired(required = false)
   private com.example.htmlmud.domain.world.WorldManager worldManager;
+  @org.springframework.beans.factory.annotation.Autowired(required = false)
+  private com.example.htmlmud.domain.service.TownHubService townHubService;
 
   public void setWorldManager(com.example.htmlmud.domain.world.WorldManager worldManager) {
     this.worldManager = worldManager;
+  }
+
+  public void setTownHubService(com.example.htmlmud.domain.service.TownHubService townHubService) {
+    this.townHubService = townHubService;
   }
 
   @Override
@@ -49,22 +55,27 @@ public class RestCommand implements PlayerCommand {
 
     Party party = partyService.getOrCreateParty(self.getName());
 
-    // 1. 若處於客棧或城鎮安全區 (Hub Safe Zone)，全體氣血、真元、道心理智全數回滿
+    // 1. 若處於客棧或城鎮安全區 (Hub Safe Zone)，委派 TownHubService 進行全體氣血、真元、SAN 完全回滿並解除精神萎靡
     com.example.htmlmud.domain.actor.impl.Room currentRoom = self.getCurrentRoom();
     if (currentRoom == null && self.getCurrentRoomId() != null && worldManager != null) {
       currentRoom = worldManager.getRoomActor(self.getCurrentRoomId());
     }
     boolean isSafeZone = currentRoom != null && currentRoom.hasFlag(com.example.htmlmud.domain.model.enums.RoomFlag.SAFE_ZONE);
     if (isSafeZone) {
-      for (PartyMember member : party.getMembers()) {
-        member.heal(member.getStats() != null ? member.getStats().getMaxHp() : 200);
-        member.restoreSan(100);
-        if (member.getStats() != null) {
-          member.getStats().setMp(member.getStats().getMaxMp());
+      if (townHubService != null) {
+        var restResult = townHubService.performCampRest(party);
+        self.reply("🛌【客棧安歇】" + restResult.message());
+      } else {
+        for (PartyMember member : party.getMembers()) {
+          member.heal(member.getStats() != null ? member.getStats().getMaxHp() : 200);
+          member.restoreSan(100);
+          if (member.getStats() != null) {
+            member.getStats().setMp(member.getStats().getMaxMp());
+          }
         }
+        self.reply("🛌【客棧安歇】小隊在安全客棧暖榻上飽食安睡，飲下一碗溫熱的百草參茶……\n"
+            + "全體成員氣血、真元與道心理智全數回滿！神完氣足！");
       }
-      self.reply("🛌【客棧安歇】小隊在安全客棧暖榻上飽食安睡，飲下一碗溫熱的百草參茶……\n"
-          + "全體成員氣血、真元與道心理智全數回滿！神完氣足！");
       broadcastService.broadcastState(self);
       return;
     }

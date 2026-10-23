@@ -91,6 +91,11 @@ public final class Player extends Living {
   @Setter
   private boolean inDungeon = false;
 
+  // 特工晶片神經元加載度 (0~100%，序章預設 12%)
+  @Getter
+  @Setter
+  private int chipRate = 12;
+
 
 
   private Player(MessageOutput output, String id, String name, LivingStats state,

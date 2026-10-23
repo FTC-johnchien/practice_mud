@@ -1,58 +1,189 @@
 [
   {
     "id": "fac_forge",
-    "name": "天工百煉坊",
+    "name": "百煉堂",
     "facilityType": "FORGE",
     "icon": "🔨",
-    "description": "黑市鐵匠以高熱靈火熔煉異形殘骸與廢棄晶片，可分解法寶、強化護甲與洗鍊隨機詞綴。",
+    "description": "宗門神兵古鐵百煉堂，長老爐火純青，傳承神兵開光與法寶注靈之法。",
     "npcId": "weaponsmith",
     "npcName": "百煉鐵匠",
     "actions": ["SALVAGE", "UPGRADE", "REFORGE_AFFIX"],
-    "isOpen": true
+    "isOpen": true,
+    "lenses": [
+      {
+        "minProgress": 0,
+        "name": "百煉堂",
+        "desc": "宗門神兵古鐵百煉堂，長老爐火純青，傳承神兵開光與法寶注靈之法。",
+        "glitch": false
+      },
+      {
+        "minProgress": 30,
+        "name": "百煉堂 [微光擾動]",
+        "desc": "爐火深處隱約閃爍著冷色金屬電弧與幾丁質殘骸，傳承神兵開光與生化零件注靈。",
+        "glitch": true
+      },
+      {
+        "minProgress": 70,
+        "name": "工程師生化兵器組裝台",
+        "desc": "【千星科技掃描】工程師遺留的自動化生化兵器組裝基座，可分解外神殘骸與重構軍用義體。",
+        "glitch": true
+      }
+    ]
   },
   {
     "id": "fac_chip_lab",
-    "name": "賽博義體與晶片工坊",
+    "name": "靈台藏經閣",
     "facilityType": "CHIP_LAB",
     "icon": "🧬",
-    "description": "暗室中閃爍著千星殖民巨企的螢幕微光，為隊員開闢神經插槽，安裝特工超頻晶片。",
+    "description": "宗門秘藏道統閣，供奉前世宿慧玉簡與通靈靈骨，由引路道者協助修士調試周天。",
     "npcId": "cyber_engineer",
-    "npcName": "叛逃工程師",
+    "npcName": "藏經閣主",
     "actions": ["OVERCLOCK", "SOCKET_CHIP", "REMOVE_CHIP"],
-    "isOpen": true
+    "isOpen": true,
+    "lenses": [
+      {
+        "minProgress": 0,
+        "name": "靈台藏經閣",
+        "desc": "宗門秘藏道統閣，供奉前世宿慧玉簡與通靈靈骨，由引路道者協助修士調試周天。",
+        "glitch": false
+      },
+      {
+        "minProgress": 30,
+        "name": "靈台藏經閣 [螢幕微光]",
+        "desc": "暗室經架間偶爾泛起藍色像素雜訊與蜂鳴，供奉前世宿慧道骨與晶片核心。",
+        "glitch": true
+      },
+      {
+        "minProgress": 70,
+        "name": "千星科技神經元算法實驗室",
+        "desc": "【千星科技掃描】千星殖民巨企遺留的高密運算終端，調試特工晶片超頻與神經插槽。",
+        "glitch": true
+      }
+    ]
   },
   {
     "id": "fac_dojo",
-    "name": "太華傳功道場",
+    "name": "雜役演武道場",
     "facilityType": "DOJO",
     "icon": "🥋",
-    "description": "古仙法碑聳立於此，支援黑客、生化、機械、靈能四大流派洗點重構與 Gambit 自動戰術方針配置。",
+    "description": "外門雜役校場與同門宿營，提供弟子陣法磨合、戰陣演練與夥伴招募。",
     "npcId": "dojo_master",
-    "npcName": "傳功長老",
+    "npcName": "演武教頭",
     "actions": ["RESET_TALENTS", "CONFIGURE_GAMBIT", "LEARN_SKILLS"],
-    "isOpen": true
+    "isOpen": true,
+    "lenses": [
+      {
+        "minProgress": 0,
+        "name": "雜役演武道場",
+        "desc": "外門雜役校場與同門宿營，提供弟子陣法磨合、戰陣演練與夥伴招募。",
+        "glitch": false
+      },
+      {
+        "minProgress": 30,
+        "name": "雜役演武道場 [戰術標註]",
+        "desc": "校場石板上刻印著古修陣法與突觸戰術反應引數，提供戰技演練與 Gambit 方針調整。",
+        "glitch": true
+      },
+      {
+        "minProgress": 70,
+        "name": "戰術戰鬥模擬演算中樞",
+        "desc": "【千星科技掃描】神經反射與微型戰術晶片演訓陣列，零成本重組戰術 Build 與隊友 AI 方針。",
+        "glitch": true
+      }
+    ]
+  },
+  {
+    "id": "fac_market",
+    "name": "宗門外門集市",
+    "facilityType": "MARKET",
+    "icon": "🛒",
+    "description": "黑煞宗外門雜役互市與私下黑市地攤，各路採掘散修銷贓換取靈石與丹藥之所。",
+    "npcId": "market_merchant",
+    "npcName": "外門掌櫃",
+    "actions": ["SHOP_BUY", "SHOP_SELL"],
+    "isOpen": true,
+    "lenses": [
+      {
+        "minProgress": 0,
+        "name": "宗門外門集市",
+        "desc": "黑煞宗外門雜役互市與私下黑市地攤，各路採掘散修銷贓換取靈石與丹藥之所。",
+        "glitch": false
+      },
+      {
+        "minProgress": 30,
+        "name": "宗門外門集市 [黑市走私]",
+        "desc": "攤販暗地兜售帶有巨企條碼的火把與辟邪血清，銷贓外神煞晶換取硬通貨。",
+        "glitch": true
+      },
+      {
+        "minProgress": 70,
+        "name": "黑市走私終端與地下交易所",
+        "desc": "【千星科技掃描】跨星系黑市走私數據鏈，收購外神生物質與工程師貴金屬，販售深淵探險生存物資。",
+        "glitch": true
+      }
+    ]
   },
   {
     "id": "fac_clinic",
-    "name": "回春草堂與強殖醫療站",
+    "name": "回春客棧／通鋪柴房",
     "facilityType": "CLINIC",
     "icon": "🌿",
-    "description": "熬煮靈草與古神抗體的靜謐醫館，提供全隊氣血真元補滿、消除精神萎靡與整裝補給。",
-    "npcId": "apothecary",
-    "npcName": "草堂醫師",
-    "actions": ["FULL_RESTORE", "PURIFY_SAN", "BUY_SUPPLIES"],
-    "isOpen": true
+    "description": "礦脈下方的避煞客棧與雜役通鋪，燃點辟邪香，供修士調息吐納、恢復氣血真元。",
+    "npcId": "innkeeper",
+    "npcName": "通鋪掌櫃",
+    "actions": ["REST", "PURIFY_SAN", "BUY_SUPPLIES"],
+    "isOpen": true,
+    "lenses": [
+      {
+        "minProgress": 0,
+        "name": "回春客棧／通鋪柴房",
+        "desc": "礦脈下方的避煞客棧與雜役通鋪，燃點辟邪香，供修士調息吐納、恢復氣血真元。",
+        "glitch": false
+      },
+      {
+        "minProgress": 30,
+        "name": "回春客棧 [避煞靜室]",
+        "desc": "客棧後房瀰漫著刺鼻的生化抗體與安神香氣，調息吐納瞬間回滿狀態並清除精神萎靡。",
+        "glitch": true
+      },
+      {
+        "minProgress": 70,
+        "name": "生化生命維持與深層休眠艙",
+        "desc": "【千星科技掃描】軍用級組織再生納米修復艙，瞬間撫平肉身創傷並格式化外神精神侵蝕。",
+        "glitch": true
+      }
+    ]
   },
   {
     "id": "fac_dungeon_portal",
-    "name": "地牢傳送門",
+    "name": "廢棄礦脈坑道",
     "facilityType": "DUNGEON_GATE",
     "icon": "🌀",
-    "description": "通往黑煞宗礦脈、太陰古塚與深淵卵鞘的空間裂隙中樞，可選擇出征樓層與小隊陣法。",
+    "description": "墨竹山封閉禁區與黑煞宗地底礦道入口，石階延伸向未知地底深淵母神卵鞘。",
     "npcId": "portal_guide",
-    "npcName": "裂隙引路人",
+    "npcName": "礦道守衛",
     "targetDungeons": ["mozhu_mines", "taiyin_tomb_b1f"],
     "actions": ["SELECT_DUNGEON", "ENTER_EXPEDITION"],
-    "isOpen": true
+    "isOpen": true,
+    "lenses": [
+      {
+        "minProgress": 0,
+        "name": "廢棄礦脈坑道",
+        "desc": "墨竹山封閉禁區與黑煞宗地底礦道入口，石階延伸向未知地底深淵母神卵鞘。",
+        "glitch": false
+      },
+      {
+        "minProgress": 30,
+        "name": "廢棄礦脈坑道 [血肉地殼]",
+        "desc": "礦坑岩壁夾雜著類似活體卵鞘的紫色幾丁質纖維，空氣中瀰漫著外神微量輻射煞氣。",
+        "glitch": true
+      },
+      {
+        "minProgress": 70,
+        "name": "森羅星地殼外神卵鞘深淵入口",
+        "desc": "【千星科技掃描】直通萬年母神生化卵鞘偽地殼，高濃度深淵煞氣與工程師史前開採遺跡。",
+        "glitch": true
+      }
+    ]
   }
 ]
