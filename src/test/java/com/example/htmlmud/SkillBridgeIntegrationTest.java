@@ -32,7 +32,7 @@ class SkillBridgeIntegrationTest {
   @BeforeEach
   void setUp() {
     templateReader = new TemplateCatalog();
-    characterSyncService = new CharacterSyncService(new com.example.htmlmud.domain.dungeon.battle.BattleOutcomeApplier(), templateReader, null);
+    characterSyncService = new CharacterSyncService(new com.example.htmlmud.combat.BattleOutcomeApplier(), templateReader, null);
   }
 
   @Test

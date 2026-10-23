@@ -242,6 +242,6 @@ graph TD
 | **動作分發器** | `com.example.htmlmud.interfaces.websocket.DrpgActionDispatcher` | 接收客戶端動作 JSON，分發至地牢、小隊或戰鬥服務 |
 | **WebSocket 處理器** | `com.example.htmlmud.interfaces.websocket.DrpgWebSocketHandler` | 本機連線生命週期、心跳與文字日誌推送 |
 | **狀態廣播器** | `com.example.htmlmud.application.service.GameStateBroadcastService` | 全景狀態組裝與 `DrpgStateDto` JSON 推送 |
-| **戰鬥時間線迴圈** | `com.example.htmlmud.domain.dungeon.battle.DrpgCombatLoop` | 虛擬執行緒驅動的 500ms 半即時戰鬥結算 |
+| **戰鬥時間線迴圈** | `com.example.htmlmud.combat.DrpgCombatLoop` | 虛擬執行緒驅動的 500ms 半即時戰鬥結算 |
 | **全景契約 DTO** | `com.example.htmlmud.interfaces.dto.DrpgStateDto` | 前後端全域資料交換唯一契約 |
 | **客戶端動作 DTO** | `com.example.htmlmud.interfaces.dto.DrpgClientActionDto` | 前端按鈕與鍵盤觸發的動作協定契約 |

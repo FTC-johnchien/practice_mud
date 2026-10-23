@@ -36,7 +36,7 @@ public class DungeonCommand implements PlayerCommand {
   private final DungeonManager dungeonManager;
   private final DungeonNavigator dungeonNavigator;
   private final PartyService partyService;
-  private final com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService;
+  private final com.example.htmlmud.combat.DrpgBattleService battleService;
   private final com.example.htmlmud.domain.world.RoomMovementService roomMovementService;
   private final com.example.htmlmud.domain.world.GameStateBroadcastService broadcastService;
   private final TemplateReader templateReader;

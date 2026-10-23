@@ -8,9 +8,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
-import com.example.htmlmud.domain.dungeon.battle.DefenseResolver;
-import com.example.htmlmud.domain.dungeon.battle.DefenseResolver.DefenseOutcome;
+import com.example.htmlmud.combat.BattleEnemy;
+import com.example.htmlmud.combat.DefenseResolver;
+import com.example.htmlmud.combat.DefenseResolver.DefenseOutcome;
 import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.progression.SkillCategory;

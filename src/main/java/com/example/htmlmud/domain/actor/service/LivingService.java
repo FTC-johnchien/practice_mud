@@ -6,8 +6,8 @@ import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.domain.combat.service.CombatService;
-import com.example.htmlmud.domain.combat.service.SkillService;
+import com.example.htmlmud.combat.CombatService;
+import com.example.htmlmud.combat.SkillService;
 import com.example.htmlmud.progression.XpProgressionService;
 import com.example.htmlmud.domain.service.MessageUtil;
 import com.example.htmlmud.domain.world.GameStateBroadcastService;
@@ -69,16 +69,16 @@ public class LivingService {
   }
 
   @org.springframework.beans.factory.annotation.Autowired(required = false)
-  private com.example.htmlmud.domain.dungeon.battle.BuffSettlementService buffSettlementService;
+  private com.example.htmlmud.combat.BuffSettlementService buffSettlementService;
 
-  public com.example.htmlmud.domain.dungeon.battle.BuffSettlementService getBuffSettlementService() {
+  public com.example.htmlmud.combat.BuffSettlementService getBuffSettlementService() {
     if (buffSettlementService == null) {
-      buffSettlementService = new com.example.htmlmud.domain.dungeon.battle.BuffSettlementService();
+      buffSettlementService = new com.example.htmlmud.combat.BuffSettlementService();
     }
     return buffSettlementService;
   }
 
-  public void setBuffSettlementService(com.example.htmlmud.domain.dungeon.battle.BuffSettlementService buffSettlementService) {
+  public void setBuffSettlementService(com.example.htmlmud.combat.BuffSettlementService buffSettlementService) {
     this.buffSettlementService = buffSettlementService;
   }
 

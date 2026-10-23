@@ -12,9 +12,9 @@ import com.example.htmlmud.party.PartyMember;
 import com.example.htmlmud.party.CombatResourceType;
 import com.example.htmlmud.party.FormationTemplate;
 import com.example.htmlmud.template.TemplateReader;
-import com.example.htmlmud.domain.dungeon.dto.BattleViewDto;
-import com.example.htmlmud.domain.dungeon.dto.PartySkillViewDto;
-import com.example.htmlmud.domain.dungeon.dto.ActiveBuffDto;
+import com.example.htmlmud.combat.BattleViewDto;
+import com.example.htmlmud.combat.PartySkillViewDto;
+import com.example.htmlmud.combat.ActiveBuffDto;
 
 public record DrpgStateDto(
     String type,

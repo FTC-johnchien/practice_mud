@@ -45,7 +45,7 @@
   - **驗收標準**：`DataIntegrityValidator` 啟動檢驗零警告；在 `DrpgCombatLoop` 戰鬥中驗證發動 Primer 裂魂標記與 Detonator 引爆震盪衝擊波。
 
 - [ ] **Task 4 (VS-01-LOOT-CHIP): 首領掉落【千星科技加密追蹤晶片】與隨機詞綴裝備掉落驗收 (裝備收集 + 376+ 測試守護)**
-  - **目標檔案**：`src/main/resources/data/global/items/quest/quest_items.json`、[`ITEM_SCHEMA.md`](../2_specifications/data_schemas/ITEM_SCHEMA.md)、[`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java)
+  - **目標檔案**：`src/main/resources/data/global/items/quest/quest_items.json`、[`ITEM_SCHEMA.md`](../2_specifications/data_schemas/ITEM_SCHEMA.md)、[`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/combat/DrpgRewardService.java)
   - **契約規範**：依循 `ITEM_SCHEMA.md` 規範：
     - 黑煞宗礦脈首領（密室畸變修士·宋天衡）掉落專屬任務道核 `item_chip_qianxing_tracker`（千星科技加密追蹤晶片）。
     - 戰鬥結算掉落武器/防具自動隨機掛載前綴與後綴詞條（例如：`超頻的黑煞短匕` 附帶削韌強度）。
@@ -55,6 +55,10 @@
 ---
 
 ## 🏆 已完成里程碑 (Completed Milestones)
+
+- [x] **Milestone REFACTOR-M3 — 模組 M3 & M3.1 戰鬥引擎與狀態效果 Package-by-Feature 封裝 (Phase 3 Step R3.8)**
+  - Task 1 (PKG-M3-ENCAPSULATION): 依循依賴拓撲完成 M3/M3.1 模組套件封裝，建立 `com.example.htmlmud.combat` 獨立套件，將 `DrpgCombatLoop`、`CombatRules`、`ComboResolver`、`BattleContext`、`DrpgBattleService`、`BuffSettlementService`、戰鬥事件模型與 DTO 等 40 份類別全面收斂至新套件，徹底消解舊有的 `domain.dungeon.battle` 與 `domain.combat` 散落結構。
+  - Task 2 (PKG-M3-TEST-VERIFY): 全域業務指令與整合測試引用切換至 `com.example.htmlmud.combat.*`，`BossPhaseAndPoiseStaggerTest`、`CrossComboAndFormationResonanceTest`、`ElementalReactionAndDetonateTest` 全數 100% 綠燈 (16/16)，全專案 393 項測試零回歸通過，文檔 368 個內部連結 100% 通過。
 
 - [x] **Milestone REFACTOR-M2 — 模組 M2 DRPG 網格地牢探索 Package-by-Feature 封裝 (Phase 3 Step R3.7)**
   - Task 1 (PKG-M2-ENCAPSULATION): 依循依賴拓撲完成 M2 模組套件封裝，建立 `com.example.htmlmud.dungeon` 獨立套件，將地牢管理核心 `DungeonManager`、資料驅動解析器 `DungeonFloorLoader`、導航器 `DungeonNavigator`、地圖圖層模型 `DungeonFloor`、`DungeonTile`、`DungeonPosition`、`GridCoord`、`GridDirection`、`Direction`、`StepResult`、`DrpgStateDto` 統一收斂至獨立套件。

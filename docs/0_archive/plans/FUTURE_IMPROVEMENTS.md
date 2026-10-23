@@ -439,7 +439,7 @@
 ### 15.1 ✅ [已完成] 戰鬥視覺化：敵方意圖預告 (Intent Icon) 與卡片蓄力唱條 (Cast Bar) (ENEMY-INTENT-01) (P1)
 - **現狀核對**：原本敵方處於意圖盲盒狀態，怪物下一動何時出手、鎖定誰、施展什麼技能在命中前毫無圖形預兆，只能在 Log 洗版。
 - **落地進度**：已於 2026-10-08 完成。
-  1. **後端行動週期 (Telegraph Phase)**：[`DrpgCombatLoop.java`](./src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java) 導入攻擊前 1500ms 預告窗口；[`BattleEnemy.java`](./src/main/java/com/example/htmlmud/domain/dungeon/battle/BattleEnemy.java) 狀態機支援 `startIntent`、`clearIntent` 與 `getCastRemainingMs()`；遭受眩暈時自動中斷施法。
+  1. **後端行動週期 (Telegraph Phase)**：[`DrpgCombatLoop.java`](./src/main/java/com/example/htmlmud/combat/DrpgCombatLoop.java) 導入攻擊前 1500ms 預告窗口；[`BattleEnemy.java`](./src/main/java/com/example/htmlmud/combat/BattleEnemy.java) 狀態機支援 `startIntent`、`clearIntent` 與 `getCastRemainingMs()`；遭受眩暈時自動中斷施法。
   2. **視圖數據傳遞向後相容 (`BattleEnemyViewDto`)**：提供完整意圖欄位與既有 19 欄位重載相容建構子，維持 100% 舊代碼與測試相容。
   3. **敵方意圖圖標 (Intent Badge)**：怪物卡片（1x1、2x2、3x3、1x3、1x5）全數渲染 `.enemy-intent-container`，即時呈現意圖圖示（🗡️普攻、⚔️重擊、🔥/⚡法術、👁️深淵）、招式名稱、鎖定目標標籤（`➔ 隊員名`）與斷招標籤（`可斷`）。
   4. **敵方蓄力條 (Enemy Cast Bar)**：蓄力招式呈現動態進度條 `.enemy-cast-track` 與 `.enemy-cast-fill`，重擊與深淵蓄力自帶 `.intent-danger-telegraph` 危險紅色脈衝呼吸邊框，打斷或攻擊釋放後即時平滑移除。
@@ -477,7 +477,7 @@
 ### 15.6 ✅ [已完成] 戰鬥結算翻牌與修仙境界突破視覺化 (BATTLE-RESULT-01) (P2)
 - **現狀痛點**：戰鬥勝利後，經驗獲取與道具掉落全數以條列式文字輸出在 Log；境界突破（Lv Up）僅輸出「【金光灌頂】隊員突破境界！」。
 - **落地進度**：已於 2026-10-08 完成。
-  1. **結構化結算事件 (`BattleVictoryDto`)**：後端 [`DrpgRewardService.java`](./src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java) 於大捷時發布 `BattleVictoryDto`，攜帶戰鬥 ID、全員修為、靈石獲得、隊員突破明細與掉落物清單；文字 Log 全面收斂為單行摘要。
+  1. **結構化結算事件 (`BattleVictoryDto`)**：後端 [`DrpgRewardService.java`](./src/main/java/com/example/htmlmud/combat/DrpgRewardService.java) 於大捷時發布 `BattleVictoryDto`，攜帶戰鬥 ID、全員修為、靈石獲得、隊員突破明細與掉落物清單；文字 Log 全面收斂為單行摘要。
   2. **戰後結算模態視窗 (`#battle-victory-modal`)**：於 [`index.html`](./src/main/resources/static/index.html) 與 [`style-07-battle-fx.css`](./src/main/resources/static/css/style-07-battle-fx.css) 打造金色暗調仙俠結算視窗，支援自適應呼吸光暈動畫、Space / Enter / Esc 快速關閉與聚焦。
   3. **全員修為長條充能與境界突破光環**：[`victory-modal.js`](./src/main/resources/static/js/modals/victory-modal.js) 即時渲染隊員修為成長條平滑充能；升級隊員展現金色「✨ 境界突破！ Lv.X ➔ Lv.Y」徽章與數值成長說明。
   4. **戰利品 3D 翻牌動態 (3D Card Flip)**：背面為太極道紋「☯️ 秘寶封印」，支援 200ms 階梯式自動翻牌與「全部翻開」按鈕；正面依物品品質（凡品/下品/中品/上品/極品）呈現對應邊框流光色彩。
@@ -503,12 +503,12 @@
 
 ### 16.2 戰鬥與技能數值硬編碼盤查 (DATA-04 / COMB-03) (P1)
 - **現狀問題**：
-  1. **試道傀儡 200+ 行手刻寫死**：[`DrpgBattleService.java:L193-400`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgBattleService.java#L193-L400) 的 `startTrainingBattle()` 用 200 多行代碼手刻 1x1 ~ 3x3 傀儡與陣樁的所有屬性與排位。
-  2. **走火入魔 CHAOS 異變機制寫死**：[`DrpgCombatLoop.java:L225-270`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java#L225-L270) 異變增幅 (`random(15, 30)`)、畸變 Boss 血量 (`HP x10`)、模板 (`taiyin:aberration_boss`)、經驗 (`250`)、背刺機率 (`40%`)、傷害倍率 (`x2.0`)、道核 ID (`"core_" + memberId + "_" + skillId`) 全數寫死在 Java 中。
-  3. **首領專屬掉落物寫死代碼注入**：[`DrpgRewardService.java:L189-214`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java#L189-L214) 擊殺首領 `boss_song_tianheng` 時，直接在代碼中手動建構並塞入戰利品 `【黑曜骨鐮】` 與 `【長老黑話玉牌】`，而非透過怪物模板本身的 `loot` 掉落表。
+  1. **試道傀儡 200+ 行手刻寫死**：[`DrpgBattleService.java:L193-400`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/combat/DrpgBattleService.java#L193-L400) 的 `startTrainingBattle()` 用 200 多行代碼手刻 1x1 ~ 3x3 傀儡與陣樁的所有屬性與排位。
+  2. **走火入魔 CHAOS 異變機制寫死**：[`DrpgCombatLoop.java:L225-270`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/combat/DrpgCombatLoop.java#L225-L270) 異變增幅 (`random(15, 30)`)、畸變 Boss 血量 (`HP x10`)、模板 (`taiyin:aberration_boss`)、經驗 (`250`)、背刺機率 (`40%`)、傷害倍率 (`x2.0`)、道核 ID (`"core_" + memberId + "_" + skillId`) 全數寫死在 Java 中。
+  3. **首領專屬掉落物寫死代碼注入**：[`DrpgRewardService.java:L189-214`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/combat/DrpgRewardService.java#L189-L214) 擊殺首領 `boss_song_tianheng` 時，直接在代碼中手動建構並塞入戰利品 `【黑曜骨鐮】` 與 `【長老黑話玉牌】`，而非透過怪物模板本身的 `loot` 掉落表。
   4. **技能橋接規則寫死 switch 查表**：[`SkillDefinition.java:L225-285`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/progression/SkillDefinition.java#L225-L285) 透過 60 行 `switch-case` 寫死 MUD 技能映射至 DRPG 技能的對照關係，並維護靜態字串陣列 `CANONICAL_MUD_SKILLS`。
   5. **屬性補正依賴 ID 前綴字串比對**：[`SkillBridgeService.java:L156-160`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/service/SkillBridgeService.java#L156-L160) 靠 `base.getId().startsWith("taoist_") || base.getId().startsWith("star_")` 判定是否為法術補正（INT+WIS），而非讀取技能模板的 `scaleStat` 或 tags（`MAGIC` vs `PHYSICAL`）。
-  6. **戰鬥時限政策與閒置熔斷衝突**：[`BattleContext.java:L45, L67`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/BattleContext.java#L45-L67) `maxDurationMs` 固定 5 分鐘熔斷，即使玩家持續積極操作仍會逾時中斷，未與 10 分鐘無操作 AFK 閒置熔斷解耦。
+  6. **戰鬥時限政策與閒置熔斷衝突**：[`BattleContext.java:L45, L67`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/combat/BattleContext.java#L45-L67) `maxDurationMs` 固定 5 分鐘熔斷，即使玩家持續積極操作仍會逾時中斷，未與 10 分鐘無操作 AFK 閒置熔斷解耦。
 - **改善方案**：
   - 將試道傀儡與大型敵怪移入 `mobs.json`，在 `MobTemplate` 支援 `width`、`height`、`rowIdx`、`colIdx`。
   - 將異變首領規則與掉落抽取至設定檔；首領掉落回歸 `mobs.json` 的 `loot` 陣列。
@@ -593,7 +593,7 @@ flowchart TD
 
 #### 3. 戰鬥迴圈與引擎 (Combat Engine: `CombatService` vs `DrpgCombatLoop`)
 - **MUD 戰鬥**：[`CombatService.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/service/CombatService.java)，由 `WorldPulse` 心跳驅動，在 `Room` 內進行 1v1 普攻與 `MoveAction` 招式文字敘事。同伴在旁邊看戲，陣法孔位無效。
-- **DRPG 戰鬥**：[`DrpgCombatLoop.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java)，由 Spring 託管之虛擬執行緒池驅動，小隊 5 人陣列交鋒，支援 5x5 站位、GCD 唱條、仇恨威脅表、Combo 合擊、Telegraph 意圖預告。
+- **DRPG 戰鬥**：[`DrpgCombatLoop.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/combat/DrpgCombatLoop.java)，由 Spring 託管之虛擬執行緒池驅動，小隊 5 人陣列交鋒，支援 5x5 站位、GCD 唱條、仇恨威脅表、Combo 合擊、Telegraph 意圖預告。
 - **割裂現況**：兩套完全不相容的戰鬥心跳迴圈並存。城鎮打怪用 MUD 邏輯（`kill`），地牢打怪用 DRPG 邏輯（`step` 遇敵），機制、仇恨、連攜技與視覺效果完全脫節。
 
 #### 4. 生靈與敵怪 (Mobs: `Mob` vs `BattleEnemy`)
@@ -660,11 +660,11 @@ flowchart TD
 
 | # | §16/§17 原述 | 實際程式碼狀況 | 影響 |
 | :---: | :--- | :--- | :--- |
-| 1 | DATA-01 已「徹底廢除 `"SWORDSMAN"` 字串硬編碼」 | 仍殘留 5 處：[`DefenseResolver.java:L133, L204`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DefenseResolver.java#L133) 以 `orElse("SWORDSMAN".equalsIgnoreCase(...))` 作 fallback；[`FormationTemplate.java:L71`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/FormationTemplate.java#L71) 有「TANK 需求可由 SWORDSMAN 滿足」特例；[`RoleCategory.java:L13, L51, L82`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/enums/RoleCategory.java#L13) 以 switch 寫死職業→職能映射；[`Player.java:L63-66`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/actor/impl/Player.java#L63-L66) 預設職業寫死 | DATA-01 狀態為「已完成」但有殘留；新增職業仍須改 Java |
-| 2 | `TOMB_ITEMS` 僅出現在 `DungeonCommand` | **共有 3 份複本**：[`DungeonCommand.java:L41`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L41)（ID 帶 `taiyin_tomb:` 前綴）、[`DrpgBattleService.java:L58`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgBattleService.java#L58)、[`DrpgRewardService.java:L37`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java#L37)（ID **不帶**前綴） | 同一份資料有兩種 ID 寫法，全靠 `TemplateRepository` 的後綴模糊比對才能運作 |
-| 3 | 首領硬編碼只有「宋天衡掉落」 | [`DrpgBattleService.startBossBattle():L547-562`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgBattleService.java#L547-L562) 對**所有**首領都套用固定 `dex(12)`、`xp(500)`、`dropItemId("mozhu_mines:black_obsidian_scythe")`，且忽略 `MobTemplate.expReward/loot`；L475-478 用 `templateId.contains("mozhu")` 決定掉落；[`DungeonCommand.java:L289`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L289) BOSS 地塊 fallback 寫死宋天衡 | 新增任何首領都會掉墨竹山鐮刀，屬功能 Bug，而不只是程式風格問題 |
+| 1 | DATA-01 已「徹底廢除 `"SWORDSMAN"` 字串硬編碼」 | 仍殘留 5 處：[`DefenseResolver.java:L133, L204`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/combat/DefenseResolver.java#L133) 以 `orElse("SWORDSMAN".equalsIgnoreCase(...))` 作 fallback；[`FormationTemplate.java:L71`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/FormationTemplate.java#L71) 有「TANK 需求可由 SWORDSMAN 滿足」特例；[`RoleCategory.java:L13, L51, L82`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/enums/RoleCategory.java#L13) 以 switch 寫死職業→職能映射；[`Player.java:L63-66`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/actor/impl/Player.java#L63-L66) 預設職業寫死 | DATA-01 狀態為「已完成」但有殘留；新增職業仍須改 Java |
+| 2 | `TOMB_ITEMS` 僅出現在 `DungeonCommand` | **共有 3 份複本**：[`DungeonCommand.java:L41`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L41)（ID 帶 `taiyin_tomb:` 前綴）、[`DrpgBattleService.java:L58`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/combat/DrpgBattleService.java#L58)、[`DrpgRewardService.java:L37`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/combat/DrpgRewardService.java#L37)（ID **不帶**前綴） | 同一份資料有兩種 ID 寫法，全靠 `TemplateRepository` 的後綴模糊比對才能運作 |
+| 3 | 首領硬編碼只有「宋天衡掉落」 | [`DrpgBattleService.startBossBattle():L547-562`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/combat/DrpgBattleService.java#L547-L562) 對**所有**首領都套用固定 `dex(12)`、`xp(500)`、`dropItemId("mozhu_mines:black_obsidian_scythe")`，且忽略 `MobTemplate.expReward/loot`；L475-478 用 `templateId.contains("mozhu")` 決定掉落；[`DungeonCommand.java:L289`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L289) BOSS 地塊 fallback 寫死宋天衡 | 新增任何首領都會掉墨竹山鐮刀，屬功能 Bug，而不只是程式風格問題 |
 | 4 | 道核 ID 為 `"core_" + memberId + "_" + skillId` | 存在**三種**格式與兩套文案：`DrpgCombatLoop` 用 `core_{member}_{skill}`；[`ItemFactory.createDaoCore()`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/factory/ItemFactory.java#L80-L96) 用 `dao_core_{skill}` 且名為「凝煞道核」；`DrpgRewardService` fallback 也用 `dao_core_{skill}`，但名為「血肉道核」 | 同一物品因 Bean 是否注入而名稱不同；存檔與堆疊判斷不穩定 |
-| 5 | 裝備位於 `Living.equipment` | 實際有**三種表示法**：[`LivingStats.equipment`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/entity/LivingStats.java#L53)（`Map<EquipmentSlot, GameItem>`）、[`PartyMember.equipment`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/PartyMember.java#L107)（`Map<EquipmentSlot, PartyItemSlot>`）、[`BattleEnemy.equipment`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/BattleEnemy.java#L85)（`Map<EquipmentSlot, String>`） | UNIFY-02 已於 Commit `a18645a` 落地，確立 `PartyMember` 為 SSoT 並透過 Actor 信箱單向投影至 `Player.stats.equipment`（唯讀視圖） |
+| 5 | 裝備位於 `Living.equipment` | 實際有**三種表示法**：[`LivingStats.equipment`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/entity/LivingStats.java#L53)（`Map<EquipmentSlot, GameItem>`）、[`PartyMember.equipment`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/PartyMember.java#L107)（`Map<EquipmentSlot, PartyItemSlot>`）、[`BattleEnemy.equipment`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/combat/BattleEnemy.java#L85)（`Map<EquipmentSlot, String>`） | UNIFY-02 已於 Commit `a18645a` 落地，確立 `PartyMember` 為 SSoT 並透過 Actor 信箱單向投影至 `Player.stats.equipment`（唯讀視圖） |
 | 6 | `buildTombB1F()` 是「未同步的冗餘」 | 真正的風險不在冗餘：它只在 JSON 全部載入失敗時啟用，會**把資源載入失敗掩蓋成「遊戲照常可玩」** | 應改為 fail-fast，而不只是刪除 |
 
 ### 18.2 §17 統一方案的架構風險 (Design Risks in UNIFY-*)
@@ -1413,7 +1413,7 @@ flowchart TD
 - **涉及檔案**：
   - [`SkillBridgeService.java`](../../src/main/java/com/example/htmlmud/domain/service/SkillBridgeService.java)
   - [`CharacterSyncService.java`](../../src/main/java/com/example/htmlmud/domain/service/CharacterSyncService.java)
-  - [`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java)
+  - [`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/combat/DrpgRewardService.java)
 - **改動方針**：
   1. 在技能模型合一後，戰鬥直接讀取隊員自身的統一技能物件，無需戰前映射翻譯。
   2. 戰鬥獲勝後，熟練度直接原地記入小隊成員技能中，無需反向回饋。
@@ -1426,11 +1426,11 @@ flowchart TD
 ### 24.4 階段 3：P2 級戰鬥引擎雙軌大一統與共享經濟 (Combat & Economy Unification)
 
 #### 1. SP-08: 戰鬥引擎收斂與 5 人小隊全域協同 (Combat Engine Unification) — Priority: P2 (已完成 ✅)
-- **問題現狀**：原本城鎮與野外採用 MUD [`CombatService.java`](../../src/main/java/com/example/htmlmud/domain/service/CombatService.java)（主角一人單挑，隊友看戲）；地牢採用 DRPG [`DrpgBattleService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgBattleService.java)（5人小隊滿編戰術戰鬥），戰鬥規則與體驗嚴重分裂。
+- **問題現狀**：原本城鎮與野外採用 MUD [`CombatService.java`](../../src/main/java/com/example/htmlmud/domain/service/CombatService.java)（主角一人單挑，隊友看戲）；地牢採用 DRPG [`DrpgBattleService.java`](../../src/main/java/com/example/htmlmud/combat/DrpgBattleService.java)（5人小隊滿編戰術戰鬥），戰鬥規則與體驗嚴重分裂。
 - **涉及檔案**：
   - [`KillCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/KillCommand.java)
   - [`CombatService.java`](../../src/main/java/com/example/htmlmud/domain/service/CombatService.java)
-  - [`DrpgBattleService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgBattleService.java)
+  - [`DrpgBattleService.java`](../../src/main/java/com/example/htmlmud/combat/DrpgBattleService.java)
   - [`FieldCombatPartyUnificationTest.java`](../../src/test/java/com/example/htmlmud/FieldCombatPartyUnificationTest.java)
 - **落地成果**：
   1. `DrpgBattleService` 實裝 `startFieldBattle(Player, Mob)`，野外遭遇戰由 5 人小隊全員依照站位、陣法與戰術 AI 協同迎敵。
@@ -1443,7 +1443,7 @@ flowchart TD
 - **涉及檔案**：
   - [`Party.java`](../../src/main/java/com/example/htmlmud/party/Party.java)
   - [`ShopCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/ShopCommand.java)
-  - [`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java)
+  - [`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/combat/DrpgRewardService.java)
   - [`DungeonCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java)
   - [`DrpgStateDto.java`](../../src/main/java/com/example/htmlmud/dungeon/DrpgStateDto.java)
   - [`UnifiedPartyEconomyTest.java`](../../src/test/java/com/example/htmlmud/UnifiedPartyEconomyTest.java)

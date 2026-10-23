@@ -18,7 +18,7 @@ import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.actor.core.MessageOutput;
-import com.example.htmlmud.domain.combat.service.CombatService;
+import com.example.htmlmud.combat.CombatService;
 import com.example.htmlmud.domain.actor.service.PlayerService;
 import com.example.htmlmud.domain.world.WorldManager;
 import com.example.htmlmud.infra.server.WorldPulse;

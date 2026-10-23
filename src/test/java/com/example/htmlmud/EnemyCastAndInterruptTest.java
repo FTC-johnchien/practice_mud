@@ -8,11 +8,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
-import com.example.htmlmud.domain.dungeon.battle.CombatFsmService;
-import com.example.htmlmud.domain.dungeon.dto.BattleEnemyDto;
-import com.example.htmlmud.domain.dungeon.dto.BattleEnemyViewDto;
-import com.example.htmlmud.domain.dungeon.dto.CombatMobDto;
+import com.example.htmlmud.combat.BattleEnemy;
+import com.example.htmlmud.combat.CombatFsmService;
+import com.example.htmlmud.combat.BattleEnemyDto;
+import com.example.htmlmud.combat.BattleEnemyViewDto;
+import com.example.htmlmud.combat.CombatMobDto;
 import com.example.htmlmud.party.PartyMember;
 import com.example.htmlmud.party.PartyMemberSkill;
 import com.example.htmlmud.party.RowPosition;

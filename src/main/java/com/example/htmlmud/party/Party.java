@@ -2,7 +2,7 @@ package com.example.htmlmud.party;
 
 import java.util.ArrayList;
 import java.util.List;
-import com.example.htmlmud.domain.dungeon.battle.ActiveBuff;
+import com.example.htmlmud.combat.ActiveBuff;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.enums.BuffCategory;
 import com.example.htmlmud.item.EquipmentSlot;

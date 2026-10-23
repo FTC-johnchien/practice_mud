@@ -12,9 +12,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import com.example.htmlmud.domain.actor.core.MessageOutput;
 import com.example.htmlmud.domain.actor.impl.Player;
-import com.example.htmlmud.domain.dungeon.battle.BattleOutcome;
-import com.example.htmlmud.domain.dungeon.battle.BattleOutcomeApplier;
-import com.example.htmlmud.domain.dungeon.battle.BattleParticipantSnapshot;
+import com.example.htmlmud.combat.BattleOutcome;
+import com.example.htmlmud.combat.BattleOutcomeApplier;
+import com.example.htmlmud.combat.BattleParticipantSnapshot;
 import com.example.htmlmud.party.Party;
 import com.example.htmlmud.party.PartyMember;
 import com.example.htmlmud.party.PartyService;

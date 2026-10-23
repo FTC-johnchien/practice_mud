@@ -20,12 +20,12 @@ import org.springframework.context.event.EventListener;
 import com.example.htmlmud.domain.actor.core.MessageOutput;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
-import com.example.htmlmud.domain.dungeon.battle.BattleContext;
-import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
-import com.example.htmlmud.domain.dungeon.battle.BattleOutcome;
-import com.example.htmlmud.domain.dungeon.battle.BattleOutcomeApplier;
-import com.example.htmlmud.domain.dungeon.battle.DrpgBattleService;
-import com.example.htmlmud.domain.dungeon.battle.DrpgRewardService;
+import com.example.htmlmud.combat.BattleContext;
+import com.example.htmlmud.combat.BattleEnemy;
+import com.example.htmlmud.combat.BattleOutcome;
+import com.example.htmlmud.combat.BattleOutcomeApplier;
+import com.example.htmlmud.combat.DrpgBattleService;
+import com.example.htmlmud.combat.DrpgRewardService;
 import com.example.htmlmud.dungeon.Direction;
 import com.example.htmlmud.dungeon.DungeonPosition;
 import com.example.htmlmud.domain.event.DomainEvent;
@@ -241,7 +241,7 @@ public class ActorOutcomeSyncAndEventBackboneTest {
         .playerId(player.getName())
         .party(party)
         .enemies(new java.util.ArrayList<>(List.of(enemy)))
-        .state(com.example.htmlmud.domain.dungeon.battle.BattleState.FIGHTING)
+        .state(com.example.htmlmud.combat.BattleState.FIGHTING)
         .build();
 
     drpgBattleService.resolveVictory(player, ctx, pos);

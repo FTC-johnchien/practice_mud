@@ -11,8 +11,8 @@
 
 - **核心實體與枚舉**：
   - [`BuffCategory.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/enums/BuffCategory.java)（`STAT_MODIFIER`, `HOT_DOT`, `CONTROL`, `SHIELD`, `PRIMER`）
-  - [`CombatRules.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/combat/CombatRules.java)（狀態反應與結算純函數）
-  - [`DrpgCombatLoop.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java)（500ms Tick 周期調度）
+  - [`CombatRules.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/combat/CombatRules.java)（狀態反應與結算純函數）
+  - [`DrpgCombatLoop.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/combat/DrpgCombatLoop.java)（500ms Tick 周期調度）
 - **關聯驗證測試**：
   - [`ElementalReactionAndDetonateTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/ElementalReactionAndDetonateTest.java)（7/7 綠燈）
   - [`CombatReactInterruptTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/CombatReactInterruptTest.java)（控制眩暈與打斷 100% 綠燈）

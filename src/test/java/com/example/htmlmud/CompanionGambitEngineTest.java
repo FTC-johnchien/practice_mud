@@ -13,11 +13,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import com.example.htmlmud.domain.actor.impl.Player;
-import com.example.htmlmud.domain.dungeon.battle.BattleContext;
-import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
-import com.example.htmlmud.domain.dungeon.battle.CombatFsmService;
-import com.example.htmlmud.domain.dungeon.battle.DrpgCombatLoop;
-import com.example.htmlmud.domain.dungeon.battle.DrpgEnemyTacticsService;
+import com.example.htmlmud.combat.BattleContext;
+import com.example.htmlmud.combat.BattleEnemy;
+import com.example.htmlmud.combat.CombatFsmService;
+import com.example.htmlmud.combat.DrpgCombatLoop;
+import com.example.htmlmud.combat.DrpgEnemyTacticsService;
 import com.example.htmlmud.party.GambitActionType;
 import com.example.htmlmud.party.GambitPreset;
 import com.example.htmlmud.party.GambitRule;

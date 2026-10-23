@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
+import com.example.htmlmud.combat.BattleEnemy;
 import com.example.htmlmud.domain.model.enums.MobKind;
 import com.example.htmlmud.domain.model.enums.MobRank;
 import com.example.htmlmud.template.model.CompanionTemplate;

@@ -515,7 +515,7 @@
 - **涉及檔案**：
   - [`SkillBridgeService.java`](../../src/main/java/com/example/htmlmud/domain/service/SkillBridgeService.java)
   - [`CharacterSyncService.java`](../../src/main/java/com/example/htmlmud/domain/service/CharacterSyncService.java)
-  - [`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java)
+  - [`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/combat/DrpgRewardService.java)
 - **改動方針**：
   1. 在技能模型合一後，戰鬥直接讀取隊員自身的統一技能物件，無需戰前映射翻譯。
   2. 戰鬥獲勝後，熟練度直接原地記入小隊成員技能中，無需反向回饋。
@@ -528,11 +528,11 @@
 ### 24.4 階段 3：P2 級戰鬥引擎雙軌大一統與共享經濟 (Combat & Economy Unification)
 
 #### 1. SP-08: 戰鬥引擎收斂與 5 人小隊全域協同 (Combat Engine Unification) — Priority: P2 (已完成 ✅)
-- **問題現狀**：原本城鎮與野外採用 MUD [`CombatService.java`](../../src/main/java/com/example/htmlmud/domain/service/CombatService.java)（主角一人單挑，隊友看戲）；地牢採用 DRPG [`DrpgBattleService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgBattleService.java)（5人小隊滿編戰術戰鬥），戰鬥規則與體驗嚴重分裂。
+- **問題現狀**：原本城鎮與野外採用 MUD [`CombatService.java`](../../src/main/java/com/example/htmlmud/domain/service/CombatService.java)（主角一人單挑，隊友看戲）；地牢採用 DRPG [`DrpgBattleService.java`](../../src/main/java/com/example/htmlmud/combat/DrpgBattleService.java)（5人小隊滿編戰術戰鬥），戰鬥規則與體驗嚴重分裂。
 - **涉及檔案**：
   - [`KillCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/KillCommand.java)
   - [`CombatService.java`](../../src/main/java/com/example/htmlmud/domain/service/CombatService.java)
-  - [`DrpgBattleService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgBattleService.java)
+  - [`DrpgBattleService.java`](../../src/main/java/com/example/htmlmud/combat/DrpgBattleService.java)
   - [`FieldCombatPartyUnificationTest.java`](../../src/test/java/com/example/htmlmud/FieldCombatPartyUnificationTest.java)
 - **落地成果**：
   1. `DrpgBattleService` 實裝 `startFieldBattle(Player, Mob)`，野外遭遇戰由 5 人小隊全員依照站位、陣法與戰術 AI 協同迎敵。
@@ -545,7 +545,7 @@
 - **涉及檔案**：
   - [`Party.java`](../../src/main/java/com/example/htmlmud/party/Party.java)
   - [`ShopCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/ShopCommand.java)
-  - [`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java)
+  - [`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/combat/DrpgRewardService.java)
   - [`DungeonCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java)
   - [`DrpgStateDto.java`](../../src/main/java/com/example/htmlmud/dungeon/DrpgStateDto.java)
   - [`UnifiedPartyEconomyTest.java`](../../src/test/java/com/example/htmlmud/UnifiedPartyEconomyTest.java)

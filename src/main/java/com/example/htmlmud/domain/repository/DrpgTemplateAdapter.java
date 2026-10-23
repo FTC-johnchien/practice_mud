@@ -5,7 +5,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.example.htmlmud.template.TemplateReader;
-import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
+import com.example.htmlmud.combat.BattleEnemy;
 import com.example.htmlmud.template.model.ItemTemplate;
 import com.example.htmlmud.template.model.MobTemplate;
 import com.example.htmlmud.template.model.SkillTemplate;

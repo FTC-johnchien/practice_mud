@@ -34,8 +34,8 @@ public sealed interface ActorMessage
   }
   record Say(String content) implements LivingMessage {
   }
-  record BuffEffect(com.example.htmlmud.domain.dungeon.battle.ActiveBuff buff, String effectId) implements LivingMessage {
-    public BuffEffect(com.example.htmlmud.domain.dungeon.battle.ActiveBuff buff) {
+  record BuffEffect(com.example.htmlmud.combat.ActiveBuff buff, String effectId) implements LivingMessage {
+    public BuffEffect(com.example.htmlmud.combat.ActiveBuff buff) {
       this(buff, buff != null ? buff.getId() : null);
     }
     public BuffEffect(String effectId) {
@@ -74,9 +74,9 @@ public sealed interface ActorMessage
   }
   record Relive() implements PlayerMessage {
   }
-  record ApplyBattleOutcome(com.example.htmlmud.domain.dungeon.battle.BattleOutcome outcome,
+  record ApplyBattleOutcome(com.example.htmlmud.combat.BattleOutcome outcome,
       CompletableFuture<Boolean> future) implements PlayerMessage {
-    public ApplyBattleOutcome(com.example.htmlmud.domain.dungeon.battle.BattleOutcome outcome) {
+    public ApplyBattleOutcome(com.example.htmlmud.combat.BattleOutcome outcome) {
       this(outcome, null);
     }
   }

@@ -15,8 +15,8 @@ import com.example.htmlmud.progression.SkillEntry;
 import com.example.htmlmud.template.model.SkillTemplate;
 import java.util.Comparator;
 import java.util.concurrent.CopyOnWriteArrayList;
-import com.example.htmlmud.domain.dungeon.battle.ActiveBuff;
-import com.example.htmlmud.domain.dungeon.battle.Buffable;
+import com.example.htmlmud.combat.ActiveBuff;
+import com.example.htmlmud.combat.Buffable;
 import com.example.htmlmud.domain.model.enums.BuffCategory;
 import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.LivingPosture;
@@ -27,7 +27,7 @@ import com.example.htmlmud.protocol.ActorMessage;
 import com.example.htmlmud.protocol.MudMessage;
 import lombok.Getter;
 import lombok.Setter;
-import com.example.htmlmud.domain.combat.Combatant;
+import com.example.htmlmud.combat.Combatant;
 import lombok.extern.slf4j.Slf4j;
 
 // 泛型 T 讓我們可以在子類別擴充更多 Message 類型

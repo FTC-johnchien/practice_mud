@@ -12,7 +12,7 @@ import com.example.htmlmud.party.PartyItemSlot;
 import com.example.htmlmud.party.PartyService;
 import com.example.htmlmud.template.TemplateReader;
 import com.example.htmlmud.domain.world.GameStateBroadcastService;
-import com.example.htmlmud.domain.combat.service.TargetSelector;
+import com.example.htmlmud.combat.TargetSelector;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

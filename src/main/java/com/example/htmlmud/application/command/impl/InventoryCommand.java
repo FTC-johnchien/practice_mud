@@ -5,7 +5,7 @@ import com.example.htmlmud.application.command.CommandAlias;
 import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.context.MudContext;
-import com.example.htmlmud.domain.dungeon.battle.DrpgBattleService;
+import com.example.htmlmud.combat.DrpgBattleService;
 import com.example.htmlmud.dungeon.DungeonPosition;
 import com.example.htmlmud.dungeon.DungeonManager;
 import com.example.htmlmud.party.Party;

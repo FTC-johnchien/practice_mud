@@ -10,11 +10,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import com.example.htmlmud.domain.dungeon.battle.BattleContext;
-import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
-import com.example.htmlmud.domain.dungeon.battle.BattleState;
-import com.example.htmlmud.domain.dungeon.battle.DrpgCombatLoop;
-import com.example.htmlmud.domain.dungeon.battle.DrpgEnemyTacticsService;
+import com.example.htmlmud.combat.BattleContext;
+import com.example.htmlmud.combat.BattleEnemy;
+import com.example.htmlmud.combat.BattleState;
+import com.example.htmlmud.combat.DrpgCombatLoop;
+import com.example.htmlmud.combat.DrpgEnemyTacticsService;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.enums.MobRank;
 import com.example.htmlmud.party.Party;

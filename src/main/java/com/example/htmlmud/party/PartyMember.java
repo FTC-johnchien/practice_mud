@@ -12,14 +12,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import com.example.htmlmud.domain.dungeon.battle.ActiveBuff;
-import com.example.htmlmud.domain.dungeon.battle.Buffable;
+import com.example.htmlmud.combat.ActiveBuff;
+import com.example.htmlmud.combat.Buffable;
 import com.example.htmlmud.domain.model.enums.BuffCategory;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import com.example.htmlmud.domain.combat.Combatant;
+import com.example.htmlmud.combat.Combatant;
 
 @Data
 @Builder

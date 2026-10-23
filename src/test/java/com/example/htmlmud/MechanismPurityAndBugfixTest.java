@@ -19,7 +19,7 @@ import com.example.htmlmud.save.SaveGameService;
 import com.example.htmlmud.template.TemplateCatalog;
 
 import com.example.htmlmud.domain.model.enums.DamageType;
-import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
+import com.example.htmlmud.combat.BattleEnemy;
 import com.example.htmlmud.party.PartyMemberSkill;
 
 @SpringBootTest

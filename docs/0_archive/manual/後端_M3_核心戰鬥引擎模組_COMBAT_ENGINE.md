@@ -151,7 +151,7 @@ sequenceDiagram
 - `CONTROL`：強制控場限制（受 `Buffable.isControlled()` / `isSilenced()` 全入口門控）。
 
 ### 5. 傷害抗性折減與「順成人，逆成仙」逆流回血契約
-實作於 [`CombatRules.resolveResistance`](../../src/main/java/com/example/htmlmud/domain/combat/CombatRules.java)：
+實作於 [`CombatRules.resolveResistance`](../../src/main/java/com/example/htmlmud/combat/CombatRules.java)：
 
 ```java
 public static ResistanceResult resolveResistance(int rawDamage, DamageType type, double resistance)
@@ -215,12 +215,12 @@ public static ResistanceResult resolveResistance(int rawDamage, DamageType type,
 
 | 項目 | 路徑 / 名稱 | 職責 |
 | :--- | :--- | :--- |
-| **純領域規則** | `com.example.htmlmud.domain.combat.CombatRules` | 一元一次圓桌判定、五行抗性與逆流結算 |
-| **戰鬥編排** | `com.example.htmlmud.domain.dungeon.battle.DrpgBattleService` | 戰鬥初始化、地牢遭遇戰、野外遭遇戰 5 人小隊協同迎敵 (`startFieldBattle`)、指令派發 |
-| **時間線迴圈** | `com.example.htmlmud.domain.dungeon.battle.DrpgCombatLoop` | 500ms Tick 虛擬執行緒迴圈推進、攻擊觸發與戰鬥演出廣播 |
-| **狀態機與打斷服務** | `com.example.htmlmud.domain.dungeon.battle.CombatFsmService` | 蓄力前搖管理、標籤比對與即時打斷反制結算 |
-| **智慧索敵** | `com.example.htmlmud.domain.dungeon.battle.DrpgEnemyTacticsService` | 前排加成、嘲諷係數與仇恨演算 |
-| **戰果結算** | `com.example.htmlmud.domain.dungeon.battle.DrpgRewardService` | 經驗派發、40格小隊公共行囊入庫與任務擊殺事件通知 |
+| **純領域規則** | `com.example.htmlmud.combat.CombatRules` | 一元一次圓桌判定、五行抗性與逆流結算 |
+| **戰鬥編排** | `com.example.htmlmud.combat.DrpgBattleService` | 戰鬥初始化、地牢遭遇戰、野外遭遇戰 5 人小隊協同迎敵 (`startFieldBattle`)、指令派發 |
+| **時間線迴圈** | `com.example.htmlmud.combat.DrpgCombatLoop` | 500ms Tick 虛擬執行緒迴圈推進、攻擊觸發與戰鬥演出廣播 |
+| **狀態機與打斷服務** | `com.example.htmlmud.combat.CombatFsmService` | 蓄力前搖管理、標籤比對與即時打斷反制結算 |
+| **智慧索敵** | `com.example.htmlmud.combat.DrpgEnemyTacticsService` | 前排加成、嘲諷係數與仇恨演算 |
+| **戰果結算** | `com.example.htmlmud.combat.DrpgRewardService` | 經驗派發、40格小隊公共行囊入庫與任務擊殺事件通知 |
 | **生靈狀態連動** | `BattleContext.onBattleEnd` | 戰鬥結束大世界 Mob 實體標記死亡、停止心跳與移出房間 |
 | **戰況視圖契約** | `com.example.htmlmud.domain.dungeon.dto.BattleEnemyViewDto` | 前端戰況實體 DTO（含 `currentAction`, `actionProgressPercent`, `interruptible`） |
 | **精簡敵方傳輸** | `com.example.htmlmud.domain.dungeon.dto.BattleEnemyDto` / `CombatMobDto` | 敵方蓄力與打斷即時狀態傳輸合約 |

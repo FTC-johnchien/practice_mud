@@ -26,7 +26,7 @@
 ### 🔹 Phase 1: 核心戰鬥與角色數值模型對齊 (Combat & Character Domain)
 
 - [x] **Task 1.1 (ALIGN-COMBAT-SAN): 移除隊員背刺，落地精神護盾與萎靡 Debuff (對齊 L1/L2 M3)**
-  - **目標檔案**：[`DrpgCombatLoop.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java)、[`PartyMember.java`](../../src/main/java/com/example/htmlmud/party/PartyMember.java)、`SealCommand.java`（已物理安全刪除除役）
+  - **目標檔案**：[`DrpgCombatLoop.java`](../../src/main/java/com/example/htmlmud/combat/DrpgCombatLoop.java)、[`PartyMember.java`](../../src/main/java/com/example/htmlmud/party/PartyMember.java)、`SealCommand.java`（已物理安全刪除除役）
   - **執行動作**：
     1. 拔除 `DrpgCombatLoop:230-320` 中隊員 SAN 歸零後的 `CHAOS` 走火入魔檢定與 40% 心魔背刺隊友邏輯。
     2. 落實文檔規範：SAN 耗盡僅施加【精神萎靡】Debuff（降低 15% 輸出），絕不叛變背刺隊友。

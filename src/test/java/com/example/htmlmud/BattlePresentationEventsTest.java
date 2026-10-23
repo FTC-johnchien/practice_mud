@@ -5,15 +5,15 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import com.example.htmlmud.domain.dungeon.battle.BattleContext;
-import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
-import com.example.htmlmud.domain.dungeon.battle.event.BattleEvent;
-import com.example.htmlmud.domain.dungeon.battle.event.BattleEventType;
-import com.example.htmlmud.domain.dungeon.battle.event.BattleHit;
-import com.example.htmlmud.domain.dungeon.battle.event.FxShape;
-import com.example.htmlmud.domain.dungeon.battle.event.HitOutcome;
-import com.example.htmlmud.domain.dungeon.battle.event.UnitRef;
-import com.example.htmlmud.domain.dungeon.dto.BattleEventsDto;
+import com.example.htmlmud.combat.BattleContext;
+import com.example.htmlmud.combat.BattleEnemy;
+import com.example.htmlmud.combat.BattleEvent;
+import com.example.htmlmud.combat.BattleEventType;
+import com.example.htmlmud.combat.BattleHit;
+import com.example.htmlmud.combat.FxShape;
+import com.example.htmlmud.combat.HitOutcome;
+import com.example.htmlmud.combat.UnitRef;
+import com.example.htmlmud.combat.BattleEventsDto;
 import com.example.htmlmud.party.Party;
 import com.example.htmlmud.party.PartyMember;
 import com.example.htmlmud.party.PartyMemberSkill;
@@ -105,10 +105,10 @@ class BattlePresentationEventsTest {
   @Test
   @DisplayName("驗證全體攻擊 (AOE Skill) 正確派發多目標 BattleEvent 與 hits 清單")
   void testAoeSkillEmitsBattleEventWithAllHits() {
-    com.example.htmlmud.domain.dungeon.battle.DrpgEnemyTacticsService tacticsService =
-        new com.example.htmlmud.domain.dungeon.battle.DrpgEnemyTacticsService();
-    com.example.htmlmud.domain.dungeon.battle.DrpgCombatLoop combatLoop =
-        new com.example.htmlmud.domain.dungeon.battle.DrpgCombatLoop(tacticsService, null, null, null, null, null);
+    com.example.htmlmud.combat.DrpgEnemyTacticsService tacticsService =
+        new com.example.htmlmud.combat.DrpgEnemyTacticsService();
+    com.example.htmlmud.combat.DrpgCombatLoop combatLoop =
+        new com.example.htmlmud.combat.DrpgCombatLoop(tacticsService, null, null, null, null, null);
 
     LivingStats heroStats = new LivingStats();
     heroStats.setMaxHp(200);

@@ -10,7 +10,7 @@
 
 本模組作為戰鬥與生靈狀態的核心樞紐，確立以下五大原則：
 
-1. **唯一真相來源 (SSoT)**：所有攻防屬性修正、傷害減免與逆流抗性計算，一律委託 [`CombatRules`](../../src/main/java/com/example/htmlmud/domain/combat/CombatRules.java)，嚴禁平行造輪子。
+1. **唯一真相來源 (SSoT)**：所有攻防屬性修正、傷害減免與逆流抗性計算，一律委託 [`CombatRules`](../../src/main/java/com/example/htmlmud/combat/CombatRules.java)，嚴禁平行造輪子。
 2. **契約驅動生命週期**：廢除 `-1` 魔術數字模糊語意，明確劃分 `TIMED`（限時心跳）與 `PERMANENT`（常駐光環）。
 3. **多重護盾最短優先**：受創時依剩餘秒數最短的護盾優先吸收，容量耗盡立即破裂，防止數值無限堆疊。
 4. **極簡資料投影 (Aggregated HUD)**：前端嚴禁用文字 Log 正則表達式猜測狀態，一律讀取後端推送之 `activeBuffs` 結構化資料，並在戰鬥卡片以「標準屬性圖示 + 聚合每秒數值」展現，懸浮顯示來源明細。
@@ -148,7 +148,7 @@ public void decrementTick() {
 針對五行法術與陰煞傷害（`METAL` 金、`WOOD` 木、`WATER` 水、`FIRE` 火、`EARTH` 土，以及陰煞 `CORRUPT`）：
 - 穿透物理護甲，直接檢驗目標的五行抗性。
 - 抗性數值 `resistance` 可透過裝備、丹藥、符籙與 Buff 堆疊超越 1.0 (100%)。
-- **抗性折算與逆流回血契約**（實作於 [`CombatRules.resolveResistance`](../../src/main/java/com/example/htmlmud/domain/combat/CombatRules.java)）：
+- **抗性折算與逆流回血契約**（實作於 [`CombatRules.resolveResistance`](../../src/main/java/com/example/htmlmud/combat/CombatRules.java)）：
   ```java
   public static ResistanceResult resolveResistance(int rawDamage, DamageType type, double resistance) {
       if (rawDamage <= 0) return new ResistanceResult(0, 0);
@@ -255,12 +255,12 @@ public void decrementTick() {
 
 | 項目 | 路徑 / 名稱 | 職責 |
 | :--- | :--- | :--- |
-| **結算服務** | `com.example.htmlmud.domain.dungeon.battle.BuffSettlementService` | 狀態施加、刷新、Tick 倒數、HoT/DoT 跳字、護盾抵扣 |
-| **實體能力介面** | `com.example.htmlmud.domain.dungeon.battle.Buffable` | 生靈掛載狀態容器、控場查詢門控 (`isControlled`, `isSilenced`) |
-| **狀態領域模型** | `com.example.htmlmud.domain.dungeon.battle.ActiveBuff` | 狀態實體、生命週期判斷 (`isPermanent`, `isExpired`) |
-| **狀態分類枚舉** | `com.example.htmlmud.domain.dungeon.battle.BuffCategory` | `SHIELD`, `HOT`, `DOT`, `STAT_MODIFIER`, `CONTROL` |
+| **結算服務** | `com.example.htmlmud.combat.BuffSettlementService` | 狀態施加、刷新、Tick 倒數、HoT/DoT 跳字、護盾抵扣 |
+| **實體能力介面** | `com.example.htmlmud.combat.Buffable` | 生靈掛載狀態容器、控場查詢門控 (`isControlled`, `isSilenced`) |
+| **狀態領域模型** | `com.example.htmlmud.combat.ActiveBuff` | 狀態實體、生命週期判斷 (`isPermanent`, `isExpired`) |
+| **狀態分類枚舉** | `com.example.htmlmud.combat.BuffCategory` | `SHIELD`, `HOT`, `DOT`, `STAT_MODIFIER`, `CONTROL` |
 | **狀態傳輸 DTO** | `com.example.htmlmud.domain.dungeon.dto.ActiveBuffDto` | 正規化快照傳輸至前端，含靈氣屬性與聚合標籤 |
-| **抗性規則結算** | `com.example.htmlmud.domain.combat.CombatRules` | 一元一次圓桌判定、五行抗性折算與逆流回血 |
+| **抗性規則結算** | `com.example.htmlmud.combat.CombatRules` | 一元一次圓桌判定、五行抗性折算與逆流回血 |
 | **資料設定來源** | `src/main/resources/data/party/party_skills.json` | 狀態來源技能、削韌值、靈氣屬性 |
 | **前端 HUD 渲染** | `src/main/resources/static/js/panels/buff-hud-helper.js` | 屬性圖示聚合、每秒加總、懸停明細 Tooltip |
 

@@ -9,7 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import com.example.htmlmud.application.factory.WorldFactory;
 import com.example.htmlmud.domain.actor.impl.Mob;
-import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
+import com.example.htmlmud.combat.BattleEnemy;
 import com.example.htmlmud.progression.SkillCategory;
 import com.example.htmlmud.template.model.MobTemplate;
 import com.example.htmlmud.template.model.RaceTemplate;

@@ -1,0 +1,297 @@
+package com.example.htmlmud.combat;
+
+import java.util.List;
+
+public record BattleEnemyViewDto(
+    int index,
+    String id,
+    String name,
+    int hp,
+    int maxHp,
+    String row,
+    boolean alive,
+    boolean isTarget,
+    boolean isStunned,
+    String targetMemberId,
+    String targetMemberName,
+    int threat,
+    boolean isLarge,
+    int size,
+    String slot,
+    int rowIdx,
+    int colIdx,
+    int width,
+    int height,
+    String intentIcon,
+    String intentName,
+    String intentType,
+    String intentTargetScope,
+    boolean isCasting,
+    long castDurationMs,
+    long castRemainingMs,
+    boolean isInterruptible,
+    int poise,
+    int maxPoise,
+    boolean isPoiseBroken,
+    int shield,
+    List<ActiveBuffDto> activeBuffs,
+    String currentAction,
+    int actionProgressPercent,
+    boolean interruptible,
+    int currentPhase,
+    int maxPhases,
+    List<Integer> phaseThresholds,
+    boolean isEnraged
+) {
+  public BattleEnemyViewDto(
+      int index,
+      String id,
+      String name,
+      int hp,
+      int maxHp,
+      String row,
+      boolean alive,
+      boolean isTarget,
+      boolean isStunned,
+      String targetMemberId,
+      String targetMemberName,
+      int threat,
+      boolean isLarge,
+      int size,
+      String slot,
+      int rowIdx,
+      int colIdx,
+      int width,
+      int height,
+      String intentIcon,
+      String intentName,
+      String intentType,
+      String intentTargetScope,
+      boolean isCasting,
+      long castDurationMs,
+      long castRemainingMs,
+      boolean isInterruptible,
+      int poise,
+      int maxPoise,
+      boolean isPoiseBroken,
+      int shield,
+      List<ActiveBuffDto> activeBuffs,
+      String currentAction,
+      int actionProgressPercent,
+      boolean interruptible
+  ) {
+    this(
+        index, id, name, hp, maxHp, row, alive, isTarget, isStunned,
+        targetMemberId, targetMemberName, threat, isLarge, size, slot,
+        rowIdx, colIdx, width, height, intentIcon, intentName, intentType,
+        intentTargetScope, isCasting, castDurationMs, castRemainingMs, isInterruptible,
+        poise, maxPoise, isPoiseBroken, shield, activeBuffs,
+        currentAction, actionProgressPercent, interruptible,
+        1, 1, List.of(), false
+    );
+  }
+  public BattleEnemyViewDto(
+      int index,
+      String id,
+      String name,
+      int hp,
+      int maxHp,
+      String row,
+      boolean alive,
+      boolean isTarget,
+      boolean isStunned,
+      String targetMemberId,
+      String targetMemberName,
+      int threat,
+      boolean isLarge,
+      int size,
+      String slot,
+      int rowIdx,
+      int colIdx,
+      int width,
+      int height,
+      String intentIcon,
+      String intentName,
+      String intentType,
+      String intentTargetScope,
+      boolean isCasting,
+      long castDurationMs,
+      long castRemainingMs,
+      boolean isInterruptible,
+      int poise,
+      int maxPoise,
+      boolean isPoiseBroken,
+      int shield,
+      List<ActiveBuffDto> activeBuffs
+  ) {
+    this(
+        index, id, name, hp, maxHp, row, alive, isTarget, isStunned,
+        targetMemberId, targetMemberName, threat, isLarge, size, slot,
+        rowIdx, colIdx, width, height, intentIcon, intentName, intentType,
+        intentTargetScope, isCasting, castDurationMs, castRemainingMs, isInterruptible,
+        poise, maxPoise, isPoiseBroken, shield, activeBuffs,
+        intentName != null ? intentName : "",
+        (castDurationMs > 0)
+            ? (int) Math.max(0, Math.min(100, Math.round((1.0 - ((double) castRemainingMs / castDurationMs)) * 100.0)))
+            : 0,
+        isInterruptible
+    );
+  }
+  public BattleEnemyViewDto(
+      int index,
+      String id,
+      String name,
+      int hp,
+      int maxHp,
+      String row,
+      boolean alive,
+      boolean isTarget,
+      boolean isStunned,
+      String targetMemberId,
+      String targetMemberName,
+      int threat,
+      boolean isLarge,
+      int size,
+      String slot,
+      int rowIdx,
+      int colIdx,
+      int width,
+      int height,
+      String intentIcon,
+      String intentName,
+      String intentType,
+      String intentTargetScope,
+      boolean isCasting,
+      long castDurationMs,
+      long castRemainingMs,
+      boolean isInterruptible
+  ) {
+    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, targetMemberId, targetMemberName,
+        threat, isLarge, size, slot, rowIdx, colIdx, width, height, intentIcon, intentName, intentType,
+        intentTargetScope, isCasting, castDurationMs, castRemainingMs, isInterruptible,
+        30, 30, false, 0, List.of());
+  }
+
+  public BattleEnemyViewDto(
+      int index,
+      String id,
+      String name,
+      int hp,
+      int maxHp,
+      String row,
+      boolean alive,
+      boolean isTarget,
+      boolean isStunned,
+      String targetMemberId,
+      String targetMemberName,
+      int threat,
+      boolean isLarge,
+      int size,
+      String slot,
+      int rowIdx,
+      int colIdx,
+      int width,
+      int height
+  ) {
+    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, targetMemberId, targetMemberName,
+        threat, isLarge, size, slot, rowIdx, colIdx, width, height, null, null, "PHYSICAL", "SINGLE",
+        false, 0L, 0L, true);
+  }
+
+  public BattleEnemyViewDto(
+      int index,
+      String id,
+      String name,
+      int hp,
+      int maxHp,
+      String row,
+      boolean alive,
+      boolean isTarget,
+      boolean isStunned,
+      String targetMemberId,
+      String targetMemberName,
+      int threat,
+      boolean isLarge,
+      int size,
+      String slot,
+      int rowIdx,
+      int colIdx
+  ) {
+    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, targetMemberId, targetMemberName,
+        threat, isLarge, size, slot, rowIdx, colIdx, size, size);
+  }
+
+  public BattleEnemyViewDto(
+      int index,
+      String id,
+      String name,
+      int hp,
+      int maxHp,
+      String row,
+      boolean alive,
+      boolean isTarget,
+      boolean isStunned,
+      String targetMemberId,
+      String targetMemberName,
+      int threat,
+      boolean isLarge,
+      int size,
+      String slot
+  ) {
+    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, targetMemberId, targetMemberName,
+        threat, isLarge, size, slot, 1, 2);
+  }
+
+  public BattleEnemyViewDto(
+      int index,
+      String id,
+      String name,
+      int hp,
+      int maxHp,
+      String row,
+      boolean alive,
+      boolean isTarget,
+      boolean isStunned,
+      String targetMemberId,
+      String targetMemberName,
+      int threat,
+      boolean isLarge,
+      int size
+  ) {
+    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, targetMemberId, targetMemberName,
+        threat, isLarge, size, "CENTER");
+  }
+
+  public BattleEnemyViewDto(
+      int index,
+      String id,
+      String name,
+      int hp,
+      int maxHp,
+      String row,
+      boolean alive,
+      boolean isTarget,
+      boolean isStunned,
+      String targetMemberId,
+      String targetMemberName,
+      int threat,
+      boolean isLarge
+  ) {
+    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, targetMemberId, targetMemberName,
+        threat, isLarge, isLarge ? 2 : 1, "CENTER");
+  }
+
+  public BattleEnemyViewDto(
+      int index,
+      String id,
+      String name,
+      int hp,
+      int maxHp,
+      String row,
+      boolean alive,
+      boolean isTarget,
+      boolean isStunned
+  ) {
+    this(index, id, name, hp, maxHp, row, alive, isTarget, isStunned, null, null, 0, false, 1, "CENTER");
+  }
+}

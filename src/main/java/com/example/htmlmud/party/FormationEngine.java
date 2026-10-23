@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.domain.dungeon.battle.ActiveBuff;
+import com.example.htmlmud.combat.ActiveBuff;
 import com.example.htmlmud.domain.model.enums.BuffCategory;
 import lombok.extern.slf4j.Slf4j;
 

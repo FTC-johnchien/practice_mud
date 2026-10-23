@@ -230,7 +230,7 @@ public final class Player extends Living {
         if (this.service != null && this.service.getCharacterSyncService() != null) {
           applied = this.service.getCharacterSyncService().getOutcomeApplier().apply(this, outcome);
         } else {
-          applied = new com.example.htmlmud.domain.dungeon.battle.BattleOutcomeApplier().apply(this, outcome);
+          applied = new com.example.htmlmud.combat.BattleOutcomeApplier().apply(this, outcome);
         }
         if (future != null) {
           future.complete(applied);

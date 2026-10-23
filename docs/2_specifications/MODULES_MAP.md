@@ -93,7 +93,7 @@ graph TD
   - **九大五行傷害與抗性結算**：物理 10% 保底穿透、五行抗性百分比折減，抗性 $>100\%$ 觸發靈氣逆流回血。
   - **仇恨與站位系統**：基於前排加成、嘲諷係數與陣法倍率智慧選擇攻擊目標。
 - **代表類別**：
-  - 純領域函式：`com.example.htmlmud.domain.combat.CombatRules`
+  - 純領域函式：`com.example.htmlmud.combat.CombatRules`
   - 業務編排：`DrpgBattleService`, `DrpgCombatLoop`, `DrpgEnemyTacticsService`, `DrpgRewardService`
 - **資料設定來源**：
   - `src/main/resources/data/party/party_skills.json`, `data/zones/*/mobs.json`

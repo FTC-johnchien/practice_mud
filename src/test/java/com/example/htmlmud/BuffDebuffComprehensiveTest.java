@@ -8,12 +8,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.example.htmlmud.domain.combat.CombatRules;
-import com.example.htmlmud.domain.dungeon.battle.ActiveBuff;
-import com.example.htmlmud.domain.dungeon.battle.BattleContext;
-import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
-import com.example.htmlmud.domain.dungeon.battle.BuffSettlementService;
-import com.example.htmlmud.domain.dungeon.battle.DrpgEnemyTacticsService;
+import com.example.htmlmud.combat.CombatRules;
+import com.example.htmlmud.combat.ActiveBuff;
+import com.example.htmlmud.combat.BattleContext;
+import com.example.htmlmud.combat.BattleEnemy;
+import com.example.htmlmud.combat.BuffSettlementService;
+import com.example.htmlmud.combat.DrpgEnemyTacticsService;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.enums.BuffCategory;
 import com.example.htmlmud.domain.model.enums.BuffType;

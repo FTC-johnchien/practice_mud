@@ -12,10 +12,10 @@
 經實地代碼特徵掃描與測試套件驗證，以下核心領域已在程式碼庫中 **100% 落實**，作為本待辦清單的穩固底座：
 
 1. **核心戰鬥與破防打斷體系 (對齊 L1/L2 M3/M3-1)**：
-   - 罡氣削韌與破防 1.5x 爆擊傷害加成（[`CombatRules.applyPoiseBreakCrit`](../../src/main/java/com/example/htmlmud/domain/combat/CombatRules.java)）。
-   - 蓄力打斷與破防硬直（[`DrpgCombatLoop.resolveSkillInterrupt`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java)）。
+   - 罡氣削韌與破防 1.5x 爆擊傷害加成（[`CombatRules.applyPoiseBreakCrit`](../../src/main/java/com/example/htmlmud/combat/CombatRules.java)）。
+   - 蓄力打斷與破防硬直（[`DrpgCombatLoop.resolveSkillInterrupt`](../../src/main/java/com/example/htmlmud/combat/DrpgCombatLoop.java)）。
    - 天道靈氣元素反應（`VAPORIZE`、`ELECTRO_CHARGED` 等五行相生相剋結算）。
-   - 跨隊員連攜終結絕技（[`ComboResolver.executeFormationFinisher`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/ComboResolver.java)）。
+   - 跨隊員連攜終結絕技（[`ComboResolver.executeFormationFinisher`](../../src/main/java/com/example/htmlmud/combat/ComboResolver.java)）。
    - 首領多階段血量門檻（`phaseThresholds` 與 `isEnraged`）與戰術求值器（`evaluateTacticsCondition`）。
 2. **角色道基、裝備與流派體系 (對齊 L1/L2 M4/M5/M6)**：
    - 小隊共用 40 格儲物袋（[`PartyInventory.CAPACITY = 40`](../../src/main/java/com/example/htmlmud/party/PartyInventory.java) 單一真相源）。

@@ -10,10 +10,10 @@
 ## 🧭 一、程式碼單一真相源 (Single Source of Truth)
 
 - **核心服務與結算模型**：
-  - [`DrpgCombatLoop.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java)（虛擬執行緒戰鬥主迴圈，500ms 心跳）
-  - [`CombatRules.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/combat/CombatRules.java)（純函數式數值判定、破防爆擊、元素反應）
-  - [`ComboResolver.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/ComboResolver.java)（3.5s 連攜窗口推進與天外合擊終結技發動）
-  - [`DrpgEnemyTacticsService.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgEnemyTacticsService.java)（敵我 AI 行動方針評估器）
+  - [`DrpgCombatLoop.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/combat/DrpgCombatLoop.java)（虛擬執行緒戰鬥主迴圈，500ms 心跳）
+  - [`CombatRules.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/combat/CombatRules.java)（純函數式數值判定、破防爆擊、元素反應）
+  - [`ComboResolver.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/combat/ComboResolver.java)（3.5s 連攜窗口推進與天外合擊終結技發動）
+  - [`DrpgEnemyTacticsService.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/combat/DrpgEnemyTacticsService.java)（敵我 AI 行動方針評估器）
 - **關聯驗證測試**：
   - [`BossPhaseAndPoiseStaggerTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/BossPhaseAndPoiseStaggerTest.java)（首領轉階段與破防爆擊 100% 綠燈）
   - [`CombatReactInterruptTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/CombatReactInterruptTest.java)（預告蓄力條與打斷 100% 綠燈）
@@ -24,6 +24,8 @@
 
 ## 🏆 二、已完成實作項目 (Completed)
 
+- [x] **M3-PKG-ENCAPSULATION (Package-by-Feature 獨立封裝 / Phase 3 Step R3.8)**
+  - 建立一級套件 `com.example.htmlmud.combat`，將戰鬥核心迴圈 `DrpgCombatLoop`、`CombatRules`、`ComboResolver`、`BattleContext`、`DrpgBattleService`、`BuffSettlementService`、戰鬥事件與 DTO 等 40 份類別全面收斂至獨立套件，全專案 393 項測試 100% 綠燈通過。
 - [x] **M3-POISE-BREAK (罡氣削韌與破防重創)**
   - 實作 `CombatRules.applyPoiseBreakCrit`：目標罡氣歸零 (`isPoiseBroken`) 享受 100% 致命暴擊與 1.5 倍傷害。
 - [x] **M3-REACT-INTERRUPT (敵方行動預告與即時打斷)**

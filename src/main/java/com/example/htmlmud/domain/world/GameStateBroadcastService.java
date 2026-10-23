@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
-import com.example.htmlmud.domain.dungeon.battle.DrpgBattleService;
+import com.example.htmlmud.combat.DrpgBattleService;
 import com.example.htmlmud.dungeon.DrpgStateDto;
 import com.example.htmlmud.dungeon.DrpgStateDto.TownCapabilityDto;
 import com.example.htmlmud.dungeon.DrpgStateDto.TownExitDto;

@@ -10,12 +10,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import com.example.htmlmud.domain.actor.impl.Player;
-import com.example.htmlmud.domain.dungeon.battle.ActiveBuff;
-import com.example.htmlmud.domain.dungeon.battle.BattleContext;
-import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
-import com.example.htmlmud.domain.dungeon.battle.BuffSettlementService;
-import com.example.htmlmud.domain.dungeon.battle.DrpgCombatLoop;
-import com.example.htmlmud.domain.dungeon.battle.DrpgEnemyTacticsService;
+import com.example.htmlmud.combat.ActiveBuff;
+import com.example.htmlmud.combat.BattleContext;
+import com.example.htmlmud.combat.BattleEnemy;
+import com.example.htmlmud.combat.BuffSettlementService;
+import com.example.htmlmud.combat.DrpgCombatLoop;
+import com.example.htmlmud.combat.DrpgEnemyTacticsService;
 import com.example.htmlmud.domain.model.config.BuffConfig;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.enums.BuffCategory;
@@ -532,19 +532,19 @@ class BuffDebuffSystemTest {
   @DisplayName("機制 10：五行法術抗性 > 100% 逆流回血契約 (順成人，逆成仙)")
   void testElementalResistance_reverseCirculationHealing() {
     // 1. 物理傷害：即使抗性超標 (如 1.5)，依然受限於保底 10% 穿透 (10 點傷害)，絕不轉為回血
-    var physResult = com.example.htmlmud.domain.combat.CombatRules.resolveResistance(
+    var physResult = com.example.htmlmud.combat.CombatRules.resolveResistance(
         100, com.example.htmlmud.domain.model.enums.DamageType.PHYSICAL, 1.5);
     assertThat(physResult.damage()).isEqualTo(10);
     assertThat(physResult.heal()).isEqualTo(0);
 
     // 2. 常規五行法術減傷 (抗性 40%)
-    var fireNormal = com.example.htmlmud.domain.combat.CombatRules.resolveResistance(
+    var fireNormal = com.example.htmlmud.combat.CombatRules.resolveResistance(
         100, com.example.htmlmud.domain.model.enums.DamageType.FIRE, 0.40);
     assertThat(fireNormal.damage()).isEqualTo(60);
     assertThat(fireNormal.heal()).isEqualTo(0);
 
     // 3. 超額五行法術抗性 (火抗 125%)：承受 0 傷害，超額 25% 轉化為氣血回復！
-    var fireAbsorb = com.example.htmlmud.domain.combat.CombatRules.resolveResistance(
+    var fireAbsorb = com.example.htmlmud.combat.CombatRules.resolveResistance(
         100, com.example.htmlmud.domain.model.enums.DamageType.FIRE, 1.25);
     assertThat(fireAbsorb.damage()).isEqualTo(0);
     assertThat(fireAbsorb.heal()).isEqualTo(25);

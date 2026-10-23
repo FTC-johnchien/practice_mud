@@ -7,8 +7,8 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
-import com.example.htmlmud.domain.dungeon.dto.BattleEnemyViewDto;
+import com.example.htmlmud.combat.BattleEnemy;
+import com.example.htmlmud.combat.BattleEnemyViewDto;
 import com.example.htmlmud.party.RowPosition;
 
 class EnemyIntentTest {
@@ -103,14 +103,14 @@ class EnemyIntentTest {
     assertThat(enemy.getActionProgressPercent()).isGreaterThanOrEqualTo(0).isLessThanOrEqualTo(100);
 
     // 驗證 BattleEnemyDto 與 CombatMobDto 轉化
-    com.example.htmlmud.domain.dungeon.dto.BattleEnemyDto enemyDto =
-        com.example.htmlmud.domain.dungeon.dto.BattleEnemyDto.from(0, enemy);
+    com.example.htmlmud.combat.BattleEnemyDto enemyDto =
+        com.example.htmlmud.combat.BattleEnemyDto.from(0, enemy);
     assertThat(enemyDto.currentAction()).isEqualTo("泣血狂暴巨爪拍下");
     assertThat(enemyDto.actionProgressPercent()).isGreaterThanOrEqualTo(0);
     assertThat(enemyDto.interruptible()).isTrue();
 
-    com.example.htmlmud.domain.dungeon.dto.CombatMobDto mobDto =
-        com.example.htmlmud.domain.dungeon.dto.CombatMobDto.of("boss-song", "畸變大師兄·宋天衡", 450, 450, enemy.getCurrentAction(), enemy.getActionProgressPercent(), enemy.isInterruptible());
+    com.example.htmlmud.combat.CombatMobDto mobDto =
+        com.example.htmlmud.combat.CombatMobDto.of("boss-song", "畸變大師兄·宋天衡", 450, 450, enemy.getCurrentAction(), enemy.getActionProgressPercent(), enemy.isInterruptible());
     assertThat(mobDto.currentAction()).isEqualTo("泣血狂暴巨爪拍下");
     assertThat(mobDto.interruptible()).isTrue();
   }
@@ -141,8 +141,8 @@ class EnemyIntentTest {
   @Test
   @DisplayName("MILESTONE-1 TASK-2: 驗證 CombatFsmService 怪物施法階段與 STUN / SILENCE 招式打斷判定")
   void testCombatFsmCastingAndInterrupt() {
-    com.example.htmlmud.domain.dungeon.battle.CombatFsmService fsmService =
-        new com.example.htmlmud.domain.dungeon.battle.CombatFsmService();
+    com.example.htmlmud.combat.CombatFsmService fsmService =
+        new com.example.htmlmud.combat.CombatFsmService();
 
     BattleEnemy boss = BattleEnemy.builder()
         .id("boss-song")

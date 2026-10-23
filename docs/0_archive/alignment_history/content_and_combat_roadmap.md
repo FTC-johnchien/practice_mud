@@ -62,7 +62,7 @@
 ### 15.1 ✅ [已完成] 戰鬥視覺化：敵方意圖預告 (Intent Icon) 與卡片蓄力唱條 (Cast Bar) (ENEMY-INTENT-01) (P1)
 - **現狀核對**：原本敵方處於意圖盲盒狀態，怪物下一動何時出手、鎖定誰、施展什麼技能在命中前毫無圖形預兆，只能在 Log 洗版。
 - **落地進度**：已於 2026-10-08 完成。
-  1. **後端行動週期 (Telegraph Phase)**：[`DrpgCombatLoop.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgCombatLoop.java) 導入攻擊前 1500ms 預告窗口；[`BattleEnemy.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/BattleEnemy.java) 狀態機支援 `startIntent`、`clearIntent` 與 `getCastRemainingMs()`；遭受眩暈時自動中斷施法。
+  1. **後端行動週期 (Telegraph Phase)**：[`DrpgCombatLoop.java`](../../src/main/java/com/example/htmlmud/combat/DrpgCombatLoop.java) 導入攻擊前 1500ms 預告窗口；[`BattleEnemy.java`](../../src/main/java/com/example/htmlmud/combat/BattleEnemy.java) 狀態機支援 `startIntent`、`clearIntent` 與 `getCastRemainingMs()`；遭受眩暈時自動中斷施法。
   2. **視圖數據傳遞向後相容 (`BattleEnemyViewDto`)**：提供完整意圖欄位與既有 19 欄位重載相容建構子，維持 100% 舊代碼與測試相容。
   3. **敵方意圖圖標 (Intent Badge)**：怪物卡片（1x1、2x2、3x3、1x3、1x5）全數渲染 `.enemy-intent-container`，即時呈現意圖圖示（🗡️普攻、⚔️重擊、🔥/⚡法術、👁️深淵）、招式名稱、鎖定目標標籤（`➔ 隊員名`）與斷招標籤（`可斷`）。
   4. **敵方蓄力條 (Enemy Cast Bar)**：蓄力招式呈現動態進度條 `.enemy-cast-track` 與 `.enemy-cast-fill`，重擊與深淵蓄力自帶 `.intent-danger-telegraph` 危險紅色脈衝呼吸邊框，打斷或攻擊釋放後即時平滑移除。
@@ -100,7 +100,7 @@
 ### 15.6 ✅ [已完成] 戰鬥結算翻牌與修仙境界突破視覺化 (BATTLE-RESULT-01) (P2)
 - **現狀痛點**：戰鬥勝利後，經驗獲取與道具掉落全數以條列式文字輸出在 Log；境界突破（Lv Up）僅輸出「【金光灌頂】隊員突破境界！」。
 - **落地進度**：已於 2026-10-08 完成。
-  1. **結構化結算事件 (`BattleVictoryDto`)**：後端 [`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java) 於大捷時發布 `BattleVictoryDto`，攜帶戰鬥 ID、全員修為、靈石獲得、隊員突破明細與掉落物清單；文字 Log 全面收斂為單行摘要。
+  1. **結構化結算事件 (`BattleVictoryDto`)**：後端 [`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/combat/DrpgRewardService.java) 於大捷時發布 `BattleVictoryDto`，攜帶戰鬥 ID、全員修為、靈石獲得、隊員突破明細與掉落物清單；文字 Log 全面收斂為單行摘要。
   2. **戰後結算模態視窗 (`#battle-victory-modal`)**：於 [`index.html`](../../src/main/resources/static/index.html) 與 [`style-07-battle-fx.css`](../../src/main/resources/static/css/style-07-battle-fx.css) 打造金色暗調仙俠結算視窗，支援自適應呼吸光暈動畫、Space / Enter / Esc 快速關閉與聚焦。
   3. **全員修為長條充能與境界突破光環**：[`victory-modal.js`](../../src/main/resources/static/js/modals/victory-modal.js) 即時渲染隊員修為成長條平滑充能；升級隊員展現金色「✨ 境界突破！ Lv.X ➔ Lv.Y」徽章與數值成長說明。
   4. **戰利品 3D 翻牌動態 (3D Card Flip)**：背面為太極道紋「☯️ 秘寶封印」，支援 200ms 階梯式自動翻牌與「全部翻開」按鈕；正面依物品品質（凡品/下品/中品/上品/極品）呈現對應邊框流光色彩。

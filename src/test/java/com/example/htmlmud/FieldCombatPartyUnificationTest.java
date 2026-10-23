@@ -25,13 +25,13 @@ import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.context.MudContext;
-import com.example.htmlmud.domain.dungeon.battle.BattleContext;
-import com.example.htmlmud.domain.dungeon.battle.BattleState;
-import com.example.htmlmud.domain.dungeon.battle.DrpgBattleService;
+import com.example.htmlmud.combat.BattleContext;
+import com.example.htmlmud.combat.BattleState;
+import com.example.htmlmud.combat.DrpgBattleService;
 import com.example.htmlmud.domain.model.enums.LivingPosture;
 import com.example.htmlmud.party.Party;
 import com.example.htmlmud.party.PartyService;
-import com.example.htmlmud.domain.combat.service.CombatService;
+import com.example.htmlmud.combat.CombatService;
 import com.example.htmlmud.domain.actor.service.PlayerService;
 import com.example.htmlmud.domain.world.WorldManager;
 

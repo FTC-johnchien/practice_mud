@@ -47,7 +47,7 @@ class DungeonTorchAndTrapTest {
   private com.example.htmlmud.dungeon.DungeonNavigator dungeonNavigator;
 
   @Autowired
-  private com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService;
+  private com.example.htmlmud.combat.DrpgBattleService battleService;
 
   private Player testPlayer;
 

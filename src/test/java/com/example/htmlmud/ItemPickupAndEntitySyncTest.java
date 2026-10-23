@@ -24,7 +24,7 @@ import com.example.htmlmud.party.PartyService;
 import com.example.htmlmud.save.SaveGameService;
 import com.example.htmlmud.domain.actor.core.MessageOutput;
 import com.example.htmlmud.domain.actor.service.PlayerService;
-import com.example.htmlmud.domain.combat.service.TargetSelector;
+import com.example.htmlmud.combat.TargetSelector;
 import com.example.htmlmud.domain.world.WorldManager;
 
 @SpringBootTest
