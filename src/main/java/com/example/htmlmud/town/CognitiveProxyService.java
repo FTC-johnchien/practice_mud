@@ -1,9 +1,9 @@
-package com.example.htmlmud.domain.service;
+package com.example.htmlmud.town;
 
 import java.util.Comparator;
 import java.util.List;
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.domain.model.enums.PerceptionTier;
+import com.example.htmlmud.town.PerceptionTier;
 import com.example.htmlmud.domain.model.vo.CognitiveLens;
 
 /**

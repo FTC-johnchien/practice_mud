@@ -9,15 +9,15 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import com.example.htmlmud.domain.model.dto.FacilityDto;
-import com.example.htmlmud.domain.model.dto.TownHubDto;
+import com.example.htmlmud.town.FacilityDto;
+import com.example.htmlmud.town.TownHubDto;
 import com.example.htmlmud.domain.model.entity.LivingStats;
-import com.example.htmlmud.domain.model.enums.PerceptionTier;
+import com.example.htmlmud.town.PerceptionTier;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.service.CognitiveProxyService;
-import com.example.htmlmud.domain.service.TownHubService;
-import com.example.htmlmud.domain.service.TownHubService.CampRestResult;
+import com.example.htmlmud.town.CognitiveProxyService;
+import com.example.htmlmud.town.TownHubService;
+import com.example.htmlmud.town.TownHubService.CampRestResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 class TownHubServiceTest {

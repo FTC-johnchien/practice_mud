@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.model.dto;
+package com.example.htmlmud.town;
 
 import java.util.List;
 import lombok.Builder;

@@ -151,10 +151,10 @@ graph BT
   - **歸整類別**：`ItemDefinition`, `ItemInstance`, `ItemAffix`, `EquipmentSlot`, `ItemFactory`, `UnifiedPartyEconomyService`
   - **驗收標準**：`UnifiedPartyEconomyTest`, `UnifiedPartyEconomyServiceTest`, `CyberSkillAndItemAffixTest` 全數 100% 綠燈，全專案 393 項測試零回歸通過。
 
-- [ ] **Step R3.3 (PKG-M1-TOWN): 模組 M1 - 營地機能設施中樞套件封裝**
+- [x] **Step R3.3 (PKG-M1-TOWN): 模組 M1 - 營地機能設施中樞套件封裝**
   - **目標套件**：`com.example.htmlmud.town`
-  - **歸整類別**：`TownHubService`, `CognitiveProxyService`, `TownHubDto`
-  - **驗收標準**：`TownHubServiceTest`、`CognitiveProxyServiceTest` 100% 綠燈。
+  - **歸整類別**：`TownHubService`, `CognitiveProxyService`, `TownHubDto`, `FacilityDto`, `PerceptionTier`
+  - **驗收標準**：`TownHubServiceTest`、`CognitiveProxyServiceTest`、`TownFacilityCommandTest` 全數 100% 綠燈，全專案 393 項測試零回歸通過。
 
 - [ ] **Step R3.4 (PKG-M8-SAVE): 模組 M8 - 存檔與持久化管線套件封裝**
   - **目標套件**：`com.example.htmlmud.save`

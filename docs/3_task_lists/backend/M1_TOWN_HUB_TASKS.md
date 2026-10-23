@@ -12,8 +12,11 @@
 - **核心資料配置**：
   - `src/main/resources/data/zones/newbie_village/facilities.json`（營地選單機能設施與三階靈識透鏡契約）
 - **核心實體與服務**：
-  - [`CognitiveProxyService.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/service/CognitiveProxyService.java)（靈識認知轉譯代理服務）
-  - [`TownHubService.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/service/TownHubService.java)（營地機能中樞服務）
+  - [`CognitiveProxyService.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/town/CognitiveProxyService.java)（靈識認知轉譯代理服務）
+  - [`TownHubService.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/town/TownHubService.java)（營地機能中樞服務）
+  - [`TownHubDto.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/town/TownHubDto.java)（營地狀態傳輸投影）
+  - [`FacilityDto.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/town/FacilityDto.java)（設施狀態資料傳輸模型）
+  - [`PerceptionTier.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/town/PerceptionTier.java)（三階靈識認知位階枚舉）
   - [`TownFacilityCommand.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/TownFacilityCommand.java)（營地機能設施與調息指令派發器）
   - [`Room.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/actor/impl/Room.java)（過渡期單機空間實體，營地業務已由 TownHubService 完全接管）
 - **關聯驗證測試**：
@@ -25,6 +28,9 @@
 ---
 
 ## 🏆 二、已完成實作項目 (Completed)
+
+- [x] **M1-PACKAGE-BY-FEATURE (模組 M1 套件獨立封裝)**
+  - 依循依賴拓撲完成 M1 套件封裝，建立 `com.example.htmlmud.town` 獨立套件，將 `TownHubService`, `CognitiveProxyService`, `TownHubDto`, `FacilityDto`, `PerceptionTier` 歸整至新套件。
 
 - [x] **M1-FACILITY-DATA (選單機能設施資料化)**
   - 在 `src/main/resources/data/zones/newbie_village/` 落地 `facilities.json`。

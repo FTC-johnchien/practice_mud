@@ -21,8 +21,8 @@ import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.service.PartyService;
-import com.example.htmlmud.domain.service.CognitiveProxyService;
-import com.example.htmlmud.domain.service.TownHubService;
+import com.example.htmlmud.town.CognitiveProxyService;
+import com.example.htmlmud.town.TownHubService;
 import com.example.htmlmud.domain.world.GameStateBroadcastService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

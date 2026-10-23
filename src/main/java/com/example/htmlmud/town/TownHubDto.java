@@ -1,7 +1,7 @@
-package com.example.htmlmud.domain.model.dto;
+package com.example.htmlmud.town;
 
 import java.util.List;
-import com.example.htmlmud.domain.model.enums.PerceptionTier;
+import com.example.htmlmud.town.PerceptionTier;
 import lombok.Builder;
 
 /**

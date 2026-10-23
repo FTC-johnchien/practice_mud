@@ -8,10 +8,10 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import com.example.htmlmud.domain.model.enums.PerceptionTier;
+import com.example.htmlmud.town.PerceptionTier;
 import com.example.htmlmud.domain.model.vo.CognitiveLens;
-import com.example.htmlmud.domain.service.CognitiveProxyService;
-import com.example.htmlmud.domain.service.CognitiveProxyService.ResolvedCognitiveView;
+import com.example.htmlmud.town.CognitiveProxyService;
+import com.example.htmlmud.town.CognitiveProxyService.ResolvedCognitiveView;
 
 class CognitiveProxyServiceTest {
 

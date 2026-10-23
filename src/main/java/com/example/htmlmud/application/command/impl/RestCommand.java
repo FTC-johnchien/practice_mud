@@ -30,13 +30,13 @@ public class RestCommand implements PlayerCommand {
   @org.springframework.beans.factory.annotation.Autowired(required = false)
   private com.example.htmlmud.domain.world.WorldManager worldManager;
   @org.springframework.beans.factory.annotation.Autowired(required = false)
-  private com.example.htmlmud.domain.service.TownHubService townHubService;
+  private com.example.htmlmud.town.TownHubService townHubService;
 
   public void setWorldManager(com.example.htmlmud.domain.world.WorldManager worldManager) {
     this.worldManager = worldManager;
   }
 
-  public void setTownHubService(com.example.htmlmud.domain.service.TownHubService townHubService) {
+  public void setTownHubService(com.example.htmlmud.town.TownHubService townHubService) {
     this.townHubService = townHubService;
   }
 

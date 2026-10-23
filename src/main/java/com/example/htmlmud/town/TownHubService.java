@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.service;
+package com.example.htmlmud.town;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -8,9 +8,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.domain.model.dto.FacilityDto;
-import com.example.htmlmud.domain.model.dto.TownHubDto;
-import com.example.htmlmud.domain.model.enums.PerceptionTier;
+import com.example.htmlmud.town.FacilityDto;
+import com.example.htmlmud.town.TownHubDto;
+import com.example.htmlmud.town.PerceptionTier;
 import com.example.htmlmud.template.model.FacilityTemplate;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;

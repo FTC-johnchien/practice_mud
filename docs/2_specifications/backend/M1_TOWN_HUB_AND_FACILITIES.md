@@ -155,12 +155,12 @@ public record TownHubDto(
 
 | 項目 | 路徑 / 名稱 | 職責 |
 | :--- | :--- | :--- |
-| **營地服務** | `com.example.htmlmud.domain.service.TownHubService` | 設施路由、休整結算與傳送進入地牢 |
-| **靈識轉譯代理** | `com.example.htmlmud.domain.world.service.CognitiveProxyService` | 依據晶片加載度動態過濾設施、物品與技能的認知透鏡呈現 |
-| **對話服務** | `com.example.htmlmud.domain.service.DialogueService` | 劇情對話節點判定與獎勵派發 |
-| **設施資料** | `src/main/resources/data/hub/facilities.json` | 營地機能設施參數與解鎖條件（含三階透鏡名詞） |
-| **對話資料** | `src/main/resources/data/hub/dialogues.json` | NPC 劇情樹、分支選項與任務掛鉤 |
-| **狀態投影** | `com.example.htmlmud.adapter.dto.TownHubDto` | 傳遞至前端渲染之唯讀營地狀態（經 Proxy 轉譯） |
+| **營地服務** | `com.example.htmlmud.town.TownHubService` | 設施路由、休整結算與傳送進入地牢 |
+| **靈識轉譯代理** | `com.example.htmlmud.town.CognitiveProxyService` | 依據晶片加載度動態過濾設施、物品與技能的認知透鏡呈現 |
+| **狀態投影** | `com.example.htmlmud.town.TownHubDto` | 傳遞至前端渲染之唯讀營地狀態（經 Proxy 轉譯） |
+| **設施模型** | `com.example.htmlmud.town.FacilityDto` | 單一設施狀態投影資料傳輸模型 |
+| **認知位階** | `com.example.htmlmud.town.PerceptionTier` | 三階靈識認知位階枚舉 |
+| **設施資料** | `src/main/resources/data/zones/newbie_village/facilities.json` | 營地機能設施參數與解鎖條件（含三階透鏡名詞） |
 
 ---
 
