@@ -15,7 +15,7 @@ import com.example.htmlmud.domain.context.MudKeys;
 import com.example.htmlmud.domain.event.DomainEvent.SystemEvent;
 import com.example.htmlmud.domain.world.WorldManager;
 import com.example.htmlmud.infra.persistence.repository.UserRepository;
-import com.example.htmlmud.infra.server.SessionRegistry;
+import com.example.htmlmud.pipeline.SessionRegistry;
 import com.example.htmlmud.protocol.ConnectionState;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;

@@ -9,7 +9,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.event.DomainEvent.SessionEvent;
-import com.example.htmlmud.infra.server.SessionRegistry;
+import com.example.htmlmud.pipeline.SessionRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 

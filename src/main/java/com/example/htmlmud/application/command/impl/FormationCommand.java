@@ -28,7 +28,7 @@ public class FormationCommand implements PlayerCommand {
   private final DungeonManager dungeonManager;
   private final DungeonNavigator dungeonNavigator;
   private final com.example.htmlmud.combat.DrpgBattleService battleService;
-  private final com.example.htmlmud.domain.world.GameStateBroadcastService broadcastService;
+  private final com.example.htmlmud.pipeline.GameStateBroadcastService broadcastService;
 
   @Override
   public String getKey() {

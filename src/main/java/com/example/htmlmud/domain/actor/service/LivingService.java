@@ -10,7 +10,7 @@ import com.example.htmlmud.combat.CombatService;
 import com.example.htmlmud.combat.SkillService;
 import com.example.htmlmud.progression.XpProgressionService;
 import com.example.htmlmud.domain.service.MessageUtil;
-import com.example.htmlmud.domain.world.GameStateBroadcastService;
+import com.example.htmlmud.pipeline.GameStateBroadcastService;
 import com.example.htmlmud.domain.world.WorldManager;
 import com.example.htmlmud.domain.port.WorldEntityFactoryPort;
 import com.example.htmlmud.domain.actor.impl.Living;

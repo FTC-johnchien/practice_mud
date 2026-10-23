@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
-import com.example.htmlmud.infra.server.MudWebSocketHandler;
+import com.example.htmlmud.pipeline.MudWebSocketHandler;
 
 @Configuration
 @EnableWebSocket

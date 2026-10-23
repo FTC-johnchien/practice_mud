@@ -23,7 +23,7 @@ import com.example.htmlmud.party.PartyMember;
 import com.example.htmlmud.party.PartyMemberSkill;
 import com.example.htmlmud.party.CombatResourceType;
 import com.example.htmlmud.party.PartyService;
-import com.example.htmlmud.domain.world.GameStateBroadcastService;
+import com.example.htmlmud.pipeline.GameStateBroadcastService;
 
 class PhaseOneMechanicsTest {
 

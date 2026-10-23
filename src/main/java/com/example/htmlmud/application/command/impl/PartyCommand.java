@@ -31,7 +31,7 @@ public class PartyCommand implements PlayerCommand {
   private final DungeonManager dungeonManager;
   private final DungeonNavigator dungeonNavigator;
   private final com.example.htmlmud.combat.DrpgBattleService battleService;
-  private final com.example.htmlmud.domain.world.GameStateBroadcastService broadcastService;
+  private final com.example.htmlmud.pipeline.GameStateBroadcastService broadcastService;
   private final TemplateReader templateReader;
   private final com.example.htmlmud.progression.XpProgressionService xpProgressionService;
 
@@ -39,7 +39,7 @@ public class PartyCommand implements PlayerCommand {
   public PartyCommand(PartyService partyService, DungeonManager dungeonManager,
       DungeonNavigator dungeonNavigator,
       com.example.htmlmud.combat.DrpgBattleService battleService,
-      com.example.htmlmud.domain.world.GameStateBroadcastService broadcastService,
+      com.example.htmlmud.pipeline.GameStateBroadcastService broadcastService,
       TemplateReader templateReader,
       @org.springframework.beans.factory.annotation.Autowired(required = false) com.example.htmlmud.progression.XpProgressionService xpProgressionService) {
     this.partyService = partyService;
@@ -54,7 +54,7 @@ public class PartyCommand implements PlayerCommand {
   public PartyCommand(PartyService partyService, DungeonManager dungeonManager,
       DungeonNavigator dungeonNavigator,
       com.example.htmlmud.combat.DrpgBattleService battleService,
-      com.example.htmlmud.domain.world.GameStateBroadcastService broadcastService,
+      com.example.htmlmud.pipeline.GameStateBroadcastService broadcastService,
       TemplateReader templateReader) {
     this(partyService, dungeonManager, dungeonNavigator, battleService, broadcastService, templateReader, null);
   }

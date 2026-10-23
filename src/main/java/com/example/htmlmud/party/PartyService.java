@@ -24,7 +24,7 @@ public class PartyService {
 
   @org.springframework.context.annotation.Lazy
   @org.springframework.beans.factory.annotation.Autowired(required = false)
-  private com.example.htmlmud.domain.world.GameStateBroadcastService broadcastService;
+  private com.example.htmlmud.pipeline.GameStateBroadcastService broadcastService;
 
   private final Map<String, FormationTemplate> formationRegistry = new HashMap<>();
 

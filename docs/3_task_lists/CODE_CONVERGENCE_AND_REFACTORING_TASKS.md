@@ -181,10 +181,10 @@ graph BT
   - **歸整類別**：`DrpgCombatLoop`, `DrpgBattleService`, `CombatRules`, `ComboResolver`, `BattleContext`, `BuffSettlementService`, `DefenseResolver`, `DrpgRewardService`, `BattleEvent`, `ActiveBuffDto`, `BattleViewDto` 等 40 份戰鬥引擎與狀態結算模型
   - **驗收標準**：`BossPhaseAndPoiseStaggerTest`、`CrossComboAndFormationResonanceTest`、`ElementalReactionAndDetonateTest` 全數 100% 綠燈，全專案 393 項測試零回歸通過。
 
-- [ ] **Step R3.9 (PKG-M9-PIPELINE): 模組 M9 - 狀態管線與排程協定套件封裝**
+- [x] **Step R3.9 (PKG-M9-PIPELINE): 模組 M9 - 狀態管線與排程協定套件封裝**
   - **目標套件**：`com.example.htmlmud.pipeline`
-  - **歸整類別**：`GameLoop`, `CommandDispatcher`, `StateBroadcaster`, `WebSocketHandler`
-  - **驗收標準**：`mvn test -Dtest=SessionTakeoverAndSingletonProtagonistTest` 100% 綠燈。
+  - **歸整類別**：`GameStateBroadcastService`, `CommandDispatcher`, `CommandDispatcherPort`, `MudWebSocketHandler`, `SessionRegistry`
+  - **驗收標準**：`SessionTakeoverAndSingletonProtagonistTest`、`NetworkSecurityAndPersistenceDrainTest` 全數 100% 綠燈，全專案 393 項測試零回歸通過。
 
 ---
 

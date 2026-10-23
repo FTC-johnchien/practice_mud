@@ -2,7 +2,7 @@ package com.example.htmlmud.application.service;
 
 import java.util.UUID;
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.application.command.CommandDispatcher;
+import com.example.htmlmud.pipeline.CommandDispatcher;
 import com.example.htmlmud.application.dto.GameRequest;
 import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.protocol.GameCommand;

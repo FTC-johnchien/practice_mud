@@ -1,8 +1,9 @@
-package com.example.htmlmud.domain.world;
+package com.example.htmlmud.pipeline;
 
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import com.example.htmlmud.domain.world.WorldManager;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;

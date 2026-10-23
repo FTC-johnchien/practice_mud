@@ -56,6 +56,10 @@
 
 ## 🏆 已完成里程碑 (Completed Milestones)
 
+- [x] **Milestone REFACTOR-M9 — 模組 M9 狀態管線與排程協定 Package-by-Feature 封裝 (Phase 3 Step R3.9)**
+  - Task 1 (PKG-M9-ENCAPSULATION): 依循依賴拓撲完成 M9 模組套件封裝，建立 `com.example.htmlmud.pipeline` 獨立套件，將狀態廣播服務 `GameStateBroadcastService`、指令分發核心 `CommandDispatcher`、分發埠 `CommandDispatcherPort`、網路處理器 `MudWebSocketHandler` 與會話註冊表 `SessionRegistry` 統一收斂至獨立套件。
+  - Task 2 (PKG-M9-TEST-VERIFY): 全域業務指令與整合測試引用切換至 `com.example.htmlmud.pipeline.*`，`SessionTakeoverAndSingletonProtagonistTest`、`NetworkSecurityAndPersistenceDrainTest` 全數 100% 綠燈 (7/7)，全專案 393 項測試零回歸通過，文檔 368 個內部連結 100% 通過。
+
 - [x] **Milestone REFACTOR-M3 — 模組 M3 & M3.1 戰鬥引擎與狀態效果 Package-by-Feature 封裝 (Phase 3 Step R3.8)**
   - Task 1 (PKG-M3-ENCAPSULATION): 依循依賴拓撲完成 M3/M3.1 模組套件封裝，建立 `com.example.htmlmud.combat` 獨立套件，將 `DrpgCombatLoop`、`CombatRules`、`ComboResolver`、`BattleContext`、`DrpgBattleService`、`BuffSettlementService`、戰鬥事件模型與 DTO 等 40 份類別全面收斂至新套件，徹底消解舊有的 `domain.dungeon.battle` 與 `domain.combat` 散落結構。
   - Task 2 (PKG-M3-TEST-VERIFY): 全域業務指令與整合測試引用切換至 `com.example.htmlmud.combat.*`，`BossPhaseAndPoiseStaggerTest`、`CrossComboAndFormationResonanceTest`、`ElementalReactionAndDetonateTest` 全數 100% 綠燈 (16/16)，全專案 393 項測試零回歸通過，文檔 368 個內部連結 100% 通過。

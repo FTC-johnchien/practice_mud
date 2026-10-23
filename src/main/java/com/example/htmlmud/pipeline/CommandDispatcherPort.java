@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.port;
+package com.example.htmlmud.pipeline;
 
 /**
  * 領域層指令轉發輸出埠口 (Output Port)

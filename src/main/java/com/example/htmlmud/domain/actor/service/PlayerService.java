@@ -17,7 +17,7 @@ import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.model.enums.Direction;
 import com.example.htmlmud.domain.port.ClientSessionManagerPort;
-import com.example.htmlmud.domain.port.CommandDispatcherPort;
+import com.example.htmlmud.pipeline.CommandDispatcherPort;
 import com.example.htmlmud.domain.port.PlayerPersistencePort;
 import com.example.htmlmud.protocol.ConnectionState;
 import com.example.htmlmud.protocol.GameCommand;

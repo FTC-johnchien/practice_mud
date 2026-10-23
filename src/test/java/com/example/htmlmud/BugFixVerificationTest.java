@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.web.socket.WebSocketSession;
 
-import com.example.htmlmud.application.command.CommandDispatcher;
+import com.example.htmlmud.pipeline.CommandDispatcher;
 import com.example.htmlmud.application.command.impl.DropCommand;
 import com.example.htmlmud.domain.actor.core.MessageOutput;
 import com.example.htmlmud.domain.actor.impl.Player;

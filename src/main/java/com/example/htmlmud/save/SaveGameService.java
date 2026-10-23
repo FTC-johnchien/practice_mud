@@ -19,7 +19,7 @@ import com.example.htmlmud.dungeon.DungeonManager;
 import com.example.htmlmud.party.Party;
 import com.example.htmlmud.party.PartyMember;
 import com.example.htmlmud.party.PartyService;
-import com.example.htmlmud.domain.world.GameStateBroadcastService;
+import com.example.htmlmud.pipeline.GameStateBroadcastService;
 import com.example.htmlmud.domain.world.WorldManager;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.party.PartyItemSlot;

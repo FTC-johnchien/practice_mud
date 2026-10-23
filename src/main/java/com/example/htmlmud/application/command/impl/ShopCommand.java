@@ -14,7 +14,7 @@ import com.example.htmlmud.template.model.ShopTemplate.ShopItemTemplate;
 import com.example.htmlmud.party.Party;
 import com.example.htmlmud.party.PartyItemSlot;
 import com.example.htmlmud.party.PartyService;
-import com.example.htmlmud.domain.world.GameStateBroadcastService;
+import com.example.htmlmud.pipeline.GameStateBroadcastService;
 import com.example.htmlmud.template.TemplateReader;
 import lombok.extern.slf4j.Slf4j;
 

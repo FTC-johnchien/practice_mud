@@ -1,4 +1,4 @@
-package com.example.htmlmud.application.command;
+package com.example.htmlmud.pipeline;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -7,11 +7,13 @@ import java.util.Map;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.application.command.impl.MoveCommand;
+import com.example.htmlmud.application.command.PlayerCommand;
+import com.example.htmlmud.application.command.CommandAlias;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.enums.Direction;
-import com.example.htmlmud.domain.port.CommandDispatcherPort;
+import com.example.htmlmud.pipeline.CommandDispatcherPort;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

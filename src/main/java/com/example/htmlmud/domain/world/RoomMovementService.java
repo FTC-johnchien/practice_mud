@@ -1,6 +1,7 @@
 package com.example.htmlmud.domain.world;
 
 import org.springframework.stereotype.Service;
+import com.example.htmlmud.pipeline.GameStateBroadcastService;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.model.enums.Direction;

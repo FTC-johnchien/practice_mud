@@ -19,7 +19,7 @@ import com.example.htmlmud.dungeon.DungeonManager;
 import com.example.htmlmud.dungeon.DungeonNavigator;
 import com.example.htmlmud.party.PartyService;
 import com.example.htmlmud.template.TemplateReader;
-import com.example.htmlmud.domain.world.GameStateBroadcastService;
+import com.example.htmlmud.pipeline.GameStateBroadcastService;
 import com.example.htmlmud.domain.world.RoomMovementService;
 
 class DebugCommandGuardTest {

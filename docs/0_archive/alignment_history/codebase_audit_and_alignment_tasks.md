@@ -62,7 +62,7 @@ graph LR
     - [`docs/2_specifications/backend/M9_STATE_PIPELINE_AND_EVENTS.md`](../2_specifications/backend/M9_STATE_PIPELINE_AND_EVENTS.md)
   - **執行動作**：
     1. 在 M8 代表類別中標註：目前自動存檔由 [`SaveGameService`](../../src/main/java/com/example/htmlmud/domain/save/service/SaveGameService.java) 統一管理，角色存檔封裝於 [`SaveData`](../../src/main/java/com/example/htmlmud/domain/save/model/SaveData.java) 之小隊狀態。
-    2. 在 M9 代表類別中標註：現行網路連線與動作分發由 [`MudWebSocketHandler`](../../src/main/java/com/example/htmlmud/infra/server/MudWebSocketHandler.java) 與 [`CommandDispatcher`](../../src/main/java/com/example/htmlmud/application/command/CommandDispatcher.java) 提供服務。
+    2. 在 M9 代表類別中標註：現行網路連線與動作分發由 [`MudWebSocketHandler`](../../src/main/java/com/example/htmlmud/pipeline/MudWebSocketHandler.java) 與 [`CommandDispatcher`](../../src/main/java/com/example/htmlmud/pipeline/CommandDispatcher.java) 提供服務。
   - **驗收標準**：手冊清楚反映當前工程現實，避免後續開發者尋找不存在的單獨類別。
 
 ---
@@ -74,7 +74,7 @@ graph LR
   - **目標檔案**：
     - `src/main/java/com/example/htmlmud/domain/world/service/TownHubService.java`（新建）
     - `src/main/java/com/example/htmlmud/domain/world/dto/TownHubDto.java`（新建）
-    - [`src/main/java/com/example/htmlmud/application/command/CommandDispatcher.java`](../../src/main/java/com/example/htmlmud/application/command/CommandDispatcher.java)
+    - [`src/main/java/com/example/htmlmud/pipeline/CommandDispatcher.java`](../../src/main/java/com/example/htmlmud/pipeline/CommandDispatcher.java)
   - **執行動作**：
     1. 建立 `TownHubService`，負責加載 `facilities.json` 並管理安全營地機能設施互動（工坊、修煉場、醫療站、傳送門）。
     2. 封裝 `TownHubDto`，包含當前營地名稱、介紹、設施卡片列表（`FacilityDto`）以及可對話 NPC 清單。

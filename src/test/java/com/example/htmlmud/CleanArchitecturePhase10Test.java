@@ -23,7 +23,7 @@ import com.example.htmlmud.domain.model.enums.ItemActionType;
 import com.example.htmlmud.party.CombatResourceType;
 import com.example.htmlmud.domain.port.AuthenticationPort;
 import com.example.htmlmud.domain.port.ClientSessionManagerPort;
-import com.example.htmlmud.domain.port.CommandDispatcherPort;
+import com.example.htmlmud.pipeline.CommandDispatcherPort;
 import com.example.htmlmud.domain.port.WorldEntityFactoryPort;
 
 @SpringBootTest

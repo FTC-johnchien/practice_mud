@@ -17,8 +17,8 @@ import com.example.htmlmud.save.SaveGameService;
 import com.example.htmlmud.domain.actor.service.PlayerService;
 import com.example.htmlmud.domain.world.WorldManager;
 import com.example.htmlmud.infra.monitor.GameMetrics;
-import com.example.htmlmud.infra.server.MudWebSocketHandler;
-import com.example.htmlmud.infra.server.SessionRegistry;
+import com.example.htmlmud.pipeline.MudWebSocketHandler;
+import com.example.htmlmud.pipeline.SessionRegistry;
 import com.example.htmlmud.protocol.ConnectionState;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

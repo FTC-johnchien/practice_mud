@@ -11,8 +11,8 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
-import com.example.htmlmud.infra.server.MudWebSocketHandler;
-import com.example.htmlmud.infra.server.SessionRegistry;
+import com.example.htmlmud.pipeline.MudWebSocketHandler;
+import com.example.htmlmud.pipeline.SessionRegistry;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.service.PlayerService;
 import com.example.htmlmud.domain.world.WorldManager;

@@ -11,7 +11,7 @@ import com.example.htmlmud.party.Party;
 import com.example.htmlmud.party.PartyMember;
 import com.example.htmlmud.party.PartyService;
 import com.example.htmlmud.domain.actor.service.CharacterSyncService;
-import com.example.htmlmud.domain.world.GameStateBroadcastService;
+import com.example.htmlmud.pipeline.GameStateBroadcastService;
 import com.example.htmlmud.progression.XpProgressionService;
 import lombok.extern.slf4j.Slf4j;
 

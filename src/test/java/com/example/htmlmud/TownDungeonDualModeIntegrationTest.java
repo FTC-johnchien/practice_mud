@@ -22,7 +22,7 @@ import com.example.htmlmud.dungeon.DungeonManager;
 import com.example.htmlmud.party.Party;
 import com.example.htmlmud.party.PartyService;
 import com.example.htmlmud.save.SaveGameService;
-import com.example.htmlmud.domain.world.GameStateBroadcastService;
+import com.example.htmlmud.pipeline.GameStateBroadcastService;
 import com.example.htmlmud.domain.actor.service.PlayerService;
 import com.example.htmlmud.domain.world.WorldManager;
 

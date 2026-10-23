@@ -23,7 +23,7 @@ import com.example.htmlmud.party.PartyMember;
 import com.example.htmlmud.party.PartyService;
 import com.example.htmlmud.town.CognitiveProxyService;
 import com.example.htmlmud.town.TownHubService;
-import com.example.htmlmud.domain.world.GameStateBroadcastService;
+import com.example.htmlmud.pipeline.GameStateBroadcastService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 class TownFacilityCommandTest {

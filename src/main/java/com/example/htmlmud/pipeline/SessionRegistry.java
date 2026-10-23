@@ -1,4 +1,4 @@
-package com.example.htmlmud.infra.server;
+package com.example.htmlmud.pipeline;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;

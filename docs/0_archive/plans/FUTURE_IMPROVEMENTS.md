@@ -1379,9 +1379,9 @@ flowchart TD
   - 消除房間對多玩家並發集合的鎖與記憶體開銷；房間探索與事件通知邏輯大幅精簡；測試 100% 綠燈。
 
 #### 3. SP-05: WebSocket 單一主角綁定與多開會話接管 (Singleton Protagonist & Session Takeover) — Priority: P1
-- **問題現狀**：目前每次 WebSocket 連入，[`MudWebSocketHandler.java`](../../src/main/java/com/example/htmlmud/infra/server/MudWebSocketHandler.java) 就分配一個 `p-<sessionId>` 並建立全新 `Player` 實體。若瀏覽器開多個分頁，世界中會同時存在多個「主角」，造成存檔槽位覆寫衝突。
+- **問題現狀**：目前每次 WebSocket 連入，[`MudWebSocketHandler.java`](../../src/main/java/com/example/htmlmud/pipeline/MudWebSocketHandler.java) 就分配一個 `p-<sessionId>` 並建立全新 `Player` 實體。若瀏覽器開多個分頁，世界中會同時存在多個「主角」，造成存檔槽位覆寫衝突。
 - **涉及檔案**：
-  - [`MudWebSocketHandler.java`](../../src/main/java/com/example/htmlmud/infra/server/MudWebSocketHandler.java)
+  - [`MudWebSocketHandler.java`](../../src/main/java/com/example/htmlmud/pipeline/MudWebSocketHandler.java)
   - [`SessionRegistry.java`](../../src/main/java/com/example/htmlmud/infra/server/SessionRegistry.java)
 - **改動方針**：
   1. 引入「單機單一主角實例（Singleton Protagonist）」模型：世界只維持單一主角生命週期。
