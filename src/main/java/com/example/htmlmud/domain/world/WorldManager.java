@@ -19,7 +19,7 @@ import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
-import com.example.htmlmud.domain.model.enums.EquipmentSlot;
+import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.template.model.ItemTemplate;
 import com.example.htmlmud.template.model.MobTemplate;
 import com.example.htmlmud.template.model.RaceTemplate;

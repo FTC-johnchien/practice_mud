@@ -26,7 +26,7 @@
 
 ## 🛡️ 二、裝備槽位與純資料驅動契約 (EquipmentSlot 5+2 結構)
 
-嚴格遵循專案第一紅線，前端與後端換裝邏輯**完全拋棄中文名稱推測**，全面依賴 [`EquipmentSlot`](../../../src/main/java/com/example/htmlmud/domain/model/enums/EquipmentSlot.java) 枚舉（JSON / DTO 序列化欄位為 `equipSlot`）：
+嚴格遵循專案第一紅線，前端與後端換裝邏輯**完全拋棄中文名稱推測**，全面依賴 [`EquipmentSlot`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/item/EquipmentSlot.java) 枚舉（JSON / DTO 序列化欄位為 `equipSlot`）：
 
 ```java
 public enum EquipmentSlot {
@@ -110,7 +110,7 @@ public enum EquipmentSlot {
 | **小隊背包** | `com.example.htmlmud.domain.party.model.PartyInventory` | 40 格小隊儲物袋堆疊、存取與序列化 |
 | **物品實體** | `com.example.htmlmud.domain.model.GameItem` | 靈物實例、耐久度、詞綴與五維加成 |
 | **靈識轉譯代理** | `com.example.htmlmud.domain.world.service.CognitiveProxyService` | 依據晶片加載度動態過濾物品多階透鏡（`lenses`）名稱與描述 |
-| **槽位枚舉** | `com.example.htmlmud.domain.model.enums.EquipmentSlot` | 裝備欄位嚴格枚舉契約 (5+2 結構) |
+| **槽位枚舉** | `com.example.htmlmud.item.EquipmentSlot` | 裝備欄位嚴格枚舉契約 (5+2 結構) |
 | **商店指令** | `com.example.htmlmud.application.command.impl.ShopCommand` | 貨棧清單列出、買入、賣出指令處理 |
 | **拾取丟棄** | `com.example.htmlmud.application.command.impl.DropCommand` | 地面物品拾取（`get`）與丟棄（`drop`） |
 | **資料設定** | `src/main/resources/data/items.json` | 全域裝備、法寶、丹藥與素材屬性模板（宣告 `lenses` 透鏡） |

@@ -1,6 +1,6 @@
 package com.example.htmlmud.domain.model.config;
 
-import com.example.htmlmud.domain.model.enums.EquipmentSlot;
+import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.vo.DamageSource;
 import lombok.Builder;
 

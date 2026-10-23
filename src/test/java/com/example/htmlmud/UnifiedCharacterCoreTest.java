@@ -23,7 +23,7 @@ import com.example.htmlmud.domain.actor.service.PlayerService;
 import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.dungeon.battle.DrpgBattleService;
 import com.example.htmlmud.domain.model.entity.GameItem;
-import com.example.htmlmud.domain.model.enums.EquipmentSlot;
+import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyItemSlot;

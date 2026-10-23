@@ -3,7 +3,7 @@
 > **文檔層級**：Level 3 — Task Lists (模組實作進度清單)  
 > **對應規格**：👉 [`docs/2_specifications/backend/M6_ITEM_AND_ECONOMY.md`](../../2_specifications/backend/M6_ITEM_AND_ECONOMY.md)  
 > **核心職責**：管理小隊 5+2 裝備部位（主副手/頭/身/足/雙飾品）、裝備稀有度、隨機道韻前綴/後綴詞綴池與小隊共享金庫經濟。  
-> **當前完成度**：90% 🟢
+> **當前完成度**：95% 🟢
 
 ---
 
@@ -12,19 +12,26 @@
 - **核心資料配置**：
   - `src/main/resources/data/global/items/`（分流目錄：weapons, armors, accessories, consumables, materials, currencies, quest）
   - `src/main/resources/data/zones/*/shops.json`（區域商店交易貨品）
-- **核心領域實體**：
+- **核心領域實體與服務**：
   - [`ItemTemplate.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/template/model/ItemTemplate.java)（物品範本）
-  - [`ItemAffix.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/item/model/ItemAffix.java)（隨機詞綴實體：PREFIX / SUFFIX，動態屬性累加）
+  - [`ItemDefinition.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/item/ItemDefinition.java)（物品不可變規範模型）
+  - [`ItemInstance.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/item/ItemInstance.java)（運行期道具實體）
+  - [`ItemAffix.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/item/ItemAffix.java)（隨機詞綴實體：PREFIX / SUFFIX，動態屬性累加）
   - [`PartyItemSlot.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/party/model/PartyItemSlot.java)（掛載詞綴之裝備插槽與動態命名）
-  - [`EquipmentSlot.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/enums/EquipmentSlot.java)（5+2 裝備槽位枚舉）
+  - [`EquipmentSlot.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/item/EquipmentSlot.java)（5+2 裝備槽位枚舉）
+  - [`ItemFactory.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/item/ItemFactory.java)（集中化道具工廠）
+  - [`UnifiedPartyEconomyService.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/item/UnifiedPartyEconomyService.java)（小隊大一統共享經濟服務）
 - **關聯驗證測試**：
   - [`CyberSkillAndItemAffixTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/CyberSkillAndItemAffixTest.java)（詞綴池掛載與合成名稱 100% 綠燈）
   - [`UnifiedPartyEconomyTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/UnifiedPartyEconomyTest.java)（共享金庫與交易 100% 綠燈）
+  - [`UnifiedPartyEconomyServiceTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/UnifiedPartyEconomyServiceTest.java)（3/3 綠燈）
 
 ---
 
 ## 🏆 二、已完成實作項目 (Completed)
 
+- [x] **M6-PACKAGE-BY-FEATURE (模組 M6 套件獨立封裝)**
+  - 依循依賴拓撲完成 M6 套件封裝，建立 `com.example.htmlmud.item` 獨立套件，將 `ItemDefinition`, `ItemInstance`, `ItemAffix`, `EquipmentSlot`, `ItemFactory` 遷移至新套件，並實作 `UnifiedPartyEconomyService` 統整金庫出納。
 - [x] **M6-5PLUS2-SLOTS (5+2 裝備槽位體系)**
   - 確立 7 大部位：`MAIN_HAND`, `OFF_HAND`, `HEAD`, `BODY`, `FEET`, `ACCESSORY_1`, `ACCESSORY_2`。
 - [x] **M6-AFFIX-SYSTEM (隨機道韻詞綴池與動態數值)**

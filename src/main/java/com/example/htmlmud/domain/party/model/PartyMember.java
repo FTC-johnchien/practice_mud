@@ -3,7 +3,7 @@ package com.example.htmlmud.domain.party.model;
 import java.util.EnumMap;
 import java.util.Map;
 import com.example.htmlmud.domain.model.entity.LivingStats;
-import com.example.htmlmud.domain.model.enums.EquipmentSlot;
+import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.template.TemplateReader;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

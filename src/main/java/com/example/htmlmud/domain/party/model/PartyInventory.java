@@ -3,7 +3,7 @@ package com.example.htmlmud.domain.party.model;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import com.example.htmlmud.domain.model.enums.EquipmentSlot;
+import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.template.model.ItemTemplate;
 import com.example.htmlmud.template.TemplateReader;

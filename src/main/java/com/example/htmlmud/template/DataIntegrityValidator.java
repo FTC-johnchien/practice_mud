@@ -13,7 +13,7 @@ import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
 import com.example.htmlmud.domain.dungeon.service.DungeonManager;
 import com.example.htmlmud.domain.exception.DataValidationException;
 import com.example.htmlmud.domain.model.config.LootEntry;
-import com.example.htmlmud.domain.model.enums.EquipmentSlot;
+import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.template.model.CompanionTemplate;
 import com.example.htmlmud.template.model.ItemTemplate;

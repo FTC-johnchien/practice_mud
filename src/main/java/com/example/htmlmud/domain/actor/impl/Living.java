@@ -18,7 +18,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import com.example.htmlmud.domain.dungeon.battle.ActiveBuff;
 import com.example.htmlmud.domain.dungeon.battle.Buffable;
 import com.example.htmlmud.domain.model.enums.BuffCategory;
-import com.example.htmlmud.domain.model.enums.EquipmentSlot;
+import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.LivingPosture;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.domain.model.vo.DamageSource;

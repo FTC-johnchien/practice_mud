@@ -51,7 +51,7 @@ public class CharacterSyncService {
    */
   public boolean syncEquipmentFromPartyToPlayer(PartyMember leader, Player player) {
     if (leader == null || player == null) return false;
-    java.util.Map<com.example.htmlmud.domain.model.enums.EquipmentSlot, com.example.htmlmud.domain.party.model.PartyItemSlot> equipment = leader.getEquipment();
+    java.util.Map<com.example.htmlmud.item.EquipmentSlot, com.example.htmlmud.domain.party.model.PartyItemSlot> equipment = leader.getEquipment();
 
     if (player.getStats() != null && player.getStats().getEquipment() != null) {
       player.getStats().getEquipment().clear();

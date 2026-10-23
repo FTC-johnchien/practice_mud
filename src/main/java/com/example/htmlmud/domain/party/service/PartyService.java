@@ -17,7 +17,7 @@ import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
 import com.example.htmlmud.domain.party.model.ResourceType;
 import com.example.htmlmud.domain.party.model.RowPosition;
-import com.example.htmlmud.domain.model.enums.EquipmentSlot;
+import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.template.model.CompanionTemplate;
 import com.example.htmlmud.template.model.ItemTemplate;

@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import com.example.htmlmud.domain.model.config.EquipmentProp;
 import com.example.htmlmud.domain.model.entity.LivingStats;
-import com.example.htmlmud.domain.model.enums.EquipmentSlot;
+import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ResourceType;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.template.model.RaceTemplate;

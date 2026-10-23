@@ -3,7 +3,7 @@ package com.example.htmlmud.domain.model.entity;
 import java.util.HashMap;
 import java.util.Map;
 import com.example.htmlmud.domain.model.enums.DamageType;
-import com.example.htmlmud.domain.model.enums.EquipmentSlot;
+import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.Gender;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

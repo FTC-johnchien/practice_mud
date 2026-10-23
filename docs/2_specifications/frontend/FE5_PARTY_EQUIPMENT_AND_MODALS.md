@@ -40,7 +40,7 @@ static/js/modals/
 
 ## 🛡️ 三、純資料驅動裝備換裝分頁 (`party-equipment-tab.js`)
 
-嚴格遵守專案第一紅線，裝備換裝介面**完全摒棄中文名稱推測**，全面依賴後端 [`EquipmentSlot`](../../../src/main/java/com/example/htmlmud/domain/model/enums/EquipmentSlot.java) 枚舉（5+2 結構，前端常數為 `EQUIP_SLOT_DEFS`）：
+嚴格遵守專案第一紅線，裝備換裝介面**完全摒棄中文名稱推測**，全面依賴後端 [`EquipmentSlot`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/item/EquipmentSlot.java) 枚舉（5+2 結構，前端常數為 `EQUIP_SLOT_DEFS`）：
 
 ```mermaid
 sequenceDiagram

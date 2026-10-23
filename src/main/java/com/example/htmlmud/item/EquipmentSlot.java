@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.model.enums;
+package com.example.htmlmud.item;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 

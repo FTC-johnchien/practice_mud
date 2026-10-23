@@ -1,8 +1,8 @@
 package com.example.htmlmud.domain.model.view;
 
-import com.example.htmlmud.domain.model.definition.ItemDefinition;
-import com.example.htmlmud.domain.model.entity.ItemInstance;
-import com.example.htmlmud.domain.model.enums.EquipmentSlot;
+import com.example.htmlmud.item.ItemDefinition;
+import com.example.htmlmud.item.ItemInstance;
+import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import lombok.Builder;
 

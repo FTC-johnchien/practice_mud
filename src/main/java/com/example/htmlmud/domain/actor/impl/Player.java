@@ -353,7 +353,7 @@ public final class Player extends Living {
     var ps = (service != null) ? service.getPartyService() : null;
     var party = (ps != null) ? ps.getOrCreateParty(getName()) : null;
     if (party != null && party.getLeader() != null && party.getLeader().getEquipment() != null) {
-      var slot = party.getLeader().getEquipment().get(com.example.htmlmud.domain.model.enums.EquipmentSlot.MAIN_HAND);
+      var slot = party.getLeader().getEquipment().get(com.example.htmlmud.item.EquipmentSlot.MAIN_HAND);
       if (slot != null && !slot.isEmpty()) {
         return slot.toGameItem(manager != null ? manager.getTemplateReader() : null);
       }
@@ -369,7 +369,7 @@ public final class Player extends Living {
     var ps = (service != null) ? service.getPartyService() : null;
     var party = (ps != null) ? ps.getOrCreateParty(getName()) : null;
     if (party != null && party.getLeader() != null && party.getLeader().getEquipment() != null) {
-      var slot = party.getLeader().getEquipment().get(com.example.htmlmud.domain.model.enums.EquipmentSlot.OFF_HAND);
+      var slot = party.getLeader().getEquipment().get(com.example.htmlmud.item.EquipmentSlot.OFF_HAND);
       if (slot != null && !slot.isEmpty()) {
         return slot.toGameItem(manager != null ? manager.getTemplateReader() : null);
       }

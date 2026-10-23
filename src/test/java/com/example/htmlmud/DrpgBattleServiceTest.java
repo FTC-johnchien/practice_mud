@@ -101,13 +101,13 @@ class DrpgBattleServiceTest {
     });
 
     // 1. 燕青/主角 COMBO 技能 (先裝備劍)
-    leader.getEquipment().put(com.example.htmlmud.domain.model.enums.EquipmentSlot.MAIN_HAND,
+    leader.getEquipment().put(com.example.htmlmud.item.EquipmentSlot.MAIN_HAND,
         com.example.htmlmud.domain.party.model.PartyItemSlot.builder()
             .slotId("slot-sword")
             .itemId("iron_sword")
             .name("鐵劍")
             .itemType(com.example.htmlmud.domain.model.enums.ItemType.WEAPON)
-            .equipSlot(com.example.htmlmud.domain.model.enums.EquipmentSlot.MAIN_HAND)
+            .equipSlot(com.example.htmlmud.item.EquipmentSlot.MAIN_HAND)
             .subType("SWORD")
             .build());
     leader.setCurrentCombo(0);

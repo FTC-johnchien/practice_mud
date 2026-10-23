@@ -2,10 +2,10 @@ package com.example.htmlmud.domain.party.model;
 
 import java.util.HashMap;
 import java.util.Map;
-import com.example.htmlmud.domain.model.definition.ItemDefinition;
+import com.example.htmlmud.item.ItemDefinition;
 import com.example.htmlmud.domain.model.entity.GameItem;
-import com.example.htmlmud.domain.model.entity.ItemInstance;
-import com.example.htmlmud.domain.model.enums.EquipmentSlot;
+import com.example.htmlmud.item.ItemInstance;
+import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.template.model.ItemTemplate;
 import com.example.htmlmud.domain.model.view.ItemView;
@@ -59,14 +59,14 @@ public class PartyItemSlot {
 
   // === Level 2 ITEM_SCHEMA 隨機詞綴與賽博特工規格 ===
   @Builder.Default
-  private java.util.List<com.example.htmlmud.domain.item.model.ItemAffix> affixes = new java.util.ArrayList<>();
+  private java.util.List<com.example.htmlmud.item.ItemAffix> affixes = new java.util.ArrayList<>();
   @Builder.Default
   private int poiseBreakPower = 0; // 戰鬥削韌強度
   @Builder.Default
   private int requiredLevel = 1;
   private String cyberLore; // 科技底層/背景設定描述
 
-  public void addAffix(com.example.htmlmud.domain.item.model.ItemAffix affix) {
+  public void addAffix(com.example.htmlmud.item.ItemAffix affix) {
     if (affix == null) return;
     if (this.affixes == null) {
       this.affixes = new java.util.ArrayList<>();
@@ -79,12 +79,12 @@ public class PartyItemSlot {
       return name;
     }
     String prefixStr = affixes.stream()
-        .filter(a -> a.type() == com.example.htmlmud.domain.item.model.ItemAffix.AffixType.PREFIX)
-        .map(com.example.htmlmud.domain.item.model.ItemAffix::name)
+        .filter(a -> a.type() == com.example.htmlmud.item.ItemAffix.AffixType.PREFIX)
+        .map(com.example.htmlmud.item.ItemAffix::name)
         .findFirst().orElse("");
     String suffixStr = affixes.stream()
-        .filter(a -> a.type() == com.example.htmlmud.domain.item.model.ItemAffix.AffixType.SUFFIX)
-        .map(com.example.htmlmud.domain.item.model.ItemAffix::name)
+        .filter(a -> a.type() == com.example.htmlmud.item.ItemAffix.AffixType.SUFFIX)
+        .map(com.example.htmlmud.item.ItemAffix::name)
         .findFirst().orElse("");
     return prefixStr + (name != null ? name : "") + suffixStr;
   }

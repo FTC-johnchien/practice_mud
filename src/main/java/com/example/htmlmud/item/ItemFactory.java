@@ -1,10 +1,10 @@
-package com.example.htmlmud.domain.factory;
+package com.example.htmlmud.item;
 
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
-import com.example.htmlmud.domain.model.definition.ItemDefinition;
-import com.example.htmlmud.domain.model.entity.ItemInstance;
+import com.example.htmlmud.item.ItemDefinition;
+import com.example.htmlmud.item.ItemInstance;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.template.model.ItemTemplate;
 import com.example.htmlmud.domain.party.model.PartyItemSlot;

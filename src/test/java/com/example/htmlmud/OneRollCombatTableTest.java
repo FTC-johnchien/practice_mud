@@ -11,7 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
 import com.example.htmlmud.domain.dungeon.battle.DefenseResolver;
 import com.example.htmlmud.domain.dungeon.battle.DefenseResolver.DefenseOutcome;
-import com.example.htmlmud.domain.model.enums.EquipmentSlot;
+import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
 import com.example.htmlmud.domain.party.model.Party;

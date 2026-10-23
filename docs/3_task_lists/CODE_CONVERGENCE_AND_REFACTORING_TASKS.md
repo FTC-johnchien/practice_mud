@@ -146,10 +146,10 @@ graph BT
   - **歸整類別**：`TemplateRepository`, `TemplateCatalog`, `TemplateReader`, `TemplateRegistryPort`, `DataIntegrityValidator`, `*Template.java`（含 `com.example.htmlmud.template.model.*`）
   - **驗收標準**：`WorldDataIntegrityTest`, `ArchitectureGuardrailsTest`, `DataIntegrityValidatorTest` 全數 100% 綠燈，全專案 390 項測試零回歸通過。
 
-- [ ] **Step R3.2 (PKG-M6-ITEM): 模組 M6 - 物品裝備與經濟套件封裝**
+- [x] **Step R3.2 (PKG-M6-ITEM): 模組 M6 - 物品裝備與經濟套件封裝**
   - **目標套件**：`com.example.htmlmud.item`
-  - **歸整類別**：`ItemDefinition`, `ItemInstance`, `ItemAffix`, `EquipmentSlot`, `UnifiedPartyEconomyService`
-  - **驗收標準**：`mvn test -Dtest=UnifiedPartyEconomyTest` 100% 綠燈。
+  - **歸整類別**：`ItemDefinition`, `ItemInstance`, `ItemAffix`, `EquipmentSlot`, `ItemFactory`, `UnifiedPartyEconomyService`
+  - **驗收標準**：`UnifiedPartyEconomyTest`, `UnifiedPartyEconomyServiceTest`, `CyberSkillAndItemAffixTest` 全數 100% 綠燈，全專案 393 項測試零回歸通過。
 
 - [ ] **Step R3.3 (PKG-M1-TOWN): 模組 M1 - 營地機能設施中樞套件封裝**
   - **目標套件**：`com.example.htmlmud.town`

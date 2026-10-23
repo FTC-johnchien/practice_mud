@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.model.entity;
+package com.example.htmlmud.item;
 
 import java.util.ArrayList;
 import java.util.HashMap;

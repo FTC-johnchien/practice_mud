@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.item.model;
+package com.example.htmlmud.item;
 
 import java.io.Serializable;
 import lombok.Builder;

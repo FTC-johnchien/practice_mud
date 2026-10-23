@@ -14,7 +14,7 @@
   - `src/main/resources/data/global/items/weapons/`
 - **核心實體與載入模型**：
   - [`ItemTemplate.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/template/model/ItemTemplate.java)
-  - [`ItemAffix.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/item/model/ItemAffix.java)
+  - [`ItemAffix.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/item/ItemAffix.java)
 - **關聯驗證測試**：
   - [`CyberSkillAndItemAffixTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/CyberSkillAndItemAffixTest.java)（100% 綠燈）
 

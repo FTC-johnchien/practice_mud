@@ -38,7 +38,7 @@ public class DrpgRewardService {
   private ApplicationEventPublisher eventPublisher;
   private XpProgressionService xpProgressionService;
   private CharacterSyncService characterSyncService;
-  private final com.example.htmlmud.domain.factory.ItemFactory itemFactory;
+  private final com.example.htmlmud.item.ItemFactory itemFactory;
 
   @Autowired(required = false)
   private org.springframework.beans.factory.ObjectProvider<SaveGameService> saveGameServiceProvider;
@@ -52,13 +52,13 @@ public class DrpgRewardService {
       @Autowired(required = false) ApplicationEventPublisher eventPublisher,
       @Autowired(required = false) XpProgressionService xpProgressionService,
       @Autowired(required = false) CharacterSyncService characterSyncService,
-      @Autowired(required = false) com.example.htmlmud.domain.factory.ItemFactory itemFactory) {
+      @Autowired(required = false) com.example.htmlmud.item.ItemFactory itemFactory) {
     this.templateReader = templateReader;
     this.dungeonManager = dungeonManager;
     this.eventPublisher = eventPublisher;
     this.xpProgressionService = xpProgressionService != null ? xpProgressionService : new XpProgressionService(this.templateReader);
     this.characterSyncService = characterSyncService != null ? characterSyncService : new CharacterSyncService();
-    this.itemFactory = itemFactory != null ? itemFactory : (this.templateReader != null ? new com.example.htmlmud.domain.factory.ItemFactory(this.templateReader) : null);
+    this.itemFactory = itemFactory != null ? itemFactory : (this.templateReader != null ? new com.example.htmlmud.item.ItemFactory(this.templateReader) : null);
   }
 
   public DrpgRewardService(TemplateReader templateReader, DungeonManager dungeonManager) {

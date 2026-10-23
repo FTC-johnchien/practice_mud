@@ -5,7 +5,7 @@ import java.util.List;
 import com.example.htmlmud.domain.dungeon.battle.ActiveBuff;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.enums.BuffCategory;
-import com.example.htmlmud.domain.model.enums.EquipmentSlot;
+import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.party.service.PartyService;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -192,27 +192,27 @@ public class Party {
     }
 
     // 確定要穿戴的目標槽位
-    com.example.htmlmud.domain.model.enums.EquipmentSlot targetSlot = slot.getEquipSlot();
+    com.example.htmlmud.item.EquipmentSlot targetSlot = slot.getEquipSlot();
     if (targetSlot == null) {
-      if (slot.isWeapon()) targetSlot = com.example.htmlmud.domain.model.enums.EquipmentSlot.MAIN_HAND;
-      else if (slot.isShield()) targetSlot = com.example.htmlmud.domain.model.enums.EquipmentSlot.OFF_HAND;
-      else if (slot.isAccessory()) targetSlot = com.example.htmlmud.domain.model.enums.EquipmentSlot.ACCESSORY_1;
-      else if (slot.isArmor()) targetSlot = com.example.htmlmud.domain.model.enums.EquipmentSlot.BODY;
+      if (slot.isWeapon()) targetSlot = com.example.htmlmud.item.EquipmentSlot.MAIN_HAND;
+      else if (slot.isShield()) targetSlot = com.example.htmlmud.item.EquipmentSlot.OFF_HAND;
+      else if (slot.isAccessory()) targetSlot = com.example.htmlmud.item.EquipmentSlot.ACCESSORY_1;
+      else if (slot.isArmor()) targetSlot = com.example.htmlmud.item.EquipmentSlot.BODY;
     }
 
     // 若為飾品，智慧判斷 ACCESSORY_1 或 ACCESSORY_2 是否為空
     if (targetSlot != null && targetSlot.isAccessory()) {
-      if (target.getEquipment().get(com.example.htmlmud.domain.model.enums.EquipmentSlot.ACCESSORY_1) == null) {
-        targetSlot = com.example.htmlmud.domain.model.enums.EquipmentSlot.ACCESSORY_1;
-      } else if (target.getEquipment().get(com.example.htmlmud.domain.model.enums.EquipmentSlot.ACCESSORY_2) == null) {
-        targetSlot = com.example.htmlmud.domain.model.enums.EquipmentSlot.ACCESSORY_2;
+      if (target.getEquipment().get(com.example.htmlmud.item.EquipmentSlot.ACCESSORY_1) == null) {
+        targetSlot = com.example.htmlmud.item.EquipmentSlot.ACCESSORY_1;
+      } else if (target.getEquipment().get(com.example.htmlmud.item.EquipmentSlot.ACCESSORY_2) == null) {
+        targetSlot = com.example.htmlmud.item.EquipmentSlot.ACCESSORY_2;
       } else {
-        targetSlot = com.example.htmlmud.domain.model.enums.EquipmentSlot.ACCESSORY_1;
+        targetSlot = com.example.htmlmud.item.EquipmentSlot.ACCESSORY_1;
       }
     }
 
     if (targetSlot == null) {
-      targetSlot = com.example.htmlmud.domain.model.enums.EquipmentSlot.BODY;
+      targetSlot = com.example.htmlmud.item.EquipmentSlot.BODY;
     }
 
     getInventory().removeItem(slotId, 1);
@@ -241,17 +241,17 @@ public class Party {
     }
 
     String key = slotType.trim().toLowerCase();
-    com.example.htmlmud.domain.model.enums.EquipmentSlot targetSlot = switch (key) {
-      case "weapon", "main_hand", "main" -> com.example.htmlmud.domain.model.enums.EquipmentSlot.MAIN_HAND;
-      case "shield", "off_hand", "off" -> com.example.htmlmud.domain.model.enums.EquipmentSlot.OFF_HAND;
-      case "armor", "body", "chest" -> com.example.htmlmud.domain.model.enums.EquipmentSlot.BODY;
-      case "head", "helm", "helmet" -> com.example.htmlmud.domain.model.enums.EquipmentSlot.HEAD;
-      case "feet", "boots", "shoes", "legs" -> com.example.htmlmud.domain.model.enums.EquipmentSlot.FEET;
-      case "acc1", "accessory_1", "ring" -> com.example.htmlmud.domain.model.enums.EquipmentSlot.ACCESSORY_1;
-      case "acc2", "accessory_2", "trinket" -> com.example.htmlmud.domain.model.enums.EquipmentSlot.ACCESSORY_2;
+    com.example.htmlmud.item.EquipmentSlot targetSlot = switch (key) {
+      case "weapon", "main_hand", "main" -> com.example.htmlmud.item.EquipmentSlot.MAIN_HAND;
+      case "shield", "off_hand", "off" -> com.example.htmlmud.item.EquipmentSlot.OFF_HAND;
+      case "armor", "body", "chest" -> com.example.htmlmud.item.EquipmentSlot.BODY;
+      case "head", "helm", "helmet" -> com.example.htmlmud.item.EquipmentSlot.HEAD;
+      case "feet", "boots", "shoes", "legs" -> com.example.htmlmud.item.EquipmentSlot.FEET;
+      case "acc1", "accessory_1", "ring" -> com.example.htmlmud.item.EquipmentSlot.ACCESSORY_1;
+      case "acc2", "accessory_2", "trinket" -> com.example.htmlmud.item.EquipmentSlot.ACCESSORY_2;
       default -> {
         try {
-          yield com.example.htmlmud.domain.model.enums.EquipmentSlot.valueOf(slotType.trim().toUpperCase());
+          yield com.example.htmlmud.item.EquipmentSlot.valueOf(slotType.trim().toUpperCase());
         } catch (IllegalArgumentException e) {
           yield null;
         }
@@ -265,9 +265,9 @@ public class Party {
     PartyItemSlot old = target.unequip(targetSlot);
     if (old != null) {
       getInventory().addSlot(old);
-      if (targetSlot == com.example.htmlmud.domain.model.enums.EquipmentSlot.MAIN_HAND) {
+      if (targetSlot == com.example.htmlmud.item.EquipmentSlot.MAIN_HAND) {
         return "🗡️ " + target.getName() + " 卸下了武器【" + old.getName() + "】。";
-      } else if (targetSlot == com.example.htmlmud.domain.model.enums.EquipmentSlot.BODY) {
+      } else if (targetSlot == com.example.htmlmud.item.EquipmentSlot.BODY) {
         return "🥋 " + target.getName() + " 卸下了防具【" + old.getName() + "】。";
       } else {
         String icon = (old.getIcon() != null) ? old.getIcon() : "📦";
@@ -275,9 +275,9 @@ public class Party {
       }
     }
 
-    if (targetSlot == com.example.htmlmud.domain.model.enums.EquipmentSlot.MAIN_HAND) {
+    if (targetSlot == com.example.htmlmud.item.EquipmentSlot.MAIN_HAND) {
       return target.getName() + " 未裝備任何武器！";
-    } else if (targetSlot == com.example.htmlmud.domain.model.enums.EquipmentSlot.BODY) {
+    } else if (targetSlot == com.example.htmlmud.item.EquipmentSlot.BODY) {
       return target.getName() + " 未穿戴任何防具！";
     }
     return target.getName() + " 的【" + targetSlot.getDisplayName() + "】部位未穿戴任何裝備！";
