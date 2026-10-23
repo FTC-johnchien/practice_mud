@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.save.model;
+package com.example.htmlmud.save;
 
 import java.util.HashSet;
 import java.util.Set;

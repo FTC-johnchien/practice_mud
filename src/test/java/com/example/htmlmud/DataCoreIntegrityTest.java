@@ -18,7 +18,7 @@ import com.example.htmlmud.domain.model.enums.RoomFlag;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.service.PartyService;
-import com.example.htmlmud.domain.save.service.SaveGameService;
+import com.example.htmlmud.save.SaveGameService;
 import com.example.htmlmud.domain.actor.service.PlayerService;
 import com.example.htmlmud.domain.world.WorldManager;
 import com.example.htmlmud.domain.actor.core.MessageOutput;

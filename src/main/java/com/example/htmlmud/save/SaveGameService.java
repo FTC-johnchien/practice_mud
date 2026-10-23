@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.save.service;
+package com.example.htmlmud.save;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -19,10 +19,6 @@ import com.example.htmlmud.domain.dungeon.service.DungeonManager;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.service.PartyService;
-import com.example.htmlmud.domain.save.dto.SaveSlotDto;
-import com.example.htmlmud.domain.save.exception.SaveCorruptedException;
-import com.example.htmlmud.domain.save.migration.SaveMigrationPipeline;
-import com.example.htmlmud.domain.save.model.SaveData;
 import com.example.htmlmud.domain.world.GameStateBroadcastService;
 import com.example.htmlmud.domain.world.WorldManager;
 import com.example.htmlmud.domain.actor.impl.Player;
@@ -94,7 +90,7 @@ public class SaveGameService {
   @PostConstruct
   public void init() {
     if (migrationPipeline == null) {
-      migrationPipeline = new com.example.htmlmud.domain.save.migration.SaveMigrationPipeline();
+      migrationPipeline = new SaveMigrationPipeline();
     }
     savesDir = new File("saves");
     if (!savesDir.exists()) {
@@ -170,12 +166,12 @@ public class SaveGameService {
     try {
       com.fasterxml.jackson.databind.JsonNode rootNode = objectMapper.readTree(file);
       if (rootNode == null || !rootNode.isObject()) {
-        throw new com.example.htmlmud.domain.save.exception.SaveCorruptedException("存檔格式非合法 JSON 物件");
+        throw new SaveCorruptedException("存檔格式非合法 JSON 物件");
       }
       com.fasterxml.jackson.databind.JsonNode migratedNode = getMigrationPipeline().migrateToLatest(rootNode);
       SaveData data = objectMapper.treeToValue(migratedNode, SaveData.class);
       if (data == null) {
-        throw new com.example.htmlmud.domain.save.exception.SaveCorruptedException("存檔反序列化失敗");
+        throw new SaveCorruptedException("存檔反序列化失敗");
       }
 
       DungeonFloor floor = dungeonManager.getFloor(data.getFloorId());
@@ -346,23 +342,23 @@ public class SaveGameService {
     try {
       com.fasterxml.jackson.databind.JsonNode rootNode = objectMapper.readTree(file);
       if (rootNode == null || !rootNode.isObject()) {
-        throw new com.example.htmlmud.domain.save.exception.SaveCorruptedException("存檔格式非合法 JSON 物件");
+        throw new SaveCorruptedException("存檔格式非合法 JSON 物件");
       }
       int origVersion = getMigrationPipeline().extractVersion(rootNode);
       com.fasterxml.jackson.databind.JsonNode migratedNode = getMigrationPipeline().migrateToLatest(rootNode);
       data = objectMapper.treeToValue(migratedNode, SaveData.class);
       if (data == null) {
-        throw new com.example.htmlmud.domain.save.exception.SaveCorruptedException("存檔反序列化失敗");
+        throw new SaveCorruptedException("存檔反序列化失敗");
       }
       if (origVersion < SaveData.CURRENT_SCHEMA_VERSION) {
         log.info("Loaded legacy save slot {} (migrated v{} -> v{})", slotId, origVersion, SaveData.CURRENT_SCHEMA_VERSION);
       }
-    } catch (com.example.htmlmud.domain.save.exception.SaveCorruptedException sce) {
+    } catch (SaveCorruptedException sce) {
       log.error("Corrupted save file detected in slot {}: {}", slotId, sce.getMessage());
       throw sce;
     } catch (Exception e) {
       log.error("Failed to load game from slot {}: {}", slotId, e.getMessage(), e);
-      throw new com.example.htmlmud.domain.save.exception.SaveCorruptedException("存檔檔案損壞或格式不相容: " + e.getMessage(), e);
+      throw new SaveCorruptedException("存檔檔案損壞或格式不相容: " + e.getMessage(), e);
     }
 
     // 1. 還原小隊 Party
@@ -520,7 +516,7 @@ public class SaveGameService {
       broadcastSaveSlots(player);
     } catch (NumberFormatException e) {
       player.reply("⚠️ 存檔槽位必須為數字 (0~5)！");
-    } catch (com.example.htmlmud.domain.save.exception.SaveCorruptedException e) {
+    } catch (SaveCorruptedException e) {
       String backupTip = (slotId >= 0 && hasBackup(slotId)) ? "（偵測到有 .bak 備份檔案，可輸入 'save restore " + slotId + "' 還原）" : "";
       player.reply("❌ 存檔損壞: " + e.getMessage() + backupTip);
     } catch (Exception e) {

@@ -21,7 +21,7 @@ import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.service.PartyService;
-import com.example.htmlmud.domain.save.service.SaveGameService;
+import com.example.htmlmud.save.SaveGameService;
 import com.example.htmlmud.domain.actor.core.MessageOutput;
 import com.example.htmlmud.domain.actor.service.PlayerService;
 import com.example.htmlmud.domain.combat.service.TargetSelector;

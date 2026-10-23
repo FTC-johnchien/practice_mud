@@ -56,6 +56,10 @@
 
 ## 🏆 已完成里程碑 (Completed Milestones)
 
+- [x] **Milestone REFACTOR-M8 — 模組 M8 存檔與持久化管線 Package-by-Feature 封裝 (Phase 3 Step R3.4)**
+  - Task 1 (PKG-M8-ENCAPSULATION): 依循依賴拓撲完成 M8 模組套件封裝，建立 `com.example.htmlmud.save` 獨立套件，將 `SaveGameService`、`SaveData`、`SaveSlotDto`、`SaveMigration`、`SaveMigrationPipeline`、`SaveCorruptedException` 統一收斂至新套件，徹底消解舊有 `domain.save.*` 子層混雜結構。
+  - Task 2 (PKG-M8-TEST-VERIFY): 全域業務指令與整合測試引用切換至 `com.example.htmlmud.save.*`，`SaveGameServiceTest`、`AsyncPersistenceLifecycleTest`、`DungeonDefeatSettlementTest` 全數 100% 綠燈，全專案 393 項測試零回歸通過，文檔 368 個內部連結 100% 通過。
+
 - [x] **Milestone REFACTOR-M1 — 模組 M1 營地機能設施中樞 Package-by-Feature 封裝 (Phase 3 Step R3.3)**
   - Task 1 (PKG-M1-ENCAPSULATION): 依循依賴拓撲完成 M1 模組套件封裝，建立 `com.example.htmlmud.town` 獨立套件，將 `TownHubService`、`CognitiveProxyService`、`TownHubDto`、`FacilityDto`、`PerceptionTier` 統一遷移至新套件，徹底消解舊有 domain/service 與 DTO 散落雜湊結構。
   - Task 2 (PKG-M1-TEST-VERIFY): 業務指令 `TownFacilityCommand` 與 `RestCommand` 引用切換，`CognitiveProxyServiceTest`、`TownFacilityCommandTest`、`TownHubServiceTest` 全數 100% 綠燈 (11/11)，全專案 393 項測試零回歸通過，文檔 368 個內部連結 100% 通過。

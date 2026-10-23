@@ -121,9 +121,9 @@ saves/
 
 | 項目 | 路徑 / 名稱 | 職責 |
 | :--- | :--- | :--- |
-| **存檔服務** | `com.example.htmlmud.domain.save.service.SaveGameService` | 槽位讀寫、備份回滾與版本遷移 |
-| **遷移管線** | `com.example.htmlmud.domain.save.migration.SaveMigrationPipeline` | v1 $\to$ v2 $\to$ v3 平滑遷移 |
-| **存檔真相源** | `com.example.htmlmud.domain.save.model.SaveData` | 小隊、40格背包、進度聚合根 DTO |
+| **存檔服務** | `com.example.htmlmud.save.SaveGameService` | 槽位讀寫、備份回滾與版本遷移 |
+| **遷移管線** | `com.example.htmlmud.save.SaveMigrationPipeline` | v1 $\to$ v2 $\to$ v3 平滑遷移 |
+| **存檔真相源** | `com.example.htmlmud.save.SaveData` | 小隊、40格背包、進度聚合根 DTO |
 | **房間持久化** | `com.example.htmlmud.domain.service.RoomPersistenceService` | 地面遺留物非同步寫入 |
 | **存檔存放目錄** | `saves/slot_*.json` | 本地原子性 JSON 存檔目錄 |
 

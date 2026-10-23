@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.save.exception;
+package com.example.htmlmud.save;
 
 public class SaveCorruptedException extends RuntimeException {
   public SaveCorruptedException(String message) {

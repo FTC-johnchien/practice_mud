@@ -18,9 +18,9 @@ import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyItemSlot;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.service.PartyService;
-import com.example.htmlmud.domain.save.dto.SaveSlotDto;
-import com.example.htmlmud.domain.save.model.SaveData;
-import com.example.htmlmud.domain.save.service.SaveGameService;
+import com.example.htmlmud.save.SaveSlotDto;
+import com.example.htmlmud.save.SaveData;
+import com.example.htmlmud.save.SaveGameService;
 
 @SpringBootTest
 class SaveGameServiceTest {
@@ -145,7 +145,7 @@ class SaveGameServiceTest {
 
       // 2. 嘗試 loadGame 應嚴格拋出 SaveCorruptedException
       org.junit.jupiter.api.Assertions.assertThrows(
-          com.example.htmlmud.domain.save.exception.SaveCorruptedException.class,
+          com.example.htmlmud.save.SaveCorruptedException.class,
           () -> saveGameService.loadGame(testPlayerId, slotId),
           "加載壞檔應拋出 SaveCorruptedException"
       );

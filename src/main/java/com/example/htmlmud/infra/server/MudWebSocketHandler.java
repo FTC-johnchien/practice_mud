@@ -27,7 +27,7 @@ public class MudWebSocketHandler extends TextWebSocketHandler implements ClientS
   private final GameMetrics gameMetrics;
   private final GameCommandService gameCommandService;
   private final ObjectMapper objectMapper;
-  private final com.example.htmlmud.domain.save.service.SaveGameService saveGameService;
+  private final com.example.htmlmud.save.SaveGameService saveGameService;
 
   public MudWebSocketHandler(
       PlayerService playerService,
@@ -36,7 +36,7 @@ public class MudWebSocketHandler extends TextWebSocketHandler implements ClientS
       GameMetrics gameMetrics,
       GameCommandService gameCommandService,
       ObjectMapper objectMapper,
-      com.example.htmlmud.domain.save.service.SaveGameService saveGameService) {
+      com.example.htmlmud.save.SaveGameService saveGameService) {
     this.playerService = playerService;
     this.worldManager = worldManager;
     this.sessionRegistry = sessionRegistry;

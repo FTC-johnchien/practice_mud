@@ -10,8 +10,8 @@
 ## 🧭 一、程式碼單一真相源 (Single Source of Truth)
 
 - **核心服務與模型**：
-  - [`SaveGameService.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/save/service/SaveGameService.java)（存讀檔核心入口）
-  - [`SaveData.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/save/model/SaveData.java)（存檔根物件，封裝小隊、行囊與進度）
+  - [`SaveGameService.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/save/SaveGameService.java)（存讀檔核心入口）
+  - [`SaveData.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/save/SaveData.java)（存檔根物件，封裝小隊、行囊與進度）
   - [`AbstractAsyncBatchPersistenceService.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/infra/persistence/service/AbstractAsyncBatchPersistenceService.java)（`ReentrantReadWriteLock` 異步落盤引擎）
 - **存檔存放路徑**：
   - `saves/slot_*.json`
@@ -23,6 +23,8 @@
 
 ## 🏆 二、已完成實作項目 (Completed)
 
+- [x] **M8-PKG-ENCAPSULATION (Package-by-Feature 獨立封裝 / Phase 3 Step R3.4)**
+  - 建立一級套件 `com.example.htmlmud.save`，將 `SaveGameService`、`SaveData`、`SaveSlotDto`、`SaveMigration`、`SaveMigrationPipeline`、`SaveCorruptedException` 統一收斂至獨立套件，全專案 393 項測試 100% 綠燈通過。
 - [x] **M8-SCHEMA-V3 (純單機小隊存檔)**
   - 存檔徹底拔除 `personalInventory` 雙寫假帳，只存 40 格小隊公共行囊與成員真實裝備。
 - [x] **M8-ASYNC-RWLOCK (停機生命週期原子化)**

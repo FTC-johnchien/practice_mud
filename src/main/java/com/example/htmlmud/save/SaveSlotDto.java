@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.save.dto;
+package com.example.htmlmud.save;
 
 import java.util.List;
 import lombok.AllArgsConstructor;

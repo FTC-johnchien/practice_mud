@@ -36,7 +36,7 @@ public class NetworkSecurityAndPersistenceDrainTest {
     GameMetrics gameMetrics = Mockito.mock(GameMetrics.class);
     GameCommandService gameCommandService = Mockito.mock(GameCommandService.class);
     ObjectMapper objectMapper = new ObjectMapper();
-    var saveGameService = Mockito.mock(com.example.htmlmud.domain.save.service.SaveGameService.class);
+    var saveGameService = Mockito.mock(com.example.htmlmud.save.SaveGameService.class);
 
     MudWebSocketHandler handler = new MudWebSocketHandler(
         playerService, worldManager, sessionRegistry, gameMetrics, gameCommandService, objectMapper, saveGameService);
@@ -73,7 +73,7 @@ public class NetworkSecurityAndPersistenceDrainTest {
     GameMetrics gameMetrics = Mockito.mock(GameMetrics.class);
     GameCommandService gameCommandService = Mockito.mock(GameCommandService.class);
     ObjectMapper objectMapper = new ObjectMapper();
-    var saveGameService = Mockito.mock(com.example.htmlmud.domain.save.service.SaveGameService.class);
+    var saveGameService = Mockito.mock(com.example.htmlmud.save.SaveGameService.class);
 
     MudWebSocketHandler handler = new MudWebSocketHandler(
         playerService, worldManager, sessionRegistry, gameMetrics, gameCommandService, objectMapper, saveGameService);

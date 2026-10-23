@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.save.migration;
+package com.example.htmlmud.save;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
