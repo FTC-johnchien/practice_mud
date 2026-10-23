@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.dungeon.service;
+package com.example.htmlmud.dungeon;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -6,11 +6,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.domain.dungeon.model.GridDirection;
-import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
-import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
-import com.example.htmlmud.domain.dungeon.model.DungeonTile;
-import com.example.htmlmud.domain.dungeon.model.GridCoord;
+import com.example.htmlmud.dungeon.GridDirection;
+import com.example.htmlmud.dungeon.DungeonFloor;
+import com.example.htmlmud.dungeon.DungeonPosition;
+import com.example.htmlmud.dungeon.DungeonTile;
+import com.example.htmlmud.dungeon.GridCoord;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

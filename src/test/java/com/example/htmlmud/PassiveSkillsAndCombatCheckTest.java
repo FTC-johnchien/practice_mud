@@ -17,7 +17,7 @@ import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
 import com.example.htmlmud.domain.dungeon.battle.DefenseResolver;
 import com.example.htmlmud.domain.dungeon.battle.DefenseResolver.DefenseOutcome;
-import com.example.htmlmud.domain.dungeon.dto.DrpgStateDto;
+import com.example.htmlmud.dungeon.DrpgStateDto;
 import com.example.htmlmud.progression.SkillCategory;
 import com.example.htmlmud.party.Party;
 import com.example.htmlmud.party.PartyMember;

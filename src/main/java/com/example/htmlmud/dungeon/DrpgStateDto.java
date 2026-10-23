@@ -1,17 +1,20 @@
-package com.example.htmlmud.domain.dungeon.dto;
+package com.example.htmlmud.dungeon;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
-import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
-import com.example.htmlmud.domain.dungeon.model.DungeonTile;
+import com.example.htmlmud.dungeon.DungeonFloor;
+import com.example.htmlmud.dungeon.DungeonPosition;
+import com.example.htmlmud.dungeon.DungeonTile;
 import com.example.htmlmud.party.Party;
 import com.example.htmlmud.party.PartyMember;
 import com.example.htmlmud.party.CombatResourceType;
 import com.example.htmlmud.party.FormationTemplate;
 import com.example.htmlmud.template.TemplateReader;
+import com.example.htmlmud.domain.dungeon.dto.BattleViewDto;
+import com.example.htmlmud.domain.dungeon.dto.PartySkillViewDto;
+import com.example.htmlmud.domain.dungeon.dto.ActiveBuffDto;
 
 public record DrpgStateDto(
     String type,

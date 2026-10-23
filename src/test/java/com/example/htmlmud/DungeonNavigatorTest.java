@@ -5,13 +5,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import com.example.htmlmud.domain.dungeon.model.GridDirection;
-import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
-import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
-import com.example.htmlmud.domain.dungeon.model.GridCoord;
-import com.example.htmlmud.domain.dungeon.model.StepResult;
-import com.example.htmlmud.domain.dungeon.service.DungeonManager;
-import com.example.htmlmud.domain.dungeon.service.DungeonNavigator;
+import com.example.htmlmud.dungeon.GridDirection;
+import com.example.htmlmud.dungeon.DungeonFloor;
+import com.example.htmlmud.dungeon.DungeonPosition;
+import com.example.htmlmud.dungeon.GridCoord;
+import com.example.htmlmud.dungeon.StepResult;
+import com.example.htmlmud.dungeon.DungeonManager;
+import com.example.htmlmud.dungeon.DungeonNavigator;
 
 class DungeonNavigatorTest {
 

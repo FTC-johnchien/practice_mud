@@ -56,6 +56,10 @@
 
 ## 🏆 已完成里程碑 (Completed Milestones)
 
+- [x] **Milestone REFACTOR-M2 — 模組 M2 DRPG 網格地牢探索 Package-by-Feature 封裝 (Phase 3 Step R3.7)**
+  - Task 1 (PKG-M2-ENCAPSULATION): 依循依賴拓撲完成 M2 模組套件封裝，建立 `com.example.htmlmud.dungeon` 獨立套件，將地牢管理核心 `DungeonManager`、資料驅動解析器 `DungeonFloorLoader`、導航器 `DungeonNavigator`、地圖圖層模型 `DungeonFloor`、`DungeonTile`、`DungeonPosition`、`GridCoord`、`GridDirection`、`Direction`、`StepResult`、`DrpgStateDto` 統一收斂至獨立套件。
+  - Task 2 (PKG-M2-TEST-VERIFY): 全域業務指令與整合測試引用切換至 `com.example.htmlmud.dungeon.*`，`DungeonTorchAndTrapTest`、`MozhuMinesDungeonIntegrationTest`、`TaiyinTombDungeonTest` 全數 100% 綠燈 (12/12)，全專案 393 項測試零回歸通過，文檔 368 個內部連結 100% 通過。
+
 - [x] **Milestone REFACTOR-M5 — 模組 M5 技能體系與修為突破 Package-by-Feature 封裝 (Phase 3 Step R3.6)**
   - Task 1 (PKG-M5-ENCAPSULATION): 依循依賴拓撲完成 M5 模組套件封裝，建立 `com.example.htmlmud.progression` 獨立套件，將 `SkillDefinition`、`XpProgressionService`、`XpService`、`DrpgSkillRules`、`MudSkillRules`、`SkillBridgeRule`、`SkillType`、`SkillCategory`、`SkillEntry` 統一收斂至獨立套件。
   - Task 2 (PKG-M5-TEST-VERIFY): 全域業務指令與整合測試引用切換至 `com.example.htmlmud.progression.*`，`CyberSkillAndItemAffixTest`、`XpProgressionServiceTest`、`CanonicalSkillModelTest` 全數 100% 綠燈 (16/16)，全專案 393 項測試零回歸通過，文檔 368 個內部連結 100% 通過。

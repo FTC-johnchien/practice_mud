@@ -5,11 +5,11 @@ import com.example.htmlmud.application.command.CommandAlias;
 import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.context.MudContext;
-import com.example.htmlmud.domain.dungeon.dto.DrpgStateDto;
-import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
-import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
-import com.example.htmlmud.domain.dungeon.service.DungeonManager;
-import com.example.htmlmud.domain.dungeon.service.DungeonNavigator;
+import com.example.htmlmud.dungeon.DrpgStateDto;
+import com.example.htmlmud.dungeon.DungeonFloor;
+import com.example.htmlmud.dungeon.DungeonPosition;
+import com.example.htmlmud.dungeon.DungeonManager;
+import com.example.htmlmud.dungeon.DungeonNavigator;
 import com.example.htmlmud.party.Party;
 import com.example.htmlmud.party.PartyMember;
 import com.example.htmlmud.party.PartyService;
@@ -86,9 +86,9 @@ public class RestCommand implements PlayerCommand {
     boolean isSafePoint = false;
 
     if (pos != null && floor != null) {
-      com.example.htmlmud.domain.dungeon.model.DungeonTile tile = floor.getTile(pos.getX(), pos.getY());
-      if (tile != null && (tile.getType() == com.example.htmlmud.domain.dungeon.model.DungeonTile.TileType.EVENT
-          || tile.getType() == com.example.htmlmud.domain.dungeon.model.DungeonTile.TileType.STAIRS_UP)) {
+      com.example.htmlmud.dungeon.DungeonTile tile = floor.getTile(pos.getX(), pos.getY());
+      if (tile != null && (tile.getType() == com.example.htmlmud.dungeon.DungeonTile.TileType.EVENT
+          || tile.getType() == com.example.htmlmud.dungeon.DungeonTile.TileType.STAIRS_UP)) {
         isSafePoint = true;
       }
 

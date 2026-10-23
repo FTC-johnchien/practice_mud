@@ -171,10 +171,10 @@ graph BT
   - **歸整類別**：`SkillDefinition`, `XpProgressionService`, `XpService`, `DrpgSkillRules`, `MudSkillRules`, `SkillBridgeRule`, `SkillType`, `SkillCategory`, `SkillEntry`
   - **驗收標準**：`CyberSkillAndItemAffixTest`、`XpProgressionServiceTest`、`CanonicalSkillModelTest` 全數 100% 綠燈，全專案 393 項測試零回歸通過。
 
-- [ ] **Step R3.7 (PKG-M2-DUNGEON): 模組 M2 - DRPG 網格地牢探索套件封裝**
+- [x] **Step R3.7 (PKG-M2-DUNGEON): 模組 M2 - DRPG 網格地牢探索套件封裝**
   - **目標套件**：`com.example.htmlmud.dungeon`
-  - **歸整類別**：`DungeonManager`, `DungeonFloorLoader`, `DungeonPosition`, `TorchSystem`
-  - **驗收標準**：`mvn test -Dtest=DungeonTorchAndTrapTest` 100% 綠燈。
+  - **歸整類別**：`DungeonManager`, `DungeonFloorLoader`, `DungeonNavigator`, `DungeonFloor`, `DungeonPosition`, `DungeonTile`, `GridCoord`, `GridDirection`, `Direction`, `StepResult`, `DrpgStateDto`
+  - **驗收標準**：`DungeonTorchAndTrapTest`、`MozhuMinesDungeonIntegrationTest`、`TaiyinTombDungeonTest` 全數 100% 綠燈，全專案 393 項測試零回歸通過。
 
 - [ ] **Step R3.8 (PKG-M3-COMBAT): 模組 M3 & M3.1 - 戰鬥引擎與狀態效果套件封裝**
   - **目標套件**：`com.example.htmlmud.combat`

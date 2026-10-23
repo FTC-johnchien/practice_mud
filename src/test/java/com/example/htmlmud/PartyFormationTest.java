@@ -377,7 +377,7 @@ class PartyFormationTest {
     }
 
     // 驗證 DrpgStateDto 轉換
-    var dto = com.example.htmlmud.domain.dungeon.dto.DrpgStateDto.toPartyViewDto(party, null);
+    var dto = com.example.htmlmud.dungeon.DrpgStateDto.toPartyViewDto(party, null);
     assertNotNull(dto);
     assertFalse(dto.formationActive(), "dto.formationActive 應為 false");
     assertTrue(dto.formationName().contains("未生效"), "dto.formationName 應標註未生效");
@@ -393,7 +393,7 @@ class PartyFormationTest {
     party.setEquippedFormation(sanCai);
     assertTrue(party.isFormationActive(), "3 人隊伍裝備 3 人陣法應生效");
     assertNotNull(party.getSlotForMember(0), "生效時應分配孔位");
-    var dtoActive = com.example.htmlmud.domain.dungeon.dto.DrpgStateDto.toPartyViewDto(party, null);
+    var dtoActive = com.example.htmlmud.dungeon.DrpgStateDto.toPartyViewDto(party, null);
     assertTrue(dtoActive.formationActive());
     assertFalse(dtoActive.formationName().contains("未生效"));
   }

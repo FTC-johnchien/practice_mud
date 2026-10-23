@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.dungeon.service;
+package com.example.htmlmud.dungeon;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -9,10 +9,10 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Component;
-import com.example.htmlmud.domain.dungeon.model.GridDirection;
-import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
-import com.example.htmlmud.domain.dungeon.model.DungeonTile;
-import com.example.htmlmud.domain.dungeon.model.GridCoord;
+import com.example.htmlmud.dungeon.GridDirection;
+import com.example.htmlmud.dungeon.DungeonFloor;
+import com.example.htmlmud.dungeon.DungeonTile;
+import com.example.htmlmud.dungeon.GridCoord;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;

@@ -109,7 +109,7 @@ graph LR
 - [ ] **Task 3.2: 梳理結構化 Action Protocol 前後端契約**
   - **目標檔案**：
     - [`src/main/resources/static/js/network/websocket.js`](../../src/main/resources/static/js/network/websocket.js)
-    - [`src/main/java/com/example/htmlmud/domain/dungeon/dto/DrpgStateDto.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/dto/DrpgStateDto.java)
+    - [`src/main/java/com/example/htmlmud/dungeon/DrpgStateDto.java`](../../src/main/java/com/example/htmlmud/dungeon/DrpgStateDto.java)
   - **執行動作**：
     1. 全面審查用戶端發送之封包，確保不再發送任何原生 MUD 文字指令字串，統一採用 `{ type: "ACTION", payload: { ... } }` 格式。
     2. 後端持續收斂至 `DrpgStateDto` 作為全域單一狀態推播封包。

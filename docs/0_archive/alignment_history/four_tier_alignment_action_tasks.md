@@ -34,7 +34,7 @@ graph TD
     - [`docs/2_specifications/data_schemas/DUNGEON_SCHEMA.md`](../2_specifications/data_schemas/DUNGEON_SCHEMA.md)
     - [`docs/4_active_tasks/ACTIVE_TASKS.md`](../4_active_tasks/ACTIVE_TASKS.md)
     - [`src/main/resources/data/dungeons/mozhu_mines_b1f.json`](../../src/main/resources/data/dungeons/mozhu_mines_b1f.json)
-    - [`src/main/java/com/example/htmlmud/domain/dungeon/service/DungeonFloorLoader.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/service/DungeonFloorLoader.java)
+    - [`src/main/java/com/example/htmlmud/dungeon/DungeonFloorLoader.java`](../../src/main/java/com/example/htmlmud/dungeon/DungeonFloorLoader.java)
   - **執行動作**：
     1. 在 `DungeonFloorLoader.java` 與 `DUNGEON_SCHEMA.md` 規範別名映射，支援 `floorId` $\leftrightarrow$ `id`、`startCoord` $\leftrightarrow$ `startPosition`、`encounters.dangerRate` $\leftrightarrow$ `encounterRate`，確保 Schema 範例能通過代碼驗證。
     2. 在 `DUNGEON_SCHEMA.md` 補齊現行真實地塊類型枚舉（加入 `TRAP`、`TREASURE`、`EVENT`），並規範 `events[]` 陣列格式與圖例 `eventId` 的觸發邊界。

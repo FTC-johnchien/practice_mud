@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.dungeon.model;
+package com.example.htmlmud.dungeon;
 
 public record GridCoord(int x, int y) {
   public GridCoord step(GridDirection direction) {

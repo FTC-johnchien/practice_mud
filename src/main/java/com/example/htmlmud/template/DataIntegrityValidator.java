@@ -9,8 +9,8 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
-import com.example.htmlmud.domain.dungeon.service.DungeonManager;
+import com.example.htmlmud.dungeon.DungeonFloor;
+import com.example.htmlmud.dungeon.DungeonManager;
 import com.example.htmlmud.domain.exception.DataValidationException;
 import com.example.htmlmud.domain.model.config.LootEntry;
 import com.example.htmlmud.item.EquipmentSlot;
@@ -345,7 +345,7 @@ public class DataIntegrityValidator implements ApplicationRunner {
       // 深度盤查樓層所有地塊之掉落物、首領與特殊事件怪物 (GUARD-01)
       for (int y = 0; y < floor.getHeight(); y++) {
         for (int x = 0; x < floor.getWidth(); x++) {
-          com.example.htmlmud.domain.dungeon.model.DungeonTile tile = floor.getTile(x, y);
+          com.example.htmlmud.dungeon.DungeonTile tile = floor.getTile(x, y);
           if (tile == null) continue;
           if (tile.getDrops() != null) {
             for (String dropId : tile.getDrops()) {
@@ -356,7 +356,7 @@ public class DataIntegrityValidator implements ApplicationRunner {
               }
             }
           }
-          if (tile.getType() == com.example.htmlmud.domain.dungeon.model.DungeonTile.TileType.BOSS) {
+          if (tile.getType() == com.example.htmlmud.dungeon.DungeonTile.TileType.BOSS) {
             String bossId = tile.getEventId();
             if (bossId == null || bossId.isBlank()) {
               errors.add("地牢樓層 [" + floorId + "] 首領地塊 (" + x + ", " + y + ") 未配置 eventId (首領怪物 ID)！");

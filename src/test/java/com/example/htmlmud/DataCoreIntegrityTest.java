@@ -158,17 +158,17 @@ class DataCoreIntegrityTest {
   @Test
   @DisplayName("DATA-GUARD-03: DRPG 地牢視圖狀態包含動態地塊名稱陣列 tileNames")
   void testDungeonStateDtoContainsDynamicTileNames() {
-    com.example.htmlmud.domain.dungeon.service.DungeonManager dungeonManager =
-        new com.example.htmlmud.domain.dungeon.service.DungeonManager();
+    com.example.htmlmud.dungeon.DungeonManager dungeonManager =
+        new com.example.htmlmud.dungeon.DungeonManager();
     dungeonManager.init();
 
-    com.example.htmlmud.domain.dungeon.model.DungeonFloor floor = dungeonManager.getFloor("taiyin_tomb_b1f");
+    com.example.htmlmud.dungeon.DungeonFloor floor = dungeonManager.getFloor("taiyin_tomb_b1f");
     assertThat(floor).isNotNull();
 
-    com.example.htmlmud.domain.dungeon.model.DungeonPosition pos =
-        new com.example.htmlmud.domain.dungeon.model.DungeonPosition(floor.getId(), 1, 1, com.example.htmlmud.domain.dungeon.model.Direction.NORTH, 10, 10);
+    com.example.htmlmud.dungeon.DungeonPosition pos =
+        new com.example.htmlmud.dungeon.DungeonPosition(floor.getId(), 1, 1, com.example.htmlmud.dungeon.Direction.NORTH, 10, 10);
 
-    var dto = com.example.htmlmud.domain.dungeon.dto.DrpgStateDto.of(floor, pos, "前方視野", null);
+    var dto = com.example.htmlmud.dungeon.DrpgStateDto.of(floor, pos, "前方視野", null);
     assertThat(dto.dungeon()).isNotNull();
     assertThat(dto.dungeon().tileNames()).isNotNull();
     assertThat(dto.dungeon().tileNames().length).isEqualTo(10);

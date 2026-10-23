@@ -13,10 +13,10 @@ import org.springframework.web.socket.WebSocketSession;
 import com.example.htmlmud.application.command.impl.DungeonCommand;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.service.PlayerService;
-import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
-import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
-import com.example.htmlmud.domain.dungeon.model.GridDirection;
-import com.example.htmlmud.domain.dungeon.service.DungeonManager;
+import com.example.htmlmud.dungeon.DungeonFloor;
+import com.example.htmlmud.dungeon.DungeonPosition;
+import com.example.htmlmud.dungeon.GridDirection;
+import com.example.htmlmud.dungeon.DungeonManager;
 import com.example.htmlmud.party.Party;
 import com.example.htmlmud.party.PartyItemSlot;
 import com.example.htmlmud.party.PartyMember;
@@ -44,7 +44,7 @@ class DungeonTorchAndTrapTest {
   private WorldManager worldManager;
 
   @Autowired
-  private com.example.htmlmud.domain.dungeon.service.DungeonNavigator dungeonNavigator;
+  private com.example.htmlmud.dungeon.DungeonNavigator dungeonNavigator;
 
   @Autowired
   private com.example.htmlmud.domain.dungeon.battle.DrpgBattleService battleService;
@@ -231,8 +231,8 @@ class DungeonTorchAndTrapTest {
 
     // 5. 驗證 DrpgStateDto.of 正確封裝 torchLight, torchStatus, torchIcon
     Party party = partyService.getOrCreateParty(testPlayer.getName());
-    com.example.htmlmud.domain.dungeon.dto.DrpgStateDto state =
-        com.example.htmlmud.domain.dungeon.dto.DrpgStateDto.of(floor, pos, brightVision, party);
+    com.example.htmlmud.dungeon.DrpgStateDto state =
+        com.example.htmlmud.dungeon.DrpgStateDto.of(floor, pos, brightVision, party);
     assertThat(state.dungeon()).isNotNull();
     assertThat(state.dungeon().torchLight()).isEqualTo(100);
     assertThat(state.dungeon().torchStatus()).isEqualTo("BRIGHT");
@@ -251,9 +251,9 @@ class DungeonTorchAndTrapTest {
 
     ScopedValue.where(MudContext.CURRENT_PLAYER, testPlayer).run(() -> {
       // --- 1. 暗弩陷阱身法檢定 ---
-      com.example.htmlmud.domain.dungeon.model.DungeonTile crossbowTile =
-          com.example.htmlmud.domain.dungeon.model.DungeonTile.of(
-              com.example.htmlmud.domain.dungeon.model.DungeonTile.TileType.TRAP,
+      com.example.htmlmud.dungeon.DungeonTile crossbowTile =
+          com.example.htmlmud.dungeon.DungeonTile.of(
+              com.example.htmlmud.dungeon.DungeonTile.TileType.TRAP,
               "青銅暗弩機關陷阱",
               "隱蔽於石磚下的連環發射暗弩。"
           );
@@ -289,9 +289,9 @@ class DungeonTorchAndTrapTest {
       assertThat(vanguard.getCurrentSan()).isEqualTo(beforeSan - 5);
 
       // --- 2. 靈泉地窟滋養 ---
-      com.example.htmlmud.domain.dungeon.model.DungeonTile springTile =
-          com.example.htmlmud.domain.dungeon.model.DungeonTile.of(
-              com.example.htmlmud.domain.dungeon.model.DungeonTile.TileType.SPRING,
+      com.example.htmlmud.dungeon.DungeonTile springTile =
+          com.example.htmlmud.dungeon.DungeonTile.of(
+              com.example.htmlmud.dungeon.DungeonTile.TileType.SPRING,
               "太玄清心靈泉",
               "氤氳著濃郁靈氣的溫潤泉穴。"
           );
@@ -322,9 +322,9 @@ class DungeonTorchAndTrapTest {
       assertThat(vanguard.getHp()).isEqualTo(refreshedHp);
 
       // --- 3. 鎖鏈暗門破拆 ---
-      com.example.htmlmud.domain.dungeon.model.DungeonTile doorTile =
-          com.example.htmlmud.domain.dungeon.model.DungeonTile.of(
-              com.example.htmlmud.domain.dungeon.model.DungeonTile.TileType.DOOR,
+      com.example.htmlmud.dungeon.DungeonTile doorTile =
+          com.example.htmlmud.dungeon.DungeonTile.of(
+              com.example.htmlmud.dungeon.DungeonTile.TileType.DOOR,
               "玄鐵鎖鏈暗門",
               "以粗大玄鐵鎖鏈纏繞的厚重暗門。"
           );

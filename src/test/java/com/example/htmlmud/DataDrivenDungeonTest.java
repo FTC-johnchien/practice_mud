@@ -8,11 +8,11 @@ import java.io.InputStream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import com.example.htmlmud.domain.dungeon.model.GridDirection;
-import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
-import com.example.htmlmud.domain.dungeon.model.DungeonTile;
-import com.example.htmlmud.domain.dungeon.service.DungeonFloorLoader;
-import com.example.htmlmud.domain.dungeon.service.DungeonManager;
+import com.example.htmlmud.dungeon.GridDirection;
+import com.example.htmlmud.dungeon.DungeonFloor;
+import com.example.htmlmud.dungeon.DungeonTile;
+import com.example.htmlmud.dungeon.DungeonFloorLoader;
+import com.example.htmlmud.dungeon.DungeonManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest

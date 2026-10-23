@@ -13,10 +13,10 @@ import com.example.htmlmud.config.GameConfig;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.dungeon.battle.DrpgBattleService;
-import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
-import com.example.htmlmud.domain.dungeon.model.GridDirection;
-import com.example.htmlmud.domain.dungeon.service.DungeonManager;
-import com.example.htmlmud.domain.dungeon.service.DungeonNavigator;
+import com.example.htmlmud.dungeon.DungeonPosition;
+import com.example.htmlmud.dungeon.GridDirection;
+import com.example.htmlmud.dungeon.DungeonManager;
+import com.example.htmlmud.dungeon.DungeonNavigator;
 import com.example.htmlmud.party.PartyService;
 import com.example.htmlmud.template.TemplateReader;
 import com.example.htmlmud.domain.world.GameStateBroadcastService;
@@ -101,7 +101,7 @@ class DebugCommandGuardTest {
 
     DungeonPosition pos = new DungeonPosition("test_floor", 0, 0, GridDirection.NORTH, 10, 10);
     when(dungeonManager.getOrCreatePosition("TestHero", null)).thenReturn(pos);
-    when(dungeonManager.getFloor("test_floor")).thenReturn(com.example.htmlmud.domain.dungeon.model.DungeonFloor.builder().id("test_floor").build());
+    when(dungeonManager.getFloor("test_floor")).thenReturn(com.example.htmlmud.dungeon.DungeonFloor.builder().id("test_floor").build());
 
     DungeonCommand cmd = new DungeonCommand(
         dungeonManager, dungeonNavigator, partyService, battleService,
@@ -121,7 +121,7 @@ class DebugCommandGuardTest {
 
     DungeonPosition pos = new DungeonPosition("test_floor", 0, 0, GridDirection.NORTH, 10, 10);
     when(dungeonManager.getOrCreatePosition("TestHero", null)).thenReturn(pos);
-    when(dungeonManager.getFloor("test_floor")).thenReturn(com.example.htmlmud.domain.dungeon.model.DungeonFloor.builder().id("test_floor").build());
+    when(dungeonManager.getFloor("test_floor")).thenReturn(com.example.htmlmud.dungeon.DungeonFloor.builder().id("test_floor").build());
 
     DungeonCommand cmd = new DungeonCommand(
         dungeonManager, dungeonNavigator, partyService, battleService,

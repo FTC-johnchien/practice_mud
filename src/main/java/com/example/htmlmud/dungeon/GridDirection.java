@@ -1,13 +1,15 @@
-package com.example.htmlmud.domain.dungeon.model;
+package com.example.htmlmud.dungeon;
 
 import lombok.Getter;
 
 /**
- * @deprecated 請改用 {@link GridDirection} 以避免與 MUD 拓撲 {@link com.example.htmlmud.domain.model.enums.Direction} 命名衝突。
+ * 2D 地牢網格專用之 4 方向 Enum
+ * @deprecated 專案已全面統一收斂為 4 方向 {@link com.example.htmlmud.domain.model.enums.Direction}。
+ * 此處保留以維持平滑相容性。
  */
 @Deprecated
 @Getter
-public enum Direction {
+public enum GridDirection {
   NORTH(0, -1, "^", "北"),
   EAST(1, 0, ">", "東"),
   SOUTH(0, 1, "v", "南"),
@@ -18,14 +20,14 @@ public enum Direction {
   private final String symbol;
   private final String chineseName;
 
-  Direction(int dx, int dy, String symbol, String chineseName) {
+  GridDirection(int dx, int dy, String symbol, String chineseName) {
     this.dx = dx;
     this.dy = dy;
     this.symbol = symbol;
     this.chineseName = chineseName;
   }
 
-  public Direction turnLeft() {
+  public GridDirection turnLeft() {
     return switch (this) {
       case NORTH -> WEST;
       case WEST -> SOUTH;
@@ -34,7 +36,7 @@ public enum Direction {
     };
   }
 
-  public Direction turnRight() {
+  public GridDirection turnRight() {
     return switch (this) {
       case NORTH -> EAST;
       case EAST -> SOUTH;
@@ -43,7 +45,7 @@ public enum Direction {
     };
   }
 
-  public Direction getOpposite() {
+  public GridDirection getOpposite() {
     return switch (this) {
       case NORTH -> SOUTH;
       case SOUTH -> NORTH;
@@ -61,12 +63,18 @@ public enum Direction {
     };
   }
 
-  public GridDirection toGridDirection() {
-    return GridDirection.valueOf(this.name());
+  /**
+   * 轉向 MUD 統一 4 方向 Direction
+   */
+  public com.example.htmlmud.domain.model.enums.Direction toMudDirection() {
+    return com.example.htmlmud.domain.model.enums.Direction.valueOf(this.name());
   }
 
-  public static Direction fromGridDirection(GridDirection gd) {
-    if (gd == null) return null;
-    return Direction.valueOf(gd.name());
+  /**
+   * 由統一 Direction 轉向 GridDirection
+   */
+  public static GridDirection fromMudDirection(com.example.htmlmud.domain.model.enums.Direction dir) {
+    if (dir == null) return null;
+    return GridDirection.valueOf(dir.name());
   }
 }

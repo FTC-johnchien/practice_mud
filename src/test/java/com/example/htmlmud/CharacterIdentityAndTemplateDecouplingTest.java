@@ -11,9 +11,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.example.htmlmud.domain.actor.impl.Player;
-import com.example.htmlmud.domain.dungeon.model.Direction;
-import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
-import com.example.htmlmud.domain.dungeon.service.DungeonManager;
+import com.example.htmlmud.dungeon.Direction;
+import com.example.htmlmud.dungeon.DungeonPosition;
+import com.example.htmlmud.dungeon.DungeonManager;
 import com.example.htmlmud.template.model.ItemTemplate;
 import com.example.htmlmud.domain.model.vo.CharacterId;
 import com.example.htmlmud.party.Party;

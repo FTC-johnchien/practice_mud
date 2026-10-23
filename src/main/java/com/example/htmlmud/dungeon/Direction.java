@@ -1,15 +1,13 @@
-package com.example.htmlmud.domain.dungeon.model;
+package com.example.htmlmud.dungeon;
 
 import lombok.Getter;
 
 /**
- * 2D 地牢網格專用之 4 方向 Enum
- * @deprecated 專案已全面統一收斂為 4 方向 {@link com.example.htmlmud.domain.model.enums.Direction}。
- * 此處保留以維持平滑相容性。
+ * @deprecated 請改用 {@link GridDirection} 以避免與 MUD 拓撲 {@link com.example.htmlmud.domain.model.enums.Direction} 命名衝突。
  */
 @Deprecated
 @Getter
-public enum GridDirection {
+public enum Direction {
   NORTH(0, -1, "^", "北"),
   EAST(1, 0, ">", "東"),
   SOUTH(0, 1, "v", "南"),
@@ -20,14 +18,14 @@ public enum GridDirection {
   private final String symbol;
   private final String chineseName;
 
-  GridDirection(int dx, int dy, String symbol, String chineseName) {
+  Direction(int dx, int dy, String symbol, String chineseName) {
     this.dx = dx;
     this.dy = dy;
     this.symbol = symbol;
     this.chineseName = chineseName;
   }
 
-  public GridDirection turnLeft() {
+  public Direction turnLeft() {
     return switch (this) {
       case NORTH -> WEST;
       case WEST -> SOUTH;
@@ -36,7 +34,7 @@ public enum GridDirection {
     };
   }
 
-  public GridDirection turnRight() {
+  public Direction turnRight() {
     return switch (this) {
       case NORTH -> EAST;
       case EAST -> SOUTH;
@@ -45,7 +43,7 @@ public enum GridDirection {
     };
   }
 
-  public GridDirection getOpposite() {
+  public Direction getOpposite() {
     return switch (this) {
       case NORTH -> SOUTH;
       case SOUTH -> NORTH;
@@ -63,18 +61,12 @@ public enum GridDirection {
     };
   }
 
-  /**
-   * 轉向 MUD 統一 4 方向 Direction
-   */
-  public com.example.htmlmud.domain.model.enums.Direction toMudDirection() {
-    return com.example.htmlmud.domain.model.enums.Direction.valueOf(this.name());
+  public GridDirection toGridDirection() {
+    return GridDirection.valueOf(this.name());
   }
 
-  /**
-   * 由統一 Direction 轉向 GridDirection
-   */
-  public static GridDirection fromMudDirection(com.example.htmlmud.domain.model.enums.Direction dir) {
-    if (dir == null) return null;
-    return GridDirection.valueOf(dir.name());
+  public static Direction fromGridDirection(GridDirection gd) {
+    if (gd == null) return null;
+    return Direction.valueOf(gd.name());
   }
 }

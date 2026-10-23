@@ -24,7 +24,7 @@ import com.example.htmlmud.application.command.impl.SaveCommand;
 import com.example.htmlmud.domain.actor.core.MessageOutput;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.context.MudContext;
-import com.example.htmlmud.domain.dungeon.model.GridDirection;
+import com.example.htmlmud.dungeon.GridDirection;
 import com.example.htmlmud.domain.model.enums.Direction;
 import com.example.htmlmud.party.CombatResourceType;
 import com.example.htmlmud.party.Party;

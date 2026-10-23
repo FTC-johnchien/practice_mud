@@ -1,12 +1,12 @@
-package com.example.htmlmud.domain.dungeon.service;
+package com.example.htmlmud.dungeon;
 
 import org.springframework.stereotype.Service;
-import com.example.htmlmud.domain.dungeon.model.Direction;
-import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
-import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
-import com.example.htmlmud.domain.dungeon.model.DungeonTile;
-import com.example.htmlmud.domain.dungeon.model.GridCoord;
-import com.example.htmlmud.domain.dungeon.model.StepResult;
+import com.example.htmlmud.dungeon.Direction;
+import com.example.htmlmud.dungeon.DungeonFloor;
+import com.example.htmlmud.dungeon.DungeonPosition;
+import com.example.htmlmud.dungeon.DungeonTile;
+import com.example.htmlmud.dungeon.GridCoord;
+import com.example.htmlmud.dungeon.StepResult;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

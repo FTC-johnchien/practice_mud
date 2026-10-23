@@ -13,9 +13,9 @@
   - `src/main/resources/data/dungeons/mozhu_mines_b1f.json`（墨竹山廢棄礦坑一層）
   - `src/main/resources/data/dungeons/taiyin_tomb_b1f.json`（太陰古塚一層）
 - **核心實體與服務**：
-  - [`DungeonFloorLoader.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/service/DungeonFloorLoader.java)（地牢樓層資料載入器，支援別名解析）
-  - [`DungeonManager.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/service/DungeonManager.java)（地牢狀態機、位移轉向與踩格判定）
-  - [`DungeonPosition.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/model/DungeonPosition.java)（玩家座標 x, y 與朝向 facing）
+  - [`DungeonFloorLoader.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/dungeon/DungeonFloorLoader.java)（地牢樓層資料載入器，支援別名解析）
+  - [`DungeonManager.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/dungeon/DungeonManager.java)（地牢狀態機、位移轉向與踩格判定）
+  - [`DungeonPosition.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/dungeon/DungeonPosition.java)（玩家座標 x, y 與朝向 facing）
 - **關聯驗證測試**：
   - [`DungeonDefeatSettlementTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/DungeonDefeatSettlementTest.java)（地牢全滅戰敗結算與手動存檔安全鎖 100% 綠燈）
   - [`DungeonTorchAndTrapTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/DungeonTorchAndTrapTest.java)（火把與陷阱 100% 綠燈）
@@ -25,6 +25,8 @@
 
 ## 🏆 二、已完成實作項目 (Completed)
 
+- [x] **M2-PKG-ENCAPSULATION (Package-by-Feature 獨立封裝 / Phase 3 Step R3.7)**
+  - 建立一級套件 `com.example.htmlmud.dungeon`，將 `DungeonManager`、`DungeonFloorLoader`、`DungeonNavigator`、`DungeonFloor`、`DungeonPosition`、`DungeonTile`、`GridCoord`、`GridDirection`、`Direction`、`StepResult`、`DrpgStateDto` 統一歸整至獨立套件，全專案 393 項測試 100% 綠燈通過。
 - [x] **M2-CORE-MAP (10x10 地牢矩陣載入器)**
   - 實作 `DungeonFloorLoader`，由 JSON 資料驅動解析 layout 矩陣、Legend 圖例、遇敵配置與出口 `exitRoomId`。
 - [x] **M2-TORCH-SYSTEM (火把照明度核心計量)**

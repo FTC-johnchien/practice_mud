@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.dungeon.model;
+package com.example.htmlmud.dungeon;
 
 import lombok.Data;
 

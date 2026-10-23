@@ -13,7 +13,7 @@
   - `src/main/resources/data/dungeons/mozhu_mines_b1f.json`
   - `src/main/resources/data/dungeons/taiyin_tomb_b1f.json`
 - **契約驗證載入器**：
-  - [`DungeonFloorLoader.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/service/DungeonFloorLoader.java)
+  - [`DungeonFloorLoader.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/dungeon/DungeonFloorLoader.java)
 - **關聯驗證測試**：
   - [`WorldDataIntegrityTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/WorldDataIntegrityTest.java)（100% 綠燈）
 

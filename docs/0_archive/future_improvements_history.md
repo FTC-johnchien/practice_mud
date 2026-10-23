@@ -547,7 +547,7 @@
   - [`ShopCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/ShopCommand.java)
   - [`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java)
   - [`DungeonCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java)
-  - [`DrpgStateDto.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/dto/DrpgStateDto.java)
+  - [`DrpgStateDto.java`](../../src/main/java/com/example/htmlmud/dungeon/DrpgStateDto.java)
   - [`UnifiedPartyEconomyTest.java`](../../src/test/java/com/example/htmlmud/UnifiedPartyEconomyTest.java)
 - **改動方針**：
   1. 在 `Party` 實體中增設 `coin` 欄位作為全隊共享靈石金庫。

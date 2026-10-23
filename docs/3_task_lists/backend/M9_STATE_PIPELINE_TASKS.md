@@ -12,7 +12,7 @@
 - **核心網路與分發服務**：
   - [`MudWebSocketHandler.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/infra/server/MudWebSocketHandler.java)（純單機連線管理與重複登入優雅接管）
   - [`CommandDispatcher.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/CommandDispatcher.java)（結構化動作命令中央派發器）
-  - [`DrpgStateDto.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/dto/DrpgStateDto.java)（單一全景狀態契約鏡像）
+  - [`DrpgStateDto.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/dungeon/DrpgStateDto.java)（單一全景狀態契約鏡像）
 - **關聯驗證測試**：
   - [`SessionTakeoverAndSingletonProtagonistTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/SessionTakeoverAndSingletonProtagonistTest.java)（連線接管 100% 綠燈）
   - [`NetworkSecurityAndPersistenceDrainTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/NetworkSecurityAndPersistenceDrainTest.java)（網路安全與生命週期 100% 綠燈）

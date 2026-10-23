@@ -491,11 +491,11 @@
 
 ### 16.1 地牢與地圖系統硬編碼盤查 (DATA-03) (P1)
 - **現狀問題**：
-  1. **地牢出口房間硬編碼**：[`DungeonCommand.java:L144-150`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L144-L150) 中，玩家在向上階梯執行 `leave` 撤離時，返回的房間透過 Java `if-else` 寫死（`mozhu_mines_b1f` 返回 `mozhu_mines:mine_entrance`；`taiyin_tomb_b1f` 返回 `newbie_village:inn`）。[`DungeonFloor.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/model/DungeonFloor.java) 缺乏 `entranceRoomId` 與 `exitRoomId` 欄位。
+  1. **地牢出口房間硬編碼**：[`DungeonCommand.java:L144-150`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L144-L150) 中，玩家在向上階梯執行 `leave` 撤離時，返回的房間透過 Java `if-else` 寫死（`mozhu_mines_b1f` 返回 `mozhu_mines:mine_entrance`；`taiyin_tomb_b1f` 返回 `newbie_village:inn`）。[`DungeonFloor.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/dungeon/DungeonFloor.java) 缺乏 `entranceRoomId` 與 `exitRoomId` 欄位。
   2. **怪物與掉落物備用池寫死**：[`DungeonCommand.java:L34-48`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L34-L48) 靜態常數寫死 `TOMB_MOBS`（4 種太陰怪）與 `TOMB_ITEMS`（6 種太陰古塚道具），當樓層或寶箱未設定掉落時直接 fallback 至太陰資料。
   3. **地牢切換別名硬編碼**：[`DungeonCommand.java:L74-83`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L74-L83) 中，`switch taiyin` / `switch mozhu` 以字串比對直接映射為指定樓層。
   4. **陷阱數值與提示文字硬編碼**：[`DungeonCommand.java:L295-298`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java#L295-L298) 陷阱扣除固定 15 HP、5 SAN，且提示寫死「菌絲煞氣噴湧」（太陰古塚踩陷阱亦出現礦坑菌絲文字）。
-  5. **殘留 65 行手刻地圖生成器**：[`DungeonManager.java:L136-200`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/service/DungeonManager.java#L136-L200) 中的 `buildTombB1F()` 在 Java 內用二維陣列手工雕刻 10x10 地牢地圖與文字，而 `resources/data/dungeons/taiyin_tomb_b1f.json` 已經存在，此備用代碼為冗餘且未同步的硬編碼。
+  5. **殘留 65 行手刻地圖生成器**：[`DungeonManager.java:L136-200`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/dungeon/DungeonManager.java#L136-L200) 中的 `buildTombB1F()` 在 Java 內用二維陣列手工雕刻 10x10 地牢地圖與文字，而 `resources/data/dungeons/taiyin_tomb_b1f.json` 已經存在，此備用代碼為冗餘且未同步的硬編碼。
   6. **區域載入清單退回硬編碼**：[`WorldManager.java:L100, L104`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/service/WorldManager.java#L100) 於動態掃描失敗時退回硬編碼清單 `List.of("newbie_village", "mozhu_mines", "snow", "silverleaf", "taiyin_tomb")`。
 - **改善方案**：
   - 在 `DungeonFloor` 與 `dungeons/*.json` 擴充 `entranceRoomId`、`exitRoomId`、`defaultLootPool`、`trapDamage`、`trapSanCost`、`trapMessage`。
@@ -691,7 +691,7 @@ flowchart TD
 ### 18.3 §16/§17 未涵蓋的系統性問題 (Missed Systemic Issues)
 
 1. **靜默 fallback 反模式（比個別硬編碼更根本）**：
-   - 生產程式碼中有約 30 處 `new TemplateCatalog()`，分布在 Service 無參建構子、DTO（[`DrpgStateDto`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/dto/DrpgStateDto.java#L31)）、領域模型（[`PartyInventory`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/PartyInventory.java#L25)、`PartyMember`、`ShopTemplate`、`BattleEnemy`）與 `MessageFactory`。空的 Catalog 會讓物品名稱退化成 ID、技能查無資料，卻**不報錯**。
+   - 生產程式碼中有約 30 處 `new TemplateCatalog()`，分布在 Service 無參建構子、DTO（[`DrpgStateDto`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/dungeon/DrpgStateDto.java#L31)）、領域模型（[`PartyInventory`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/PartyInventory.java#L25)、`PartyMember`、`ShopTemplate`、`BattleEnemy`）與 `MessageFactory`。空的 Catalog 會讓物品名稱退化成 ID、技能查無資料，卻**不報錯**。
    - [`GameConfig.getInstance()`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/config/GameConfig.java#L34-L43) 靜態單例被 `Player`、`Living` 直接呼叫，並在建構子內覆寫 `INSTANCE`；在測試或多 Context 情境下，可能拿到未綁定 YAML 的預設值。
    - 多個核心協作者使用 `@Autowired(required = false)` 加延遲 `new`（`DrpgRewardService`、`CharacterSyncService`、`CombatService.buffSettlementService`），注入失敗時會悄悄改用沒有依賴的實例。
    - **修正（FALLBACK-01）**：從生產程式碼移除無參建構子與 `new TemplateCatalog()`，測試改用 `TestTemplates` fixture；`GameConfig` 改為建構子注入；必要依賴一律改成必填注入。
@@ -1445,7 +1445,7 @@ flowchart TD
   - [`ShopCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/ShopCommand.java)
   - [`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/battle/DrpgRewardService.java)
   - [`DungeonCommand.java`](../../src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java)
-  - [`DrpgStateDto.java`](../../src/main/java/com/example/htmlmud/domain/dungeon/dto/DrpgStateDto.java)
+  - [`DrpgStateDto.java`](../../src/main/java/com/example/htmlmud/dungeon/DrpgStateDto.java)
   - [`UnifiedPartyEconomyTest.java`](../../src/test/java/com/example/htmlmud/UnifiedPartyEconomyTest.java)
 - **改動方針**：
   1. 在 `Party` 實體中增設 `coin` 欄位作為全隊共享靈石金庫。

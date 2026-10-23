@@ -6,8 +6,8 @@ import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.context.MudContext;
 import com.example.htmlmud.domain.dungeon.battle.DrpgBattleService;
-import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
-import com.example.htmlmud.domain.dungeon.service.DungeonManager;
+import com.example.htmlmud.dungeon.DungeonPosition;
+import com.example.htmlmud.dungeon.DungeonManager;
 import lombok.RequiredArgsConstructor;
 
 @Component

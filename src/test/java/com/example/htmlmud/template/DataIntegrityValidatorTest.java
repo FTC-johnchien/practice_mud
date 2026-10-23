@@ -23,7 +23,7 @@ import com.example.htmlmud.template.model.MobTemplate;
 import com.example.htmlmud.template.model.RoomExit;
 import com.example.htmlmud.template.model.RoomTemplate;
 import com.example.htmlmud.template.model.ShopTemplate;
-import com.example.htmlmud.domain.dungeon.service.DungeonManager;
+import com.example.htmlmud.dungeon.DungeonManager;
 import com.example.htmlmud.party.FormationTemplate;
 import com.example.htmlmud.template.TemplateReader;
 
@@ -58,23 +58,23 @@ class DataIntegrityValidatorTest {
     validator.setDungeonManager(mockDungeonManager);
     validator.setFailFast(true);
 
-    com.example.htmlmud.domain.dungeon.model.DungeonFloor floor =
-        com.example.htmlmud.domain.dungeon.model.DungeonFloor.builder()
+    com.example.htmlmud.dungeon.DungeonFloor floor =
+        com.example.htmlmud.dungeon.DungeonFloor.builder()
             .id("test_floor")
             .width(2)
             .height(2)
-            .startCoord(new com.example.htmlmud.domain.dungeon.model.GridCoord(0, 0))
-            .tiles(new com.example.htmlmud.domain.dungeon.model.DungeonTile[][] {
+            .startCoord(new com.example.htmlmud.dungeon.GridCoord(0, 0))
+            .tiles(new com.example.htmlmud.dungeon.DungeonTile[][] {
                 {
-                    com.example.htmlmud.domain.dungeon.model.DungeonTile.floor("起點"),
-                    com.example.htmlmud.domain.dungeon.model.DungeonTile.builder()
-                        .type(com.example.htmlmud.domain.dungeon.model.DungeonTile.TileType.TREASURE)
+                    com.example.htmlmud.dungeon.DungeonTile.floor("起點"),
+                    com.example.htmlmud.dungeon.DungeonTile.builder()
+                        .type(com.example.htmlmud.dungeon.DungeonTile.TileType.TREASURE)
                         .drops(List.of("ghost_drop_item"))
                         .build()
                 },
                 {
-                    com.example.htmlmud.domain.dungeon.model.DungeonTile.wall(),
-                    com.example.htmlmud.domain.dungeon.model.DungeonTile.wall()
+                    com.example.htmlmud.dungeon.DungeonTile.wall(),
+                    com.example.htmlmud.dungeon.DungeonTile.wall()
                 }
             })
             .build();
@@ -228,24 +228,24 @@ class DataIntegrityValidatorTest {
     validator.setDungeonManager(mockDungeonManager);
     validator.setFailFast(false);
 
-    com.example.htmlmud.domain.dungeon.model.DungeonFloor floor =
-        com.example.htmlmud.domain.dungeon.model.DungeonFloor.builder()
+    com.example.htmlmud.dungeon.DungeonFloor floor =
+        com.example.htmlmud.dungeon.DungeonFloor.builder()
             .id("broken_floor")
             .exitRoomId("zone:missing_exit_room")
             .width(2)
             .height(2)
-            .startCoord(new com.example.htmlmud.domain.dungeon.model.GridCoord(0, 0))
-            .tiles(new com.example.htmlmud.domain.dungeon.model.DungeonTile[][] {
+            .startCoord(new com.example.htmlmud.dungeon.GridCoord(0, 0))
+            .tiles(new com.example.htmlmud.dungeon.DungeonTile[][] {
                 {
-                    com.example.htmlmud.domain.dungeon.model.DungeonTile.floor("起點"),
-                    com.example.htmlmud.domain.dungeon.model.DungeonTile.builder()
-                        .type(com.example.htmlmud.domain.dungeon.model.DungeonTile.TileType.BOSS)
+                    com.example.htmlmud.dungeon.DungeonTile.floor("起點"),
+                    com.example.htmlmud.dungeon.DungeonTile.builder()
+                        .type(com.example.htmlmud.dungeon.DungeonTile.TileType.BOSS)
                         .eventId("missing_boss_mob")
                         .build()
                 },
                 {
-                    com.example.htmlmud.domain.dungeon.model.DungeonTile.wall(),
-                    com.example.htmlmud.domain.dungeon.model.DungeonTile.wall()
+                    com.example.htmlmud.dungeon.DungeonTile.wall(),
+                    com.example.htmlmud.dungeon.DungeonTile.wall()
                 }
             })
             .build();
