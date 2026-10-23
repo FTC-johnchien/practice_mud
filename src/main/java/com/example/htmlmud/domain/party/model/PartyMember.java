@@ -4,7 +4,7 @@ import java.util.EnumMap;
 import java.util.Map;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
-import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.template.TemplateReader;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
@@ -842,7 +842,7 @@ public class PartyMember implements Combatant {
     return getBasicSkillId();
   }
 
-  public com.example.htmlmud.domain.model.template.SkillTemplate getEnabledBasicSkill() {
+  public com.example.htmlmud.template.model.SkillTemplate getEnabledBasicSkill() {
     String skillId = getEffectiveBasicSkillId();
     return getTemplateReader().findSkill(skillId).orElse(null);
   }
@@ -893,7 +893,7 @@ public class PartyMember implements Combatant {
     };
   }
 
-  public static com.example.htmlmud.domain.model.enums.SkillCategory resolveSkillCategory(com.example.htmlmud.domain.model.template.SkillTemplate template) {
+  public static com.example.htmlmud.domain.model.enums.SkillCategory resolveSkillCategory(com.example.htmlmud.template.model.SkillTemplate template) {
     if (template == null) return com.example.htmlmud.domain.model.enums.SkillCategory.UNARMED;
 
     // 1. 優先依據標籤判定被動心法 (DODGE, PARRY, FORCE)
@@ -951,7 +951,7 @@ public class PartyMember implements Combatant {
     return com.example.htmlmud.domain.model.enums.SkillCategory.FORCE;
   }
 
-  public static boolean supportsSkillCategory(com.example.htmlmud.domain.model.template.SkillTemplate template, com.example.htmlmud.domain.model.enums.SkillCategory cat) {
+  public static boolean supportsSkillCategory(com.example.htmlmud.template.model.SkillTemplate template, com.example.htmlmud.domain.model.enums.SkillCategory cat) {
     if (template == null || cat == null) return false;
     if (resolveSkillCategory(template) == cat) return true;
     if (template.getTags() != null && template.getTags().contains(cat.name())) return true;
@@ -977,7 +977,7 @@ public class PartyMember implements Combatant {
     return enabledSkills != null ? enabledSkills.get(category) : null;
   }
 
-  public com.example.htmlmud.domain.model.template.SkillTemplate getEnabledPassive(com.example.htmlmud.domain.model.enums.SkillCategory category) {
+  public com.example.htmlmud.template.model.SkillTemplate getEnabledPassive(com.example.htmlmud.domain.model.enums.SkillCategory category) {
     String id = getEnabledPassiveSkillId(category);
     return (id != null && getTemplateReader() != null) ? getTemplateReader().findSkill(id).orElse(null) : null;
   }
@@ -1001,7 +1001,7 @@ public class PartyMember implements Combatant {
   }
 
   @JsonIgnore
-  public java.util.Optional<com.example.htmlmud.domain.model.template.ClassTemplate> getClassTemplate() {
+  public java.util.Optional<com.example.htmlmud.template.model.ClassTemplate> getClassTemplate() {
     if (this.classId == null || this.classId.isBlank()) {
       return java.util.Optional.empty();
     }
@@ -1018,7 +1018,7 @@ public class PartyMember implements Combatant {
 
   @JsonIgnore
   public String getEffectiveClassName() {
-    return getClassTemplate().map(com.example.htmlmud.domain.model.template.ClassTemplate::name).orElse(this.roleTitle);
+    return getClassTemplate().map(com.example.htmlmud.template.model.ClassTemplate::name).orElse(this.roleTitle);
   }
 
   public boolean isGambitEnabled() {

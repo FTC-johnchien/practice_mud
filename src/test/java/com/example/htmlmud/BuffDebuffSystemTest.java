@@ -28,7 +28,7 @@ import com.example.htmlmud.domain.party.model.RowPosition;
 import com.example.htmlmud.domain.party.model.TacticsCondition;
 import com.example.htmlmud.domain.party.model.TacticsRule;
 import com.example.htmlmud.domain.party.model.TacticsTarget;
-import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.template.TemplateReader;
 
 /**
  * 針對 WoW 風格 Buff / Debuff 體系之核心純粹機制測試：

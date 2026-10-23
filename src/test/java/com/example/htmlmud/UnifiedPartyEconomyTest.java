@@ -28,7 +28,7 @@ import com.example.htmlmud.domain.dungeon.dto.BattleVictoryDto;
 import com.example.htmlmud.domain.model.enums.MobRank;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.service.PartyService;
-import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.template.TemplateReader;
 import com.example.htmlmud.domain.actor.service.PlayerService;
 import com.example.htmlmud.domain.world.WorldManager;
 

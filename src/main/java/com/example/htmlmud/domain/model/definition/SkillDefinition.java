@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import com.example.htmlmud.domain.model.enums.SkillType;
-import com.example.htmlmud.domain.model.template.SkillTemplate;
+import com.example.htmlmud.template.model.SkillTemplate;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
 import lombok.Builder;
 

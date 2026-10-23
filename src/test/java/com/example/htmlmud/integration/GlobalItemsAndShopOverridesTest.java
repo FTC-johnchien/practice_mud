@@ -10,10 +10,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.example.htmlmud.application.command.impl.ShopCommand;
-import com.example.htmlmud.domain.model.template.ItemTemplate;
-import com.example.htmlmud.domain.model.template.ShopTemplate;
-import com.example.htmlmud.domain.model.template.ShopTemplate.ShopItemTemplate;
-import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
+import com.example.htmlmud.template.model.ItemTemplate;
+import com.example.htmlmud.template.model.ShopTemplate;
+import com.example.htmlmud.template.model.ShopTemplate.ShopItemTemplate;
+import com.example.htmlmud.template.TemplateRepository;
 
 @SpringBootTest
 @ActiveProfiles("test")

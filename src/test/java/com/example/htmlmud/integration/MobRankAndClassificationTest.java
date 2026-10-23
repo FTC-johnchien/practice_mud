@@ -10,10 +10,10 @@ import org.springframework.test.context.ActiveProfiles;
 import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
 import com.example.htmlmud.domain.model.enums.MobKind;
 import com.example.htmlmud.domain.model.enums.MobRank;
-import com.example.htmlmud.domain.model.template.CompanionTemplate;
-import com.example.htmlmud.domain.model.template.MobTemplate;
+import com.example.htmlmud.template.model.CompanionTemplate;
+import com.example.htmlmud.template.model.MobTemplate;
 import com.example.htmlmud.domain.party.model.RowPosition;
-import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
+import com.example.htmlmud.template.TemplateRepository;
 
 @SpringBootTest
 @ActiveProfiles("test")

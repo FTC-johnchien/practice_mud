@@ -110,7 +110,7 @@ class DataCoreIntegrityTest {
   private com.example.htmlmud.application.command.impl.ShopCommand shopCommand;
 
   @Autowired
-  private com.example.htmlmud.domain.repository.TemplateReader templateReader;
+  private com.example.htmlmud.template.TemplateReader templateReader;
 
   @Test
   @DisplayName("DATA-CORE-02: PartyService 夥伴招募失敗提示動態自 TemplateReader 產出可用清單")

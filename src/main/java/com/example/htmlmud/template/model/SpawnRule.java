@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.model.template;
+package com.example.htmlmud.template.model;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.Builder;

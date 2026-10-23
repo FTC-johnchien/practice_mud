@@ -7,7 +7,7 @@ import com.example.htmlmud.domain.dungeon.battle.BattleOutcomeApplier;
 import com.example.htmlmud.domain.dungeon.battle.BattleParticipantSnapshot;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.party.model.PartyMember;
-import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.template.TemplateReader;
 import lombok.extern.slf4j.Slf4j;
 
 /**

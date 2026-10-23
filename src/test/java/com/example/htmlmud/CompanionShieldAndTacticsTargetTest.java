@@ -22,7 +22,7 @@ import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
 import com.example.htmlmud.domain.party.model.TacticsTarget;
 import com.example.htmlmud.domain.party.service.PartyService;
-import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.template.TemplateReader;
 
 @SpringBootTest
 class CompanionShieldAndTacticsTargetTest {
@@ -95,7 +95,7 @@ class CompanionShieldAndTacticsTargetTest {
     assertThat(blessSkill.isShield()).isTrue();
 
     // 執行護盾技能
-    DrpgCombatLoop combatLoop = new DrpgCombatLoop(tacticsService, new DrpgRewardService(new com.example.htmlmud.domain.repository.TemplateCatalog(), null), new DefenseResolver());
+    DrpgCombatLoop combatLoop = new DrpgCombatLoop(tacticsService, new DrpgRewardService(new com.example.htmlmud.template.TemplateCatalog(), null), new DefenseResolver());
     Player player = mock(Player.class);
     when(player.getName()).thenReturn("tester_shield");
     when(player.isValid()).thenReturn(true);

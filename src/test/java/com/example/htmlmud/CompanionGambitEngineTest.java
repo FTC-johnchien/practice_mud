@@ -28,7 +28,7 @@ import com.example.htmlmud.domain.party.model.RowPosition;
 import com.example.htmlmud.domain.party.model.TacticsCondition;
 import com.example.htmlmud.domain.party.model.TacticsRule;
 import com.example.htmlmud.domain.party.model.TacticsTarget;
-import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.template.TemplateReader;
 
 /**
  * Milestone F3-05: 隊友自動戰術 Gambit 規則鏈引擎 (Companion Gambit AI Chains) 專屬整合測試

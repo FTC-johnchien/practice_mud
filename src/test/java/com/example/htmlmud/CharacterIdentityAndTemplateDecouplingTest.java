@@ -14,14 +14,14 @@ import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.dungeon.model.Direction;
 import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
 import com.example.htmlmud.domain.dungeon.service.DungeonManager;
-import com.example.htmlmud.domain.model.template.ItemTemplate;
+import com.example.htmlmud.template.model.ItemTemplate;
 import com.example.htmlmud.domain.model.vo.CharacterId;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.service.PartyService;
 import com.example.htmlmud.domain.actor.service.PlayerService;
-import com.example.htmlmud.domain.repository.TemplateCatalog;
+import com.example.htmlmud.template.TemplateCatalog;
 import com.example.htmlmud.domain.world.WorldManager;
-import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
+import com.example.htmlmud.template.TemplateRepository;
 import com.example.htmlmud.domain.actor.core.MessageOutput;
 
 @SpringBootTest

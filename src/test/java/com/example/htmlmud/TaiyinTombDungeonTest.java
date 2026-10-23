@@ -15,7 +15,7 @@ import com.example.htmlmud.domain.dungeon.service.DungeonManager;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.service.PartyService;
-import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
+import com.example.htmlmud.template.TemplateRepository;
 
 @SpringBootTest
 class TaiyinTombDungeonTest {
@@ -82,7 +82,7 @@ class TaiyinTombDungeonTest {
   void testChestAndTrapMechanics() {
     DungeonManager dungeonManager = new DungeonManager();
     dungeonManager.init();
-    PartyService partyService = new PartyService(new com.example.htmlmud.domain.repository.TemplateCatalog());
+    PartyService partyService = new PartyService(new com.example.htmlmud.template.TemplateCatalog());
     partyService.initDefaultFormations();
 
     DungeonFloor floor = dungeonManager.getFloor("taiyin_tomb_b1f");

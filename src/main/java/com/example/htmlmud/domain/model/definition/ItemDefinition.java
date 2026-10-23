@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
-import com.example.htmlmud.domain.model.template.ItemTemplate;
+import com.example.htmlmud.template.model.ItemTemplate;
 import lombok.Builder;
 
 /**

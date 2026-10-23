@@ -11,13 +11,13 @@ import com.example.htmlmud.application.factory.WorldFactory;
 import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
-import com.example.htmlmud.domain.model.template.MobTemplate;
-import com.example.htmlmud.domain.model.template.RaceTemplate;
+import com.example.htmlmud.template.model.MobTemplate;
+import com.example.htmlmud.template.model.RaceTemplate;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.RowPosition;
 import com.example.htmlmud.domain.party.service.PartyService;
-import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
+import com.example.htmlmud.template.TemplateRepository;
 
 @SpringBootTest
 @ActiveProfiles("test")

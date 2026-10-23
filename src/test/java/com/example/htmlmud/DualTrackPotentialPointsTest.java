@@ -27,7 +27,7 @@ import com.example.htmlmud.domain.actor.service.CharacterSyncService;
 import com.example.htmlmud.domain.actor.service.PlayerService;
 import com.example.htmlmud.domain.world.WorldManager;
 import com.example.htmlmud.domain.progression.service.XpProgressionService;
-import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
+import com.example.htmlmud.template.TemplateRepository;
 
 /**
  * 3.4 主角自由潛能點 (Potential Points) 雙軌升級專屬測試

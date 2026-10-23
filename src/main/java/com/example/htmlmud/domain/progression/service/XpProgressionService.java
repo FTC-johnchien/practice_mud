@@ -9,25 +9,25 @@ import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.entity.SkillEntry;
-import com.example.htmlmud.domain.model.template.ClassTemplate;
-import com.example.htmlmud.domain.model.template.SkillTemplate;
+import com.example.htmlmud.template.model.ClassTemplate;
+import com.example.htmlmud.template.model.SkillTemplate;
 import com.example.htmlmud.domain.party.model.PartyMember;
 
 @Service
 public class XpProgressionService {
 
-  private final com.example.htmlmud.domain.repository.TemplateReader templateReader;
+  private final com.example.htmlmud.template.TemplateReader templateReader;
   private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
   @org.springframework.beans.factory.annotation.Autowired
   public XpProgressionService(
-      com.example.htmlmud.domain.repository.TemplateReader templateReader,
+      com.example.htmlmud.template.TemplateReader templateReader,
       @org.springframework.beans.factory.annotation.Autowired(required = false) org.springframework.context.ApplicationEventPublisher eventPublisher) {
     this.templateReader = templateReader;
     this.eventPublisher = eventPublisher;
   }
 
-  public XpProgressionService(com.example.htmlmud.domain.repository.TemplateReader templateReader) {
+  public XpProgressionService(com.example.htmlmud.template.TemplateReader templateReader) {
     this(templateReader, null);
   }
 
@@ -43,7 +43,7 @@ public class XpProgressionService {
   }
 
   public XpProgressionService() {
-    this((com.example.htmlmud.domain.repository.TemplateReader) null);
+    this((com.example.htmlmud.template.TemplateReader) null);
   }
 
   public java.util.Optional<ClassTemplate> resolveClassTemplate(String classId) {

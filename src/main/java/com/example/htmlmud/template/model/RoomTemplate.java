@@ -1,9 +1,9 @@
-package com.example.htmlmud.domain.model.template;
+package com.example.htmlmud.template.model;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import com.example.htmlmud.domain.model.template.json.RoomDescriptionDeserializer;
+import com.example.htmlmud.template.model.json.RoomDescriptionDeserializer;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Builder;

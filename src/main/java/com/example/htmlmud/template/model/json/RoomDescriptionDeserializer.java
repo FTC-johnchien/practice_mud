@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.model.template.json;
+package com.example.htmlmud.template.model.json;
 
 import java.io.IOException;
 import com.fasterxml.jackson.core.JsonParser;

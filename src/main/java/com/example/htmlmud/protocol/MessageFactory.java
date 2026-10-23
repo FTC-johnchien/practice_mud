@@ -8,7 +8,7 @@ import com.example.htmlmud.domain.actor.impl.Mob;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.service.HealthStatusUtil;
-import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.template.TemplateReader;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

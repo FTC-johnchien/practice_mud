@@ -23,7 +23,7 @@ import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.RowPosition;
 import com.example.htmlmud.domain.party.service.PartyService;
-import com.example.htmlmud.domain.repository.TemplateCatalog;
+import com.example.htmlmud.template.TemplateCatalog;
 
 class DrpgBattleDecompositionTest {
 

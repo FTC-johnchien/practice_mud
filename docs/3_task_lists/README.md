@@ -25,7 +25,7 @@
 | **M4** | 冒險小隊與古仙陣法 | [`M4_PARTY_AND_FORMATION.md`](../2_specifications/backend/M4_PARTY_AND_FORMATION.md) | [**`M4_PARTY_AND_FORMATION_TASKS.md`**](backend/M4_PARTY_AND_FORMATION_TASKS.md) | 95% 🟢 | `CompanionGambitEngineTest`<br>`PartyInventoryAndMadnessTest` (行囊與精神防護) |
 | **M5** | 技能體系與修為突破 | [`M5_SKILL_AND_PROGRESSION.md`](../2_specifications/backend/M5_SKILL_AND_PROGRESSION.md) | [**`M5_SKILL_AND_PROGRESSION_TASKS.md`**](backend/M5_SKILL_AND_PROGRESSION_TASKS.md) | 95% 🟢 | `CyberSkillAndItemAffixTest`<br>`XpProgressionServiceTest` |
 | **M6** | 物品裝備與經濟體系 | [`M6_ITEM_AND_ECONOMY.md`](../2_specifications/backend/M6_ITEM_AND_ECONOMY.md) | [**`M6_ITEM_AND_ECONOMY_TASKS.md`**](backend/M6_ITEM_AND_ECONOMY_TASKS.md) | 90% 🟢 | `UnifiedPartyEconomyTest` |
-| **M7** | 資料範本與看門狗 | [`M7_DATA_DRIVEN_TEMPLATES.md`](../2_specifications/backend/M7_DATA_DRIVEN_TEMPLATES.md) | [**`M7_DATA_DRIVEN_TEMPLATES_TASKS.md`**](backend/M7_DATA_DRIVEN_TEMPLATES_TASKS.md) | 95% 🟢 | `ArchitectureGuardrailsTest` |
+| **M7** | 資料範本與看門狗 | [`M7_DATA_DRIVEN_TEMPLATES.md`](../2_specifications/backend/M7_DATA_DRIVEN_TEMPLATES.md) | [**`M7_DATA_DRIVEN_TEMPLATES_TASKS.md`**](backend/M7_DATA_DRIVEN_TEMPLATES_TASKS.md) | 100% 🟢 | `ArchitectureGuardrailsTest`<br>`WorldDataIntegrityTest` |
 | **M8** | 存檔與持久化管線 | [`M8_SAVE_AND_PERSISTENCE.md`](../2_specifications/backend/M8_SAVE_AND_PERSISTENCE.md) | [**`M8_SAVE_AND_PERSISTENCE_TASKS.md`**](backend/M8_SAVE_AND_PERSISTENCE_TASKS.md) | 90% 🟢 | `AsyncPersistenceLifecycleTest` |
 | **M9** | 狀態管線與事件協定 | [`M9_STATE_PIPELINE_AND_EVENTS.md`](../2_specifications/backend/M9_STATE_PIPELINE_AND_EVENTS.md) | [**`M9_STATE_PIPELINE_TASKS.md`**](backend/M9_STATE_PIPELINE_TASKS.md) | 90% 🟢 | `SessionTakeoverAndSingletonProtagonistTest` |
 

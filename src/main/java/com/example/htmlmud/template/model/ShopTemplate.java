@@ -1,7 +1,7 @@
-package com.example.htmlmud.domain.model.template;
+package com.example.htmlmud.template.model;
 
 import java.util.List;
-import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.template.TemplateReader;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 

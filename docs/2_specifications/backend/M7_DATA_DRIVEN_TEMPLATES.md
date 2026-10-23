@@ -99,10 +99,10 @@ sequenceDiagram
 
 | 項目 | 路徑 / 名稱 | 職責 |
 | :--- | :--- | :--- |
-| **模板快取庫** | `com.example.htmlmud.infrastructure.template.TemplateRepository` | JSON 解析、快取持有與模板註冊 |
-| **唯讀讀取埠** | `com.example.htmlmud.domain.ports.TemplateReader` | 業務層純唯讀存取介面（依賴反轉） |
-| **資料校驗器** | `com.example.htmlmud.infrastructure.template.DataIntegrityValidator` | 開機完整性自檢（死鏈、引用合法性） |
-| **轉接適配器** | `com.example.htmlmud.infrastructure.template.DrpgTemplateAdapter` | DRPG 專屬資料轉接與適配 |
+| **模板快取庫** | `com.example.htmlmud.template.TemplateRepository` | JSON 解析、快取持有與模板註冊 |
+| **唯讀讀取埠** | `com.example.htmlmud.template.TemplateReader` | 業務層純唯讀存取介面（依賴反轉） |
+| **資料校驗器** | `com.example.htmlmud.template.DataIntegrityValidator` | 開機完整性自檢（死鏈、引用合法性） |
+| **轉接適配器** | `com.example.htmlmud.domain.repository.DrpgTemplateAdapter` | DRPG 專屬資料轉接與適配 |
 | **資料目錄** | `src/main/resources/data/**/*.json` | 全專案宣告式靜態設定真相源 |
 
 ---

@@ -16,14 +16,14 @@ import com.example.htmlmud.domain.dungeon.model.DungeonTile.TileType;
 import com.example.htmlmud.domain.dungeon.model.StepResult;
 import com.example.htmlmud.domain.dungeon.service.DungeonManager;
 import com.example.htmlmud.domain.dungeon.service.DungeonNavigator;
-import com.example.htmlmud.domain.model.template.ItemTemplate;
-import com.example.htmlmud.domain.model.template.MobTemplate;
+import com.example.htmlmud.template.model.ItemTemplate;
+import com.example.htmlmud.template.model.MobTemplate;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyInventory;
 import com.example.htmlmud.domain.party.model.PartyItemSlot;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.service.PartyService;
-import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.template.TemplateReader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

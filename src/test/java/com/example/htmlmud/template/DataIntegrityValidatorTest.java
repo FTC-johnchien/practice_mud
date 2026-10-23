@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.validation;
+package com.example.htmlmud.template;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -17,15 +17,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.example.htmlmud.domain.exception.DataValidationException;
 import com.example.htmlmud.domain.model.config.LootEntry;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
-import com.example.htmlmud.domain.model.template.CompanionTemplate;
-import com.example.htmlmud.domain.model.template.ItemTemplate;
-import com.example.htmlmud.domain.model.template.MobTemplate;
-import com.example.htmlmud.domain.model.template.RoomExit;
-import com.example.htmlmud.domain.model.template.RoomTemplate;
-import com.example.htmlmud.domain.model.template.ShopTemplate;
+import com.example.htmlmud.template.model.CompanionTemplate;
+import com.example.htmlmud.template.model.ItemTemplate;
+import com.example.htmlmud.template.model.MobTemplate;
+import com.example.htmlmud.template.model.RoomExit;
+import com.example.htmlmud.template.model.RoomTemplate;
+import com.example.htmlmud.template.model.ShopTemplate;
 import com.example.htmlmud.domain.dungeon.service.DungeonManager;
 import com.example.htmlmud.domain.party.model.FormationTemplate;
-import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.template.TemplateReader;
 
 @SpringBootTest
 class DataIntegrityValidatorTest {
@@ -95,8 +95,8 @@ class DataIntegrityValidatorTest {
     DataIntegrityValidator validator = new DataIntegrityValidator(mockReader);
     validator.setFailFast(false);
 
-    com.example.htmlmud.domain.model.template.SkillTemplate brokenSkill =
-        new com.example.htmlmud.domain.model.template.SkillTemplate();
+    com.example.htmlmud.template.model.SkillTemplate brokenSkill =
+        new com.example.htmlmud.template.model.SkillTemplate();
     brokenSkill.setId("custom_sword");
     brokenSkill.setName("自創劍法");
     brokenSkill.setBridges(List.of(com.example.htmlmud.domain.model.definition.SkillBridgeRule.of("non_existent_drpg_skill", 1)));

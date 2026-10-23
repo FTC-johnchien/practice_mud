@@ -15,7 +15,7 @@ import com.example.htmlmud.domain.model.config.MoveAction;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.entity.SkillEntry;
 import com.example.htmlmud.domain.model.skill.dto.ActiveSkillResult;
-import com.example.htmlmud.domain.model.template.SkillTemplate;
+import com.example.htmlmud.template.model.SkillTemplate;
 import com.example.htmlmud.domain.model.vo.DamageSource;
 import com.example.htmlmud.domain.port.DomainMetricsPort;
 import com.example.htmlmud.domain.util.RandomUtil;

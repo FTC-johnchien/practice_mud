@@ -88,7 +88,7 @@ public class Party {
     if ("LEARN_SKILL".equals(slot.getEffectType()) && slot.getGrantedSkillId() != null) {
       // 吸收道種遺物，習得技能
       String grantedSkillId = slot.getGrantedSkillId();
-      com.example.htmlmud.domain.repository.TemplateReader reader = getTemplateReader();
+      com.example.htmlmud.template.TemplateReader reader = getTemplateReader();
       PartyMemberSkill newSkill = null;
       if (reader != null) {
         var partySkillOpt = reader.findPartySkill(grantedSkillId);
@@ -102,7 +102,7 @@ public class Party {
         } else {
           var skillTplOpt = reader.findSkill(grantedSkillId);
           if (skillTplOpt.isPresent()) {
-            com.example.htmlmud.domain.model.template.SkillTemplate st = skillTplOpt.get();
+            com.example.htmlmud.template.model.SkillTemplate st = skillTplOpt.get();
             PartyMemberSkill converted = PartyMemberSkill.fromSkillTemplate(st);
             if (converted != null) {
               int cooldown = (st.getTiming() != null && st.getTiming().cooldown() > 0)
@@ -568,11 +568,11 @@ public class Party {
   }
 
   @JsonIgnore
-  public com.example.htmlmud.domain.repository.TemplateReader getTemplateReader() {
+  public com.example.htmlmud.template.TemplateReader getTemplateReader() {
     if (inventory != null && inventory.getTemplateReader() != null) {
       return inventory.getTemplateReader();
     }
-    return new com.example.htmlmud.domain.repository.TemplateCatalog();
+    return new com.example.htmlmud.template.TemplateCatalog();
   }
 }
 

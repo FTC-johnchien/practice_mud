@@ -6,7 +6,7 @@ import com.example.htmlmud.domain.actor.impl.Living;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.enums.ResourceType;
-import com.example.htmlmud.domain.model.template.SkillTemplate;
+import com.example.htmlmud.template.model.SkillTemplate;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

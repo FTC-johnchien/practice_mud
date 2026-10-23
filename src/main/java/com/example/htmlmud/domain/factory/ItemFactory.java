@@ -6,9 +6,9 @@ import org.springframework.stereotype.Component;
 import com.example.htmlmud.domain.model.definition.ItemDefinition;
 import com.example.htmlmud.domain.model.entity.ItemInstance;
 import com.example.htmlmud.domain.model.enums.ItemType;
-import com.example.htmlmud.domain.model.template.ItemTemplate;
+import com.example.htmlmud.template.model.ItemTemplate;
 import com.example.htmlmud.domain.party.model.PartyItemSlot;
-import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.template.TemplateReader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

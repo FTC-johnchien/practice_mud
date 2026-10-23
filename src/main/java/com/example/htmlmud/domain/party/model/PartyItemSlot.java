@@ -7,7 +7,7 @@ import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.entity.ItemInstance;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
-import com.example.htmlmud.domain.model.template.ItemTemplate;
+import com.example.htmlmud.template.model.ItemTemplate;
 import com.example.htmlmud.domain.model.view.ItemView;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
@@ -258,7 +258,7 @@ public class PartyItemSlot {
     return toGameItem(null);
   }
 
-  public GameItem toGameItem(com.example.htmlmud.domain.repository.TemplateReader templateReader) {
+  public GameItem toGameItem(com.example.htmlmud.template.TemplateReader templateReader) {
     GameItem item = new GameItem();
     item.setId(this.slotId != null ? this.slotId : java.util.UUID.randomUUID().toString());
     item.setName(this.name);

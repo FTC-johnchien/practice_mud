@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.UUID;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
-import com.example.htmlmud.domain.model.template.ItemTemplate;
-import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.template.model.ItemTemplate;
+import com.example.htmlmud.template.TemplateReader;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 

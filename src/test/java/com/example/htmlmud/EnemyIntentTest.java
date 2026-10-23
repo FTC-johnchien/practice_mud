@@ -118,8 +118,8 @@ class EnemyIntentTest {
   @Test
   @DisplayName("MILESTONE-1 TASK-1: 驗證 MobTemplate 與 PartyMemberSkill 資料驅動加載 castTimeMs 與 interruptible")
   void testDataModelSchemaExtensions() {
-    com.example.htmlmud.infra.persistence.repository.TemplateRepository repo =
-        new com.example.htmlmud.infra.persistence.repository.TemplateRepository();
+    com.example.htmlmud.template.TemplateRepository repo =
+        new com.example.htmlmud.template.TemplateRepository();
     repo.initDefaults();
 
     // 驗證 party_skills.json 中的 castTimeMs 與 interruptible 設定

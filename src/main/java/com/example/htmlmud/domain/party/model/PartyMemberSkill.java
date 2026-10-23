@@ -256,7 +256,7 @@ public class PartyMemberSkill implements UnifiedSkill {
     return (int) Math.round(this.sanRestore * (1.0 + (lvl - 1) * 0.05));
   }
 
-  public static PartyMemberSkill fromSkillTemplate(com.example.htmlmud.domain.model.template.SkillTemplate tpl) {
+  public static PartyMemberSkill fromSkillTemplate(com.example.htmlmud.template.model.SkillTemplate tpl) {
     if (tpl == null) return null;
 
     CombatResourceType costType = CombatResourceType.MP;

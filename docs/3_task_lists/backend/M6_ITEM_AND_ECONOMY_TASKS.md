@@ -13,7 +13,7 @@
   - `src/main/resources/data/global/items/`（分流目錄：weapons, armors, accessories, consumables, materials, currencies, quest）
   - `src/main/resources/data/zones/*/shops.json`（區域商店交易貨品）
 - **核心領域實體**：
-  - [`ItemTemplate.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/template/ItemTemplate.java)（物品範本）
+  - [`ItemTemplate.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/template/model/ItemTemplate.java)（物品範本）
   - [`ItemAffix.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/item/model/ItemAffix.java)（隨機詞綴實體：PREFIX / SUFFIX，動態屬性累加）
   - [`PartyItemSlot.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/party/model/PartyItemSlot.java)（掛載詞綴之裝備插槽與動態命名）
   - [`EquipmentSlot.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/model/enums/EquipmentSlot.java)（5+2 裝備槽位枚舉）

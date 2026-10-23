@@ -24,7 +24,7 @@ class CyberSkillAndItemAffixTest {
   private PartyService partyService;
 
   @Autowired
-  private com.example.htmlmud.infra.persistence.repository.TemplateRepository templateRepository;
+  private com.example.htmlmud.template.TemplateRepository templateRepository;
 
   @Test
   @DisplayName("測試賽博修仙技能模型：四大流派、超頻階級與 Primer/Detonator 連攜角色判定")

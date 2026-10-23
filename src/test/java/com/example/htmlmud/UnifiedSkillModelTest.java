@@ -10,7 +10,7 @@ import com.example.htmlmud.domain.model.config.MoveAction;
 import com.example.htmlmud.domain.model.config.MoveMessage;
 import com.example.htmlmud.domain.model.entity.SkillEntry;
 import com.example.htmlmud.domain.model.enums.SkillType;
-import com.example.htmlmud.domain.model.template.SkillTemplate;
+import com.example.htmlmud.template.model.SkillTemplate;
 import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;

@@ -46,7 +46,7 @@ public class SkillEntry {
    * 轉換為大一統規範技能實體 (PartyMemberSkill)
    */
   public com.example.htmlmud.domain.party.model.PartyMemberSkill toUnifiedSkill(
-      com.example.htmlmud.domain.repository.TemplateReader reader) {
+      com.example.htmlmud.template.TemplateReader reader) {
     if (reader == null) {
       return com.example.htmlmud.domain.party.model.PartyMemberSkill.builder()
           .id(this.skillId)

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import com.example.htmlmud.config.GameConfig;
 import com.example.htmlmud.domain.model.config.MoveAction;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
-import com.example.htmlmud.domain.model.template.SkillTemplate;
+import com.example.htmlmud.template.model.SkillTemplate;
 import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.model.PartyItemSlot;
 import com.example.htmlmud.domain.party.model.PartyMember;
@@ -52,17 +52,17 @@ public class DefenseResolver {
   }
 
   private final GameConfig gameConfig;
-  private final com.example.htmlmud.domain.repository.TemplateReader templateReader;
+  private final com.example.htmlmud.template.TemplateReader templateReader;
 
   public DefenseResolver() {
-    this(null, new com.example.htmlmud.domain.repository.TemplateCatalog());
+    this(null, new com.example.htmlmud.template.TemplateCatalog());
   }
 
   @Autowired
   public DefenseResolver(@Autowired(required = false) GameConfig gameConfig,
-                         @Autowired(required = false) com.example.htmlmud.domain.repository.TemplateReader templateReader) {
+                         @Autowired(required = false) com.example.htmlmud.template.TemplateReader templateReader) {
     this.gameConfig = gameConfig;
-    this.templateReader = templateReader != null ? templateReader : new com.example.htmlmud.domain.repository.TemplateCatalog();
+    this.templateReader = templateReader != null ? templateReader : new com.example.htmlmud.template.TemplateCatalog();
   }
 
   /**

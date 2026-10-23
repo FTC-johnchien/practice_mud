@@ -10,7 +10,7 @@ import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyItemSlot;
 import com.example.htmlmud.domain.party.service.PartyService;
-import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.template.TemplateReader;
 import com.example.htmlmud.domain.world.GameStateBroadcastService;
 import com.example.htmlmud.domain.combat.service.TargetSelector;
 import lombok.RequiredArgsConstructor;

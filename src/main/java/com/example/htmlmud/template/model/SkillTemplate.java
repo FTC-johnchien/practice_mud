@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.model.template;
+package com.example.htmlmud.template.model;
 
 import java.util.List;
 import java.util.Set;

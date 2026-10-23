@@ -14,7 +14,7 @@ import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.model.config.Mechanics;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.entity.SkillEntry;
-import com.example.htmlmud.domain.model.template.SkillTemplate;
+import com.example.htmlmud.template.model.SkillTemplate;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.progression.service.XpProgressionService;
 import com.example.htmlmud.domain.progression.service.XpService;
@@ -22,17 +22,17 @@ import com.example.htmlmud.domain.progression.service.XpService;
 public class XpProgressionServiceTest {
 
   private XpProgressionService service;
-  private com.example.htmlmud.infra.persistence.repository.TemplateRepository templateRepository;
+  private com.example.htmlmud.template.TemplateRepository templateRepository;
 
   @BeforeEach
   void setUp() {
     service = new XpProgressionService();
-    templateRepository = new com.example.htmlmud.infra.persistence.repository.TemplateRepository();
+    templateRepository = new com.example.htmlmud.template.TemplateRepository();
     templateRepository.registerClass(
-        com.example.htmlmud.domain.model.template.ClassTemplate.builder()
+        com.example.htmlmud.template.model.ClassTemplate.builder()
             .id("swordsman")
             .name("劍客")
-            .growth(new com.example.htmlmud.domain.model.template.ClassTemplate.ClassGrowth(20, 8, java.util.Map.of(
+            .growth(new com.example.htmlmud.template.model.ClassTemplate.ClassGrowth(20, 8, java.util.Map.of(
                 "DEX", 2.5,
                 "STR", 1.5,
                 "CON", 1.0,
@@ -41,10 +41,10 @@ public class XpProgressionServiceTest {
             )))
             .build());
     templateRepository.registerClass(
-        com.example.htmlmud.domain.model.template.ClassTemplate.builder()
+        com.example.htmlmud.template.model.ClassTemplate.builder()
             .id("warrior")
             .name("豪俠")
-            .growth(new com.example.htmlmud.domain.model.template.ClassTemplate.ClassGrowth(35, 0, java.util.Map.of(
+            .growth(new com.example.htmlmud.template.model.ClassTemplate.ClassGrowth(35, 0, java.util.Map.of(
                 "CON", 3.0,
                 "STR", 1.5,
                 "DEX", 0.5,

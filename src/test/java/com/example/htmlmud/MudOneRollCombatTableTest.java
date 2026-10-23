@@ -18,7 +18,7 @@ import com.example.htmlmud.domain.dungeon.battle.DefenseResolver;
 import com.example.htmlmud.domain.dungeon.battle.DefenseResolver.DefenseOutcome;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
-import com.example.htmlmud.domain.model.template.MobTemplate;
+import com.example.htmlmud.template.model.MobTemplate;
 import com.example.htmlmud.domain.actor.service.MobService;
 import com.example.htmlmud.domain.actor.service.PlayerService;
 import com.example.htmlmud.domain.world.WorldManager;

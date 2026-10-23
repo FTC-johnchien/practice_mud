@@ -18,7 +18,7 @@ class PartyFormationTest {
 
   @BeforeEach
   void setUp() {
-    partyService = new PartyService(new com.example.htmlmud.domain.repository.TemplateCatalog());
+    partyService = new PartyService(new com.example.htmlmud.template.TemplateCatalog());
     partyService.initDefaultFormations();
     party = partyService.createInitialParty("李長生");
   }
@@ -199,13 +199,13 @@ class PartyFormationTest {
     com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
     try (var is = getClass().getClassLoader().getResourceAsStream("data/zones/newbie_village/rooms.json")) {
       assertNotNull(is, "newbie_village/rooms.json 應存在");
-      java.util.List<com.example.htmlmud.domain.model.template.RoomTemplate> rooms =
+      java.util.List<com.example.htmlmud.template.model.RoomTemplate> rooms =
           mapper.readValue(is, new com.fasterxml.jackson.core.type.TypeReference<>() {});
       var innOpt = rooms.stream().filter(r -> "inn".equals(r.id())).findFirst();
       assertTrue(innOpt.isPresent(), "客棧房間應存在");
       var spawns = innOpt.get().spawnRules();
       assertNotNull(spawns);
-      var mobIds = spawns.stream().map(com.example.htmlmud.domain.model.template.SpawnRule::id).toList();
+      var mobIds = spawns.stream().map(com.example.htmlmud.template.model.SpawnRule::id).toList();
       assertTrue(mobIds.contains("tie_niu"), "客棧應可招募鐵牛");
       assertTrue(mobIds.contains("ling_shuang"), "客棧應可招募凌霜");
       assertTrue(mobIds.contains("yan_qing"), "客棧應可招募燕青");

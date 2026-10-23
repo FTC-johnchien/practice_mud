@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.repository;
+package com.example.htmlmud.template;
 
 import java.util.Collections;
 import java.util.Map;
@@ -10,15 +10,15 @@ import org.springframework.stereotype.Service;
 
 import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
-import com.example.htmlmud.domain.model.template.ClassTemplate;
-import com.example.htmlmud.domain.model.template.CompanionTemplate;
-import com.example.htmlmud.domain.model.template.ItemTemplate;
-import com.example.htmlmud.domain.model.template.MobTemplate;
-import com.example.htmlmud.domain.model.template.RaceTemplate;
-import com.example.htmlmud.domain.model.template.RoomTemplate;
-import com.example.htmlmud.domain.model.template.ShopTemplate;
-import com.example.htmlmud.domain.model.template.SkillTemplate;
-import com.example.htmlmud.domain.model.template.ZoneTemplate;
+import com.example.htmlmud.template.model.ClassTemplate;
+import com.example.htmlmud.template.model.CompanionTemplate;
+import com.example.htmlmud.template.model.ItemTemplate;
+import com.example.htmlmud.template.model.MobTemplate;
+import com.example.htmlmud.template.model.RaceTemplate;
+import com.example.htmlmud.template.model.RoomTemplate;
+import com.example.htmlmud.template.model.ShopTemplate;
+import com.example.htmlmud.template.model.SkillTemplate;
+import com.example.htmlmud.template.model.ZoneTemplate;
 import com.example.htmlmud.domain.party.model.FormationTemplate;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
 
@@ -37,7 +37,7 @@ public class TemplateCatalog implements TemplateReader {
       return defaultReaderSupplier.get();
     }
     try {
-      Class<?> clazz = Class.forName("com.example.htmlmud.infra.persistence.repository.TemplateRepository");
+      Class<?> clazz = Class.forName("com.example.htmlmud.template.TemplateRepository");
       return (TemplateReader) clazz.getDeclaredConstructor().newInstance();
     } catch (Exception e) {
       return null;

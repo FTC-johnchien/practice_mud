@@ -11,7 +11,7 @@ import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.CombatResourceType;
 import com.example.htmlmud.domain.party.model.FormationTemplate;
-import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.template.TemplateReader;
 
 public record DrpgStateDto(
     String type,
@@ -242,8 +242,8 @@ public record DrpgStateDto(
       String basicSkillId = m.getEffectiveBasicSkillId();
       String basicSkillName = null;
       if (customStanceId != null) {
-        var customSkillOpt = templateReader != null ? templateReader.findSkill(customStanceId) : java.util.Optional.<com.example.htmlmud.domain.model.template.SkillTemplate>empty();
-        basicSkillName = customSkillOpt.map(com.example.htmlmud.domain.model.template.SkillTemplate::getName).orElse(customStanceId);
+        var customSkillOpt = templateReader != null ? templateReader.findSkill(customStanceId) : java.util.Optional.<com.example.htmlmud.template.model.SkillTemplate>empty();
+        basicSkillName = customSkillOpt.map(com.example.htmlmud.template.model.SkillTemplate::getName).orElse(customStanceId);
       }
 
       com.example.htmlmud.domain.model.enums.SkillCategory currentCat =
@@ -357,7 +357,7 @@ public record DrpgStateDto(
           availablePassives,
           m.getClassId(),
           m.getEffectiveClassName(),
-          m.getClassTemplate().map(com.example.htmlmud.domain.model.template.ClassTemplate::description).orElse(""),
+          m.getClassTemplate().map(com.example.htmlmud.template.model.ClassTemplate::description).orElse(""),
           tacticsDtos,
           memberLevel,
           memberExp,
@@ -859,7 +859,7 @@ public record DrpgStateDto(
         com.example.htmlmud.domain.party.model.PartyMember m, TemplateReader templateReader) {
       if (r == null) return null;
       String skillName = r.getSkillId();
-      var skOpt = (templateReader != null && r.getSkillId() != null) ? templateReader.findSkill(r.getSkillId()) : java.util.Optional.<com.example.htmlmud.domain.model.template.SkillTemplate>empty();
+      var skOpt = (templateReader != null && r.getSkillId() != null) ? templateReader.findSkill(r.getSkillId()) : java.util.Optional.<com.example.htmlmud.template.model.SkillTemplate>empty();
       if (skOpt.isPresent()) {
         skillName = skOpt.get().getName();
       } else if (m != null && m.getSkills() != null) {

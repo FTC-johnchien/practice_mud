@@ -72,7 +72,7 @@ public final class Player extends Living {
     return (cfgClass != null && !cfgClass.isBlank()) ? cfgClass : "SWORDSMAN";
   }
 
-  public java.util.Optional<com.example.htmlmud.domain.model.template.ClassTemplate> getClassTemplate() {
+  public java.util.Optional<com.example.htmlmud.template.model.ClassTemplate> getClassTemplate() {
     if (this.manager != null && this.manager.getTemplateReader() != null) {
       return this.manager.getTemplateReader().findClass(getClassId());
     }

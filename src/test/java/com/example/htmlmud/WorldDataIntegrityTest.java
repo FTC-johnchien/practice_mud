@@ -12,13 +12,13 @@ import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ResourceType;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
-import com.example.htmlmud.domain.model.template.RaceTemplate;
-import com.example.htmlmud.domain.model.template.RoomExit;
-import com.example.htmlmud.domain.model.template.RoomTemplate;
-import com.example.htmlmud.domain.model.template.SkillTemplate;
-import com.example.htmlmud.domain.model.template.ZoneTemplate;
+import com.example.htmlmud.template.model.RaceTemplate;
+import com.example.htmlmud.template.model.RoomExit;
+import com.example.htmlmud.template.model.RoomTemplate;
+import com.example.htmlmud.template.model.SkillTemplate;
+import com.example.htmlmud.template.model.ZoneTemplate;
 import com.example.htmlmud.domain.model.vo.DamageSource;
-import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
+import com.example.htmlmud.template.TemplateRepository;
 
 @SpringBootTest
 class WorldDataIntegrityTest {

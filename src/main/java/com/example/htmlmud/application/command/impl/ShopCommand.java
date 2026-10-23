@@ -9,13 +9,13 @@ import com.example.htmlmud.application.command.CommandAlias;
 import com.example.htmlmud.application.command.PlayerCommand;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.context.MudContext;
-import com.example.htmlmud.domain.model.template.ShopTemplate;
-import com.example.htmlmud.domain.model.template.ShopTemplate.ShopItemTemplate;
+import com.example.htmlmud.template.model.ShopTemplate;
+import com.example.htmlmud.template.model.ShopTemplate.ShopItemTemplate;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyItemSlot;
 import com.example.htmlmud.domain.party.service.PartyService;
 import com.example.htmlmud.domain.world.GameStateBroadcastService;
-import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.template.TemplateReader;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -342,7 +342,7 @@ public class ShopCommand implements PlayerCommand {
   private String getNpcName(ShopTemplate shop) {
     if (shop != null && shop.npcId() != null && !shop.npcId().isBlank()) {
       return templateReader.findMob(shop.npcId())
-          .map(com.example.htmlmud.domain.model.template.MobTemplate::name)
+          .map(com.example.htmlmud.template.model.MobTemplate::name)
           .orElse(shop.npcId());
     }
     return "掌櫃";

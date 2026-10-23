@@ -1,4 +1,4 @@
-package com.example.htmlmud.domain.validation;
+package com.example.htmlmud.template;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,16 +15,16 @@ import com.example.htmlmud.domain.exception.DataValidationException;
 import com.example.htmlmud.domain.model.config.LootEntry;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
-import com.example.htmlmud.domain.model.template.CompanionTemplate;
-import com.example.htmlmud.domain.model.template.ItemTemplate;
-import com.example.htmlmud.domain.model.template.MobTemplate;
-import com.example.htmlmud.domain.model.template.RoomExit;
-import com.example.htmlmud.domain.model.template.RoomTemplate;
-import com.example.htmlmud.domain.model.template.ShopTemplate;
-import com.example.htmlmud.domain.model.template.SpawnRule;
+import com.example.htmlmud.template.model.CompanionTemplate;
+import com.example.htmlmud.template.model.ItemTemplate;
+import com.example.htmlmud.template.model.MobTemplate;
+import com.example.htmlmud.template.model.RoomExit;
+import com.example.htmlmud.template.model.RoomTemplate;
+import com.example.htmlmud.template.model.ShopTemplate;
+import com.example.htmlmud.template.model.SpawnRule;
 import com.example.htmlmud.domain.party.model.FormationTemplate;
 import com.example.htmlmud.domain.model.enums.RoleCategory;
-import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.template.TemplateReader;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -377,9 +377,9 @@ public class DataIntegrityValidator implements ApplicationRunner {
   }
 
   private int validateSkills(List<String> errors, List<String> warnings) {
-    Map<String, com.example.htmlmud.domain.model.template.SkillTemplate> skills = templateReader.getAllSkills();
+    Map<String, com.example.htmlmud.template.model.SkillTemplate> skills = templateReader.getAllSkills();
     int count = skills.size();
-    for (com.example.htmlmud.domain.model.template.SkillTemplate skill : skills.values()) {
+    for (com.example.htmlmud.template.model.SkillTemplate skill : skills.values()) {
       if (skill.getId() == null || skill.getId().isBlank()) {
         errors.add("發現 ID 為空的技能模板！");
         continue;

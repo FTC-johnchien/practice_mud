@@ -1,4 +1,4 @@
-package com.example.htmlmud.infra.persistence.repository;
+package com.example.htmlmud.template;
 
 import java.util.Collections;
 import java.util.EnumMap;
@@ -8,22 +8,22 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Component;
 import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.enums.SkillCategory;
-import com.example.htmlmud.domain.model.template.ItemTemplate;
-import com.example.htmlmud.domain.model.template.MobTemplate;
-import com.example.htmlmud.domain.model.template.RaceTemplate;
-import com.example.htmlmud.domain.model.template.RoomExit;
-import com.example.htmlmud.domain.model.template.RoomTemplate;
-import com.example.htmlmud.domain.model.template.SkillTemplate;
-import com.example.htmlmud.domain.model.template.ZoneTemplate;
-import com.example.htmlmud.domain.model.template.CompanionTemplate;
-import com.example.htmlmud.domain.model.template.ClassTemplate;
-import com.example.htmlmud.domain.model.template.QuestTemplate;
-import com.example.htmlmud.domain.model.template.ShopTemplate;
+import com.example.htmlmud.template.model.ItemTemplate;
+import com.example.htmlmud.template.model.MobTemplate;
+import com.example.htmlmud.template.model.RaceTemplate;
+import com.example.htmlmud.template.model.RoomExit;
+import com.example.htmlmud.template.model.RoomTemplate;
+import com.example.htmlmud.template.model.SkillTemplate;
+import com.example.htmlmud.template.model.ZoneTemplate;
+import com.example.htmlmud.template.model.CompanionTemplate;
+import com.example.htmlmud.template.model.ClassTemplate;
+import com.example.htmlmud.template.model.QuestTemplate;
+import com.example.htmlmud.template.model.ShopTemplate;
 import com.example.htmlmud.domain.party.model.FormationTemplate;
 import com.example.htmlmud.domain.party.model.GambitPreset;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.port.TemplateRegistryPort;
-import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.template.TemplateRegistryPort;
+import com.example.htmlmud.template.TemplateReader;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -72,7 +72,7 @@ public class TemplateRepository implements TemplateRegistryPort {
     MOB_BASIC_SKILL_IDS.put(SkillCategory.DODGE, "mob_basic_dodge");
     MOB_BASIC_SKILL_IDS.put(SkillCategory.PARRY, "mob_basic_parry");
 
-    com.example.htmlmud.domain.repository.TemplateCatalog.setDefaultReaderSupplier(TemplateRepository::new);
+    com.example.htmlmud.template.TemplateCatalog.setDefaultReaderSupplier(TemplateRepository::new);
   }
 
   public TemplateRepository() {

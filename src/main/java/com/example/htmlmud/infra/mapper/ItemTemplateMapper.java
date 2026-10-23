@@ -1,7 +1,7 @@
 package com.example.htmlmud.infra.mapper;
 
 import com.example.htmlmud.domain.model.entity.GameItem;
-import com.example.htmlmud.domain.model.template.ItemTemplate;
+import com.example.htmlmud.template.model.ItemTemplate;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

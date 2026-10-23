@@ -8,11 +8,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import com.example.htmlmud.domain.model.template.ItemTemplate;
-import com.example.htmlmud.domain.model.template.SkillTemplate;
+import com.example.htmlmud.template.model.ItemTemplate;
+import com.example.htmlmud.template.model.SkillTemplate;
 import com.example.htmlmud.domain.repository.DrpgTemplateAdapter;
 import com.example.htmlmud.domain.repository.MudTemplateAdapter;
-import com.example.htmlmud.domain.repository.TemplateCatalog;
+import com.example.htmlmud.template.TemplateCatalog;
 
 @SpringBootTest
 @ActiveProfiles("test")

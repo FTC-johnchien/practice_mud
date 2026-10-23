@@ -1,18 +1,18 @@
-package com.example.htmlmud.domain.port;
+package com.example.htmlmud.template;
 
 import java.util.Map;
-import com.example.htmlmud.domain.model.template.ClassTemplate;
-import com.example.htmlmud.domain.model.template.CompanionTemplate;
-import com.example.htmlmud.domain.model.template.ItemTemplate;
-import com.example.htmlmud.domain.model.template.MobTemplate;
-import com.example.htmlmud.domain.model.template.RaceTemplate;
-import com.example.htmlmud.domain.model.template.RoomTemplate;
-import com.example.htmlmud.domain.model.template.ShopTemplate;
-import com.example.htmlmud.domain.model.template.SkillTemplate;
-import com.example.htmlmud.domain.model.template.ZoneTemplate;
+import com.example.htmlmud.template.model.ClassTemplate;
+import com.example.htmlmud.template.model.CompanionTemplate;
+import com.example.htmlmud.template.model.ItemTemplate;
+import com.example.htmlmud.template.model.MobTemplate;
+import com.example.htmlmud.template.model.RaceTemplate;
+import com.example.htmlmud.template.model.RoomTemplate;
+import com.example.htmlmud.template.model.ShopTemplate;
+import com.example.htmlmud.template.model.SkillTemplate;
+import com.example.htmlmud.template.model.ZoneTemplate;
 import com.example.htmlmud.domain.party.model.FormationTemplate;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
-import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.template.TemplateReader;
 
 /**
  * 模板資料註冊與存儲埠 (Template Registry Port)

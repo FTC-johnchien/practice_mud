@@ -141,10 +141,10 @@ graph BT
     M3 --> M9
 ```
 
-- [ ] **Step R3.1 (PKG-M7-TEMPLATE): 模組 M7 - 資料範本與看門狗套件封裝**
+- [x] **Step R3.1 (PKG-M7-TEMPLATE): 模組 M7 - 資料範本與看門狗套件封裝**
   - **目標套件**：`com.example.htmlmud.template`
-  - **歸整類別**：`TemplateRepository`, `TemplateCatalog`, `DataIntegrityValidator`, `*Template.java`
-  - **驗收標準**：`mvn test -Dtest=WorldDataIntegrityTest,ArchitectureGuardrailsTest` 100% 綠燈。
+  - **歸整類別**：`TemplateRepository`, `TemplateCatalog`, `TemplateReader`, `TemplateRegistryPort`, `DataIntegrityValidator`, `*Template.java`（含 `com.example.htmlmud.template.model.*`）
+  - **驗收標準**：`WorldDataIntegrityTest`, `ArchitectureGuardrailsTest`, `DataIntegrityValidatorTest` 全數 100% 綠燈，全專案 390 項測試零回歸通過。
 
 - [ ] **Step R3.2 (PKG-M6-ITEM): 模組 M6 - 物品裝備與經濟套件封裝**
   - **目標套件**：`com.example.htmlmud.item`

@@ -17,9 +17,9 @@ import com.example.htmlmud.domain.dungeon.dto.BattleEnemyViewDto;
 import com.example.htmlmud.domain.model.enums.BuffCategory;
 import com.example.htmlmud.domain.model.enums.BuffType;
 import com.example.htmlmud.domain.model.enums.MobRank;
-import com.example.htmlmud.domain.model.template.MobTemplate;
+import com.example.htmlmud.template.model.MobTemplate;
 import com.example.htmlmud.domain.party.model.RowPosition;
-import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.template.TemplateReader;
 
 /**
  * Milestone F2-02: 罡氣破防重創與首領多階段狂暴轉階段 (Poise Break & Boss Phases) 專屬整合測試

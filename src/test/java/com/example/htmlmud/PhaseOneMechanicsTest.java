@@ -40,10 +40,10 @@ class PhaseOneMechanicsTest {
     dungeonManager = new DungeonManager();
     dungeonManager.init();
 
-    partyService = new PartyService(new com.example.htmlmud.domain.repository.TemplateCatalog());
+    partyService = new PartyService(new com.example.htmlmud.template.TemplateCatalog());
     partyService.initDefaultFormations();
 
-    battleService = new DrpgBattleService(partyService, dungeonManager, new DungeonNavigator(), new com.example.htmlmud.domain.repository.TemplateCatalog());
+    battleService = new DrpgBattleService(partyService, dungeonManager, new DungeonNavigator(), new com.example.htmlmud.template.TemplateCatalog());
     broadcastService = mock(GameStateBroadcastService.class);
     restCommand = new RestCommand(partyService, dungeonManager, new DungeonNavigator(), battleService, broadcastService);
 

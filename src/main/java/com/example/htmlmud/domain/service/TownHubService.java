@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.model.dto.FacilityDto;
 import com.example.htmlmud.domain.model.dto.TownHubDto;
 import com.example.htmlmud.domain.model.enums.PerceptionTier;
-import com.example.htmlmud.domain.model.template.FacilityTemplate;
+import com.example.htmlmud.template.model.FacilityTemplate;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.fasterxml.jackson.core.type.TypeReference;

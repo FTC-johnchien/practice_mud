@@ -12,7 +12,7 @@ import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.entity.SkillEntry;
-import com.example.htmlmud.domain.model.template.SkillTemplate;
+import com.example.htmlmud.template.model.SkillTemplate;
 import java.util.Comparator;
 import java.util.concurrent.CopyOnWriteArrayList;
 import com.example.htmlmud.domain.dungeon.battle.ActiveBuff;

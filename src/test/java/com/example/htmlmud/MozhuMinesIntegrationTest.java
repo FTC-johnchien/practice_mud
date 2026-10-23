@@ -6,13 +6,13 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import com.example.htmlmud.domain.model.template.ItemTemplate;
-import com.example.htmlmud.domain.model.template.MobTemplate;
-import com.example.htmlmud.domain.model.template.RoomTemplate;
-import com.example.htmlmud.domain.model.template.SkillTemplate;
-import com.example.htmlmud.domain.model.template.ZoneTemplate;
+import com.example.htmlmud.template.model.ItemTemplate;
+import com.example.htmlmud.template.model.MobTemplate;
+import com.example.htmlmud.template.model.RoomTemplate;
+import com.example.htmlmud.template.model.SkillTemplate;
+import com.example.htmlmud.template.model.ZoneTemplate;
 import com.example.htmlmud.domain.world.WorldManager;
-import com.example.htmlmud.infra.persistence.repository.TemplateRepository;
+import com.example.htmlmud.template.TemplateRepository;
 
 @SpringBootTest
 class MozhuMinesIntegrationTest {

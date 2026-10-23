@@ -1,7 +1,7 @@
-package com.example.htmlmud.domain.model.template.json;
+package com.example.htmlmud.template.model.json;
 
 import java.io.IOException;
-import com.example.htmlmud.domain.model.template.RoomExit;
+import com.example.htmlmud.template.model.RoomExit;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;

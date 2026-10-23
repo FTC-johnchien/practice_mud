@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MozhuMinesQuestListener {
 
   private final WorldManager worldManager;
-  private final com.example.htmlmud.domain.repository.TemplateReader templateReader;
+  private final com.example.htmlmud.template.TemplateReader templateReader;
 
   @Async
   @EventListener

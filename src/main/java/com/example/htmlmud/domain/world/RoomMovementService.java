@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.domain.actor.impl.Room;
 import com.example.htmlmud.domain.model.enums.Direction;
-import com.example.htmlmud.domain.model.template.RoomExit;
+import com.example.htmlmud.template.model.RoomExit;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.service.PartyService;
 import lombok.RequiredArgsConstructor;

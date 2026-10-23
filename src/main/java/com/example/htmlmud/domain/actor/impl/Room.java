@@ -16,8 +16,8 @@ import com.example.htmlmud.domain.actor.core.VirtualActor; // 引用您的基礎
 import com.example.htmlmud.domain.exception.MudException;
 import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.enums.Direction;
-import com.example.htmlmud.domain.model.template.RoomTemplate;
-import com.example.htmlmud.domain.model.template.ZoneTemplate;
+import com.example.htmlmud.template.model.RoomTemplate;
+import com.example.htmlmud.template.model.ZoneTemplate;
 import com.example.htmlmud.domain.world.RoomService;
 import com.example.htmlmud.protocol.MudMessage;
 import com.example.htmlmud.protocol.RoomMessage;

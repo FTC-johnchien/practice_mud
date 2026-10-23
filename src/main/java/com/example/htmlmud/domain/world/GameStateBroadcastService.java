@@ -20,12 +20,12 @@ import com.example.htmlmud.domain.model.entity.GameItem;
 import com.example.htmlmud.domain.model.enums.Direction;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.domain.model.enums.MobKind;
-import com.example.htmlmud.domain.model.template.NpcCapability;
-import com.example.htmlmud.domain.model.template.NpcCapability.NpcCapabilityType;
-import com.example.htmlmud.domain.model.template.RoomTemplate;
+import com.example.htmlmud.template.model.NpcCapability;
+import com.example.htmlmud.template.model.NpcCapability.NpcCapabilityType;
+import com.example.htmlmud.template.model.RoomTemplate;
 import com.example.htmlmud.domain.party.model.Party;
 import com.example.htmlmud.domain.party.service.PartyService;
-import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.template.TemplateReader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -81,7 +81,7 @@ public class GameStateBroadcastService {
     String zoneName = "新手仙鄉";
     if (zoneId != null) {
       zoneName = templateReader.findZone(zoneId)
-          .map(com.example.htmlmud.domain.model.template.ZoneTemplate::name)
+          .map(com.example.htmlmud.template.model.ZoneTemplate::name)
           .orElse(zoneId);
     }
 

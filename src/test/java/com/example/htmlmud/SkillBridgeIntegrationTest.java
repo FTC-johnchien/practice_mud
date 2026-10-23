@@ -17,9 +17,9 @@ import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.model.PartyMemberSkill;
 import com.example.htmlmud.domain.party.model.RowPosition;
 import com.example.htmlmud.domain.model.definition.SkillDefinition;
-import com.example.htmlmud.domain.repository.TemplateReader;
+import com.example.htmlmud.template.TemplateReader;
 import com.example.htmlmud.domain.actor.service.CharacterSyncService;
-import com.example.htmlmud.domain.repository.TemplateCatalog;
+import com.example.htmlmud.template.TemplateCatalog;
 
 /**
  * 大一統技能模型與無膠水架構整合測試 (SP-07: 徹底除役 SkillBridgeService 膠水代碼)

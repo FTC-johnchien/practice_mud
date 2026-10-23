@@ -15,11 +15,11 @@ import com.example.htmlmud.domain.model.definition.ItemDefinition;
 import com.example.htmlmud.domain.model.entity.ItemInstance;
 import com.example.htmlmud.domain.model.enums.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
-import com.example.htmlmud.domain.model.template.ItemTemplate;
+import com.example.htmlmud.template.model.ItemTemplate;
 import com.example.htmlmud.domain.model.view.ItemView;
 import com.example.htmlmud.domain.party.model.PartyInventory;
 import com.example.htmlmud.domain.party.model.PartyItemSlot;
-import com.example.htmlmud.domain.repository.TemplateCatalog;
+import com.example.htmlmud.template.TemplateCatalog;
 
 public class CanonicalItemModelTest {
 

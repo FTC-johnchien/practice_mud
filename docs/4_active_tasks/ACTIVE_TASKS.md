@@ -56,6 +56,10 @@
 
 ## 🏆 已完成里程碑 (Completed Milestones)
 
+- [x] **Milestone REFACTOR-M7 — 模組 M7 資料範本與看門狗 Package-by-Feature 封裝 (Phase 3 Step R3.1)**
+  - Task 1 (PKG-M7-ENCAPSULATION): 依循依賴拓撲完成 M7 模組套件封裝，建立 `com.example.htmlmud.template` 獨立套件，將 `TemplateRepository`、`TemplateCatalog`、`TemplateReader`、`TemplateRegistryPort`、`DataIntegrityValidator` 與所有 `*Template.java`（`com.example.htmlmud.template.model.*`）徹底移出 domain/infra 雜湊目錄，落實 Package-by-Feature。
+  - Task 2 (PKG-M7-TEST-VERIFY): 全專案 389 份 Java 類別無 BOM 乾淨編譯，`WorldDataIntegrityTest`、`ArchitectureGuardrailsTest`、`DataIntegrityValidatorTest` 全數綠燈，全專案 390 項測試 100% 綠燈，文檔 360 個內部連結 100% 通過。
+
 - [x] **Milestone CONV-02 — 地牢生存機制與存檔安全鎖收斂 (Dungeon Survival & Save Restrictions Convergence, P1)**
   - Task 1 (CONV-02-DEFEAT-WIPE): 在 `DrpgRewardService` 實裝滅團結算，全員 HP 歸零立即終止戰鬥、重置 `inDungeon = false` 遣返營地客棧 (`exitRoomId` / `newbie_village:inn`)、30% HP 虛弱復甦、扣除 20 點 SAN，透過 `ObjectProvider<SaveGameService>` 解耦觸發 `slot_0` (AutoSave)，`DungeonDefeatSettlementTest` 100% 綠燈。
   - Task 2 (CONV-02-SAVE-RESTRICTIONS): 在 `SaveGameService` 與 `SaveCommand` 實裝地牢手動存檔安全鎖，走廊深處殺機四伏嚴格阻斷，唯有抵達生路石階 (`<`, `>`) 或古仙殘碑 (`EVENT !`) 方可入定存檔。

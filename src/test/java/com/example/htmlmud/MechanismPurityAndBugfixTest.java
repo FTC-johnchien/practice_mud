@@ -16,7 +16,7 @@ import com.example.htmlmud.domain.party.model.PartyItemSlot;
 import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.party.service.PartyService;
 import com.example.htmlmud.domain.save.service.SaveGameService;
-import com.example.htmlmud.domain.repository.TemplateCatalog;
+import com.example.htmlmud.template.TemplateCatalog;
 
 import com.example.htmlmud.domain.model.enums.DamageType;
 import com.example.htmlmud.domain.dungeon.battle.BattleEnemy;
@@ -32,7 +32,7 @@ public class MechanismPurityAndBugfixTest {
   private SaveGameService saveGameService;
 
   @Autowired
-  private com.example.htmlmud.domain.repository.TemplateReader templateReader;
+  private com.example.htmlmud.template.TemplateReader templateReader;
 
   @Test
   @DisplayName("機制驗證：PartyInventory 容器建構子必須純淨，無任何寫死初始道具")
