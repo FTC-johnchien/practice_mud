@@ -3,7 +3,7 @@
 > **文檔層級**：Level 3 — Task Lists (模組實作進度清單)  
 > **對應規格**：👉 [`docs/2_specifications/backend/M5_SKILL_AND_PROGRESSION.md`](../../2_specifications/backend/M5_SKILL_AND_PROGRESSION.md)  
 > **核心職責**：管理四大賽博修仙流派技能、超頻階級 (0~3)、連攜角色 (ComboRole)、境界階梯突破與潛能點成長。  
-> **當前完成度**：90% 🟢
+> **當前完成度**：95% 🟢
 
 ---
 
@@ -33,6 +33,9 @@
   - 支援超頻階級 `overclockTier 0~3`；`DataIntegrityValidator` Fail-Fast 啟動期檢驗防破窗。
 - [x] **M5-PROLOGUE-SKILLS (首批序章戰技注入)**
   - 在 `party_skills.json` 實裝【神經超頻步】(`skill_neural_overclock_step`, Primer, 削韌 25) 與【強殖角質刃】(`skill_bio_keratin_blade`, Detonator, 削韌 45)。
+- [x] **Task M5-3 (16-CANONICAL-SKILLS-INGESTION): 落地 16 大標準賽博修仙技能庫（仙俠表層定名）**
+  - 依據 L1《CYBERPUNK_CULTIVATION_SPEC.md》與 L2《SKILL_SCHEMA.md》第四節 16 大技能矩陣，在 `party_skills.json` 完整補齊 16 項技能資料配置。所有技能對外展示名稱一律採用東方仙俠神通名稱（如【偷天換日·轉煞移因訣】、【燃魂溯光·剎那千秋步】），後端對齊四大 `cyberSchool` 與 `comboRole` 連攜機制。
+  - `CyberSkillAndItemAffixTest` 與 `WorldDataIntegrityTest` 綠燈通過，前端呈現純正仙俠神通名，戰鬥中 Primer/Detonator 連攜機制運作正常。
 
 ---
 
@@ -44,6 +47,3 @@
 - [ ] **Task M5-2 (BREAKTHROUGH-TRIALS): 境界突破雷劫試煉副本**
   - **目標**：築基破金丹時，需消耗突破丹藥並觸發九重天劫考驗，成功後五維上限大幅躍遷。
   - **驗收標準**：突破失敗有保底保護，突破成功廣播天地異象。
-- [ ] **Task M5-3 (16-CANONICAL-SKILLS-INGESTION): 落地 16 大標準賽博修仙技能庫（仙俠表層定名）**
-  - **目標**：依據 L1《CYBERPUNK_CULTIVATION_SPEC.md》與 L2《SKILL_SCHEMA.md》第四節 16 大技能矩陣，在 `party_skills.json` 完整補齊 16 項技能資料配置。所有技能對外展示名稱一律採用東方仙俠神通名稱（如【偷天換日·轉煞移因訣】、【燃魂溯光·剎那千秋步】），後端對齊四大 `cyberSchool` 與 `comboRole` 連攜機制。
-  - **驗收標準**：`WorldDataIntegrityTest` 綠燈，技能在前端呈現純正仙俠神通名，戰鬥中 Primer/Detonator 連攜機制運作正常。

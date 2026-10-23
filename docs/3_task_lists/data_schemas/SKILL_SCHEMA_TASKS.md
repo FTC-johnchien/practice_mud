@@ -28,12 +28,13 @@
 - [x] **SCHEMA-OVERCLOCK-TIERS (超頻階級 0~3 驗證)**
   - 整合 `DataIntegrityValidator` Fail-Fast 檢驗，階級超界立即阻斷。
 
+- [x] **Task SKILL-SCHEMA-2 (16-CANONICAL-SKILLS-VALIDATION): 16 大標準賽博技能 Schema 契約齊備性驗證（仙俠神通名契約）**
+  - 依據 `SKILL_SCHEMA.md` 第四節 16 大技能矩陣，`party_skills.json` 完整包含四大流派之 16 項技能定義，`name` 欄位為古典仙俠神通名（如【移花接木·協議解析】、【萬劍歸宗·分散式洪流】），且 `cyberSchool`、`comboRole`、`poiseDamage`、`costMp`、`cooldownMs` 契約無遺漏。
+  - `CyberSkillAndItemAffixTest.testCanonical16CyberSkillsLoadedFromData` 測試 16 個技能 Schema 結構與連攜角色全數 100% 綠燈。
+
 ---
 
 ## ⏳ 三、未竟待辦與演進項目 (Pending Backlog)
 
 - [ ] **Task SKILL-SCHEMA-1 (VS-01 戰鬥連攜實測): 戰鬥中 Primer 標記與 Detonator 引爆閉環驗收**
   - **目標**：驗證技能發動後 DTO 投影正確攜帶 `comboRole`，戰鬥中正確發動 50% 震盪衝擊波。
-- [ ] **Task SKILL-SCHEMA-2 (16-CANONICAL-SKILLS-VALIDATION): 16 大標準賽博技能 Schema 契約齊備性驗證（仙俠神通名契約）**
-  - **目標**：依據 `SKILL_SCHEMA.md` 第四節 16 大技能矩陣，確保 `party_skills.json` 包含四大流派之 16 項技能定義，`name` 欄位為古典仙俠神通名，且 `cyberSchool`、`comboRole`、`poiseDamage`、`costMp`、`cooldownMs` 契約無遺漏。
-  - **驗收標準**：`CyberSkillAndItemAffixTest` 擴展測試 16 個技能 Schema 結構全數綠燈。

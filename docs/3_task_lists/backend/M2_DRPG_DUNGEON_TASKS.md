@@ -3,7 +3,7 @@
 > **文檔層級**：Level 3 — Task Lists (模組實作進度清單)  
 > **對應規格**：👉 [`docs/2_specifications/backend/M2_DRPG_DUNGEON.md`](../../2_specifications/backend/M2_DRPG_DUNGEON.md)  
 > **核心職責**：管理純單機第一人稱 2D 矩陣地牢（10x10 等規格）、走格步進、暗雷遇敵率、火把光明度消耗與機關陷阱檢定。  
-> **當前完成度**：90% 🟢
+> **當前完成度**：95% 🟢
 
 ---
 
@@ -17,6 +17,7 @@
   - [`DungeonManager.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/service/DungeonManager.java)（地牢狀態機、位移轉向與踩格判定）
   - [`DungeonPosition.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/dungeon/model/DungeonPosition.java)（玩家座標 x, y 與朝向 facing）
 - **關聯驗證測試**：
+  - [`DungeonDefeatSettlementTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/DungeonDefeatSettlementTest.java)（地牢全滅戰敗結算與手動存檔安全鎖 100% 綠燈）
   - [`DungeonTorchAndTrapTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/DungeonTorchAndTrapTest.java)（火把與陷阱 100% 綠燈）
   - [`WorldDataIntegrityTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/WorldDataIntegrityTest.java)（地牢資料拓撲檢驗 100% 綠燈）
 
@@ -32,6 +33,12 @@
   - 實裝暗弩陷阱（身法檢定）、靈泉滋養（全員 HP/MP/SAN 大回補）、鎖鏈暗門（臂力/工具破拆）。
 - [x] **M2-DATA-DRIVEN-PURGE (硬編碼地圖徹底清除)**
   - 物理刪除 `DungeonManager` 中 65 行手刻地圖代碼（`buildTombB1F()`），全專案 100% 依循 JSON 範本驅動。
+- [x] **Task M2-3 (DEFEAT-WIPE-SETTLEMENT): 全隊覆滅回營懲罰與虛弱復甦機制 (Defeat Settlement)**
+  - 在 `DrpgRewardService.java` 實裝滅團結算：小隊全員氣血歸零時立即終止戰鬥、重置 `inDungeon = false` 並遣返營地客棧 (`exitRoomId` / `newbie_village:inn`)、全員 30% 氣血重塑復甦、SAN 扣除 20 點並自動落盤存入 `slot_0` (AutoSave)，防止深淵死鎖。
+  - `DungeonDefeatSettlementTest.testDungeonWipeDefeatSettlement` 100% 綠燈覆蓋驗證。
+- [x] **Task M2-4 (IN-DUNGEON-RESTRICTIONS): 地牢內部手動存檔限制 (In-Dungeon Save Restriction)**
+  - 在 `SaveGameService.java` 與 `SaveCommand.java` 實裝沉浸博弈安全鎖：地牢深處殺機四伏時嚴格阻斷手動存檔，唯有抵達生路石階（`<` / `>`）或神秘殘碑生門（`EVENT`）方可閉關入定封印存檔。
+  - `DungeonDefeatSettlementTest.testInDungeonManualSaveRestrictions` 100% 綠燈覆蓋驗證。
 
 ---
 
@@ -43,9 +50,3 @@
 - [ ] **Task M2-2 (SAN-VISION-SECRETS): 低 SAN 幻覺與古修士靈視暗門**
   - **目標**：當小隊 SAN 值過低時，視界邊緣渲染扭曲粒子，並在地牢特定座標浮現「常態隱形之古修士道藏暗門」。
   - **驗收標準**：SAN < 30 時可與隱藏格互動獲得古代特工晶片或高階丹方。
-- [ ] **Task M2-3 (DEFEAT-WIPE-SETTLEMENT): 全隊覆滅回營懲罰與虛弱復甦機制 (Defeat Settlement)**
-  - **目標**：當小隊全員 HP 歸零或於地牢判定全滅時，觸發結算：扣除隨身戰利品、將狀態安全重置回營地、全員氣血虛弱復甦（30% HP）、安全保存寫入存檔。
-  - **驗收標準**：全滅時不破壞存檔，營地復甦並提示扣除戰利品之情境日誌。
-- [ ] **Task M2-4 (IN-DUNGEON-RESTRICTIONS): 地牢中禁止手動任意存檔與任意脫離**
-  - **目標**：確保地牢探索中無法任意保存/讀取跳出，僅在抵達石階/單向脫離法陣時方可派發 `EXTRACT` 動作回營存檔。
-  - **驗收標準**：在地牢中嘗試任意存檔或脫離被 ActionHandler 阻斷並提示需尋找撤離點。

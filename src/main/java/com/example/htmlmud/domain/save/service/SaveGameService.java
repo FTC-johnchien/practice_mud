@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.example.htmlmud.domain.dungeon.model.GridDirection;
 import com.example.htmlmud.domain.dungeon.model.DungeonFloor;
 import com.example.htmlmud.domain.dungeon.model.DungeonPosition;
+import com.example.htmlmud.domain.dungeon.model.DungeonTile;
 import com.example.htmlmud.domain.dungeon.model.GridCoord;
 import com.example.htmlmud.domain.dungeon.service.DungeonManager;
 import com.example.htmlmud.domain.party.model.Party;
@@ -215,6 +216,43 @@ public class SaveGameService {
           .title(defaultTitle + " (存檔損壞)")
           .build();
     }
+  }
+
+  /**
+   * 檢查當前玩家是否允許執行手動存檔 (M2-4 / Task C2-2: 地牢沉浸博弈安全鎖)
+   * 規則：地表營地隨時可存；地牢深處殺機四伏，唯有抵達安全撤離石階 (<, >) 或神秘殘碑 (EVENT !) 方可入定存檔。
+   */
+  public boolean isManualSaveAllowed(Player player) {
+    if (player == null) return false;
+    return isManualSaveAllowed(player.getName(), player.isInDungeon());
+  }
+
+  public boolean isManualSaveAllowed(String playerId, boolean inDungeon) {
+    if (!inDungeon) {
+      return true;
+    }
+    if (dungeonManager == null) {
+      return true;
+    }
+    DungeonPosition pos = dungeonManager.getPlayerPosition(playerId);
+    if (pos == null) {
+      pos = dungeonManager.getOrCreatePosition(playerId, null);
+    }
+    if (pos == null || pos.getFloorId() == null) {
+      return false;
+    }
+    DungeonFloor floor = dungeonManager.getFloor(pos.getFloorId());
+    if (floor == null) {
+      return false;
+    }
+    DungeonTile tile = floor.getTile(pos.getX(), pos.getY());
+    if (tile == null) {
+      return false;
+    }
+    DungeonTile.TileType type = tile.getType();
+    return type == DungeonTile.TileType.STAIRS_UP
+        || type == DungeonTile.TileType.STAIRS_DOWN
+        || type == DungeonTile.TileType.EVENT;
   }
 
   public SaveData saveGame(String playerId, int slotId, String customTitle) {

@@ -94,19 +94,19 @@ graph TD
 ### 🟢 階段二：地牢生存與戰技資料收斂 (Phase 2: Feature Convergence - M2 & M5)
 > **目的**：補齊 L2 規範中明訂但程式碼缺漏的地牢死亡結算、存檔安全鎖與 16 大仙俠戰技資料。
 
-- [ ] **Task C2-1 (DEFEAT-WIPE-SETTLEMENT): 實作地牢全滅結算與營地虛弱復甦 (M2-3)**
-  - **位置**：`DungeonManager.java`、`DrpgCombatLoop.java`
+- [x] **Task C2-1 (DEFEAT-WIPE-SETTLEMENT): 實作地牢全滅結算與營地虛弱復甦 (M2-3)**
+  - **位置**：`DrpgRewardService.java`
   - **職責**：
     1. 當在地牢中遭遇滅團（全隊 HP 歸零）時，立即中斷當前戰鬥。
-    2. 清空探索期間獲得的暫存掉落物（已穿戴裝備與背包既有物資保留）。
-    3. 將隊伍狀態重置至營地（`viewMode = TOWN`），全員氣血虛弱復甦（以 30% HP 復活）。
-    4. 觸發自動存檔（AutoSave），確保狀態落盤且無壞檔風險。
-  - **測試驗證**：在 `DungeonTorchAndTrapTest` 或新增 `DungeonDefeatSettlementTest` 驗證滅團結算。
+    2. 將隊伍狀態重置至營地（`inDungeon = false`，`currentRoomId` 重置回營地客棧/入口），全員氣血虛弱復甦（以 30% HP 復活），扣除 20 點 SAN。
+    3. 重置地牢探索座標至入口起點，防止下次進入死鎖。
+    4. 透過 `ObjectProvider<SaveGameService>` 解耦並觸發自動存檔（`slot_0` AutoSave），確保狀態落盤且無壞檔與循環依賴風險。
+  - **測試驗證**：新增 `DungeonDefeatSettlementTest.testDungeonWipeDefeatSettlement` 驗證滅團結算 100% 綠燈。
 
-- [ ] **Task C2-2 (IN-DUNGEON-RESTRICTIONS): 實作地牢內部存檔與脫離限制 (M2-4)**
-  - **位置**：`SaveCommand.java` / `ActionHandler`
-  - **職責**：在 `viewMode == DUNGEON` 且不在撤離點（`E` 或石階）時，阻斷主動存檔或脫離請求，提示「地脈煞氣擾動，唯有抵達脫離石階方可閉關存檔」。
-  - **測試驗證**：單元測試驗證地牢中存檔阻斷、撤離點存檔成功。
+- [x] **Task C2-2 (IN-DUNGEON-RESTRICTIONS): 實作地牢內部存檔與脫離限制 (M2-4)**
+  - **位置**：`SaveGameService.java` / `SaveCommand.java`
+  - **職責**：在 `player.isInDungeon()` 且不在撤離點（`STAIRS_UP <`、`STAIRS_DOWN >` 或神秘殘碑 `EVENT !`）時，嚴密阻斷手動存檔，提示「⚠️【地脈煞氣擾動】地牢深處殺機四伏，神念無法入定封印！唯有抵達脫離石階或安全生路（殘碑/生門）方可閉關存檔！」。
+  - **測試驗證**：在 `DungeonDefeatSettlementTest.testInDungeonManualSaveRestrictions` 驗證深處走廊阻斷、石階與殘碑處允許存檔，100% 綠燈。
 
 - [x] **Task C2-3 (16-CANONICAL-SKILLS-DATA): 完整落地 16 大仙俠賽博戰技資料 (M5-3)**
   - **位置**：`src/main/resources/data/party/party_skills.json`

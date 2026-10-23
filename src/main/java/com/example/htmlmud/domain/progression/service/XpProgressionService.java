@@ -378,19 +378,19 @@ public class XpProgressionService {
 
     String lower = statName.trim().toLowerCase();
     switch (lower) {
-      case "str", "力量", "臂力" -> stats.setStr(stats.getStr() + amount);
-      case "con", "根骨", "體質" -> {
+      case "str", "力量", "臂力", "根骨" -> stats.setStr(stats.getStr() + amount);
+      case "con", "體質" -> {
         stats.setCon(stats.getCon() + amount);
         stats.setMaxHp(stats.getMaxHp() + amount * 10);
         stats.setHp(stats.getHp() + amount * 10);
       }
       case "dex", "靈巧", "身法" -> stats.setDex(stats.getDex() + amount);
-      case "int", "intelligence", "悟性", "智力" -> {
+      case "int", "intelligence", "悟性", "智力", "真元" -> {
         stats.setIntelligence(stats.getIntelligence() + amount);
         stats.setMaxMp(stats.getMaxMp() + amount * 8);
         stats.setMp(stats.getMp() + amount * 8);
       }
-      case "wis", "定力", "精神" -> stats.setWis(stats.getWis() + amount);
+      case "wis", "定力", "精神", "神識" -> stats.setWis(stats.getWis() + amount);
       default -> {
         return false;
       }

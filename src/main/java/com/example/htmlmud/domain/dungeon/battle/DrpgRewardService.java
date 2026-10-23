@@ -23,6 +23,7 @@ import com.example.htmlmud.domain.party.model.PartyMember;
 import com.example.htmlmud.domain.repository.TemplateReader;
 import com.example.htmlmud.domain.actor.service.CharacterSyncService;
 import com.example.htmlmud.domain.progression.service.XpProgressionService;
+import com.example.htmlmud.domain.save.service.SaveGameService;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -38,6 +39,11 @@ public class DrpgRewardService {
   private XpProgressionService xpProgressionService;
   private CharacterSyncService characterSyncService;
   private final com.example.htmlmud.domain.factory.ItemFactory itemFactory;
+
+  @Autowired(required = false)
+  private org.springframework.beans.factory.ObjectProvider<SaveGameService> saveGameServiceProvider;
+
+  private SaveGameService saveGameService;
 
   @Autowired
   public DrpgRewardService(
@@ -61,6 +67,20 @@ public class DrpgRewardService {
 
   public DrpgRewardService() {
     this(null, null);
+  }
+
+  public void setSaveGameService(SaveGameService saveGameService) {
+    this.saveGameService = saveGameService;
+  }
+
+  public SaveGameService getSaveGameService() {
+    if (this.saveGameService != null) {
+      return this.saveGameService;
+    }
+    if (this.saveGameServiceProvider != null) {
+      return this.saveGameServiceProvider.getIfAvailable();
+    }
+    return null;
   }
 
   public XpProgressionService getXpProgressionService() {
@@ -298,16 +318,21 @@ public class DrpgRewardService {
       m.setCurrentCombo(0);
       if (m.getStats() != null) {
         m.getStats().setHp(Math.max(20, (int) (m.getStats().getMaxHp() * 0.3)));
+        m.getStats().setSan(m.getCurrentSan());
         m.setAlive(true);
       }
     }
 
     postBattleCleanup(player, ctx);
 
-    // 傳送回當前樓層起始入口
+    // 傳送回營地 (安全退出地牢，脫離深淵死鎖)
+    String exitRoomId = "newbie_village:inn";
     if (pos != null) {
       if (pos.getFloorId() != null && dungeonManager != null) {
         DungeonFloor floor = dungeonManager.getFloor(pos.getFloorId());
+        if (floor != null && floor.getExitRoomId() != null && !floor.getExitRoomId().isBlank()) {
+          exitRoomId = floor.getExitRoomId();
+        }
         if (floor != null && floor.getStartCoord() != null) {
           pos.setCoord(floor.getStartCoord().x(), floor.getStartCoord().y());
         } else {
@@ -318,10 +343,27 @@ public class DrpgRewardService {
       }
     }
 
-    String defeatMsg = "\n\u001B[1;31m═══════════════════【小隊潰敗】═══════════════════\n"
-        + "  妖邪陰煞入體，小隊不敵！於千鈞一髮之際激發護身靈符遁回墓塚入口！\n"
-        + "  全員身受重傷，道心嚴重受挫 (-20 SAN)！\n"
-        + "══════════════════════════════════════════════════\u001B[0m\n";
+    if (player != null) {
+      player.setInDungeon(false);
+      player.setCurrentRoomId(exitRoomId);
+    }
+
+    // 觸發自動存檔 (AutoSave slot 0)，確保全滅後的健康度與狀態落盤
+    SaveGameService saveService = getSaveGameService();
+    if (saveService != null && player != null) {
+      try {
+        saveService.saveGame(player.getName(), 0, "小隊戰敗潰散 (自動存檔)", false, exitRoomId);
+        log.info("AutoSave triggered on defeat wipe for player: {}", player.getName());
+      } catch (Exception ex) {
+        log.error("Failed to execute AutoSave on defeat wipe for player: {}", player.getName(), ex);
+      }
+    }
+
+    String defeatMsg = "\n\u001B[1;31m═══════════════════【小隊潰敗・殘魂歸陣】═══════════════════\n"
+        + "  妖邪陰煞入體，小隊力竭潰敗！緊急激發宗門保命挪移令，殘魂遁返營地！\n"
+        + "  全員氣血極度衰弱（僅保留 30% 氣血），道心劇烈動盪受創 (-20 SAN)！\n"
+        + "  探索進度已緊急封印至自動存檔，請速至客棧調息安歇以復元氣！\n"
+        + "════════════════════════════════════════════════════════════\u001B[0m\n";
     broadcastLog(player, ctx, defeatMsg);
 
     if (stateBroadcaster != null && player != null) {

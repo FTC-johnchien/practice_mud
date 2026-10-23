@@ -56,6 +56,12 @@
 
 ## 🏆 已完成里程碑 (Completed Milestones)
 
+- [x] **Milestone CONV-02 — 地牢生存機制與存檔安全鎖收斂 (Dungeon Survival & Save Restrictions Convergence, P1)**
+  - Task 1 (CONV-02-DEFEAT-WIPE): 在 `DrpgRewardService` 實裝滅團結算，全員 HP 歸零立即終止戰鬥、重置 `inDungeon = false` 遣返營地客棧 (`exitRoomId` / `newbie_village:inn`)、30% HP 虛弱復甦、扣除 20 點 SAN，透過 `ObjectProvider<SaveGameService>` 解耦觸發 `slot_0` (AutoSave)，`DungeonDefeatSettlementTest` 100% 綠燈。
+  - Task 2 (CONV-02-SAVE-RESTRICTIONS): 在 `SaveGameService` 與 `SaveCommand` 實裝地牢手動存檔安全鎖，走廊深處殺機四伏嚴格阻斷，唯有抵達生路石階 (`<`, `>`) 或古仙殘碑 (`EVENT !`) 方可入定存檔。
+  - Task 3 (CONV-02-DAOIST-ATTRIBUTES): 前端 `party-equipment-tab.js` 五維屬性標籤對齊道基五維（根骨 STR、體質 CON、身法 DEX、真元 INT、神識 WIS）；`XpProgressionService` 擴充加點別名相容。
+  - Task 4 (CONV-02-TEST-VERIFY): 撰寫 `DungeonDefeatSettlementTest.java`（2/2 綠燈），全專案 390 項測試 100% 綠燈守護。
+
 - [x] **Milestone CONV-01 — 營地機能中樞與靈識透鏡核心服務收斂 (Town Hub & Cognitive Proxy Convergence, P1)**
   - Task 1 (CONV-01-COGNITIVE-PROXY): 實作三階靈識認知轉譯代理服務 `CognitiveProxyService`（`<30%` 純仙俠表象、`30%~70%` 異象微顯 Glitch、`>70%` 科技覺醒），專屬測試 `CognitiveProxyServiceTest` 100% 綠燈。
   - Task 2 (CONV-01-TOWNHUB-SERVICE): 實作營地機能中樞服務 `TownHubService` 與 DTO 投影 `TownHubDto`，加載 6 大設施契約，實裝全員一鍵調息休整（回滿 HP/MP/SAN，清除精神萎靡），`TownHubServiceTest` 100% 綠燈。

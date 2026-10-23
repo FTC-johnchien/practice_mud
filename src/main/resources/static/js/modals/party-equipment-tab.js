@@ -390,24 +390,24 @@ export function renderMemberStatusDetailHtml(m, selIdx, party) {
             </div>
             <div style="display:flex;flex-direction:column;gap:8px;">
               <div class="stat-row" style="font-size:13px;">
-                <span>💪 膂力 (STR)：<strong style="color:#f1f5f9;">${strVal}</strong></span>
-                ${renderStatAddBtn('str', '膂力')}
+                <span>💪 根骨 (STR)：<strong style="color:#f1f5f9;">${strVal}</strong></span>
+                ${renderStatAddBtn('str', '根骨')}
               </div>
               <div class="stat-row" style="font-size:13px;">
-                <span>🛡️ 根骨 (CON)：<strong style="color:#f1f5f9;">${conVal}</strong></span>
-                ${renderStatAddBtn('con', '根骨')}
+                <span>🛡️ 體質 (CON)：<strong style="color:#f1f5f9;">${conVal}</strong></span>
+                ${renderStatAddBtn('con', '體質')}
               </div>
               <div class="stat-row" style="font-size:13px;">
                 <span>💨 身法 (DEX)：<strong style="color:#f1f5f9;">${dexVal}</strong></span>
                 ${renderStatAddBtn('dex', '身法')}
               </div>
               <div class="stat-row" style="font-size:13px;">
-                <span>🧠 悟性 (INT)：<strong style="color:#f1f5f9;">${intVal}</strong></span>
-                ${renderStatAddBtn('int', '悟性')}
+                <span>🧠 真元 (INT)：<strong style="color:#f1f5f9;">${intVal}</strong></span>
+                ${renderStatAddBtn('int', '真元')}
               </div>
               <div class="stat-row" style="font-size:13px;">
-                <span>🧘 定力 (WIS)：<strong style="color:#f1f5f9;">${wisVal}</strong></span>
-                ${renderStatAddBtn('wis', '定力')}
+                <span>🧘 神識 (WIS)：<strong style="color:#f1f5f9;">${wisVal}</strong></span>
+                ${renderStatAddBtn('wis', '神識')}
               </div>
             </div>
           </div>

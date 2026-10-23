@@ -85,6 +85,10 @@ public class SaveCommand implements PlayerCommand {
         player.reply("⚠️ 手動存檔槽位僅限 1 ~ " + SaveGameService.TOTAL_MANUAL_SLOTS + " (0 為自動存檔專用)！");
         return;
       }
+      if (!saveGameService.isManualSaveAllowed(player)) {
+        player.reply("\u001B[1;31m⚠️【地脈煞氣擾動】地牢深處殺機四伏，神念無法入定封印！唯有抵達脫離石階或安全生路（殘碑/生門）方可閉關存檔！\u001B[0m");
+        return;
+      }
       String customTitle = (tokens.length > 1) ? tokens[1] : null;
       var data = saveGameService.saveGame(player.getName(), slotId, customTitle, player.isInDungeon(), player.getCurrentRoomId());
       player.reply("\n\u001B[1;32m💾【道印封存】進度已成功烙印至【存檔槽位 " + slotId + "】！\n標題: "

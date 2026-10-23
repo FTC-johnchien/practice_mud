@@ -134,11 +134,11 @@ public class StatCommand implements PlayerCommand {
     if (key == null) return false;
     String k = key.toLowerCase();
     return switch (k) {
-      case "str", "力量", "臂力",
-           "con", "根骨", "體質",
+      case "str", "力量", "臂力", "根骨",
+           "con", "體質",
            "dex", "靈巧", "身法",
-           "int", "intelligence", "悟性", "智力",
-           "wis", "定力", "精神" -> true;
+           "int", "intelligence", "悟性", "智力", "真元",
+           "wis", "定力", "精神", "神識" -> true;
       default -> false;
     };
   }

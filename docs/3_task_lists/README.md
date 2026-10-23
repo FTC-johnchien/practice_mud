@@ -2,7 +2,7 @@
 
 > **文檔層級**：Level 3 — Task Lists (實作進度與待辦管理中樞)  
 > **體系定位**：**1:1 鏡像對齊 Level 2 模組架構手冊**。任何 Level 2 規格變更，皆在此處對應的模組清單中紀錄進度與追加待辦；Level 4 看板微任務均由本清單抽取。  
-> **全局測試基準**：全專案 376+ 項單元與整合測試 100% 綠燈守護（`.\test.ps1`）。
+> **全局測試基準**：全專案 390+ 項單元與整合測試 100% 綠燈守護（`.\test.ps1`）。
 
 > [!IMPORTANT]
 > **三大層級遞進治理與使用者審批鐵律 (Mandatory Cascading Governance & User Approval Rules)**：
@@ -18,12 +18,12 @@
 
 | 模組代碼 | 模組名稱 | Level 2 規格手冊 | Level 3 實作進度清單 | 完成度 | 關鍵測試保護 |
 | :---: | :--- | :--- | :--- | :---: | :--- |
-| **M1** | 營地機能設施中樞 | [`M1_TOWN_HUB_AND_FACILITIES.md`](../2_specifications/backend/M1_TOWN_HUB_AND_FACILITIES.md) | [**`M1_TOWN_HUB_TASKS.md`**](backend/M1_TOWN_HUB_TASKS.md) | 80% 🟢 | `WorldDataIntegrityTest` |
-| **M2** | DRPG 網格地牢探索 | [`M2_DRPG_DUNGEON.md`](../2_specifications/backend/M2_DRPG_DUNGEON.md) | [**`M2_DRPG_DUNGEON_TASKS.md`**](backend/M2_DRPG_DUNGEON_TASKS.md) | 90% 🟢 | `DungeonTorchAndTrapTest` |
+| **M1** | 營地機能設施中樞 | [`M1_TOWN_HUB_AND_FACILITIES.md`](../2_specifications/backend/M1_TOWN_HUB_AND_FACILITIES.md) | [**`M1_TOWN_HUB_TASKS.md`**](backend/M1_TOWN_HUB_TASKS.md) | 100% 🟢 | `TownHubServiceTest`<br>`CognitiveProxyServiceTest` |
+| **M2** | DRPG 網格地牢探索 | [`M2_DRPG_DUNGEON.md`](../2_specifications/backend/M2_DRPG_DUNGEON.md) | [**`M2_DRPG_DUNGEON_TASKS.md`**](backend/M2_DRPG_DUNGEON_TASKS.md) | 95% 🟢 | `DungeonDefeatSettlementTest`<br>`DungeonTorchAndTrapTest` |
 | **M3** | 戰鬥引擎與規則結算 | [`M3_COMBAT_ENGINE.md`](../2_specifications/backend/M3_COMBAT_ENGINE.md) | [**`M3_COMBAT_ENGINE_TASKS.md`**](backend/M3_COMBAT_ENGINE_TASKS.md) | 95% 🟢 | `BossPhaseAndPoiseStaggerTest`<br>`CrossComboAndFormationResonanceTest` |
 | **M3.1** | 狀態效果與 Buff 引擎 | [`M3_1_BUFF_AND_STATUS_EFFECTS.md`](../2_specifications/backend/M3_1_BUFF_AND_STATUS_EFFECTS.md) | [**`M3_1_BUFF_AND_STATUS_TASKS.md`**](backend/M3_1_BUFF_AND_STATUS_TASKS.md) | 95% 🟢 | `ElementalReactionAndDetonateTest` |
 | **M4** | 冒險小隊與古仙陣法 | [`M4_PARTY_AND_FORMATION.md`](../2_specifications/backend/M4_PARTY_AND_FORMATION.md) | [**`M4_PARTY_AND_FORMATION_TASKS.md`**](backend/M4_PARTY_AND_FORMATION_TASKS.md) | 95% 🟢 | `CompanionGambitEngineTest`<br>`PartyInventoryAndMadnessTest` (行囊與精神防護) |
-| **M5** | 技能體系與修為突破 | [`M5_SKILL_AND_PROGRESSION.md`](../2_specifications/backend/M5_SKILL_AND_PROGRESSION.md) | [**`M5_SKILL_AND_PROGRESSION_TASKS.md`**](backend/M5_SKILL_AND_PROGRESSION_TASKS.md) | 90% 🟢 | `CyberSkillAndItemAffixTest`<br>`XpProgressionServiceTest` |
+| **M5** | 技能體系與修為突破 | [`M5_SKILL_AND_PROGRESSION.md`](../2_specifications/backend/M5_SKILL_AND_PROGRESSION.md) | [**`M5_SKILL_AND_PROGRESSION_TASKS.md`**](backend/M5_SKILL_AND_PROGRESSION_TASKS.md) | 95% 🟢 | `CyberSkillAndItemAffixTest`<br>`XpProgressionServiceTest` |
 | **M6** | 物品裝備與經濟體系 | [`M6_ITEM_AND_ECONOMY.md`](../2_specifications/backend/M6_ITEM_AND_ECONOMY.md) | [**`M6_ITEM_AND_ECONOMY_TASKS.md`**](backend/M6_ITEM_AND_ECONOMY_TASKS.md) | 90% 🟢 | `UnifiedPartyEconomyTest` |
 | **M7** | 資料範本與看門狗 | [`M7_DATA_DRIVEN_TEMPLATES.md`](../2_specifications/backend/M7_DATA_DRIVEN_TEMPLATES.md) | [**`M7_DATA_DRIVEN_TEMPLATES_TASKS.md`**](backend/M7_DATA_DRIVEN_TEMPLATES_TASKS.md) | 95% 🟢 | `ArchitectureGuardrailsTest` |
 | **M8** | 存檔與持久化管線 | [`M8_SAVE_AND_PERSISTENCE.md`](../2_specifications/backend/M8_SAVE_AND_PERSISTENCE.md) | [**`M8_SAVE_AND_PERSISTENCE_TASKS.md`**](backend/M8_SAVE_AND_PERSISTENCE_TASKS.md) | 90% 🟢 | `AsyncPersistenceLifecycleTest` |
