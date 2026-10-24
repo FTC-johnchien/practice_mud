@@ -3,7 +3,7 @@
 > **文檔層級**：Level 3 — Task Lists (架構治理與重構專案清單)  
 > **關聯規格**：👉 [`docs/2_specifications/MODULES_MAP.md`](../2_specifications/MODULES_MAP.md) 及後端 M1 ~ M9 各模組手冊  
 > **專案總表指針**：👉 [`docs/3_task_lists/README.md`](README.md)  
-> **全局測試防線**：專案 376+ 項單元與整合測試 100% 綠燈守護（`mvn test`）。任何重構步進皆以測試完全通過為唯一驗收前提。
+> **全局測試防線**：專案 395 項單元與整合測試 100% 綠燈守護（`mvn test` / `.\test.ps1`）。任何重構步進皆以測試完全通過為唯一驗收前提。
 
 ---
 
@@ -15,14 +15,14 @@
 
 ```mermaid
 graph TD
-    subgraph Convergence ["第一階段：代碼收斂 (Convergence)"]
-        C1["消除規格與實作 Delta<br>(補齊 TownHubService、CognitiveProxyService)"]
+    subgraph Convergence ["第一階段：代碼收斂 (Convergence - 已全數完工)"]
+        C1["消除規格與實作 Delta<br>(已落實 TownHubService、CognitiveProxyService)"]
         C2["實作缺失規則與資料<br>(地牢死亡結算 M2-3、16 大仙俠戰技 M5-3)"]
         C3["除役舊 MUD 殘留代碼<br>(清除廢棄房間指令與多人廣播)"]
     end
 
-    subgraph Refactoring ["第二階段：結構重構 (Refactoring)"]
-        R0["保持全部 376+ 測試 100% 綠燈"]
+    subgraph Refactoring ["第二階段：結構重構 (Refactoring - 已全數完工)"]
+        R0["保持全部 395 測試 100% 綠燈"]
         R1["由底層至上層，依賴拓撲安全排序"]
         R2["一次只搬一個 L2 模組套件<br>(M7 -> M6 -> M1 -> M8 -> M4 -> M2 -> M3 -> M9)"]
         R3["架構防禦測試 (ArchitectureGuardrailsTest) 定錨"]
@@ -33,13 +33,13 @@ graph TD
 
 ### 1. 什麼是「程式碼收斂 (Code Convergence)」？
 - **定義**：讓「實際程式碼」與「L1/L2 規範與 L3 待辦」的落差（Delta）趨近於零，消除代碼與手冊之間的割裂。
-- **專案現況中的收斂項目**：
-  1. **補齊未實作的規格核心**：L2 M1 規格手冊定義了 `TownHubService` 與 `CognitiveProxyService`（三階靈識透鏡轉譯），但目前程式碼中營地仍過渡依賴舊 MUD 的 `Room.java`。必須先實作這兩個類別，使營地功能完整自洽。
-  2. **補齊關鍵規則與契約**：M2-3（地牢全滅扣除戰利品與 30% 虛弱回營）、M2-4（地牢中禁止任意存檔脫離）、M5-3（在 `party_skills.json` 完整落地 16 個標準仙俠神通戰技）。
-  3. **清理廢棄殘留**：清除已確認除役的舊 MUD 雙軌文字指令、多人連線廣播代碼。
+- **專案收斂成果（已落實）**：
+  1. **規格核心收斂 (已完成)**：L2 M1 規格手冊定義之 `TownHubService` 與 `CognitiveProxyService`（三階靈識透鏡轉譯）已全面實作落地，營地業務已由 `TownHubService` 接管，脫離舊 MUD `Room.java`。
+  2. **關鍵規則與契約收斂 (已完成)**：M2-3（地牢全滅扣除戰利品與 30% 虛弱回營）、M2-4（地牢中禁止任意存檔脫離）、M5-3（在 `party_skills.json` 完整落地 16 個標準仙俠神通戰技）。
+  3. **清理廢棄殘留 (已完成)**：清除已確認除役的舊 MUD 雙軌文字指令、多人連線廣播代碼。
 
 ### 2. 什麼是「程式碼重構 (Code Refactoring)」？
-- **定義**：在**不改變任何對外可觀測行為與功能（376+ 測試全綠）**的前提下，改善代碼的內部結構與目錄分組。
+- **定義**：在**不改變任何對外可觀測行為與功能（395 測試全綠）**的前提下，改善代碼的內部結構與目錄分組。
 - **專案現況中的重構項目**：
   - 目前專案共有 288 個 Java 原始碼檔案，採用的是傳統的「依技術層次分包（Package-by-Layer: `com.example.htmlmud.application.*`、`domain.*`、`infra.*`）」。
   - 重構目標是轉換為「依業務模組分包（Package-by-Feature: `com.example.htmlmud.town`、`dungeon`、`combat`、`party` 等）」，與 Level 2 模組清單 1:1 完全鏡像。

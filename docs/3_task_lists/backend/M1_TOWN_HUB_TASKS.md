@@ -3,7 +3,7 @@
 > **文檔層級**：Level 3 — Task Lists (模組實作進度清單)  
 > **對應規格**：👉 [`docs/2_specifications/backend/M1_TOWN_HUB_AND_FACILITIES.md`](../../2_specifications/backend/M1_TOWN_HUB_AND_FACILITIES.md)  
 > **核心職責**：管理純單機安全據點（新手村 / 墨竹前進營地）選單式機能設施（工坊、修煉場、道場、醫療站、傳送門）與休整機制。  
-> **當前完成度**：100% 🟢
+> **當前完成度**：85% 🟢
 
 ---
 
@@ -53,5 +53,11 @@
 
 ## ⏳ 三、未竟待辦與演進項目 (Pending Backlog)
 
-- （無，M1 模組核心機能與透鏡轉譯已 100% 完工並通過單元與整合測試驗證）
+- [ ] **Task M1-4 (NPC-DIALOGUE-TREE-AND-QUESTS): NPC 劇情對話樹、狀態模型與委託交互管線**
+  - **目標**：依據 L2 規格《[`M1_TOWN_HUB_AND_FACILITIES.md`](../../2_specifications/backend/M1_TOWN_HUB_AND_FACILITIES.md)》第三節，實裝 `dialogues.json` 對話樹結構（採礦長老·鐵手、外門集市遊商·瘸狼等 NPC），建立 `DialogueStateDto`、對話選項跳轉管線與任務分發/交付契約。
+  - **驗收標準**：
+    1. 在 `src/main/resources/data/hub/dialogues.json` 或 `zones/newbie_village/dialogues.json` 落地 NPC 結構化對話樹資料。
+    2. 後端提供 NPC 對話查詢與選項互動介面（支援 `INTERACT_NPC` 指令），組裝並回傳 `DialogueStateDto` 納入 `DrpgStateDto`。
+    3. 對話文本經由 `CognitiveProxyService` 進行表層仙俠化與漸進真相解密。
+    4. 撰寫 `DialogueServiceTest` 單元測試驗證對話分支跳轉與任務交付邏輯。
 

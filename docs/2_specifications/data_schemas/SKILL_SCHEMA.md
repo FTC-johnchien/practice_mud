@@ -1,50 +1,80 @@
 # ⚡ 賽博修仙技能資料架構規格 (Skill Schema Specification)
 
 > **文檔層級**：Level 2 — Module Specifications (data_schemas)  
-> **系統類型**：資料驅動技能模板與戰鬥法變契約  
-> **核心定位**：對齊 Level 1《賽博修仙技能體系需求規格》，定義四大流派、超頻階級、戰鬥削韌（Poise）、元素反應與 Primer/Detonator 戰技契約。
+> **系統類型**：資料驅動技能模板、被動道骨晶片與小隊合體技契約  
+> **核心定位**：1:1 鏡像對齊 Level 1《賽博修仙與克蘇魯神話神通體系需求規格》，定義四大淵源體系、十七專精樹、Tier 1~4 四階武技（含元嬰大絕招）、被動道骨晶片插槽與多維合體技契約。
 
 ---
 
-## 📌 一、核心設計原則
+## 📌 一、核心設計原則與流派映射
 
-1. **四大賽博修仙流派 (Schools 1:1 對齊 L1 四大體系)**：
-   - `CYBER_HACK`（網路安全與權限劫持類 / 虛空神經道）：神經超頻、算力逆流、破綻打斷、因果劫持。
-   - `GENE_BIO`（生物駭客與義體過載類 / 生化血肉道）：異形強殖、外骨骼甲殼、煞種寄生、排斥控制。
-   - `MECHA_CULT`（光學渲染與認知介面類 / 重力機械修真）：粒子震動刃、像素降噪、全息蜃樓、幀率鎖死。
-   - `VOID_PSI`（底層架構與崩潰重置類 / 虛數靈能矩陣）：空指針解構、核心冷重啟、記憶體洩漏、格式化天劫。
-2. **爽快戰鬥參數完備 (Combat Synergy)**：
-   - 削韌破防值 (`poiseDamage`)、元素反應屬性 (`element`)、裂魂引爆標籤 (`comboRole`: `PRIMER` / `DETONATOR`)、打斷施法標籤 (`interruptsCasting`)。
+1. **四大淵源體系 (`originSchool`) 1:1 對齊 L1**：
+   - `CULTIVATOR`（東方修仙道統類）：五行基底（金/木/水/火/土）與四象變異（雷/風/陰/陽）。主打元素連鎖、真元續航與陣法光環。
+   - `ENGINEER`（古代工程師類）：重力定錨、液壓裂解、蜂巢金剛、地核熔爐。主打破防削韌（Poise Break）、黑洞聚怪與重坦護盾。
+   - `HIGH_TECH`（賽博高科技類）：時序超頻、協議逆亂、全息匿影、電磁動能。主打 100% 唱條打斷、子彈時間時停與真實破甲。
+   - `CTHULHU`（克蘇魯外神類）：強殖幾丁質、黑山羊血裔、知見污染、虛無崩解。主打裂魂引爆 (`DETONATOR`)、嗜血吸血與斬殺。
+2. **階梯縱深與大絕招 (Tier 1 ~ Tier 4)**：
+   - 每棵專精樹具備 4 階主動武技：
+     - `TIER_1` (煉氣·基礎循環 / 施加 Primer)
+     - `TIER_2` (築基·核心戰術 / 打斷 / 破防削韌 / 增益)
+     - `TIER_3` (金丹·極限殺招 / Detonator 引爆 / 巨額 AOE)
+     - `TIER_4` (元嬰·天道大絕招 / 全場領域 / 毀滅性終結技)
+   - 以及 1 個 `PASSIVE_TALENT`（道骨/晶片心法，裝備於角色插槽）。
+3. **戰術標籤完備性 (Tactical Tags)**：
+   - `comboRole`: `NONE` | `PRIMER` | `DETONATOR`
+   - `synergyTag`: `INTERRUPT` | `POISE_BREAK` | `GRAVITY_PULL` | `BARRIER` | `LIFE_LEECH` | `TIME_STOP` | `EXECUTE` | `PURIFY`
 
 ---
 
-## 📐 二、技能結構定義 (Schema)
+## 📐 二、主動神通結構定義 (`ActiveSkillTemplate`)
 
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "CyberSkillTemplate",
+  "title": "ActiveSkillTemplate",
   "type": "object",
-  "required": ["id", "name", "school", "targetType", "cooldownMs", "damageMultiplier", "costs"],
+  "required": ["id", "name", "originSchool", "treeId", "tier", "targetType", "cooldownMs", "damageMultiplier", "costs"],
   "properties": {
-    "id": { "type": "string" },
-    "name": { "type": "string" },
-    "school": { "type": "string", "enum": ["CYBER_HACK", "GENE_BIO", "MECHA_CULT", "VOID_PSI"] },
-    "targetType": { "type": "string", "enum": ["SINGLE_ENEMY", "ALL_ENEMIES", "FRONT_ROW_ENEMIES", "SINGLE_ALLY", "ALL_ALLIES", "SELF"] },
-    "overclockTier": { "type": "integer", "default": 0, "minimum": 0, "maximum": 3 },
-    "gcdMs": { "type": "integer", "default": 1000 },
-    "castTimeMs": { "type": "integer", "default": 0 },
-    "cooldownMs": { "type": "integer", "default": 3000 },
+    "id": { "type": "string", "description": "全域唯一代碼，如 skill_gold_tier4_wanjian" },
+    "name": { "type": "string", "description": "仙俠先行古典名稱，如【萬劍歸宗·太白凌虛大殺劫】" },
+    "originSchool": { 
+      "type": "string", 
+      "enum": ["CULTIVATOR", "ENGINEER", "HIGH_TECH", "CTHULHU"],
+      "description": "四大淵源體系"
+    },
+    "treeId": { 
+      "type": "string", 
+      "description": "所屬專精樹，如 tree_gold_sword, tree_gravity, tree_overclock, tree_chitin 等共 17 樹" 
+    },
+    "tier": { 
+      "type": "integer", 
+      "minimum": 1, 
+      "maximum": 4, 
+      "description": "1:煉氣循環, 2:築基戰術, 3:金丹殺招, 4:元嬰大絕招" 
+    },
+    "targetType": { 
+      "type": "string", 
+      "enum": ["SINGLE_ENEMY", "ALL_ENEMIES", "FRONT_ROW_ENEMIES", "COLUMN_ENEMIES", "SINGLE_ALLY", "ALL_ALLIES", "SELF"] 
+    },
+    "gcdMs": { "type": "integer", "default": 1000, "description": "公共冷卻時間" },
+    "castTimeMs": { "type": "integer", "default": 0, "description": "吟唱前搖時間（可被打斷）" },
+    "cooldownMs": { "type": "integer", "default": 4000, "description": "獨立冷卻時間" },
     "damageMultiplier": { "type": "number", "default": 1.0 },
-    "poiseDamage": { "type": "integer", "default": 15 },
-    "element": { "type": "string", "enum": ["PHYSICAL", "CHAOS", "FIRE", "ICE", "POISON", "LIGHTNING", "FORCE"] },
+    "poiseDamage": { "type": "integer", "default": 15, "description": "削韌破防值" },
+    "element": { 
+      "type": "string", 
+      "enum": ["PHYSICAL", "METAL", "WOOD", "WATER", "FIRE", "EARTH", "LIGHTNING", "WIND", "POISON", "HOLY", "DARK", "CHAOS", "TRUE"] 
+    },
     "comboRole": {
       "type": "string",
       "enum": ["NONE", "PRIMER", "DETONATOR"],
-      "default": "NONE",
-      "description": "連攜角色：NONE(無)、PRIMER(裂魂印記先手)、DETONATOR(引爆先手印記)。代碼層 isPrimer()/isDetonator() 為派生或相容別名"
+      "default": "NONE"
     },
-    "interruptsCasting": { "type": "boolean", "default": false },
+    "synergyTags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "戰術特性標籤：INTERRUPT, POISE_BREAK, GRAVITY_PULL, BARRIER, LIFE_LEECH, TIME_STOP, EXECUTE"
+    },
     "costs": {
       "type": "object",
       "properties": {
@@ -53,80 +83,211 @@
         "hp": { "type": "integer", "default": 0 }
       }
     },
-    "cyberLore": { "type": "string", "description": "科技底層與道法表象之雙重疊影描述" }
+    "cyberLore": { 
+      "type": "string", 
+      "description": "底層文明原貌（特工晶片加載度 >70% 解鎖雙重疊影文本）" 
+    }
   }
 }
 ```
 
 ---
 
-## 📝 三、範例：首批序章戰技【神經超頻步】與【強殖角質刃】
+## 🧬 三、道骨/晶片心法結構定義 (`PassiveTalentTemplate`)
 
 ```json
 {
-  "skills": [
-    {
-      "id": "skill_neural_overclock_step",
-      "name": "神經超頻步",
-      "school": "CYBER_HACK",
-      "targetType": "SINGLE_ENEMY",
-      "overclockTier": 1,
-      "comboRole": "PRIMER",
-      "gcdMs": 800,
-      "castTimeMs": 0,
-      "cooldownMs": 4000,
-      "damageMultiplier": 1.4,
-      "poiseDamage": 25,
-      "element": "PHYSICAL",
-      "interruptsCasting": true,
-      "costs": { "sp": 20 },
-      "cyberLore": "特工晶片向運動神經束注入瞬時超頻電流，身法如鬼魅位移，劍鋒精準直刺敵方詠唱破綻。"
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PassiveTalentTemplate",
+  "type": "object",
+  "required": ["id", "name", "originSchool", "treeId", "socketType", "modifiers"],
+  "properties": {
+    "id": { "type": "string", "description": "道骨/晶片代碼，如 talent_core_genesis_nexus" },
+    "name": { "type": "string", "description": "仙俠主稱謂，如【劍心通明骨】 / 【神經突觸超頻晶片】" },
+    "originSchool": { "type": "string", "enum": ["CULTIVATOR", "ENGINEER", "HIGH_TECH", "CTHULHU", "UNIVERSAL"] },
+    "treeId": { "type": "string" },
+    "socketType": { 
+      "type": "string", 
+      "enum": ["CORE_CHIP_PROTAGONIST", "SUB_SCHOOL_BONE", "TALENT_CHIP"] 
     },
-    {
-      "id": "skill_bio_keratin_blade",
-      "name": "強殖角質刃",
-      "school": "GENE_BIO",
-      "targetType": "SINGLE_ENEMY",
-      "overclockTier": 1,
-      "comboRole": "DETONATOR",
-      "gcdMs": 1000,
-      "castTimeMs": 0,
-      "cooldownMs": 5000,
-      "damageMultiplier": 2.2,
-      "poiseDamage": 45,
-      "element": "POISON",
-      "interruptsCasting": false,
-      "costs": { "sp": 35 },
-      "cyberLore": "激活外神母體退化基因，手臂骨骼瞬間刺出漆黑幾丁質刃鋒，對破防弱點造成毀滅引爆。"
-    }
-  ]
+    "modifiers": {
+      "type": "object",
+      "properties": {
+        "critRateBonus": { "type": "number", "default": 0.0 },
+        "poiseBreakBonus": { "type": "number", "default": 0.0 },
+        "damageReductionPercent": { "type": "number", "default": 0.0 },
+        "mpRegenOnCombo": { "type": "integer", "default": 0 },
+        "darknessSanDrainReduction": { "type": "number", "default": 0.0 },
+        "deathPrevention": { "type": "boolean", "default": false }
+      }
+    },
+    "cyberLore": { "type": "string" }
+  }
 }
 ```
 
 ---
 
-## 📜 四、Level 1 十六項神通標準資料契約對照表 (The 16 Canonical Cyber Skills Matrix)
+## 💥 四、小隊合體與動態陣法終結技契約 (`SynergySkillTemplate`)
 
-> 📌 **【技能表層仙俠先行呈現準則 (Option C)】**：  
-> 遊戲中面向玩家呈現的所有 UI 介面、技能樹、戰鬥卡片與狀態欄中，展示名稱**一律使用【仙俠神通名稱】**（如【偷天換日·轉煞移因訣】）。底層資料結構則攜帶對應之 `cyberSchool`、`comboRole`、`poiseDamage` 等戰術數值。玩家在探索深層地牢或特工晶片加載度突破閾值（>70%）時，技能日誌方解鎖科技原貌解析。
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SynergySkillTemplate",
+  "type": "object",
+  "required": ["id", "name", "tierLevel", "formationEnergyCost", "synergyType"],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "tierLevel": { 
+      "type": "string", 
+      "enum": ["DUAL_STAR_2P", "TRI_RESONANCE_3P", "QUAD_DOMAIN_4P", "QUINTET_FINISHER_5P"] 
+    },
+    "synergyType": {
+      "type": "string",
+      "enum": [
+        "REACTION_DUAL", "SIGNATURE_DUAL", "SIGNATURE_TRIO", "QUAD_DOMAIN_EXPANSION",
+        "MONO_CULTIVATOR_5P", "MONO_ENGINEER_5P", "MONO_HIGH_TECH_5P", "MONO_CTHULHU_5P",
+        "QUAD_BALANCED_NEXUS_5P",
+        "DUAL_XIAN_MO_5P", "DUAL_CYBER_MECHA_5P", "DUAL_XIAN_CYBER_5P", "DUAL_XIAN_MECHA_5P", "DUAL_CTHULHU_CYBER_5P", "DUAL_CTHULHU_MECHA_5P",
+        "TRIO_XIAN_MO_CYBER_5P", "TRIO_XIAN_MO_MECHA_5P", "TRIO_XIAN_CYBER_MECHA_5P", "TRIO_CTHULHU_CYBER_MECHA_5P"
+      ]
+    },
+    "reactionType": {
+      "type": "string",
+      "enum": [
+        "NONE", "STEAM", "SPREAD", "GROWTH", "MELT", "MUD_LOCK", 
+        "GRAVITY_COLLAPSE", "SUPERCONDUCTOR", "BLOOD_TROJAN", "ABYSS_TERROR", 
+        "MAGMA_BLOOD", "DOMAIN_BURST"
+      ],
+      "default": "NONE"
+    },
+    "requiredConditions": {
+      "type": "object",
+      "properties": {
+        "minPartyAlive": { "type": "integer", "default": 2 },
+        "requiredTrees": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "指定觸發之專精樹 ID（如 [tree_water, tree_fire]）"
+        },
+        "requiredSchools": { 
+          "type": "array", 
+          "items": { "type": "string" },
+          "description": "所需體系成分（例如 [CULTIVATOR, CULTIVATOR] 或 [CULTIVATOR, ENGINEER, HIGH_TECH, CTHULHU]）"
+        },
+        "dominantSchoolCount": { "type": "integer", "description": "純化流派門檻（如 ≥4）" }
+      }
+    },
+    "formationEnergyCost": { "type": "integer", "default": 100 },
+    "effects": {
+      "type": "object",
+      "properties": {
+        "instantPoiseBreak": { "type": "boolean", "default": false },
+        "timeStopDurationMs": { "type": "integer", "default": 0 },
+        "partyHealPercent": { "type": "number", "default": 0.0 },
+        "allDetonateBonusMultiplier": { "type": "number", "default": 1.0 },
+        "fullPartyMpRefill": { "type": "boolean", "default": false },
+        "domainDurationSec": { "type": "integer", "default": 0 }
+      }
+    },
+    "cyberLore": { "type": "string" }
+  }
+}
+```
 
-依據 Level 1《[CYBERPUNK_CULTIVATION_SPEC.md](../../1_requirements/CYBERPUNK_CULTIVATION_SPEC.md)》，全專案 16 大核心神通技術規格與契約對應如下：
+---
 
-| # | 技能 ID (`id`) | 神通名稱 | 科技原貌 | 所屬流派 (`school`) | 連攜角色 (`comboRole`) | 元素屬性 (`element`) | 核心戰術機制與代價博弈 |
-|---|---|---|---|---|---|---|---|
-| 1 | `skill_mitm_transfer` | 【偷天換日·轉煞移因訣】 | MITM 流量劫持 | `CYBER_HACK` | `PRIMER` | `CHAOS` | 技能反噬或 SAN 扣減代價 100% 轉嫁敵方目標承受。 |
-| 2 | `skill_docker_sandbox` | 【太上太極·胎藏隔識印】 | Sandbox 沙盒隔離 | `CYBER_HACK` | `NONE` | `FORCE` | 短時間免疫精神衝擊/幻覺/即死，期間無法調用高階靈氣。 |
-| 3 | `skill_ddos_flooding` | 【萬念俱雜·三千紅塵濁浪潮】 | DDoS 巨量阻斷攻擊 | `CYBER_HACK` | `DETONATOR` | `CHAOS` | 心神過載走火入魔硬直，強制**打斷 (Interrupt)** 蓄力前搖。 |
-| 4 | `skill_bruteforce_crack` | 【周天易數·萬相破陣梭】 | Brute-force 字典破解 | `CYBER_HACK` | `DETONATOR` | `PHYSICAL` | 無視護甲與罡氣韌性，造成真實貫穿傷害。 |
-| 5 | `skill_hotpatch_firmware` | 【虛月逆行·皮相歸元法】 | Hot-patching 韌體熱抽換 | `GENE_BIO` | `NONE` | `FORCE` | 重置法變時間，平息神識過載，防範精神萎靡狀態。 |
-| 6 | `skill_neural_overclock_step` | 【燃魂溯光·剎那千秋步】 | Neural Overclocking | `GENE_BIO` / `CYBER_HACK` | `PRIMER` | `PHYSICAL` | 移動迴避大幅提升，前搖歸零，每秒持續扣除生命氣血。 |
-| 7 | `skill_shell_injection` | 【萬蟲蝕命·煞種寄生禁】 | SQL/Shell Injection 注入 | `GENE_BIO` | `PRIMER` | `POISON` | 敵方消耗法力時符文同步引爆，轉化為臟腑破爆傷害。 |
-| 8 | `skill_immuno_override` | 【移花接木·太歲肉身契】 | Immunosuppressive Override | `GENE_BIO` | `NONE` | `FORCE` | 允許跨級裝備高污染法寶/器官，大幅降低排斥暴斃率。 |
-| 9 | `skill_glitch_texture` | 【太虛匿影·無貌欺天障】 | Glitch 貼圖丟失 | `MECHA_CULT` | `PRIMER` | `CHAOS` | 絕對隱匿脫離仇恨列表，下次突襲必定 100% 暴擊。 |
-| 10 | `skill_pixel_mosaic` | 【大智若愚·知見自盲術】 | Downsampling 畫素降噪 | `MECHA_CULT` | `NONE` | `FORCE` | 降低 80% 面對外神之精神衝擊 (SAN 扣減)，命中暫降 25%。 |
-| 11 | `skill_deepfake_mirror` | 【虛妄重構·三世蜃樓鏡】 | Deepfake 偽造欺騙 | `MECHA_CULT` | `NONE` | `LIGHTNING` | 召喚 3 具 30% HP 虛影分身強制吸引仇恨，本體後撤。 |
-| 12 | `skill_framerate_lock` | 【逆熵之眸·量子觀測鎖】 | Frame-rate Locking | `MECHA_CULT` | `NONE` | `FORCE` | 敵方全體 3 秒內攻擊與冷卻進度暴跌 70%。 |
-| 13 | `skill_null_pointer` | 【萬法皆空·空指針崩解印】 | Null Pointer Dereference | `VOID_PSI` | `DETONATOR` | `CHAOS` | 斬殺技：目標生命 < 15% 且罡氣破防時，直接湮滅消散。 |
-| 14 | `skill_hard_reboot` | 【九幽輪迴·硬體冷重啟】 | Hard Reboot 冷重啟 | `VOID_PSI` | `NONE` | `FIRE` | 致命傷觸發被動：免死、清負面 Debuff、30% 氣血復甦 (限一次)。 |
-| 15 | `skill_memory_leak` | 【太初鴻濛·記憶體洩漏術】 | Memory Leak 資源耗盡 | `VOID_PSI` | `PRIMER` | `POISON` | 終極 DoT：每回合傷害倍增，直至敵方無法施放消耗法力招式。 |
-| 16 | `skill_format_drive` | 【歸墟終末·格式化天劫】 | Format Drive 磁區格式化 | `VOID_PSI` | `DETONATOR` | `LIGHTNING` | 全場無差別毀滅打擊，洗清全場所有 Buff 與地形效果。 |
+## 📝 五、標準資料範例（涵蓋 2P/3P/4P 名牌合體與 Tier 4 元嬰大絕招）
+
+```json
+[
+  {
+    "id": "skill_gold_tier4_wanjian",
+    "name": "【萬劍歸宗·太白凌虛大殺劫】",
+    "originSchool": "CULTIVATOR",
+    "treeId": "tree_gold_sword",
+    "tier": 4,
+    "targetType": "ALL_ENEMIES",
+    "gcdMs": 1500,
+    "castTimeMs": 1000,
+    "cooldownMs": 30000,
+    "damageMultiplier": 3.8,
+    "poiseDamage": 60,
+    "element": "METAL",
+    "comboRole": "DETONATOR",
+    "synergyTags": ["POISE_BREAK", "AOE_SWEEP"],
+    "costs": { "mp": 60 },
+    "cyberLore": "調用全域磁懸浮飛劍集束超音速飽和打擊，瞬間摧毀敵怪分子防護力場。"
+  },
+  {
+    "id": "combo_2p_taiji_water_fire",
+    "name": "【太極水火·兩儀陰陽寂滅印】",
+    "tierLevel": "DUAL_STAR_2P",
+    "synergyType": "SIGNATURE_DUAL",
+    "reactionType": "STEAM",
+    "formationEnergyCost": 40,
+    "requiredConditions": {
+      "minPartyAlive": 2,
+      "requiredTrees": ["tree_water", "tree_fire"]
+    },
+    "effects": {
+      "allDetonateBonusMultiplier": 2.0,
+      "instantPoiseBreak": false,
+      "partyHealPercent": 0.0
+    },
+    "cyberLore": "水火同源熱力學碰撞，先施加霜凍再瞬爆蒸發，引爆 3 段混元蒸氣衝擊波。"
+  },
+  {
+    "id": "combo_3p_toxic_steam",
+    "name": "【萬毒天雨·碧落赤霞蒸仙煞】",
+    "tierLevel": "TRI_RESONANCE_3P",
+    "synergyType": "SIGNATURE_TRIO",
+    "reactionType": "SPREAD",
+    "formationEnergyCost": 65,
+    "requiredConditions": {
+      "minPartyAlive": 3,
+      "requiredTrees": ["tree_water", "tree_fire", "tree_wood"]
+    },
+    "effects": {
+      "allDetonateBonusMultiplier": 2.5,
+      "instantPoiseBreak": false
+    },
+    "cyberLore": "沸騰生化劇毒氣溶膠全場擴散，敵怪每 0.5 秒承受水火毒三重 DoT 傷害。"
+  },
+  {
+    "id": "domain_4p_elemental_cascade",
+    "name": "【太乙混元·五行四象破天劍煞界】",
+    "tierLevel": "QUAD_DOMAIN_4P",
+    "synergyType": "QUAD_DOMAIN_EXPANSION",
+    "formationEnergyCost": 90,
+    "requiredConditions": {
+      "minPartyAlive": 4,
+      "requiredSchools": ["CULTIVATOR", "CULTIVATOR", "CULTIVATOR", "CULTIVATOR"]
+    },
+    "effects": {
+      "domainDurationSec": 8,
+      "fullPartyMpRefill": true
+    },
+    "cyberLore": "Element Overclock Cascade: 五行四象萬劍領域展開，所有基礎法術冷卻減半且真元消耗歸零。"
+  },
+  {
+    "id": "combo_5p_protocol_genesis",
+    "name": "【大衍混元·諸天萬象開天闢地神劫】",
+    "tierLevel": "QUINTET_FINISHER_5P",
+    "synergyType": "QUAD_BALANCED_NEXUS_5P",
+    "formationEnergyCost": 100,
+    "requiredConditions": {
+      "minPartyAlive": 5,
+      "requiredSchools": ["CULTIVATOR", "ENGINEER", "HIGH_TECH", "CTHULHU"]
+    },
+    "effects": {
+      "instantPoiseBreak": true,
+      "timeStopDurationMs": 2000,
+      "partyHealPercent": 0.5,
+      "allDetonateBonusMultiplier": 2.5
+    },
+    "cyberLore": "Protocol Genesis: 行星地核冷格式化指令，四源合一全面覆寫戰場因果。"
+  }
+]
+```

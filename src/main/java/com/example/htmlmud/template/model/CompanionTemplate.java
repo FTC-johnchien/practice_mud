@@ -6,14 +6,19 @@ import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.Gender;
 import com.example.htmlmud.party.CombatResourceType;
 import com.example.htmlmud.party.RowPosition;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 
 @Builder(toBuilder = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record CompanionTemplate(
     String id,
     String name,
     String roleTitle,
     String classId,
+    String originSchool,
+    String faction,
+    String treeId,
     Gender gender,
     RowPosition defaultRow,
     CombatResourceType resourceType,
@@ -43,6 +48,9 @@ public record CompanionTemplate(
 ) {
   public CompanionTemplate {
     if (gender == null) gender = Gender.MALE;
+    if (originSchool == null || originSchool.isBlank()) originSchool = "UNIVERSAL";
+    if (faction == null) faction = "";
+    if (treeId == null) treeId = "";
     if (defaultRow == null) defaultRow = RowPosition.FRONT;
     if (resourceType == null) resourceType = CombatResourceType.MP;
     if (initialEquipment == null) initialEquipment = Map.of();

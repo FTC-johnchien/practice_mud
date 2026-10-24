@@ -25,6 +25,8 @@ import com.example.htmlmud.party.RowPosition;
 
 
 
+import com.example.htmlmud.template.TemplateReader;
+
 /**
  * Milestone F2-05 複合靈氣連鎖反應與狀態引爆 (Elemental Reactions & Primer/Detonator) 全面測試
  */
@@ -34,6 +36,9 @@ public class ElementalReactionAndDetonateTest {
 
   @Autowired
   private DrpgCombatLoop drpgCombatLoop;
+
+  @Autowired
+  private TemplateReader templateReader;
 
   @Test
   @DisplayName("F2-05-01: 火 + 冰/水 應觸發【氣化爆裂 (Vaporize)】造成 2.0x 傷害與 +20 削韌並消耗先導狀態")
@@ -352,5 +357,91 @@ public class ElementalReactionAndDetonateTest {
     // 驗證同排的 enemy2 承受了跳躍電弧傷害
     assertTrue(enemy2.getHp() < initialEnemy2Hp,
         "同排的前排妖魔乙應承受感電傳導電弧傷害");
+  }
+
+  @Test
+  @DisplayName("VS-01-CYBER-SKILLS: 驗證特工戰技【剎那千秋步】(Primer) 命中施加裂魂印記，隨後【玄冥幾丁刃】(Detonator) 命中引爆並掀起全場衝擊波")
+  void testCyberSkillsPrimerAndDetonatorIntegration() {
+    Party party = new Party();
+    LivingStats agentStats = new LivingStats();
+    agentStats.setHp(200);
+    agentStats.setMaxHp(200);
+    PartyMember agent = PartyMember.builder()
+        .id("p-agent")
+        .name("特工主角")
+        .stats(agentStats)
+        .baseMinDamage(40)
+        .baseMaxDamage(40)
+        .row(RowPosition.FRONT)
+        .alive(true)
+        .build();
+
+    LivingStats bioStats = new LivingStats();
+    bioStats.setHp(200);
+    bioStats.setMaxHp(200);
+    PartyMember bioWarrior = PartyMember.builder()
+        .id("p-bio")
+        .name("幾丁異化修士")
+        .stats(bioStats)
+        .baseMinDamage(50)
+        .baseMaxDamage(50)
+        .row(RowPosition.FRONT)
+        .alive(true)
+        .build();
+
+    party.addMember(agent);
+    party.addMember(bioWarrior);
+
+    BattleEnemy boss = BattleEnemy.builder()
+        .id("e-target-boss")
+        .name("密室修士·宋天衡")
+        .hp(1000)
+        .maxHp(1000)
+        .defense(0)
+        .poise(100)
+        .maxPoise(100)
+        .alive(true)
+        .build();
+
+    BattleEnemy minion = BattleEnemy.builder()
+        .id("e-minion")
+        .name("黑煞侍從蠍")
+        .hp(200)
+        .maxHp(200)
+        .defense(0)
+        .poise(50)
+        .maxPoise(50)
+        .alive(true)
+        .build();
+
+    BattleContext ctx = new BattleContext();
+    ctx.setParty(party);
+    ctx.setEnemies(new ArrayList<>(List.of(boss, minion)));
+
+    PartyMemberSkill primerSkill = templateReader.findPartySkill("skill_time_tier1_step")
+        .orElseThrow(() -> new AssertionError("找不到 skill_time_tier1_step"));
+    PartyMemberSkill detonatorSkill = templateReader.findPartySkill("skill_chitin_tier1_blade")
+        .orElseThrow(() -> new AssertionError("找不到 skill_chitin_tier1_blade"));
+
+    assertTrue(primerSkill.isPrimer(), "剎那千秋步應為 PRIMER 戰技");
+    assertTrue(detonatorSkill.isDetonator(), "玄冥幾丁刃應為 DETONATOR 戰技");
+
+    // 1. 特工施展【剎那千秋步】
+    int bossHpBefore = boss.getHp();
+    drpgCombatLoop.applySkillEffects(null, ctx, agent, primerSkill, 0, "【特工身法】");
+    assertTrue(boss.getHp() < bossHpBefore, "Boss 應受到剎那千秋步傷害");
+    assertTrue(boss.getActiveBuffs().stream().anyMatch(b -> b.getId().equals("buff_soul_primer")),
+        "Boss 應被標記【裂魂印記】(PRIMER)");
+
+    // 2. 幾丁異化修士施展【玄冥幾丁刃】引爆
+    int minionHpBefore = minion.getHp();
+    drpgCombatLoop.applySkillEffects(null, ctx, bioWarrior, detonatorSkill, 0, "【幾丁爆裂】");
+
+    // 驗證印記被引爆移除
+    assertTrue(boss.getActiveBuffs().stream().noneMatch(b -> b.getId().equals("buff_soul_primer")),
+        "裂魂印記應已被引爆移除");
+    // 驗證引爆衝擊波波及 minion
+    assertTrue(minion.getHp() < minionHpBefore,
+        "侍從蠍應承受引爆所產生的全場震盪衝擊波傷害");
   }
 }

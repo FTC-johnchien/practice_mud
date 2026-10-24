@@ -34,7 +34,7 @@ graph TD
 
 ---
 
-## 🏬 二、五大核心營地設施規格 (Facilities Specification)
+## 🏬 二、六大核心營地設施規格 (Facilities Specification)
 
 為配合「表層仙俠，漸進揭示真相」原則（Option C），營地設施在介面卡牌與對話中**一律優先呈現東方仙俠風格稱謂**，底層掛接相應的 DRPG 業務邏輯：
 
@@ -55,7 +55,7 @@ graph TD
 ### 3. 雜役演武道場 (Combat Tactics & Gambit)
 - **表層仙俠語意**：外門雜役校場與同門宿營，提供弟子陣法磨合、戰陣演練與夥伴招募。
 - **實戰業務職責**：
-  - **夥伴招募與編制 (Party Roster)**：招募鐵牛、凌霜、燕青、墨衍，調配 5 人小隊名冊。
+  - **夥伴招募與編制 (Party Roster)**：依據四大道統陣營門派招募鐵牛（天工神機/妖門）、凌霜（正統道門）、燕青（巨企仙朝）、墨衍（天道星靈），調配 5 人小隊名冊（詳見 [`M4_PARTY_AND_FORMATION.md`](M4_PARTY_AND_FORMATION.md)）。
   - **連招戰術方針配置 (Gambit Auto-Tactics)**：設定隊員在半即時戰鬥中的 AI 觸發條件（如「敵方處於破防狀態時優先釋放重力裂變」）。
   - **陣法調度 (Formation Engine)**：配置五行八卦陣法孔位與站位加成。
 

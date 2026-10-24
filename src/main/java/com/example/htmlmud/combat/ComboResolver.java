@@ -378,14 +378,17 @@ public class ComboResolver {
     ctx.setResonancePoints(0);
     ctx.resetCrossCombo();
 
+    // 動態解算 15 大小隊天外終結技規格 (對齊 SYNERGY_AND_COMBOS.md)
+    FormationFinisherSpec finisher = FormationFinisherClassifier.classify(party);
+
     // 匯聚全隊存活弟子攻擊力
     List<PartyMember> aliveMembers = party.getAliveMembers();
     int totalAtk = aliveMembers.stream().mapToInt(PartyMember::getEffectiveMaxDamage).sum();
-    double multiplier = 2.5 + (resonance * 0.5); // 3 點 = 4.0x, 4 點 = 4.5x, 5 點 = 5.0x
+    double multiplier = 2.5 + (resonance * 0.5) + finisher.damageMultiplierBonus();
     int finisherDamage = (int) Math.round(totalAtk * multiplier);
-    int poiseDmg = 50 + (resonance * 10);
-    int sanHeal = 15;
-    int hpHeal = 50;
+    int poiseDmg = 50 + (resonance * 10) + finisher.poiseBonus();
+    int sanHeal = 15 + finisher.sanHealBonus();
+    int hpHeal = 50 + finisher.hpHealBonus();
 
     // 全隊滋養回穩
     for (PartyMember m : aliveMembers) {
@@ -422,9 +425,9 @@ public class ComboResolver {
 
     String formationName = party.getEquippedFormation().getName();
     if (logBroadcaster != null) {
-      logBroadcaster.accept(player, "\n\u001B[1;35m⚡⚡🌌【古仙陣法・天外合擊】陣眼 " + invoker.getName()
+      logBroadcaster.accept(player, "\n\u001B[1;35m⚡⚡🌌" + finisher.name() + " 陣眼 " + invoker.getName()
           + " 踏動陣盤，引動《" + formationName + "》至高天道奧義！全隊共鳴威能破界傾瀉！\u001B[0m");
-      logBroadcaster.accept(player, "\u001B[1;36m   ↳ 萬千星煞天外墜落，對敵方全員造成 " + finisherDamage
+      logBroadcaster.accept(player, "\u001B[1;36m   ↳ " + finisher.logDescription() + "，對敵方全員造成 " + finisherDamage
           + " 點天外毀滅打擊，削韌 " + poiseDmg + " 點！全體隊員沐浴靈光，回復 " + hpHeal + " 氣血與 " + sanHeal + " 點道心！\u001B[0m\n");
     }
 
@@ -433,10 +436,10 @@ public class ComboResolver {
         now,
         BattleEventType.SKILL,
         new UnitRef(UnitRef.Side.PARTY, invoker.getId(), invokerIdx >= 0 ? invokerIdx : 0),
-        "combo_formation_finisher",
-        "【天外合擊】" + formationName,
+        finisher.id(),
+        finisher.name(),
         "FORMATION",
-        "HOLY",
+        finisher.damageType(),
         FxShape.ALL,
         "formation_finisher",
         hits
@@ -447,6 +450,13 @@ public class ComboResolver {
     }
 
     return true;
+  }
+
+  /**
+   * 取得指定小隊對應之 15 大天外終結技規格
+   */
+  public FormationFinisherSpec resolveFinisher(Party party) {
+    return FormationFinisherClassifier.classify(party);
   }
 }
 

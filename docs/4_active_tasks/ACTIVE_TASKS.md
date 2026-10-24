@@ -37,12 +37,13 @@
   - **契約規範**：對齊 Level 2 [`M4_PARTY_AND_FORMATION.md`](../2_specifications/backend/M4_PARTY_AND_FORMATION.md)（道基五維體系）與 [`M5_SKILL_AND_PROGRESSION.md`](../2_specifications/backend/M5_SKILL_AND_PROGRESSION.md)（潛能點與成長曲線）；隊長初始加載「特工覺醒度 12%」，分配 5 點自由道基潛能點（體質、真元、神識、根骨、身法）。
   - **驗收標準**：後端提供潛能點分配 Action 與 DTO 投影，加點即時轉化為 HP/MP/攻防速五維屬性；前端隊伍面板提供直觀加點 UI；專屬單元測試綠燈。
 
-- [ ] **Task 3 (VS-01-CYBER-SKILLS): 首批賽博特工戰技資料驅動配置【神經超頻步】與【強殖角質刃】(戰鬥爽快 + 技能組合)**
-  - **目標檔案**：`src/main/resources/data/party/party_skills.json`、[`SKILL_SCHEMA.md`](../2_specifications/data_schemas/SKILL_SCHEMA.md)
-  - **契約規範**：依循 `SKILL_SCHEMA.md` 規範，對齊 `party_skills.json` 序章核心戰技：
-    - `skill_neural_overclock_step`（神經超頻步）：流派 `CYBER_HACK`、超頻 `tier=1`、`comboRole=PRIMER`、破防削韌 25、提供急速與破綻打斷。
-    - `skill_bio_keratin_blade`（強殖角質刃）：流派 `GENE_BIO`、超頻 `tier=1`、`comboRole=DETONATOR`、破防削韌 45、引爆 Primer 造成 1.5x 爆裂。
-  - **驗收標準**：`DataIntegrityValidator` 啟動檢驗零警告；在 `DrpgCombatLoop` 戰鬥中驗證發動 Primer 裂魂標記與 Detonator 引爆震盪衝擊波。
+- [x] **Task 3 (VS-01-CYBER-SKILLS): 首批賽博特工戰技資料驅動配置【剎那千秋步】與【玄冥幾丁刃】(戰鬥爽快 + 技能組合)**
+  - **目標檔案**：`src/main/resources/data/party/party_skills.json`、[`SKILL_SCHEMA.md`](../2_specifications/data_schemas/SKILL_SCHEMA.md)、[`docs/2_specifications/skills/3_high_tech/TREE_10_TIME_OVERCLOCK.md`](../2_specifications/skills/3_high_tech/TREE_10_TIME_OVERCLOCK.md)、[`docs/2_specifications/skills/4_cthulhu/TREE_14_CHITIN_BLADE.md`](../2_specifications/skills/4_cthulhu/TREE_14_CHITIN_BLADE.md)
+  - **契約規範**：依循 `SKILL_SCHEMA.md` 規範與 Option C（仙俠先行 × 底層真相揭示），對齊 `party_skills.json` 序章核心戰技與雙星合體技：
+    - `skill_time_tier1_step`（【剎那千秋步】）：淵源 `HIGH_TECH`、專精樹 `tree_time_overclock`、階級 `tier=1`、`comboRole=PRIMER`、破防削韌 25、提供身法 GCD 壓縮與前搖打斷。底層真相為神經突觸瞬態超頻電流。
+    - `skill_chitin_tier1_blade`（【玄冥幾丁刃】）：淵源 `CTHULHU`、專精樹 `tree_chitin_blade`、階級 `tier=1`、`comboRole=DETONATOR`、破防削韌 45、引爆 Primer 裂魂標記造成 1.5x 爆裂。底層真相為外神母體退化基因刺激骨刃急速外生。
+    - `combo_chitin_kinetic_superconductor`（【生化超導·破空磁煞幾丁刃】）：傳奇雙星名招，幾丁質 ＋ 電磁動能，一刀兩斷貫穿全列，造成 100% 暴擊穿甲。
+  - **驗收標準**：`DataIntegrityValidator` 啟動檢驗零警告；在 `DrpgCombatLoop` 戰鬥中驗證發動 Primer 裂魂標記與 Detonator 引爆震盪衝擊波。已於 `ElementalReactionAndDetonateTest` 驗收完備。
 
 - [ ] **Task 4 (VS-01-LOOT-CHIP): 首領掉落【千星科技加密追蹤晶片】與隨機詞綴裝備掉落驗收 (裝備收集 + 376+ 測試守護)**
   - **目標檔案**：`src/main/resources/data/global/items/quest/quest_items.json`、[`ITEM_SCHEMA.md`](../2_specifications/data_schemas/ITEM_SCHEMA.md)、[`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/combat/DrpgRewardService.java)

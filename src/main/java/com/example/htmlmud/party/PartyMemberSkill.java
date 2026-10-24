@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder(toBuilder = true)
 @AllArgsConstructor
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 public class PartyMemberSkill implements UnifiedSkill {
 
   public PartyMemberSkill() {
@@ -23,6 +24,15 @@ public class PartyMemberSkill implements UnifiedSkill {
   private String icon;
   private String description;
   private CombatResourceType costType;
+
+  // === 17-Tree Architecture & Schema Fields ===
+  private String originSchool;
+  private String treeId;
+  @Builder.Default
+  private int tier = 1;
+  private String tierLevel;
+  private String synergyType;
+  private String reactionType;
 
   // === SP-06: 大一統修煉境界屬性 (Level 1~10 & Mastery XP) ===
   @Builder.Default

@@ -63,7 +63,7 @@ graph TD
 ### 1. M1: 營地中樞與功能設施模組 (Town Hub & Facilities)
 - 📖 **詳細技術手冊**：[`backend/M1_TOWN_HUB_AND_FACILITIES.md`](backend/M1_TOWN_HUB_AND_FACILITIES.md)
 - **核心職責**：
-  - 管理安全營地（如黑煞宗採掘營、地下避難所）的選單式功能設施（百煉堂、靈台藏經閣、雜役演武道場、回春客棧、廢棄礦脈坑道）。
+  - 管理安全營地（如黑煞宗採掘營、地下避難所）的六大選單式功能設施（百煉堂、靈台藏經閣、雜役演武道場、宗門外門集市、回春客棧、廢棄礦脈坑道）。
   - **靈識認知轉譯代理 (`CognitiveProxyService`)**：依據特工晶片加載度（0%~100%），將底層科技設施與物品動態轉譯為對應之仙俠/解密表象。
   - 提供全隊一鍵休整、補給整備與冒險出征校驗。
   - 管理駐留生靈（NPC）劇情分支樹與對話任務分發，徹底淘汰 MUD 房間 exits 拓撲。
@@ -126,14 +126,17 @@ graph TD
 
 ### 5. M5: 技能、境界與修煉模組 (Skill & Progression)
 - 📖 **詳細技術手冊**：[`backend/M5_SKILL_AND_PROGRESSION.md`](backend/M5_SKILL_AND_PROGRESSION.md)
+- 🌲 **十七專精樹規格目錄**：[`skills/README.md`](skills/README.md)（含四大歷史淵源 17 份獨立專精樹手冊與四階武技）
+- 💥 **合體技與終結技手冊**：[`skills/SYNERGY_AND_COMBOS.md`](skills/SYNERGY_AND_COMBOS.md)（10 大反應引擎、16 雙星、8 三才、5 領域與 15 終結技）
 - **核心職責**：
   - 技能學習、真元消耗檢定、冷卻時間（CD）與通用冷卻（GCD）管制。
   - 大一統動態屬性縮放（`UnifiedSkill` / `PartyMemberSkill`）：在保留 Buff、削韌、五行標籤的前提下，根據施法者道基五維與修煉境界動態縮放威力。
   - 境界突破（練氣 ➔ 築基 ➔ 金丹...）與自由屬性點分配。
+  - 解算 17 專精樹四階主動武技、道骨晶片插槽、2~4人合體技與 15 大全隊終結技。
 - **代表類別**：
-  - `UnifiedSkill`, `PartyMemberSkill`, `XpProgressionService`, `SkillCostService`, `FormulaEvaluator`
+  - `UnifiedSkill`, `PartyMemberSkill`, `ComboResolver`, `SocketService`, `XpProgressionService`, `SkillCostService`, `FormulaEvaluator`
 - **資料設定來源**：
-  - `src/main/resources/data/classes/classes.json`, `data/skills.json`
+  - `src/main/resources/data/global/classes.json`, `data/party/party_skills.json`
 
 ### 6. M6: 物品、背包與經濟模組 (Item, Inventory & Economy)
 - 📖 **詳細技術手冊**：[`backend/M6_ITEM_AND_ECONOMY.md`](backend/M6_ITEM_AND_ECONOMY.md)

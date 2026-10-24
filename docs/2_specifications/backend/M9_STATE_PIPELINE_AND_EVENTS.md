@@ -66,7 +66,7 @@
 {
   "action": "CAST_SKILL",
   "actorId": "char-1",
-  "skillId": "skill_neural_overclock_step",
+  "skillId": "skill_time_tier1_step",
   "targetId": "mob-001"
 }
 ```

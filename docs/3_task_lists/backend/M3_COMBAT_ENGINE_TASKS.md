@@ -45,8 +45,8 @@
 
 ## ⏳ 三、未竟待辦與演進項目 (Pending Backlog)
 
-- [ ] **Task M3-1 (VS-01-CYBER-SKILLS / ACTIVE-TASK-3): 序章戰技【神經超頻步】與【強殖角質刃】戰鬥整合驗證**
-  - **目標**：在 `DrpgCombatLoop` 實際驗證 `skill_neural_overclock_step`（Primer 破防 25）接續 `skill_bio_keratin_blade`（Detonator 破防 45）引爆全場衝擊波。
+- [ ] **Task M3-1 (VS-01-CYBER-SKILLS / ACTIVE-TASK-3): 序章戰技【燃魂溯光·剎那千秋步】與【血肉強殖·玄冥幾丁刃】戰鬥整合驗證**
+  - **目標**：在 `DrpgCombatLoop` 實際驗證 `skill_time_tier1_step`（別名 `skill_neural_overclock_step`，Primer 破防 25）接續 `skill_chitin_tier1_blade`（別名 `skill_bio_keratin_blade`，Detonator 破防 45）引爆全場衝擊波。
   - **驗收標準**：戰鬥日誌彩色廣播正確呈現裂魂印記與引爆震盪，`.\test.ps1` 綠燈守護。
 - [ ] **Task M3-2 (COMBAT-ACTION-RELOAD): 兵刃熱量/耐久度過載換彈循環**
   - **目標**：機械修真流派高頻飛劍射擊累積過載熱量，達到 100% 需執行 1 回合散熱冷卻換彈動作。

@@ -1279,6 +1279,16 @@ public class DrpgCombatLoop {
           }
         }
       }
+    } else if (skill != null && skill.isPrimer() && target.isAlive()) {
+      target.addBuff(com.example.htmlmud.combat.ActiveBuff.builder()
+          .id("buff_soul_primer")
+          .name("裂魂印記")
+          .category(com.example.htmlmud.domain.model.enums.BuffCategory.PRIMER)
+          .durationTicks(20)
+          .remainingTicks(20)
+          .value(25)
+          .build());
+      broadcastLog(player, ctx, "   ↳ \u001B[1;35m✨【裂魂印記】" + skill.getName() + " 命中目標，施加【裂魂印記】(PRIMER)！\u001B[0m");
     }
 
     // 3. 古仙陣法跨隊員連攜合擊判定 (F3-01 Cross Combos)

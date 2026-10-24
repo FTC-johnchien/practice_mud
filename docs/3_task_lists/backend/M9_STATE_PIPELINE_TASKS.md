@@ -37,3 +37,9 @@
 - [ ] **Task M9-1 (ACTION-PROTOCOL-REFACTOR): 結構化 Action Protocol 前後端契約全域收斂**
   - **目標**：所有前後端互動 100% 收斂為 JSON 格式，全面實作與支援 [`M9_STATE_PIPELINE_AND_EVENTS.md`](../../2_specifications/backend/M9_STATE_PIPELINE_AND_EVENTS.md) 第三節定義之標準動作（`MOVE`、`TURN`、`INTERACT`、`EXTRACT`、`CAST_SKILL`、`FORMATION_FINISHER`、`TOWN_FACILITY`、`INTERACT_NPC`、`EQUIP`、`UNEQUIP`、`USE_ITEM`、`ALLOCATE_POTENTIAL`、`SAVE_GAME`、`LOAD_GAME`），徹底除役殘留的字串指令拼接。
   - **驗收標準**：WebSocket 僅接收與派發型別安全的 ActionCommand，單元測試覆蓋率 100%。
+- [ ] **Task M9-2 (DRPG-WEBSOCKET-HANDLER-RENAME): 傳輸層類別除役舊 MUD 命名並重構為 DrpgWebSocketHandler**
+  - **目標**：徹底消除外部 AI 審查反覆提出之「MUD 歷史遺留命名混淆」問題，將 `MudWebSocketHandler.java` 安全重構更名為 `DrpgWebSocketHandler.java`，同步更新 Spring WebSocket 路由配置、前端連線註解與測試類別。
+  - **驗收標準**：
+    1. 類別名稱正式由 `MudWebSocketHandler` 更名為 `DrpgWebSocketHandler`，完全清除 `com.example.htmlmud.pipeline` 中的 MUD 字樣。
+    2. 全專案 395 項測試維持 100% 綠燈零回歸通過。
+    3. L2《`M9_STATE_PIPELINE_AND_EVENTS.md`》與相應手冊代表類別名稱同步更新。

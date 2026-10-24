@@ -31,6 +31,12 @@ public class PartyMember implements Combatant {
   private String name;
   private String roleTitle;
   private String classId;
+  @Builder.Default
+  private String originSchool = "UNIVERSAL";
+  @Builder.Default
+  private String faction = "";
+  @Builder.Default
+  private String treeId = "";
   private RowPosition row;
   private LivingStats stats;
   @Builder.Default

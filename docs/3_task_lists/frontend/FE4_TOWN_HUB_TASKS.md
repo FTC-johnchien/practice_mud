@@ -27,9 +27,12 @@
 
 ## ⏳ 三、未竟待辦與演進項目 (Pending Backlog)
 
-- [ ] **Task FE4-1 (TOWN-PANEL-CARDS-REFACTOR): 營地選單網格卡片重構 (移除 4 向羅盤)**
-  - **目標**：徹底自 `town-panel.js` 移除渲染舊 MUD 4 向出口（`exits.forEach` / `renderTownNav`），全面以卡片呈現五大機能設施（百煉堂、靈台藏經閣、演武道場、回春客棧、廢棄礦脈坑道）。
-  - **驗收標準**：營地介面不再出現四向移動羅盤，全面轉為純單機點選式現代 RPG 選單。
+- [ ] **Task FE4-1 (TOWN-PANEL-CARDS-REFACTOR): 營地選單網格卡片重構 (移除 4 向羅盤，呈現六大設施)**
+  - **目標**：徹底自 `town-panel.js` 移除渲染舊 MUD 4 向出口（`exits.forEach` / `renderTownNav`），全面以卡片呈現六大機能設施（百煉堂、靈台藏經閣、雜役演武道場、宗門外門集市、回春客棧、廢棄礦脈坑道）。
+  - **驗收標準**：營地介面不再出現四向移動羅盤，全面轉為純單機點選式現代 RPG 卡片選單，六大設施卡牌（含外門集市）完整渲染。
 - [ ] **Task FE4-2 (XIANXIA-THEMED-SURFACE-RENDER): 表層仙俠風格純化與動態真相浮水印解密 (Glitch FX)**
-  - **目標**：落實 Option C 渲染原則，營地設施卡牌、NPC 對話框與按鈕文字預設 100% 呈現古典仙俠稱謂；當後端 `TownHubDto` 標記 `glitch: true` 時，前端觸發 CSS 故障光斑特效；當晶片加載度突破閾值時，卡片動態解鎖賽博底層解析浮水印。
+  - **目標**：落實 Option C 渲染原則，營地設施卡牌、NPC 對話框與按鈕文字預設 100% 呈現古典仙俠稱謂；當後端 `TownHubDto` 標記 `glitch: true` 時，前端觸發 CSS 故障光斑特效；當晶片加載度突破閾值時，卡片動態解鎖賽博底法解析浮水印。
   - **驗收標準**：前端卡牌預設無破梗詞彙，臨界與突破期平滑呈現故障過渡與真相解密。
+- [ ] **Task FE4-3 (MARKET-TRADING-PANEL-AND-SUPPLIES): 宗門外門集市交易與物資補給面板**
+  - **目標**：依據 L1《[`GAMEPLAY_CORE_LOOPS.md`](../../1_requirements/GAMEPLAY_CORE_LOOPS.md)》與 L2《[`FE4_TOWN_HUB_AND_ACTION_BAR.md`](../../2_specifications/frontend/FE4_TOWN_HUB_AND_ACTION_BAR.md)》，實作宗門外門集市（Outer Sect Market）交易視圖/面板，支援玩家購買地牢生存物資（火把、金創藥、辟邪符籙），並可向遊商·瘸狼銷贓地牢戰利品（黑煞石、怪獸素材）換取靈石。
+  - **驗收標準**：點擊外門集市卡牌或 NPC 名片開啟交易面板，支援買入補給與批量銷贓，小隊 40 格公共行囊數量即時同步刷新。

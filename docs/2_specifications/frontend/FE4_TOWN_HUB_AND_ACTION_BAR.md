@@ -17,7 +17,7 @@ graph TD
     StoreState["store.state (中央狀態樹)"] --> StateCheck{"當前場景與戰鬥判定"}
     
     StateCheck -- viewMode: TOWN --> ModeTown["【營地整備態】"]
-    ModeTown --> TownHub["五大機能設施卡牌 + 駐留 NPC 名片"]
+    ModeTown --> TownHub["六大機能設施卡牌 + 駐留 NPC 名片"]
     ModeTown --> TownBar["一鍵休整 (Rest) / 行囊整備 (Inventory) / 小隊加點 (Party)"]
     
     StateCheck -- viewMode: DUNGEON 且非戰鬥 --> ModeDungeon["【地牢步進態】"]
