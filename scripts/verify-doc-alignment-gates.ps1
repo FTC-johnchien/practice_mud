@@ -73,6 +73,7 @@ foreach ($line in $gitStatus) {
 }
 
 $governanceWhitelist = @(
+    ".agents/skills/docs-alignment-instructor/SKILL.md",
     "docs/4_active_tasks/DOCS_ALIGNMENT_ACTIVE_TASKS.md",
     "docs/3_task_lists/DOCS_ALIGNMENT_MASTER_PLAN.md",
     "scripts/verify-doc-alignment-gates.ps1",

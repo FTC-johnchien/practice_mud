@@ -3,6 +3,7 @@
 > **文檔層級**：Level 3 — 架構治理主控計劃與指導員簽核檢查表（Master Plan & Instructor Gate Checklist）  
 > **跨電腦 Git 同步設計**：本檔存放於 Git 追蹤之 `docs/3_task_lists/`，不依賴本機 `%USERPROFILE%\.gemini\` 暫存目錄。無論在**公司電腦**或**家裡電腦**，只要執行 `git pull`，指導員 AI 讀取本檔即可 100% 掌握背景裁決、當前闖關進度與驗收標準。  
 > **關聯執行組件**：
+> - 🧠 **指導員自動喚醒技能（`gemini 3.8` 禁讀）**：[`SKILL.md`](../../.agents/skills/docs-alignment-instructor/SKILL.md)
 > - 🤖 **`gemini 3.8` 執行任務卡**：[`DOCS_ALIGNMENT_ACTIVE_TASKS.md`](../4_active_tasks/DOCS_ALIGNMENT_ACTIVE_TASKS.md)
 > - 🛡️ **指導員自動驗收閘門腳本**：[`verify-doc-alignment-gates.ps1`](../../scripts/verify-doc-alignment-gates.ps1)（快照目錄：`scripts/.gate_snapshots/`）
 > - 📑 **全量審查問題溯源報告**：[`docs_hierarchy_review_report.md`](../0_references/docs_hierarchy_review_report.md)
@@ -16,8 +17,7 @@
    - 將「執行步驟卡」放 `docs/4_active_tasks/` 給 `gemini 3.8` 專注執行、將「主控計劃＋檢核表＋自動腳本」放 `docs/3_task_lists/` 與 `scripts/` 給指導員控場，既避免單檔超過 350 行紅線，也能防止執行模型看到驗收正規表達式而「湊字作弊」。
 2. **換電腦時的標準交接步驟**：
    - **離開當前電腦前**：指導員完成當前關卡簽核並更新本檔下方 `Gate` 勾選框 `[x]` 後，將變更 `git add .` → `git commit`（繁體中文訊息）→ `git push`。
-   - **抵達另一台電腦後**：先執行 `git pull`，開啟指導員對話並貼入以下接手指令：
-     > `請讀取 docs/3_task_lists/DOCS_ALIGNMENT_MASTER_PLAN.md 與 docs/4_active_tasks/DOCS_ALIGNMENT_ACTIVE_TASKS.md，接手擔任「指導員」角色。請先執行 .\scripts\verify-doc-alignment-gates.ps1 確認目前已完成到哪個 Gate，並告訴我下一步要派發給 gemini 3.8 的指令。`
+   - **抵達另一台電腦後**：先執行 `git pull`，直接對指導員輸入 **「下一步要做什麼」** 即可（已內建專屬按需載入技能 [`docs-alignment-instructor`](../../.agents/skills/docs-alignment-instructor/SKILL.md)，指導員會自動讀取本檔與檢核腳本接手進度，而執行模型不會載入該技能）。
 3. **指導員單步控場迴圈（每關必守 4 步）**：
    - **① 單步派工**：每次只授權 `gemini 3.8` 執行**單一 Step**（嚴禁一次派多步）。
    - **② 腳本硬檢核**：待 `gemini 3.8` 回報停機後，指導員在 `practice_mud` 根目錄執行：

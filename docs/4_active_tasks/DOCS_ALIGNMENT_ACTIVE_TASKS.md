@@ -1,7 +1,7 @@
 # 🛠️ 《深淵仙途》四層級工程文件對齊執行任務卡（供 `gemini 3.8` 單步執行）
 
-> **文檔層級**：Level 4 — 專項文件治理執行任務卡（受指導員主控計劃 [`DOCS_ALIGNMENT_MASTER_PLAN.md`](../3_task_lists/DOCS_ALIGNMENT_MASTER_PLAN.md) 單步闖關簽核管制）  
-> **與 [`ACTIVE_TASKS.md`](./ACTIVE_TASKS.md) 之關係**：本任務卡僅於「四層級文件對齊專項」期間生效，全程不修改任何業務程式碼；待 Step 1 ~ Step 7 全數通過簽核後，本檔將與主控計劃一併封存至 `docs/0_archive/alignment_history/`，恢復 [`ACTIVE_TASKS.md`](./ACTIVE_TASKS.md) 單一業務看板。  
+> **文檔層級**：Level 4 — 專項文件治理執行任務卡（受指導員單步闖關簽核管制；執行模型僅依本檔步驟執行）
+> **與 [`ACTIVE_TASKS.md`](./ACTIVE_TASKS.md) 之關係**：本任務卡僅於「四層級文件對齊專項」期間生效，全程不修改任何業務程式碼；待 Step 1 ~ Step 7 全數通過簽核後，本檔將與主控計劃一併封存至 `docs/0_archive/alignment_history/`，恢復 [`ACTIVE_TASKS.md`](./ACTIVE_TASKS.md) 單一業務看板。
 > **問題溯源報告**：[`docs_hierarchy_review_report.md`](../0_references/docs_hierarchy_review_report.md)
 
 ---
@@ -12,7 +12,7 @@
    - **你每次只准執行指導員在對話中點名派發的「單一 Step」（例如僅執行 `Step 1`）！**
    - 完成該 Step 內的所有項目與自檢指令後，請輸出「本步修改檔案清單與自檢結果」並**立即停下（Stop）等待指導員驗收**，**絕對禁止**自行跨步修改下一關檔案！
 2. **🚫 五條安全紅線（Scope & Safety Lock）**：
-   - **禁改業務代碼與資料**：僅限修改 Markdown 文件（`.md`）與 [`check-doc-links.ps1`](../../scripts/check-doc-links.ps1)；**嚴禁修改** `src/main/`、`src/test/` 下任何 `.java`、`.json`、`.html`、`.css`、`.js`，亦**嚴禁修改**指導員專用之 [`DOCS_ALIGNMENT_MASTER_PLAN.md`](../3_task_lists/DOCS_ALIGNMENT_MASTER_PLAN.md) 與 `scripts/verify-doc-alignment-gates.ps1`。
+   - **禁改業務代碼與禁讀指導員專屬檔**：僅限修改 Markdown 文件（`.md`）與 [`check-doc-links.ps1`](../../scripts/check-doc-links.ps1)；**嚴禁修改** `src/main/`、`src/test/` 下任何 `.java`、`.json`、`.html`、`.css`、`.js`，且**嚴禁讀取或修改**指導員專用之 `.agents/skills/`、`docs/3_task_lists/DOCS_ALIGNMENT_MASTER_PLAN.md` 與 `scripts/verify-doc-alignment-gates.ps1`。
    - **禁碰憲法保護鎖**：**絕對禁止修改、縮編或刪除** [`GEMINI.md`](../../GEMINI.md) 第 21~37 行「第 7 條：100% 資料驅動與零硬編碼鐵律（不可刪除／修改保護鎖）」，以及 [`documentation_alignment_guardrails.md`](../../.agents/rules/documentation_alignment_guardrails.md)。
    - **禁改封存與外部參考檔**：嚴禁修改 `docs/0_archive/` 與 `docs/0_references/` 下任何檔案。
    - **單檔行數守則**：修改後一般文件須 `< 350` 行；高內聚規格手冊（如 [`M3_1_BUFF_AND_STATUS_EFFECTS.md`](../2_specifications/backend/M3_1_BUFF_AND_STATUS_EFFECTS.md)、[`MODULES_MAP.md`](../2_specifications/MODULES_MAP.md)）豁免上限為 `<= 400` 行。
@@ -189,4 +189,3 @@
    git diff -- GEMINI.md
    ```
    並確認 `docs/` 非封存文件無任何單檔超過 `400` 行，回報最終結果等待指導員總簽核。
-
