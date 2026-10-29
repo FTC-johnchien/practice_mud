@@ -10,12 +10,12 @@
 ## 🧭 一、程式碼單一真相源 (Single Source of Truth)
 
 - **核心檔案路徑**：
-  - `src/main/resources/static/css/style-01-tokens.css`（全域 CSS 變數、顏色、字級、間距）
-  - `src/main/resources/static/css/style-02-layout.css`（響應式五大板塊骨架）
-  - `src/main/resources/static/css/style-03-dungeon-view.css`（DRPG 視口與迷霧）
-  - `src/main/resources/static/css/style-04-battle-arena.css`（擂台排位佈局）
+  - `src/main/resources/static/css/style-01-tokens-and-shell.css`（全域 Tokens 與基礎骨架 Shell；舊 `style-01-tokens.css`、`style-02-layout.css`【歷史／已除役】）
+  - `src/main/resources/static/css/style-02-combat-arena.css`（戰鬥擂台視口與排位佈局；舊 `style-04-battle-arena.css`【歷史／已除役】）
+  - `src/main/resources/static/css/style-03-battle-actions.css`（動作技能列與技能卡；舊 `style-03-dungeon-view.css`【歷史／已除役】）
+  - `src/main/resources/static/css/style-04-main-menu.css`（主選單與全域彈窗容器）
   - `src/main/resources/static/css/style-05-town-and-hub.css`（營地中樞卡片）
-  - `src/main/resources/static/css/style-06-modals-and-forms.css`（彈窗與對話框）
+  - `src/main/resources/static/css/style-06-shop-and-responsive.css`（集市商店、行囊與響應式規則；舊 `style-06-modals-and-forms.css`【歷史／已除役】）
   - `src/main/resources/static/css/style-07-battle-fx.css`（打擊動效與浮動大字）
 
 ---
@@ -25,7 +25,7 @@
 - [x] **FE6-STYLE-MONOLITH-PURGE (歷史樣式巨石安全除役)**
   - 物理安全刪除 122 KB 之舊樣式巨石 `style.css`，全系統 100% 運行於 7 層模組化串流。
 - [x] **FE6-SEVEN-TIER-STREAM (七層結構建立)**
-  - 確立清晰層次：Tokens $\to$ Layout $\to$ Viewport $\to$ Battle $\to$ Hub $\to$ Modals $\to$ FX，無循環依賴。
+  - 確立清晰層次：Tokens/Shell $\to$ Arena $\to$ Actions $\to$ Main Menu $\to$ Hub $\to$ Shop/Responsive $\to$ FX，無循環依賴。
 - [x] **FE6-THEME-TOKENS (賽博克蘇魯修仙主題 Token)**
   - 確立暗紫黑底、科技青藍、靈煞赤紅與天道金等標準 CSS 變數，字級下限不低於 13px。
 

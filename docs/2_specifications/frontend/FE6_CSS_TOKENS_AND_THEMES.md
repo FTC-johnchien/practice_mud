@@ -1,7 +1,7 @@
 # 🎨 前端 FE-6: 七層樣式串流與視覺主題深度手冊 (CSS Tokens & Themes Manual)
 
-> **模組編號**：FE-6  
-> **系統類型**：前端表現層模組  
+> **模組編號**：FE-6
+> **系統類型**：前端表現層模組
 > **核心定位**：管理暗黑克蘇魯修仙全域視覺規範、CSS Custom Properties（設計變數 Tokens）、嚴格之七層 Cascade 依賴順序串流載入架構、無障礙字級排版標準，以及歷史樣式巨石解耦成果。
 
 ---
@@ -52,7 +52,7 @@ graph TD
 4. **`style-04-main-menu.css`**：
    - 封面選單、修仙標題漸層光暈、星空閃爍動畫。
 5. **`style-05-town-and-hub.css`**：
-   - 城鎮模式佈局、NPC 資訊卡片、四方出口網格按鈕。
+   - 城鎮模式佈局、設施卡片與 NPC 對話卡片。
 6. **`style-06-shop-and-responsive.css`**：
    - 貨棧商品陳列卡片、購買數量微調器，以及行動端螢幕適配媒體查詢（Media Queries）。
 7. **`style-07-battle-fx.css`**：
@@ -88,7 +88,7 @@ graph TD
 | `static/css/style-02-combat-arena.css` | 戰鬥擂台與生靈卡牌 | `.battle-arena`, `.hp-bar`, `.poise-bar` |
 | `static/css/style-03-battle-actions.css` | 戰鬥動作與快捷按鈕 | `.skill-button`, `.gcd-overlay` |
 | `static/css/style-04-main-menu.css` | 封面主選單 | `.main-menu`, `.title-glow`, `.star-field` |
-| `static/css/style-05-town-and-hub.css` | 城鎮面板與 NPC 卡片 | `.town-hub`, `.npc-card`, `.exit-btn` |
+| `static/css/style-05-town-and-hub.css` | 城鎮面板與 NPC 卡片 | `.town-hub`, `.facility-card`, `.npc-card` |
 | `static/css/style-06-shop-and-responsive.css`| 貨棧交易與行動端適配 | `.shop-grid`, `@media (max-width: 1024px)` |
 | `static/css/style-07-battle-fx.css` | 打擊飄字與震動特效 | `.fct-damage`, `.screen-shake`, `.broken-pulse` |
 

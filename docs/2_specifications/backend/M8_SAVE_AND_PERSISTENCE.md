@@ -32,7 +32,8 @@ saves/
 ├── slot_3.json                         # 槽位 3
 ├── slot_4.json                         # 槽位 4
 ├── slot_5.json                         # 槽位 5
-└── slot_auto.json                      # 系統自動存檔 (AutoSave)
+├── autosave.json                       # 系統自動存檔 (AutoSave)
+└── autosave.json.bak                   # 自動存檔備份
 ```
 
 ### `SaveData` JSON 核心結構
@@ -79,7 +80,7 @@ saves/
 2. **小隊覆滅結算與強制自動存檔 (Defeat Wipe & AutoSave Protocol)**：
    - 當小隊在戰鬥或地牢中全員 HP 歸零覆滅時，觸發滅團結算：清空本次探索暫存未鑑定掉落物（已裝備物品與出發前行囊物資保留）。
    - 小隊狀態強制重置回安全營地（`viewMode = TOWN`），全員以 30% 氣血虛弱復甦。
-   - 結算完成後，系統立即觸發原子性自動存檔至 `slot_auto.json`，杜絕玩家藉由強退遊戲逃避死亡懲罰。
+   - 結算完成後，系統立即觸發原子性自動存檔至 `autosave.json`，杜絕玩家藉由強退遊戲逃避死亡懲罰。
 
 ---
 
@@ -124,8 +125,8 @@ saves/
 | **存檔服務** | `com.example.htmlmud.save.SaveGameService` | 槽位讀寫、備份回滾與版本遷移 |
 | **遷移管線** | `com.example.htmlmud.save.SaveMigrationPipeline` | v1 $\to$ v2 $\to$ v3 平滑遷移 |
 | **存檔真相源** | `com.example.htmlmud.save.SaveData` | 小隊、40格背包、進度聚合根 DTO |
-| **房間持久化** | `com.example.htmlmud.domain.service.RoomPersistenceService` | 地面遺留物非同步寫入 |
-| **存檔存放目錄** | `saves/slot_*.json` | 本地原子性 JSON 存檔目錄 |
+| **存檔槽位模型** | `com.example.htmlmud.save.SaveSlotDto` | 存檔槽位元資料與預覽傳輸契約 |
+| **存檔存放目錄** | `saves/slot_*.json, saves/autosave.json` | 本地原子性 JSON 存檔目錄 |
 
 ---
 

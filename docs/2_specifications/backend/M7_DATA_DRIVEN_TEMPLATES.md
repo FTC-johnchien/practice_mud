@@ -46,9 +46,15 @@ src/main/resources/data/
 ├── formations/                         # 古仙陣法模板
 │   └── formations.json                 # 九宮八卦陣、北斗七星陣的站位增益與仇恨倍率
 │
-├── quests.json                         # 通用任務與劇情台詞 (擊殺觸發、台詞對話、獎勵)
-├── items.json                          # 全域法寶、飛劍、防具、靈藥模板
-└── classes/classes.json                # 職業、境界突破與道基成長曲線
+├── global/                             # 全域跨區域共享資料庫
+│   ├── items/                          # 裝備、法寶、丹藥與素材屬性模板
+│   │   └── weapons/weapons.json        # 武器分類資料
+│   ├── skills/                         # 技能範本定義
+│   ├── classes.json                    # 職業、境界突破與道基成長曲線
+│   ├── races.json                      # 種族基礎屬性
+│   └── weapon_config.json              # 武器槽位與係數
+│
+└── quests.json                         # 通用任務與劇情台詞 (擊殺觸發、台詞對話、獎勵)
 ```
 
 ---
@@ -87,7 +93,7 @@ sequenceDiagram
 為了防止策劃或開發者在 JSON 寫錯一個 ID（例如房間出口指向不存在的房間、怪物掉落未定義的物品），專案內建 **`DataIntegrityValidator`**，在 Spring Boot 啟動時自動進行全面稽核：
 
 1. **房間出口連通性驗證**：檢查每間房的 `exits` 指向的 `targetId` 是否真實存在，嚴防「走進虛空」。
-2. **物品掉落完整性驗證**：檢查怪物 `mobPool` 與寶箱掉落物 ID 是否在 `items.json` 中已註冊。
+2. **物品掉落完整性驗證**：檢查怪物 `mobPool` 與寶箱掉落物 ID 是否在全域物品庫中已註冊。
 3. **裝備槽位完整性驗證**：確保所有可穿戴裝備皆具備明確的 `equipSlot` 枚舉，杜絕前端中文名稱推測。
 4. **技能五行與標籤驗證**：確認所有技能具備合法的 `DamageType` 與冷卻數值。
 
@@ -102,7 +108,6 @@ sequenceDiagram
 | **模板快取庫** | `com.example.htmlmud.template.TemplateRepository` | JSON 解析、快取持有與模板註冊 |
 | **唯讀讀取埠** | `com.example.htmlmud.template.TemplateReader` | 業務層純唯讀存取介面（依賴反轉） |
 | **資料校驗器** | `com.example.htmlmud.template.DataIntegrityValidator` | 開機完整性自檢（死鏈、引用合法性） |
-| **轉接適配器** | `com.example.htmlmud.domain.repository.DrpgTemplateAdapter` | DRPG 專屬資料轉接與適配 |
 | **資料目錄** | `src/main/resources/data/**/*.json` | 全專案宣告式靜態設定真相源 |
 
 ---
@@ -112,10 +117,8 @@ sequenceDiagram
 作為專案第一紅線的基石，資料驅動架構將持續向現代商業引擎（如 Unreal / Unity ScriptableObject）的靈活性演進：
 
 ### 1. 🎯 現代遊戲機制深化 (Modern Gameplay & Depth)
-- **非中斷動態熱重載 (Live Hot-Reloading Pipeline)**：
-  開發環境或運維管理下，整合檔案系統監聽器（`WatchService`）。當策劃修改 `skills.json` 或 `mozhu_mines_b1f.json` 存檔時，自動重新載入對應範本並原子性替換記憶體快取。無需重啟 Spring Boot，正在運行的遊戲世界即時套用新平衡性數值！
-- **可視化地圖/技能編輯器標準協議**：
-  提供 OpenAPI / JSON-LD 規範，方便串接第三方 Web 地圖編輯器（如 Tiled）或策劃試算表，一鍵匯出為標準專案 JSON。
+- **靜態啟動快取與可視化編輯器標準協議 (Static Boot Cache & Editor Protocol)**：
+  遵循純單機單體架構，全域設定檔於啟動時一次性掃描載入至不可變記憶體快取，確保確定性與零副作用。提供 OpenAPI / JSON Schema 規範，方便串接第三方 Web 編輯器（如 Tiled）或策劃試算表，一鍵匯出為標準專案 JSON。
 
 ### 2. 🛡️ 穩定性與狀態防禦 (Robustness & Resilience)
 - **JSON Schema 語法嚴格校驗層 (JSON Schema Validation)**：
@@ -127,5 +130,6 @@ sequenceDiagram
   在 `TemplateRepository` 啟動階段完成全量 JSON 拓撲掃描與反序列化，建立雙向別名與索引表，於單元測試中由 `DataIntegrityValidator` 進行完整性防禦，執行期 0 次重複磁碟 I/O。
 
 ### 4. 🚫 過度設計正式除役宣告 (Decommissioned Over-Engineering Scope)
+- ❌ **非中斷動態熱重載 (Live Hot-Reloading / WatchService)**：已依 D4-4 正式除役，維持啟動時確定性一次載入與唯讀快取。
 - ❌ **二進位預編譯快取 (MessagePack / FlatBuffers)**：已除役，維持標準可讀 JSON 檔案驅動。
 - ❌ **第三方動態 Mod 載入器**：已除役，所有資料完全由 `src/main/resources/data/**/*.json` 單一真相源驅動。

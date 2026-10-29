@@ -31,7 +31,7 @@ static/js/modals/
    - 清楚呈現 2 前衛、1 中衛、2 後衛之站位排列。
    - 顯示即時氣血條（HP）、真元條（MP）與受創罡氣韌性上限。
 2. **外神精神侵蝕警示 (Psychic Shield Warning)**：
-   - 當隊員神識護盾（SAN）低於 50% 時，卡牌邊框浮現暗紫符紋警示，直觀提示玩家及時服用「清心靈丹」或返回營地休整，防範精神震懾虛弱。
+   - 依 D2 規範，當隊員道心（SAN）降至 0 時附加單一【精神萎靡 (WEAKENED)】（全域傷害 -15%）；低 SAN 時卡牌邊框浮現暗紫符紋警示，直觀提示玩家及時服用「清心靈丹」或返回營地休整。
 3. **古仙陣法切換 (Formation Selector)**：
    - 下拉清單動態呈現已解鎖之仙門陣法（九宮八卦陣、北斗七星陣）。
    - 切換陣法即時發送結構化動作至後端 `FormationEngine` 重新結算站位攻防加成。
@@ -40,13 +40,13 @@ static/js/modals/
 
 ## 🛡️ 三、純資料驅動裝備換裝分頁 (`party-equipment-tab.js`)
 
-嚴格遵守專案第一紅線，裝備換裝介面**完全摒棄中文名稱推測**，全面依賴後端 [`EquipmentSlot`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/item/EquipmentSlot.java) 枚舉（5+2 結構，前端常數為 `EQUIP_SLOT_DEFS`）：
+嚴格遵守專案第一紅線，裝備換裝介面**完全摒棄中文名稱推測**，全面依賴後端 [`EquipmentSlot`](../../../src/main/java/com/example/htmlmud/item/EquipmentSlot.java) 枚舉（5+2 結構，前端常數為 `EQUIP_SLOT_DEFS`）：
 
 ```mermaid
 sequenceDiagram
     autonumber
     participant UI as 前端 party-equipment-tab.js
-    participant Store as store.js (小隊行囊 40 格)
+    participant Store as state-store.js (小隊 40 格公共行囊)
     participant Server as 後端 M9 動作管線
 
     UI->>Store: 點選隊員之【主手武器 (MAIN_HAND)】槽位
@@ -94,7 +94,7 @@ sequenceDiagram
 
 當地下城首領或遭遇戰魔物全數殲滅時自動觸發：
 - **修為經驗分配動效**：經驗條自左向右蓄力填滿，若觸發升級則浮現金色仙光。
-- **戰利品展示卡片**：將怪物掉落之靈石碎銀、妖丹靈草與極品法寶逐一展示，點擊「收納入袋」後自動安全存入 40 格小隊儲物袋。
+- **戰利品展示卡片**：將怪物掉落之靈石碎銀、妖丹靈草與極品法寶逐一展示，點擊「收納入袋」後自動安全存入 40 格公共行囊。
 
 ---
 
@@ -114,7 +114,7 @@ sequenceDiagram
 為使小隊管理、裝備換裝與多槽位存檔具備現代商業級 3A RPG 的便利性與交互質感，確立以下四大演進方向：
 
 ### 1. 🎯 現代交互體驗與數值對比 (Modern UX & Loadout)
-- **法寶屬性並排差分對比 Tooltip (Side-by-Side Stat Diff Tooltip)**：
+- **法寶屬性並排差分對比 Tooltip (Side-by-Side Stat Diff Tooltip) 【現行已驗證】**：
   當滑鼠懸停於儲物袋中某件新法寶時，介面同時彈出「當前穿戴裝備」與「選中新裝備」的左右並排卡片。數值增益（如「根骨 +15 (+4)」）以碧綠高亮標註，折損數值以暗紅標註，一目了然；並提供「一鍵換裝推薦」功能。
 - **小隊戰鬥配裝方案切換 (Loadout Presets)**：
   支援儲存 3 套戰備方案（如「破煞開荒防禦流」、「純陽極致暴擊流」、「五行抗性抗煞流」），在非戰鬥狀態下一鍵切換全隊裝備與陣法配置。

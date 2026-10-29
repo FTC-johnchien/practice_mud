@@ -26,7 +26,7 @@
 
 ## 🛡️ 二、裝備槽位與純資料驅動契約 (EquipmentSlot 5+2 結構)
 
-嚴格遵循專案第一紅線，前端與後端換裝邏輯**完全拋棄中文名稱推測**，全面依賴 [`EquipmentSlot`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/item/EquipmentSlot.java) 枚舉（JSON / DTO 序列化欄位為 `equipSlot`）：
+嚴格遵循專案第一紅線，前端與後端換裝邏輯**完全拋棄中文名稱推測**，全面依賴 [`EquipmentSlot`](../../../src/main/java/com/example/htmlmud/item/EquipmentSlot.java) 枚舉（JSON / DTO 序列化欄位為 `equipSlot`）：
 
 ```java
 public enum EquipmentSlot {
@@ -81,7 +81,7 @@ public enum EquipmentSlot {
 
 ---
 
-## 🔍 三、多階靈識認知透鏡與動態轉譯管線 (Cognitive Item Lenses)
+## 🔍 四、多階靈識認知透鏡與動態轉譯管線 (Cognitive Item Lenses)
 
 為實踐「表層修仙，漸進揭示真相」原則，道具範本支援多階認知透鏡（`lenses`）：
 
@@ -103,30 +103,31 @@ public enum EquipmentSlot {
 
 ---
 
-## 🔗 四、代表類別與資料設定檔
+## 🔗 五、代表類別與資料設定檔
 
 | 項目 | 路徑 / 名稱 | 職責 |
 | :--- | :--- | :--- |
 | **小隊背包** | `com.example.htmlmud.party.PartyInventory` | 40 格小隊儲物袋堆疊、存取與序列化 |
-| **物品實體** | `com.example.htmlmud.domain.model.GameItem` | 靈物實例、耐久度、詞綴與五維加成 |
-| **靈識轉譯代理** | `com.example.htmlmud.domain.world.service.CognitiveProxyService` | 依據晶片加載度動態過濾物品多階透鏡（`lenses`）名稱與描述 |
+| **物品定義** | `com.example.htmlmud.item.ItemDefinition` | 靈物範本資料結構、基礎數值、槽位與透鏡 |
+| **物品實例** | `com.example.htmlmud.item.ItemInstance` | 靈物實體實例、隨機詞綴、強化等級與耐久 |
+| **物品工廠** | `com.example.htmlmud.item.ItemFactory` | 隨機詞綴骰算、物品實例建構與模板綁定 |
 | **槽位枚舉** | `com.example.htmlmud.item.EquipmentSlot` | 裝備欄位嚴格枚舉契約 (5+2 結構) |
-| **商店指令** | `com.example.htmlmud.application.command.impl.ShopCommand` | 貨棧清單列出、買入、賣出指令處理 |
-| **拾取丟棄** | `com.example.htmlmud.application.command.impl.DropCommand` | 地面物品拾取（`get`）與丟棄（`drop`） |
-| **資料設定** | `src/main/resources/data/items.json` | 全域裝備、法寶、丹藥與素材屬性模板（宣告 `lenses` 透鏡） |
+| **經濟服務** | `com.example.htmlmud.item.UnifiedPartyEconomyService` | 小隊共享金庫出納、買入、賣出與結算 |
+| **靈識轉譯代理** | `com.example.htmlmud.town.CognitiveProxyService` | 依據晶片加載度動態過濾物品多階透鏡（`lenses`）名稱與描述 |
+| **資料設定** | `src/main/resources/data/global/items/weapons/weapons.json` | 全域裝備與法寶屬性模板（全域目錄 `src/main/resources/data/global/items/`，舊路徑 `data/items.json` 【歷史／已除役】） |
 | **資料設定** | `src/main/resources/data/zones/*/shops.json` | 區域商店商品、價格與無限庫存宣告 |
 
 ---
 
-## 🚀 五、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
+## 🚀 六、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
 
 為使物品、背包與經濟模組具備暗黑刷寶、修仙百藝與拍賣交易的耐玩深度，確立以下四大演進方向：
 
 ### 1. 🎯 現代遊戲機制深化 (Modern Gameplay & Depth)
-- **隨機詞綴法寶生成與洗練 (Affix & Refinement System)**：
+- **隨機詞綴法寶生成與洗練 (Affix & Refinement System) 【現行已驗證】**：
   地牢擊敗首領或開棺摸金時，掉落之法寶導入隨機詞綴（前綴如「破煞之·物理穿透+15%」，後綴如「幽冥之·受擊回藍+5」）。城鎮鐵匠鋪開放「重鑄與銘文洗練」，消耗靈石與煞石精華洗練詞條，打造極品本命法寶。
 - **動態供需經濟與修仙跑商 (Dynamic Market & Leyline Trade)**：
-  不同區域商店貨棧引入供需差價（如桃源村盛產靈米但缺丹藥，雪亭鎮急缺禦寒靈符）。玩家可在城鎮間行商套利，靈石物價隨全服消耗量動態微幅波動，增添生活修仙樂趣。
+  不同區域商店貨棧引入供需差價（如桃源村盛產靈米但缺丹藥，雪亭鎮急缺禦寒靈符）。玩家可在城鎮間行商套利，增添生活修仙樂趣。
 
 ### 2. 🛡️ 穩定性與狀態防禦 (Robustness & Resilience)
 - **交易原子性兩階段事務 (Two-Phase Commit Transaction)**：
@@ -135,7 +136,7 @@ public enum EquipmentSlot {
 
 ### 3. ⚡ 效能與記憶體最佳化 (Performance & Concurrency)
 - **物品原型享元架構 (Flyweight Item Model)**：
-  靜態資料（圖標、重量、基礎描述、槽位枚舉）一律由 `ItemTemplate` 共享單例。動態實例（`GameItem`）僅記錄 `templateId`、自訂詞綴、耐久度與強化等級，記憶體開銷降至原本的 10%，序列化更加輕盈。
+  靜態資料（圖標、重量、基礎描述、槽位枚舉）一律由 `ItemTemplate` 共享單例。動態實例（`GameItem` / `ItemInstance`）僅記錄 `templateId`、自訂詞綴、耐久度與強化等級，記憶體開銷降至原本的 10%，序列化更加輕盈。
 
 ### 4. 🔌 可擴充性與模組化 (Extensibility & Modding)
 - **宗門古寶套裝效果引擎 (Set Bonus Engine)**：

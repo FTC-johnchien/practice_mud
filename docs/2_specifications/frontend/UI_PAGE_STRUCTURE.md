@@ -1,10 +1,10 @@
 # 🖥️ 前端頁面結構與視圖模組化架構規範書
 # (Frontend Page Architecture, Core Modules & Data-Driven Specifications)
 
-> **文件定位**：  
-> 本文件定義 Web 前端核心架構原則、共用基礎庫（`constants.js`, `ui-utils.js`）、7 大視圖契約與資料驅動防範守則。  
-> **關聯專屬手冊導航**：  
-> - 🖥️ **宏觀佈局與場景狀態機**：請參閱 👉 [`FRONTEND_LAYOUT_GUIDE.md`](FRONTEND_LAYOUT_GUIDE.md)  
+> **文件定位**：
+> 本文件定義 Web 前端核心架構原則、共用基礎庫（`constants.js`, `ui-utils.js`）、7 大視圖契約與資料驅動防範守則。
+> **關聯專屬手冊導航**：
+> - 🖥️ **宏觀佈局與場景狀態機**：請參閱 👉 [`FRONTEND_LAYOUT_GUIDE.md`](FRONTEND_LAYOUT_GUIDE.md)
 > - 🎨 **6 大表現層模組手冊**：[`FE1_CORE_STATE`](FE1_CORE_STATE_AND_PIPELINE.md) ‧ [`FE2_VIEWPORT`](FE2_DRPG_VIEWPORT_RENDERER.md) ‧ [`FE3_ARENA`](FE3_BATTLE_ARENA_AND_FX.md) ‧ [`FE4_TOWN`](FE4_TOWN_HUB_AND_ACTION_BAR.md) ‧ [`FE5_MODALS`](FE5_PARTY_EQUIPMENT_AND_MODALS.md) ‧ [`FE6_THEMES`](FE6_CSS_TOKENS_AND_THEMES.md)
 
 ---
@@ -53,6 +53,10 @@ flowchart TD
     SevenModules -.-> EventBus
 ```
 
+### 1.1 佈局架構雙軌規範（對齊 D1 決策）
+- **【現行已驗證】現行實作版面**：`index.html` 採左右雙主區佈局（左側主舞台＋左下 5 人小隊卡，右側全高可摺疊敘事情報日誌，支援 `⮃ 換邊` 按鈕左右對調）。所有操作均透過點擊按鈕與快捷鍵完成，**完全除役打字文字指令**。
+- **【待深入討論／已決議待實作】規劃演進版面**：PC 經典三欄式（左欄雷達、中欄主舞台、右欄小隊、底欄日誌）與手機直向自適應 5 分頁常駐 Tab Bar（【遠征】 【小隊】 【行囊】 【技能】 【存檔】）。
+
 ### 鐵律一：嚴格資料驅動 (Strict Data-Driven)
 - **禁止在 JS/CSS 中硬編碼遊戲業務規則**：職業名稱、部位限制、物品類別、數值加成、技能標籤、怪物類型等全數由後端提供。
 - **UI 僅負責純粹投影 (Pure Projection)**：標籤、品階色彩、按鈕啟用/禁用狀態，必須直接取自後端 DTO 或由後端 metadata 宣告。
@@ -76,7 +80,7 @@ flowchart TD
 export const UI_CONSTANTS = Object.freeze({
   // 字級安全下限 (杜絕破版)
   MIN_FONT_SIZE_PX: 13,
-  
+
   // 日誌最大留存行數
   MAX_LOG_HISTORY_LINES: 200,
 
@@ -163,13 +167,13 @@ export const UiUtils = {
 
 | 編號 | 視圖模組 | 對應 DOM 節點 | 核心業務職責 | 對應規格手冊 |
 | :---: | :--- | :--- | :--- | :--- |
-| **①** | **頂部資訊列** (`header-panel`) | `<header class="top-nav-bar">` | 探索模式、地圖名稱、陣法靈威條、主選單 (C) 入口、連線指示燈 | [`FE1`](FE1_CORE_STATE_AND_PIPELINE.md) / [`FE6`](FE6_CSS_TOKENS_AND_THEMES.md) |
-| **②** | **底部操作列** (`footer-bar`) | `<footer class="bottom-control-panel">` | 固定高度 48~64px；情境化動作按鈕（探索: 調息/選單/行囊；戰鬥: 集火/奧義/遁地） | [`FE4`](FE4_TOWN_HUB_AND_ACTION_BAR.md) |
+| **①** | **頂部資訊列** (`header-panel`) | `<header class="top-nav-bar">` | 探索模式、地圖名稱、陣法靈威條、主選單 (C) 入口、連線指示燈、換邊按鈕 | [`FE1`](FE1_CORE_STATE_AND_PIPELINE.md) / [`FE6`](FE6_CSS_TOKENS_AND_THEMES.md) |
+| **②** | **底部操作列** (`footer-bar`) | `<footer class="bottom-control-panel">` | 固定高度 48~64px；情境化動作按鈕（探索: 調息/選單/40格行囊；戰鬥: 集火/奧義/遁地） | [`FE4`](FE4_TOWN_HUB_AND_ACTION_BAR.md) |
 | **③** | **戰鬥交鋒主舞台** (`battle-panel`) | `<section class="battle-arena-panel">` | 敵方 5x5 怪物陣列、目標選取、破防削韌條、2px 交鋒微光線、我方 5x3 戰備甲板與 FCT 浮動大字 | [`FE3`](FE3_BATTLE_ARENA_AND_FX.md) |
 | **④** | **城鎮營地中樞** (`town-panel`) | `<section class="town-nav-panel">` | 區域抬頭、選單式設施導航、身旁 NPC 卡片（交談/交易/切磋）與地面掉落物拾取 | [`FE4`](FE4_TOWN_HUB_AND_ACTION_BAR.md) |
 | **⑤** | **迷宮雷達視窗** (`dungeon-panel`) | `<aside class="dungeon-radar-panel">` | 10x10 ASCII 矩陣迷宮雷達、迷霧遮蔽、第一人稱透視、凝神探查卡片 | [`FE2`](FE2_DRPG_VIEWPORT_RENDERER.md) |
 | **⑥** | **歷程情報日誌** (`message-log-panel`) | `<div class="log-and-battle-area">` | 100% 全高貫通右舞台、ANSI 彩色轉義、平滑滾動至底、最大緩衝 200 行 | [`FE1`](FE1_CORE_STATE_AND_PIPELINE.md) |
-| **⑦** | **功能選單彈窗** (`party-modal`) | `<div id="party-modal" class="modal-overlay">` | 固定 1600x900 / 滿版適配；8 大分頁（道具、裝備、技能、角色、隊伍、陣法、Gambit、系統存讀檔） | [`FE5`](FE5_PARTY_EQUIPMENT_AND_MODALS.md) |
+| **⑦** | **功能選單彈窗** (`party-modal`) | `<div id="party-modal" class="modal-overlay">` | 固定 1600x900 / 滿版適配；8 大分頁（40 格公共行囊、裝備、技能、角色、隊伍、陣法、Gambit、系統存讀檔） | [`FE5`](FE5_PARTY_EQUIPMENT_AND_MODALS.md) |
 
 ---
 

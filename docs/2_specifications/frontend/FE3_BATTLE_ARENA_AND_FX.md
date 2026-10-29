@@ -43,22 +43,22 @@
 
 ---
 
-## 💥 三、破防爆裂與受創反饋 (Poise Break & Impact VFX)
+## 💥 三、破防爆裂與受創反饋 (Poise Break & Impact VFX)【現行已驗證】
 
-為營造極致打擊反饋感，結合 `style-07-battle-fx.css` 實作多層動效：
+為營造極致打擊反饋感，結合 `style-07-battle-fx.css` 實作多層動效【現行已驗證】：
 
-1. **破防虛弱動效 (`vulnerable-pulse`)**：
+1. **破防虛弱動效 (`vulnerable-pulse`)【現行已驗證】**：
    - 當敵方韌性歸零（Poise Broken）時，怪物卡片周圍立即爆發紫色碎裂粒子動畫，並附加呼吸式高亮光暈，直觀提示玩家進入輸出黃金時間。
-2. **打斷反制失衡震顫 (`interrupted-break`)**：
+2. **打斷反制失衡震顫 (`interrupted-break`)【現行已驗證】**：
    - 當敵方在蓄力前搖窗口內被眩暈（Stun）或打斷技能命中時，卡片觸發 600ms 高頻震顫、猩紅金電邊框閃爍，並即時於目標上方噴發 `⚡ 打斷！` 專屬大字級 FCT 浮動文字。支援 `@media (prefers-reduced-motion)` 無障礙自動降級。
-3. **螢幕微震動效 (`screen-shake`)**：
-   - 當生靈遭受重度暴擊（Critical Hit）或破防重擊時，主容器容器瞬間觸發 150ms 隨機位移微震，強化魂系厚重感。
+3. **螢幕微震動效 (`screen-shake`)【現行已驗證】**：
+   - 當生靈遭受重度暴擊（Critical Hit）或破防重擊時，主容器容器瞬間觸發 150ms 隨機位移微震，強化厚重打擊感。
 
 ---
 
-## 🍃 四、多樣態動態打擊飄字系統 (Floating Combat Text)
+## 🍃 四、多樣態動態打擊飄字系統 (Floating Combat Text)【現行已驗證】
 
-戰鬥中的每一次結算均在目標上方生成短暫飄浮動畫文字，隨後淡出銷毀：
+戰鬥中的每一次結算均在目標上方生成短暫飄浮動畫文字，隨後淡出銷毀【現行已驗證】：
 
 | 戰鬥結算事件 | 飄字樣式類別 | 顏色風格 | 呈現效果 |
 | :--- | :--- | :--- | :--- |
@@ -71,20 +71,20 @@
 
 ---
 
-## 🧪 五、Buff HUD 圖標與 Tooltip 懸停氣泡 (`buff-hud-helper.js`)
+## 🧪 五、Buff HUD 圖標與 Tooltip 懸停氣泡 (`buff-hud-helper.js`)【現行已驗證】
 
-生靈身上的 Buff / Debuff 透過通用輔助模組進行標準化展示：
+生靈身上的 Buff / Debuff 透過通用輔助模組進行標準化展示【現行已驗證】：
 - **堆疊層數角標 (Badge)**：當 Buff 層數 $> 1$ 時（如中毒 3 層），右下角自動標註數字標籤。
 - **倒數進度光圈**：持續時間環繞圖標邊緣逐步遞減。
 - **動態 Tooltip 氣泡**：滑鼠懸停即時呈現純文字修仙描述（如：「【火煞灼心】每秒扣減 15 點氣血，剩餘 4.2 秒」）。
 
 ---
 
-## ⚡ 七、Hack-and-slash 高頻視覺反饋與節奏規範 (H&S Feedback & Presentation Flow)
+## ⚡ 六、Hack-and-slash 高頻視覺反饋與節奏規範 (H&S Feedback & Presentation Flow)
 
 為完美支撐「動作戰術 DRPG」的戰鬥爽快感，前端 FE-3 遵循以下高頻視覺回饋與節奏渲染準則：
 
-### 1. FCT 浮動戰況大字視覺分層 (Floating Combat Text Hierarchy)
+### 1. FCT 浮動戰況大字視覺分層 (Floating Combat Text Hierarchy)【現行已驗證】
 - **普通傷害**：白色/灰色小字向上漂浮並淡出（`0.8s`）。
 - **暴擊傷害 (CRIT)**：金黃色粗體放大 1.4 倍，帶有彈跳下落動畫（`.ft-crit`）。
 - **破防重創 (STAGGER CRIT)**：紫紅色外發光文字 `💥 破防重創!`，伴隨 150ms 全屏微震（`.ft-stagger-crit`）。
@@ -97,24 +97,24 @@
   - Finisher: `🌌⚡ 天外合擊!` (彩金全屏高亮，持續 1.5s)。
 
 ### 2. 高頻戰鬥效能與 DOM 節點防護
-- 由於半即時下打擊頻率極高，FCT 浮動文字由 `floating-text.js` 的定容節點池（Max 30 節點）循環覆用，動畫結束立即回收，絕不無限制 appendChild 造成記憶體洩漏或掉幀。
+- 由於半即時下打擊頻率極高，FCT 浮動文字由 `static/js/fx/floating-text.js` 的定容節點池（Max 30 節點）循環覆用，動畫結束立即回收，絕不無限制 appendChild 造成記憶體洩漏或掉幀。
 - 支援 `@media (prefers-reduced-motion)` 無障礙自動降級（關閉震屏，轉為純漸顯）。
 
 ---
 
-## 🔗 八、代表檔案清單
+## 🔗 七、代表檔案清單
 
 | 檔案路徑 | 模組定位 | 關鍵導出項目 |
 | :--- | :--- | :--- |
 | `static/js/panels/battle-panel.js` | 戰鬥擂台主控制器 | `renderBattlePanel()`, `spawnDamageNumber()` |
-| `static/js/helpers/buff-hud-helper.js` | Buff 狀態圖標輔助器 | `renderBuffIcons()`, `buildBuffTooltip()` |
+| `static/js/core/buff-hud-helper.js` | Buff 狀態圖標輔助器 | `renderBuffIcons()`, `buildBuffTooltip()`（舊路徑 `static/js/helpers/buff-hud-helper.js`【歷史／已除役】） |
 | `static/css/style-02-combat-arena.css` | 戰鬥擂台幾何排版 | `.battle-arena`, `.enemy-card`, `.hp-bar`, `.poise-bar` |
 | `static/css/style-03-battle-actions.css` | 戰鬥技能按鈕與冷卻光圈 | `.skill-button`, `.gcd-overlay`, `.target-selector` |
 | `static/css/style-07-battle-fx.css` | 飄字、破防粒子與螢幕震動 | `@keyframes float-up`, `.screen-shake`, `.broken-pulse` |
 
 ---
 
-## 🚀 七、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
+## 🚀 八、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
 
 為使戰鬥擂台視覺表現達到「刀光劍影、拳拳到肉、仙法轟鳴」的頂級動態打擊反饋，確立以下四大演進方向：
 

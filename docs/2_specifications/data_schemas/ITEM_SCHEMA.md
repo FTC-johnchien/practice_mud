@@ -61,6 +61,7 @@
           "maxValue": { "type": "number" }
         }
       }
+    },
     "lenses": {
       "type": "array",
       "description": "多階靈識認知透鏡（隨主角特工晶片加載度動態轉譯名稱與描述）",

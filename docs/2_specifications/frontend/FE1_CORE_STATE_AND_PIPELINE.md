@@ -12,7 +12,7 @@
 
 ```mermaid
 graph TD
-    WS["WebSocket 網路連線 (websocket.js)"] -->|解析 JSON (DrpgStateDto)| Store["中央狀態樹 (store.js)"]
+    WS["WebSocket 網路連線 (websocket.js)"] -->|解析 JSON (DrpgStateDto)| Store["中央狀態樹 (state-store.js)"]
     WS -->|情境敘事日誌流| Terminal["敘事日誌面板 (narrative-event-log)"]
     
     User["玩家點擊任意 DOM 節點"] -->|事件冒泡| Delegation["全域事件委派 (app.js 監聽 document)"]
@@ -25,9 +25,9 @@ graph TD
 
 ---
 
-## 🌳 二、單一響應式狀態中心 (`store.js`)
+## 🌳 二、單一響應式狀態中心 (`state-store.js`)
 
-前端所有視圖資料統一託管於 `static/js/state/store.js`：
+前端所有視圖資料統一託管於 `static/js/core/state-store.js`（舊路徑 `static/js/state/store.js`【歷史／已除役】）：
 
 ### 1. 核心狀態樹結構
 - **`viewMode`**：當前主視圖模式，可為 `'TOWN'`（選單式營地中樞）或 `'DUNGEON'`（第一人稱地牢 DRPG）。
@@ -107,7 +107,8 @@ document.addEventListener('click', (event) => {
 
 | 檔案路徑 | 模組定位 | 關鍵導出項目 |
 | :--- | :--- | :--- |
-| **代表檔案** | `static/js/network/websocket.js` | WebSocket 通訊管線 | `connectWebSocket()`, `sendWsCommand()`, `disconnectWebSocket()`, `getWebSocket()`, `isWebSocketConnected()` (向後相容掛載至 `window.send`, `window.connect`) |
+| `static/js/core/state-store.js` | 全域響應式狀態中心 | `store.state`, `store.setState()`, `store.subscribe()`（舊路徑 `static/js/state/store.js`【歷史／已除役】） |
+| `static/js/network/websocket.js` | WebSocket 通訊管線 | `connectWebSocket()`, `sendWsCommand()`, `disconnectWebSocket()`, `getWebSocket()`, `isWebSocketConnected()` (向後相容掛載至 `window.send`, `window.connect`) |
 
 ---
 
@@ -117,7 +118,7 @@ document.addEventListener('click', (event) => {
 
 ### 1. 🎯 現代前端架構深化 (Modern Frontend Architecture)
 - **時間旅行狀態重放器 (Time-Travel Debugger)**：
-  在開發與調試模式下，中央狀態樹（`store.js`）支援 Action 歷史快照隊列。前端可隨時「倒帶（Rewind）」或「前進（Fast-forward）」任何一個戰鬥回合或地牢位移，大幅提升 UI 動效調整與競態邊界的排查效率。
+  在開發與調試模式下，中央狀態樹（`state-store.js`）支援 Action 歷史快照隊列。前端可隨時「倒帶（Rewind）」或「前進（Fast-forward）」任何一個戰鬥回合或地牢位移，大幅提升 UI 動效調整與競態邊界的排查效率。
 - **全量 JSDoc / TypeScript 型別宣告**：
   為 `DrpgStateDto`、`PartyState`、`BattleState` 提供端到端的靜態型別提示與自動補全，杜絕因手誤造成的 `undefined` 存取錯誤。
 

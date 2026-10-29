@@ -49,10 +49,10 @@
 
 ### 1. 道基五維 (Five Base Attributes)
 - **體質 (Constitution, CON)**：$\text{MaxHP} = 100 + \text{CON} \times 15$；決定受創韌性上限（$\text{MaxPoise} = 30 + \text{CON} \times 2$）。
-- **真元 (Essence, ESS)**：$\text{MaxMP} = 50 + \text{ESS} \times 10$；決定道術與晶片戰技威力與真元回復速度。
-- **神識 (Spirit, SPI)**：決定暴擊機率、法術穿透，以及對不可名狀精神污染的抗性與初始 SAN 護盾容量。
-- **根骨 (Bone Structure, STR)**：決定物理護甲減傷、招架減免比例，以及重型兵刃傷害加成。
-- **身法 (Agility, AGI / DEX)**：決定 ATB 攻擊間隔加速比率、命中率、閃避機率與戰鬥先手權。
+- **真元 (Essence / Intelligence, ESS / INT)**：$\text{MaxMP} = 50 + \text{ESS} \times 10$；決定道術與晶片戰技威力與真元回復速度。
+- **神識 (Spirit / Wisdom, SPI / WIS)**：決定暴擊機率、法術穿透，以及對不可名狀精神污染的抗性與初始 SAN 護盾容量。
+- **根骨 (Bone Structure / Strength, STR)**：決定物理護甲減傷、招架減免比例，以及重型兵刃傷害加成。
+- **身法 (Agility / Dexterity, DEX / AGI)**：決定 ATB 攻擊間隔加速比率、命中率、閃避機率與戰鬥先手權。
 
 ### 2. 外神精神侵蝕防護罩 (Psychic SAN Shield)
 
@@ -62,16 +62,15 @@
 為守護純單機 Hack-and-slash DRPG 之爽快打擊節奏，**徹底廢止隊員發瘋失控、隨機叛變與自殘等中斷心流之負面機制**：
 - **初始值**：100 點 SAN（神識越高，抗性護盾越厚）。
 - **侵蝕機制**：
-  - 當小隊身處無火把之深層幽冥或直視高階外神眷族時，SAN 值持續承受侵蝕抵扣。
-  - **$\text{SAN} > 25$【神智清明 (STABLE)】**：精神壁壘完好，全屬性發揮 100%。
-  - **$\text{SAN} \le 25$【神識動搖 (WEAKENED)】**：視界邊緣泛起微幅低語暗紋，攻擊威力微幅下降 10%。
-  - **$\text{SAN} = 0$【精神萎靡 (CHAOS)】**：精神屏障破裂，隊員進入【精神萎靡】Debuff（輸出傷害降低 15%）。**絕不背叛、絕不攻擊同伴、不扣除自身生命、不中斷戰鬥心流**，玩家可透過服用「清心辟邪丹」或返回營地一鍵休整快速回復。
+  - 當小隊身處無火把之深層幽冥或直視高階外神眷族時，精神防護罩（SAN 護盾）持續承受侵蝕抵扣。
+  - **$\text{SAN} > 0$【神智清明 (STABLE)】**：精神壁壘完好，全屬性正常發揮 100%。
+  - **$\text{SAN} = 0$【精神萎靡 (WEAKENED)】**：精神屏障破裂，全員附加單一【精神萎靡 (`WEAKENED`)】負面狀態（輸出傷害降低 15%）。**絕不隨機發瘋、絕不背叛攻擊同伴、不扣除自身氣血、不中斷戰鬥心流**；玩家可透過服用「清心辟邪丹」或返回安全營地回春客棧一鍵調息休整快速回復重置。
 
 ---
 
 ## 🔮 三、古仙陣法引擎 (FormationEngine)
 
-陣法不僅是靜態名詞，而是帶有數學演算的即時加成引擎（[`FormationEngine.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/FormationEngine.java)）：
+陣法不僅是靜態名詞，而是帶有數學演算的即時加成引擎（[`FormationEngine.java`](../../../src/main/java/com/example/htmlmud/party/FormationEngine.java)）：
 
 ### 1. 存活孔位自動排位映射 (Auto-mapping)
 當戰鬥中某位隊員不幸陣亡時，陣法不會崩潰，而是觸發動態重映射：
@@ -117,13 +116,13 @@ graph LR
 - 徹底消除強迫使用者在個人與公共背包間頻繁存取的繁瑣負擔。
 
 ### 2. 裝備單一擁有權與零延遲投影 (Equipment Projection)
-- 5+2 結構裝備槽位（`MAIN_HAND` 主手、`OFF_HAND` 副手、`HEAD` 頭部、`BODY` 衣服、`FEET` 鞋履、`ACCESSORY_1` 飾品1、`ACCESSORY_2` 飾品2）由小隊成員實體真實擁有（對齊 [`EquipmentSlot`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/item/EquipmentSlot.java)）。
+- 5+2 結構裝備槽位（`MAIN_HAND` 主手、`OFF_HAND` 副手、`HEAD` 頭部、`BODY` 衣服、`FEET` 鞋履、`ACCESSORY_1` 飾品1、`ACCESSORY_2` 飾品2）由小隊成員實體真實擁有（對齊 [`EquipmentSlot`](../../../src/main/java/com/example/htmlmud/item/EquipmentSlot.java)）。
 - 換裝操作支援一鍵檢視與配置全隊 5 名成員的 5+2 槽裝備。
-- 隊長裝備變更時，透過 [`CharacterSyncService.syncEquipmentFromPartyToPlayer`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/actor/service/CharacterSyncService.java) 進行 0ms 零延遲鏡像投影並即時重算衍生戰鬥屬性，徹底廢止歷史 `CompletableFuture` 5 秒超時阻塞。
+- 隊長裝備變更時，直接進行 0ms 零延遲鏡像投影並即時重算衍生戰鬥屬性，徹底廢止歷史超時阻塞。
 
 ### 3. 戰鬥結算與真實屬性同步
 - 戰後經驗值、升級、修為成長直接記入 `PartyMember`。
-- `syncFromPartyToPlayer` 採用同步直接深層數值拷貝，徹底廢除偽裝 `BattleOutcome` 投遞至 Mailbox 的舊阻塞機制。
+- 數值更新採用同步深層數值拷貝，徹底廢除偽裝 `BattleOutcome` 投遞至 Mailbox 的舊阻塞機制。
 
 ---
 
@@ -131,10 +130,11 @@ graph LR
 
 | 項目 | 路徑 / 名稱 | 職責 |
 | :--- | :--- | :--- |
-| **小隊服務** | `com.example.htmlmud.domain.service.PartyService` | 小隊創建、隊員招募、陣容調整 |
-| **生靈管理** | `com.example.htmlmud.domain.service.LivingService` | 生靈屬性快照、氣血扣除與死亡狀態 |
+| **小隊服務** | `com.example.htmlmud.party.PartyService` | 小隊創建、隊員招募、陣容調整與裝備換裝 |
+| **生靈實體** | `com.example.htmlmud.party.PartyMember` | 單一隊員五維屬性、裝備槽位與戰鬥狀態 |
 | **陣法引擎** | `com.example.htmlmud.party.FormationEngine` | 站位加成計算、存活孔位動態映射與破陣檢驗 |
 | **小隊模型** | `com.example.htmlmud.party.Party` | 持有 5 人小隊隊員與小隊儲物袋 |
+| **戰術規則** | `com.example.htmlmud.party.GambitRule` | 隊友自動戰術條件與行動方針（【現行已驗證】） |
 | **資料設定** | `src/main/resources/data/formations/formations.json` | 陣法孔位、攻防係數與啟動門檻宣告 |
 | **資料設定** | `src/main/resources/data/companions/default_companions.json` | 初始可招募夥伴模板（鐵牛、凌霜等） |
 
@@ -147,8 +147,8 @@ graph LR
 ### 1. 🎯 現代遊戲機制深化 (Modern Gameplay & Depth)
 - **團隊共鳴合擊與連攜終結 (Resonance Combos & Finishers)**：
   小隊隊員在半即時戰鬥中累積共鳴點數（Resonance Points），當破防敵方核心弱點時，可發動「古仙陣法天外合擊」，觸發全屏流光大合擊，大幅提升砍殺打擊爽度。
-- **隊員戰術方針 AI 系統 (Gambit / Behavior System)**：
-  引入類似 FF12 的戰術指令宣告（例如：「隊友氣血 $< 30\%$ ➔ 施放回春術」、「敵方進入破防狀態 ➔ 釋放高削韌巨錘」）。玩家可預先配置小隊在半即時戰鬥中的自動應對行為，大幅減輕多線操作負擔。
+- **隊員戰術方針 AI 系統 (Gambit / Behavior System) 【現行已驗證】**：
+  基於 `GambitRule` 規則鏈（例如：「隊友氣血 $< 30\%$ ➔ 施放回春術」、「敵方進入破防狀態 ➔ 釋放高削韌巨錘」）。玩家可預先配置小隊在半即時戰鬥中的自動應對行為，大幅減輕多線操作負擔。
 
 ### 2. 🛡️ 穩定性與狀態防禦 (Robustness & Resilience)
 - **屬性修飾管道 (Stat Modifier Pipeline)**：

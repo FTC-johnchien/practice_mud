@@ -2,7 +2,7 @@
 
 > **文檔層級**：Level 3 — Task Lists (模組實作進度清單)  
 > **對應規格**：👉 [`docs/2_specifications/frontend/FE4_TOWN_HUB_AND_ACTION_BAR.md`](../../2_specifications/frontend/FE4_TOWN_HUB_AND_ACTION_BAR.md)  
-> **核心職責**：管理城鎮設施卡片式選單展示、快捷休整按鈕與全域 8 鍵自適應動作列面板 (`action-bar-panel.js`)。  
+> **核心職責**：管理城鎮設施卡片式選單展示、快捷休整按鈕與全域 8 鍵自適應動作列面板。  
 > **當前完成度**：85% 🟢
 
 ---
@@ -11,7 +11,7 @@
 
 - **核心檔案路徑**：
   - `src/main/resources/static/js/panels/town-panel.js`（營地中樞設施面板）
-  - `src/main/resources/static/js/panels/action-bar-panel.js`（底部 8 格動態動作列）
+  - `src/main/resources/static/index.html`（全域動作列與熱鍵容器；舊 `src/main/resources/static/js/panels/action-bar-panel.js`【歷史／已除役】）
   - `src/main/resources/static/css/style-05-town-and-hub.css`（營地設施卡片與功能面板樣式）
 
 ---
@@ -36,3 +36,6 @@
 - [ ] **Task FE4-3 (MARKET-TRADING-PANEL-AND-SUPPLIES): 宗門外門集市交易與物資補給面板**
   - **目標**：依據 L1《[`GAMEPLAY_CORE_LOOPS.md`](../../1_requirements/GAMEPLAY_CORE_LOOPS.md)》與 L2《[`FE4_TOWN_HUB_AND_ACTION_BAR.md`](../../2_specifications/frontend/FE4_TOWN_HUB_AND_ACTION_BAR.md)》，實作宗門外門集市（Outer Sect Market）交易視圖/面板，支援玩家購買地牢生存物資（火把、金創藥、辟邪符籙），並可向遊商·瘸狼銷贓地牢戰利品（黑煞石、怪獸素材）換取靈石。
   - **驗收標準**：點擊外門集市卡牌或 NPC 名片開啟交易面板，支援買入補給與批量銷贓，小隊 40 格公共行囊數量即時同步刷新。
+- [ ] **Task FE4-4 (UI-LAYOUT-MOBILE-TABS-AND-PC-3COL)【待深入討論】：手機直向底部 5 分頁常駐導航列與 PC 三欄版面演進**
+  - **目標**：依據 L1 UI/UX 規範與待辦議程，評估在維持當前單一視圖容器的基礎上，引進手機直向底部 5 分頁常駐導航列，以及 PC 寬螢幕三欄沉浸式戰鬥/探索版面。
+  - **驗收標準**：提出響應式版面重構提案，不破壞現有單檔 JS 模組化設計。

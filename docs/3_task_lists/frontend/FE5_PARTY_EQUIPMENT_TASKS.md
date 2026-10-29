@@ -15,7 +15,7 @@
   - `src/main/resources/static/js/modals/party-tactics-tab.js`（Gambit 隊友戰術方針設定）
   - `src/main/resources/static/js/modals/save-modal.js`（存檔與槽位管理）
   - `src/main/resources/static/js/modals/victory-modal.js`（戰鬥結算翻牌視窗）
-  - `src/main/resources/static/css/style-06-modals-and-forms.css`（彈窗與卡片樣式）
+  - `src/main/resources/static/css/style-04-main-menu.css`、`src/main/resources/static/css/style-06-shop-and-responsive.css`（彈窗與卡片樣式；舊 `src/main/resources/static/css/style-06-modals-and-forms.css`【歷史／已除役】）
 
 ---
 

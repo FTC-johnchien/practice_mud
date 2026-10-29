@@ -10,21 +10,21 @@
 ## 🧭 一、程式碼單一真相源 (Single Source of Truth)
 
 - **核心領域模型**：
-  - [`Party.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/Party.java)（5 人小隊實體，管理成員與共享資源）
-  - [`PartyMember.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/PartyMember.java)（隊員實體、道基五維、SAN 狀態機、裝備與技能槽）
-  - [`PartyInventory.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/PartyInventory.java)（唯一真相源：40 格小隊公共背包）
-  - [`FormationEngine.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/FormationEngine.java)（陣法孔位與動態替補計算）
+  - [`Party.java`](../../../src/main/java/com/example/htmlmud/party/Party.java)（5 人小隊實體，管理成員與共享資源）
+  - [`PartyMember.java`](../../../src/main/java/com/example/htmlmud/party/PartyMember.java)（隊員實體、道基五維、SAN 狀態機、裝備與技能槽）
+  - [`PartyInventory.java`](../../../src/main/java/com/example/htmlmud/party/PartyInventory.java)（唯一真相源：40 格小隊公共背包）
+  - [`FormationEngine.java`](../../../src/main/java/com/example/htmlmud/party/FormationEngine.java)（陣法孔位與動態替補計算）
 - **關聯驗證測試**：
-  - [`CompanionGambitEngineTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/CompanionGambitEngineTest.java)（4/4 綠燈）
-  - [`PartyInventoryAndMadnessTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/PartyInventoryAndMadnessTest.java)（小隊行囊與精神萎靡 100% 綠燈）
-  - [`UnifiedPartyEconomyTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/UnifiedPartyEconomyTest.java)（小隊金庫與經濟 100% 綠燈）
+  - [`CompanionGambitEngineTest.java`](../../../src/test/java/com/example/htmlmud/CompanionGambitEngineTest.java)（4/4 綠燈）
+  - [`PartyInventoryAndMadnessTest.java`](../../../src/test/java/com/example/htmlmud/PartyInventoryAndMadnessTest.java)（小隊行囊與精神萎靡 100% 綠燈）
+  - [`UnifiedPartyEconomyTest.java`](../../../src/test/java/com/example/htmlmud/UnifiedPartyEconomyTest.java)（小隊金庫與經濟 100% 綠燈）
 
 ---
 
 ## 🏆 二、已完成實作項目 (Completed)
 
 - [x] **M4-PKG-ENCAPSULATION (Package-by-Feature 獨立封裝 / Phase 3 Step R3.5)**
-  - 建立一級套件 `com.example.htmlmud.party`，將 `PartyMember`、`Party`、`PartyInventory`、`PartyItemSlot`、`FormationEngine`、`PartyService` 等 21 份模型與服務類別徹底自 `domain.party` 移出歸整，全專案 393 項測試 100% 綠燈通過。
+  - 建立一級套件 `com.example.htmlmud.party`，將 `PartyMember`、`Party`、`PartyInventory`、`PartyItemSlot`、`FormationEngine`、`PartyService` 等 21 份模型與服務類別徹底自 `domain.party` 移出歸整，全專案 395 項測試 100% 綠燈通過。
 - [x] **M4-UNIFIED-INVENTORY (小隊 40 格共用儲物袋)**
   - 徹底廢止個人 12 格背包與雙向轉存（`stash` 刪除），以 40 格小隊行囊作為全系統唯一真相源。
 - [x] **M4-FORMATION-AUTO (陣法孔位陣亡動態重映射)**

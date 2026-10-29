@@ -2,8 +2,8 @@
 
 > **文檔層級**：Level 3 — Task Lists (模組實作進度清單)  
 > **對應規格**：👉 [`docs/2_specifications/backend/M5_SKILL_AND_PROGRESSION.md`](../../2_specifications/backend/M5_SKILL_AND_PROGRESSION.md)  
-> **核心職責**：管理四大賽博修仙流派技能、超頻階級 (0~3)、連攜角色 (ComboRole)、境界階梯突破與潛能點成長。  
-> **當前完成度**：80% 🟢
+> **核心職責**：管理四大淵源 × 17 專精技能樹與合體技體系、超頻階級 (0~3)、連攜角色 (ComboRole)、境界階梯突破與潛能點成長。  
+> **當前完成度**：85% 🟢
 
 ---
 
@@ -13,20 +13,20 @@
   - `src/main/resources/data/party/party_skills.json`（小隊可用賽博戰技庫）
   - `src/main/resources/data/global/classes.json`（境界階梯、基礎屬性與成長率）
 - **核心實體與服務**：
-  - [`SkillDefinition.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/progression/SkillDefinition.java)（大一統技能核心定義）
-  - [`PartyMemberSkill.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/PartyMemberSkill.java)（賽博流派、超頻階級、ComboRole）
-  - [`XpProgressionService.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/progression/XpProgressionService.java)（修為經驗與等級計算）
+  - [`SkillDefinition.java`](../../../src/main/java/com/example/htmlmud/progression/SkillDefinition.java)（大一統技能核心定義）
+  - [`PartyMemberSkill.java`](../../../src/main/java/com/example/htmlmud/party/PartyMemberSkill.java)（賽博流派、超頻階級、ComboRole）
+  - [`XpProgressionService.java`](../../../src/main/java/com/example/htmlmud/progression/XpProgressionService.java)（修為經驗與等級計算）
 - **關聯驗證測試**：
-  - [`CyberSkillAndItemAffixTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/CyberSkillAndItemAffixTest.java)（賽博技能流派與超頻 100% 綠燈）
-  - [`UnifiedSkillModelTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/UnifiedSkillModelTest.java)（大一統技能模型 100% 綠燈）
-  - [`XpProgressionServiceTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/XpProgressionServiceTest.java)（9/9 綠燈）
+  - [`CyberSkillAndItemAffixTest.java`](../../../src/test/java/com/example/htmlmud/CyberSkillAndItemAffixTest.java)（賽博技能流派與超頻 100% 綠燈）
+  - [`UnifiedSkillModelTest.java`](../../../src/test/java/com/example/htmlmud/UnifiedSkillModelTest.java)（大一統技能模型 100% 綠燈）
+  - [`XpProgressionServiceTest.java`](../../../src/test/java/com/example/htmlmud/XpProgressionServiceTest.java)（9/9 綠燈）
 
 ---
 
 ## 🏆 二、已完成實作項目 (Completed)
 
 - [x] **M5-PKG-ENCAPSULATION (Package-by-Feature 獨立封裝 / Phase 3 Step R3.6)**
-  - 建立一級套件 `com.example.htmlmud.progression`，將 `SkillDefinition`、`XpProgressionService`、`XpService`、`DrpgSkillRules`、`MudSkillRules`、`SkillBridgeRule`、`SkillType`、`SkillCategory`、`SkillEntry` 全面自雜湊目錄移出歸整，全專案 393 項測試 100% 綠燈通過。
+  - 建立一級套件 `com.example.htmlmud.progression`，將 `SkillDefinition`、`XpProgressionService`、`XpService`、`DrpgSkillRules`、`MudSkillRules`、`SkillBridgeRule`、`SkillType`、`SkillCategory`、`SkillEntry` 全面自雜湊目錄移出歸整，全專案 395 項測試 100% 綠燈通過。
 - [x] **M5-UNIFIED-SKILL (技能核心大一統)**
   - 徹底消除 MUD 與 DRPG 雙軌技能定義，物理刪除 `SkillBridgeService`，全系統統一運行於 `UnifiedSkill`。
 - [x] **M5-CYBER-SCHOOLS (四大賽博修仙流派枚舉)**
@@ -43,9 +43,6 @@
 
 ## ⏳ 三、未竟待辦與演進項目 (Pending Backlog)
 
-- [ ] **Task M5-1 (CYBER-TALENT-TREE): 32+ 賽博天賦樹分支加點**
-  - **目標**：各流派提供 8 個天賦節點（被動數值增強、冷卻縮減、元素轉化），由特工晶片算力解鎖。
-  - **驗收標準**：加點存讀檔正常，戰鬥結算享受天賦增益。
 - [ ] **Task M5-2 (BREAKTHROUGH-TRIALS): 境界突破雷劫試煉副本**
   - **目標**：築基破金丹時，需消耗突破丹藥並觸發九重天劫考驗，成功後五維上限大幅躍遷。
   - **驗收標準**：突破失敗有保底保護，突破成功廣播天地異象。

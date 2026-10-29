@@ -27,8 +27,6 @@
 
 ---
 
----
-
 ## 🔦 二、前方視野探測與火把光明度機制 (Inspect Forward & Light Level)
 
 ### 1. 前方 3 步射線探測
@@ -61,7 +59,7 @@ Step 3: (x, y - 3)
 ## 🎲 三、動態遇敵率演算法 (Danger Rate)
 
 地牢探索處處危機，每走一步均會觸發危險度檢定：
-1. **基礎危險度**：來自樓層配置的 `dangerRate`（如墨竹礦坑 $0.15$）。
+1. **基礎危險度**：來自樓層配置的 `dangerRate`（如墨竹礦坑整數 `15`，即 15% 基礎遇敵率）。
 2. **步數累積加權**：若長時間未遇敵，累計危險權重逐步爬升。
 3. **戰鬥觸發**：當隨機擲骰落入危險區間時，立即中斷常規探索，由 `DrpgBattleService` 接管並啟動半即時戰鬥。
 
@@ -98,7 +96,7 @@ graph TD
 
 ### 3. 地牢禁止任意存檔與脫離守則 (In-Dungeon Save Restriction)
 - 嚴格對齊 Level 1 沉沒成本博弈：**地牢中禁止隨時隨地手動存檔或任意傳送脫離**。
-- 唯有抵達安全撤離石階（`<`）執行 `EXTRACT`、戰勝首領結算、或切換樓層時，系統方進行安全自動存檔 (`slot_auto.json`)。
+- 唯有抵達安全撤離石階（`<`）執行 `EXTRACT`、戰勝首領結算、或切換樓層時，系統方進行安全自動存檔 (`autosave.json`)。
 
 ---
 
@@ -111,21 +109,21 @@ graph TD
 
 ---
 
-## 🔗 五、代表類別與資料設定檔
+## 🔗 六、代表類別與資料設定檔
 
 | 項目 | 路徑 / 名稱 | 職責 |
 | :--- | :--- | :--- |
-| **地牢中樞** | `com.example.htmlmud.domain.dungeon.DungeonManager` | 地牢狀態持有與樓層切換 |
-| **導航演算** | `com.example.htmlmud.domain.dungeon.DungeonNavigator` | 網格位移、朝向旋轉與前方 3 步探測 |
-| **地圖載入** | `com.example.htmlmud.domain.dungeon.DungeonFloorLoader` | 讀取 JSON 解析二維字元矩陣與圖例 |
-| **樓層模型** | `com.example.htmlmud.domain.dungeon.DungeonFloor` | 尺寸、地塊、初始點、危險度、exitRoomId |
-| **動作分發** | `com.example.htmlmud.domain.dungeon.DrpgActionDispatcher` | 處理 MOVE / TURN / INTERACT / EXTRACT 結構化動作 |
+| **地牢中樞** | `com.example.htmlmud.dungeon.DungeonManager` | 地牢狀態持有與樓層切換 |
+| **導航演算** | `com.example.htmlmud.dungeon.DungeonNavigator` | 網格位移、朝向旋轉與前方 3 步探測 |
+| **地圖載入** | `com.example.htmlmud.dungeon.DungeonFloorLoader` | 讀取 JSON 解析二維字元矩陣與圖例 |
+| **樓層模型** | `com.example.htmlmud.dungeon.DungeonFloor` | 尺寸、地塊、初始點、危險度、exitRoomId |
+| **位置模型** | `com.example.htmlmud.dungeon.DungeonPosition` | 玩家小隊動態網格座標、朝向與迷霧/寶箱矩陣 |
 | **資料設定** | `src/main/resources/data/dungeons/mozhu_mines_b1f.json` | 墨竹礦坑一層 10x10 地牢地圖與圖塊配置 |
 | **資料設定** | `src/main/resources/data/dungeons/taiyin_tomb_b1f.json` | 太陰古塚一層 10x10 地牢地圖與圖例宣告 |
 
 ---
 
-## 🚀 六、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
+## 🚀 七、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
 
 為使 DRPG 網格地牢模組向經典《世界樹迷宮》與現代克系地牢體驗看齊，本模組確立以下四大演進方向：
 

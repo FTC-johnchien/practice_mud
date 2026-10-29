@@ -21,7 +21,7 @@
 前後端透過極簡的本機全雙工 WebSocket（預設端點：`ws://localhost:8080/ws`）互動：
 
 ```text
-[前端 視圖層 (websocket.js)]                                      [後端 業務引擎 (DrpgActionHandler)]
+[前端 視圖層 (websocket.js)]                                      [後端 業務引擎 (CommandDispatcher)]
           │                                                                      │
           │ ────────── 1. 本機握手連線 (Local Handshake) ────────────────────────> │
           │ <───────── 2. 連線就緒 (Connection Ready) ─────────────────────────── │
@@ -39,7 +39,7 @@
 
 ## 🎮 三、DRPG 結構化動作協定規範 (Action Protocol)
 
-前端向後端派發的請求一律為標準 JSON 物件，定義於 `com.example.htmlmud.interfaces.dto.DrpgClientActionDto`：
+前端向後端派發的請求一律為標準 JSON 物件：
 
 ### 1. 地牢走格移動動作 (`MOVE`)
 ```json
@@ -142,7 +142,7 @@
 ```json
 {
   "type": "DRPG_STATE",
-  "viewMode": "DUNGEON", // "TOWN_HUB" (營地選單) 或 "DUNGEON" (地牢遠征)
+  "viewMode": "DUNGEON", // "TOWN" (營地選單) 或 "DUNGEON" (地牢遠征)
   
   // 1. 地牢遠征視角 (當 viewMode == "DUNGEON" 時非空 - 世界觀介紹 & DRPG 走格)
   "dungeon": {
@@ -151,59 +151,72 @@
     "x": 2, "y": 7,
     "direction": "NORTH", "directionArrow": "▲",
     "width": 10, "height": 10,
-    "tiles": [ [ "#", ".", ... ] ],
-    "visited": [ [ false, true, ... ] ],
-    "openedChests": [ [ false, false, ... ] ],
+    "tiles": [ [ "#", ".", "..." ] ],
+    "visited": [ [ false, true, "..." ] ],
+    "openedChests": [ [ false, false, "..." ] ],
     "torchLight": 85, // 火把光明度 (0~100)
     "torchStatus": "BRIGHT", // "BRIGHT" / "DIM" / "DARKNESS"
     "forwardInspection": "石壁摸起來如同堅韌的角質皮革，石縫正滲出暗紅黏稠組織..."
   },
 
-  // 2. 五人小隊狀態 (始終存在 - 角色養成 & 裝備收集)
-  "party": {
-    "partyId": "party-main",
-    "activeFormationId": "nine_palaces_eight_trigrams",
-    "formationName": "九宮八卦陣",
-    "resonancePoints": 3, // 陣法共鳴點數 (用於天外合擊)
-    "agentChipLoad": 12, // 主角特工晶片加載進度 (12%...)
-    "members": [
-      {
-        "id": "char-1",
-        "name": "主角 (前千星特工)",
-        "row": "FRONT",
-        "hp": 150, "maxHp": 150,
-        "mp": 90,  "maxMp": 90,
-        "poise": 60, "maxPoise": 60,
-        "level": 3,
-        "realm": "煉氣三層",
-        "potentialPoints": 5, // 待分配道基五維潛能點
-        "skills": [ ... ],
-        "equipment": { ... }
-      }
+  // 2. 營地中樞視角 (當 viewMode == "TOWN" 時非空 - 六大功能設施)
+  "townHub": {
+    "hubId": "hub_ore_mine_shelter",
+    "hubName": "黑煞宗採掘營 ‧ 下層避難所",
+    "facilities": [
+      { "id": "FAC_FORGE", "name": "百煉堂 (裝備工坊)", "unlocked": true },
+      { "id": "FAC_DOJO", "name": "靈台藏經閣 (晶片實驗室)", "unlocked": true },
+      { "id": "FAC_TACTICS", "name": "雜役演武道場 (戰術方針)", "unlocked": true },
+      { "id": "FAC_MARKET", "name": "宗門外門集市 (貨棧交易)", "unlocked": true },
+      { "id": "FAC_INN", "name": "回春客棧／通鋪柴房 (全隊休整)", "unlocked": true },
+      { "id": "FAC_PORTAL", "name": "廢棄礦脈坑道 (地牢啟程)", "unlocked": true }
     ],
-    "inventory": {
-      "capacity": 40, // 40格小隊公共行囊 (唯一真相源)
-      "slots": [ ... ]
-    }
+    "activeNpcs": [ { "id": "elder_kuang_nu", "name": "採礦長老 ‧ 鐵手" } ]
   },
 
-  // 3. 戰鬥擂台視角 (僅在戰鬥觸發時非空 - 戰鬥爽快 & 技能組合)
+  // 3. 5 人標準戰術小隊 (小隊戰鬥 & 養成)
+  "party": {
+    "partyId": "party-hero-01",
+    "activeFormation": {
+      "id": "nine_palaces_eight_trigrams",
+      "name": "九宮八卦陣",
+      "resonanceProgress": 45, // 0~100 終結技共鳴進度
+      "canCastFinisher": false
+    },
+    "members": [
+      {
+        "id": "char-hero", "name": "李長生 (主角)", "row": "FRONT",
+        "hp": 850, "maxHp": 1000, "mp": 200, "maxMp": 300,
+        "san": 85, "maxSan": 100, // 外神精神侵蝕防護罩
+        "poise": 70, "maxPoise": 100, // 罡氣破防值
+        "gcdRemainingMs": 0,
+        "activeBuffs": [ ... ],
+        "skills": [ ... ],
+        "equipment": { ... } // 5+2 結構
+      }
+    ]
+  },
+
+  // 4. 40 格小隊共用儲物袋 (刷寶養成 & 40格背包)
+  "inventory": {
+    "capacity": 40,
+    "coins": 1250, // 碎銀 / 靈石
+    "items": [
+      { "slot": 0, "id": "item_torch", "name": "辟邪火把", "count": 8 },
+      { "slot": 1, "id": "item_black_alloy_blade", "name": "玄鐵百煉飛劍", "count": 1 }
+    ]
+  },
+
+  // 5. 遭遇戰擂台 (僅在遭遇魔物時啟動 - 半即時戰鬥)
   "battle": {
     "inBattle": true,
-    "crossComboStep": 2, // 動態連攜階數 (1:先導, 2:雙星合璧, 3:三才混元, 4:四象誅仙)
-    "crossComboExpiresAt": 1774320000000,
+    "battleId": "bat-9901",
     "enemies": [
       {
-        "id": "mob-001",
-        "name": "守墓道奴",
-        "hp": 320, "maxHp": 800,
-        "poise": 0, "maxPoise": 100,
-        "isPoiseBroken": true, // 罡氣破防 (享受 1.5x 爆擊重創)
-        "currentAction": "九幽聚煞引",
-        "actionProgressPercent": 65,
-        "isCasting": true,
-        "isInterruptible": true, // 可反制打斷
-        "buffs": [ { "id": "primer_soul_fracture", "type": "PRIMER" } ]
+        "id": "mob-001", "name": "畸變礦奴 ‧ 斷指", "level": 3,
+        "hp": 240, "maxHp": 400, "poise": 10, "maxPoise": 80,
+        "isCasting": true, "castingAction": "重械猛砸", "castProgress": 65,
+        "activeBuffs": [ ... ]
       }
     ]
   }
@@ -212,13 +225,13 @@
 
 ---
 
-## ⚡ 五、輕量虛擬執行緒時間線調度器 (Virtual Thread Timeline)
+## ⚡ 五、輕量虛擬執行緒時間線架構
 
-在純單機單體架構下，後端不再為每個實體維護 Actor 信箱，而是收斂為單一清晰的時間線調度結構：
+為杜絕傳統多執行緒鎖競爭與 Reactor 響應式編程的晦澀斷點，M9 採用 **Java 21/25 Virtual Threads + 單一調度管線**：
 
 ```mermaid
 graph TD
-    Client["前端 WebSocket (單一玩家連線)"] -->|動作事件 ActionDto| Controller["DrpgActionDispatcher"]
+    Client["前端 WebSocket (單一玩家連線)"] -->|動作事件 ActionDto| Controller["CommandDispatcher"]
     Controller -->|同步修改狀態| Model["Party / Dungeon / Inventory (單一真相源)"]
     
     subgraph BattleTimeline ["戰鬥時間線 (僅在遭遇戰時啟動)"]
@@ -239,9 +252,9 @@ graph TD
 
 | 項目 | 路徑 / 名稱 | 職責 |
 | :--- | :--- | :--- |
-| **動作分發器** | `com.example.htmlmud.interfaces.websocket.DrpgActionDispatcher` | 接收客戶端動作 JSON，分發至地牢、小隊或戰鬥服務 |
-| **WebSocket 處理器** | `com.example.htmlmud.interfaces.websocket.DrpgWebSocketHandler` | 本機連線生命週期、心跳與文字日誌推送 |
-| **狀態廣播器** | `com.example.htmlmud.application.service.GameStateBroadcastService` | 全景狀態組裝與 `DrpgStateDto` JSON 推送 |
+| **指令分發器** | `com.example.htmlmud.pipeline.CommandDispatcher` | 接收客戶端動作 JSON，分發至地牢、小隊或戰鬥服務 |
+| **WebSocket 處理器** | `com.example.htmlmud.pipeline.MudWebSocketHandler` | 本機連線生命週期、心跳與文字日誌推送 |
+| **狀態廣播器** | `com.example.htmlmud.pipeline.GameStateBroadcastService` | 全景狀態組裝與 `DrpgStateDto` JSON 推送 |
+| **會話註冊表** | `com.example.htmlmud.pipeline.SessionRegistry` | 管理本機會話連線與通道對應關係 |
 | **戰鬥時間線迴圈** | `com.example.htmlmud.combat.DrpgCombatLoop` | 虛擬執行緒驅動的 500ms 半即時戰鬥結算 |
-| **全景契約 DTO** | `com.example.htmlmud.interfaces.dto.DrpgStateDto` | 前後端全域資料交換唯一契約 |
-| **客戶端動作 DTO** | `com.example.htmlmud.interfaces.dto.DrpgClientActionDto` | 前端按鈕與鍵盤觸發的動作協定契約 |
+| **全景契約 DTO** | `com.example.htmlmud.dungeon.DrpgStateDto` | 前後端全域資料交換唯一契約 |

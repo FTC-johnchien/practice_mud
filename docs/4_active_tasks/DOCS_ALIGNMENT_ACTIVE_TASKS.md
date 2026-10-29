@@ -150,7 +150,7 @@
 3. **[`FE2_DRPG_VIEWPORT_RENDERER.md`](../2_specifications/frontend/FE2_DRPG_VIEWPORT_RENDERER.md)**：修正 §1 左右面板顛倒描述（對齊 D1）；移除 §4/§5「打字輸入 `leave`」改為點擊撤離按鈕。
 4. **[`FE3_BATTLE_ARENA_AND_FX.md`](../2_specifications/frontend/FE3_BATTLE_ARENA_AND_FX.md)**：第 110 行路徑改為 `static/js/core/buff-hud-helper.js`（舊路徑【歷史／已除役】）；修正章節編號跳號（`七→六`、`八→七`、重複 `七→八`）；已完工特效標 `【現行已驗證】`。
 5. **[`FE4_TOWN_HUB_AND_ACTION_BAR.md`](../2_specifications/frontend/FE4_TOWN_HUB_AND_ACTION_BAR.md)**：修正 §4「左側敘事日誌」衝突描述（對齊 D1）；第 120 行刪除不存在的動作列面板檔【歷史／已除役】，改為 `static/js/panels/town-panel.js` 與 `static/index.html`。
-6. **[`FE5_PARTY_EQUIPMENT_AND_MODALS.md`](../2_specifications/frontend/FE5_PARTY_EQUIPMENT_AND_MODALS.md)**：修正第 28、34 行 SAN 警示對齊 D2（`SAN = 0`【精神萎靡】`-15%` 傷害）；裝備屬性差值對比標 `【現行已驗證】`。
+6. **[`FE5_PARTY_EQUIPMENT_AND_MODALS.md`](../2_specifications/frontend/FE5_PARTY_EQUIPMENT_AND_MODALS.md)**：修正第 28、34 行 SAN 警示對齊 D2（`SAN = 0`【精神萎靡】`-15%` 傷害）；裝備屬性差值對比標 `【現行已驗證】`；將第 43 行寫死本機之 `file:///c:/Workspace/...` 連結改為相對路徑 `../../../src/main/java/com/example/htmlmud/item/EquipmentSlot.java`。
 7. **[`FE6_CSS_TOKENS_AND_THEMES.md`](../2_specifications/frontend/FE6_CSS_TOKENS_AND_THEMES.md)**：移除第 55、91 行違規「四方出口網格按鈕 `.exit-btn`」；統一全檔 7 支真實 CSS 檔名（第 7 支為 `style-07-battle-fx.css`）。
 - **本步完成後立即停下**，回報修改檔案清單待指導員驗收。
 
@@ -170,6 +170,7 @@
    - [`M8_SAVE_AND_PERSISTENCE_TASKS.md`](../3_task_lists/backend/M8_SAVE_AND_PERSISTENCE_TASKS.md)：將已完工之 `Task M8-2` 勾選 `- [x]` 移入已完成區；將舊自動存檔名統一改為 `autosave.json`。
 3. **前端清單（`FE1` ~ `FE6`）**：依 Step 0 字典全面修正真實 CSS/JS 路徑（[`FE1`](../3_task_lists/frontend/FE1_CORE_STATE_TASKS.md) 改 `js/core/state-store.js`；[`FE2`](../3_task_lists/frontend/FE2_DRPG_VIEWPORT_TASKS.md) 改 `css/style-01-tokens-and-shell.css`；[`FE3`](../3_task_lists/frontend/FE3_BATTLE_ARENA_TASKS.md) 改 `js/fx/battle-fx-director.js` 與 `js/fx/floating-text.js`；[`FE4`](../3_task_lists/frontend/FE4_TOWN_HUB_TASKS.md) 移除舊動作列面板檔並新增低優先待辦 `【待深入討論】手機直向底部 5 分頁常駐導航列與 PC 三欄版面演進`；[`FE5`](../3_task_lists/frontend/FE5_PARTY_EQUIPMENT_TASKS.md) 改 `css/style-04-main-menu.css` 與 `css/style-06-shop-and-responsive.css`；[`FE6`](../3_task_lists/frontend/FE6_CSS_TOKENS_TASKS.md) 替換為真實 7 支 CSS 路徑）。
 4. **[`FUTURE_IMPROVEMENTS.md`](../3_task_lists/FUTURE_IMPROVEMENTS.md)**：將懸空 `對應章節` 改為對應模組代碼；將重複已完工之 `CODE-01`、`DATA-03`、`PERSIST-01`、`FALLBACK-02` 更新為 `✅ 已完成`；新增 `UI-LAYOUT-DISCUSS`（P3 / `【待深入討論】`）追蹤 PC 版面與手機 5 分頁導航列。
+5. **跨電腦相對路徑收斂**：將 `docs/3_task_lists/` 下各任務清單內舊有寫死本機磁碟之 `file:///c:/Workspace/my_practice/practice_mud/...` 連結全面轉為相對路徑（如 `../../../src/...` 或 `../../src/...`），確保跨電腦執行 `check-doc-links.ps1` 零斷鏈。
 - **本步完成後立即停下**，回報修改檔案清單待指導員驗收。
 
 ---
@@ -177,7 +178,7 @@
 ## 🎯 Step 7：校準 Level 4 看板、根目錄 [`GEMINI.md`](../../GEMINI.md) 斷鏈、登載 [`CHANGELOG.md`](../../CHANGELOG.md) 與終極驗收
 
 1. **[`SPRINT_GOAL.md`](./SPRINT_GOAL.md)**：第 20 行「五個問題」改為「四個問題」並修正第 34 行重複編號 `3.` → `4.`；第 32 行日誌正例加註 Option C 前提（`>70%` 覺醒揭示代碼特效，初期 `<30%` 純東方仙俠描寫）；第 44 行「微量強殖基因槽」改為「萬象核心插槽（含強殖幾丁質專精）」；第 45 行「16 項賽博修仙技能」改為「四大淵源 17 專精技能樹」。
-2. **[`ACTIVE_TASKS.md`](./ACTIVE_TASKS.md)**：將不一致的測試數量（`388` / `376+` / `395`）收斂為「以 `.\test.ps1` 全量綠燈為準（基準見 `docs/3_task_lists/README.md`）」。
+2. **[`ACTIVE_TASKS.md`](./ACTIVE_TASKS.md)**：將不一致的測試數量（`388` / `376+` / `395`）收斂為「以 `.\test.ps1` 全量綠燈為準（基準見 `docs/3_task_lists/README.md`）」；於第 168 行已物理刪除之舊單一 CSS 檔所在行補註 `【歷史／已除役】`；並將第 62 行（以及 [`CYBERPUNK_CULTIVATION_SPEC.md`](../1_requirements/CYBERPUNK_CULTIVATION_SPEC.md) 第 55~75 行）殘留寫死本機之 `file:///c:/Workspace/...` 連結統一轉為相對路徑。
 3. **[`GEMINI.md`](../../GEMINI.md)**（⚠️ **嚴禁觸碰第 21~37 行第 7 條紅線任何字元**）：
    - 僅修正第 5、50、58 行失效連結目標：`./docs/3_task_lists/CHANGELOG.md` 改為 `./CHANGELOG.md`；`./docs/3_task_lists/future_improvements_history.md` 改為 `./docs/0_archive/future_improvements_history.md`。
    - 修正第 160~162 行過時的 `2026-10-20 / 324 項測試` 與 `26 處` 描述，對齊 `docs/3_task_lists/README.md` 最新基準（`395 項測試 100% 綠燈`、`new TemplateCatalog()` 私建目錄已清零）。

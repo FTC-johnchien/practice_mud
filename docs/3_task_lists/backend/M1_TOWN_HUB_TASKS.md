@@ -12,18 +12,18 @@
 - **核心資料配置**：
   - `src/main/resources/data/zones/newbie_village/facilities.json`（營地選單機能設施與三階靈識透鏡契約）
 - **核心實體與服務**：
-  - [`CognitiveProxyService.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/town/CognitiveProxyService.java)（靈識認知轉譯代理服務）
-  - [`TownHubService.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/town/TownHubService.java)（營地機能中樞服務）
-  - [`TownHubDto.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/town/TownHubDto.java)（營地狀態傳輸投影）
-  - [`FacilityDto.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/town/FacilityDto.java)（設施狀態資料傳輸模型）
-  - [`PerceptionTier.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/town/PerceptionTier.java)（三階靈識認知位階枚舉）
-  - [`TownFacilityCommand.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/application/command/impl/TownFacilityCommand.java)（營地機能設施與調息指令派發器）
-  - [`Room.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/domain/actor/impl/Room.java)（過渡期單機空間實體，營地業務已由 TownHubService 完全接管）
+  - [`CognitiveProxyService.java`](../../../src/main/java/com/example/htmlmud/town/CognitiveProxyService.java)（靈識認知轉譯代理服務）
+  - [`TownHubService.java`](../../../src/main/java/com/example/htmlmud/town/TownHubService.java)（營地機能中樞服務）
+  - [`TownHubDto.java`](../../../src/main/java/com/example/htmlmud/town/TownHubDto.java)（營地狀態傳輸投影）
+  - [`FacilityDto.java`](../../../src/main/java/com/example/htmlmud/town/FacilityDto.java)（設施狀態資料傳輸模型）
+  - [`PerceptionTier.java`](../../../src/main/java/com/example/htmlmud/town/PerceptionTier.java)（三階靈識認知位階枚舉）
+  - [`TownFacilityCommand.java`](../../../src/main/java/com/example/htmlmud/application/command/impl/TownFacilityCommand.java)（營地機能設施與調息指令派發器）
+  - [`Room.java`](../../../src/main/java/com/example/htmlmud/domain/actor/impl/Room.java)（過渡期單機空間實體，營地業務已由 TownHubService 完全接管）
 - **關聯驗證測試**：
-  - [`CognitiveProxyServiceTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/CognitiveProxyServiceTest.java)（3/3 綠燈）
-  - [`TownHubServiceTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/TownHubServiceTest.java)（3/3 綠燈）
-  - [`TownFacilityCommandTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/TownFacilityCommandTest.java)（5/5 綠燈）
-  - [`WorldDataIntegrityTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/WorldDataIntegrityTest.java)（8/8 綠燈）
+  - [`CognitiveProxyServiceTest.java`](../../../src/test/java/com/example/htmlmud/CognitiveProxyServiceTest.java)（3/3 綠燈）
+  - [`TownHubServiceTest.java`](../../../src/test/java/com/example/htmlmud/TownHubServiceTest.java)（3/3 綠燈）
+  - [`TownFacilityCommandTest.java`](../../../src/test/java/com/example/htmlmud/TownFacilityCommandTest.java)（5/5 綠燈）
+  - [`WorldDataIntegrityTest.java`](../../../src/test/java/com/example/htmlmud/WorldDataIntegrityTest.java)（8/8 綠燈）
 
 ---
 
@@ -56,8 +56,7 @@
 - [ ] **Task M1-4 (NPC-DIALOGUE-TREE-AND-QUESTS): NPC 劇情對話樹、狀態模型與委託交互管線**
   - **目標**：依據 L2 規格《[`M1_TOWN_HUB_AND_FACILITIES.md`](../../2_specifications/backend/M1_TOWN_HUB_AND_FACILITIES.md)》第三節，實裝 `dialogues.json` 對話樹結構（採礦長老·鐵手、外門集市遊商·瘸狼等 NPC），建立 `DialogueStateDto`、對話選項跳轉管線與任務分發/交付契約。
   - **驗收標準**：
-    1. 在 `src/main/resources/data/hub/dialogues.json` 或 `zones/newbie_village/dialogues.json` 落地 NPC 結構化對話樹資料。
+    1. 在 `src/main/resources/data/hub/dialogues.json`【已決議待實作】或 `zones/newbie_village/dialogues.json` 落地 NPC 結構化對話樹資料。
     2. 後端提供 NPC 對話查詢與選項互動介面（支援 `INTERACT_NPC` 指令），組裝並回傳 `DialogueStateDto` 納入 `DrpgStateDto`。
     3. 對話文本經由 `CognitiveProxyService` 進行表層仙俠化與漸進真相解密。
     4. 撰寫 `DialogueServiceTest` 單元測試驗證對話分支跳轉與任務交付邏輯。
-

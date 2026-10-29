@@ -2,7 +2,7 @@
 
 > **文檔層級**：Level 3 — Task Lists (模組實作進度清單)  
 > **對應規格**：👉 [`docs/2_specifications/frontend/FE1_CORE_STATE_AND_PIPELINE.md`](../../2_specifications/frontend/FE1_CORE_STATE_AND_PIPELINE.md)  
-> **核心職責**：管理前端全域響應式狀態樹 (`store.js`)、WebSocket 指數退避連線 (`websocket.js`)、全域 `data-action` 事件委派 (`app.js`) 與開發者終端。  
+> **核心職責**：管理前端全域響應式狀態樹 (`core/state-store.js`)、WebSocket 指數退避連線 (`websocket.js`)、全域 `data-action` 事件委派 (`app.js`) 與開發者終端。  
 > **當前完成度**：90% 🟢
 
 ---
@@ -11,7 +11,7 @@
 
 - **核心檔案路徑**：
   - `src/main/resources/static/js/app.js`（核心入口與全域事件委派）
-  - `src/main/resources/static/js/state/store.js`（中央響應式狀態樹）
+  - `src/main/resources/static/js/core/state-store.js`（中央響應式狀態樹，舊路徑 `src/main/resources/static/js/state/store.js`【歷史／已除役】）
   - `src/main/resources/static/js/network/websocket.js`（獨立 WebSocket 通訊模組）
   - `src/main/resources/static/index.html`（純 HTML5 單頁結構，嚴格 CSP 零內嵌連線代碼）
 

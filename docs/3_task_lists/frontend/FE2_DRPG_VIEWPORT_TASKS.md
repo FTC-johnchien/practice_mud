@@ -11,7 +11,7 @@
 
 - **核心檔案路徑**：
   - `src/main/resources/static/js/panels/dungeon-panel.js`（透視視口與雷達地圖渲染器）
-  - `src/main/resources/static/css/style-03-dungeon-view.css`（地牢視口與迷霧特效樣式）
+  - `src/main/resources/static/css/style-01-tokens-and-shell.css`（地牢視口與迷霧特效樣式，舊樣式檔名 `style-03-dungeon-view.css`【歷史／已除役】）
 
 ---
 

@@ -23,7 +23,7 @@
 
 ## ⚔️ 二、大一統技能模型與動態屬性縮放 (Unified Skill & Scaling Engine)
 
-專案確立大一統技能模型 [`UnifiedSkill`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/UnifiedSkill.java) 與 [`PartyMemberSkill`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/party/PartyMemberSkill.java)：
+專案確立大一統技能模型 [`UnifiedSkill`](../../../src/main/java/com/example/htmlmud/party/UnifiedSkill.java) 與 [`PartyMemberSkill`](../../../src/main/java/com/example/htmlmud/party/PartyMemberSkill.java)：
 
 ### 1. 內聚合一的核心契約 (Unified Contract)
 大一統模型同時封裝三大面向：
@@ -34,7 +34,7 @@
 ### 2. 動態屬性與境界縮放
 - 戰鬥中呼叫 `skill.getEffectiveDamageMultiplier()` 時，自動結合隊員五維道基與修煉等級進行動態加成：
 $$\text{ScaledDamage} = \text{BaseDamage} \times (1.0 + (\text{SkillLevel} - 1) \times 0.15) \times \text{MasteryMult}$$
-- 物理武技偏向根骨（STR）縮放；道法仙術偏向真元與神識（SPI/PER）縮放；特工武技偏向身法（DEX）縮放。
+- 物理武技偏向根骨（STR）縮放；道法仙術偏向真元與神識（ESS[INT]/SPI[WIS]）縮放；特工武技偏向身法（DEX）縮放。
 
 ---
 
@@ -84,8 +84,8 @@ $$\text{ScaledDamage} = \text{BaseDamage} \times (1.0 + (\text{SkillLevel} - 1) 
     - **4 大三才鼎立型（隊伍包含 3 種體系）**：仙魔科【偷天換日·生化天道逆亂真訣】、仙魔工【冥河重嶽·混沌太虛開山印】、仙科工【天衍算籌·九天神雷星際裂變陣】、魔科工【萬機歸淵·黑山羊奇異點格式化】。
 - **長線低優先連攜寶庫**：由 `Task M5-7` 追蹤額外經典拍檔（如【地湧金蓮】、【水月太陰飛劍】、【萬骨機變爪】、【幽靈特工步】等），作為後續版本平滑擴充池。
 
-### 3. 主角萬象陣眼與道骨副修插槽 (Socket System)
-- **主角專屬【萬象核心插槽 (Core Socket)】**：主角在營地道場可自由更換核心晶片，在陣法判定中代表任意體系，杜絕玩家因隊友短缺而無法觸發心儀大絕招。
+### 3. 主角萬象陣眼、強殖基因覺醒與道骨副修插槽 (Socket System)
+- **主角專屬【萬象核心插槽 (Core Socket)】與強殖幾丁質覺醒 (D5 裁決)**：主角體內潛藏的外神強殖基因覺醒已全面收斂併入第 14 專精樹【強殖幾丁質樹 (`tree_chitin_blade`)】與【萬象核心插槽】。主角在營地道場可自由更換核心晶片，在陣法判定中代表任意體系，杜絕玩家因隊友短缺而無法觸發心儀大絕招。
 - **隊友【道骨副修插槽 (Sub-School Socket)】**：隊友突破大境界後解鎖道骨插槽，鑲嵌其他體系之道骨，在陣法判定中額外獲得該體系標籤，提供極致的 Build 自由度。
 - **零成本洗點 (Zero-Cost Respec)**：在營地雜役演武道場洗點完全零成本，鼓勵玩家不斷嘗試新技能與合體技組合。
 
@@ -110,11 +110,10 @@ $$\text{ScaledDamage} = \text{BaseDamage} \times (1.0 + (\text{SkillLevel} - 1) 
 | :--- | :--- | :--- |
 | **大一統技能** | `com.example.htmlmud.party.UnifiedSkill` | 修煉境界、四大淵源與戰術機制大一統介面 |
 | **隊員技能實體** | `com.example.htmlmud.party.PartyMemberSkill` | 隊員專屬技能、熟練度成長與動態縮放 |
+| **技能規則檢定** | `com.example.htmlmud.progression.DrpgSkillRules` | 技能施展條件、真元消耗與冷卻檢定 |
 | **連攜合體解算器** | `com.example.htmlmud.combat.ComboResolver` | 解算 2人雙星、3~4人跨界與 5人全隊動態終結技 |
-| **道骨晶片插槽** | `com.example.htmlmud.party.SocketService` | 管理主角萬象核心插槽與隊友副修道骨鑲嵌 |
 | **經驗成長服務** | `com.example.htmlmud.progression.XpProgressionService` | 經驗分配、境界提升與屬性點獎勵 |
 | **十七專精樹手冊** | `docs/2_specifications/skills/README.md` | 十七棵獨立專精規格目錄與導覽總索引 |
 | **合體與終結技手冊** | `docs/2_specifications/skills/SYNERGY_AND_COMBOS.md` | 10 大反應引擎、16 雙星、8 三才、5 領域與 15 終結技 |
 | **資料設定真值源** | `src/main/resources/data/party/party_skills.json` | 17 專精樹全武技、被動道骨與合體技資料庫 |
 | **資料契約規範** | `docs/2_specifications/data_schemas/SKILL_SCHEMA.md` | 四大淵源、Tier 1~4 與合體技 Schema |
-

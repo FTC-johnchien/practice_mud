@@ -55,12 +55,12 @@
 > 💡 **進度同步規則**：每通過一關，指導員請即時將下方對應關卡更新為 `[x]` 並記錄日期與檢核備註，隨 Git 同步至另一台電腦。
 
 - [x] **Gate 0（Pre-Flight）**：雙檔拆分就緒、審查報告相對路徑化、全域保護鎖基準驗證通過（2026-10-29）
-- [ ] **Gate 1（Step 1）**：升級 [`check-doc-links.ps1`](../../scripts/check-doc-links.ps1) 三重檢查並通過 TDD 紅燈基準測試
-- [ ] **Gate 2（Step 2）**：Level 1 需求層（3 檔）與全域導覽 [`docs/README.md`](../README.md) 校準完成
-- [ ] **Gate 3（Step 3）**：Level 2 資料架構（`ITEM_SCHEMA`、`SKILL_SCHEMA`）與 `TREE_01 ~ TREE_17`（17 檔）契約統一
-- [ ] **Gate 4（Step 4）**：Level 2 頂層架構（`ARCHITECTURE_SUMMARY`、`MODULES_MAP`）與後端 `M1 ~ M9`（10 檔）校準完成
-- [ ] **Gate 5（Step 5）**：Level 2 前端規格手冊（`FRONTEND_LAYOUT_GUIDE`、`UI_PAGE_STRUCTURE`、`FE1 ~ FE6` 共 8 檔）校準完成
-- [ ] **Gate 6（Step 6）**：Level 3 任務清單與總覽看板（`3_task_lists/` 下 22 份業務清單）1:1 收斂完成
+- [x] **Gate 1（Step 1）**：升級 [`check-doc-links.ps1`](../../scripts/check-doc-links.ps1) 三重檢查並通過 TDD 紅燈基準測試（2026-10-29 簽核：成功捕獲 4 條斷鏈、21 處失效路徑、1 處 JSON 語法錯誤）
+- [x] **Gate 2（Step 2）**：Level 1 需求層（3 檔）與全域導覽 [`docs/README.md`](../README.md) 校準完成（2026-10-29 簽核：D1/D3/D5 裁決、五維屬性鍵對照與目錄樹連結全數通過）
+- [x] **Gate 3（Step 3）**：Level 2 資料架構（`ITEM_SCHEMA`、`SKILL_SCHEMA`）與 `TREE_01 ~ TREE_17`（17 檔）契約統一（2026-10-29 簽核：9 個 JSON 區塊語法全綠、17 樹精準 +1/-1 行修改）
+- [x] **Gate 4（Step 4）**：Level 2 頂層架構（`ARCHITECTURE_SUMMARY`、`MODULES_MAP`）與後端 `M1 ~ M9`（10 檔）校準完成（2026-10-29 簽核：12 檔規格、`M3_1` 390 行契約、`CognitiveProxyService` 與相對路徑全數通過）
+- [x] **Gate 5（Step 5）**：Level 2 前端規格手冊（`FRONTEND_LAYOUT_GUIDE`、`UI_PAGE_STRUCTURE`、`FE1 ~ FE6` 共 8 檔）校準完成（2026-10-29 簽核：D1 雙軌版面、40 格行囊、真實 JS/CSS 路徑與相對連結全數通過，Level 2 層零失效路徑）
+- [x] **Gate 6（Step 6）**：Level 3 任務清單與總覽看板（`3_task_lists/` 下 22 份業務清單）1:1 收斂完成（2026-10-29 簽核：孤兒/違憲任務清除、新增待辦雙向對齊、74 處連結相對路徑化全數通過，Level 3 層零失效路徑）
 - [ ] **Gate 7（Step 7）**：Level 4 看板、[`GEMINI.md`](../../GEMINI.md) 斷鏈修復、[`CHANGELOG.md`](../../CHANGELOG.md) 登載與全專案看門狗 100% 綠燈總驗收
 - [ ] **收尾封存（Post-Gate）**：將本主控計劃與 [`DOCS_ALIGNMENT_ACTIVE_TASKS.md`](../4_active_tasks/DOCS_ALIGNMENT_ACTIVE_TASKS.md) 移入 `docs/0_archive/alignment_history/`，並清除 `scripts/.gate_snapshots/`
 
@@ -70,28 +70,28 @@
 
 ### 🛡️ Gate 1 檢核清單（對應 Step 1：看門狗腳本升級）
 - **授權修改範圍**：僅限 [`scripts/check-doc-links.ps1`](../../scripts/check-doc-links.ps1)（1 檔）。
-- [ ] **自動閘門**：`.\scripts\verify-doc-alignment-gates.ps1 -Step 1 -RecordSnapshot` 回傳 `ExitCode = 0`。
-- [ ] **檢查 A 語意審查**：掃描涵蓋 `docs/**/*.md`（排除 `0_archive`、`0_references`）與根目錄 `GEMINI.md`，且已先濾除單行反引號內文字再比對連結。
-- [ ] **檢查 B 語意審查**：正確解析 `src/`、`static/`、`js/`、`css/`、`data/`、`scripts/` 實體路徑，排除 `0_archive`、`0_references` 與 `DOCS_ALIGNMENT_*.md`，且豁免四級規劃/除役標籤所在行。
-- [ ] **檢查 C 語意審查**：對 `docs/2_specifications/data_schemas/*.md` 所有 JSON 區塊執行 `ConvertFrom-Json` 並精準抓出目前 `ITEM_SCHEMA.md` 漏逗號錯誤（TDD 紅燈必現）。
-- [ ] **編碼防呆**：PowerShell 5.1 執行無亂碼解析錯誤（ASCII 訊息或 UTF-8 BOM）。
+- [x] **自動閘門**：`.\scripts\verify-doc-alignment-gates.ps1 -Step 1 -RecordSnapshot` 回傳 `ExitCode = 0`。
+- [x] **檢查 A 語意審查**：掃描涵蓋 `docs/**/*.md`（排除 `0_archive`、`0_references`）與根目錄 `GEMINI.md`，且已先濾除單行反引號內文字再比對連結。
+- [x] **檢查 B 語意審查**：正確解析 `src/`、`static/`、`js/`、`css/`、`data/`、`scripts/` 實體路徑，排除 `0_archive`、`0_references` 與 `DOCS_ALIGNMENT_*.md`，且豁免四級規劃/除役標籤所在行。
+- [x] **檢查 C 語意審查**：對 `docs/2_specifications/data_schemas/*.md` 所有 JSON 區塊執行 `ConvertFrom-Json` 並精準抓出目前 `ITEM_SCHEMA.md` 漏逗號錯誤（TDD 紅燈必現）。
+- [x] **編碼防呆**：PowerShell 5.1 執行無亂碼解析錯誤（ASCII 訊息或 UTF-8 BOM）。
 
 ### 🧭 Gate 2 檢核清單（對應 Step 2：L1 需求層與 `docs/README.md`）
 - **授權新增修改範圍**：[`WORLD_AND_LORE_BIBLE.md`](../1_requirements/WORLD_AND_LORE_BIBLE.md)、[`GAMEPLAY_CORE_LOOPS.md`](../1_requirements/GAMEPLAY_CORE_LOOPS.md)、[`UI_UX_REQUIREMENTS.md`](../1_requirements/UI_UX_REQUIREMENTS.md)、[`docs/README.md`](../README.md)。
-- [ ] **自動閘門**：`.\scripts\verify-doc-alignment-gates.ps1 -Step 2 -RecordSnapshot` 回傳 `ExitCode = 0`。
-- [ ] **L1 純淨度與裁決核對**：`GAMEPLAY_CORE_LOOPS.md` 已無具體 Java 類別名，已寫入 Boss/菁英限定護體減傷（D3）、強殖基因併入第 14 樹與萬象核心插槽（D5）、五維屬性鍵對照（`CON`、`ESS/INT`、`SPI/WIS`、`STR`、`DEX`）。
-- [ ] **版面過渡與導覽**：`UI_UX_REQUIREMENTS.md` §2/§3 已標 `【待深入討論／演進目標】` 並移除 `.torch-darkness-vignette`；`docs/README.md` 已補入 `skills/` 19 檔與 `CODE_CONVERGENCE_AND_REFACTORING_TASKS.md`。
+- [x] **自動閘門**：`.\scripts\verify-doc-alignment-gates.ps1 -Step 2 -RecordSnapshot` 回傳 `ExitCode = 0`。
+- [x] **L1 純淨度與裁決核對**：`GAMEPLAY_CORE_LOOPS.md` 已無具體 Java 類別名，已寫入 Boss/菁英限定護體減傷（D3）、強殖基因併入第 14 樹與萬象核心插槽（D5）、五維屬性鍵對照（`CON`、`ESS/INT`、`SPI/WIS`、`STR`、`DEX`）。
+- [x] **版面過渡與導覽**：`UI_UX_REQUIREMENTS.md` §2/§3 已標 `【待深入討論／演進目標】` 並移除 `.torch-darkness-vignette`；`docs/README.md` 已補入 `skills/` 19 檔與 `CODE_CONVERGENCE_AND_REFACTORING_TASKS.md`。
 
 ### 📜 Gate 3 檢核清單（對應 Step 3：Data Schemas 與 17 專精技能樹）
 - **授權新增修改範圍**：`docs/2_specifications/data_schemas/*.md`、`docs/2_specifications/skills/**/*.md`。
-- [ ] **自動閘門**：`.\scripts\verify-doc-alignment-gates.ps1 -Step 3 -RecordSnapshot` 回傳 `ExitCode = 0`（含 9 個 JSON 區塊 `ConvertFrom-Json` 全綠）。
-- [ ] **契約對齊核對**：`SKILL_SCHEMA.md` 簡寫 `treeId` 已清零，合體技 `combo_water_fire_taiji`（`2.5x` / `poiseDamage: 60` + `taichi` 別名說明）與 `domain_quad_celestial_blade`（消耗 `100`）對齊 `SYNERGY_AND_COMBOS.md`；`comboRole` 與 `tags` 映射規則明確。
-- [ ] **17 樹批次核對**：`TREE_01 ~ TREE_17` 第 7 欄表頭全改為 `戰術／連攜定位`，`TREE_09` `前討` 已改為 `前搖`，表格列數與技能數值無誤刪。
+- [x] **自動閘門**：`.\scripts\verify-doc-alignment-gates.ps1 -Step 3 -RecordSnapshot` 回傳 `ExitCode = 0`（含 9 個 JSON 區塊 `ConvertFrom-Json` 全綠）。
+- [x] **契約對齊核對**：`SKILL_SCHEMA.md` 簡寫 `treeId` 已清零，合體技 `combo_water_fire_taiji`（`2.5x` / `poiseDamage: 60` + `taichi` 別名說明）與 `domain_quad_celestial_blade`（消耗 `100`）對齊 `SYNERGY_AND_COMBOS.md`；`comboRole` 與 `tags` 映射規則明確。
+- [x] **17 樹批次核對**：`TREE_01 ~ TREE_17` 第 7 欄表頭全改為 `戰術／連攜定位`，`TREE_09` `前討` 已改為 `前搖`，表格列數與技能數值無誤刪。
 
 ### ⚙️ Gate 4 檢核清單（對應 Step 4：頂層架構與後端 `M1 ~ M9`）
 - **授權新增修改範圍**：[`ARCHITECTURE_SUMMARY.md`](../2_specifications/ARCHITECTURE_SUMMARY.md)、[`MODULES_MAP.md`](../2_specifications/MODULES_MAP.md)、`docs/2_specifications/backend/*.md`。
-- [ ] **自動閘門**：`.\scripts\verify-doc-alignment-gates.ps1 -Step 4 -RecordSnapshot` 回傳 `ExitCode = 0`。
-- [ ] **關鍵規格逐項抽檢**：
+- [x] **自動閘門**：`.\scripts\verify-doc-alignment-gates.ps1 -Step 4 -RecordSnapshot` 回傳 `ExitCode = 0`。
+- [x] **關鍵規格逐項抽檢**：
   - `M1` 頁首與 Mermaid 圖對齊 6 大仙俠設施；`M2` `dangerRate` 為 `15` 且章節號修復；
   - `M3` 與 `M3_1` 破防統一為 Boss/菁英限定未破防 `25%~33%`（`1/3`）受擊、破防 `6~8 秒`（`7 秒`）且附 `BattleEnemy.java` 待收斂註記（D3）；
   - `M3`、`M4`、`MODULES_MAP` 完全符合 SAN Option A（無 `<=25`、無 `<30%` 畸變、無偽裝寶箱怪）（D2）；
@@ -99,13 +99,13 @@
 
 ### 🎨 Gate 5 檢核清單（對應 Step 5：前端 8 份規格手冊）
 - **授權新增修改範圍**：`docs/2_specifications/frontend/*.md`（8 檔）。
-- [ ] **自動閘門**：`.\scripts\verify-doc-alignment-gates.ps1 -Step 5 -RecordSnapshot` 回傳 `ExitCode = 0`。
-- [ ] **版面與路徑核對**：`FRONTEND_LAYOUT_GUIDE` 與 `UI_PAGE_STRUCTURE` 清楚區分 `【現行已驗證】` 左右雙主區與 `【待深入討論／已決議待實作】` 三欄＋手機 5 Tab Bar，且修正 `40 格公共行囊`、移除文字指令；`FE1`~`FE6` 無虛構 JS/CSS 路徑、`FE5` 對齊 SAN=0、`FE6` 移除 `.exit-btn` 並引用 `style-07-battle-fx.css`。
+- [x] **自動閘門**：`.\scripts\verify-doc-alignment-gates.ps1 -Step 5 -RecordSnapshot` 回傳 `ExitCode = 0`。
+- [x] **版面與路徑核對**：`FRONTEND_LAYOUT_GUIDE` 與 `UI_PAGE_STRUCTURE` 清楚區分 `【現行已驗證】` 左右雙主區與 `【待深入討論／已決議待實作】` 三欄＋手機 5 Tab Bar，且修正 `40 格公共行囊`、移除文字指令；`FE1`~`FE6` 無虛構 JS/CSS 路徑、`FE5` 對齊 SAN=0、`FE6` 移除 `.exit-btn` 並引用 `style-07-battle-fx.css`。
 
 ### 📋 Gate 6 檢核清單（對應 Step 6：Level 3 任務清單收斂）
 - **授權新增修改範圍**：`docs/3_task_lists/**/*.md`（**嚴禁 `gemini 3.8` 修改本檔 `DOCS_ALIGNMENT_MASTER_PLAN.md`**）。
-- [ ] **自動閘門**：`.\scripts\verify-doc-alignment-gates.ps1 -Step 6 -RecordSnapshot` 回傳 `ExitCode = 0`。
-- [ ] **任務增刪與雙向同步核對**：
+- [x] **自動閘門**：`.\scripts\verify-doc-alignment-gates.ps1 -Step 6 -RecordSnapshot` 回傳 `ExitCode = 0`。
+- [x] **任務增刪與雙向同步核對**：
   - 已刪除：`M2_TASKS` `Task M2-2`、`M3_TASKS` `Task M3-2`、`M5_TASKS` `Task M5-1`、`M7_TASKS` `Task M7-1`；
   - 已勾選 `[x]`：`M3_TASKS` `Task M3-1`、`SKILL_SCHEMA_TASKS` `Task SKILL-SCHEMA-1`、`M8_TASKS` `Task M8-2`；
   - 已新增：`M3_TASKS` `Task M3-3 (POISE-RANK-GATE)`、`M3_1_TASKS` 救援/DR/`valueFormula`、`M6_TASKS` 裝備數值強化 `UPGRADE`、`FE4_TASKS` 與 `FUTURE_IMPROVEMENTS` 的版面討論項（`UI-LAYOUT-DISCUSS`）；

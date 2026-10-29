@@ -11,8 +11,8 @@
 
 - **核心檔案路徑**：
   - `src/main/resources/static/js/panels/battle-panel.js`（擂台血條、怪相與施法條）
-  - `src/main/resources/static/js/battle-fx-director.js`（震盪、光效與閃爍導演器）
-  - `src/main/resources/static/js/floating-text.js`（FCT 彩色浮動文字爆發）
+  - `src/main/resources/static/js/fx/battle-fx-director.js`（震盪、光效與閃爍導演器；舊 `src/main/resources/static/js/battle-fx-director.js`【歷史／已除役】）
+  - `src/main/resources/static/js/fx/floating-text.js`（FCT 彩色浮動文字爆發；舊 `src/main/resources/static/js/floating-text.js`【歷史／已除役】）
   - `src/main/resources/static/css/style-07-battle-fx.css`（打擊特效、浮動大字與狂暴光環）
 
 ---

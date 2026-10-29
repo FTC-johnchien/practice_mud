@@ -20,9 +20,9 @@
      - `TIER_3` (金丹·極限殺招 / Detonator 引爆 / 巨額 AOE)
      - `TIER_4` (元嬰·天道大絕招 / 全場領域 / 毀滅性終結技)
    - 以及 1 個 `PASSIVE_TALENT`（道骨/晶片心法，裝備於角色插槽）。
-3. **戰術標籤完備性 (Tactical Tags)**：
-   - `comboRole`: `NONE` | `PRIMER` | `DETONATOR`
-   - `synergyTag`: `INTERRUPT` | `POISE_BREAK` | `GRAVITY_PULL` | `BARRIER` | `LIFE_LEECH` | `TIME_STOP` | `EXECUTE` | `PURIFY`
+3. **戰術標籤完備性與欄位映射規則 (Tactical Tags & Mapping Rules)**：
+   - `comboRole`: 嚴格限定 `"NONE"` | `"PRIMER"` | `"DETONATOR"`。
+   - **專精樹表格欄位映射規範**：各專精樹規格表「戰術／連攜定位」欄若為 `INTERRUPT`、`BARRIER`、`HEAL`、`CONTROL`、`STEALTH`、`DEFENSE`、`PURIFY`、`EXECUTE`、`BUFF`、`TACTICAL`、`ULTIMATE`、`POISE_BREAK` 等戰術職能，在落盤為技能資料實體時，`comboRole` 一律填 `"NONE"`，並將該戰術職能寫入 `"tags"`（或 `"synergyTags"`）陣列中，以保持連攜合體技觸發器與一般戰術職能分離。
 
 ---
 
@@ -44,7 +44,7 @@
     },
     "treeId": { 
       "type": "string", 
-      "description": "所屬專精樹，如 tree_gold_sword, tree_gravity, tree_overclock, tree_chitin 等共 17 樹" 
+      "description": "所屬專精樹，如 tree_gold_sword, tree_gravity, tree_time_overclock, tree_chitin_blade 等共 17 樹" 
     },
     "tier": { 
       "type": "integer", 
@@ -93,7 +93,7 @@
 
 ---
 
-## 🧬 三、道骨/晶片心法結構定義 (`PassiveTalentTemplate`)
+## 🧬 三、道骨/晶片心法結構定義 (`PassiveTalentTemplate`)【已決議待實作】
 
 ```json
 {
@@ -128,7 +128,7 @@
 
 ---
 
-## 💥 四、小隊合體與動態陣法終結技契約 (`SynergySkillTemplate`)
+## 💥 四、小隊合體與動態陣法終結技契約 (`SynergySkillTemplate`)【已決議待實作】
 
 ```json
 {
@@ -138,6 +138,11 @@
   "required": ["id", "name", "tierLevel", "formationEnergyCost", "synergyType"],
   "properties": {
     "id": { "type": "string" },
+    "aliases": { 
+      "type": "array", 
+      "items": { "type": "string" },
+      "description": "相容現行實作之主鍵別名列表" 
+    },
     "name": { "type": "string" },
     "tierLevel": { 
       "type": "string", 
@@ -169,7 +174,7 @@
         "requiredTrees": {
           "type": "array",
           "items": { "type": "string" },
-          "description": "指定觸發之專精樹 ID（如 [tree_water, tree_fire]）"
+          "description": "指定觸發之專精樹 ID（如 [tree_water_frost, tree_fire_flame]）"
         },
         "requiredSchools": { 
           "type": "array", 
@@ -184,6 +189,7 @@
       "type": "object",
       "properties": {
         "instantPoiseBreak": { "type": "boolean", "default": false },
+        "poiseDamage": { "type": "integer", "default": 0 },
         "timeStopDurationMs": { "type": "integer", "default": 0 },
         "partyHealPercent": { "type": "number", "default": 0.0 },
         "allDetonateBonusMultiplier": { "type": "number", "default": 1.0 },
@@ -221,7 +227,8 @@
     "cyberLore": "調用全域磁懸浮飛劍集束超音速飽和打擊，瞬間摧毀敵怪分子防護力場。"
   },
   {
-    "id": "combo_2p_taiji_water_fire",
+    "id": "combo_water_fire_taiji",
+    "aliases": ["combo_water_fire_taichi"],
     "name": "【太極水火·兩儀陰陽寂滅印】",
     "tierLevel": "DUAL_STAR_2P",
     "synergyType": "SIGNATURE_DUAL",
@@ -229,14 +236,15 @@
     "formationEnergyCost": 40,
     "requiredConditions": {
       "minPartyAlive": 2,
-      "requiredTrees": ["tree_water", "tree_fire"]
+      "requiredTrees": ["tree_water_frost", "tree_fire_flame"]
     },
     "effects": {
-      "allDetonateBonusMultiplier": 2.0,
+      "allDetonateBonusMultiplier": 2.5,
+      "poiseDamage": 60,
       "instantPoiseBreak": false,
       "partyHealPercent": 0.0
     },
-    "cyberLore": "水火同源熱力學碰撞，先施加霜凍再瞬爆蒸發，引爆 3 段混元蒸氣衝擊波。"
+    "cyberLore": "水火同源熱力學碰撞，先施加霜凍再瞬爆蒸發，引爆 3 段混元蒸氣衝擊波。（註：現行 party_skills.json 主鍵 combo_water_fire_taichi 透過 aliases: ['combo_water_fire_taiji'] 相容）"
   },
   {
     "id": "combo_3p_toxic_steam",
@@ -247,7 +255,7 @@
     "formationEnergyCost": 65,
     "requiredConditions": {
       "minPartyAlive": 3,
-      "requiredTrees": ["tree_water", "tree_fire", "tree_wood"]
+      "requiredTrees": ["tree_water_frost", "tree_fire_flame", "tree_wood_life"]
     },
     "effects": {
       "allDetonateBonusMultiplier": 2.5,
@@ -256,11 +264,11 @@
     "cyberLore": "沸騰生化劇毒氣溶膠全場擴散，敵怪每 0.5 秒承受水火毒三重 DoT 傷害。"
   },
   {
-    "id": "domain_4p_elemental_cascade",
+    "id": "domain_quad_celestial_blade",
     "name": "【太乙混元·五行四象破天劍煞界】",
     "tierLevel": "QUAD_DOMAIN_4P",
     "synergyType": "QUAD_DOMAIN_EXPANSION",
-    "formationEnergyCost": 90,
+    "formationEnergyCost": 100,
     "requiredConditions": {
       "minPartyAlive": 4,
       "requiredSchools": ["CULTIVATOR", "CULTIVATOR", "CULTIVATOR", "CULTIVATOR"]

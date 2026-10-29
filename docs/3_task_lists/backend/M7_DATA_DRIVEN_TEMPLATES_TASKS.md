@@ -4,19 +4,20 @@
 > **對應規格**：👉 [`docs/2_specifications/backend/M7_DATA_DRIVEN_TEMPLATES.md`](../../2_specifications/backend/M7_DATA_DRIVEN_TEMPLATES.md)  
 > **核心職責**：管理 JSON 靜態資料目錄架構、TemplateCatalog 快取、啟動期 Fail-Fast 校驗器 (`DataIntegrityValidator`) 與架構看門狗。  
 > **當前完成度**：100% 🟢
+> 
 ---
 
 ## 🧭 一、程式碼單一真相源 (Single Source of Truth)
 
 - **核心服務與看門狗**：
-  - [`TemplateRepository.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/template/TemplateRepository.java)（範本快取與註冊核心）
-  - [`TemplateCatalog.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/template/TemplateCatalog.java)（集中式範本快取目錄）
-  - [`DataIntegrityValidator.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/template/DataIntegrityValidator.java)（啟動期健全性校驗器）
-  - [`TemplateReader.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/template/TemplateReader.java)（唯讀資料介面）
+  - [`TemplateRepository.java`](../../../src/main/java/com/example/htmlmud/template/TemplateRepository.java)（範本快取與註冊核心）
+  - [`TemplateCatalog.java`](../../../src/main/java/com/example/htmlmud/template/TemplateCatalog.java)（集中式範本快取目錄）
+  - [`DataIntegrityValidator.java`](../../../src/main/java/com/example/htmlmud/template/DataIntegrityValidator.java)（啟動期健全性校驗器）
+  - [`TemplateReader.java`](../../../src/main/java/com/example/htmlmud/template/TemplateReader.java)（唯讀資料介面）
 - **關聯驗證測試**：
-  - [`WorldDataIntegrityTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/WorldDataIntegrityTest.java)（8/8 綠燈）
-  - [`DataIntegrityValidatorTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/template/DataIntegrityValidatorTest.java)（8/8 綠燈）
-  - [`ArchitectureGuardrailsTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/domain/validation/ArchitectureGuardrailsTest.java)（架構零破窗看門狗 100% 綠燈）
+  - [`WorldDataIntegrityTest.java`](../../../src/test/java/com/example/htmlmud/WorldDataIntegrityTest.java)（8/8 綠燈）
+  - [`DataIntegrityValidatorTest.java`](../../../src/test/java/com/example/htmlmud/template/DataIntegrityValidatorTest.java)（8/8 綠燈）
+  - [`ArchitectureGuardrailsTest.java`](../../../src/test/java/com/example/htmlmud/domain/validation/ArchitectureGuardrailsTest.java)（架構零破窗看門狗 100% 綠燈）
 
 ---
 
@@ -35,6 +36,4 @@
 
 ## ⏳ 三、未竟待辦與演進項目 (Pending Backlog)
 
-- [ ] **Task M7-1 (DATA-HOT-RELOAD): 本地開發資料熱重載通道**
-  - **目標**：在開發模式下修改 `party_skills.json` 或 `dungeons/*.json` 時，按 `~` 終端輸入指令即可熱重載範本，無需重啟 Spring Boot。
-  - **驗收標準**：熱重載後數值立即生效，測試守護無記憶體洩漏。
+- 暫無未竟待辦（本模組全數實作已 100% 交付完畢，熱重載依 D4-4 明確除役以保障生產穩定性）。

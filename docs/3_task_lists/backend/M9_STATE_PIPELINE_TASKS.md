@@ -10,19 +10,19 @@
 ## 🧭 一、程式碼單一真相源 (Single Source of Truth)
 
 - **核心網路與分發服務**：
-  - [`MudWebSocketHandler.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/pipeline/MudWebSocketHandler.java)（純單機連線管理與重複登入優雅接管）
-  - [`CommandDispatcher.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/pipeline/CommandDispatcher.java)（結構化動作命令中央派發器）
-  - [`DrpgStateDto.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/dungeon/DrpgStateDto.java)（單一全景狀態契約鏡像）
+  - [`MudWebSocketHandler.java`](../../../src/main/java/com/example/htmlmud/pipeline/MudWebSocketHandler.java)（純單機連線管理與重複登入優雅接管）
+  - [`CommandDispatcher.java`](../../../src/main/java/com/example/htmlmud/pipeline/CommandDispatcher.java)（結構化動作命令中央派發器）
+  - [`DrpgStateDto.java`](../../../src/main/java/com/example/htmlmud/dungeon/DrpgStateDto.java)（單一全景狀態契約鏡像）
 - **關聯驗證測試**：
-  - [`SessionTakeoverAndSingletonProtagonistTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/SessionTakeoverAndSingletonProtagonistTest.java)（連線接管 100% 綠燈）
-  - [`NetworkSecurityAndPersistenceDrainTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/NetworkSecurityAndPersistenceDrainTest.java)（網路安全與生命週期 100% 綠燈）
+  - [`SessionTakeoverAndSingletonProtagonistTest.java`](../../../src/test/java/com/example/htmlmud/SessionTakeoverAndSingletonProtagonistTest.java)（連線接管 100% 綠燈）
+  - [`NetworkSecurityAndPersistenceDrainTest.java`](../../../src/test/java/com/example/htmlmud/NetworkSecurityAndPersistenceDrainTest.java)（網路安全與生命週期 100% 綠燈）
 
 ---
 
 ## 🏆 二、已完成實作項目 (Completed)
 
 - [x] **M9-PKG-ENCAPSULATION (Package-by-Feature 獨立封裝 / Phase 3 Step R3.9)**
-  - 建立一級套件 `com.example.htmlmud.pipeline`，將狀態廣播服務 `GameStateBroadcastService`、指令分發核心 `CommandDispatcher`、分發埠 `CommandDispatcherPort`、網路處理器 `MudWebSocketHandler` 與會話註冊表 `SessionRegistry` 統一收斂至獨立套件，全專案 393 項測試 100% 綠燈通過。
+  - 建立一級套件 `com.example.htmlmud.pipeline`，將狀態廣播服務 `GameStateBroadcastService`、指令分發核心 `CommandDispatcher`、分發埠 `CommandDispatcherPort`、網路處理器 `MudWebSocketHandler` 與會話註冊表 `SessionRegistry` 統一收斂至獨立套件，全專案 395 項測試 100% 綠燈通過。
 - [x] **M9-SESSION-TAKEOVER (多開分頁優雅接管)**
   - 當玩家在多瀏覽器分頁開啟連線時，後端自動將唯一主角代理接管至新連線，踢除舊連線，杜絕存檔覆寫競爭。
 - [x] **M9-DRPG-DTO-PIPELINE (全景單一狀態契約)**

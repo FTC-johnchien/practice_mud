@@ -5,44 +5,60 @@
 
 ---
 
-## 🏗️ 一、潔淨架構四層依賴反轉 (Clean Architecture)
+## 🏗️ 一、潔淨架構與一級業務套件結構 (Clean Architecture & Package Layout)
 
-本專案嚴格貫徹 Clean Architecture（潔淨架構）與 Hexagonal Architecture（六角架構）的核心思想：**依賴永遠只能向內指向領域核心**。
+本專案貫徹 Clean Architecture（潔淨架構）與模組化單體（Modular Monolith）的核心思想：**依賴永遠只能向內指向領域核心**。
+
+後端程式碼已收斂為【現行已驗證】之 9 大一級業務模組套件與過渡/支援套件（`com.example.htmlmud.*`）：
+
+```text
+src/main/java/com/example/htmlmud/
+├── town/           # M1: 營地中樞與功能設施 (TownHubService, CognitiveProxyService, TownHubDto)
+├── dungeon/        # M2: DRPG 網格地牢 (DungeonManager, DungeonFloor, DungeonNavigator, DungeonTile)
+├── combat/         # M3/M3.1: 戰鬥引擎與狀態 (CombatRules, DrpgCombatLoop, DrpgBattleService, ComboResolver, BuffSettlementService)
+├── party/          # M4: 小隊、生靈與陣法 (PartyService, Party, PartyMember, FormationEngine, GambitRule)
+├── progression/    # M5: 成長與技能樹 (XpProgressionService, DrpgSkillRules, SkillDefinition)
+├── item/           # M6: 物品與經濟 (UnifiedPartyEconomyService, ItemFactory, ItemInstance, EquipmentSlot)
+├── template/       # M7: 資料驅動模板與校驗 (TemplateCatalog, TemplateRepository, TemplateReader, DataIntegrityValidator)
+├── save/           # M8: 存檔持久化與遷移 (SaveGameService, SaveData, SaveSlotDto, SaveMigrationPipeline)
+├── pipeline/       # M9: 狀態與通訊管線 (CommandDispatcher, GameStateBroadcastService, MudWebSocketHandler, SessionRegistry)
+└── (過渡/支援層)    # domain, application, infra, config, protocol 等通用基底與歷史相容層
+```
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ 4. 框架與外部設施層 (Frameworks & Drivers)                   │
-│    • Spring Boot 4.1.1, WebSocket, Jackson, H2 JPA (棄用中) │
+│    • Spring Boot 4.1.1, WebSocket, Jackson, H2 JPA (除役中) │
 └──────────────────────────────┬──────────────────────────────┘
                                │ (實作 / 注入)
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
 │ 3. 介面適配器層 (Interface Adapters)                         │
-│    • MudWebSocketHandler, DrpgStateDto, TemplateRepository  │
+│    • MudWebSocketHandler, GameStateBroadcastService         │
 └──────────────────────────────┬──────────────────────────────┘
                                │ (呼叫)
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ 2. 應用業務編排層 (Application Layer)                        │
-│    • CommandDispatcher, LivingService, SaveGameService       │
+│ 2. 應用業務編排層 (Application & Service Layer)              │
+│    • CommandDispatcher, TownHubService, DrpgBattleService   │
 └──────────────────────────────┬──────────────────────────────┘
                                │ (依賴)
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
 │ 1. 核心領域實體與純規則層 (Domain Core - Pure Java)           │
-│    • CombatRules, Poise, Resistance, LivingStats, Player    │
+│    • CombatRules, FormationEngine, BuffSettlementService    │
 │    • TemplateReader (埠), Buffable (契約)                   │
 │    • 絕無任何 Spring / 資料庫依賴，純乾淨業務邏輯            │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-1. **核心領域層 (`domain`)**：
+1. **核心領域層 (`domain`, `combat`, `party` 等純業務核心)**：
    - 包含實體（`Player`, `Party`, `GameItem`）與純函式規則（`CombatRules`, `FormationEngine`）。
    - 嚴禁依賴 Spring、資料庫實體或外部傳輸協定，確保單元測試毫秒級執行。
-2. **應用層 (`application`)**：
-   - 負責玩家輸入指令的調度（`CommandDispatcher`）、事件監聽解算（`MozhuMinesQuestListener`）。
-3. **介面適配器與基礎設施層 (`adapter`, `infra`)**：
-   - 負責將內部領域物件序列化為前端專用 DTO（`DrpgStateDto`），並實作 `TemplateReader` 等輸出埠。
+2. **應用層與服務編排 (`town`, `dungeon`, `progression`, `pipeline`)**：
+   - 負責玩家輸入指令的調度（`CommandDispatcher`）、事件監聽解算與業務狀態機推進。
+3. **介面適配器與基礎設施層 (`template`, `save`, `infra`)**：
+   - 負責將內部領域物件序列化為前端專用 DTO（`DrpgStateDto`），實作 `TemplateReader` 等輸出埠與檔案式原子存檔。
 
 ---
 
@@ -53,7 +69,7 @@
 ### 0. 純單機 85/15 刷寶黃金權重與三大層級遞進治理鐵律
 - **85/15 黃金權重原則**：
   - 本專案定位為**「純單機第一人稱地牢探索與爽快砍殺刷寶 RPG (Single-Player Hack-and-Slash DRPG)」**。
-  - **85% 核心體驗**：半即時 ATB 砍殺、罡氣削韌、反制打斷、詞綴刷寶、5人小隊戰術構築。
+  - **85% 核心體驗**：半即時 500ms ATB 砍殺、罡氣削韌、反制打斷、詞綴刷寶、5人小隊戰術構築。
   - **15% 背景世界觀**：克蘇魯卵鞘、工程師基岩、特工晶片覺醒，所有劇情與敘事**一律為非侵入式背景文字**，絕不可打斷戰鬥節奏或強制彈窗阻斷操作。
 - **三大層級遞進治理與使用者審批鐵律**：
   1. `1_requirements` (L1) 發生任何異動，必須檢視現有 L2 文件是否涵蓋。若需新增或修改，AI 必須提供建議並由使用者決定是否新增/修改 L2 文件。
@@ -71,7 +87,7 @@
 - 任何遺漏均視為破壞系統可逆性與快照完整性的重大架構事故。
 
 ### 3. 單機存檔單一真相源 (SaveData JSON as Single Truth)
-- 單機運行模式下，`saves/slot_*.json` 為唯一單一真相源。
+- 單機運行模式下，`saves/autosave.json` 與 `saves/slot_*.json` 為唯一單一真相源。
 - 歷史 H2 JPA 實體（`CharacterEntity.inventory` 等）已全數標記為 `@Deprecated`，業務層一律透過 `SaveGameService` 操作。
 
 ### 4. 繁體中文 Commit 規範
@@ -81,9 +97,9 @@
 
 ## 🛡️ 三、架構看門狗測試 (Architecture Guardrails)
 
-專案配備了強大的架構看門狗測試（[`ArchitectureGuardrailsTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/domain/validation/ArchitectureGuardrailsTest.java)），每次執行 `.\test.ps1` 都會自動執行靜態代碼稽核：
+專案配備了強大的架構看門狗測試（[`ArchitectureGuardrailsTest.java`](../../src/test/java/com/example/htmlmud/domain/validation/ArchitectureGuardrailsTest.java)），每次執行 `.\test.ps1` 都會自動執行靜態代碼稽核：
 1. **靜態單例封殺**：全面禁止生產代碼直接調用 `GameConfig.getInstance()`，強制由 Spring 建構子依賴注入。
-2. **空 Catalog 棘輪監控**：即時監控 `new TemplateCatalog()` 的呼叫次數，門檻已自 35 處嚴格收斂至 **26 處**，任何新增的靜默 fallback 都會直接導致編譯測試失敗！
+2. **空 Catalog 棘輪監控**：即時監控 `new TemplateCatalog()` 的呼叫次數，門檻已自 35 處嚴格收斂至 **0 處**（全域已完成依賴注入改造），任何新增的靜默 fallback 都會直接導致編譯測試失敗！
 3. **深拷貝完整性檢驗**：反射比對原始物件與深拷貝物件的所有欄位，確保 100% 完美克隆。
 
 ---
@@ -102,7 +118,7 @@
 - **檔案式存檔可靠性與壞檔防禦**：
   - 以 `SaveData` JSON 為唯一單一真相源，多槽位原子替換、自動 `.bak` 備份與 `schemaVersion` 平滑遷移管線（v0 $\to$ v1 $\to$ v2 $\to$ v3）。
 - **看門狗棘輪全面清零 (Zero-Tolerance Ratchet Gate)**：
-  - 持續推進領域層重構，將當前 26 處 `new TemplateCatalog()` 的棘輪上限逐步清零，全面消除代碼庫中任何潛在的靜默 fallback。
+  - 領域層已完成重構，`new TemplateCatalog()` 私建目錄已全面清零，消除代碼庫中任何潛在的靜默 fallback。
 
 ### 3. 本機極速效能與單體無鎖並發 (Local High Performance)
 - **單機虛擬執行緒 Actor 模型**：
@@ -111,7 +127,7 @@
   - 透過 `flushLock` 互斥鎖與 `flushedCount >= acceptedCount` 完成度量契約，確保在任何伺服器重啟或高併發停機瞬間，零資料遺失、零競態崩潰。
 
 ### 4. 領域模型清晰化與架構邊界收斂 (Clean Architecture & Scope Convergence)
-- **領域層 Service 包結構按業務模組拆分 (Domain Subpackages)**：
-  - 將目前平鋪在 `domain.service` 的 10+ 個服務，按業務領域重構至子包（`domain.world`、`domain.combat`、`domain.party`、`domain.progression`、`domain.economy`），各子包對外僅暴露精簡的 Facade 介面。
+- **一級業務套件架構邊界收斂【現行已驗證】**：
+  - 後端已全面收斂至 9 大核心業務套件（`town`、`dungeon`、`combat`、`party`、`progression`、`item`、`template`、`save`、`pipeline`），歷史 `domain.service` 已完成模組化邊界遷移，各套件內部職責內聚，對外僅依賴公開服務與 DTO 契約。
 - **🛡️ 避免過度設計守則**：
   - 架構全面採用純粹的 Java 25 虛擬執行緒機制與靜態 JSON 資料驅動，杜絕引入跨服通訊（Redis/gRPC）、Protobuf 二進位串流與動態腳本熱載入引擎等複雜度。

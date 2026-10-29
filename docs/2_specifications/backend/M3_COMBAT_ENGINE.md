@@ -75,19 +75,25 @@ sequenceDiagram
 
 ## 💥 三、罡氣削韌與破防機制 (Poise & Break System)
 
-為了體現魂系與動作 RPG 的策略打擊感，生靈除了生命值（HP）外，皆具備 **罡氣韌性條 (Poise / Stamina)**：
+為了體現魂系與動作 RPG 的策略打擊感，**僅限具備護體罡氣之首領（Boss）與特定菁英怪（Elite）** 具備護體罡氣減傷與 **罡氣韌性條 (Poise / Stamina)**；普通小怪（`NORMAL`）無護體減傷：
+
+> 📌 **【護體罡氣階級閘門與待校準附註】**：  
+> - **僅限 Boss 與菁英怪**：未破防狀態下具備護體罡氣，僅承受 `25% ~ 33%`（現行代碼實作 `1/3`）傷害。  
+> - **破防力竭（Poise Broken / Exhausted）**：持續 `6 ~ 8 秒`（現行實作 `7 秒 / 14 Ticks`），期間恢復 `100%` 受擊（移除護體減傷）、必定暴擊或享 `1.5x` 暴擊加成，並即時打斷蓄力前搖。  
+> - **普通小怪無護體減傷**：普通小怪（`NORMAL`）不享受 1/3 減傷。  
+> - `【待校準：現行 BattleEnemy.java 對一般小怪仍預設套用 1/3 減傷，由 Task M3-3 追蹤收斂】`。
 
 1. **韌性扣減**：
    - 技能在 `party_skills.json` 中配置 `poiseDamage`（削韌值）。例如巨錘「碎嶽擊」具備高達 40 點削韌。
-   - 敵人每次遭受重擊，韌性條即時減少。
-2. **破防虛弱狀態 (Poise Broken / Vulnerable)**：
-   - 當韌性歸零時，目標觸發 **「罡氣崩散 · 破防虛弱」**！
+   - 敵方每次遭受重擊，韌性條即時減少。
+2. **破防力竭狀態 (Poise Broken / Exhausted)**：
+   - 當韌性歸零時，目標觸發 **「罡氣崩散 · 破防力竭」**！
    - **破防懲罰**：
-     - 目標在 3~5 秒內無法閃避與招架（圓桌閃避率歸零）。
-     - 承受之所有傷害提升 30% ~ 50%。
-     - 中斷當前蓄力施法。
+     - 目標在 6~8 秒（現行實作 7 秒 / 14 Ticks）內無法閃避與招架（圓桌閃避率歸零）。
+     - 恢復 100% 受擊（移除護體減傷），並享有 1.5x 暴擊傷害加成。
+     - 即時中斷當前蓄力施法與攻擊意圖。
 3. **韌性恢復**：
-   - 虛弱時間結束後，目標罡氣重新充能回滿，進入下一輪對抗。
+   - 力竭時間結束後，目標罡氣重新充能回滿，進入下一輪對抗。
 
 ---
 
@@ -105,7 +111,7 @@ sequenceDiagram
 ├────────────────────┼───────────────────────────────────────────────────┤
 │ 3. 狀態效果標籤     │ Status / Skill Tags (STUN/SILENCE/SEAL/INTERRUPT 矩陣)│
 ├────────────────────┼───────────────────────────────────────────────────┤
-│ 4. 底層 Buff 分類  │ BuffCategory (SHIELD/HOT/DOT/STAT_MODIFIER/CONTROL)   │
+│ 4. 底層 Buff 分類  │ BuffCategory (SHIELD/HOT/DOT/STAT_MODIFIER/CONTROL/PRIMER)│
 └────────────────────┴───────────────────────────────────────────────────┘
 ```
 
@@ -149,6 +155,7 @@ sequenceDiagram
 - `DOT`：週期性傷害 (Damage over Time)。
 - `STAT_MODIFIER`：五維屬性或戰鬥數值加成/減益。
 - `CONTROL`：強制控場限制（受 `Buffable.isControlled()` / `isSilenced()` 全入口門控）。
+- `PRIMER`：元素反應前置印記（如冰霜/烈火/裂魂印記，供後續 Detonator 終結引爆）。
 
 ### 5. 傷害抗性折減與「順成人，逆成仙」逆流回血契約
 實作於 [`CombatRules.resolveResistance`](../../../src/main/java/com/example/htmlmud/combat/CombatRules.java)：
@@ -217,7 +224,7 @@ public static ResistanceResult resolveResistance(int rawDamage, DamageType type,
 
 ### 1. 戰鬥內 Hack-and-slash 爽快五大支柱
 1. **罡氣削韌與破防重創 (Poise Break & Stagger Crit)**：
-   - 目標韌性歸零觸發 1.5x 爆擊加成與虛弱硬直，形成「削韌 $\to$ 破防 $\to$ 爆發」的節奏高潮。
+   - 目標韌性歸零觸發 1.5x 爆擊加成與力竭硬直，形成「削韌 $\to$ 破防 $\to$ 爆發」的節奏高潮。
 2. **行動預告與即時打斷 (Combat React & Interrupt)**：
    - 敵方蓄力前搖窗口內，打出控制技能打斷大招並震散罡氣，體驗魂系見招拆招的反制成就感。
 3. **元素連鎖與狀態引爆 (Elemental Reactions & Primer/Detonator)**：
@@ -229,7 +236,7 @@ public static ResistanceResult resolveResistance(int rawDamage, DamageType type,
 
 ### 2. 與 DRPG 長線生存的架構邊界 (Boundary Separation)
 - **單場戰鬥 (Local Scope)**：氣血 HP、法力 MP 與連攜點數自由流轉，技能反饋強烈，杜絕空藍卡頓。
-- **地牢大局 (Global DRPG Scope)**：**火把光明度 (Torchlight)** 與 **道心理智 (SAN 值)** 為不可逆衰減資源。戰鬥贏得再漂亮，若火把耗盡或 SAN 跌破 30%，小隊依然面臨不可名狀靈視視界畸變與滅團風險。
+- **地牢大局 (Global DRPG Scope)**：**火把光明度 (Torchlight)** 與 **道心理智 (SAN 值)** 為不可逆衰減資源。戰鬥贏得再漂亮，若幽冥深淵無火把照明，精神防護罩承受侵蝕抵扣；當 `SAN = 0` 時全隊附加單一 **【精神萎靡 (`WEAKENED`)】** 狀態（-15% 傷害），但絕不發瘋叛變。
 - **刷寶動力 (Loot Grinding)**：戰鬥掉落高隨機詞綴之「工程師生物零件」、「黑煞血肉合金」、「千星科技晶片」，直接驅動玩家反覆挑戰更深層地牢。
 
 ---
@@ -252,7 +259,7 @@ public static ResistanceResult resolveResistance(int rawDamage, DamageType type,
 
 ---
 
-## 🚀 八、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
+## 🚀 九、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
 
 為使核心戰鬥引擎達到現代動作 RPG（如暗黑破壞神、黑神話、魂系）的策略交鋒深度，確立以下四大演進方向：
 

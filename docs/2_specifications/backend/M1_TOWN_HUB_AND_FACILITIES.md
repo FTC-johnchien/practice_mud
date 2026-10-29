@@ -2,7 +2,7 @@
 
 > **模組編號**：M1  
 > **系統類型**：後端核心業務模組  
-> **核心定位**：管理純單機 DRPG 營地（如黑煞宗採掘營、地下避難所、黑市據點）的選單式功能設施（裝備工坊、晶片實驗室、道場修煉、醫療站、地牢傳送門）與 NPC 劇情對話交互契約，徹底取代舊有 MUD 房間 exits 與文字移動機制。
+> **核心定位**：管理純單機 DRPG 營地（如黑煞宗採掘營、地下避難所、黑市據點）的選單式功能設施（百煉堂、靈台藏經閣、雜役演武道場、宗門外門集市、回春客棧／通鋪柴房、廢棄礦脈坑道）與 NPC 劇情對話交互契約，徹底取代舊有 MUD 房間 exits 與文字移動機制。
 
 ---
 
@@ -15,11 +15,12 @@ graph TD
     Client["前端營地介面 (FE4 Town Hub Panel)"] -->|ActionCommand: ENTER_FACILITY / INTERACT_NPC| Pipeline["M9 動作管線 (ActionPipeline)"]
     Pipeline --> HubService["TownHubService 營地中樞服務"]
     
-    HubService --> FacForge["裝備工坊 (Equipment Workshop)"]
-    HubService --> FacLab["賽博晶片實驗室 (Cyber Chip Lab)"]
-    HubService --> FacDojo["道場與技能傳承 (Dojo & Skill Trees)"]
-    HubService --> FacClinic["生化醫療站 (Biochemical Clinic)"]
-    HubService --> FacPortal["地牢傳送門 (Dungeon Extraction Gate)"]
+    HubService --> FacForge["百煉堂 (The Forge & Scrap Workshop)"]
+    HubService --> FacLab["靈台藏經閣 (Cultivation Dojo & Chip Lab)"]
+    HubService --> FacDojo["雜役演武道場 (Combat Tactics & Gambit)"]
+    HubService --> FacMarket["宗門外門集市 (Outer Sect Market)"]
+    HubService --> FacClinic["回春客棧／通鋪柴房 (Clinic & Rest)"]
+    HubService --> FacPortal["廢棄礦脈坑道 (Dungeon Extraction Portal)"]
     
     HubService --> NpcDialogue["NPC 劇情對話樹 (Dialogue Tree Service)"]
     
@@ -91,7 +92,7 @@ graph TD
 
 NPC 交互徹底廢除 MUD 文字指令（如 `look npc`、`ask elder about sword`），全部由結構化 JSON 驅動，且其對話文字同樣受 `CognitiveProxyService` 轉譯保護：
 
-### 對話樹範本結構 (`dialogues.json`)
+### 對話樹範本結構 (`data/hub/dialogues.json` 【已決議待實作】)
 ```json
 {
   "dialogueId": "npc_elder_ore_mine_intro",

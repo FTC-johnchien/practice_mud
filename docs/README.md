@@ -49,6 +49,13 @@ docs/
 │   │   ├── FE6_CSS_TOKENS_AND_THEMES.md
 │   │   ├── FRONTEND_LAYOUT_GUIDE.md
 │   │   └── UI_PAGE_STRUCTURE.md
+│   ├── skills/                   # 四大淵源 17 專精技能樹與合體技規格
+│   │   ├── README.md
+│   │   ├── SYNERGY_AND_COMBOS.md
+│   │   ├── 1_cultivator/         # 修真者 (TREE_01 ~ TREE_05)
+│   │   ├── 2_engineer/           # 造物主/工程師 (TREE_06 ~ TREE_09)
+│   │   ├── 3_high_tech/          # 賽博巨企 (TREE_10 ~ TREE_13)
+│   │   └── 4_cthulhu/            # 克蘇魯外神 (TREE_14 ~ TREE_17)
 │   └── data_schemas/             # 資料驅動拓撲與 JSON Schema 模板
 │       ├── DUNGEON_SCHEMA.md
 │       ├── ITEM_SCHEMA.md
@@ -57,6 +64,7 @@ docs/
 ├── 3_task_lists/                # Level 3: 模組實作清單與路線圖層 (1:1 鏡像對齊 Level 2)
 │   ├── README.md                # 📊 全模組 1:1 實作進度儀表板 (進度中樞與完成度總表)
 │   ├── FUTURE_IMPROVEMENTS.md   # 宏觀演進戰略總表 (優先序矩陣與演進路徑)
+│   ├── CODE_CONVERGENCE_AND_REFACTORING_TASKS.md # 跨模組代碼收斂與重構任務清單
 │   ├── backend/                 # 後端 10 大模組實作與驗收清單 (M1~M9, M3.1)
 │   ├── frontend/                # 前端 6 大表現模組實作與驗收清單 (FE1~FE6)
 │   └── data_schemas/            # 資料架構契約實作與驗收清單 (Dungeon, Item, Skill)
@@ -97,6 +105,7 @@ docs/
   - [架構總覽 (ARCHITECTURE_SUMMARY.md)](./2_specifications/ARCHITECTURE_SUMMARY.md)
   - [後端手冊庫 (backend/)](./2_specifications/backend/)
   - [前端手冊庫 (frontend/)](./2_specifications/frontend/)
+  - [專精技能樹與合體技 (skills/)](./2_specifications/skills/)
   - [資料契約庫 (data_schemas/)](./2_specifications/data_schemas/)
 
 ### 🔹 Level 3: Task Lists (模組實作清單與路線圖層)
@@ -105,6 +114,7 @@ docs/
 - **核心文件與模組目錄**：
   - [📊 全模組實作進度儀表板 (README.md)](./3_task_lists/README.md)（全專案 19 大模組進度看板與完成度矩陣）
   - [🧭 宏觀演進戰略總表 (FUTURE_IMPROVEMENTS.md)](./3_task_lists/FUTURE_IMPROVEMENTS.md)（演進路徑與優先序總表）
+  - [🔧 代碼收斂與重構清單 (CODE_CONVERGENCE_AND_REFACTORING_TASKS.md)](./3_task_lists/CODE_CONVERGENCE_AND_REFACTORING_TASKS.md)（跨模組代碼收斂與重構任務清單）
   - [🏛️ 後端模組任務清單 (backend/)](./3_task_lists/backend/)（10 大後端模組 M1~M9、M3.1 實作清單）
   - [🎨 前端模組任務清單 (frontend/)](./3_task_lists/frontend/)（6 大前端模組 FE1~FE6 實作清單）
   - [📜 資料契約任務清單 (data_schemas/)](./3_task_lists/data_schemas/)（3 大 Schema 契約實作清單）
@@ -136,5 +146,3 @@ docs/
 - **執行命令**：`powershell -ExecutionPolicy Bypass -File .\scripts\check-doc-links.ps1`
 - **檢驗內容**：自動遍歷 `docs/`（排除 `0_archive/`）下所有 Markdown 內部檔案連結與 `file:///` 絕對路徑，確保目標檔案 100% 存在於檔案系統中。
 - **治理紅線**：任何文件重構或搬移完成後，必須保證此腳本回傳 Exit Code 0（PASS）。
-
-

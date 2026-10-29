@@ -194,8 +194,8 @@ graph BT
 - [x] **Task C4-1 (LEGACY-CODE-PURGE): 物理除役廢棄代碼**
   - 安全審查並移除已完全無引用之舊 MUD 房間導航、文字指令及過渡類別（已清除 `LivingStateService`、`infra.util.IdUtils`、`infra.util.RandomUtil`、`ExitDeserializer`、`RoomDescriptionDeserializer` 與所有空目錄）。
 - [x] **Task C4-2 (ARCH-GUARDRAILS-STRENGTHEN): 強化模組依賴看門狗測試**
-  - 在 [`ArchitectureGuardrailsTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/domain/validation/ArchitectureGuardrailsTest.java) 增加套件依賴檢驗：
-    - 透過 [`DungeonValidatorPort.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/template/DungeonValidatorPort.java) 依賴反轉，徹底禁止 `template` 反向依賴 `combat` 或 `dungeon`。
+  - 在 [`ArchitectureGuardrailsTest.java`](../../src/test/java/com/example/htmlmud/domain/validation/ArchitectureGuardrailsTest.java) 增加套件依賴檢驗：
+    - 透過 [`DungeonValidatorPort.java`](../../src/main/java/com/example/htmlmud/template/DungeonValidatorPort.java) 依賴反轉，徹底禁止 `template` 反向依賴 `combat` 或 `dungeon`。
     - 禁止 `town` 與 `item` 反向依賴 `combat` 或 `dungeon`。
     - 禁止模組之間產生非法的循環引用（Circular Dependency）。
   - **驗收標準**：`mvn test` 全量 395 測試 100% 綠燈通過，文檔 368 個內部連結 100% 通過。

@@ -2,15 +2,15 @@
 
 > **模組編號**：FE-4  
 > **系統類型**：前端表現層模組  
-> **核心定位**：管理純單機 DRPG 安全營地中樞（Town Hub Panel）選單式視圖、機能設施卡片（裝備工坊、晶片實驗室、道場、醫療站、傳送門）、NPC 劇情名片與對話彈窗，以及常駐底部快捷動作列（Action Bar Panel）在「營地整備態 / 地牢步進態 / 半即時砍殺態」的無縫狀態切換。
+> **核心定位**：管理純單機 DRPG 安全營地中樞（Town Hub Panel）選單式視圖、機能設施卡片（裝備工坊、晶片實驗室、道場、醫療站、傳送門）、NPC 劇情名片與對話彈窗，以及常駐底部快捷動作列在「營地整備態 / 地牢步進態 / 半即時砍殺態」的無縫狀態切換。
 
 ---
 
 ## 🏛️ 一、模組架構與視圖職責劃分
 
 本模組涵蓋兩大關鍵面板元件：
-1. **營地中樞面板 (`town-panel.js`)**：在營地安全區（`viewMode === 'TOWN'`）主導中央與右側視圖佈局，呈現克蘇魯賽博修仙避難所市集氛圍，支援一鍵點擊進入機能設施與 NPC 對話。
-2. **快捷動作列面板 (`action-bar-panel.js`)**：常駐於螢幕底層，純資料驅動（`data-action`），隨遊戲情境動態變換。
+1. **營地中樞面板 (`town-panel.js`)**：在營地安全區（`viewMode === 'TOWN'`）主導主舞台視圖佈局，呈現克蘇魯賽博修仙避難所市集氛圍，支援一鍵點擊進入機能設施與 NPC 對話。
+2. **快捷動作列元件**：常駐於螢幕底層（整合於 `static/index.html`，舊規劃檔 `static/js/panels/action-bar-panel.js`【歷史／已除役】），純資料驅動（`data-action`），隨遊戲情境動態變換。
 
 ```mermaid
 graph TD
@@ -76,7 +76,7 @@ graph TD
 
 ---
 
-## ⚡ 三、快捷動作列三態切換機制 (`action-bar-panel.js`)
+## ⚡ 三、快捷動作列三態切換機制（舊規劃 `action-bar-panel.js`【歷史／已除役】，現行實作於 `static/index.html` 與 `town-panel.js`）
 
 動作列位於螢幕最下方，根據中央狀態進行瞬時切換：
 
@@ -85,11 +85,11 @@ graph TD
   - `[R] 全隊休整`：立即補滿全員氣血（HP）與真元（MP）。
   - `[I] 小隊行囊`：開啟 40 格公用儲物袋與裝備穿戴。
   - `[P] 角色養成`：開啟 5 人小隊屬性加點與境界突破面板。
-  - `[Enter] 出征地牢`：快速進入地牢傳送門。
+  - `點擊【啟程出征】`：快速進入地牢傳送門。
 
 ### 2. 地牢步進態 (Dungeon Exploration State)
 - **第一人稱視角控制**：
-  - `[W] 前進` / `[S] 後退` / `[A] 左轉向` / `[D] 右轉向` / `[Q] 左平移` / `[E] 右平移`。
+  - `[W] 前進` / `[S] 後退` / `[A] 左轉向` / `[D] 右轉向`。
   - `[F] 空間互動`：開寶箱、啟動遠古遺跡開關、解除陷阱。
   - `[T] 消耗火把`：增加當前區域光明度，防範外神陰煞滋生。
   - `[M] 樓層地圖`：切換全螢幕已探明迷宮與標記點。
@@ -106,7 +106,7 @@ graph TD
 ## 📱 四、響應式排版適配規範
 
 - **桌機螢幕（Width $\ge 1024\text{px}$）**：
-  左側為情境敘事日誌面板，中央為 3D 視口/設施卡牌矩陣，右側為小隊 5 人血條與狀態監控，底部為動作列。
+  依 D1 規範，【現行已驗證】為左右雙主區佈局（左側主舞台/設施卡牌矩陣＋左下 5 人小隊卡，右側全高可摺疊情境敘事情報日誌，支援「⮃ 換邊」左右對調）；【待深入討論／已決議待實作】為 PC 經典三欄式＋底欄日誌。
 - **掌機/行動端（Width $< 1024\text{px}$）**：
   自動收斂為垂直單欄，點擊按鈕保底 $44 \times 44\text{px}$，避免戰鬥高頻點擊誤觸。
 
@@ -116,8 +116,8 @@ graph TD
 
 | 檔案路徑 | 模組定位 | 關鍵導出項目 |
 | :--- | :--- | :--- |
-| `static/js/panels/town-panel.js` | 營地中樞主控制器 | `renderTownHub()`, `renderFacilities()`, `renderNpcs()` |
-| `static/js/panels/action-bar-panel.js` | 底部快捷動作列控制器 | `renderActionBar()`, `syncActionBarMode()` |
+| `static/js/panels/town-panel.js` | 營地中樞主控制器與動作列 | `renderTownHub()`, `renderFacilities()`, `renderNpcs()` |
+| `static/index.html` | 頁面結構與常駐快捷動作列 DOM | `#town-hub-panel`, `.bottom-control-panel`（舊動作列面板檔 `static/js/panels/action-bar-panel.js`【歷史／已除役】） |
 | `static/css/style-05-town-and-hub.css` | 營地設施卡牌與 NPC 對話樣式 | `.town-hub-grid`, `.facility-card`, `.npc-dialogue-modal` |
 | `static/css/style-06-shop-and-responsive.css` | 設施功能彈窗與響應式排版 | `.facility-modal`, `@media (max-width: 1024px)` |
 

@@ -81,7 +81,6 @@ public boolean isPermanent() {
 @JsonIgnore
 public boolean isExpired() {
     if (isPermanent()) {
-        // 常駐光環不隨時間過期；若為常駐護盾則需容量耗盡才過期
         return (category == BuffCategory.SHIELD && value <= 0);
     }
     return remainingTicks <= 0 || (category == BuffCategory.SHIELD && value <= 0);
@@ -112,7 +111,7 @@ public void decrementTick() {
 
 ## ⚡ 四、罡氣破防條 (Poise / Break Gauge) 與五行吸收回血機制
 
-結合《最終幻想 7 重製版》（FF7R）、魂系架勢值與暗黑仙俠道門世界觀，將戰鬥核心升級為具備爆發節奏的**「罡氣破防條 (Poise / Break Gauge)」**體系：
+結合魂系架勢值與暗黑仙俠道門世界觀，將戰鬥核心升級為具備爆發節奏的**「罡氣破防條 (Poise / Break Gauge)」**體系：
 
 ```
 ┌────────────────────────────────────────────────────────┐
@@ -124,25 +123,25 @@ public void decrementTick() {
 ```
 
 ### 1. 敵方破防機制 (Boss / 菁英戰的爆發節奏)
-* **未破防階段 (Poise > 0，罡氣護體中)**：
-  - **傷害折減**：敵怪承受的所有攻擊傷害**折減為 1/4 ~ 1/3（約 25% ~ 33% 輸出）**。怪物血條依然有微幅扣減反饋，維持打擊反饋。
-  - **霸體護身**：**100% 免疫硬控**（眩暈、定身、擊退無效），蓄力大招不會被常規招式打斷。
-  - **削韌積累**：每次受擊時，依招式與武器的【削韌值 (`poiseDamage`)】扣減破防條。重型武器（巨斧/戰錘）與特定破罡道術具備高削韌加成。
-* **破防瞬間 (Poise = 0，力竭失衡期)**：
-  - **大招中斷**：若敵方正在蓄力大招，強制中斷並清除意圖！
-  - **全額爆發輸出 (1:1 傷害)**：傷害折減解除，所有攻擊恢復 **100% 全額輸出（甚至觸發暴擊增傷）**，帶來極致的集火爆發期 (Burst Window)！
-  - **全面受控**：眩暈、凍結、麻痺等控場效果 **100% 生效**。
-  - **持續時間**：進入持續 **6 ~ 8 秒 (12~16 Ticks) 的力竭期**。
+* **適用對象與階級限制**：
+  - **僅限帶護體罡氣之 Boss 與特定菁英怪**：未破防狀態下僅受 `25% ~ 33%`（現行代碼實作 `1/3`）傷害，具備霸體（免疫硬控且蓄力大招不被常規招式打斷）。
+  - **普通小怪無護體減傷**：普通雜兵（`NORMAL`）無護體罡氣減傷。
+  - `【待校準：現行 BattleEnemy.java 對一般小怪仍預設套用 1/3 減傷，由 Task M3-3 追蹤收斂】`。
+* **削韌積累**：每次受擊時，依招式與武器的【削韌值 (`poiseDamage`)】扣減破防條。重型武器與特定破罡道術具備高削韌加成。
+* **破防力竭 (Poise = 0，力竭失衡期)**：
+  - **持續時間**：進入持續 **6 ~ 8 秒（現行實作 7 秒 / 14 Ticks）的力竭期**。
+  - **全額爆發輸出**：傷害折減解除，所有攻擊恢復 **100% 全額輸出並享 1.5x 暴擊加成**。
+  - **大招打斷與全面受控**：若敵方正在蓄力大招，強制中斷並清除意圖；眩暈、凍結等控場效果 100% 生效。
 * **罡氣復甦 (Poise Recovery，防無限連暈)**：
-  - 力竭期結束後，敵方的破防條**自動回滿**，重新獲得霸體與減傷保護，自然防止無腦無限連暈！
+  - 力竭期結束後，敵方破防條**自動回滿**，重新獲得霸體與減傷保護，自然防止無腦連暈。
 
-### 2. 我方隊伍受傷與破防機制 (魂系團隊防守與救援)
+### 2. 我方隊伍受傷與破防機制 (魂系團隊防守與救援) 【已決議待實作】
 我方角色依據職業定位擁有專屬的【罡氣架勢條】：
 * **未破防時 (Poise > 0)**：前排肉盾（鐵牛）天生擁有高額架勢上限（150~200 點），普通攻擊打在身上不會打斷施法或嘲諷；後排脆皮架勢上限較低（30~40 點）。
 * **我方被打破防瞬間 (Poise = 0，失衡力竭)**：
   - 角色重心失衡，陷入 **3 ~ 4 秒力竭狀態**（無法出招、無法閃避格擋，受到傷害提升 30%~40%）。
   - 戰報警報：`⚠️💥【罡氣潰散】鐵牛 被首領狂暴猛擊破開空門，身形失衡陷入眩暈力竭！受到傷害提升 40%！`
-* **隊友援護救場**：醫修施展【回春金剛符】或力士施展【不動明王】，可**瞬間拉滿隊友架勢條，強制解除失衡力竭狀態**！
+* **隊友援護救場**：醫修施展【回春金剛符】或力士施展【不動明王】，可**瞬間拉滿隊友架勢條，強制解除失衡力竭狀態**。
 
 ### 3. 五行法術屬性與吸收回血機制 (Elemental Absorption & Healing)
 針對五行法術與陰煞傷害（`METAL` 金、`WOOD` 木、`WATER` 水、`FIRE` 火、`EARTH` 土，以及陰煞 `CORRUPT`）：
@@ -162,9 +161,9 @@ public void decrementTick() {
       
       // 2. 五行法術/陰煞傷害：若抗性 > 1.0 (100%)，超額部分轉化為氣血回復 (順成人，逆成仙)
       if (resistance > 1.0) {
-          double absorbRatio = resistance - 1.0; // 例如火抗 1.25 -> 25% 吸收回血
+          double absorbRatio = resistance - 1.0;
           int healAmount = (int) Math.round(rawDamage * absorbRatio);
-          return new ResistanceResult(0, healAmount); // 承受 0 點傷害，轉為獲得治療
+          return new ResistanceResult(0, healAmount);
       } else {
           int finalDmg = (int) Math.round(rawDamage * Math.max(0.0, 1.0 - resistance));
           return new ResistanceResult(finalDmg, 0);
@@ -177,7 +176,7 @@ public void decrementTick() {
 
 ## 🚫 五、控場分級與全動作入口門控 (Control Hierarchy & Action Gates)
 
-所有控場狀態統一納入 `ActiveBuff`，不再使用零散的 `stunnedUntil` 欄位。控場判定全面覆蓋所有動作入口：
+所有控場狀態統一納入 `ActiveBuff`，控場判定全面覆蓋所有動作入口：
 
 | 控場類別 | 判定條件 | 受影響之動作入口 | 行動反饋與戰報 |
 | :--- | :--- | :--- | :--- |
@@ -258,23 +257,23 @@ public void decrementTick() {
 | **結算服務** | `com.example.htmlmud.combat.BuffSettlementService` | 狀態施加、刷新、Tick 倒數、HoT/DoT 跳字、護盾抵扣 |
 | **實體能力介面** | `com.example.htmlmud.combat.Buffable` | 生靈掛載狀態容器、控場查詢門控 (`isControlled`, `isSilenced`) |
 | **狀態領域模型** | `com.example.htmlmud.combat.ActiveBuff` | 狀態實體、生命週期判斷 (`isPermanent`, `isExpired`) |
-| **狀態分類枚舉** | `com.example.htmlmud.combat.BuffCategory` | `SHIELD`, `HOT`, `DOT`, `STAT_MODIFIER`, `CONTROL` |
+| **狀態分類枚舉** | `com.example.htmlmud.combat.BuffCategory` | `SHIELD`, `HOT`, `DOT`, `STAT_MODIFIER`, `CONTROL`, `PRIMER` |
 | **狀態傳輸 DTO** | `com.example.htmlmud.domain.dungeon.dto.ActiveBuffDto` | 正規化快照傳輸至前端，含靈氣屬性與聚合標籤 |
 | **抗性規則結算** | `com.example.htmlmud.combat.CombatRules` | 一元一次圓桌判定、五行抗性折算與逆流回血 |
 | **資料設定來源** | `src/main/resources/data/party/party_skills.json` | 狀態來源技能、削韌值、靈氣屬性 |
-| **前端 HUD 渲染** | `src/main/resources/static/js/panels/buff-hud-helper.js` | 屬性圖示聚合、每秒加總、懸停明細 Tooltip |
+| **前端 HUD 渲染** | `src/main/resources/static/js/core/buff-hud-helper.js` | 屬性圖示聚合、每秒加總、懸停明細 Tooltip（舊 `static/js/panels/buff-hud-helper.js` 【歷史／已除役】） |
 
 ---
 
 ## 🚀 九、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
 
-為了讓《深淵仙途》之狀態效果與 Buff 系統達到頂級現代動作/戰術 RPG（如《艾爾登法環》、《暗黑破壞神 4》、《原神》元素反應、《最終幻想 7 重製版》）的策略交鋒深度與工業級工程水準，確立以下**五大現代化演化戰線**：
+為了讓《深淵仙途》之狀態效果與 Buff 系統達到頂級現代動作/戰術 RPG 的策略交鋒深度與工業級工程水準，確立以下**五大現代化演化戰線**：
 
 ---
 
 ### 1. 🎯 機制更好：複合靈氣反應、狀態引爆與道心共振 (Deeper Gameplay & Synergy)
 
-#### ① 全域九大靈氣複合反應矩陣 (Elemental Chain Reactions)
+#### ① 全域九大靈氣複合反應矩陣 (Elemental Chain Reactions) 【現行已驗證】
 擺脫傳統單純的「火抗高扣火血少」，引入現代動作 RPG 的「元素附著與連鎖質變」體系。生靈同時附著兩種靈氣時觸發質變：
 * **🔥 火 (Fire) + ❄️ 冰 (Ice) ➔ 【氣化爆裂 (Vaporize)】**：瞬間清空兩種狀態，造成 $2.0\times$ 穿透真實傷害並附帶擊退擊倒。
 * **💧 水 (Water) + ⚡ 雷 (Lightning) ➔ 【感電傳導 (Electro-Charged)】**：在目標同排（Row）所有敵怪間引發電弧跳躍，造成連鎖硬直與削韌。
@@ -282,7 +281,7 @@ public void decrementTick() {
 * **🌑 陰煞 (Dark) + ☀️ 純陽 (Holy) ➔ 【太極混沌湮滅 (Chaos Annihilation)】**：道門終極碰撞，直接扣減目標 $50$ 點罡氣破防值（Poise），強制引發破防失衡！
 * **⛰️ 土 (Earth) + 🪙 金 (Metal) ➔ 【金石固元 (Stonewall Resonance)】**：友方受到土金雙重加持時，生成具備 50% 物理反傷的暗金反震壁障。
 
-#### ② 狀態引子與引爆機制 (Primer & Detonator Combos)
+#### ② 狀態引子與引爆機制 (Primer & Detonator Combos) 【現行已驗證】
 借鑒現代戰術射擊與 ARPG 的協同玩法：
 * **引子狀態 (Primer)**：刺客施展《影骨刺》為目標施加【裂魂印記 (Shatter Primer)】（持續 10 秒，帶有特殊碎裂符號）。
 * **引爆技能 (Detonator)**：力士使用巨錘重砸或劍修施展《長虹貫日》作為引爆技命中該目標時，**強制引爆印記**：立即結算該目標身上所有剩餘 DoT 的總和傷害，並轉化為全場 AOE 衝擊波！極大提升小隊隊友間的戰術配合手感。
@@ -297,7 +296,7 @@ public void decrementTick() {
 
 ### 2. 🛡️ 系統更穩定：控場抗性遞減、快照自癒與數值上下限防禦 (Robustness & Resilience)
 
-#### ① 控場抗性遞減引擎 (Diminishing Returns, DR Engine)
+#### ① 控場抗性遞減引擎 (Diminishing Returns, DR Engine) 【已決議待實作】
 為徹底杜絕玩家透過小隊輪流眩暈導致首領「全程罰站死」的惡性 Exploit，並防止我方隊友遭群怪無腦連控：
 * **時間檢驗窗口**：設置 **15 秒滑動窗口**。
 * **四階衰減曲線**：
@@ -361,7 +360,7 @@ public void decrementTick() {
 
 ### 5. 🔌 模組擴充性：狀態效果處理器介面與資料驅動 (Extensibility & Mechanism)
 
-#### ① 內部狀態效果生命週期介面 (Buff Effect Handler)
+#### ① 內部狀態效果生命週期介面 (Buff Effect Handler) 【已決議待實作】
 為支援後續單機各類首領機制擴充與狀態效果解耦，將特殊狀態機抽象為內部標準 Spring Bean 介面：
 ```java
 public interface BuffEffectHandler {
@@ -377,7 +376,7 @@ public interface BuffEffectHandler {
 ```
 透過 Spring Bean 自動註冊，新增各類首領道法或特殊光環機制均遵循 Clean Architecture 開閉原則（OCP），完全依賴核心引擎的純粹機制。
 
-#### ② 100% 資料驅動之動態複合公式 (Data-Driven Formula Engine)
+#### ② 100% 資料驅動之動態複合公式 (Data-Driven Formula Engine) 【已決議待實作】
 解除固定數值綁定，Buff 的每跳傷害或護盾厚度支援在 JSON 中編寫安全動態表達式：
 ```json
 {
