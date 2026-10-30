@@ -183,10 +183,34 @@
    - 僅修正第 5、50、58 行失效連結目標：`./docs/3_task_lists/CHANGELOG.md` 改為 `./CHANGELOG.md`；`./docs/3_task_lists/future_improvements_history.md` 改為 `./docs/0_archive/future_improvements_history.md`。
    - 修正第 160~162 行過時的 `2026-10-20 / 324 項測試` 與 `26 處` 描述，對齊 `docs/3_task_lists/README.md` 最新基準（`395 項測試 100% 綠燈`、`new TemplateCatalog()` 私建目錄已清零）。
 4. **[`CHANGELOG.md`](../../CHANGELOG.md)**：於最上方新增 `## [2026-10-29] 四層級工程文件全面對齊與自動化防漂移看門狗升級` 繁體中文條目。
-5. **終極自檢閘門（4 道指令全綠方可回報完成）**：
+5. **Step 7 自檢閘門（4 道指令全綠方可回報完成）**：
    ```powershell
    powershell -ExecutionPolicy Bypass -File .\scripts\check-doc-links.ps1
    git status -s -- src/
    git diff -- GEMINI.md
    ```
    並確認 `docs/` 非封存文件無任何單檔超過 `400` 行，回報最終結果等待指導員總簽核。
+
+
+---
+
+## 🔬 Step 8：外部 AI 審查精華收斂（跨模組契約、認知透鏡門檻、長線藍圖標籤與 L3 去重）
+
+1. **[`ITEM_SCHEMA.md`](../2_specifications/data_schemas/ITEM_SCHEMA.md)**（跨模組槽位與透鏡門檻對齊）：
+   - 於 §2.1 與 §2.2 明確標註靜態 JSON 模板欄位為 `"slot"`（或 `"stats.slot"`），經後端 `ItemDefinition` 載入並序列化為執行個體／前端 DTO 時，規範屬性名統一為 `"equipSlot"`（將 §2.2 `ItemInstance` 的 `"slot"` 屬性改為 `"equipSlot"` 並附註模板 `"slot"` 映射關係）。
+   - 將 §3 範例（第 157 行）二階認知透鏡 `"minProgress": 35` 修正為 `"minProgress": 30`，100% 對齊 L1（`0 / 30 / 70`）與 `PerceptionTier.java`。
+2. **[`M6_ITEM_AND_ECONOMY.md`](../2_specifications/backend/M6_ITEM_AND_ECONOMY.md)**（認知透鏡門檻與方法名對齊）：
+   - 將 §4（第 95 行）二階認知透鏡 `"minProgress": 35` 修正為 `"minProgress": 30`；將第 101 行 `CognitiveProxyService.filterItem(item, chipLoadingRate)` 修正為真實方法 `CognitiveProxyService.resolve(baseName, baseDesc, lenses, chipRate)`（及 `resolveName` / `resolveDescription`）。
+3. **[`FE5_PARTY_EQUIPMENT_AND_MODALS.md`](../2_specifications/frontend/FE5_PARTY_EQUIPMENT_AND_MODALS.md)**（穿戴動作名對齊 `M9`）：
+   - 將 §3 Mermaid 序列圖（第 55 行）的 `ActionCommand: EQUIP_ITEM(charId, slot, itemId)` 修正為對齊 `M9` §3.7 的 `EQUIP(memberId, slot, itemId)`。
+4. **[`FE2_DRPG_VIEWPORT_RENDERER.md`](../2_specifications/frontend/FE2_DRPG_VIEWPORT_RENDERER.md)**（地牢移動動作對齊 `M9`）：
+   - 將 §5（第 93~96 行）的「發送指令 `step w` / `step s` / `turn a` / `turn d`」改為對齊 `M9` §3.1 結構化動作 `MOVE`（`direction: "FORWARD" | "BACKWARD" | "TURN_LEFT" | "TURN_RIGHT"`，註明底層若經舊橋接僅為內部相容封裝）。
+5. **[`M7_DATA_DRIVEN_TEMPLATES.md`](../2_specifications/backend/M7_DATA_DRIVEN_TEMPLATES.md)**（Schema 版本與語意校驗分工）：
+   - 於 §6.2「JSON Schema 語法嚴格校驗層」標題旁加註 `【已決議待實作】`，將文內 `Draft 2020-12` 改為對齊 `data_schemas/*.md` 現行的 `draft-07`，並說明「JSON Schema 負責單檔靜態型別與必填宣告；跨檔案 ID 引用、地牢矩陣尺寸與圖例一致性等語意校驗由 `DataIntegrityValidator` 負責」。
+6. **L2 模組規格手冊（`M1 ~ M9` 與 `FE1 ~ FE6`）末章標題統一加註長線藍圖標籤**：
+   - 將 `docs/2_specifications/backend/M*.md` 與 `docs/2_specifications/frontend/FE*.md` 末章「未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)」大標題旁，統一補標 `【待深入討論／長線演進藍圖】`，與正文現行契約明確區隔。
+7. **17 專精技能樹分階實裝說明與 L3 任務去重／追蹤矩陣精確化**：
+   - 於 [`docs/2_specifications/skills/README.md`](../2_specifications/skills/README.md) 與 [`M5_SKILL_AND_PROGRESSION_TASKS.md`](../3_task_lists/backend/M5_SKILL_AND_PROGRESSION_TASKS.md) 補充說明：「17 專精樹為四大淵源完整架構藍圖；當前 VS-01 垂直切片優先實裝並驗收代表性核心專精樹與基礎合擊，其餘隨後續章節分批擴充」。
+   - 於 [`DUNGEON_SCHEMA_TASKS.md`](../3_task_lists/data_schemas/DUNGEON_SCHEMA_TASKS.md) 的 `Task DUNGEON-SCHEMA-1` 註明「地貌文本重塑主責追蹤收斂於 [`M2_DRPG_DUNGEON_TASKS.md`](../3_task_lists/backend/M2_DRPG_DUNGEON_TASKS.md) 之 `Task M2-1`，本項僅聚焦靜態 JSON 結構符合 Schema 規範」。
+   - 於 [`docs/3_task_lists/README.md`](../3_task_lists/README.md) 第 4~5 行將「1:1 鏡像對齊」修正為「核心模組 1:1 鏡像、跨模組總綱與 17 專精技能樹採聚合映射」，並於 `395 項單元與整合測試` 旁加註基準日期快照（`2026-10-29 驗證基準，實時狀態以執行 .\test.ps1 為準`）。
+- **本步完成後執行 `powershell -ExecutionPolicy Bypass -File .\scripts\check-doc-links.ps1` 自檢並立即停下**，回報最終結果等待指導員總簽核。

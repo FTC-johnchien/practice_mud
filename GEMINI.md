@@ -2,7 +2,7 @@
 
 > **Antigravity 2.0 自動讀取規範**：
 > 本檔案位於專案根目錄，是 Antigravity 每次啟動新會話、接收指令時自動無條件載入的最高優先級規則檔案。
-> **現代 Agentic Workflow 協同鐵律**：本檔案專注於**「不可動搖之架構憲法、技術邊界、按需載入指針與品質守護門」**。當前微任務請查閱 [`docs/4_active_tasks/ACTIVE_TASKS.md`](./docs/4_active_tasks/ACTIVE_TASKS.md)，歷史演進紀錄請查閱 [`docs/3_task_lists/CHANGELOG.md`](./docs/3_task_lists/CHANGELOG.md)，長遠規劃請查閱 [`docs/3_task_lists/FUTURE_IMPROVEMENTS.md`](./docs/3_task_lists/FUTURE_IMPROVEMENTS.md)。
+> **現代 Agentic Workflow 協同鐵律**：本檔案專注於**「不可動搖之架構憲法、技術邊界、按需載入指針與品質守護門」**。當前微任務請查閱 [`docs/4_active_tasks/ACTIVE_TASKS.md`](./docs/4_active_tasks/ACTIVE_TASKS.md)，歷史演進紀錄請查閱 [`CHANGELOG.md`](./CHANGELOG.md)，長遠規劃請查閱 [`docs/3_task_lists/FUTURE_IMPROVEMENTS.md`](./docs/3_task_lists/FUTURE_IMPROVEMENTS.md)。
 
 ---
 
@@ -47,7 +47,7 @@
         4. 系統架構：[`docs/2_specifications/ARCHITECTURE_SUMMARY.md`](./docs/2_specifications/ARCHITECTURE_SUMMARY.md) 與 [`MODULES_MAP.md`](./docs/2_specifications/MODULES_MAP.md)。
         5. 模組規格：[`docs/2_specifications/backend/`](./docs/2_specifications/backend/) 與 [`frontend/`](./docs/2_specifications/frontend/)。
         6. 待辦武器庫：[`docs/3_task_lists/FUTURE_IMPROVEMENTS.md`](./docs/3_task_lists/FUTURE_IMPROVEMENTS.md)（中長程藍圖與五大目標拓展路線唯一來源）。
-        7. 歷史紀錄：[`docs/3_task_lists/CHANGELOG.md`](./docs/3_task_lists/CHANGELOG.md) 與 [`future_improvements_history.md`](./docs/3_task_lists/future_improvements_history.md)。
+        7. 歷史紀錄：[`CHANGELOG.md`](./CHANGELOG.md) 與 [`future_improvements_history.md`](./docs/0_archive/future_improvements_history.md)。
         8. 封存庫：[`docs/0_archive/`](./docs/0_archive/)（歷史審查與舊架構封存，不具規範力）。
       - **三大層級遞進治理與使用者審批鐵律 (Mandatory Cascading Governance & User Approval Rules)**：
         1. **`1_requirements` (L1) 為最主要規範**：當 L1 內容發生任何異動時，必須檢視現有 L2 文件是否涵蓋 L1 異動後的內容。若需新增或修改，AI 必須提供建議並由「使用者審批決定」後，方可執行 L2 文件的實質新增/修改。
@@ -55,7 +55,7 @@
         3. **`3_task_lists` (L3) 為 L2 規格的 1:1 完整實作項目清單**：忠實記錄所有模組之落實現況、待辦與驗收標準。
       - **四級內容狀態標籤規範**：專案文件統一標註【現行已驗證】、【已決議待實作】、【候選提案】與【歷史／已除役】，避免將遠期藍圖誤當現行規格。
       - **待辦與未決事項第一時間入庫**：凡是在對話討論中提出但「未決定」、「待決議」或「待執行/待重構」的項目，**必須第一時間記錄至 [`docs/3_task_lists/FUTURE_IMPROVEMENTS.md`](./docs/3_task_lists/FUTURE_IMPROVEMENTS.md)**。
-      - **每次新增/變更項目必記 Log**：**每次進行專案功能新增、程式碼重構、缺陷修復或規格變更時，必須同步將變更內容詳細登載到 [`docs/3_task_lists/CHANGELOG.md`](./docs/3_task_lists/CHANGELOG.md)**。
+      - **每次新增/變更項目必記 Log**：**每次進行專案功能新增、程式碼重構、缺陷修復或規格變更時，必須同步將變更內容詳細登載到 [`CHANGELOG.md`](./CHANGELOG.md)**。
       - **每次新增/變更時必 Review 並修調規格**：**每次進行功能新增或架構變更時，AI 必須主動 Review [`docs/2_specifications/`](./docs/2_specifications/) 對應之模組手冊**，確保規格說明書與實際代碼庫永遠維持 100% 同步一致。
   10. **強調畫面呈現並淡化文字訊息鐵律 (Visual-First, De-emphasize Text-Heavy Presentation Rule) — 🚨 極度重要**：
       - **從 MUD 邁向生動 DRPG 的視覺核心原則**：本專案的核心願景是由「傳統文字 MUD」全面轉化為「生動沉浸的 DRPG 遊戲」。底層引擎仍保留文字訊息 Log（僅作為後台稽核、排查與輔助紀錄），**所有遊戲機制、狀態變更、戰鬥互動、環境探索、NPC 交流與操作回饋，必須以生動的「畫面呈現、微動態、HUD 視覺指標、可點擊熱區」為第一優先，徹底淡化玩家對閱讀文字訊息的依賴！**
@@ -157,9 +157,9 @@
 ---
 
 ## 7. 最新測試與健康狀況基準 (Latest Health Benchmark)
-* **全量測試基準**：2026-10-20，全專案 **324 項單元與整合測試 100% 綠燈全數通過**（78 個測試類別，0 失敗、0 錯誤）。
+* **全量測試基準**：全專案 **395 項單元與整合測試 100% 綠燈全數通過**（`.\test.ps1` 全量守護，0 失敗、0 錯誤）。
 * **架構看門狗健康狀態 (`ArchitectureGuardrailsTest`)**：
-  - `GUARD-01`：`new TemplateCatalog()` 靜默 fallback 數量鎖定在 **26 處**基準內；`GameConfig.getInstance()` 靜態存取鎖定在 12 處基準內；Clean Architecture 領域層依賴反轉 0 違規。
+  - `GUARD-01`：`new TemplateCatalog()` 私建目錄與靜默 fallback 數量已全面清零（0 處違規）；`GameConfig.getInstance()` 靜態存取鎖定在 12 處基準內；Clean Architecture 領域層依賴反轉 0 違規。
   - `GUARD-02`：核心戰鬥迴圈（`DrpgCombatLoop`）中文硬編碼特例檢查 0 違規。
 
 ---

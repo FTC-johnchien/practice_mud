@@ -8,6 +8,26 @@
 
 ## 📌 最新里程碑 (Latest Releases)
 
+## [2026-10-29] 四層級工程文件全面對齊與自動化防漂移看門狗升級
+- **防漂移看門狗升級 (`check-doc-links.ps1`)**：
+  - 擴充三大檢驗維度：全域 Markdown 連結有效性（納入根目錄 `GEMINI.md`）、反引號實體檔案路徑真實存在性（支援 `static/`、`js/`、`css/`、`data/` 智慧映射並設有除役標籤豁免）、`data_schemas/*.md` 內嵌 JSON 語法合法性。
+  - 採用 UTF-8 編碼與 PowerShell 5.1 可攜防呆，落實 CI/CD 本地紅綠燈把關機制。
+- **Level 1 需求概念層校準 (`WORLD_AND_LORE_BIBLE.md` / `GAMEPLAY_CORE_LOOPS.md` / `UI_UX_REQUIREMENTS.md`)**：
+  - 世界觀與養成：確立主角微量強殖基因覺醒正式併入四大淵源之【強殖幾丁質專精樹】與【萬象核心插槽】體系（D5）。
+  - 核心戰鬥：依 D3 確立「護體罡氣減傷與破防力竭僅適用於深淵菁英與首領（Boss），普通雜兵無護體減傷以確保爽快清場」；統一五維屬性縮寫（CON/INT/WIS/STR/DEX）。
+  - 介面視覺：依 D1 確立左右雙主區為現行已驗證架構，PC 上三欄與手機直向底部 5 分頁標註為待深入討論演進目標。
+- **Level 2 規格契約層全面對齊 (後端 M1~M9、前端 FE1~FE6、17 專精技能樹)**：
+  - 修復 `ITEM_SCHEMA.md` 語法錯誤；對齊 `SKILL_SCHEMA.md` 完整 `treeId` 與合體技/領域契約（D4-1, D4-2）。
+  - 批次更新 17 專精樹戰術/連攜定位表頭；消解破防數值（1/3 減傷、7 秒力竭）與 SAN 精神萎靡（單一 `WEAKENED` -15%）在 M3/M4/FE5 的描述衝突（D2, D3）。
+  - 後端模組全面更新為 Package-by-Feature 真實類別結構；依 D4-4 刪除 M7 動態熱重載提案；全域統一自動存檔為 `autosave.json`。
+  - 前端模組修正 FE2 左右顛倒與 FE6 7 支真實 CSS 流，移除舊動作列面板與輸入指令描述。
+- **Level 3 任務庫與 Level 4 看板治理收斂**：
+  - 任務清單刪除孤兒 `Task M3-2`（兵刃換彈）、`Task M7-1`（動態熱重載）、`Task M5-1`、`Task M2-2`（低 SAN 幻覺），新增 `Task M3-3` 追蹤雜兵破防收斂。
+  - Level 4 看板收斂測試基準為「以 `.\test.ps1` 全量綠燈為準」，修正 `GEMINI.md` 歷史連結與測試基準。
+  - 全面將寫死本機之 `file:///c:/Workspace/...` 轉換為相對路徑，確保跨電腦 Git 同步零斷鏈。
+
+
+
 ### [2026-10-21] Milestone F3-05：隊友自動戰術 Gambit 規則鏈引擎 (Companion Gambit AI Chains, P1)
 - **Gambit 領域模型與資料驅動條件/動作枚舉 (Task 1)**：
   - 新增領域枚舉 `GambitActionType` (`SKILL`, `ITEM`, `DEFENSE`, `ATTACK`)，擴充 `TacticsRule` 支援 `actionType` 與 `itemId`。

@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory = $false)]
-    [ValidateRange(0, 7)]
+    [ValidateRange(0, 8)]
     [int]$Step = 0,
 
     [switch]$RecordSnapshot
@@ -215,6 +215,11 @@ function Get-StepTargetFiles([int]$TargetStep) {
         7 {
             $targets += @("docs/4_active_tasks/SPRINT_GOAL.md", "docs/4_active_tasks/ACTIVE_TASKS.md", "docs/1_requirements/CYBERPUNK_CULTIVATION_SPEC.md", "GEMINI.md", "CHANGELOG.md")
         }
+        8 {
+            $targets += @("docs/2_specifications/data_schemas/ITEM_SCHEMA.md", "docs/2_specifications/skills/README.md", "docs/3_task_lists/README.md", "docs/3_task_lists/data_schemas/DUNGEON_SCHEMA_TASKS.md", "docs/3_task_lists/backend/M5_SKILL_AND_PROGRESSION_TASKS.md")
+            Get-ChildItem (Join-Path $RepoRoot "docs\2_specifications\backend") -Filter "*.md" | ForEach-Object { $targets += $_.FullName.Substring($RepoRoot.Length).TrimStart("\/").Replace('\', '/') }
+            Get-ChildItem (Join-Path $RepoRoot "docs\2_specifications\frontend") -Filter "*.md" | ForEach-Object { $targets += $_.FullName.Substring($RepoRoot.Length).TrimStart("\/").Replace('\', '/') }
+        }
     }
     return $targets
 }
@@ -236,7 +241,8 @@ for ($prev = 1; $prev -lt $Step; $prev++) {
     if (Test-Path $snapFile) {
         $snap = Get-Content $snapFile -Raw -Encoding UTF8 | ConvertFrom-Json
         foreach ($prop in $snap.PSObject.Properties) {
-            if ($Step -eq 7 -and $prev -eq 2 -and $prop.Name -eq "docs/1_requirements/CYBERPUNK_CULTIVATION_SPEC.md") {
+            if ($Step -ge 7 -and $prev -eq 2 -and $prop.Name -eq "docs/1_requirements/CYBERPUNK_CULTIVATION_SPEC.md") { continue }
+            if ($Step -eq 8 -and ($prop.Name -in (Get-StepTargetFiles -TargetStep 8))) {
                 continue
             }
             $targetFull = Join-Path $RepoRoot $prop.Name
@@ -437,6 +443,38 @@ switch ($Step) {
             Add-GateError "Final check-doc-links.ps1 failed (ExitCode=$code)!"
         } else {
             Pass-Note "Final check-doc-links.ps1 PASSED (ExitCode=0)"
+        }
+    }
+    8 {
+        $itemSchema = Get-Content (Join-Path $RepoRoot "docs\2_specifications\data_schemas\ITEM_SCHEMA.md") -Raw -Encoding UTF8
+        $m6 = Get-Content (Join-Path $RepoRoot "docs\2_specifications\backend\M6_ITEM_AND_ECONOMY.md") -Raw -Encoding UTF8
+        $m7 = Get-Content (Join-Path $RepoRoot "docs\2_specifications\backend\M7_DATA_DRIVEN_TEMPLATES.md") -Raw -Encoding UTF8
+        $fe2 = Get-Content (Join-Path $RepoRoot "docs\2_specifications\frontend\FE2_DRPG_VIEWPORT_RENDERER.md") -Raw -Encoding UTF8
+        $fe5 = Get-Content (Join-Path $RepoRoot "docs\2_specifications\frontend\FE5_PARTY_EQUIPMENT_AND_MODALS.md") -Raw -Encoding UTF8
+        $skillsReadme = Get-Content (Join-Path $RepoRoot "docs\2_specifications\skills\README.md") -Raw -Encoding UTF8
+        $l3Readme = Get-Content (Join-Path $RepoRoot "docs\3_task_lists\README.md") -Raw -Encoding UTF8
+        $dst = Get-Content (Join-Path $RepoRoot "docs\3_task_lists\data_schemas\DUNGEON_SCHEMA_TASKS.md") -Raw -Encoding UTF8
+
+        if ($itemSchema -notmatch 'equipSlot' -or $itemSchema -match '"minProgress"\s*:\s*35') { Add-GateError "ITEM_SCHEMA.md missing equipSlot contract note or still has minProgress: 35" }
+        if ($m6 -match '"minProgress"\s*:\s*35' -or $m6 -match 'filterItem') { Add-GateError "M6_ITEM_AND_ECONOMY.md still has minProgress: 35 or filterItem" }
+        if ($fe5 -match 'EQUIP_ITEM\(') { Add-GateError "FE5_PARTY_EQUIPMENT_AND_MODALS.md still contains EQUIP_ITEM(" }
+        if ($fe2 -match '\u767C\u9001\u6307\u4EE4\s*`(step|turn)') { Add-GateError "FE2_DRPG_VIEWPORT_RENDERER.md still describes sending raw step/turn string commands" }
+        if ($m7 -match 'Draft 2020-12' -or $m7 -notmatch 'draft-07') { Add-GateError "M7_DATA_DRIVEN_TEMPLATES.md not aligned to draft-07" }
+        if ($skillsReadme -notmatch 'VS-01') { Add-GateError "docs/2_specifications/skills/README.md missing VS-01 phased scope note" }
+        if ($dst -notmatch 'Task M2-1') { Add-GateError "DUNGEON_SCHEMA_TASKS.md missing Task M2-1 cross-reference note" }
+        if ($l3Readme -notmatch '2026-10-29') { Add-GateError "docs/3_task_lists/README.md missing test baseline date snapshot" }
+        Push-Location $RepoRoot
+        try {
+            $out = powershell -ExecutionPolicy Bypass -File .\scripts\check-doc-links.ps1 2>&1 | Out-String
+            $code = $LASTEXITCODE
+        } finally {
+            Pop-Location
+        }
+        Write-Host $out
+        if ($code -ne 0) {
+            Add-GateError "Step 8 check-doc-links.ps1 failed (ExitCode=$code)!"
+        } else {
+            Pass-Note "Step 8 check-doc-links.ps1 PASSED (ExitCode=0)"
         }
     }
 }

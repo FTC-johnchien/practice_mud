@@ -12,7 +12,7 @@
 > 1. ✅ **需求層 (L1)**：確立五大核心目標、純單機 85/15 刷寶黃金權重、SAN 護盾生存化（Option A）與靈識三階透鏡轉譯（Option C）。
 > 2. ✅ **規格層 (L2)**：後端 10 大模組 (M1~M9, M3.1)、前端 6 大表現模組 (FE1~FE6)、3 大資料 Schema 契約全數完備並 100% 涵蓋 L1。
 > 3. ✅ **任務庫 (L3)**：落實 1:1 鏡像對齊結構，確立專屬執行計畫 [`CODE_CONVERGENCE_AND_REFACTORING_TASKS.md`](../3_task_lists/CODE_CONVERGENCE_AND_REFACTORING_TASKS.md)。
-> 4. ✅ **治理憲法**：於全域文件定錨「三大層級遞進治理與使用者審批鐵律」，全量 388 項測試 100% 綠燈守護。
+> 4. ✅ **治理憲法**：於全域文件定錨「三大層級遞進治理與使用者審批鐵律」，以 `.\test.ps1` 全量綠燈為準（基準見 [`docs/3_task_lists/README.md`](../3_task_lists/README.md)）。
 > 5. ✅ **收斂里程碑 (CONV-01)**：三階靈識透鏡轉譯代理 (`CognitiveProxyService`)、營地機能中樞 (`TownHubService` / `TownHubDto`)、營地設施與調息派發 (`TownFacilityCommand`)、16 大標準賽博神通資料矩陣全數落地！
 >
 > 🎯 **當前唯一推進焦點**：**Milestone VS-01 — 第一章序幕垂直切片：黑煞宗地底礦脈・採礦奴隸與特工覺醒 (Vertical Slice, P1)**。
@@ -23,7 +23,7 @@
 
 - **核心目標對齊**：依據三大戰略與【五大核心目標】（世界觀介紹、戰鬥爽快、技能組合、裝備收集、角色養成），徹底取消道心崩潰魔化設計，打造首個完整閉環的純單機 Hack-and-slash DRPG 序章！
 - **背景設定融合**：主角在黑煞宗地底奴役通鋪甦醒，特工晶片加載 12%，在萬年母神卵鞘地殼深處面臨塌陷與退化妖獸，收集黑煞煞石，反殺密室修士並繳獲千星科技加密追蹤晶片。
-- **資料契約綁定**：全任務 100% 依循 `DUNGEON_SCHEMA.md`、`ITEM_SCHEMA.md` 與 `SKILL_SCHEMA.md`，全量測試維持 376+ 測試 100% 綠燈守護。
+- **資料契約綁定**：全任務 100% 依循 `DUNGEON_SCHEMA.md`、`ITEM_SCHEMA.md` 與 `SKILL_SCHEMA.md`，以 `.\test.ps1` 全量綠燈為準（基準見 [`docs/3_task_lists/README.md`](../3_task_lists/README.md)）。
 
 ### 📋 微任務清單 (Micro-Tasks)
 
@@ -45,12 +45,12 @@
     - `combo_chitin_kinetic_superconductor`（【生化超導·破空磁煞幾丁刃】）：傳奇雙星名招，幾丁質 ＋ 電磁動能，一刀兩斷貫穿全列，造成 100% 暴擊穿甲。
   - **驗收標準**：`DataIntegrityValidator` 啟動檢驗零警告；在 `DrpgCombatLoop` 戰鬥中驗證發動 Primer 裂魂標記與 Detonator 引爆震盪衝擊波。已於 `ElementalReactionAndDetonateTest` 驗收完備。
 
-- [ ] **Task 4 (VS-01-LOOT-CHIP): 首領掉落【千星科技加密追蹤晶片】與隨機詞綴裝備掉落驗收 (裝備收集 + 376+ 測試守護)**
+- [ ] **Task 4 (VS-01-LOOT-CHIP): 首領掉落【千星科技加密追蹤晶片】與隨機詞綴裝備掉落驗收 (裝備收集 + 全量測試綠燈守護)**
   - **目標檔案**：`src/main/resources/data/global/items/quest/quest_items.json`、[`ITEM_SCHEMA.md`](../2_specifications/data_schemas/ITEM_SCHEMA.md)、[`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/combat/DrpgRewardService.java)
   - **契約規範**：依循 `ITEM_SCHEMA.md` 規範：
     - 黑煞宗礦脈首領（密室畸變修士·宋天衡）掉落專屬任務道核 `item_chip_qianxing_tracker`（千星科技加密追蹤晶片）。
     - 戰鬥結算掉落武器/防具自動隨機掛載前綴與後綴詞條（例如：`超頻的黑煞短匕` 附帶削韌強度）。
-  - **驗收標準**：`victory-modal.js` 結算視窗金色 3D 翻牌正確呈現晶片與隨機詞綴裝備；`.\test.ps1` 既有 376 項測試 100% 綠燈守護。
+  - **驗收標準**：`victory-modal.js` 結算視窗金色 3D 翻牌正確呈現晶片與隨機詞綴裝備；以 `.\test.ps1` 全量綠燈為準（基準見 [`docs/3_task_lists/README.md`](../3_task_lists/README.md)）。
 
 
 ---
@@ -59,7 +59,7 @@
 
 - [x] **Milestone REFACTOR-PHASE-4 — 階段四：舊代碼除役與架構看門狗 (Phase 4 Legacy Purge & Guardrails)**
   - Task 1 (LEGACY-CODE-PURGE): 物理除役廢棄代碼：安全審查並移除未引用的過渡類別（`LivingStateService`、`infra.util.IdUtils`、`infra.util.RandomUtil`、`ExitDeserializer`、`RoomDescriptionDeserializer`）與歷史搬移後殘留之空目錄。
-  - Task 2 (ARCH-GUARDRAILS-STRENGTHEN): 強化模組依賴看門狗測試：新增 [`DungeonValidatorPort.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/template/DungeonValidatorPort.java) 介面反轉 `template` 對 `dungeon` 模組的依賴；在 [`ArchitectureGuardrailsTest.java`](file:///c:/Workspace/my_practice/practice_mud/src/test/java/com/example/htmlmud/domain/validation/ArchitectureGuardrailsTest.java) 新增 GUARD-03（禁止 `template` 反向依賴 `combat`/`dungeon`）與 GUARD-04（禁止 `town`/`item` 反向依賴 `combat`/`dungeon`），修正 `DrpgCombatLoop` 套件路徑檢驗；全專案 395 項測試 100% 綠燈，文檔 368 個內部連結 100% 通過。
+  - Task 2 (ARCH-GUARDRAILS-STRENGTHEN): 強化模組依賴看門狗測試：新增 [`DungeonValidatorPort.java`](../../src/main/java/com/example/htmlmud/template/DungeonValidatorPort.java) 介面反轉 `template` 對 `dungeon` 模組的依賴；在 [`ArchitectureGuardrailsTest.java`](../../src/test/java/com/example/htmlmud/domain/validation/ArchitectureGuardrailsTest.java) 新增 GUARD-03（禁止 `template` 反向依賴 `combat`/`dungeon`）與 GUARD-04（禁止 `town`/`item` 反向依賴 `combat`/`dungeon`），修正 `DrpgCombatLoop` 套件路徑檢驗；全專案以 `.\test.ps1` 全量綠燈為準（基準見 [`docs/3_task_lists/README.md`](../3_task_lists/README.md)），文檔 368 個內部連結 100% 通過。
 
 - [x] **Milestone REFACTOR-M9 — 模組 M9 狀態管線與排程協定 Package-by-Feature 封裝 (Phase 3 Step R3.9)**
   - Task 1 (PKG-M9-ENCAPSULATION): 依循依賴拓撲完成 M9 模組套件封裝，建立 `com.example.htmlmud.pipeline` 獨立套件，將狀態廣播服務 `GameStateBroadcastService`、指令分發核心 `CommandDispatcher`、分發埠 `CommandDispatcherPort`、網路處理器 `MudWebSocketHandler` 與會話註冊表 `SessionRegistry` 統一收斂至獨立套件。
@@ -165,7 +165,7 @@
   - Task 4 (F1-05-FE-RADAR & VERIFY): 前端 `dungeon-panel.js` 雷達火把狀態條、點火按鈕、黑暗暗影暈影特效與靈泉地窟 `♨` 渲染，新增專屬測試 `DungeonTorchAndTrapTest`，全專案 343 項測試 100% 綠燈通過。
 
 - [x] **Milestone F1-04 — 前端歷史樣式巨石 `style.css` (122 KB) 安全除役**
-  - 物理安全刪除 122 KB 之 `static/css/style.css`，全系統 100% 運行於 `style-01` ~ `style-07` 七層樣式流。
+  - 物理安全刪除 122 KB 之 `static/css/style.css`【歷史／已除役】，全系統 100% 運行於 `style-01` ~ `style-07` 七層樣式流。
   - 存檔歷史頁面 `singleplayer_v1.html` 同步對齊為引用七層樣式流。
   - 同步更新前端技術手冊 `前端_FE6` 與 `UI_PAGE_STRUCTURE.md`，全專案 338 項測試全綠通過。
 

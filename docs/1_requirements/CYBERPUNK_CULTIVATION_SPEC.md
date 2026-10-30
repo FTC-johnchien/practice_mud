@@ -52,27 +52,27 @@ Socket: 道骨/晶片心法  ──>  【常駐被動】(裝備於隊員插槽�
 
 ### 🏛️ 四大歷史淵源與十七專精樹架構總覽
 
-全專案技能體系劃分為四大歷史淵源，共計 **17 棵專精技能樹**。依據 Level 1 需求概念層原則，此處確立各流派之世界觀淵源與核心戰術定位；各專精樹之完整數值、施法前搖、削韌公式與 JSON 契約，全面下沉至 Level 2 模組規劃手冊 [`docs/2_specifications/skills/`](file:///c:/Workspace/my_practice/practice_mud/docs/2_specifications/skills/) 獨立分檔管理：
+全專案技能體系劃分為四大歷史淵源，共計 **17 棵專精技能樹**。依據 Level 1 需求概念層原則，此處確立各流派之世界觀淵源與核心戰術定位；各專精樹之完整數值、施法前搖、削韌公式與 JSON 契約，全面下沉至 Level 2 模組規劃手冊 [`docs/2_specifications/skills/`](../2_specifications/skills/) 獨立分檔管理：
 
 | 歷史淵源 | 專精技能樹名稱 | 戰術機制與流派標籤 | Tier 4 天道大絕招 (元嬰階) | Socket 常駐被動道骨/晶片 | Level 2 詳細規格手冊 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **☯️ 東方修仙道統**<br>*(本土擬態修真)* | **1. 【庚金劍煞樹】** | 飛劍破甲、金煞印記 (`PRIMER`)、雷法變異 | 【萬劍歸宗·太白凌虛大殺劫】 | 【劍心通明骨】(暴擊真元返還) | [`TREE_01_GOLD_SWORD.md`](file:///c:/Workspace/my_practice/practice_mud/docs/2_specifications/skills/1_cultivator/TREE_01_GOLD_SWORD.md) |
-| | **2. 【青帝靈木樹】** | 草木回血、真菌流毒、風法變異 | 【萬象回春·太陰神樹降世生】 | 【靈泉不息心法】(反應回真元) | [`TREE_02_WOOD_LIFE.md`](file:///c:/Workspace/my_practice/practice_mud/docs/2_specifications/skills/1_cultivator/TREE_02_WOOD_LIFE.md) |
-| | **3. 【玄冥真水樹】** | 極寒減速、冰幕護盾 (`BARRIER`)、陰煞變異 | 【翻江倒海·九幽天河覆地陣】 | 【寒玉冰魄心】(受擊減速反震) | [`TREE_03_WATER_FROST.md`](file:///c:/Workspace/my_practice/practice_mud/docs/2_specifications/skills/1_cultivator/TREE_03_WATER_FROST.md) |
-| | **4. 【九天離火樹】** | 赤陽灼燒、範圍爆破、熔岩變異 | 【九天焚世·金烏大日焚天劫】 | 【赤帝焚炎髓】(火暴擊刷新CD) | [`TREE_04_FIRE_FLAME.md`](file:///c:/Workspace/my_practice/practice_mud/docs/2_specifications/skills/1_cultivator/TREE_04_FIRE_FLAME.md) |
-| | **5. 【后土鎮嶽樹】** | 巨岩鈍擊、金剛嘲諷、純陽剋魔 | 【八荒六合·九州神山定鼎引】 | 【大地同調脈】(後排AOE減免) | [`TREE_05_EARTH_SHIELD.md`](file:///c:/Workspace/my_practice/practice_mud/docs/2_specifications/skills/1_cultivator/TREE_05_EARTH_SHIELD.md) |
-| **🏛️ 古代工程師類**<br>*(深井行星採掘指令)* | **6. 【天引重力樹】** | 引力定錨、黑洞聚怪、行動條壓制 | 【太古黑洞·奇異點湮滅核】 | 【地心定錨骨】(免疫位移擊退) | [`TREE_06_GRAVITY.md`](file:///c:/Workspace/my_practice/practice_mud/docs/2_specifications/skills/2_engineer/TREE_06_GRAVITY.md) |
-| | **7. 【神機裂解樹】** | 液壓超聲波、極限削韌破防 (`POISE_BREAK`)| 【地核共振·萬刃崩山破】 | 【破陣先鋒骨】(破防真實傷害) | [`TREE_07_FRACTURE.md`](file:///c:/Workspace/my_practice/practice_mud/docs/2_specifications/skills/2_engineer/TREE_07_FRACTURE.md) |
-| | **8. 【太古金剛樹】** | 蜂巢偏折、反震回彈、重坦霸體 | 【絕對防衛·造物主力場堡壘】 | 【受創充能晶片】(受擊反震波) | [`TREE_08_FORCEFIELD.md`](file:///c:/Workspace/my_practice/practice_mud/docs/2_specifications/skills/2_engineer/TREE_08_FORCEFIELD.md) |
-| | **9. 【地核熔爐樹】** | 地熱等離子、貫穿射線、熔岩地形 | 【地心超新星·行星熔爐過載爆發】 | 【超導散熱髓】(冷卻縮減無血耗) | [`TREE_09_PLASMA_CORE.md`](file:///c:/Workspace/my_practice/practice_mud/docs/2_specifications/skills/2_engineer/TREE_09_PLASMA_CORE.md) |
-| **⚡ 賽博高科技類**<br>*(星際巨企軍規特工)* | **10. 【時序超頻樹】** | 神經加速、子彈時間、身法 GCD 歸零 | 【子彈時間·天衍特工時停獵殺】 | 【神經突觸超頻晶片】(前搖減半) | [`TREE_10_TIME_OVERCLOCK.md`](file:///c:/Workspace/my_practice/practice_mud/docs/2_specifications/skills/3_high_tech/TREE_10_TIME_OVERCLOCK.md) |
-| | **11. 【協議逆亂樹】** | 100% 唱條打斷 (`INTERRUPT`)、因果劫持 | 【天道宕機·全頻段電磁因果癱瘓】 | 【零日漏洞嗅探算法】(打斷回真元) | [`TREE_11_CYBER_WARFARE.md`](file:///c:/Workspace/my_practice/practice_mud/docs/2_specifications/skills/3_high_tech/TREE_11_CYBER_WARFARE.md) |
-| | **12. 【全息匿影樹】** | 頂點錯誤、全息分身仇恨、潛行暴擊 | 【虛實莫辨·九幽全息幻殺陣】 | 【光學折射迷彩塗層】(後排減傷) | [`TREE_12_OPTICS_GLITCH.md`](file:///c:/Workspace/my_practice/practice_mud/docs/2_specifications/skills/3_high_tech/TREE_12_OPTICS_GLITCH.md) |
-| | **13. 【電磁動能樹】** | 高斯軌道、真實穿甲貫穿、反器材狙殺 | 【天基軌道·上帝之杖天劫滅】 | 【弱點彈道輔助晶片】(碎甲歸零) | [`TREE_13_KINETIC_RAILS.md`](file:///c:/Workspace/my_practice/practice_mud/docs/2_specifications/skills/3_high_tech/TREE_13_KINETIC_RAILS.md) |
-| **🧬 克蘇魯外神類**<br>*(黑山羊血肉與畸變)* | **14. 【強殖幾丁質樹】** | 外骨骼化相、骨刃切割、裂魂引爆 (`DETONATOR`)| 【完全降臨·強殖阿修羅天魔相】 | 【幾丁外骨骼骨】(物理減傷反毒) | [`TREE_14_CHITIN_BLADE.md`](file:///c:/Workspace/my_practice/practice_mud/docs/2_specifications/skills/4_cthulhu/TREE_14_CHITIN_BLADE.md) |
-| | **15. 【黑山羊血裔樹】** | 嗜血撕裂、氣血吞噬、全隊回哺、自殘狂化 | 【萬子千孫·母神卵鞘血海臨】 | 【貪婪血髓心法】(殘血傷害倍增) | [`TREE_15_BLOOD_SIPHON.md`](file:///c:/Workspace/my_practice/practice_mud/docs/2_specifications/skills/4_cthulhu/TREE_15_BLOOD_SIPHON.md) |
-| | **16. 【知見污染樹】** | 不可名狀囈語、恐懼混亂、海馬體抹除 | 【不可名狀·盲目痴愚知見障】 | 【深淵平靜心】(黑暗損耗減半) | [`TREE_16_COSMIC_MADNESS.md`](file:///c:/Workspace/my_practice/practice_mud/docs/2_specifications/skills/4_cthulhu/TREE_16_COSMIC_MADNESS.md) |
-| | **17. 【虛無崩解樹】** | 空指針斬殺、記憶體洩漏成長 DoT、格式化 | 【歸墟終末·格式化天劫】 | 【九幽輪迴·硬體冷重啟】(免死復甦) | [`TREE_17_NULL_VOID.md`](file:///c:/Workspace/my_practice/practice_mud/docs/2_specifications/skills/4_cthulhu/TREE_17_NULL_VOID.md) |
+| **☯️ 東方修仙道統**<br>*(本土擬態修真)* | **1. 【庚金劍煞樹】** | 飛劍破甲、金煞印記 (`PRIMER`)、雷法變異 | 【萬劍歸宗·太白凌虛大殺劫】 | 【劍心通明骨】(暴擊真元返還) | [`TREE_01_GOLD_SWORD.md`](../2_specifications/skills/1_cultivator/TREE_01_GOLD_SWORD.md) |
+| | **2. 【青帝靈木樹】** | 草木回血、真菌流毒、風法變異 | 【萬象回春·太陰神樹降世生】 | 【靈泉不息心法】(反應回真元) | [`TREE_02_WOOD_LIFE.md`](../2_specifications/skills/1_cultivator/TREE_02_WOOD_LIFE.md) |
+| | **3. 【玄冥真水樹】** | 極寒減速、冰幕護盾 (`BARRIER`)、陰煞變異 | 【翻江倒海·九幽天河覆地陣】 | 【寒玉冰魄心】(受擊減速反震) | [`TREE_03_WATER_FROST.md`](../2_specifications/skills/1_cultivator/TREE_03_WATER_FROST.md) |
+| | **4. 【九天離火樹】** | 赤陽灼燒、範圍爆破、熔岩變異 | 【九天焚世·金烏大日焚天劫】 | 【赤帝焚炎髓】(火暴擊刷新CD) | [`TREE_04_FIRE_FLAME.md`](../2_specifications/skills/1_cultivator/TREE_04_FIRE_FLAME.md) |
+| | **5. 【后土鎮嶽樹】** | 巨岩鈍擊、金剛嘲諷、純陽剋魔 | 【八荒六合·九州神山定鼎引】 | 【大地同調脈】(後排AOE減免) | [`TREE_05_EARTH_SHIELD.md`](../2_specifications/skills/1_cultivator/TREE_05_EARTH_SHIELD.md) |
+| **🏛️ 古代工程師類**<br>*(深井行星採掘指令)* | **6. 【天引重力樹】** | 引力定錨、黑洞聚怪、行動條壓制 | 【太古黑洞·奇異點湮滅核】 | 【地心定錨骨】(免疫位移擊退) | [`TREE_06_GRAVITY.md`](../2_specifications/skills/2_engineer/TREE_06_GRAVITY.md) |
+| | **7. 【神機裂解樹】** | 液壓超聲波、極限削韌破防 (`POISE_BREAK`)| 【地核共振·萬刃崩山破】 | 【破陣先鋒骨】(破防真實傷害) | [`TREE_07_FRACTURE.md`](../2_specifications/skills/2_engineer/TREE_07_FRACTURE.md) |
+| | **8. 【太古金剛樹】** | 蜂巢偏折、反震回彈、重坦霸體 | 【絕對防衛·造物主力場堡壘】 | 【受創充能晶片】(受擊反震波) | [`TREE_08_FORCEFIELD.md`](../2_specifications/skills/2_engineer/TREE_08_FORCEFIELD.md) |
+| | **9. 【地核熔爐樹】** | 地熱等離子、貫穿射線、熔岩地形 | 【地心超新星·行星熔爐過載爆發】 | 【超導散熱髓】(冷卻縮減無血耗) | [`TREE_09_PLASMA_CORE.md`](../2_specifications/skills/2_engineer/TREE_09_PLASMA_CORE.md) |
+| **⚡ 賽博高科技類**<br>*(星際巨企軍規特工)* | **10. 【時序超頻樹】** | 神經加速、子彈時間、身法 GCD 歸零 | 【子彈時間·天衍特工時停獵殺】 | 【神經突觸超頻晶片】(前搖減半) | [`TREE_10_TIME_OVERCLOCK.md`](../2_specifications/skills/3_high_tech/TREE_10_TIME_OVERCLOCK.md) |
+| | **11. 【協議逆亂樹】** | 100% 唱條打斷 (`INTERRUPT`)、因果劫持 | 【天道宕機·全頻段電磁因果癱瘓】 | 【零日漏洞嗅探算法】(打斷回真元) | [`TREE_11_CYBER_WARFARE.md`](../2_specifications/skills/3_high_tech/TREE_11_CYBER_WARFARE.md) |
+| | **12. 【全息匿影樹】** | 頂點錯誤、全息分身仇恨、潛行暴擊 | 【虛實莫辨·九幽全息幻殺陣】 | 【光學折射迷彩塗層】(後排減傷) | [`TREE_12_OPTICS_GLITCH.md`](../2_specifications/skills/3_high_tech/TREE_12_OPTICS_GLITCH.md) |
+| | **13. 【電磁動能樹】** | 高斯軌道、真實穿甲貫穿、反器材狙殺 | 【天基軌道·上帝之杖天劫滅】 | 【弱點彈道輔助晶片】(碎甲歸零) | [`TREE_13_KINETIC_RAILS.md`](../2_specifications/skills/3_high_tech/TREE_13_KINETIC_RAILS.md) |
+| **🧬 克蘇魯外神類**<br>*(黑山羊血肉與畸變)* | **14. 【強殖幾丁質樹】** | 外骨骼化相、骨刃切割、裂魂引爆 (`DETONATOR`)| 【完全降臨·強殖阿修羅天魔相】 | 【幾丁外骨骼骨】(物理減傷反毒) | [`TREE_14_CHITIN_BLADE.md`](../2_specifications/skills/4_cthulhu/TREE_14_CHITIN_BLADE.md) |
+| | **15. 【黑山羊血裔樹】** | 嗜血撕裂、氣血吞噬、全隊回哺、自殘狂化 | 【萬子千孫·母神卵鞘血海臨】 | 【貪婪血髓心法】(殘血傷害倍增) | [`TREE_15_BLOOD_SIPHON.md`](../2_specifications/skills/4_cthulhu/TREE_15_BLOOD_SIPHON.md) |
+| | **16. 【知見污染樹】** | 不可名狀囈語、恐懼混亂、海馬體抹除 | 【不可名狀·盲目痴愚知見障】 | 【深淵平靜心】(黑暗損耗減半) | [`TREE_16_COSMIC_MADNESS.md`](../2_specifications/skills/4_cthulhu/TREE_16_COSMIC_MADNESS.md) |
+| | **17. 【虛無崩解樹】** | 空指針斬殺、記憶體洩漏成長 DoT、格式化 | 【歸墟終末·格式化天劫】 | 【九幽輪迴·硬體冷重啟】(免死復甦) | [`TREE_17_NULL_VOID.md`](../2_specifications/skills/4_cthulhu/TREE_17_NULL_VOID.md) |
 
 ---
 

@@ -42,6 +42,6 @@ description: >-
    完成 Step <N> 後請貼出修改檔案清單與自檢結果，並立即停下等待指導員簽核，嚴禁自行執行 Step <N+1>！
    ```
 
-### 情境 C：`Gate 1 ~ Gate 7` 已全數勾選 `[x]`
+### 情境 C：`Gate 1 ~ Gate 8` 已全數勾選 `[x]`
 主動提醒使用者進入「收尾封存（Post-Gate）」步驟：在獲得確認後，將 `DOCS_ALIGNMENT_MASTER_PLAN.md` 與 `DOCS_ALIGNMENT_ACTIVE_TASKS.md` 歸檔至 `docs/0_archive/alignment_history/`、清除 `scripts/.gate_snapshots/`，恢復 `docs/4_active_tasks/ACTIVE_TASKS.md` 常態開發。
 
