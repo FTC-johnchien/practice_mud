@@ -28,6 +28,7 @@ docs/
 │
 ├── 2_specifications/            # Level 2: 模組架構與技術規格層 (How & Architecture)
 │   ├── ARCHITECTURE_SUMMARY.md   # 頂層技術架構總覽 (Java 25 虛擬執行緒、Spring Boot)
+│   ├── ARCHITECTURAL_DECISIONS.md # 既定架構裁決與外部 AI 審查豁免基準
 │   ├── MODULES_MAP.md            # 全功能模組拼圖與拓撲邊界 (後端9+1、前端6)
 │   ├── backend/                  # 後端 9+1 大業務模組技術規格手冊 (M1 ~ M9)
 │   │   ├── M1_TOWN_HUB_AND_FACILITIES.md
@@ -103,6 +104,7 @@ docs/
 - **核心文件**：
   - [全模組地圖 (MODULES_MAP.md)](./2_specifications/MODULES_MAP.md)
   - [架構總覽 (ARCHITECTURE_SUMMARY.md)](./2_specifications/ARCHITECTURE_SUMMARY.md)
+  - [架構裁決與審查豁免基準 (ARCHITECTURAL_DECISIONS.md)](./2_specifications/ARCHITECTURAL_DECISIONS.md)
   - [後端手冊庫 (backend/)](./2_specifications/backend/)
   - [前端手冊庫 (frontend/)](./2_specifications/frontend/)
   - [專精技能樹與合體技 (skills/)](./2_specifications/skills/)
