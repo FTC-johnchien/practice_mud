@@ -123,7 +123,7 @@ graph TD
 
 ---
 
-## 🚀 七、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
+## 🚀 七、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)【待深入討論／長線演進藍圖】
 
 為使 DRPG 網格地牢模組向經典《世界樹迷宮》與現代克系地牢體驗看齊，本模組確立以下四大演進方向：
 

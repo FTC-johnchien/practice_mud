@@ -265,7 +265,7 @@ public void decrementTick() {
 
 ---
 
-## 🚀 九、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
+## 🚀 九、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)【待深入討論／長線演進藍圖】
 
 為了讓《深淵仙途》之狀態效果與 Buff 系統達到頂級現代動作/戰術 RPG 的策略交鋒深度與工業級工程水準，確立以下**五大現代化演化戰線**：
 

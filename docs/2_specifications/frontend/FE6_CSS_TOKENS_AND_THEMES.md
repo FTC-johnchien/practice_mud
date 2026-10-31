@@ -94,7 +94,7 @@ graph TD
 
 ---
 
-## 🚀 六、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
+## 🚀 六、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)【待深入討論／長線演進藍圖】
 
 為使視覺系統在具備極致東方暗黑修仙美感的同時，兼備現代 Web 樣式架構的極速加載與換膚自由度，確立以下四大演進方向：
 

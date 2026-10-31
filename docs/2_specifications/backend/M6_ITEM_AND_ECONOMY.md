@@ -92,13 +92,13 @@ public enum EquipmentSlot {
   "basePrice": 150,
   "lenses": [
     { "minProgress": 0,  "name": "一團怪物的血肉", "desc": "自地底礦脈妖物剝離的黏稠血肉，隱隱散發血腥溫熱。" },
-    { "minProgress": 35, "name": "幾丁質活性骨晶", "desc": "表面硬化且密布神經節點，握持時使前世靈骨隱隱發燙。" },
+    { "minProgress": 30, "name": "幾丁質活性骨晶", "desc": "表面硬化且密布神經節點，握持時使前世靈骨隱隱發燙。" },
     { "minProgress": 70, "name": "【強殖角質晶片·試作型】", "desc": "工程師二代仿生兵器組件，可於藏經閣鑲嵌解鎖戰技【強殖角質刃】。" }
   ]
 }
 ```
 
-- **轉譯機制**：組裝 `DrpgStateDto` 物品清單時，由 `CognitiveProxyService.filterItem(item, chipLoadingRate)` 動態選取符合當前特工晶片進度的 `name` 與 `desc`。
+- **轉譯機制**：組裝 `DrpgStateDto` 物品清單時，由 `CognitiveProxyService.resolve(baseName, baseDesc, lenses, chipRate)`（及 `resolveName` / `resolveDescription`）動態選取符合當前特工晶片進度的 `name` 與 `desc`。
 - **故障特效 (Glitch FX)**：在進度處於臨界區間（如 30%~40% 或 65%~75%）時，DTO 會攜帶 `glitch: true` 標籤，前端自動觸發字元抖動與科技浮水印光斑。
 
 ---
@@ -119,7 +119,7 @@ public enum EquipmentSlot {
 
 ---
 
-## 🚀 六、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
+## 🚀 六、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)【待深入討論／長線演進藍圖】
 
 為使物品、背包與經濟模組具備暗黑刷寶、修仙百藝與拍賣交易的耐玩深度，確立以下四大演進方向：
 

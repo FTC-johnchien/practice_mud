@@ -112,7 +112,7 @@ sequenceDiagram
 
 ---
 
-## 🚀 六、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
+## 🚀 六、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)【待深入討論／長線演進藍圖】
 
 作為專案第一紅線的基石，資料驅動架構將持續向現代商業引擎（如 Unreal / Unity ScriptableObject）的靈活性演進：
 
@@ -121,8 +121,8 @@ sequenceDiagram
   遵循純單機單體架構，全域設定檔於啟動時一次性掃描載入至不可變記憶體快取，確保確定性與零副作用。提供 OpenAPI / JSON Schema 規範，方便串接第三方 Web 編輯器（如 Tiled）或策劃試算表，一鍵匯出為標準專案 JSON。
 
 ### 2. 🛡️ 穩定性與狀態防禦 (Robustness & Resilience)
-- **JSON Schema 語法嚴格校驗層 (JSON Schema Validation)**：
-  引入標準 JSON Schema（Draft 2020-12）對每一類設定檔進行語法樹檢查。若缺少關鍵欄位（如 `exitRoomId`、`poiseDamage`）或數值越界，在建構與啟動階段精確指出檔案名稱與行號，將錯誤消滅於執行前。
+- **JSON Schema 語法嚴格校驗層 (JSON Schema Validation)【已決議待實作】**：
+  引入標準 JSON Schema（draft-07）對每一類設定檔進行語法樹檢查。JSON Schema 負責單檔靜態型別與必填宣告；跨檔案 ID 引用、地牢矩陣尺寸與圖例一致性等語意校驗由 `DataIntegrityValidator` 負責。若缺少關鍵欄位（如 `exitRoomId`、`poiseDamage`）或數值越界，在建構與啟動階段精確指出檔案名稱與行號，將錯誤消滅於執行前。
 - **孤島與環狀引線死鎖防禦**：升級 `DataIntegrityValidator`，增加圖論拓撲環路檢測（Cycle Detection），防止房間出口形成死鎖迷宮或階梯指向循環黑洞。
 
 ### 3. ⚡ 效能與啟動最佳化 (Performance & Validation)

@@ -130,7 +130,7 @@ saves/
 
 ---
 
-## 🚀 六、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
+## 🚀 六、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)【待深入討論／長線演進藍圖】
 
 為使以 `SaveData` 為核心的單機存檔系統具備商用級安全度與雲端互通性，確立以下四大演進方向：
 

@@ -34,3 +34,4 @@
 
 - [ ] **Task DUNGEON-SCHEMA-1 (VS-01 地理重塑): 墨竹山礦坑地質文本深度化**
   - **目標**：在 `mozhu_mines_b1f.json` 中深化外神卵塊、硬化偽地殼與腐朽枕木坑道描寫，通過 `DataIntegrityValidator` 驗證。
+  - **分工註記**：地貌文本重塑主責追蹤收斂於 [`M2_DRPG_DUNGEON_TASKS.md`](../backend/M2_DRPG_DUNGEON_TASKS.md) 之 `Task M2-1`，本項僅聚焦靜態 JSON 結構符合 Schema 規範。

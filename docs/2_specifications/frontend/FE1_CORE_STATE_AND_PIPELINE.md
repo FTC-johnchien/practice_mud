@@ -112,7 +112,7 @@ document.addEventListener('click', (event) => {
 
 ---
 
-## 🚀 六、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
+## 🚀 六、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)【待深入討論／長線演進藍圖】
 
 為使前端核心管線具備商用級的響應極速性、狀態可溯性與跨平台移植能力，確立以下四大演進方向：
 

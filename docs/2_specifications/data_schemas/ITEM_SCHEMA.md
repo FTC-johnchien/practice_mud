@@ -18,6 +18,8 @@
 
 ### 1. 裝備範本定義 (Item Template - 靜態資料表)
 
+> 💡 **槽位映射說明**：靜態 JSON 模板欄位宣告為 `"slot"`（或 `"stats.slot"`），經後端 `ItemDefinition` 載入並序列化為執行個體／前端 DTO 時，規範屬性名統一映射為 `"equipSlot"`。
+
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -30,7 +32,7 @@
     "slot": {
       "type": "string",
       "enum": ["MAIN_HAND", "OFF_HAND", "HEAD", "BODY", "FEET", "ACCESSORY_1", "ACCESSORY_2"],
-      "description": "裝備槽位（武器/防具/飾品必填，消耗品/任務道具為 null 或省略）"
+      "description": "裝備槽位（武器/防具/飾品必填，消耗品/任務道具為 null 或省略；序列化為執行個體 DTO 時映射為 equipSlot）"
     },
     "quality": { "type": "string", "enum": ["POOR", "COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC"] },
     "itemType": { "type": "string", "enum": ["WEAPON", "ARMOR", "SHIELD", "CHIP_ACCESSORY", "CONSUMABLE", "QUEST", "TRASH"] },
@@ -82,6 +84,8 @@
 
 ### 2. 裝備執行個體定義 (Item Instance - 掉落/行囊持有態)
 
+> 💡 **槽位規範說明**：執行個體與前端 DTO 規範屬性名統一為 `"equipSlot"`，對應靜態模板之 `"slot"` 欄位。
+
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -91,7 +95,11 @@
   "properties": {
     "id": { "type": "string" },
     "name": { "type": "string", "description": "動態合成名稱，如「超頻透鏡之千星科技加密追蹤晶片」" },
-    "slot": { "type": "string", "enum": ["MAIN_HAND", "OFF_HAND", "HEAD", "BODY", "FEET", "ACCESSORY_1", "ACCESSORY_2"] },
+    "equipSlot": {
+      "type": "string",
+      "enum": ["MAIN_HAND", "OFF_HAND", "HEAD", "BODY", "FEET", "ACCESSORY_1", "ACCESSORY_2"],
+      "description": "裝備槽位（對應靜態模板之 slot 欄位，供穿戴與比對）"
+    },
     "quality": { "type": "string" },
     "itemType": { "type": "string" },
     "baseStats": { "type": "object" },
@@ -154,7 +162,7 @@
       "desc": "自宋天衡畸變殘骸剝離的黏稠組織，散發古怪腥香，偶爾抽搐。"
     },
     {
-      "minProgress": 35,
+      "minProgress": 30,
       "name": "閃爍幽光的異化道骨",
       "desc": "骨晶內部浮現微弱的金色電路狀細紋，隱約伴隨 12Hz 節律跳動。"
     },

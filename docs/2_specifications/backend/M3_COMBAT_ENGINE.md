@@ -259,7 +259,7 @@ public static ResistanceResult resolveResistance(int rawDamage, DamageType type,
 
 ---
 
-## 🚀 九、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
+## 🚀 九、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)【待深入討論／長線演進藍圖】
 
 為使核心戰鬥引擎達到現代動作 RPG（如暗黑破壞神、黑神話、魂系）的策略交鋒深度，確立以下四大演進方向：
 

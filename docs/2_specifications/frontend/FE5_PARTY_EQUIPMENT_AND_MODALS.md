@@ -52,7 +52,7 @@ sequenceDiagram
     UI->>Store: 點選隊員之【主手武器 (MAIN_HAND)】槽位
     UI->>Store: 過濾行囊 items.filter(it => it.equipSlot === 'MAIN_HAND')
     Note over UI: 僅列出符合該槽位之飛劍或法杖，防具自動隱藏
-    UI->>Server: 玩家點選穿戴 ➔ 發送 ActionCommand: EQUIP_ITEM(charId, slot, itemId)
+    UI->>Server: 玩家點選穿戴 ➔ 發送 ActionCommand: EQUIP(memberId, slot, itemId)
     Server-->>Store: 回傳最新 DrpgStateDto (道基五維即時重算)
     Store-->>UI: 介面自動局部更新，裝備穿戴成功
 ```
@@ -109,7 +109,7 @@ sequenceDiagram
 
 ---
 
-## 🚀 七、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
+## 🚀 七、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)【待深入討論／長線演進藍圖】
 
 為使小隊管理、裝備換裝與多槽位存檔具備現代商業級 3A RPG 的便利性與交互質感，確立以下四大演進方向：
 

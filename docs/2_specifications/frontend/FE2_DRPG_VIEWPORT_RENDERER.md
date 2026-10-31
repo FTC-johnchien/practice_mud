@@ -90,10 +90,10 @@ export function populateTileAppearance(cellElement, tileChar, isVisited, isOpene
 ## ⌨️ 五、快捷操作與鍵盤綁定
 
 前端提供鍵盤與點擊雙軌支援，徹底除役打字指令：
-- **`W` / `↑`**：向前邁進一步（發送指令 `step w`）。
-- **`S` / `↓`**：向後退一步（發送指令 `step s`）。
-- **`A` / `←`**：原地向左轉身 90 度（發送指令 `turn a`）。
-- **`D` / `→`**：原地向右轉身 90 度（發送指令 `turn d`）。
+- **`W` / `↑`**：向前邁進一步（發送結構化動作 `MOVE`，`direction: "FORWARD"`；底層若經舊橋接僅為內部相容封裝）。
+- **`S` / `↓`**：向後退一步（發送結構化動作 `MOVE`，`direction: "BACKWARD"`；底層若經舊橋接僅為內部相容封裝）。
+- **`A` / `←`**：原地向左轉身 90 度（發送結構化動作 `MOVE`，`direction: "TURN_LEFT"`；底層若經舊橋接僅為內部相容封裝）。
+- **`D` / `→`**：原地向右轉身 90 度（發送結構化動作 `MOVE`，`direction: "TURN_RIGHT"`；底層若經舊橋接僅為內部相容封裝）。
 - **`L` / 點擊【安全撤離】按鈕**：在出口石階處一鍵撤離地牢（觸發 `EXTRACT` 動作）。
 
 ---
@@ -107,7 +107,7 @@ export function populateTileAppearance(cellElement, tileChar, isVisited, isOpene
 
 ---
 
-## 🚀 七、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)
+## 🚀 七、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)【待深入討論／長線演進藍圖】
 
 為使第一人稱地牢探索體驗從文字/網格邁向具備沉浸式氛圍感與高度操作流暢度的現代 DRPG，確立以下四大演進方向：
 

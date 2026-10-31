@@ -61,9 +61,9 @@
 - [x] **Gate 4（Step 4）**：Level 2 頂層架構（`ARCHITECTURE_SUMMARY`、`MODULES_MAP`）與後端 `M1 ~ M9`（10 檔）校準完成（2026-10-29 簽核：12 檔規格、`M3_1` 390 行契約、`CognitiveProxyService` 與相對路徑全數通過）
 - [x] **Gate 5（Step 5）**：Level 2 前端規格手冊（`FRONTEND_LAYOUT_GUIDE`、`UI_PAGE_STRUCTURE`、`FE1 ~ FE6` 共 8 檔）校準完成（2026-10-29 簽核：D1 雙軌版面、40 格行囊、真實 JS/CSS 路徑與相對連結全數通過，Level 2 層零失效路徑）
 - [x] **Gate 6（Step 6）**：Level 3 任務清單與總覽看板（`3_task_lists/` 下 22 份業務清單）1:1 收斂完成（2026-10-29 簽核：孤兒/違憲任務清除、新增待辦雙向對齊、74 處連結相對路徑化全數通過，Level 3 層零失效路徑）
-- [ ] **Gate 7（Step 7）**：Level 4 看板、[`GEMINI.md`](../../GEMINI.md) 斷鏈修復、[`CHANGELOG.md`](../../CHANGELOG.md) 登載與全專案看門狗綠燈驗收
-- [ ] **Gate 8（Step 8）**：外部 AI 審查（[`Codex_Review.md`](../0_references/Codex_Review.md)、[`Copilot_Review.md`](../0_references/Copilot_Review.md)）合理建議收斂（跨模組 `slot`/`equipSlot` 與 `EQUIP`/`MOVE` 契約、認知透鏡 `30%` 門檻、`draft-07` 與語意校驗分工、Future Roadmap 標籤、17 樹分階交付與 L3 去重）
-- [ ] **收尾封存（Post-Gate）**：將本主控計劃與 [`DOCS_ALIGNMENT_ACTIVE_TASKS.md`](../4_active_tasks/DOCS_ALIGNMENT_ACTIVE_TASKS.md) 移入 `docs/0_archive/alignment_history/`，並清除 `scripts/.gate_snapshots/`
+- [x] **Gate 7（Step 7）**：Level 4 看板、[`GEMINI.md`](../../GEMINI.md) 斷鏈修復、[`CHANGELOG.md`](../../CHANGELOG.md) 登載與全專案看門狗綠燈驗收（2026-10-31 簽核：557 連結、75 實體路徑、9 JSON 區塊 100% 綠燈，`GEMINI.md` 最小差異通過）
+- [x] **Gate 8（Step 8）**：外部 AI 審查（[`Codex_Review.md`](../0_references/Codex_Review.md)、[`Copilot_Review.md`](../0_references/Copilot_Review.md)）合理建議收斂（跨模組 `slot`/`equipSlot` 與 `EQUIP`/`MOVE` 契約、認知透鏡 `30%` 門檻、`draft-07` 與語意校驗分工、Future Roadmap 標籤、17 樹分階交付與 L3 去重）
+- [x] **收尾封存（Post-Gate）**：將本主控計劃與 [`DOCS_ALIGNMENT_ACTIVE_TASKS.md`](../4_active_tasks/DOCS_ALIGNMENT_ACTIVE_TASKS.md) 移入 `docs/0_archive/alignment_history/`，並清除 `scripts/.gate_snapshots/`
 
 ---
 
@@ -114,14 +114,14 @@
 
 ### 🎯 Gate 7 終極總驗收清單（對應 Step 7：L4、`GEMINI.md`、`CHANGELOG.md`）
 - **授權新增修改範圍**：[`SPRINT_GOAL.md`](../4_active_tasks/SPRINT_GOAL.md)、[`ACTIVE_TASKS.md`](../4_active_tasks/ACTIVE_TASKS.md)、[`GEMINI.md`](../../GEMINI.md)、[`CHANGELOG.md`](../../CHANGELOG.md)。
-- [ ] **自動閘門與看門狗雙綠燈**：`.\scripts\verify-doc-alignment-gates.ps1 -Step 7 -RecordSnapshot` 回傳 `ExitCode = 0`（內含升級版 `check-doc-links.ps1` 全專案 0 斷鏈、0 虛構路徑、0 JSON 語法錯誤）。
-- [ ] **`GEMINI.md` 最小差異鐵律**：執行 `git diff -- GEMINI.md` 人工逐行確認**僅第 5、50、58 行連結與第 160~162 行測試基準變更**，第 21~37 行保護鎖一字未動。
-- [ ] **L4 與變更日誌核對**：`SPRINT_GOAL.md` 對齊 17 專精樹、萬象核心插槽與 Option C 分階前提；`ACTIVE_TASKS.md` 測試基準表述統一；`CHANGELOG.md` 最上方已新增 `2026-10-29` 繁體中文完整紀錄。
+- [x] **自動閘門與看門狗雙綠燈**：`.\scripts\verify-doc-alignment-gates.ps1 -Step 7 -RecordSnapshot` 回傳 `ExitCode = 0`（內含升級版 `check-doc-links.ps1` 全專案 0 斷鏈、0 虛構路徑、0 JSON 語法錯誤）。
+- [x] **`GEMINI.md` 最小差異鐵律**：執行 `git diff -- GEMINI.md` 人工逐行確認**僅第 5、50、58 行連結與第 160~162 行測試基準變更**，第 21~37 行保護鎖一字未動。
+- [x] **L4 與變更日誌核對**：`SPRINT_GOAL.md` 對齊 17 專精樹、萬象核心插槽與 Option C 分階前提；`ACTIVE_TASKS.md` 測試基準表述統一；`CHANGELOG.md` 最上方已新增 `2026-10-29` 繁體中文完整紀錄。
 
 ### 🔬 Gate 8 終極總驗收清單（對應 Step 8：Codex & Copilot 審查精華收斂）
 - **授權新增修改範圍**：[`ITEM_SCHEMA.md`](../2_specifications/data_schemas/ITEM_SCHEMA.md)、[`M6_ITEM_AND_ECONOMY.md`](../2_specifications/backend/M6_ITEM_AND_ECONOMY.md)、[`M7_DATA_DRIVEN_TEMPLATES.md`](../2_specifications/backend/M7_DATA_DRIVEN_TEMPLATES.md)、[`FE2_DRPG_VIEWPORT_RENDERER.md`](../2_specifications/frontend/FE2_DRPG_VIEWPORT_RENDERER.md)、[`FE5_PARTY_EQUIPMENT_AND_MODALS.md`](../2_specifications/frontend/FE5_PARTY_EQUIPMENT_AND_MODALS.md)、[`skills/README.md`](../2_specifications/skills/README.md)、`M1~M9` 與 `FE1~FE6` 末章標題、[`3_task_lists/README.md`](./README.md)、[`DUNGEON_SCHEMA_TASKS.md`](./data_schemas/DUNGEON_SCHEMA_TASKS.md)、[`M5_SKILL_AND_PROGRESSION_TASKS.md`](./backend/M5_SKILL_AND_PROGRESSION_TASKS.md)。
-- [ ] **自動閘門與看門狗雙綠燈**：`.\scripts\verify-doc-alignment-gates.ps1 -Step 8 -RecordSnapshot` 回傳 `ExitCode = 0`。
-- [ ] **跨模組契約核對**：`ITEM_SCHEMA.md` 釐清靜態 `slot` 與執行期/DTO `equipSlot`；`FE5` 穿戴動作對齊 `M9` 的 `EQUIP(memberId, slot, itemId)`；`FE2` 移動快捷鍵對齊 `M9` 結構化 `MOVE`（無殘留 `step w` / `turn a` 主契約描述）。
-- [ ] **認知透鏡與驗證器核對**：`ITEM_SCHEMA.md` 與 `M6` 二階透鏡門檻統一為 `"minProgress": 30` 且方法名對齊 `CognitiveProxyService.resolve`；`M7` §6.2 標註 `【已決議待實作】`、對齊 `draft-07` 並釐清與 `DataIntegrityValidator` 的語意校驗分工。
-- [ ] **藍圖邊界與任務去重核對**：`M1~M9` 與 `FE1~FE6` 末章「未來架構演進」標題皆標註 `【待深入討論／長線演進藍圖】`；`skills/README.md` 與 `M5_TASKS` 區分「17 樹完整架構藍圖 vs VS-01 切片優先實裝範圍」；`DUNGEON_SCHEMA_TASKS` 指向 `Task M2-1` 主責不雙重列管；`3_task_lists/README.md` 修正 1:1/聚合映射描述並附測試基準日期快照。
+- [x] **自動閘門與看門狗雙綠燈**：`.\scripts\verify-doc-alignment-gates.ps1 -Step 8 -RecordSnapshot` 回傳 `ExitCode = 0`。
+- [x] **跨模組契約核對**：`ITEM_SCHEMA.md` 釐清靜態 `slot` 與執行期/DTO `equipSlot`；`FE5` 穿戴動作對齊 `M9` 的 `EQUIP(memberId, slot, itemId)`；`FE2` 移動快捷鍵對齊 `M9` 結構化 `MOVE`（無殘留 `step w` / `turn a` 主契約描述）。
+- [x] **認知透鏡與驗證器核對**：`ITEM_SCHEMA.md` 與 `M6` 二階透鏡門檻統一為 `"minProgress": 30` 且方法名對齊 `CognitiveProxyService.resolve`；`M7` §6.2 標註 `【已決議待實作】`、對齊 `draft-07` 並釐清與 `DataIntegrityValidator` 的語意校驗分工。
+- [x] **藍圖邊界與任務去重核對**：`M1~M9` 與 `FE1~FE6` 末章「未來架構演進」標題皆標註 `【待深入討論／長線演進藍圖】`；`skills/README.md` 與 `M5_TASKS` 區分「17 樹完整架構藍圖 vs VS-01 切片優先實裝範圍」；`DUNGEON_SCHEMA_TASKS` 指向 `Task M2-1` 主責不雙重列管；`3_task_lists/README.md` 修正 1:1/聚合映射描述並附測試基準日期快照。
 

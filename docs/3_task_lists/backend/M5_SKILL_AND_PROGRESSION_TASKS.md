@@ -3,6 +3,7 @@
 > **文檔層級**：Level 3 — Task Lists (模組實作進度清單)  
 > **對應規格**：👉 [`docs/2_specifications/backend/M5_SKILL_AND_PROGRESSION.md`](../../2_specifications/backend/M5_SKILL_AND_PROGRESSION.md)  
 > **核心職責**：管理四大淵源 × 17 專精技能樹與合體技體系、超頻階級 (0~3)、連攜角色 (ComboRole)、境界階梯突破與潛能點成長。  
+> **分階實裝說明**：17 專精樹為四大淵源完整架構藍圖；當前 VS-01 垂直切片優先實裝並驗收代表性核心專精樹與基礎合擊，其餘隨後續章節分批擴充。  
 > **當前完成度**：85% 🟢
 
 ---
