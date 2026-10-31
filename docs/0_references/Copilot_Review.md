@@ -1,117 +1,230 @@
-# 文件規劃與治理整體審閱
+# 程式碼與文件對齊審查暨可執行任務清單
 
-> **檢視日期：** 2026-10-30
-> **檢視範圍：** `docs/` 下 73 份 Markdown；排除 `docs/0_archive/` 與 `docs/0_references/`。
-> **目的：** 提出讓文件更清楚、可靠、有效率，並支援現代單機遊戲規劃與內容擴充的建議。
-> **性質：** 非規範性審閱；本文件不會自行變更需求、規格、數值或任務狀態。
+> **審查日期：** 2026-10-31  
+> **審查範圍：** `docs/1_requirements/`、`docs/2_specifications/`、`docs/3_task_lists/`、`docs/4_active_tasks/`，並參考 [`CODE_DOCS_ALIGNMENT_TASKS.md`](../3_task_lists/CODE_DOCS_ALIGNMENT_TASKS.md)。  
+> **目的：** 以需求與已決議規格對照目前程式、資料與測試，記錄可重現的差異，並整理成可執行、可驗收的後續工作。  
+> **審查性質：** 本報告是建議與任務追蹤，不代表已變更需求或規格；依專案審批規則，任何 L1/L2 裁決仍須由專案擁有者決定。
 
-## 總結
+## 審查結論
 
-文件已具備值得保留的基礎：需求、模組規格、實作清單與當前工作分層；遊戲定位明確採單機模組化架構；資料驅動、啟動校驗、存檔版本遷移與任務追溯也已有相應設計。〔[docs/README.md](../README.md#L19)、[M7_DATA_DRIVEN_TEMPLATES.md](../2_specifications/backend/M7_DATA_DRIVEN_TEMPLATES.md#L91)、[M8_SAVE_AND_PERSISTENCE.md](../2_specifications/backend/M8_SAVE_AND_PERSISTENCE.md#L45)、[3_task_lists/README.md](../3_task_lists/README.md#L64)〕
+專案已有清楚的四層文件結構、模組手冊、資料 Schema、驗證測試與架構守護；目前主要風險是部分規格仍描述「目標架構」，而實作仍沿用舊橋接；另有若干已知待辦在多份清單重複追蹤或未完成狀態更新。
 
-主要風險不是缺少更多規劃文件，而是現有文件之間有些契約、狀態與任務責任尚未收斂。建議先改善「規格能否互相對接、現在該做什麼、如何驗收」，再擴大內容量；避免以新增文件或流程取代修正既有權威來源。
+優先處理順序建議如下：
 
-## 優先建議
+1. 先決議並固定跨層契約（動作協定、屬性對應、地圖圖元、技能欄位）。
+2. 修正會直接造成玩家看錯狀態或進度遺失的執行期落差。
+3. 完成首章地牢獎勵／夥伴等可玩閉環，再收斂 CSP 事件處理及歷史相容層。
+4. 合併重複待辦，讓每項工作只有一個狀態來源和明確的驗收方式。
 
-### P0｜收斂跨模組契約，並明確區分規格目標與實作現況
+## 範圍與核對方式
 
-目前少數關鍵契約在不同文件使用不同名稱或表達方式：
+- 已盤點需求層 4 份文件、規格層 43 份文件、任務層 23 份文件及當前任務層 2 份文件；深入核讀核心契約、模組地圖、任務看板及與下列差異直接相關的規格／任務文件，並以程式／資料／測試交叉核對。
+- 程式核對涵蓋 Java 後端、JSON 遊戲資料、主要前端 JS/HTML、測試及文件驗證腳本。對已列入任務的問題另外核對了對應程式碼，沒有直接照抄既有審查中的未驗證假設。
+- 本次不改動需求、規格、程式碼或任務狀態；下列項目均為待執行任務。
 
-- 物品資料以 `slot` 描述裝備位置，M6 與 FE5 則使用 `equipSlot`。〔[ITEM_SCHEMA.md](../2_specifications/data_schemas/ITEM_SCHEMA.md#L30)、[M6_ITEM_AND_ECONOMY.md](../2_specifications/backend/M6_ITEM_AND_ECONOMY.md#L29)、[FE5_PARTY_EQUIPMENT_AND_MODALS.md](../2_specifications/frontend/FE5_PARTY_EQUIPMENT_AND_MODALS.md#L53)〕
-- FE5 的裝備動作名稱與 M9 所列動作契約不同（`EQUIP_ITEM`／`EQUIP`）。〔[FE5_PARTY_EQUIPMENT_AND_MODALS.md](../2_specifications/frontend/FE5_PARTY_EQUIPMENT_AND_MODALS.md#L53)、[M9_STATE_PIPELINE_AND_EVENTS.md](../2_specifications/backend/M9_STATE_PIPELINE_AND_EVENTS.md#L40)〕
-- FE2 的操作示例仍以 `step w`、`turn a` 文字命令呈現，容易被誤讀為遊戲狀態仍依賴命令字串，而非結構化動作契約。〔[FE2_DRPG_VIEWPORT_RENDERER.md](../2_specifications/frontend/FE2_DRPG_VIEWPORT_RENDERER.md#L93)、[M9_STATE_PIPELINE_AND_EVENTS.md](../2_specifications/backend/M9_STATE_PIPELINE_AND_EVENTS.md#L104)〕
-- M3 的規格目標與文件註記的現況／待辦尚未完全一致；應明確標示未完成項目，而不要讓讀者誤以為目標行為已落地。〔[M3_COMBAT_ENGINE.md](../2_specifications/backend/M3_COMBAT_ENGINE.md#L78)〕
+## 已確認的主要差異
 
-**建議做法**
+| 優先級 | 對齊面向 | 核對結果 |
+|---|---|---|
+| P0 | 單機零文字命令／結構化動作 | L1 與 M9 要求玩家以按鈕、選單及快捷鍵送出結構化動作；目前前端 `sendStep()` 仍送出 `step w`，WebSocket 將命令包成 `INPUT.text`，後端仍由文字 `CommandDispatcher` 解析。主頁另保留可開啟的 Dev Console，提示可輸入 MUD 指令。規格與現行傳輸／派發實作並未收斂。 |
+| P1 | 地牢圖元與雷達呈現 | JSON 將 `D/T/B/E/X/S` 定義為門／寶藏／首領／事件／陷阱／下樓梯；目前雷達未處理 `D/T/B/E/X`，且把 `S` 顯示成靈泉。FE2 圖例又把 `T` 列為陷阱，與實際 JSON 相反。 |
+| P1 | SAN 與舊魔化呈現 | L1、ADR 與 M4 已裁定保留 SAN 護盾、移除隨機魔化；`party-hud-panel.js` 仍渲染 `CHAOS/SEALED/DEAD_MEAT/ABERRATION`、異變進度及 `seal` 按鈕。此為明確的舊功能殘留，不是 SAN 護盾本身的規格衝突。 |
+| P1 | 晶片進度存檔 | `Player` 有 `chipRate`，並用於認知透鏡／營地 DTO；`SaveData` 與 `SaveGameService` 建立存檔時未寫入此值，載入也沒有還原欄位，進度因此無法由存檔保證保存。 |
+| P1 | 首領任務道具與隨機詞綴 | `quest_items.json` 有追蹤晶片，但宋天衡掉落表未含該物品、`quests.json` 的 `rewardItemIds` 為空；擊殺監聽器只輸出故事文字，不發放任務道具。一般掉落結算使用 `inventory.addItem(dropItemId, 1)`，未透過注入的 `ItemFactory` 建立帶詞綴的物品實例。與 L1 序章鉤子及 ITEM/M6 戰利品目標有落差。 |
+| P1 | 技能樹契約 | `party_skills.json` 混用 Schema 欄位 `originSchool/treeId/tier` 與舊 `school/CyberSchool`；例如 `skill_format_drive` 與 `skill_hard_reboot` 的淵源、樹 ID、階級／主被動型態，和 TREE_17 手冊不一致。互為 aliases 的雙 ID 技能不應直接當成重複資料刪除，須先決定 canonical ID 與相容策略。 |
+| P1 | 五維屬性語意 | L1/M4 對應為 `CON=體質`、`STR=根骨`、`DEX=身法`、`INT/ESS=真元`、`WIS/SPI=神識`；`PartyCommand` 的提示仍寫 `str (力量), con (根骨)`，指令展示與領域註解亦有「根骨/體質」混稱。只改提示字串不足以證明加點與衍生公式一致。 |
+| P2 | 夥伴規格與資料 | M4 將凌霜描述為冰系符師，JSON 則定義為木系醫修且初始技能為空；鐵牛 JSON 只配置 `tank_smash`，未配置文件敘述的嘲諷技能（雖然資料中另有 `tank_taunt`）。須由權威設定決定角色定位，再同步資料與測試。 |
+| P2 | 內聯事件處理 | FE1 要求全面採用 `[data-action]` 委派、避免 HTML `onclick`；目前多個有效 JS 面板仍產生 `onclick=`（包括戰鬥、隊伍、裝備、技能、行囊、商店、地牢等），現有 ALIGN-07 只涵蓋部分檔案，不能代表完成全域規範。 |
+| P2 | 任務狀態與重複追蹤 | `ACTIVE_TASKS.md` 的 VS-01 地貌任務與 M2 任務清單、DUNGEON_SCHEMA 任務清單有重複或互相轉交但仍各自未勾選的情況；清單中已完成與待辦描述也需依目前程式及驗收結果更新。 |
+| P2 | 已記錄的戰鬥落差 | M3 手冊已明確註記普通怪仍套用 1/3 護體減傷，與「僅 Boss/Elite 有減傷」不一致；`BattleEnemy` 的受傷路徑仍採未破防即折減。這是文件已揭露但尚待完成的明確任務，不應另造重複任務卡。 |
 
-1. 為 JSON 欄位、前後端動作、事件與 DTO 欄位各指定唯一權威契約來源；跨文件以連結引用，不重複維護另一份相同清單。
-2. 逐項決定採用的 canonical 名稱；若需保留舊名稱，列出相容別名、轉換位置與移除條件。
-3. 統一文件狀態標籤，清楚區分「現行已驗證」、「規格已決議但未實作」、「候選提案」與「已除役」。
-4. 讓既有資料載入／整合驗證涵蓋這些契約；文件的範例應能被實際解析或由測試核對。
+## 建議的執行任務
 
-**效益與成本：** 可降低前後端整合、資料遷移與實作歧義；需先盤點程式與 JSON 的實際契約，並以相容遷移避免一次改名造成舊資料失效。
+> 狀態均為 `[ ]`，只有在程式、測試與必要文件更新均完成後才勾選。P0 代表先決定契約；P1 代表影響核心可玩性／存檔正確性；P2 代表一致性與維護性。
 
-### P1｜建立唯一工作入口，消除看板與狀態數字漂移
+### [ ] ALIGN-00 — 核定跨層 canonical 契約
 
-根目錄文件將 `ACTIVE_TASKS.md` 定義為唯一當前看板，但另有文件對齊專用的 active task 文件；規劃文件、看板及模組任務清單的責任邊界需要更明確。測試總數也曾以不同數字或不同表述並存，降低進度資訊可信度。〔[docs/README.md](../README.md#L126)、[DOCS_ALIGNMENT_MASTER_PLAN.md](../3_task_lists/DOCS_ALIGNMENT_MASTER_PLAN.md#L64)、[DOCS_ALIGNMENT_ACTIVE_TASKS.md](../4_active_tasks/DOCS_ALIGNMENT_ACTIVE_TASKS.md#L4)、[ACTIVE_TASKS.md](../4_active_tasks/ACTIVE_TASKS.md#L15)、[3_task_lists/README.md](../3_task_lists/README.md#L5)〕
+- **優先級：** P0；後續 ALIGN-01、02、05、06 依賴本任務。
+- **範圍：** L1/L2 契約與程式相容層；不預先改寫需求或直接刪除相容欄位。
+- **執行步驟：**
+  1. 依 L1「零 MUD 指令」與 M9，決定線上傳輸是否正式改為具型別的結構化 Action；若保留文字命令，明確限定為開發工具或過渡 adapter，並列出退場條件。
+  2. 核定五維屬性鍵與中文名稱的單一映射，涵蓋指令加點、`LivingStats`、角色資料、DTO、裝備與衍生公式。
+  3. 以 `mozhu_mines_b1f.json` 的 `legend` 為資料實際來源，核定圖元語意及通用雷達映射；明確記錄 `P`（若保留）與 `S` 的差異。
+  4. 依 `SKILL_SCHEMA.md` 與 TREE_01–17 確認技能的標準欄位、主動／被動表示、canonical ID 與舊 ID alias 相容政策。
+  5. 更新必要規格註記並由專案擁有者確認決策；同一契約只保留一份權威定義，其餘文件交叉連結。
+- **驗收標準：**
+  - 四項決策均有唯一、明確的契約來源與相容策略。
+  - 不存在未解決的 `STR/CON` 中文語意或 `T/S` 圖元歧義。
+  - 專案擁有者確認前，不進行可能改變遊戲規則或破壞舊存檔／舊 ID 的遷移。
 
-**建議做法**
+### [ ] ALIGN-01 — 逐步以結構化 Action 取代玩家文字命令
 
-- 保留四層文件治理，但明定 L4 是「目前選定工作的入口」，不是第二份任務資料庫；治理工作與遊戲功能工作都經由同一入口切換，完成後將狀態與歷史移回對應來源。
-- 模組任務清單維護任務的完整說明與驗收；L4 只引用任務 ID、當前焦點與阻塞，不複製整份工作內容。
-- 測試數量若非必要，不在多份文件手動維護；改記錄可重現的測試命令與結果來源。若需保留里程碑數字，明確標成歷史快照並附日期。
-- 為「進行中／已完成／封存」定義明確的轉換條件，避免待辦、提案與現況混在同一清單。
+- **優先級：** P1；依賴 ALIGN-00。
+- **範圍：** `static/js/core/cmd-dispatcher.js`、`network/websocket.js`、`app.js`、後端 WebSocket／pipeline／command adapter、對應 UI 與整合測試。
+- **執行步驟：**
+  1. 建立型別明確的前端 Action payload，先遷移地牢移動、互動、撤離、戰技、營地設施及存檔動作。
+  2. 後端在協定邊界將 payload 驗證並派送至既有應用服務；若需保留舊命令，集中在相容 adapter，不讓 UI 各自拼命令字串。
+  3. 改寫 `sendStep()`／`sendTownMove()` 與連線恢復時的 `saves quiet` 呼叫，避免把文字命令當成正式 UI 協定。
+  4. 將 Dev Console 限制於明確的開發模式或設定；生產遊戲流程不得要求或預設玩家輸入命令。清理主 UI 的舊輸入提示與不再使用的鍵盤狀態。
+  5. 依遷移結果更新 M9、FE1、FE2 範例，並測試舊命令 adapter 的相容性及錯誤回應。
+- **驗收標準：**
+  - 主要遊戲操作以結構化 payload 端到端完成，無需玩家輸入 MUD 指令。
+  - 錯誤／未知 Action 回傳可辨識錯誤，不靜默忽略或假裝成功。
+  - 開發命令入口不可在一般遊戲流程誤觸；文件中的協定範例可由測試驗證。
 
-**效益與成本：** 降低重複更新與過期狀態，讓每次工作都能快速定位；初期需整理重複任務並確認各文件現有狀態。
+### [ ] ALIGN-02 — 對齊地牢圖元 Schema、JSON 與雷達
 
-### P1｜將任務拆成可獨立驗收的垂直增量，守住領域單一真相源
+- **優先級：** P1；依賴 ALIGN-00。
+- **範圍：** `dungeon-panel.js`、`FE2_DRPG_VIEWPORT_RENDERER.md`、地牢資料驗證測試。
+- **執行步驟：**
+  1. 依核定圖例補齊 `D/T/B/E/X/S` 的通用渲染；不可把特定關卡 ID 寫死在 renderer。
+  2. 對照 `legend.type`、`legend.name`、`passable` 顯示對應圖示、tooltip 及 CSS 類別；未知符號輸出可診斷警告並安全降級。
+  3. 修正文檔中 `T`（TREASURE）與 `X`（TRAP）的定義，並修正 `S` 被當成靈泉的說明／實作。
+  4. 為符號映射建立測試，使用實際 `mozhu_mines_b1f.json` 驗證每個出現的圖元均被支援。
+- **驗收標準：**
+  - 該地圖使用的全部圖元均有正確名稱、圖示與類別；`S` 不再錯畫成靈泉。
+  - renderer 不含關卡專屬分支；新增未知圖元時有可診斷行為。
+  - FE2 圖例、Schema、JSON 與測試的每個符號語意一致。
 
-部分當前任務橫跨領域模型、Action、DTO、前端與測試，難以判定單一任務的完成條件。地牢與 Schema 任務也有相近工作重複列管的情況。另 M4 將小隊成員／小隊狀態描述為權威資料來源，任務規劃應避免重新引入角色狀態雙寫。〔[ACTIVE_TASKS.md](../4_active_tasks/ACTIVE_TASKS.md#L30)、[M4_PARTY_AND_FORMATION.md](../2_specifications/backend/M4_PARTY_AND_FORMATION.md#L88)、[M4_PARTY_AND_FORMATION_TASKS.md](../3_task_lists/backend/M4_PARTY_AND_FORMATION_TASKS.md#L41)、[M2_DRPG_DUNGEON_TASKS.md](../3_task_lists/backend/M2_DRPG_DUNGEON_TASKS.md#L49)、[DUNGEON_SCHEMA_TASKS.md](../3_task_lists/data_schemas/DUNGEON_SCHEMA_TASKS.md#L35)〕
+### [ ] ALIGN-03 — 清除 HUD 中已除役的魔化與封印操作
 
-**建議做法**
+- **優先級：** P1。
+- **範圍：** `party-hud-panel.js`、相關 DTO／狀態映射、前端測試。
+- **執行步驟：**
+  1. 移除舊 `madnessState` 的 `CHAOS/SEALED/DEAD_MEAT/ABERRATION` 卡片分支、異變進度與背刺／永久異變描述。
+  2. 移除 `seal` 按鈕與對應 UI 發送路徑；不要移除仍有效的 SAN 數值與 `WEAKENED` 提示。
+  3. 對照 M4/L1，僅呈現有效生命狀態及 SAN 歸零後的已裁決弱化狀態；清理 CSS 或測試中只服務舊 UI 的項目。
+  4. 增加 HUD 測試，覆蓋一般、SAN 歸零及 HP 歸零狀態。
+- **驗收標準：**
+  - HUD 不產生封印按鈕、異變百分比、背刺或魔化文案。
+  - SAN 護盾與 `WEAKENED` 仍按既定規則顯示；狀態更新沒有瀏覽器錯誤。
 
-- 每項任務以一個可觀察的結果為核心，列出範圍、前置條件、驗收方式與負責的權威文件。
-- 依實際依賴拆分資料／Schema、後端規則、前端呈現及端到端驗收；只有跨層功能確實需要時才保留一張垂直整合任務，並連結子項。
-- 為相同交付物指定唯一任務來源，其他清單以任務 ID 引用，避免重複追蹤。
-- 對主角、小隊、裝備與背包等狀態，先在任務驗收中寫清「唯一寫入來源」及「投影／同步方向」，再開發 UI 或 API。
+### [ ] ALIGN-04 — 將晶片加載度納入存檔與遷移
 
-**效益與成本：** 進度更容易驗收、回歸失敗也較容易定位；需要一次性拆卡，且跨層工作的完成狀態會分布在相依子項。
+- **優先級：** P1。
+- **範圍：** `SaveData`、`SaveGameService`、`SaveMigrationPipeline`、M8 文件與存檔測試。
+- **執行步驟：**
+  1. 依 ALIGN-00 決定 `chipRate` 的正式存放位置（建議與隊長/玩家存檔狀態同層），在寫檔和讀檔管線完整映射。
+  2. 為既有 v3 舊存檔定義明確的缺欄位預設與上下限驗證；如需變更 schemaVersion，新增遞移步驟，不可只改版本常數。
+  3. 更新 M8 的範例結構與版本說明，明確列出晶片進度的存放及回復規則。
+  4. 測試非預設加載度存檔／讀檔保留、舊檔載入預設、錯誤值處理及認知透鏡恢復。
+- **驗收標準：**
+  - 保存後重新載入，晶片加載度及據此產生的認知透鏡狀態不變。
+  - 舊版存檔可依遷移政策載入；無效值不造成越界狀態。
+  - 存檔版本、M8 範例與測試互相一致。
 
-### P1｜以「可玩的章節閉環」定義垂直切片，而非功能清單
+### [ ] ALIGN-05 — 完成首領任務獎勵與裝備詞綴結算
 
-世界觀文件已描述序章與地牢經歷，但當前切片的任務重點偏向地圖、HUD、技能與掉落；開始探索、首領遭遇、撤離或失敗、回營結算與存檔等端到端完成條件，應在同一處明確串起來。〔[WORLD_AND_LORE_BIBLE.md](../1_requirements/WORLD_AND_LORE_BIBLE.md#L83)、[ACTIVE_TASKS.md](../4_active_tasks/ACTIVE_TASKS.md#L22)、[M1_TOWN_HUB_TASKS.md](../3_task_lists/backend/M1_TOWN_HUB_TASKS.md#L56)〕
+- **優先級：** P1；首領道具依據序章任務契約驗收。
+- **範圍：** `quests.json`、宋天衡 mob 資料、`MozhuMinesQuestListener`、`DrpgRewardService`、物品工廠與獎勵測試。
+- **執行步驟：**
+  1. 依資料驅動任務定義配置追蹤晶片獎勵，避免只在 Java 以首領 ID 寫死；確認 `rewardItemIds`、掉落表與顯示結算採單一發放路徑，防止重複獎勵。
+  2. 確保任務獎勵實際加入小隊行囊並出現在 `BattleVictoryDto`，且在重複事件／重複擊殺時不重複領取。
+  3. 核對 M6/ITEM_SCHEMA 所要求的「裝備掉落即生成詞綴」；將一般掉落接至正確的物品實例／詞綴建立管線。`DrpgRewardService` 目前注入 `ItemFactory`，但普通掉落路徑仍以 item ID 入庫，需明確使用既有工廠能力或補足必要 API。
+  4. 更新結算 UI 及測試，涵蓋任務道具、詞綴實例、行囊容量不足與事件重複。
+- **驗收標準：**
+  - 擊敗宋天衡後，追蹤晶片依任務資料只發放一次、入庫且顯示於結算。
+  - 至少一種符合掉落條件的武器／防具生成帶有效詞綴的實例；非裝備與任務物品不被錯誤詞綴化。
+  - 任務事件、獎勵 DTO、行囊內容與資料設定一致。
 
-規劃內容也需確認符合既有體驗取向：85/15 的遊戲體驗比例、Sprint 中較強的敘事文字安排，以及「不另設基因進度條」與新增基因槽構想，可能造成方向或範圍上的歧義。地點名稱與認知透鏡門檻的示例亦有差異。〔[GAMEPLAY_CORE_LOOPS.md](../1_requirements/GAMEPLAY_CORE_LOOPS.md#L107)、[SPRINT_GOAL.md](../4_active_tasks/SPRINT_GOAL.md#L20)、[WORLD_AND_LORE_BIBLE.md](../1_requirements/WORLD_AND_LORE_BIBLE.md#L118)、[DUNGEON_SCHEMA.md](../2_specifications/data_schemas/DUNGEON_SCHEMA.md#L97)、[M6_ITEM_AND_ECONOMY.md](../2_specifications/backend/M6_ITEM_AND_ECONOMY.md#L94)、[ITEM_SCHEMA.md](../2_specifications/data_schemas/ITEM_SCHEMA.md#L152)〕
+### [ ] ALIGN-06 — 收斂技能樹分類、別名與主被動模型
 
-**建議做法**
+- **優先級：** P1；依賴 ALIGN-00。
+- **範圍：** `party_skills.json`、`PartyMemberSkill`、技能載入／映射、TREE_01–17、Schema 與技能資料測試。
+- **執行步驟：**
+  1. 產生並審核 `id → originSchool → treeId → tier → 主動/被動` 對照表，逐筆比對 17 棵樹與 `SKILL_SCHEMA.md`。
+  2. 優先校正 TREE_17 明確不符項：`skill_format_drive` 的淵源／樹／階級；`skill_hard_reboot` 的被動插槽定位與樹歸屬。勿把被動人才硬塞成 Tier 主動技。
+  3. 明確處理舊 `school`/`CyberSchool` 欄位。因現有測試與映射仍引用它，先以相容讀取／遷移保護舊資料，再移除過時模型與測試依賴。
+  4. 對互為 aliases 的雙 ID 技能保留既有呼叫相容性；選定 canonical 定義後，以 alias 指向同一技能，不因外觀相似而直接刪除仍被引用的 ID。
+  5. 擴充資料完整性驗證器，檢查未知 treeId、非法 originSchool/tier、重複 canonical 定義及錯誤 passive/active 型態。
+- **驗收標準：**
+  - 全部技能符合已核定的 17-tree taxonomy 與 Schema；TREE_17 主被動及 Tier 定義一致。
+  - 舊 ID 在相容期間仍可解析；資料中不再有未受控的雙重分類來源。
+  - 資料驗證與技能載入測試能在新增錯誤分類時明確失敗。
 
-1. 為首個可玩切片定義一條玩家路徑：新遊戲／回營 → 整備 → 進入地牢 → 探索與戰鬥 → 獲得戰利品 → 撤離或失敗結算 → 回營 → 存檔與重新載入。
-2. 為每個節點列出玩家可觀察的畫面、成功／失敗條件及至少一項端到端驗收；後台日誌不能取代必要的遊戲內視覺回饋。
-3. 對體驗比例、基因槽、技能數量、地名與門檻等不一致事項，回到權威需求文件作決議；涉及 L1/L2 規格變更時依現有審批規則先取得使用者決定。
-4. 把非必要敘事做成可忽略的環境或物品資訊，避免切片為了展示設定而阻塞核心遊玩循環。
+### [ ] ALIGN-07 — 統一夥伴職能規格與起始技能資料
 
-**效益與成本：** 能更早驗證遊戲是否「真的可玩」，並及早發現系統整合與體驗問題；相較於單點功能清單，端到端切片短期需要較多協調和測試。
+- **優先級：** P2。
+- **範圍：** M4、夥伴 JSON、技能資料、Gambit 預設及夥伴整合測試。
+- **執行步驟：**
+  1. 以 L1 世界觀與遊戲職能為依據，確認凌霜是冰系控場角色或木系治療角色，並決定其門派、treeId、文字與戰術定位。
+  2. 依決策同步 M4 表格、`default_companions.json` 的屬性／裝備／技能及對話描述。
+  3. 為鐵牛確認初始技能是否應包含 `tank_taunt`；核對 Gambit 的 fallback skill ID 是否存在且可施放。
+  4. 新增資料完整性測試，驗證夥伴配置的技能 ID 可解析，且職能描述與至少一項實際技能相符。
+- **驗收標準：**
+  - 夥伴資料與 M4 對角色身份、流派、技能的描述一致。
+  - 起始 Gambit 不引用不存在或不適用的技能；凌霜若定位為治療者，初始隊伍可實際施放治療能力。
 
-### P1｜統一資料 Schema 方言，補足跨欄位與引用資料驗證
+### [ ] ALIGN-08 — 對齊五維屬性映射、指令與衍生公式
 
-M7 提及 Draft 2020-12，而部分 Schema 範例仍宣告 draft-07；地牢版面除了基本型別，還需要驗證矩陣尺寸、行長、符號圖例與引用 ID 等語意約束。不同驗證器或只依賴 JSON Schema 的結構檢查，可能留下無效遊戲內容。〔[M7_DATA_DRIVEN_TEMPLATES.md](../2_specifications/backend/M7_DATA_DRIVEN_TEMPLATES.md#L121)、[DUNGEON_SCHEMA.md](../2_specifications/data_schemas/DUNGEON_SCHEMA.md#L21)、[ITEM_SCHEMA.md](../2_specifications/data_schemas/ITEM_SCHEMA.md#L23)、[SKILL_SCHEMA.md](../2_specifications/data_schemas/SKILL_SCHEMA.md#L33)〕
+- **優先級：** P2；依賴 ALIGN-00。
+- **範圍：** `LivingStats`、`PartyCommand`、PartyMember/角色模板、加點／同步服務、M4/M5 與測試。
+- **執行步驟：**
+  1. 盤點各屬性在資料鍵、Java getter、加點指令、UI、存檔、同步與戰鬥公式的實際對應。
+  2. 以核定映射更新輸入提示及展示名稱；保留必要的舊鍵 alias，但禁止 alias 指向不同的數值含義。
+  3. 核驗每一維加點只影響文件指定的衍生屬性，並確認 Party-to-Player 同步不把 STR/CON 互換。
+  4. 更新 M4/M5 具體說明與單元／整合測試；不要只將 `PartyCommand` 的提示文字做表面修正。
+- **驗收標準：**
+  - 五維鍵名、繁中名稱、輸入解析、UI 顯示、衍生公式及同步方向完全一致。
+  - 五種加點各有測試證明正確增加屬性且只改變預期衍生值。
+  - 舊存檔與舊指令 alias 的相容行為有明確測試。
 
-**建議做法**
+### [ ] ALIGN-09 — 完成全前端 `[data-action]` 委派收斂
 
-- 統一 Schema draft 版本與實際使用的驗證器，並確認既有 JSON 均可通過。
-- 將可由 Schema 表達的型別、必填欄位與範圍檢查，和需讀取多筆資料才能判斷的語意檢查分開；例如地圖列寬一致、符號有對應圖例、技能／物品引用 ID 存在、門檻順序合理，應由同一套內容驗證流程負責。
-- 在文件中記錄校驗入口、錯誤定位方式及資料遷移策略；持續沿用既有啟動校驗，不必為此引入熱重載或額外服務。
+- **優先級：** P2；分批執行，避免一次改寫所有 UI。
+- **範圍：** 有效使用中的 `src/main/resources/static/js/` 面板、彈窗、`app.js` 與 FE1；`legacy/` 需另列明確退役／隔離策略。
+- **執行步驟：**
+  1. 建立全域盤點基線，搜尋 HTML `onclick=` 及動態模板中的事件屬性；區分有效 UI、程式化事件監聽與 `legacy/` 檔案。
+  2. 先遷移 ALIGN-07 以外仍活躍的事件模板，將參數放入安全的 `data-*` 屬性並由已存在的委派入口派送。
+  3. 移除不再需要的 `window.*` inline handler 相容掛載；不得因 CSP 遷移破壞鍵盤、觸控或彈窗操作。
+  4. 加入靜態檢查或測試，僅對正式執行中的頁面／模組禁止 `onclick=`；對保留的 legacy 檔案明確註記為不載入、不作正式入口。
+  5. 更新 FE1 的現況說明與驗收命令。
+- **驗收標準：**
+  - 正式遊戲載入的 HTML/JS 模板無內聯 `onclick=`；所有使用者操作仍有對應的委派 handler。
+  - 核心探索、戰鬥、隊伍、背包、商店、存檔互動均通過前端／整合驗證。
+  - legacy 檔案若仍保留，不會被正式頁面引用，且不被錯列為完成的 CSP 收斂範圍。
 
-**效益與成本：** 讓內容作者能在執行遊戲前發現資料錯誤，降低新地圖、技能與物品的擴充風險；需盤點舊資料並選擇是否採相容或版本遷移。
+### [ ] ALIGN-10 — 完成普通怪 Poise 減傷規則並避免重複追蹤
 
-### P2｜以小規模可玩內容驗證技能與組合，再擴大內容承諾
+- **優先級：** P2；沿用 M3 現有 Task M3-3，不另建第二張功能任務。
+- **範圍：** `BattleEnemy` 受傷／建構路徑、怪物 rank 資料、M3 任務清單及戰鬥測試。
+- **執行步驟：**
+  1. 依 M3 已裁決規則，只讓 Boss/Elite 使用未破防的護體減傷；普通 NORMAL 不套用該折減。
+  2. 檢查模板缺少 rank/poise/maxPoise 時的預設，不得意外讓普通怪取得首領行為。
+  3. 增加 NORMAL、ELITE、BOSS 各自未破防／破防受傷測試。
+  4. M3-3 驗收完成後移除手冊中的「待校準」註記，並同步唯一任務清單狀態。
+- **驗收標準：**
+  - NORMAL 受傷不套用罡氣 1/3 折減；ELITE/BOSS 的護體及破防倍率符合已決議規則。
+  - M3 手冊、任務卡與測試描述的數值一致。
 
-技能規劃已涵蓋 17 棵專精樹及多種合體／連攜組合，而實作清單仍包含大範圍資料擴充與動態解算器工作。這類內容不只要驗證資料能載入，也要驗證組合在不同隊伍、敵人與資源條件下是否有趣且可平衡。〔[skills/README.md](../2_specifications/skills/README.md#L12)、[SYNERGY_AND_COMBOS.md](../2_specifications/skills/SYNERGY_AND_COMBOS.md#L14)、[M5_SKILL_AND_PROGRESSION_TASKS.md](../3_task_lists/backend/M5_SKILL_AND_PROGRESSION_TASKS.md#L49)〕
+### [ ] ALIGN-11 — 合併重複任務並校正活躍看板狀態
 
-**建議做法**
+- **優先級：** P2；在對應實作任務有明確 owner 後執行。
+- **範圍：** `ACTIVE_TASKS.md`、M2/DUNGEON_SCHEMA 任務清單、`3_task_lists/README.md` 及 ALIGN 任務追蹤。
+- **執行步驟：**
+  1. 為相同交付物指定唯一任務主檔；對應清單改成引用主任務 ID，而非保留另一份可獨立勾選的副本。
+  2. 對 VS-01 地貌資料／文案任務，決定由 M2 或 Schema 任務作主卡，分清程式資料、Schema 與敘事驗收範圍。
+  3. 對照目前程式、測試與資料，逐項確認 ACTIVE_TASKS 中完成／待辦狀態；沒有端到端驗收證據時不得只因部分類別存在就勾選完成。
+  4. 移除已過時的路徑、測試數量與不存在類別敘述；保留歷史紀錄時標示其為歷史狀態。
+- **驗收標準：**
+  - 每個交付物只有一個可更新狀態的任務來源，其他清單可追溯至該來源。
+  - 活躍看板中的狀態均有程式／測試驗收依據；未完成項目具明確下一步。
 
-- 保留完整專精樹作長期內容藍圖，但將「架構支援數量」與「首個可玩版本實裝數量」分開標示。
-- 先選能代表不同戰術角色的少量技能與組合，驗證消耗、冷卻、反制、可讀性及隊伍配置差異，再決定擴充順序。
-- 將載入／觸發正確性測試與遊戲平衡／體驗驗收分開，避免資料格式通過就被視為內容完成。
-- 對尚未決定或未驗證的組合明確標示為提案，不把完整規劃清單誤當成本迭代的交付承諾。
+## 明確不列為缺陷的已決議事項
 
-**效益與成本：** 降低內容膨脹與全局返工；部分已撰寫內容需重新標示成熟度，短期看起來的「已規劃數量」可能下降。
+- **SAN 護盾與除役魔化並不矛盾。** 依 [`ARCHITECTURAL_DECISIONS.md`](../2_specifications/ARCHITECTURAL_DECISIONS.md)，只移除發瘋、自殘及背叛等失控機制，SAN 與 `WEAKENED` 保留。
+- **「黑煞宗地底礦脈」與「墨竹山廢棄礦坑」不是地名衝突。** ADR 已說明前者為勢力歸屬、後者為地理名稱。
+- **`slot` 與 `equipSlot` 是靜態範本到執行個體 DTO 的欄位映射。** `ITEM_SCHEMA.md` 已記載，不應再當作未決缺陷。
+- PC 三欄與手機底部導覽目前在 UI/UX 需求中標為延後演進目標，不列為本輪實作不符合。
+- 本報告不建議新增全域需求流水號、在所有 Markdown 加版本 Header，或建立獨立平衡試算表；這些均非修正已驗證差異所必需。
 
-## 建議的落地順序
+## 建議驗證命令
 
-1. **契約盤點：** 以一份短期核對清單確認 canonical 欄位、動作名稱、Schema 版本及現況標籤；不先大規模重寫文件。
-2. **看板收斂：** 明定 L4 唯一入口與任務引用規則，合併重複追蹤，清理手工複製的過期測試數字。
-3. **切片驗收：** 為當前垂直切片補上完整玩家路徑與端到端 DoD，並處理需使用者決策的體驗方向差異。
-4. **內容護欄：** 在既有資料載入與文件連結檢查流程中補契約和語意驗證，再逐步擴充技能／地圖內容。
+每張任務卡應先執行其指定的單元／整合測試；在本輪程式任務完成後再跑：
 
-## 文件維護的輕量 DoD 建議
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\scripts\check-doc-links.ps1
+powershell.exe -ExecutionPolicy Bypass -File .\test.ps1
+```
 
-每次新增或改動規劃文件時，至少檢查：
-
-- 文件的層級、權威範圍、狀態與上游來源是否清楚。
-- API、JSON 欄位、ID、數值與遊戲規則是否引用唯一來源，而非複製成第二套真相。
-- 需求、規格、任務與驗收是否能以連結或穩定任務 ID 追溯。
-- 範例是否有效、相對連結是否通過現有文件檢查，以及完成狀態是否有可核對依據。
-- 若內容尚未決議或尚未驗證，是否明確標示，而非寫成現行承諾。
-
-本報告提供改進方向而非自動批准的規格變更；任何涉及需求或架構規格的實質調整，仍應遵守現有文件治理與使用者審批流程。
+若只修改文件，執行文件連結檢查即可；全量測試應在相關程式變更落地後執行，並記錄實際結果，不要把既有測試總數當成完成證據。

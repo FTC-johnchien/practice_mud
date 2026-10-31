@@ -80,6 +80,7 @@
 ## 🧭 五、全域演進中樞與歷史封存庫指針
 
 - **全域架構裁決與審查豁免基準**：👉 [**`ARCHITECTURAL_DECISIONS.md`**](../2_specifications/ARCHITECTURAL_DECISIONS.md)（已拍板定案之核心設計裁決、治理基準與外部 AI 審查豁免清單）
+- **文件與程式碼一致性對齊清單**：👉 [**`CODE_DOCS_ALIGNMENT_TASKS.md`**](CODE_DOCS_ALIGNMENT_TASKS.md)（對齊 Level 2 模組手冊、資料配置與現行代碼之專項治理任務庫）
 - **代碼模組化收斂與重構清單**：👉 [**`CODE_CONVERGENCE_AND_REFACTORING_TASKS.md`**](CODE_CONVERGENCE_AND_REFACTORING_TASKS.md)（對齊 Level 2 模組之漸進式收斂與安全重構工程專案）
 - **宏觀演進總覽**：👉 [`FUTURE_IMPROVEMENTS.md`](FUTURE_IMPROVEMENTS.md)（跨領域優先序矩陣與長程路線圖）
 - **當前衝刺看板**：👉 [`../4_active_tasks/ACTIVE_TASKS.md`](../4_active_tasks/ACTIVE_TASKS.md)（唯一微觀焦點，當前執行：Milestone VS-01）
