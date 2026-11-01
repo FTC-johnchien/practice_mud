@@ -438,86 +438,19 @@
   color: #ef4444;
 }
 
-/* 走火入魔與異變特效 */
-.party-card.card-chaos {
-  border-color: #c084fc !important;
-  box-shadow: 0 0 12px rgba(192, 132, 252, 0.5);
-  animation: chaos-pulse 1.2s infinite alternate;
+/* Option A: 氣血耗盡重傷與精神萎靡樣式 */
+.party-card.card-fainted {
+  border-color: #ef4444 !important;
+  background: rgba(127, 29, 29, 0.25);
+  opacity: 0.7;
+  filter: grayscale(50%);
 }
 
-@keyframes chaos-pulse {
-  0% { box-shadow: 0 0 6px rgba(192, 132, 252, 0.3); }
-  100% { box-shadow: 0 0 14px rgba(239, 68, 68, 0.7); border-color: #ef4444 !important; }
-}
-
-.aberration-bar-wrap {
-  position: relative;
-  height: 12px;
-  background: #2e1065;
-  border-radius: 2px;
-  overflow: hidden;
-  margin-top: 2px;
-  border: 1px solid rgba(192, 132, 252, 0.4);
-}
-
-.aberration-fill {
-  background: linear-gradient(90deg, #7c3aed, #ef4444);
-  height: 100%;
-  transition: width 0.3s ease;
-  box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
-}
-
-.aberration-val {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.fainted-status-badge {
   font-size: var(--font-xs);
-  font-weight: bold;
-  color: #fdf4ff;
-  text-shadow: 0 0 3px #000;
-}
-
-.chaos-action-row {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 2px;
-}
-
-.seal-trigger-btn {
-  font-size: var(--font-xs);
-  padding: 1px 5px;
-  background: #1e3a8a;
-  color: #93c5fd;
-  border: 1px solid #3b82f6;
-  border-radius: 2px;
-  cursor: pointer;
-  font-weight: bold;
-  animation: seal-flash 1.5s infinite;
-}
-
-.seal-trigger-btn:hover {
-  background: #2563eb;
-  color: #fff;
-}
-
-@keyframes seal-flash {
-  0%, 100% { box-shadow: 0 0 4px rgba(59, 130, 246, 0.4); }
-  50% { box-shadow: 0 0 10px rgba(59, 130, 246, 0.9); }
-}
-
-.party-card.card-sealed {
-  border-color: #3b82f6 !important;
-  background: rgba(30, 58, 138, 0.15);
-  opacity: 0.85;
-}
-
-.sealed-status-badge {
-  font-size: var(--font-xs);
-  color: #60a5fa;
-  background: rgba(59, 130, 246, 0.2);
-  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: #fca5a5;
+  background: rgba(153, 27, 27, 0.35);
+  border: 1px solid rgba(239, 68, 68, 0.5);
   padding: 1px 4px;
   border-radius: 2px;
   text-align: center;
@@ -525,39 +458,20 @@
   font-weight: 600;
 }
 
-.party-card.card-dead-meat {
-  border-color: #7f1d1d !important;
-  background: rgba(127, 29, 29, 0.2);
-  opacity: 0.6;
-  filter: grayscale(60%);
+.party-card.card-weakened {
+  border-color: #f59e0b !important;
 }
 
-.dead-status-badge {
+.weakened-status-badge {
   font-size: var(--font-xs);
-  color: #fca5a5;
-  background: rgba(153, 27, 27, 0.3);
-  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fde68a;
+  background: rgba(180, 83, 9, 0.25);
+  border: 1px solid rgba(245, 158, 11, 0.4);
   padding: 1px 4px;
   border-radius: 2px;
   text-align: center;
   margin-top: 2px;
-}
-
-.party-card.card-aberration {
-  border-color: #581c87 !important;
-  background: rgba(88, 28, 135, 0.3);
-  opacity: 0.7;
-}
-
-.aberration-status-badge {
-  font-size: var(--font-xs);
-  color: #d8b4fe;
-  background: rgba(88, 28, 135, 0.4);
-  border: 1px solid #a855f7;
-  padding: 1px 4px;
-  border-radius: 2px;
-  text-align: center;
-  margin-top: 2px;
+  font-weight: 600;
 }
 
 .btn-bag {

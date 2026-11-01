@@ -6,7 +6,7 @@ import { renderAggregatedBuffBadges, renderShieldOverlayHtml, renderPoiseBarHtml
 
 /**
  * 6 人小隊狀態列面板 (Party HUD Panel)
- * 負責渲染成員卡片、前後衛標籤、HP/MP/SAN 狀態條、走火入魔異變進度與裝備槽位
+ * 負責渲染成員卡片、前後衛標籤、HP/MP/SAN 狀態條、破防/重傷/精神萎靡狀態與裝備槽位
  */
 
 /**
@@ -49,44 +49,30 @@ export function renderPartyHud(party) {
     const card = document.createElement('div');
     const isSelected = (idx === selectedMemberIdx && isSkillDrawerOpen);
 
-    let madnessCardClass = '';
-    let madnessExtraHtml = '';
+    // Option A 精神防護規範：氣血耗盡重傷 (FAINTED) 與 精神萎靡 (WEAKENED / SAN <= 0)
+    const isFainted = m.hp <= 0 || m.isFainted;
+    const isWeakened = m.isWeakened || m.madnessState === 'CHAOS' || (m.san !== undefined && m.san <= 0);
 
-    if (m.madnessState === 'CHAOS') {
-      madnessCardClass = ' card-chaos';
-      madnessExtraHtml = `
-        <div class="mini-bar-wrap aberration-bar-wrap" title="⚠️ 走火入魔！異變進度 ${m.aberrationCounter}% (滿 100% 變為古神畸變 Boss！每回合自殘 15% HP，40% 背刺隊友！)">
-          <div class="mini-bar aberration-fill" style="width: ${m.aberrationCounter}%"></div>
-          <span class="mini-val aberration-val">⚠️ 異變 ${m.aberrationCounter}%</span>
-        </div>
-        <div class="chaos-action-row">
-          <button class="seal-trigger-btn" onclick="event.stopPropagation(); window.send('seal ${idx}')" title="施展太上鎮魔符，凍結異變計數，暫停行動">🔒 施符鎮魔</button>
-        </div>
-      `;
-    } else if (m.madnessState === 'SEALED') {
-      madnessCardClass = ' card-sealed';
-      madnessExtraHtml = `
-        <div class="sealed-status-badge" title="已被太上鎮魔符鎮壓靈台，異變凍結在 ${m.aberrationCounter}%，定身無法行動">
-          🔒 已施符鎮魔 (${m.aberrationCounter}%)
+    let statusCardClass = '';
+    let statusExtraHtml = '';
+
+    if (isFainted) {
+      statusCardClass = ' card-fainted';
+      statusExtraHtml = `
+        <div class="fainted-status-badge" title="氣血耗盡陷入昏厥重傷，無法行動，需調息或丹藥救治">
+          💀 氣血耗盡・重傷
         </div>
       `;
-    } else if (m.madnessState === 'DEAD_MEAT') {
-      madnessCardClass = ' card-dead-meat';
-      madnessExtraHtml = `
-        <div class="dead-status-badge" title="肉身承受不住煞氣崩解為一灘死肉，永久陣亡">
-          💀 血肉崩解・身殞
-        </div>
-      `;
-    } else if (m.madnessState === 'ABERRATION') {
-      madnessCardClass = ' card-aberration';
-      madnessExtraHtml = `
-        <div class="aberration-status-badge" title="已化為域外古神畸變體！">
-          👁️ 畸變成魔
+    } else if (isWeakened) {
+      statusCardClass = ' card-weakened';
+      statusExtraHtml = `
+        <div class="weakened-status-badge" title="精神防護耗盡陷入萎靡，輸出降低 15% / 全屬性降低 10%">
+          🍂 精神萎靡 (-15%)
         </div>
       `;
     }
 
-    card.className = `party-card${isSelected ? ' selected-card' : ''}${madnessCardClass}`;
+    card.className = `party-card${isSelected ? ' selected-card' : ''}${statusCardClass}`;
     card.onclick = () => selectPartyMember(idx);
     card.title = `點選 #${idx + 1} ${m.name} 展開技能盤 (按 C 開啟選單查看完整道基/裝備)`;
 
@@ -168,7 +154,7 @@ export function renderPartyHud(party) {
         <div style="font-size:var(--font-xs); color:#94a3b8; text-align:right; padding-right:2px;" title="全域招式調息中 (GCD)">
           ⏳ 調息 ${(m.remainingGcdMs / 1000).toFixed(1)}s
         </div>` : ''}
-        ${madnessExtraHtml}
+        ${statusExtraHtml}
       </div>
     `;
     partyContainer.appendChild(card);

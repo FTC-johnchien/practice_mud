@@ -44,7 +44,7 @@ graph LR
 
 | 優先級 | 任務代碼 | 任務名稱 | 核心涉及模組 / 目標檔案 | 影響程度 |
 | :---: | :--- | :--- | :--- | :--- |
-| **P0** | **Task ALIGN-01** | 清理 HUD 走火入魔舊代碼與無效 seal 封印按鈕 | `party-hud-panel.js` | 消除前端調用已除役指令之執行期錯誤 |
+| **P0** | **Task ALIGN-01** | 清理 HUD 走火入魔舊代碼與無效 seal 封印按鈕 (✅ 已完成) | `party-hud-panel.js` | 消除前端調用已除役指令之執行期錯誤 |
 | **P0** | **Task ALIGN-02** | 補齊雷達地牢圖塊符號映射與校正 FE2 手冊錯字 | `dungeon-panel.js`<br>`FE2_DRPG_VIEWPORT_RENDERER.md` | 解決門、寶箱、首領與陷阱顯示為地磚問題 |
 | **P1** | **Task ALIGN-03** | 補齊 `SaveData` `chipRate` 持久化與更新 M8 範例 | `SaveData.java`<br>`SaveGameService.java`<br>`M8_SAVE_AND_PERSISTENCE.md` | 避免特工晶片加載率存檔讀取重置 |
 | **P1** | **Task ALIGN-04** | 清理重複戰技條目、對齊 17 專精樹 ID 與除役雙軌枚舉 | `party_skills.json`<br>`PartyMemberSkill.java` | 統一四大淵源與消除戰技樹歸屬錯位 |
@@ -57,7 +57,7 @@ graph LR
 
 ## 📋 三、P0 緊急修復任務卡 (P0 Critical Bug & Dead Code Elimination)
 
-### - [ ] Task ALIGN-01 (FE-CHAOS-PURGE): 清理 `party-hud-panel.js` 走火入魔舊代碼與無效 seal 封印按鈕
+### - [x] Task ALIGN-01 (FE-CHAOS-PURGE): 清理 `party-hud-panel.js` 走火入魔舊代碼與無效 seal 封印按鈕
 - **所屬模組**：FE1 核心狀態 / FE5 小隊表現
 - **目標檔案**：
   - `src/main/resources/static/js/panels/party-hud-panel.js`
