@@ -40,6 +40,9 @@ class DrpgBattleServiceTest {
     if (oldCtx != null) {
       oldCtx.cancelBattle();
       oldCtx.setState(BattleState.VICTORY);
+      if (oldCtx.getCombatFuture() != null) {
+        oldCtx.getCombatFuture().cancel(true);
+      }
     }
     battleService.getActiveBattles().remove("tester");
     partyService.clearCache();
@@ -56,6 +59,9 @@ class DrpgBattleServiceTest {
     if (ctx != null) {
       ctx.cancelBattle();
       ctx.setState(BattleState.VICTORY);
+      if (ctx.getCombatFuture() != null) {
+        ctx.getCombatFuture().cancel(true);
+      }
     }
     battleService.getActiveBattles().remove("tester");
   }
@@ -88,7 +94,13 @@ class DrpgBattleServiceTest {
   @DisplayName("測試三態資源招式施展：MP、怒氣、連擊點")
   void testSkillCastingResources() {
     battleService.startBattle(dummyPlayer, dungeonPos, List.of("taiyin_tomb:corpse_doll"));
-    BattleContext ctx = battleService.getBattle("tester");
+    BattleContext ctx = null;
+    for (int i = 0; i < 20; i++) {
+      ctx = battleService.getBattle("tester");
+      if (ctx != null) break;
+      try { Thread.sleep(25); } catch (InterruptedException ignored) {}
+    }
+    assertThat(ctx).isNotNull();
 
     PartyMember leader = ctx.getParty().getMembers().get(0);
     PartyMember iron = ctx.getParty().getMembers().get(1);
@@ -142,7 +154,13 @@ class DrpgBattleServiceTest {
   @DisplayName("測試陣法靈威達標釋放陣法奧義")
   void testPartyUltimate() {
     battleService.startBattle(dummyPlayer, dungeonPos, List.of("taiyin_tomb:corpse_doll"));
-    BattleContext ctx = battleService.getBattle("tester");
+    BattleContext ctx = null;
+    for (int i = 0; i < 20; i++) {
+      ctx = battleService.getBattle("tester");
+      if (ctx != null) break;
+      try { Thread.sleep(25); } catch (InterruptedException ignored) {}
+    }
+    assertThat(ctx).isNotNull();
     for (var enemy : ctx.getEnemies()) {
       enemy.setMaxHp(9999);
       enemy.setHp(9999);
@@ -159,7 +177,13 @@ class DrpgBattleServiceTest {
   @DisplayName("測試主動迎戰與戰鬥視圖持久化建立")
   void testFightActionAndBattleView() {
     battleService.startBattle(dummyPlayer, dungeonPos, List.of("taiyin_tomb:corpse_doll"));
-    BattleContext ctx = battleService.getBattle("tester");
+    BattleContext ctx = null;
+    for (int i = 0; i < 20; i++) {
+      ctx = battleService.getBattle("tester");
+      if (ctx != null) break;
+      try { Thread.sleep(25); } catch (InterruptedException ignored) {}
+    }
+    assertThat(ctx).isNotNull();
     for (var enemy : ctx.getEnemies()) {
       enemy.setMaxHp(9999);
       enemy.setHp(9999);

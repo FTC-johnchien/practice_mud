@@ -234,4 +234,56 @@ class UnifiedPartyEconomyTest {
     assertThat(victoryDtoOpt).isPresent();
     assertThat(victoryDtoOpt.get().coinsGained()).isEqualTo(33);
   }
+
+  @Test
+  @DisplayName("ALIGN-05: 首領宋天衡掉落表掛載追蹤晶片，結算戰鬥大捷時產出任務晶片，且掉落裝備隨機綁定詞綴")
+  void testBossLootIncludesTrackingChipAndAffixedEquipment() {
+    Party party = partyService.getOrCreateParty(testPlayer);
+    party.getInventory().getSlots().clear();
+
+    // 1. 驗證首領宋天衡在模板中掉落表包含任務晶片 item_chip_qianxing_tracker
+    var bossMobOpt = templateReader.findMob("mozhu_mines:boss_song_tianheng");
+    assertThat(bossMobOpt).isPresent();
+    assertThat(bossMobOpt.get().loot()).anyMatch(l -> l.itemId().contains("item_chip_qianxing_tracker"));
+
+    // 2. 構造首領敵人實體，帶有黑曜骨鐮與追蹤晶片掉落
+    BattleEnemy bossEnemy = BattleEnemy.builder()
+        .id("boss-song")
+        .name("畸變大師兄·宋天衡")
+        .rank(MobRank.BOSS)
+        .hp(0)
+        .maxHp(450)
+        .alive(false)
+        .xp(500)
+        .dropItemIds(List.of("black_obsidian_scythe", "item_chip_qianxing_tracker"))
+        .build();
+
+    BattleContext ctx = BattleContext.builder()
+        .battleId("battle-boss-loot-test")
+        .party(party)
+        .enemies(List.of(bossEnemy))
+        .build();
+
+    // 3. 結算戰鬥大捷
+    drpgRewardService.resolveVictory(testPlayer, ctx, null, null, null);
+
+    // 4. 驗證小隊行囊中獲得任務晶片與黑曜骨鐮
+    assertThat(party.getInventory().getSlots()).isNotEmpty();
+    var trackerSlotOpt = party.getInventory().getSlots().stream()
+        .filter(s -> s.getItemId().contains("item_chip_qianxing_tracker"))
+        .findFirst();
+    assertThat(trackerSlotOpt).isPresent();
+
+    var scytheSlotOpt = party.getInventory().getSlots().stream()
+        .filter(s -> s.getItemId().contains("black_obsidian_scythe"))
+        .findFirst();
+    assertThat(scytheSlotOpt).isPresent();
+
+    // 5. 驗證掉落裝備黑曜骨鐮具備隨機詞綴加成
+    var scytheSlot = scytheSlotOpt.get();
+    assertThat(scytheSlot.getAffixes()).isNotEmpty();
+    assertThat(scytheSlot.getDisplayNameWithAffixes()).isNotEqualTo("黑曜骨鐮");
+    assertThat(scytheSlot.getTotalBonusMinDamage() + scytheSlot.getTotalBonusMaxDamage() + scytheSlot.getTotalPoiseBreakPower())
+        .isGreaterThan(scytheSlot.getBonusMinDamage() + scytheSlot.getBonusMaxDamage() + scytheSlot.getPoiseBreakPower());
+  }
 }

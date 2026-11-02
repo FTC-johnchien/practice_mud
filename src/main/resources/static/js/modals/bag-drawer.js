@@ -91,7 +91,7 @@ export function renderBagDrawer() {
         const safeMemberName = escapeHtml(m.name || '無名');
         const shortName = safeMemberName.slice(0, 3);
         return `<button class="item-act-mini-btn btn-use" ${isAlive ? '' : 'disabled'}
-          onclick="window.send('use ${safeJsSlotId} ${mIdx}')" title="為 #${mIdx + 1} ${safeMemberName} 使用">
+          data-action="send-cmd" data-cmd="use ${safeSlotId} ${mIdx}" title="為 #${mIdx + 1} ${safeMemberName} 使用">
           #${mIdx + 1} ${shortName}
         </button>`;
       }).join('');
@@ -109,7 +109,7 @@ export function renderBagDrawer() {
         const safeMemberName = escapeHtml(m.name || '無名');
         const shortName = safeMemberName.slice(0, 3);
         return `<button class="item-act-mini-btn btn-equip" ${isAlive ? '' : 'disabled'}
-          onclick="window.send('equip ${safeJsSlotId} ${mIdx}')" title="為 #${mIdx + 1} ${safeMemberName} 穿戴">
+          data-action="send-cmd" data-cmd="equip ${safeSlotId} ${mIdx}" title="為 #${mIdx + 1} ${safeMemberName} 穿戴">
           #${mIdx + 1} ${shortName}
         </button>`;
       }).join('');

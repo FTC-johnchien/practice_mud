@@ -2,9 +2,11 @@ package com.example.htmlmud.domain.model.config;
 
 import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.vo.DamageSource;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 
 @Builder(toBuilder = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record EquipmentProp(
 
     // @JsonProperty("slot") @JsonFormat(
@@ -33,8 +35,9 @@ public record EquipmentProp(
 
     int critDamage, // 暴擊傷害 %
 
-    int maxDurability // 最大耐久 -1 代表無限
+    int maxDurability, // 最大耐久 -1 代表無限
 
+    int poiseBreakPower // 戰鬥削韌強度
 
 ) {
 

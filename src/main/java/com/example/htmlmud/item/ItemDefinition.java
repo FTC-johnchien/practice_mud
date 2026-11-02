@@ -33,6 +33,7 @@ public record ItemDefinition(
     int bonusDefense,
     int bonusHp,
     int bonusSan,
+    int poiseBreakPower,
     Map<String, Integer> bonusStats,
     Map<String, Object> extraProps
 ) {
@@ -85,6 +86,7 @@ public record ItemDefinition(
     int def = 0;
     int hp = 0;
     int san = 0;
+    int poiseBreak = 0;
 
     if (t.type() == ItemType.CONSUMABLE) {
       icon = "🧪";
@@ -113,6 +115,7 @@ public record ItemDefinition(
         minDmg = t.equipmentProp().minDamage();
         maxDmg = t.equipmentProp().maxDamage();
         def = t.equipmentProp().defense();
+        poiseBreak = t.equipmentProp().poiseBreakPower();
       } else if (t.type() == ItemType.WEAPON) {
         minDmg = 12;
         maxDmg = 20;
@@ -126,6 +129,7 @@ public record ItemDefinition(
         def += t.bonusStats().getOrDefault("DEFENSE", t.bonusStats().getOrDefault("def", 0));
         minDmg += t.bonusStats().getOrDefault("MIN_DAMAGE", 0);
         maxDmg += t.bonusStats().getOrDefault("MAX_DAMAGE", 0);
+        poiseBreak += t.bonusStats().getOrDefault("POISE_BREAK", t.bonusStats().getOrDefault("poiseBreakPower", 0));
       }
     } else if (t.type() == ItemType.KEY_ITEM) {
       icon = "🗝️";
@@ -157,6 +161,7 @@ public record ItemDefinition(
         .bonusDefense(def)
         .bonusHp(hp)
         .bonusSan(san)
+        .poiseBreakPower(poiseBreak)
         .bonusStats(t.bonusStats() != null ? t.bonusStats() : Map.of())
         .extraProps(t.extraProps() != null ? t.extraProps() : Map.of())
         .build();

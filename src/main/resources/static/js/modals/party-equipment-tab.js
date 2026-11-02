@@ -18,6 +18,54 @@ function getRenderPaginationBar() {
   return window.renderPaginationBar || ((cur, tot, cnt, fn) => '');
 }
 
+// 事件委派：集中攔截 party-equipment-tab 的 data-action，落實 CSP 無內聯規範
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest ? e.target.closest('[data-action]') : null;
+    if (!target) return;
+    const action = target.getAttribute('data-action');
+
+    if (action === 'set-items-sec-filter') {
+      const filter = target.getAttribute('data-filter');
+      setItemsSecondaryFilter(filter);
+    } else if (action === 'open-bag-drawer') {
+      if (typeof window !== 'undefined' && window.toggleBagDrawer) {
+        window.toggleBagDrawer(true);
+      }
+    } else if (action === 'open-skill-picker') {
+      const memberIdx = parseInt(target.getAttribute('data-member-idx'), 10);
+      const slotKey = target.getAttribute('data-slot-key');
+      const slotLabel = target.getAttribute('data-slot-label');
+      if (typeof window !== 'undefined' && window.openSkillPicker) {
+        window.openSkillPicker(memberIdx, slotKey, slotLabel);
+      }
+    } else if (action === 'confirm-unequip-skill') {
+      const memberIdx = parseInt(target.getAttribute('data-member-idx'), 10);
+      const slotKey = target.getAttribute('data-slot-key');
+      if (typeof window !== 'undefined' && window.confirmUnequipSkill) {
+        window.confirmUnequipSkill(memberIdx, slotKey);
+      }
+    } else if (action === 'open-equip-picker') {
+      const memberIdx = parseInt(target.getAttribute('data-member-idx'), 10);
+      const slotKey = target.getAttribute('data-slot-key');
+      const slotAlias = target.getAttribute('data-slot-alias');
+      const slotLabel = target.getAttribute('data-slot-label');
+      openEquipPicker(memberIdx, slotKey, slotAlias, slotLabel);
+    } else if (action === 'select-equip-picker-item') {
+      const slotId = target.getAttribute('data-slot-id');
+      selectEquipPickerItem(slotId);
+    } else if (action === 'confirm-equip-item') {
+      const slotId = target.getAttribute('data-slot-id');
+      const memberIdx = parseInt(target.getAttribute('data-member-idx'), 10);
+      confirmEquipItem(slotId, memberIdx);
+    } else if (action === 'confirm-unequip-item') {
+      const slotAlias = target.getAttribute('data-slot-alias');
+      const memberIdx = parseInt(target.getAttribute('data-member-idx'), 10);
+      confirmUnequipItem(slotAlias, memberIdx);
+    }
+  });
+}
+
 /**
  * 裝備部位定義 (7 個部位)
  */
@@ -135,20 +183,20 @@ export function renderItemsListHtml(itemTab, secFilter, party) {
     chipsHtml = `
       <div style="display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid #1e293b;margin-bottom:12px;flex-wrap:wrap;">
         <span style="font-size:13px;color:#94a3b8;">子分類篩選：</span>
-        <button class="act-btn btn-sm ${currentSec === 'ALL' ? 'active' : ''}" onclick="window.setItemsSecondaryFilter('ALL')" style="font-size:13px;padding:3px 12px;background:${currentSec === 'ALL' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'ALL' ? '#0f172a' : '#cbd5e1'};">全部可使用</button>
-        <button class="act-btn btn-sm ${currentSec === 'HEAL' ? 'active' : ''}" onclick="window.setItemsSecondaryFilter('HEAL')" style="font-size:13px;padding:3px 12px;background:${currentSec === 'HEAL' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'HEAL' ? '#0f172a' : '#cbd5e1'};">🌿 氣血/道心回復</button>
-        <button class="act-btn btn-sm ${currentSec === 'BUFF' ? 'active' : ''}" onclick="window.setItemsSecondaryFilter('BUFF')" style="font-size:13px;padding:3px 12px;background:${currentSec === 'BUFF' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'BUFF' ? '#0f172a' : '#cbd5e1'};">⚡ 增益/丹道Buff</button>
+        <button class="act-btn btn-sm ${currentSec === 'ALL' ? 'active' : ''}" data-action="set-items-sec-filter" data-filter="ALL" style="font-size:13px;padding:3px 12px;background:${currentSec === 'ALL' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'ALL' ? '#0f172a' : '#cbd5e1'};">全部可使用</button>
+        <button class="act-btn btn-sm ${currentSec === 'HEAL' ? 'active' : ''}" data-action="set-items-sec-filter" data-filter="HEAL" style="font-size:13px;padding:3px 12px;background:${currentSec === 'HEAL' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'HEAL' ? '#0f172a' : '#cbd5e1'};">🌿 氣血/道心回復</button>
+        <button class="act-btn btn-sm ${currentSec === 'BUFF' ? 'active' : ''}" data-action="set-items-sec-filter" data-filter="BUFF" style="font-size:13px;padding:3px 12px;background:${currentSec === 'BUFF' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'BUFF' ? '#0f172a' : '#cbd5e1'};">⚡ 增益/丹道Buff</button>
       </div>
     `;
   } else if (itemTab === 'ALL') {
     chipsHtml = `
       <div style="display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid #1e293b;margin-bottom:12px;flex-wrap:wrap;">
         <span style="font-size:13px;color:#94a3b8;">品項篩選：</span>
-        <button class="act-btn btn-sm ${currentSec === 'ALL' ? 'active' : ''}" onclick="window.setItemsSecondaryFilter('ALL')" style="font-size:13px;padding:3px 12px;background:${currentSec === 'ALL' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'ALL' ? '#0f172a' : '#cbd5e1'};">全部 (${allSlots.length})</button>
-        <button class="act-btn btn-sm ${currentSec === 'EQUIP' ? 'active' : ''}" onclick="window.setItemsSecondaryFilter('EQUIP')" style="font-size:13px;padding:3px 12px;background:${currentSec === 'EQUIP' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'EQUIP' ? '#0f172a' : '#cbd5e1'};">🛡️ 裝備法寶</button>
-        <button class="act-btn btn-sm ${currentSec === 'CONSUMABLE' ? 'active' : ''}" onclick="window.setItemsSecondaryFilter('CONSUMABLE')" style="font-size:13px;padding:3px 12px;background:${currentSec === 'CONSUMABLE' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'CONSUMABLE' ? '#0f172a' : '#cbd5e1'};">🧪 消耗靈丹</button>
-        <button class="act-btn btn-sm ${currentSec === 'QUEST' ? 'active' : ''}" onclick="window.setItemsSecondaryFilter('QUEST')" style="font-size:13px;padding:3px 12px;background:${currentSec === 'QUEST' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'QUEST' ? '#0f172a' : '#cbd5e1'};">📜 任務信物</button>
-        <button class="act-btn btn-sm ${currentSec === 'MISC' ? 'active' : ''}" onclick="window.setItemsSecondaryFilter('MISC')" style="font-size:13px;padding:3px 12px;background:${currentSec === 'MISC' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'MISC' ? '#0f172a' : '#cbd5e1'};">📦 靈材雜項</button>
+        <button class="act-btn btn-sm ${currentSec === 'ALL' ? 'active' : ''}" data-action="set-items-sec-filter" data-filter="ALL" style="font-size:13px;padding:3px 12px;background:${currentSec === 'ALL' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'ALL' ? '#0f172a' : '#cbd5e1'};">全部 (${allSlots.length})</button>
+        <button class="act-btn btn-sm ${currentSec === 'EQUIP' ? 'active' : ''}" data-action="set-items-sec-filter" data-filter="EQUIP" style="font-size:13px;padding:3px 12px;background:${currentSec === 'EQUIP' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'EQUIP' ? '#0f172a' : '#cbd5e1'};">🛡️ 裝備法寶</button>
+        <button class="act-btn btn-sm ${currentSec === 'CONSUMABLE' ? 'active' : ''}" data-action="set-items-sec-filter" data-filter="CONSUMABLE" style="font-size:13px;padding:3px 12px;background:${currentSec === 'CONSUMABLE' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'CONSUMABLE' ? '#0f172a' : '#cbd5e1'};">🧪 消耗靈丹</button>
+        <button class="act-btn btn-sm ${currentSec === 'QUEST' ? 'active' : ''}" data-action="set-items-sec-filter" data-filter="QUEST" style="font-size:13px;padding:3px 12px;background:${currentSec === 'QUEST' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'QUEST' ? '#0f172a' : '#cbd5e1'};">📜 任務信物</button>
+        <button class="act-btn btn-sm ${currentSec === 'MISC' ? 'active' : ''}" data-action="set-items-sec-filter" data-filter="MISC" style="font-size:13px;padding:3px 12px;background:${currentSec === 'MISC' ? '#38bdf8' : '#1e293b'};color:${currentSec === 'MISC' ? '#0f172a' : '#cbd5e1'};">📦 靈材雜項</button>
       </div>
     `;
   }
@@ -198,7 +246,7 @@ export function renderItemsListHtml(itemTab, secFilter, party) {
               const isAlive = (mem.alive !== undefined) ? mem.alive : (mem.hp > 0);
               return `
                 <button class="act-btn btn-sm btn-green" ${isAlive ? '' : 'disabled style="opacity:0.35;cursor:not-allowed;"'}
-                  onclick="send('use ${item.slotId} ${mIdx}')" title="為 #${mIdx + 1} ${mem.name} 服用" style="font-size:var(--font-xs);padding:3px 7px;">
+                  data-action="send-cmd" data-cmd="use ${item.slotId} ${mIdx}" title="為 #${mIdx + 1} ${mem.name} 服用" style="font-size:var(--font-xs);padding:3px 7px;">
                   #${mIdx + 1} ${mem.name}
                 </button>
               `;
@@ -213,7 +261,7 @@ export function renderItemsListHtml(itemTab, secFilter, party) {
               const isAlive = (mem.alive !== undefined) ? mem.alive : (mem.hp > 0);
               return `
                 <button class="act-btn btn-sm btn-blue" ${isAlive ? '' : 'disabled style="opacity:0.35;cursor:not-allowed;"'}
-                  onclick="send('equip ${item.slotId} ${mIdx}')" title="為 #${mIdx + 1} ${mem.name} 穿戴" style="font-size:var(--font-xs);padding:3px 7px;">
+                  data-action="send-cmd" data-cmd="equip ${item.slotId} ${mIdx}" title="為 #${mIdx + 1} ${mem.name} 穿戴" style="font-size:var(--font-xs);padding:3px 7px;">
                   #${mIdx + 1}
                 </button>
               `;
@@ -292,7 +340,7 @@ export function renderMemberStatusDetailHtml(m, selIdx, party) {
   const renderStatAddBtn = (statKey, label) => {
     if (!isLeader) return '';
     if (freePoints > 0) {
-      return `<button class="stat-add-btn" onclick="send('party stat add ${statKey} 1')" title="點擊投入 1 點自由修為點數提升【${label}】">+1</button>`;
+      return `<button class="stat-add-btn" data-action="send-cmd" data-cmd="party stat add ${statKey} 1" title="點擊投入 1 點自由修為點數提升【${label}】">+1</button>`;
     } else {
       return `<button class="stat-add-btn disabled" disabled title="無可用自由修為點數">+1</button>`;
     }
@@ -564,7 +612,7 @@ export function renderMemberEquipHtml(m, selIdx, party) {
         <div class="equip-slot-box has-item" title="${item.description || ''}" style="font-size:13px;">
           <div class="equip-slot-title">
             <span style="font-size:13px;">${slot.icon} ${slot.label}</span>
-            <button class="unequip-mini-btn" onclick="send('item unequip ${slot.alias} ${selIdx}')" title="卸下放回行囊" style="font-size:var(--font-xs);">✕ 卸下</button>
+            <button class="unequip-mini-btn" data-action="send-cmd" data-cmd="item unequip ${slot.alias} ${selIdx}" title="卸下放回行囊" style="font-size:var(--font-xs);">✕ 卸下</button>
           </div>
           <div class="equip-slot-name" style="font-size:14px;font-weight:bold;">${item.icon || '📦'} ${item.name}</div>
           <div class="equip-slot-stats" style="font-size:var(--font-xs);">${statsStr}</div>
@@ -578,7 +626,7 @@ export function renderMemberEquipHtml(m, selIdx, party) {
           </div>
           <div class="equip-slot-name" style="color:#64748b;font-weight:normal;font-size:13px;">(未穿戴)</div>
           <div class="equip-slot-act">
-            <button class="item-act-mini-btn" onclick="toggleBagDrawer(true)" title="開啟行囊挑選裝備穿戴" style="font-size:var(--font-xs);">🎒 挑選</button>
+            <button class="item-act-mini-btn" data-action="open-bag-drawer" title="開啟行囊挑選裝備穿戴" style="font-size:var(--font-xs);">🎒 挑選</button>
           </div>
         </div>
       `;
@@ -596,17 +644,17 @@ export function renderMemberEquipHtml(m, selIdx, party) {
   let passivesHtml = passiveCategories.map(p => {
     if (p.val) {
       return `
-        <div class="equip-slot-item-row" onclick="window.openSkillPicker(${selIdx}, '${p.key}', '${p.label}')" title="點擊更換功法" style="background:#0f172a;border:1px solid #334155;border-radius:6px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;">
+        <div class="equip-slot-item-row" data-action="open-skill-picker" data-member-idx="${selIdx}" data-slot-key="${p.key}" data-slot-label="${p.label}" title="點擊更換功法" style="background:#0f172a;border:1px solid #334155;border-radius:6px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;">
           <span style="font-size:13px;color:#94a3b8;">${p.icon} ${p.label}</span>
           <div style="display:flex;align-items:center;gap:8px;">
             <span style="font-size:13px;color:#38bdf8;font-weight:bold;">${p.val}</span>
-            <button class="act-btn btn-sm" onclick="event.stopPropagation();window.confirmUnequipSkill(${selIdx}, '${p.key}');" style="font-size:var(--font-xs);padding:2px 6px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;" title="卸下還原為預設">✕</button>
+            <button class="act-btn btn-sm" data-action="confirm-unequip-skill" data-member-idx="${selIdx}" data-slot-key="${p.key}" style="font-size:var(--font-xs);padding:2px 6px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;" title="卸下還原為預設">✕</button>
           </div>
         </div>
       `;
     } else {
       return `
-        <div class="equip-slot-item-row is-empty" onclick="window.openSkillPicker(${selIdx}, '${p.key}', '${p.label}')" title="點擊挑選功法" style="background:#0f172a;border:1px dashed #334155;border-radius:6px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;">
+        <div class="equip-slot-item-row is-empty" data-action="open-skill-picker" data-member-idx="${selIdx}" data-slot-key="${p.key}" data-slot-label="${p.label}" title="點擊挑選功法" style="background:#0f172a;border:1px dashed #334155;border-radius:6px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;">
           <span style="font-size:13px;color:#64748b;">${p.icon} ${p.label}</span>
           <span style="font-size:13px;color:#64748b;">(無) <span style="color:#94a3b8;">+ 選擇功法</span></span>
         </div>
@@ -745,20 +793,20 @@ export function renderMemberEquipmentView(m, selIdx, party) {
       const statStr = statsParts.length > 0 ? statsParts.join(' ') : '裝備中';
 
       return `
-        <div class="equip-slot-item-row" onclick="window.openEquipPicker(${selIdx}, '${slot.key}', '${slot.alias}', '${slot.label}')" title="點擊更換法寶裝備或比較屬性" style="height:38px;box-sizing:border-box;">
+        <div class="equip-slot-item-row" data-action="open-equip-picker" data-member-idx="${selIdx}" data-slot-key="${slot.key}" data-slot-alias="${slot.alias}" data-slot-label="${slot.label}" title="點擊更換法寶裝備或比較屬性" style="height:38px;box-sizing:border-box;">
           <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
             <span style="font-size:13px;color:#94a3b8;flex-shrink:0;">${slot.icon} ${slot.label}</span>
             <span style="font-size:13px;font-weight:bold;color:#f1f5f9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.name}</span>
             <span style="font-size:12px;color:#38bdf8;flex-shrink:0;margin-left:auto;margin-right:8px;">${statStr}</span>
           </div>
-          <button class="act-btn btn-sm" onclick="event.stopPropagation();send('item unequip ${slot.alias} ${selIdx}');" style="font-size:12px;padding:2px 7px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;border-radius:3px;" title="卸下裝備">
+          <button class="act-btn btn-sm" data-action="send-cmd" data-cmd="item unequip ${slot.alias} ${selIdx}" style="font-size:12px;padding:2px 7px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;border-radius:3px;" title="卸下裝備">
             ✕
           </button>
         </div>
       `;
     } else {
       return `
-        <div class="equip-slot-item-row is-empty" onclick="window.openEquipPicker(${selIdx}, '${slot.key}', '${slot.alias}', '${slot.label}')" title="點擊挑選裝備穿戴" style="height:38px;box-sizing:border-box;">
+        <div class="equip-slot-item-row is-empty" data-action="open-equip-picker" data-member-idx="${selIdx}" data-slot-key="${slot.key}" data-slot-alias="${slot.alias}" data-slot-label="${slot.label}" title="點擊挑選裝備穿戴" style="height:38px;box-sizing:border-box;">
           <span style="font-size:13px;color:#64748b;">${slot.icon} ${slot.label}</span>
           <span style="font-size:12px;color:#94a3b8;">+ 挑選法寶</span>
         </div>
@@ -779,7 +827,7 @@ export function renderMemberEquipmentView(m, selIdx, party) {
     if (p.val) {
       passiveCount++;
       return `
-        <div class="equip-slot-item-row" onclick="window.openSkillPicker(${selIdx}, '${p.key}', '${p.label}')" title="點擊更換功法" style="height:44px;box-sizing:border-box;">
+        <div class="equip-slot-item-row" data-action="open-skill-picker" data-member-idx="${selIdx}" data-slot-key="${p.key}" data-slot-label="${p.label}" title="點擊更換功法" style="height:44px;box-sizing:border-box;">
           <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;">
             <div style="display:flex;align-items:center;gap:6px;">
               <span style="font-size:13px;color:#94a3b8;flex-shrink:0;">${p.icon} ${p.label}</span>
@@ -787,14 +835,14 @@ export function renderMemberEquipmentView(m, selIdx, party) {
             </div>
             <span style="font-size:11px;color:#64748b;">${p.typeDesc}常駐加持中</span>
           </div>
-          <button class="act-btn btn-sm" onclick="event.stopPropagation();window.confirmUnequipSkill(${selIdx}, '${p.key}');" style="font-size:12px;padding:2px 7px;margin-left:6px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;border-radius:3px;" title="卸下還原為預設招式">
+          <button class="act-btn btn-sm" data-action="confirm-unequip-skill" data-member-idx="${selIdx}" data-slot-key="${p.key}" style="font-size:12px;padding:2px 7px;margin-left:6px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;border-radius:3px;" title="卸下還原為預設招式">
             ✕
           </button>
         </div>
       `;
     } else {
       return `
-        <div class="equip-slot-item-row is-empty" onclick="window.openSkillPicker(${selIdx}, '${p.key}', '${p.label}')" title="點擊挑選功法" style="height:44px;box-sizing:border-box;">
+        <div class="equip-slot-item-row is-empty" data-action="open-skill-picker" data-member-idx="${selIdx}" data-slot-key="${p.key}" data-slot-label="${p.label}" title="點擊挑選功法" style="height:44px;box-sizing:border-box;">
           <div style="display:flex;align-items:center;gap:6px;">
             <span style="font-size:13px;color:#64748b;">${p.icon} ${p.label}</span>
             <span style="font-size:12px;color:#64748b;">(門派基礎)</span>
@@ -967,7 +1015,7 @@ export function renderTeamEquipmentOverview(party) {
         const statStr = statsParts.length > 0 ? statsParts.join(' ') : '裝備中';
 
         return `
-          <div class="equip-slot-item-row" onclick="window.openEquipPicker(${idx}, '${slot.key}', '${slot.alias}', '${slot.label}')" title="點擊挑選更換或比較屬性">
+          <div class="equip-slot-item-row" data-action="open-equip-picker" data-member-idx="${idx}" data-slot-key="${slot.key}" data-slot-alias="${slot.alias}" data-slot-label="${slot.label}" title="點擊挑選更換或比較屬性">
             <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;">
               <div style="display:flex;align-items:center;gap:6px;">
                 <span style="font-size:13px;color:#94a3b8;">${slot.icon} ${slot.label}</span>
@@ -975,14 +1023,14 @@ export function renderTeamEquipmentOverview(party) {
               </div>
               <div style="font-size:13px;color:#38bdf8;">${statStr}</div>
             </div>
-            <button class="act-btn btn-sm" onclick="event.stopPropagation();send('item unequip ${slot.alias} ${idx}');" style="font-size:12px;padding:2px 8px;margin-left:6px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;" title="卸下裝備">
+            <button class="act-btn btn-sm" data-action="send-cmd" data-cmd="item unequip ${slot.alias} ${idx}" style="font-size:12px;padding:2px 8px;margin-left:6px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;" title="卸下裝備">
               ✕
             </button>
           </div>
         `;
       } else {
         return `
-          <div class="equip-slot-item-row is-empty" onclick="window.openEquipPicker(${idx}, '${slot.key}', '${slot.alias}', '${slot.label}')" title="點擊挑選裝備穿戴">
+          <div class="equip-slot-item-row is-empty" data-action="open-equip-picker" data-member-idx="${idx}" data-slot-key="${slot.key}" data-slot-alias="${slot.alias}" data-slot-label="${slot.label}" title="點擊挑選裝備穿戴">
             <span style="font-size:13px;color:#64748b;">${slot.icon} ${slot.label}</span>
             <span style="font-size:12px;color:#94a3b8;">+ 挑選裝備</span>
           </div>
@@ -1082,7 +1130,7 @@ export function renderEquipmentDiffPickerView(party) {
       const statsStr = statsParts.length > 0 ? statsParts.join(' ‧ ') : '基礎裝備';
 
       return `
-        <div class="equip-candidate-card ${isSelected ? 'is-selected' : ''}" onclick="window.selectEquipPickerItem('${it.slotId}')">
+        <div class="equip-candidate-card ${isSelected ? 'is-selected' : ''}" data-action="select-equip-picker-item" data-slot-id="${it.slotId}">
           <div style="font-size:24px;width:40px;height:40px;background:#0b1120;border:1px solid #334155;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             ${it.icon || '📦'}
           </div>
@@ -1094,7 +1142,7 @@ export function renderEquipmentDiffPickerView(party) {
             </div>
             <div style="font-size:13px;color:#38bdf8;">${statsStr}</div>
           </div>
-          <button class="act-btn btn-sm btn-blue" onclick="event.stopPropagation();window.confirmEquipItem('${it.slotId}', ${memberIdx});" style="font-size:13px;padding:4px 12px;flex-shrink:0;">
+          <button class="act-btn btn-sm btn-blue" data-action="confirm-equip-item" data-slot-id="${it.slotId}" data-member-idx="${memberIdx}" style="font-size:13px;padding:4px 12px;flex-shrink:0;">
             ✨ 穿戴
           </button>
         </div>
@@ -1192,7 +1240,7 @@ export function renderEquipmentDiffPickerView(party) {
           <div style="background:#1e293b;border:1px solid #334155;border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:8px;">
             <div style="font-size:14px;font-weight:bold;color:#cbd5e1;">當前穿戴中：</div>
             <div style="font-size:15px;font-weight:bold;color:#f1f5f9;">${curItem.icon || '📦'} ${curItem.name}</div>
-            <button class="act-btn btn-sm btn-red" onclick="window.confirmUnequipItem('${slotAlias}', ${memberIdx})" style="font-size:13px;padding:6px 14px;margin-top:8px;">
+            <button class="act-btn btn-sm btn-red" data-action="confirm-unequip-item" data-slot-alias="${slotAlias}" data-member-idx="${memberIdx}" style="font-size:13px;padding:6px 14px;margin-top:8px;">
               ✕ 卸下當前裝備
             </button>
           </div>
@@ -1259,11 +1307,11 @@ export function renderEquipmentDiffPickerView(party) {
 
         <!-- 操作按鈕列 -->
         <div style="display:flex;gap:10px;margin-top:6px;">
-          <button class="act-btn btn-blue" onclick="window.confirmEquipItem('${selectedCandidate.slotId}', ${memberIdx})" style="flex:1;font-size:14px;font-weight:bold;padding:10px 16px;">
+          <button class="act-btn btn-blue" data-action="confirm-equip-item" data-slot-id="${selectedCandidate.slotId}" data-member-idx="${memberIdx}" style="flex:1;font-size:14px;font-weight:bold;padding:10px 16px;">
             ✨ 即刻確認穿戴
           </button>
           ${curItem ? `
-            <button class="act-btn btn-red" onclick="window.confirmUnequipItem('${slotAlias}', ${memberIdx})" style="font-size:13px;padding:10px 14px;">
+            <button class="act-btn btn-red" data-action="confirm-unequip-item" data-slot-alias="${slotAlias}" data-member-idx="${memberIdx}" style="font-size:13px;padding:10px 14px;">
               ✕ 卸下當前
             </button>
           ` : ''}

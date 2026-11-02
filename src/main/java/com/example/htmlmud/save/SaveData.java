@@ -38,6 +38,8 @@ public class SaveData {
   private String protagonistName;
   private boolean inDungeon;
   private String currentRoomId;
+  @Builder.Default
+  private int chipRate = 12;
   private String floorId;
   private int floorX;
   private int floorY;

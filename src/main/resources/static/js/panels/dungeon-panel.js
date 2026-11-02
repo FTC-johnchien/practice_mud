@@ -66,51 +66,68 @@ export function populateTileAppearance(cell, symbol, gx, gy, customName = null) 
   const coordSuffix = `(${gx}, ${gy})`;
   switch (symbol) {
     case '#':
-      cell.classList.add('cell-wall');
+      cell.classList.add('cell-wall', 'tile-wall');
       cell.innerText = '█';
       cell.title = customName ? `${customName} ${coordSuffix}` : `玄岩石壁 ${coordSuffix}`;
       break;
     case '+':
-      cell.classList.add('cell-door');
-      cell.innerText = '☩';
+    case 'D':
+      cell.classList.add('cell-door', 'tile-door');
+      cell.innerText = '+';
       cell.title = customName ? `${customName} ${coordSuffix}` : `石門 ${coordSuffix}`;
       break;
     case '$':
     case '◆':
-      cell.classList.add('cell-chest');
-      cell.innerText = '◆';
+    case 'T':
+      cell.classList.add('cell-chest', 'tile-chest');
+      cell.innerText = '⌸';
       cell.title = customName ? `${customName} ${coordSuffix}` : `密封寶箱 ${coordSuffix}`;
       break;
     case '◇':
-      cell.classList.add('cell-chest-opened');
+      cell.classList.add('cell-chest-opened', 'tile-chest-opened');
       cell.innerText = '◇';
       cell.title = customName ? `${customName} ${coordSuffix}` : `已開啟寶箱 ${coordSuffix}`;
       break;
     case '^':
     case '~':
-      cell.classList.add('cell-trap');
-      cell.innerText = '▲';
+    case 'X':
+      cell.classList.add('cell-trap', 'tile-trap');
+      cell.innerText = '^';
       cell.title = customName ? `${customName} ${coordSuffix}` : `機關陷阱 ${coordSuffix}`;
       break;
-    case 'P':
+    case 'B':
+      cell.classList.add('cell-boss', 'tile-boss');
+      cell.innerText = '☠';
+      cell.title = customName ? `${customName} ${coordSuffix}` : `首領區域 ${coordSuffix}`;
+      break;
+    case 'E':
+      cell.classList.add('cell-event', 'tile-event');
+      cell.innerText = '!';
+      cell.title = customName ? `${customName} ${coordSuffix}` : `神秘事件/殘碑 ${coordSuffix}`;
+      break;
     case 'S':
-      cell.classList.add('cell-spring');
+      cell.classList.add('cell-safe', 'tile-safe');
+      cell.innerText = '⛺';
+      cell.title = customName ? `${customName} ${coordSuffix}` : `安全營地出入口 ${coordSuffix}`;
+      break;
+    case 'P':
+      cell.classList.add('cell-spring', 'tile-spring');
       cell.innerText = '♨';
       cell.title = customName ? `${customName} ${coordSuffix}` : `靈泉地窟 ${coordSuffix}`;
       break;
     case '>':
-      cell.classList.add('cell-stairs');
+      cell.classList.add('cell-stairs', 'tile-stairs');
       cell.innerText = '▼';
       cell.title = customName ? `${customName} ${coordSuffix}` : `向下階梯 ${coordSuffix}`;
       break;
     case '<':
-      cell.classList.add('cell-stairs-up');
+      cell.classList.add('cell-stairs-up', 'tile-stairs-up');
       cell.innerText = '▲';
       cell.title = customName ? `${customName} ${coordSuffix}` : `向上階梯/出口 ${coordSuffix}`;
       break;
     case '.':
     default:
-      cell.classList.add('cell-path');
+      cell.classList.add('cell-path', 'tile-path');
       cell.innerText = '·';
       cell.title = customName ? `${customName} ${coordSuffix}` : `通路 ${coordSuffix}`;
       break;

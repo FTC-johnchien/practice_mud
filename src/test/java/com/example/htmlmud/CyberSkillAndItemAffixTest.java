@@ -14,7 +14,7 @@ import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.party.PartyItemSlot;
 import com.example.htmlmud.party.PartyMemberSkill;
 import com.example.htmlmud.party.PartyMemberSkill.ComboRole;
-import com.example.htmlmud.party.PartyMemberSkill.CyberSchool;
+import com.example.htmlmud.party.PartyMemberSkill.OriginSchool;
 import com.example.htmlmud.party.PartyService;
 
 @SpringBootTest
@@ -27,12 +27,12 @@ class CyberSkillAndItemAffixTest {
   private com.example.htmlmud.template.TemplateRepository templateRepository;
 
   @Test
-  @DisplayName("測試賽博修仙技能模型：四大流派、超頻階級與 Primer/Detonator 連攜角色判定")
+  @DisplayName("測試賽博修仙技能模型：四大淵源流派、超頻階級與 Primer/Detonator 連攜角色判定")
   void testCyberSkillModelAndSchools() {
     PartyMemberSkill hackSkill = PartyMemberSkill.builder()
-        .id("skill_neural_overclock_step")
+        .id("skill_time_tier1_step")
         .name("神經超頻步")
-        .school(CyberSchool.CYBER_HACK)
+        .school(OriginSchool.HIGH_TECH)
         .overclockTier(1)
         .comboRole(ComboRole.PRIMER)
         .poiseDamage(25)
@@ -40,7 +40,7 @@ class CyberSkillAndItemAffixTest {
         .cyberLore("特工晶片向運動神經束注入瞬時超頻電流。")
         .build();
 
-    assertThat(hackSkill.getSchool()).isEqualTo(CyberSchool.CYBER_HACK);
+    assertThat(hackSkill.getSchool()).isEqualTo(OriginSchool.HIGH_TECH);
     assertThat(hackSkill.getOverclockTier()).isEqualTo(1);
     assertThat(hackSkill.isPrimer()).isTrue();
     assertThat(hackSkill.isDetonator()).isFalse();
@@ -48,16 +48,16 @@ class CyberSkillAndItemAffixTest {
     assertThat(hackSkill.getCyberLore()).contains("特工晶片");
 
     PartyMemberSkill bioSkill = PartyMemberSkill.builder()
-        .id("skill_bio_keratin_blade")
+        .id("skill_chitin_tier1_blade")
         .name("強殖角質刃")
-        .school(CyberSchool.GENE_BIO)
+        .school(OriginSchool.CTHULHU)
         .overclockTier(2)
         .comboRole(ComboRole.DETONATOR)
         .poiseDamage(45)
         .damageMultiplier(2.2)
         .build();
 
-    assertThat(bioSkill.getSchool()).isEqualTo(CyberSchool.GENE_BIO);
+    assertThat(bioSkill.getSchool()).isEqualTo(OriginSchool.CTHULHU);
     assertThat(bioSkill.getOverclockTier()).isEqualTo(2);
     assertThat(bioSkill.isPrimer()).isFalse();
     assertThat(bioSkill.isDetonator()).isTrue();
@@ -126,7 +126,7 @@ class CyberSkillAndItemAffixTest {
   }
 
   @Test
-  @DisplayName("CONV-01-16-SKILLS-DATA: 驗證 16 大標準賽博神通資料矩陣均已成功載入且具備古典仙俠展示名稱與底層科技疊影")
+  @DisplayName("CONV-01-16-SKILLS-DATA: 驗證 16 大標準賽博神通資料矩陣均已成功載入且具備古典仙俠展示名稱、有效 17 樹 ID 與底層科技疊影")
   void testCanonical16CyberSkillsLoadedFromData() {
     String[] expectedSkillIds = {
         "skill_mitm_transfer",
@@ -134,7 +134,10 @@ class CyberSkillAndItemAffixTest {
         "skill_ddos_flooding",
         "skill_bruteforce_crack",
         "skill_hotpatch_firmware",
+        "skill_time_tier1_step",
         "skill_neural_overclock_step",
+        "skill_chitin_tier1_blade",
+        "skill_bio_keratin_blade",
         "skill_shell_injection",
         "skill_immuno_override",
         "skill_glitch_texture",
@@ -147,14 +150,24 @@ class CyberSkillAndItemAffixTest {
         "skill_format_drive"
     };
 
+    List<String> canonical17Trees = List.of(
+        "tree_gold_sword", "tree_wood_life", "tree_water_frost", "tree_fire_flame", "tree_earth_shield",
+        "tree_gravity", "tree_fracture", "tree_forcefield", "tree_plasma_core",
+        "tree_time_overclock", "tree_cyber_warfare", "tree_optics_glitch", "tree_kinetic_rails",
+        "tree_chitin_blade", "tree_blood_siphon", "tree_cosmic_madness", "tree_null_void"
+    );
+
     for (String skillId : expectedSkillIds) {
       PartyMemberSkill skill = templateRepository.getPartySkill(skillId).orElse(null);
       assertThat(skill).as("技能 [%s] 應成功加載於 TemplateRepository", skillId).isNotNull();
       assertThat(skill.getName()).as("技能 [%s] 應具備古典仙俠展示名稱（包含【】）", skillId)
           .startsWith("【")
           .endsWith("】");
-      assertThat(skill.getSchool()).as("技能 [%s] 應綁定四大賽博流派之一", skillId)
-          .isNotEqualTo(CyberSchool.NONE);
+      assertThat(skill.getSchool()).as("技能 [%s] 應綁定四大淵源流派之一", skillId)
+          .isNotEqualTo(OriginSchool.NONE);
+      assertThat(skill.getTreeId()).as("技能 [%s] 的 treeId 必須非空且為 17 專精樹之一", skillId)
+          .isNotBlank()
+          .isIn(canonical17Trees);
       assertThat(skill.getCyberLore()).as("技能 [%s] 應具備底層科技疊影描述", skillId)
           .isNotBlank();
     }
@@ -166,5 +179,14 @@ class CyberSkillAndItemAffixTest {
     assertThat(templateRepository.getPartySkill("skill_null_pointer").orElseThrow().isDetonator()).isTrue();
     assertThat(templateRepository.getPartySkill("skill_memory_leak").orElseThrow().isPrimer()).isTrue();
     assertThat(templateRepository.getPartySkill("skill_format_drive").orElseThrow().isDetonator()).isTrue();
+
+    // 驗證 Task ALIGN-04: skill_format_drive 與 skill_hard_reboot 歸屬 CTHULHU / tree_null_void
+    PartyMemberSkill formatDrive = templateRepository.getPartySkill("skill_format_drive").orElseThrow();
+    assertThat(formatDrive.getSchool()).isEqualTo(OriginSchool.CTHULHU);
+    assertThat(formatDrive.getTreeId()).isEqualTo("tree_null_void");
+
+    PartyMemberSkill hardReboot = templateRepository.getPartySkill("skill_hard_reboot").orElseThrow();
+    assertThat(hardReboot.getSchool()).isEqualTo(OriginSchool.CTHULHU);
+    assertThat(hardReboot.getTreeId()).isEqualTo("tree_null_void");
   }
 }

@@ -1,7 +1,7 @@
 # 程式碼與文件對齊審查暨可執行任務清單
 
 > **審查日期：** 2026-10-31  
-> **審查範圍：** `docs/1_requirements/`、`docs/2_specifications/`、`docs/3_task_lists/`、`docs/4_active_tasks/`，並參考 [`CODE_DOCS_ALIGNMENT_TASKS.md`](../3_task_lists/CODE_DOCS_ALIGNMENT_TASKS.md)。  
+> **審查範圍：** `docs/1_requirements/`、`docs/2_specifications/`、`docs/3_task_lists/`、`docs/4_active_tasks/`，並參考 [`CODE_DOCS_ALIGNMENT_TASKS.md`](../0_archive/alignment_history/CODE_DOCS_ALIGNMENT_TASKS.md)。  
 > **目的：** 以需求與已決議規格對照目前程式、資料與測試，記錄可重現的差異，並整理成可執行、可驗收的後續工作。  
 > **審查性質：** 本報告是建議與任務追蹤，不代表已變更需求或規格；依專案審批規則，任何 L1/L2 裁決仍須由專案擁有者決定。
 

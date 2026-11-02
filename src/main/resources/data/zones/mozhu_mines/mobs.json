@@ -103,6 +103,10 @@
       {
         "itemId": "global:elder_token",
         "chance": 1.0
+      },
+      {
+        "itemId": "global:item_chip_qianxing_tracker",
+        "chance": 1.0
       }
     ]
   }

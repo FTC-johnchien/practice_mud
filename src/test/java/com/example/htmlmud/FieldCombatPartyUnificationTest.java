@@ -126,6 +126,10 @@ class FieldCombatPartyUnificationTest {
         newMob.start();
         worldManager.addLivingActor(newMob);
         room.addMob(newMob);
+        for (int i = 0; i < 20; i++) {
+          if (room.getMobs().stream().anyMatch(m -> m.getId().equals(newMob.getId()))) break;
+          try { Thread.sleep(25); } catch (InterruptedException ignored) {}
+        }
         return newMob;
       });
 
@@ -185,6 +189,10 @@ class FieldCombatPartyUnificationTest {
     }
 
     // 驗證房間內生靈已清理
+    for (int i = 0; i < 20; i++) {
+      if (room.getMobs().stream().noneMatch(m -> m.getId().equals(mob.getId()))) break;
+      Thread.sleep(25);
+    }
     assertFalse(room.getMobs().stream().anyMatch(m -> m.getId().equals(mob.getId())), "房間內應已移除該死亡怪物");
     assertEquals(LivingPosture.DEAD, mob.getPosture(), "怪物姿勢應標記為 DEAD");
     assertFalse(mob.isValid(), "怪物應標記為 invalid 停止心跳");

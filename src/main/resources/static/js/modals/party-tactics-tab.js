@@ -10,6 +10,33 @@ import { escapeHtml } from '../core/ui-utils.js';
 const drpgState = store.getState();
 const send = (cmd, silent) => sendCmd(cmd, silent);
 
+// 事件委派：集中攔截 party-tactics-tab 的 data-action 與選單變更，落實 CSP 無內聯規範
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest ? e.target.closest('[data-action]') : null;
+    if (!target) return;
+    const action = target.getAttribute('data-action');
+    if (action === 'submit-add-tactics') {
+      const idx = parseInt(target.getAttribute('data-member-idx'), 10);
+      submitAddTactics(idx);
+    } else if (action === 'toggle-add-tactics') {
+      const show = target.getAttribute('data-show') === 'true';
+      toggleAddTacticsForm(show);
+    }
+  });
+
+  document.addEventListener('change', (e) => {
+    if (e.target && e.target.id === 't-builder-cond') {
+      handleTacticsCondChange();
+    }
+    const target = e.target.closest ? e.target.closest('[data-action="select-tactics-preset"]') : null;
+    if (!target || !target.value) return;
+    const idx = target.getAttribute('data-member-idx');
+    send(`party tactics ${idx} preset ${target.value}`);
+    target.value = '';
+  });
+}
+
 function getRenderPartyModal() {
   return window.renderPartyModal;
 }
@@ -123,7 +150,7 @@ export function renderMemberTactics(m, idx) {
           <input type="number" id="t-builder-prio" value="${nextPriority}" min="1" max="99" style="width:55px;font-size:13px;" />
 
           <label style="font-size:13px;color:#94a3b8;">觸發條件：</label>
-          <select id="t-builder-cond" onchange="window.handleTacticsCondChange()" style="font-size:13px;">
+          <select id="t-builder-cond" style="font-size:13px;">
             <option value="ENEMY_CASTING_INTERRUPTIBLE">敵怪蓄力吟唱中 (可中斷)</option>
             <option value="ENEMY_IS_CASTING">敵怪施法引導中 (任何吟唱)</option>
             <option value="ENEMY_POISE_BROKEN">敵怪破防失衡 (虛弱期)</option>
@@ -166,8 +193,8 @@ export function renderMemberTactics(m, idx) {
           </select>
         </div>
         <div style="display:flex;gap:8px;margin-top:6px;">
-          <button class="act-btn btn-green" type="button" onclick="window.submitAddTactics(${idx})">💾 確定新增規則</button>
-          <button class="act-btn" type="button" onclick="window.toggleAddTacticsForm(false)">✕ 取消</button>
+          <button class="act-btn btn-green" type="button" data-action="submit-add-tactics" data-member-idx="${idx}">💾 確定新增規則</button>
+          <button class="act-btn" type="button" data-action="toggle-add-tactics" data-show="false">✕ 取消</button>
         </div>
       </div>
     `;
@@ -196,11 +223,11 @@ export function renderMemberTactics(m, idx) {
               </div>
               <div class="tactics-rule-actions">
                 <button class="act-btn btn-sm ${r.enabled ? 'btn-green' : 'btn-gray'}" type="button"
-                  onclick="send('party tactics ${idx} toggle ${r.priority}')" title="點擊啟用或停用此規則">
+                  data-action="send-cmd" data-cmd="party tactics ${idx} toggle ${r.priority}" title="點擊啟用或停用此規則">
                   ${r.enabled ? '🟢 啟用中' : '⚪ 已停用'}
                 </button>
                 <button class="act-btn btn-sm btn-red" type="button"
-                  onclick="send('party tactics ${idx} delete ${r.priority}')" title="刪除此規則">
+                  data-action="send-cmd" data-cmd="party tactics ${idx} delete ${r.priority}" title="刪除此規則">
                   🗑️ 刪除
                 </button>
               </div>
@@ -224,19 +251,19 @@ export function renderMemberTactics(m, idx) {
           <div class="tactics-banner-desc">戰鬥中輪到該同伴行動時，將依優先級序號 (#1, #2, #3...) 由上至下判定條件，首條滿足者即刻施展。</div>
         </div>
         <div class="tactics-banner-actions" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-          <button class="act-btn btn-sm ${isGambitOn ? 'btn-gray' : 'btn-green'}" type="button" onclick="send('party tactics ${idx} gambit')">
+          <button class="act-btn btn-sm ${isGambitOn ? 'btn-gray' : 'btn-green'}" type="button" data-action="send-cmd" data-cmd="party tactics ${idx} gambit">
             ${isGambitOn ? '⏸️ 關閉Gambit' : '⚡ 開啟Gambit'}
           </button>
-          <select class="act-btn btn-sm" onchange="if(this.value){send('party tactics ${idx} preset ' + this.value);this.value='';}" style="background:#1e293b;color:#f8fafc;border:1px solid #475569;padding:4px 6px;cursor:pointer;">
+          <select class="act-btn btn-sm" data-action="select-tactics-preset" data-member-idx="${idx}" style="background:#1e293b;color:#f8fafc;border:1px solid #475569;padding:4px 6px;cursor:pointer;">
             <option value="">📜 套用戰術範本...</option>
             <option value="interrupt_focus">⚡ 斷法攻堅 (反制特化)</option>
             <option value="emergency_sustain">🌿 急救續航 (道心醫修)</option>
             <option value="guardian_tank">🛡️ 守禦護坦 (金湯鐵壁)</option>
             <option value="poise_burst">💥 破防爆發 (狂暴強攻)</option>
           </select>
-          <button class="act-btn btn-blue btn-sm" type="button" onclick="window.toggleAddTacticsForm(true)">➕ 新增方針</button>
-          <button class="act-btn btn-sm" type="button" onclick="send('party tactics ${idx} reset')">🔄 重置預設</button>
-          <button class="act-btn btn-red btn-sm" type="button" onclick="send('party tactics ${idx} clear')">🗑️ 清空方針</button>
+          <button class="act-btn btn-blue btn-sm" type="button" data-action="toggle-add-tactics" data-show="true">➕ 新增方針</button>
+          <button class="act-btn btn-sm" type="button" data-action="send-cmd" data-cmd="party tactics ${idx} reset">🔄 重置預設</button>
+          <button class="act-btn btn-red btn-sm" type="button" data-action="send-cmd" data-cmd="party tactics ${idx} clear">🗑️ 清空方針</button>
         </div>
       </div>
       ${builderHtml}

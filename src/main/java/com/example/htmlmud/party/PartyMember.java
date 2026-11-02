@@ -223,7 +223,7 @@ public class PartyMember implements Combatant {
 
   @JsonIgnore
   public int getEffectiveMinDamage() {
-    int bonus = (equipment != null) ? equipment.values().stream().mapToInt(PartyItemSlot::getBonusMinDamage).sum() : 0;
+    int bonus = (equipment != null) ? equipment.values().stream().mapToInt(PartyItemSlot::getTotalBonusMinDamage).sum() : 0;
     int base = baseMinDamage + bonus;
     double atkPct = getStatModifierSum("ATK_PCT");
     if (atkPct != 0) {
@@ -234,7 +234,7 @@ public class PartyMember implements Combatant {
 
   @JsonIgnore
   public int getEffectiveMaxDamage() {
-    int bonus = (equipment != null) ? equipment.values().stream().mapToInt(PartyItemSlot::getBonusMaxDamage).sum() : 0;
+    int bonus = (equipment != null) ? equipment.values().stream().mapToInt(PartyItemSlot::getTotalBonusMaxDamage).sum() : 0;
     int base = baseMaxDamage + bonus;
     double atkPct = getStatModifierSum("ATK_PCT");
     if (atkPct != 0) {
@@ -245,7 +245,7 @@ public class PartyMember implements Combatant {
 
   @JsonIgnore
   public int getEffectiveDefense() {
-    int bonus = (equipment != null) ? equipment.values().stream().mapToInt(PartyItemSlot::getBonusDefense).sum() : 0;
+    int bonus = (equipment != null) ? equipment.values().stream().mapToInt(PartyItemSlot::getTotalBonusDefense).sum() : 0;
     int base = baseDefense + bonus;
     double defPct = getStatModifierSum("DEF_PCT");
     if (defPct != 0) {
@@ -848,9 +848,10 @@ public class PartyMember implements Combatant {
     return getBasicSkillId();
   }
 
+  @JsonIgnore
   public com.example.htmlmud.template.model.SkillTemplate getEnabledBasicSkill() {
     String skillId = getEffectiveBasicSkillId();
-    return getTemplateReader().findSkill(skillId).orElse(null);
+    return (getTemplateReader() != null) ? getTemplateReader().findSkill(skillId).orElse(null) : null;
   }
 
   public void enableSkill(com.example.htmlmud.progression.SkillCategory category, String skillId) {
@@ -988,6 +989,7 @@ public class PartyMember implements Combatant {
     return (id != null && getTemplateReader() != null) ? getTemplateReader().findSkill(id).orElse(null) : null;
   }
 
+  @JsonIgnore
   public com.example.htmlmud.domain.model.config.MoveAction getRandomBasicMove() {
     var skill = getEnabledBasicSkill();
     if (skill != null && skill.getMoves() != null && !skill.getMoves().isEmpty()) {

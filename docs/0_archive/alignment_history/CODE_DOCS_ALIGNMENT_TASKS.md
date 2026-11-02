@@ -1,7 +1,7 @@
 # 📋 文件與程式碼一致性對齊專項任務清單 (Code & Documentation Alignment Tasks)
 
 > **文檔層級**：Level 3 — Task Lists (專項治理與契約對齊中樞)  
-> **關聯手冊**：👉 [`docs/2_specifications/MODULES_MAP.md`](../2_specifications/MODULES_MAP.md) 及 Level 2 全域架構手冊  
+> **關聯手冊**：👉 [`docs/2_specifications/MODULES_MAP.md`](../../2_specifications/MODULES_MAP.md) 及 Level 2 全域架構手冊  
 > **專案總表指針**：👉 [`docs/3_task_lists/README.md`](README.md)  
 > **全量測試防線**：專案單元與整合測試 100% 綠燈守護（`mvn test` / `.\test.ps1`）。
 
@@ -13,7 +13,7 @@
 > **本清單之設立目的為「專項消除文件手冊、資料配置與現行代碼間的 Delta 歷史技術債」。**
 > 為了維持敏捷專注，全專案確立以下邊界分工，嚴禁職責混淆：
 > 1. **與當前衝刺看板區隔**：[`docs/4_active_tasks/ACTIVE_TASKS.md`](../4_active_tasks/ACTIVE_TASKS.md) 為當前 Phase 2 遊戲玩法垂直切片（當前唯一焦點：**Milestone VS-01 序章地牢冒險**）的微任務看板。本清單**不佔用**當前衝刺焦點，避免衝刺目標漂移。
-> 2. **與套件重構清單區隔**：[`CODE_CONVERGENCE_AND_REFACTORING_TASKS.md`](CODE_CONVERGENCE_AND_REFACTORING_TASKS.md) 專注於 Java 後端 Package-by-Feature 套件目錄搬遷與架構拓撲解耦。
+> 2. **與套件重構清單區隔**：[`CODE_CONVERGENCE_AND_REFACTORING_TASKS.md`](../0_archive/alignment_history/CODE_CONVERGENCE_AND_REFACTORING_TASKS.md)（已 100% 結案封存）專注於 Java 後端 Package-by-Feature 套件目錄搬遷與架構拓撲解耦。
 > 3. **與長程藍圖清單區隔**：[`FUTURE_IMPROVEMENTS.md`](FUTURE_IMPROVEMENTS.md) 專注於未來的全新系統玩法、宏觀階段演進與遠程 Feature。
 > 4. **本清單責任範疇**：依據全專案深度稽核，集中列出「現有代碼未如實遵守 L2 規格」、「資料 JSON 鍵名或歸屬分歧」、「前端殘留歷史廢棄代碼/未符合 CSP 事件委派」之 8 大專案一致性對齊任務。
 
@@ -27,8 +27,8 @@ graph LR
         ACTIVE["ACTIVE_TASKS.md<br>(Milestone VS-01 序章垂直切片玩法)"]
     end
 
-    subgraph Architecture ["套件結構重構 (L3)"]
-        REFACTOR["CODE_CONVERGENCE_AND_REFACTORING_TASKS.md<br>(Package-by-Feature 套件重構)"]
+    subgraph Architecture ["套件結構重構 (結案存檔)"]
+        REFACTOR["CODE_CONVERGENCE_AND_REFACTORING_TASKS.md<br>(已 100% 完工封存至 0_archive)"]
     end
 
     subgraph Backlog ["宏觀演進藍圖 (L3)"]
@@ -45,13 +45,13 @@ graph LR
 | 優先級 | 任務代碼 | 任務名稱 | 核心涉及模組 / 目標檔案 | 影響程度 |
 | :---: | :--- | :--- | :--- | :--- |
 | **P0** | **Task ALIGN-01** | 清理 HUD 走火入魔舊代碼與無效 seal 封印按鈕 (✅ 已完成) | `party-hud-panel.js` | 消除前端調用已除役指令之執行期錯誤 |
-| **P0** | **Task ALIGN-02** | 補齊雷達地牢圖塊符號映射與校正 FE2 手冊錯字 | `dungeon-panel.js`<br>`FE2_DRPG_VIEWPORT_RENDERER.md` | 解決門、寶箱、首領與陷阱顯示為地磚問題 |
-| **P1** | **Task ALIGN-03** | 補齊 `SaveData` `chipRate` 持久化與更新 M8 範例 | `SaveData.java`<br>`SaveGameService.java`<br>`M8_SAVE_AND_PERSISTENCE.md` | 避免特工晶片加載率存檔讀取重置 |
-| **P1** | **Task ALIGN-04** | 清理重複戰技條目、對齊 17 專精樹 ID 與除役雙軌枚舉 | `party_skills.json`<br>`PartyMemberSkill.java` | 統一四大淵源與消除戰技樹歸屬錯位 |
-| **P1** | **Task ALIGN-05** | 首領宋天衡掉落表掛載追蹤晶片與隨機詞綴入庫 | `zones/mozhu_mines/mobs.json`<br>`DrpgRewardService.java` | 確保任務道核必定產出與戰利品隨機詞綴 |
-| **P2** | **Task ALIGN-06** | 補齊夥伴初始戰技配置與校對 M4 規格表 | `default_companions.json`<br>`M4_PARTY_AND_FORMATION.md` | 解決凌霜空技能槽與護衛嘲諷缺口 |
-| **P2** | **Task ALIGN-07** | 前端內聯 `onclick` 收斂至 `[data-action]` 委派 | `party-equipment-tab.js`<br>`party-tactics-tab.js`<br>`bag-drawer.js` | 全面落實 CSP 安全原則與事件委派規範 |
-| **P2** | **Task ALIGN-08** | 校準 `PartyCommand.java` 道基五維屬性文字提示 | `PartyCommand.java` | 修正加點錯誤提示中的 str/con 語意筆誤 |
+| **P0** | **Task ALIGN-02** | 補齊雷達地牢圖塊符號映射與校正 FE2 手冊錯字 (✅ 已完成) | `dungeon-panel.js`<br>`FE2_DRPG_VIEWPORT_RENDERER.md` | 解決門、寶箱、首領與陷阱顯示為地磚問題 |
+| **P1** | **Task ALIGN-03** | 補齊 `SaveData` `chipRate` 持久化與更新 M8 範例 (✅ 已完成) | `SaveData.java`<br>`SaveGameService.java`<br>`M8_SAVE_AND_PERSISTENCE.md` | 避免特工晶片加載率存檔讀取重置 |
+| **P1** | **Task ALIGN-04** | 清理重複戰技條目、對齊 17 專精樹 ID 與除役雙軌枚舉 (✅ 已完成) | `party_skills.json`<br>`PartyMemberSkill.java` | 統一四大淵源與消除戰技樹歸屬錯位 |
+| **P1** | **Task ALIGN-05** | 首領宋天衡掉落表掛載追蹤晶片與隨機詞綴入庫 (✅ 已完成) | `zones/mozhu_mines/mobs.json`<br>`DrpgRewardService.java` | 確保任務道核必定產出與戰利品隨機詞綴 |
+| **P2** | **Task ALIGN-06** | 補齊夥伴初始戰技配置與校對 M4 規格表 (✅ 已完成) | `default_companions.json`<br>`M4_PARTY_AND_FORMATION.md` | 解決凌霜空技能槽與護衛嘲諷缺口 |
+| **P2** | **Task ALIGN-07** | 前端內聯 `onclick` 收斂至 `[data-action]` 委派 (✅ 已完成) | `party-equipment-tab.js`<br>`party-tactics-tab.js`<br>`bag-drawer.js` | 全面落實 CSP 安全原則與事件委派規範 |
+| **P2** | **Task ALIGN-08** | 校準 `PartyCommand.java` 道基五維屬性文字提示 (✅ 已完成) | `PartyCommand.java` | 修正加點錯誤提示中的 str/con 語意筆誤 |
 
 ---
 
@@ -62,9 +62,9 @@ graph LR
 - **目標檔案**：
   - `src/main/resources/static/js/panels/party-hud-panel.js`
 - **對齊手冊**：
-  - [`FE1_CORE_STATE_AND_PIPELINE.md`](../2_specifications/frontend/FE1_CORE_STATE_AND_PIPELINE.md) §1
-  - [`M4_PARTY_AND_FORMATION.md`](../2_specifications/backend/M4_PARTY_AND_FORMATION.md) §2
-  - [`ARCHITECTURAL_DECISIONS.md`](../2_specifications/ARCHITECTURAL_DECISIONS.md) (ADR-004 走火入魔背刺除役裁決)
+  - [`FE1_CORE_STATE_AND_PIPELINE.md`](../../2_specifications/frontend/FE1_CORE_STATE_AND_PIPELINE.md) §1
+  - [`M4_PARTY_AND_FORMATION.md`](../../2_specifications/backend/M4_PARTY_AND_FORMATION.md) §2
+  - [`ARCHITECTURAL_DECISIONS.md`](../../2_specifications/ARCHITECTURAL_DECISIONS.md) (ADR-004 走火入魔背刺除役裁決)
 - **現況落差**：
   `party-hud-panel.js` 第 55~85 行仍殘留已除役的舊版道心崩潰狀態分支（`SEALED`, `DEAD_MEAT`, `ABERRATION`，以及「40% 背刺隊友」、「100% 變為古神畸變 Boss」），並組裝了 `<button class="seal-trigger-btn" onclick="... window.send('seal ${idx}')">`。因後端 `SealCommand.java` 早已徹底除役，玩家點擊將觸發指令未定義異常。
 - **對齊實作步驟**：
@@ -77,13 +77,13 @@ graph LR
 
 ---
 
-### - [ ] Task ALIGN-02 (FE-RADAR-TILES): 補齊雷達地牢圖塊符號映射與校正 FE2 手冊錯字
+### - [x] Task ALIGN-02 (FE-RADAR-TILES): 補齊雷達地牢圖塊符號映射與校正 FE2 手冊錯字 (✅ 已完成)
 - **所屬模組**：FE2 DRPG 視口與雷達
 - **目標檔案**：
   - `src/main/resources/static/js/panels/dungeon-panel.js`
-  - [`FE2_DRPG_VIEWPORT_RENDERER.md`](../2_specifications/frontend/FE2_DRPG_VIEWPORT_RENDERER.md) §4
+  - [`FE2_DRPG_VIEWPORT_RENDERER.md`](../../2_specifications/frontend/FE2_DRPG_VIEWPORT_RENDERER.md) §4
 - **對齊手冊**：
-  - [`DUNGEON_SCHEMA.md`](../2_specifications/data_schemas/DUNGEON_SCHEMA.md) §2
+  - [`DUNGEON_SCHEMA.md`](../../2_specifications/data_schemas/DUNGEON_SCHEMA.md) §2
   - `src/main/resources/data/dungeons/mozhu_mines_b1f.json`
 - **現況落差**：
   1. `dungeon-panel.js` 之 `populateTileAppearance` 僅映射 `#`, `+`, `$`, `◆`, `◇`, `^`, `~`, `P`, `S`, `>`, `<`。地牢真實 JSON 與契約中使用之 `D` (木門)、`T` (寶箱/木箱)、`B` (首領祭壇)、`E` (遺跡碑文/事件)、`X` (外神菌沼/陷阱) 全部落入 default 分支，被渲染為普通地磚 `·`。
@@ -106,14 +106,14 @@ graph LR
 
 ## 📋 四、P1 核心狀態持久化與資料契約調平 (P1 Data Contract Reconciliation)
 
-### - [ ] Task ALIGN-03 (M8-SAVE-CHIPRATE): 補齊 `SaveData` `chipRate` 持久化與更新 M8 範例
+### - [x] Task ALIGN-03 (M8-SAVE-CHIPRATE): 補齊 `SaveData` `chipRate` 持久化與更新 M8 範例 (✅ 已完成)
 - **所屬模組**：M8 存檔與持久化 / M1 營地特工覺醒
 - **目標檔案**：
   - `src/main/java/com/example/htmlmud/save/SaveData.java`
   - `src/main/java/com/example/htmlmud/save/SaveGameService.java`
-  - [`M8_SAVE_AND_PERSISTENCE.md`](../2_specifications/backend/M8_SAVE_AND_PERSISTENCE.md) §2
+  - [`M8_SAVE_AND_PERSISTENCE.md`](../../2_specifications/backend/M8_SAVE_AND_PERSISTENCE.md) §2
 - **對齊手冊**：
-  - [`M1_TOWN_HUB_AND_FACILITIES.md`](../2_specifications/backend/M1_TOWN_HUB_AND_FACILITIES.md) §7
+  - [`M1_TOWN_HUB_AND_FACILITIES.md`](../../2_specifications/backend/M1_TOWN_HUB_AND_FACILITIES.md) §7
   - `src/main/java/com/example/htmlmud/domain/actor/impl/Player.java`
 - **現況落差**：
   1. `Player.java`（第 97 行）已加入 `chipRate = 12` 欄位，但 `SaveData.java` 未宣告 `chipRate`，`SaveGameService.java` 亦未在存檔或讀檔時處理此欄位，導致存檔重新載入後特工覺醒進度丟失。
@@ -129,14 +129,14 @@ graph LR
 
 ---
 
-### - [ ] Task ALIGN-04 (M5-SKILL-TAXONOMY): 清理重複戰技條目、對齊 17 專精樹 ID 與除役雙軌枚舉
+### - [x] Task ALIGN-04 (M5-SKILL-TAXONOMY): 清理重複戰技條目、對齊 17 專精樹 ID 與除役雙軌枚舉 (✅ 已完成)
 - **所屬模組**：M5 技能與突破 / 靜態資料契約
 - **目標檔案**：
   - `src/main/resources/data/party/party_skills.json`
   - `src/main/java/com/example/htmlmud/party/PartyMemberSkill.java`
 - **對齊手冊**：
-  - [`SKILL_SCHEMA.md`](../2_specifications/data_schemas/SKILL_SCHEMA.md) §2
-  - [`TREE_17_NULL_VOID.md`](../2_specifications/skills/4_cthulhu/TREE_17_NULL_VOID.md)
+  - [`SKILL_SCHEMA.md`](../../2_specifications/data_schemas/SKILL_SCHEMA.md) §2
+  - [`TREE_17_NULL_VOID.md`](../../2_specifications/skills/4_cthulhu/TREE_17_NULL_VOID.md)
 - **現況落差**：
   1. `party_skills.json` 存在重複戰技宣告（如 `skill_neural_overclock_step` 與 `skill_time_tier1_step` 重複；`skill_bio_keratin_blade` 與 `skill_chitin_tier1_blade` 重複）。
   2. `skill_format_drive` (格式化硬碟) 與 `skill_hard_reboot` (冷重啟) 在 `TREE_17_NULL_VOID.md` 規範中屬於 `CTHULHU` / `tree_null_void`，但 JSON 中錯標為 `HIGH_TECH` 與 `ENGINEER`。
@@ -151,14 +151,14 @@ graph LR
 
 ---
 
-### - [ ] Task ALIGN-05 (M6-LOOT-CHIP-AFFIX): 首領宋天衡掉落表掛載追蹤晶片與隨機詞綴入庫
+### - [x] Task ALIGN-05 (M6-LOOT-CHIP-AFFIX): 首領宋天衡掉落表掛載追蹤晶片與隨機詞綴入庫 (✅ 已完成)
 - **所屬模組**：M6 物品與經濟 / M3 戰鬥獎勵
 - **目標檔案**：
   - `src/main/resources/data/zones/mozhu_mines/mobs.json`
   - `src/main/java/com/example/htmlmud/combat/DrpgRewardService.java`
 - **對齊手冊**：
-  - [`ITEM_SCHEMA.md`](../2_specifications/data_schemas/ITEM_SCHEMA.md) §1, §3
-  - [`M6_ITEM_AND_ECONOMY.md`](../2_specifications/backend/M6_ITEM_AND_ECONOMY.md) §2
+  - [`ITEM_SCHEMA.md`](../../2_specifications/data_schemas/ITEM_SCHEMA.md) §1, §3
+  - [`M6_ITEM_AND_ECONOMY.md`](../../2_specifications/backend/M6_ITEM_AND_ECONOMY.md) §2
 - **現況落差**：
   1. 黑煞宗地牢首領 `boss_song_tianheng` 在 `mobs.json` 中的 `dropTable` 未配置 Milestone VS-01 核心任務物品 `item_chip_qianxing_tracker`（千星科技加密追蹤晶片）。
   2. `DrpgRewardService.java` 在產出戰利品入庫至小隊行囊時，未調度 `ItemAffixService` 綁定隨機前綴與後綴。
@@ -173,13 +173,13 @@ graph LR
 
 ## 📋 五、P2 內容健全化與前端工程規範推進 (P2 Content Hygiene & Code Standards)
 
-### - [ ] Task ALIGN-06 (M4-COMPANION-SKILLS): 補齊夥伴初始戰技配置與校對 M4 規格表
+### - [x] Task ALIGN-06 (M4-COMPANION-SKILLS): 補齊夥伴初始戰技配置與校對 M4 規格表 (✅ 已完成)
 - **所屬模組**：M4 冒險小隊與陣法
 - **目標檔案**：
   - `src/main/resources/data/companions/default_companions.json`
-  - [`M4_PARTY_AND_FORMATION.md`](../2_specifications/backend/M4_PARTY_AND_FORMATION.md) §1
+  - [`M4_PARTY_AND_FORMATION.md`](../../2_specifications/backend/M4_PARTY_AND_FORMATION.md) §1
 - **對齊手冊**：
-  - [`M4_PARTY_AND_FORMATION.md`](../2_specifications/backend/M4_PARTY_AND_FORMATION.md) §1
+  - [`M4_PARTY_AND_FORMATION.md`](../../2_specifications/backend/M4_PARTY_AND_FORMATION.md) §1
 - **現況落差**：
   1. `default_companions.json` 中，初期醫修夥伴 `ling_shuang` (凌霜) 的 `"skills": []` 為空陣列，缺乏初始單體治療技能。
   2. 鐵牛 `tie_niu` 技能陣列中缺少嘲諷戰技 `tank_taunt`。
@@ -194,14 +194,14 @@ graph LR
 
 ---
 
-### - [ ] Task ALIGN-07 (FE-CSP-DELEGATION): 前端內聯 `onclick` 收斂至 `[data-action]` 委派
+### - [x] Task ALIGN-07 (FE-CSP-DELEGATION): 前端內聯 `onclick` 收斂至 `[data-action]` 委派 (✅ 已完成)
 - **所屬模組**：FE1 核心狀態 / FE5 小隊與彈窗
 - **目標檔案**：
   - `src/main/resources/static/js/modals/party-equipment-tab.js`
   - `src/main/resources/static/js/modals/party-tactics-tab.js`
   - `src/main/resources/static/js/modals/bag-drawer.js`
 - **對齊手冊**：
-  - [`FE1_CORE_STATE_AND_PIPELINE.md`](../2_specifications/frontend/FE1_CORE_STATE_AND_PIPELINE.md) §4
+  - [`FE1_CORE_STATE_AND_PIPELINE.md`](../../2_specifications/frontend/FE1_CORE_STATE_AND_PIPELINE.md) §4
 - **現況落差**：
   上述前端組件中大量使用字串拼接生成的 `onclick="window.send('... ${id}')"`，違反了 `FE1` 明文要求的「嚴格無內聯腳本、所有使用者互動統一採用 `data-action` 屬性配合容器事件委派 (Event Delegation)」架構憲法。
 - **對齊實作步驟**：
@@ -213,13 +213,13 @@ graph LR
 
 ---
 
-### - [ ] Task ALIGN-08 (M5-STAT-PROMPT-FIX): 校準 `PartyCommand.java` 道基五維屬性文字提示
+### - [x] Task ALIGN-08 (M5-STAT-PROMPT-FIX): 校準 `PartyCommand.java` 道基五維屬性文字提示 (✅ 已完成)
 - **所屬模組**：M5 技能與修為 / 後端指令管線
 - **目標檔案**：
   - `src/main/java/com/example/htmlmud/application/command/impl/PartyCommand.java`
 - **對齊手冊**：
-  - [`M4_PARTY_AND_FORMATION.md`](../2_specifications/backend/M4_PARTY_AND_FORMATION.md) §1
-  - [`M5_SKILL_AND_PROGRESSION.md`](../2_specifications/backend/M5_SKILL_AND_PROGRESSION.md) §3
+  - [`M4_PARTY_AND_FORMATION.md`](../../2_specifications/backend/M4_PARTY_AND_FORMATION.md) §1
+  - [`M5_SKILL_AND_PROGRESSION.md`](../../2_specifications/backend/M5_SKILL_AND_PROGRESSION.md) §3
 - **現況落差**：
   `PartyCommand.java` 第 603 行加點失敗時的錯誤提示文字仍標記為 `con (根骨), str (力量)`。而全專案道基五維體系標準定義為：`str (根骨)` 與 `con (體質)`。
 - **對齊實作步驟**：

@@ -60,15 +60,9 @@ DRPG 視口與雷達渲染器託管於 `static/js/panels/dungeon-panel.js`，當
 嚴格遵循專案第一紅線，圖塊渲染完全中立、通用，禁止在代碼中寫死關卡特例：
 
 ```javascript
-export function populateTileAppearance(cellElement, tileChar, isVisited, isOpenedChest) {
-  // 1. 若該格未曾踏足 (未被 visited 矩陣收錄)，一律遮蔽為暗黑迷霧
-  if (!isVisited) {
-    cellElement.className = 'radar-cell cell-fog';
-    cellElement.textContent = ' ';
-    return;
-  }
-  
-  // 2. 依圖元符號資料驅動映射
+export function populateTileAppearance(cell, symbol, gx, gy, customName = null) {
+  // 1. 依圖元符號資料驅動映射外觀、圖標與 Tooltip
+  // 2. 支援自定義名稱（若 DTO 提供 tileNames 矩陣則優先使用，未提供則使用通用預設名稱）
   ...
 }
 ```
@@ -76,14 +70,18 @@ export function populateTileAppearance(cellElement, tileChar, isVisited, isOpene
 ### 通用圖元樣式映射標準表
 | 圖元符號 | CSS 類別 | 顯示圖標 | Tooltip 說明 | 行為特性 |
 | :---: | :--- | :---: | :--- | :--- |
-| `#` | `cell-wall` | `█` | 玄岩石壁 | 不可通行（阻擋視線與位移） |
-| `+` / `D` | `cell-door` | `☩` | 封印石門 | 需互動開啟，阻擋視線 |
-| `$` / `◆` | `cell-chest` | `◆` | 密封寶箱 / 棺槨 | 踩格自動觸發摸金探寶 |
-| `◇` | `cell-chest-opened` | `◇` | 已開啟寶箱 | 已空置，可自由通行 |
-| `^` / `T` | `cell-trap` | `▲` | 機關陷阱 | 踩格扣除道心 SAN 或氣血 |
-| `>` | `cell-stairs` | `▼` | 向下階梯 | 通往更深地牢樓層 |
-| `<` | `cell-stairs-up` | `▲` | 向上階梯 / 出口 | **安全撤離點**（點擊【安全撤離】按鈕或快捷鍵 L 撤離） |
-| `.` | `cell-path` | `·` | 通路 / 枕木道 | 常規可通行路徑 |
+| `#` | `cell-wall` / `tile-wall` | `█` | 玄岩石壁 | 不可通行（阻擋視線與位移） |
+| `.` | `cell-path` / `tile-path` | `·` | 通路 / 枕木道 | 常規可通行路徑 |
+| `+` / `D` | `cell-door` / `tile-door` | `+` (或 `☩`) | 石門 / 加固避煞木門 | 需互動開啟，阻擋視線 |
+| `$` / `◆` / `T` | `cell-chest` / `tile-chest` | `⌸` (或 `◆`) | 密封寶箱 / 採礦木箱 / 棺槨 | 踩格自動觸發摸金探寶 |
+| `◇` | `cell-chest-opened` / `tile-chest-opened` | `◇` | 已開啟寶箱 | 已空置，可自由通行 |
+| `^` / `~` / `X` | `cell-trap` / `tile-trap` | `^` (或 `▲`) | 機關陷阱 / 菌絲泥沼 | 踩格扣除道心 SAN 或氣血 |
+| `B` | `cell-boss` / `tile-boss` | `☠` (或 `👹`) | 首領祭壇 / 妖邪核心 | 強敵巢穴，踩格觸發 Boss 決戰 |
+| `E` | `cell-event` / `tile-event` | `!` (或 `📜`) | 遺跡古碑 / 特殊事件 | 互動觸發劇情、閉關定境或石碑拓印 |
+| `S` | `cell-safe` / `tile-safe` | `⛺` (或 `S`) | 安全營地出入口 / 深層滑井 | 安全休整點或深層探勘通道 |
+| `P` | `cell-spring` / `tile-spring` | `♨` | 太玄清心靈泉 | 滋養靈泉，撫平道心與氣血 |
+| `>` | `cell-stairs` / `tile-stairs` | `▼` | 向下階梯 | 通往更深地牢樓層 |
+| `<` | `cell-stairs-up` / `tile-stairs-up` | `▲` | 向上階梯 / 出口 | **安全撤離點**（點擊【安全撤離】按鈕或快捷鍵 L 撤離） |
 
 ---
 

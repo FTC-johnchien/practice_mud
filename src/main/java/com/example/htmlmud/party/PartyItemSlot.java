@@ -81,12 +81,20 @@ public class PartyItemSlot {
     String prefixStr = affixes.stream()
         .filter(a -> a.type() == com.example.htmlmud.item.ItemAffix.AffixType.PREFIX)
         .map(com.example.htmlmud.item.ItemAffix::name)
-        .findFirst().orElse("");
+        .collect(java.util.stream.Collectors.joining(""));
     String suffixStr = affixes.stream()
         .filter(a -> a.type() == com.example.htmlmud.item.ItemAffix.AffixType.SUFFIX)
         .map(com.example.htmlmud.item.ItemAffix::name)
-        .findFirst().orElse("");
+        .collect(java.util.stream.Collectors.joining(""));
     return prefixStr + (name != null ? name : "") + suffixStr;
+  }
+
+  public String getName() {
+    return getDisplayNameWithAffixes();
+  }
+
+  public String getBaseName() {
+    return this.name;
   }
 
   public int getTotalBonusMinDamage() {
@@ -202,6 +210,7 @@ public class PartyItemSlot {
         .bonusDefense(d.bonusDefense())
         .bonusHp(d.bonusHp())
         .bonusSan(d.bonusSan())
+        .poiseBreakPower(d.poiseBreakPower())
         .build();
   }
 
@@ -284,7 +293,7 @@ public class PartyItemSlot {
     return ItemView.builder()
         .slotId(this.slotId)
         .itemId(this.itemId)
-        .name(this.name)
+        .name(getDisplayNameWithAffixes())
         .icon(this.icon)
         .itemType(this.itemType)
         .subType(this.subType)
@@ -297,9 +306,9 @@ public class PartyItemSlot {
         .effectValue(this.effectValue)
         .grantedSkillId(this.grantedSkillId)
         .grantedSkillName(this.grantedSkillName)
-        .bonusMinDamage(this.bonusMinDamage)
-        .bonusMaxDamage(this.bonusMaxDamage)
-        .bonusDefense(this.bonusDefense)
+        .bonusMinDamage(getTotalBonusMinDamage())
+        .bonusMaxDamage(getTotalBonusMaxDamage())
+        .bonusDefense(getTotalBonusDefense())
         .bonusHp(this.bonusHp)
         .bonusSan(this.bonusSan)
         .consumable(isConsumable())

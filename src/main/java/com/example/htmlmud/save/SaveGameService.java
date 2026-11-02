@@ -219,7 +219,8 @@ public class SaveGameService {
    * 規則：地表營地隨時可存；地牢深處殺機四伏，唯有抵達安全撤離石階 (<, >) 或神秘殘碑 (EVENT !) 方可入定存檔。
    */
   public boolean isManualSaveAllowed(Player player) {
-    if (player == null) return false;
+    if (player == null)
+      return false;
     return isManualSaveAllowed(player.getName(), player.isInDungeon());
   }
 
@@ -251,6 +252,20 @@ public class SaveGameService {
         || type == DungeonTile.TileType.EVENT;
   }
 
+  public Player findOnlinePlayer(String playerId) {
+    Player onlinePlayer = null;
+    if (worldManagerProvider != null && worldManagerProvider.getIfAvailable() != null) {
+      onlinePlayer = worldManagerProvider.getIfAvailable().findPlayerActor(playerId).orElse(null);
+    }
+    if (onlinePlayer == null && MudContext.hasCurrentPlayer()) {
+      Player current = MudContext.currentPlayer();
+      if (playerId.equals(current.getName()) || playerId.equals(current.getId())) {
+        onlinePlayer = current;
+      }
+    }
+    return onlinePlayer;
+  }
+
   public SaveData saveGame(String playerId, int slotId, String customTitle) {
     return saveGame(playerId, slotId, customTitle, false, getDefaultSpawnRoomId());
   }
@@ -280,6 +295,9 @@ public class SaveGameService {
       }
     }
 
+    Player onlinePlayer = findOnlinePlayer(playerId);
+    int chipRate = (onlinePlayer != null) ? onlinePlayer.getChipRate() : 12;
+
     SaveData saveData = SaveData.builder()
         .slotId(slotId)
         .title(title)
@@ -287,6 +305,7 @@ public class SaveGameService {
         .protagonistName(protagonistName)
         .inDungeon(inDungeon)
         .currentRoomId(currentRoomId)
+        .chipRate(chipRate)
         .floorId(pos.getFloorId())
         .floorX(pos.getX())
         .floorY(pos.getY())
@@ -351,7 +370,8 @@ public class SaveGameService {
         throw new SaveCorruptedException("存檔反序列化失敗");
       }
       if (origVersion < SaveData.CURRENT_SCHEMA_VERSION) {
-        log.info("Loaded legacy save slot {} (migrated v{} -> v{})", slotId, origVersion, SaveData.CURRENT_SCHEMA_VERSION);
+        log.info("Loaded legacy save slot {} (migrated v{} -> v{})", slotId, origVersion,
+            SaveData.CURRENT_SCHEMA_VERSION);
       }
     } catch (SaveCorruptedException sce) {
       log.error("Corrupted save file detected in slot {}: {}", slotId, sce.getMessage());
@@ -370,18 +390,10 @@ public class SaveGameService {
       partyService.setParty(playerId, data.getParty());
     }
 
-    // 2. 若玩家在線，同步小隊長裝備鏡像至線上 Player (若存在) (SP-03: 道具由 party.inventory 唯一管理)
-    Player onlinePlayer = null;
-    if (worldManagerProvider != null && worldManagerProvider.getIfAvailable() != null) {
-      onlinePlayer = worldManagerProvider.getIfAvailable().findPlayerActor(playerId).orElse(null);
-    }
-    if (onlinePlayer == null && MudContext.hasCurrentPlayer()) {
-      Player current = MudContext.currentPlayer();
-      if (playerId.equals(current.getName()) || playerId.equals(current.getId())) {
-        onlinePlayer = current;
-      }
-    }
+    // 2. 若玩家在線，同步小隊長裝備鏡像與特工晶片進度至線上 Player (若存在) (SP-03: 道具由 party.inventory 唯一管理)
+    Player onlinePlayer = findOnlinePlayer(playerId);
     if (onlinePlayer != null) {
+      onlinePlayer.setChipRate(data.getChipRate());
       Party restoredParty = data.getParty();
       if (restoredParty != null && !restoredParty.getMembers().isEmpty()) {
         PartyMember leader = restoredParty.getMembers().get(0);
@@ -401,7 +413,8 @@ public class SaveGameService {
     if (data.getFloorFacing() != null) {
       try {
         facing = GridDirection.valueOf(data.getFloorFacing().toUpperCase());
-      } catch (Exception ignored) {}
+      } catch (Exception ignored) {
+      }
     }
 
     DungeonPosition pos = new DungeonPosition(floorId, data.getFloorX(), data.getFloorY(), facing, w, h);
@@ -416,7 +429,8 @@ public class SaveGameService {
             int cx = Integer.parseInt(parts[0].trim());
             int cy = Integer.parseInt(parts[1].trim());
             pos.markChestOpened(cx, cy);
-          } catch (Exception ignored) {}
+          } catch (Exception ignored) {
+          }
         }
       }
     }
@@ -442,11 +456,13 @@ public class SaveGameService {
     DungeonFloor floor = dungeonManager.getFloor(defaultFloorId);
     if (floor == null) {
       floor = dungeonManager.getFloor("taiyin_tomb_b1f");
-      if (floor != null) defaultFloorId = "taiyin_tomb_b1f";
+      if (floor != null)
+        defaultFloorId = "taiyin_tomb_b1f";
     }
     int startX = (floor != null && floor.getStartCoord() != null) ? floor.getStartCoord().x() : 1;
     int startY = (floor != null && floor.getStartCoord() != null) ? floor.getStartCoord().y() : 1;
-    GridDirection facing = (floor != null && floor.getStartFacing() != null) ? floor.getStartFacing() : GridDirection.NORTH;
+    GridDirection facing = (floor != null && floor.getStartFacing() != null) ? floor.getStartFacing()
+        : GridDirection.NORTH;
     int w = (floor != null) ? floor.getWidth() : 10;
     int h = (floor != null) ? floor.getHeight() : 10;
 
@@ -456,7 +472,8 @@ public class SaveGameService {
     // 自動儲存初始狀態至 slot 0 (Autosave)
     try {
       saveGame(playerId, 0, pName + " 踏入修仙道途 (新手村與墨竹礦坑)");
-    } catch (Exception ignored) {}
+    } catch (Exception ignored) {
+    }
 
     // 同步初始裝備至線上玩家 (UNIFY-02)
     Player onlinePlayer = null;
@@ -495,7 +512,8 @@ public class SaveGameService {
   }
 
   public void handleLoad(com.example.htmlmud.domain.actor.impl.Player player, String slotStr) {
-    if (player == null) return;
+    if (player == null)
+      return;
     int slotId = -1;
     try {
       slotId = Integer.parseInt(slotStr.trim());
@@ -507,6 +525,7 @@ public class SaveGameService {
           + data.getTitle() + " | 主角: " + data.getProtagonistName() + "\u001B[0m\n");
 
       player.setInDungeon(data.isInDungeon());
+      player.setChipRate(data.getChipRate());
       if (data.getCurrentRoomId() != null && !data.getCurrentRoomId().isBlank()) {
         player.setCurrentRoomId(data.getCurrentRoomId());
       }
@@ -517,7 +536,8 @@ public class SaveGameService {
     } catch (NumberFormatException e) {
       player.reply("⚠️ 存檔槽位必須為數字 (0~5)！");
     } catch (SaveCorruptedException e) {
-      String backupTip = (slotId >= 0 && hasBackup(slotId)) ? "（偵測到有 .bak 備份檔案，可輸入 'save restore " + slotId + "' 還原）" : "";
+      String backupTip = (slotId >= 0 && hasBackup(slotId)) ? "（偵測到有 .bak 備份檔案，可輸入 'save restore " + slotId + "' 還原）"
+          : "";
       player.reply("❌ 存檔損壞: " + e.getMessage() + backupTip);
     } catch (Exception e) {
       player.reply("❌ 讀檔失敗: " + e.getMessage());
@@ -525,7 +545,8 @@ public class SaveGameService {
   }
 
   public void handleRestore(com.example.htmlmud.domain.actor.impl.Player player, String slotStr) {
-    if (player == null) return;
+    if (player == null)
+      return;
     try {
       int slotId = Integer.parseInt(slotStr.trim());
       boolean restored = restoreBackup(slotId);
@@ -543,7 +564,8 @@ public class SaveGameService {
   }
 
   public void handleNew(com.example.htmlmud.domain.actor.impl.Player player, String args) {
-    if (player == null) return;
+    if (player == null)
+      return;
     try {
       String protagonistName = "玄靈子";
       String formationId = "formation_four_symbols";
@@ -572,7 +594,8 @@ public class SaveGameService {
   }
 
   public void handleDelete(com.example.htmlmud.domain.actor.impl.Player player, String slotStr) {
-    if (player == null) return;
+    if (player == null)
+      return;
     try {
       int slotId = Integer.parseInt(slotStr.trim());
       boolean deleted = deleteSave(slotId);
@@ -588,7 +611,8 @@ public class SaveGameService {
   }
 
   public void listSaveSlots(com.example.htmlmud.domain.actor.impl.Player player) {
-    if (player == null) return;
+    if (player == null)
+      return;
     List<SaveSlotDto> slots = listSaveSlots();
     StringBuilder sb = new StringBuilder();
     sb.append("=== 📜【仙道命冊・單機存檔槽位】===\n");
@@ -615,7 +639,8 @@ public class SaveGameService {
   }
 
   public void broadcastSaveSlots(com.example.htmlmud.domain.actor.impl.Player player) {
-    if (player == null) return;
+    if (player == null)
+      return;
     List<SaveSlotDto> slots = listSaveSlots();
     player.sendJson(java.util.Map.of("type", "SAVE_SLOTS", "slots", slots));
   }

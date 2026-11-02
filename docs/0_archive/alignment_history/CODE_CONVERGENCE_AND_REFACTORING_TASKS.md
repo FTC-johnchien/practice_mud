@@ -1,8 +1,9 @@
 # 🧱 專案程式碼模組化收斂與重構執行計畫 (Code Convergence & Modular Refactoring Tasks)
 
-> **文檔層級**：Level 3 — Task Lists (架構治理與重構專案清單)  
-> **關聯規格**：👉 [`docs/2_specifications/MODULES_MAP.md`](../2_specifications/MODULES_MAP.md) 及後端 M1 ~ M9 各模組手冊  
-> **專案總表指針**：👉 [`docs/3_task_lists/README.md`](README.md)  
+> **狀態**：📦 [已全數完工結案 / 歷史封存存檔]（完工日期：2026-10-29）  
+> **文檔層級**：Level 0 — Archive (架構治理與重構專案結案存檔)  
+> **關聯規格**：👉 [`docs/2_specifications/MODULES_MAP.md`](../../2_specifications/MODULES_MAP.md) 及後端 M1 ~ M9 各模組手冊  
+> **專案總表指針**：👉 [`docs/3_task_lists/README.md`](../../3_task_lists/README.md)  
 > **全局測試防線**：專案 395 項單元與整合測試 100% 綠燈守護（`mvn test` / `.\test.ps1`）。任何重構步進皆以測試完全通過為唯一驗收前提。
 
 ---
@@ -194,8 +195,8 @@ graph BT
 - [x] **Task C4-1 (LEGACY-CODE-PURGE): 物理除役廢棄代碼**
   - 安全審查並移除已完全無引用之舊 MUD 房間導航、文字指令及過渡類別（已清除 `LivingStateService`、`infra.util.IdUtils`、`infra.util.RandomUtil`、`ExitDeserializer`、`RoomDescriptionDeserializer` 與所有空目錄）。
 - [x] **Task C4-2 (ARCH-GUARDRAILS-STRENGTHEN): 強化模組依賴看門狗測試**
-  - 在 [`ArchitectureGuardrailsTest.java`](../../src/test/java/com/example/htmlmud/domain/validation/ArchitectureGuardrailsTest.java) 增加套件依賴檢驗：
-    - 透過 [`DungeonValidatorPort.java`](../../src/main/java/com/example/htmlmud/template/DungeonValidatorPort.java) 依賴反轉，徹底禁止 `template` 反向依賴 `combat` 或 `dungeon`。
+  - 在 [`ArchitectureGuardrailsTest.java`](../../../src/test/java/com/example/htmlmud/domain/validation/ArchitectureGuardrailsTest.java) 增加套件依賴檢驗：
+    - 透過 [`DungeonValidatorPort.java`](../../../src/main/java/com/example/htmlmud/template/DungeonValidatorPort.java) 依賴反轉，徹底禁止 `template` 反向依賴 `combat` 或 `dungeon`。
     - 禁止 `town` 與 `item` 反向依賴 `combat` 或 `dungeon`。
     - 禁止模組之間產生非法的循環引用（Circular Dependency）。
   - **驗收標準**：`mvn test` 全量 395 測試 100% 綠燈通過，文檔 368 個內部連結 100% 通過。

@@ -546,11 +546,11 @@ public class PartyCommand implements PlayerCommand {
       sb.append("  當前修為：[").append(stats.getExp()).append(" / ").append(stats.getNextLevelExp()).append(" EXP]\n");
       sb.append("  未分配自由點數：【").append(stats.getFreeStatPoints()).append("】點\n");
       sb.append("──────────────────────────────────────────────\n");
-      sb.append("  [STR] 力量/臂力：").append(stats.getStr()).append(" 點 (影響物理傷害、穿透與負重)\n");
-      sb.append("  [CON] 根骨/體質：").append(stats.getCon()).append(" 點 (影響氣血上限 HP: ").append(stats.getMaxHp()).append("、減傷)\n");
-      sb.append("  [DEX] 靈巧/身法：").append(stats.getDex()).append(" 點 (影響暴擊、命中、閃避迴避)\n");
-      sb.append("  [INT] 悟性/智力：").append(stats.getIntelligence()).append(" 點 (影響真元上限 MP: ").append(stats.getMaxMp()).append("、法術傷害)\n");
-      sb.append("  [WIS] 定力/精神：").append(stats.getWis()).append(" 點 (影響治療效果、法力恢復、道心抗性)\n");
+      sb.append("  [STR] 根骨/力量：").append(stats.getStr()).append(" 點 (影響物理護甲、招架與兵刃傷害)\n");
+      sb.append("  [CON] 體質/氣血：").append(stats.getCon()).append(" 點 (影響氣血上限 HP: ").append(stats.getMaxHp()).append("、受創韌性)\n");
+      sb.append("  [DEX] 身法/敏捷：").append(stats.getDex()).append(" 點 (影響先手、命中、閃避與攻速)\n");
+      sb.append("  [INT] 真元/悟性：").append(stats.getIntelligence()).append(" 點 (影響真元上限 MP: ").append(stats.getMaxMp()).append("、戰技威力)\n");
+      sb.append("  [WIS] 神識/定力：").append(stats.getWis()).append(" 點 (影響暴擊、法術穿透、精神防護)\n");
       sb.append("──────────────────────────────────────────────\n");
       sb.append("  自由配點指令：party stat add <str|con|dex|int|wis> [點數]\n");
       sb.append("══════════════════════════════════════════════");
@@ -600,7 +600,7 @@ public class PartyCommand implements PlayerCommand {
         self.reply("【道胎拓寬】成功將 " + amount + " 點自由點數注入【" + statName.toUpperCase() + "】！剩餘點數：" + stats.getFreeStatPoints() + " 點。");
         broadcastDrpgState(self);
       } else {
-        self.reply("無效的屬性名稱，可選屬性：str (力量), con (根骨), dex (身法), int (悟性), wis (定力)");
+        self.reply("無效的屬性名稱，可選屬性：str (根骨), con (體質), dex (身法), int (真元), wis (神識)");
       }
     }
   }

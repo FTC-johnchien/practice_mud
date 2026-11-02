@@ -40,33 +40,36 @@ saves/
 ```json
 {
   "schemaVersion": 3,
-  "saveTimestamp": 1729000000000,
-  "saveSlot": "slot_1",
-  "saveName": "墨竹礦坑深處 ‧ 練氣九層",
-  "player": {
-    "id": "char-12345",
-    "name": "李長生",
-    "currentRoomId": "mozhu_mines:mine_entrance",
-    "inDungeon": true,
-    "stats": { ... },
-    "learnedSkills": { ... }
-  },
+  "slotId": 1,
+  "title": "墨竹礦坑深處 ‧ 練氣九層",
+  "playerId": "char-12345",
+  "protagonistName": "李長生",
+  "inDungeon": true,
+  "currentRoomId": "mozhu_mines:mine_entrance",
+  "chipRate": 12,
+  "floorId": "mozhu_mines_b1f",
+  "floorX": 1,
+  "floorY": 8,
+  "floorFacing": "NORTH",
+  "visitedTiles": [
+    [ true, true, false ]
+  ],
+  "openedChests": [ "3,5" ],
   "party": {
-    "partyId": "party-李長生",
-    "activeFormationId": "nine_palaces_eight_trigrams",
-    "members": [ ... ],
-    "sharedInventory": {
+    "id": "party-李長生",
+    "partyName": "李長生的問道旅團",
+    "equippedFormation": {
+      "id": "formation_four_symbols",
+      "name": "四象辟邪陣"
+    },
+    "inventory": {
       "capacity": 40,
-      "slots": [ ... ]
-    }
+      "slots": []
+    },
+    "members": []
   },
-  "dungeonProgress": {
-    "currentFloorId": "mozhu_mines_b1f",
-    "coord": { "x": 1, "y": 8 },
-    "facing": "NORTH",
-    "visitedMatrix": [ ... ],
-    "openedChestsMatrix": [ ... ]
-  }
+  "savedAt": "2026-11-02 10:00:00",
+  "playtimeSeconds": 120
 }
 ```
 

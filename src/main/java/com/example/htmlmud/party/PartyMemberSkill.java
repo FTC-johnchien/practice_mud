@@ -130,12 +130,53 @@ public class PartyMemberSkill implements UnifiedSkill {
     return defense || (tags != null && tags.contains("DEFENSE"));
   }
 
+  // === OriginSchool (四大淵源體系，收斂廢除 CyberSchool 雙軌) ===
+  public enum OriginSchool {
+    NONE,
+    UNIVERSAL,
+    CULTIVATOR,
+    ENGINEER,
+    HIGH_TECH,
+    CTHULHU;
+
+    @com.fasterxml.jackson.annotation.JsonCreator
+    public static OriginSchool fromString(String val) {
+      if (val == null || val.isBlank()) return NONE;
+      String upper = val.trim().toUpperCase();
+      return switch (upper) {
+        case "CULTIVATOR" -> CULTIVATOR;
+        case "ENGINEER", "MECHA_CULT" -> ENGINEER;
+        case "HIGH_TECH", "CYBER_HACK" -> HIGH_TECH;
+        case "CTHULHU", "GENE_BIO", "VOID_PSI" -> CTHULHU;
+        case "UNIVERSAL" -> UNIVERSAL;
+        default -> {
+          try {
+            yield OriginSchool.valueOf(upper);
+          } catch (IllegalArgumentException e) {
+            yield NONE;
+          }
+        }
+      };
+    }
+  }
+
+  @Deprecated
   public enum CyberSchool {
     NONE,        // 傳統/未指定
     CYBER_HACK,  // 黑客劫持 (神經超頻、算力逆流、破綻打斷)
     GENE_BIO,    // 強殖生化 (外神同化、甲殼強殖、異形毒素)
     MECHA_CULT,  // 機械修真 (經脈義體化、高頻電弧、過載重創)
-    VOID_PSI     // 虛數靈能 (量子道心、空間折疊、虛空湮滅)
+    VOID_PSI;    // 虛數靈能 (量子道心、空間折疊、虛空湮滅)
+
+    public OriginSchool toOriginSchool() {
+      return switch (this) {
+        case CYBER_HACK -> OriginSchool.HIGH_TECH;
+        case GENE_BIO -> OriginSchool.CTHULHU;
+        case MECHA_CULT -> OriginSchool.ENGINEER;
+        case VOID_PSI -> OriginSchool.CTHULHU;
+        default -> OriginSchool.NONE;
+      };
+    }
   }
 
   public enum ComboRole {
@@ -144,9 +185,50 @@ public class PartyMemberSkill implements UnifiedSkill {
     DETONATOR
   }
 
-  // === Level 2 SKILL_SCHEMA 賽博四大流派、超頻階級與連攜角色 ===
+  // === Level 2 SKILL_SCHEMA 四大淵源體系、超頻階級與連攜角色 ===
   @Builder.Default
-  private CyberSchool school = CyberSchool.NONE;
+  private OriginSchool school = OriginSchool.NONE;
+
+  public OriginSchool getSchool() {
+    if (school != null && school != OriginSchool.NONE) {
+      return school;
+    }
+    if (originSchool != null && !originSchool.isBlank()) {
+      return OriginSchool.fromString(originSchool);
+    }
+    return OriginSchool.NONE;
+  }
+
+  public String getOriginSchool() {
+    if (originSchool != null && !originSchool.isBlank()) {
+      return originSchool;
+    }
+    if (school != null && school != OriginSchool.NONE) {
+      return school.name();
+    }
+    return null;
+  }
+
+  @Deprecated
+  @com.fasterxml.jackson.annotation.JsonIgnore
+  public void setSchool(CyberSchool legacySchool) {
+    this.school = legacySchool != null ? legacySchool.toOriginSchool() : OriginSchool.NONE;
+  }
+
+  public static class PartyMemberSkillBuilder {
+    public PartyMemberSkillBuilder school(OriginSchool school) {
+      this.school$value = school;
+      this.school$set = true;
+      return this;
+    }
+
+    @Deprecated
+    public PartyMemberSkillBuilder school(CyberSchool legacy) {
+      this.school$value = legacy != null ? legacy.toOriginSchool() : OriginSchool.NONE;
+      this.school$set = true;
+      return this;
+    }
+  }
   @Builder.Default
   private int overclockTier = 0; // 0~3
   @Builder.Default

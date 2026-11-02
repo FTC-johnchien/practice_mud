@@ -1,5 +1,11 @@
 package com.example.htmlmud;
 
+import com.example.htmlmud.domain.actor.impl.Player;
+import com.example.htmlmud.domain.actor.core.MessageOutput;
+import com.example.htmlmud.domain.actor.service.PlayerService;
+import com.example.htmlmud.domain.context.MudContext;
+import com.example.htmlmud.domain.world.WorldManager;
+import org.mockito.Mockito;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -33,6 +39,10 @@ class SaveGameServiceTest {
 
   @Autowired
   private DungeonManager dungeonManager;
+  @Autowired(required = false)
+  private PlayerService playerService;
+  @Autowired(required = false)
+  private WorldManager worldManager;
 
   private final String testPlayerId = "test_player";
 
@@ -300,6 +310,40 @@ class SaveGameServiceTest {
       SaveData loaded = saveGameService.loadGame(testPlayerId, slotId);
       assertNotNull(loaded);
       assertThat(loaded.getTitle()).isEqualTo("第一代進度");
+    } finally {
+      saveGameService.deleteSave(slotId);
+    }
+  }
+  @Test
+  @DisplayName("驗證特工晶片神經元加載率 (chipRate) 存讀檔持久化與在線還原")
+  void testChipRatePersistenceAndRestore() {
+    int slotId = 3;
+    try {
+      saveGameService.deleteSave(slotId);
+
+      partyService.resetParty(testPlayerId, "測試特工");
+      // 1. 預設存檔 chipRate 應為 12
+      SaveData savedDefault = saveGameService.saveGame(testPlayerId, slotId, "預設特工進度");
+      assertThat(savedDefault.getChipRate()).isEqualTo(12);
+
+      // 2. 模擬線上玩家特工覺醒至 45%
+      var mockOutput = Mockito.mock(MessageOutput.class);
+      Player player = Player.createSinglePlayer(mockOutput, worldManager, playerService, testPlayerId);
+
+      player.setChipRate(45);
+
+      ScopedValue.where(MudContext.CURRENT_PLAYER, player).run(() -> {
+        SaveData saved45 = saveGameService.saveGame(testPlayerId, slotId, "特工覺醒45%存檔");
+        assertThat(saved45.getChipRate()).isEqualTo(45);
+
+        // 重置在線玩家狀態為 12%
+        player.setChipRate(12);
+
+        // 讀取槽位 3
+        SaveData loaded45 = saveGameService.loadGame(testPlayerId, slotId);
+        assertThat(loaded45.getChipRate()).isEqualTo(45);
+        assertThat(player.getChipRate()).isEqualTo(45);
+      });
     } finally {
       saveGameService.deleteSave(slotId);
     }

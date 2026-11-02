@@ -89,7 +89,7 @@ flowchart LR
 ## 📋 四、層級三檢驗：`3_task_lists` (L3) 是否完整包含 `2_specifications` (L2)？
 
 ### ✅ 已建立之治理優勢
-- [`3_task_lists/README.md`](../3_task_lists/README.md#L15-L74) 已建立完整的 19 模組 1:1 連結（舊版標籤錯名問題已修復）與 **R1 ~ R11 端到端需求追溯矩陣**，且獨立維護了 [`CODE_CONVERGENCE_AND_REFACTORING_TASKS.md`](../3_task_lists/CODE_CONVERGENCE_AND_REFACTORING_TASKS.md) 追蹤架構重構。
+- [`3_task_lists/README.md`](../3_task_lists/README.md#L15-L74) 已建立完整的 19 模組 1:1 連結（舊版標籤錯名問題已修復）與 **R1 ~ R11 端到端需求追溯矩陣**，且獨立維護了 [`CODE_CONVERGENCE_AND_REFACTORING_TASKS.md`](../0_archive/alignment_history/CODE_CONVERGENCE_AND_REFACTORING_TASKS.md) 追蹤架構重構。
 
 ### ❌ L2 → L3 的 6 大覆蓋缺口與任務失真
 
@@ -112,7 +112,7 @@ flowchart LR
    - [`FE6_CSS_TOKENS_TASKS.md`](../3_task_lists/frontend/FE6_CSS_TOKENS_TASKS.md#L13-L19)、[`FE2_DRPG_VIEWPORT_TASKS.md`](../3_task_lists/frontend/FE2_DRPG_VIEWPORT_TASKS.md#L14)、[`FE5_PARTY_EQUIPMENT_TASKS.md`](../3_task_lists/frontend/FE5_PARTY_EQUIPMENT_TASKS.md#L18) 引用不存在的 `style-01-tokens.css`、`style-02-layout.css`、`style-03-dungeon-view.css`、`style-04-battle-arena.css`、`style-06-modals-and-forms.css`（實際 `static/css/` 為 `style-01-tokens-and-shell.css`、`style-02-combat-arena.css`、`style-03-battle-actions.css`、`style-04-main-menu.css`、`style-05-town-and-hub.css`、`style-06-shop-and-responsive.css`、`style-07-modals-and-fx.css`）。
    - [`3_task_lists/README.md`](../3_task_lists/README.md#L38-L41)、[`FE1_CORE_STATE_TASKS.md`](../3_task_lists/frontend/FE1_CORE_STATE_TASKS.md#L14)、[`FE3_BATTLE_ARENA_TASKS.md`](../3_task_lists/frontend/FE3_BATTLE_ARENA_TASKS.md#L14-L15)、[`FE4_TOWN_HUB_TASKS.md`](../3_task_lists/frontend/FE4_TOWN_HUB_TASKS.md#L14) 引用不存在的 `store.js`、`action-bar-panel.js` 及錯誤目錄的 `js/battle-fx-director.js`、`js/floating-text.js`（實位於 `js/fx/`）。
 6. **L3 內部完成狀態自相矛盾**：
-   - **地牢存檔鎖與滅團存檔**：在 [`M2_DRPG_DUNGEON_TASKS.md`](../3_task_lists/backend/M2_DRPG_DUNGEON_TASKS.md#L39-L44)（`Task M2-3/M2-4`）與 [`CODE_CONVERGENCE_AND_REFACTORING_TASKS.md`](../3_task_lists/CODE_CONVERGENCE_AND_REFACTORING_TASKS.md#L58-L65)（`Task C2-1/C2-2`）皆已標 `[x]` 完工，但在 [`M8_SAVE_AND_PERSISTENCE_TASKS.md`](../3_task_lists/backend/M8_SAVE_AND_PERSISTENCE_TASKS.md#L42-L44) 的 `Task M8-2` 卻仍標 `[ ]` 未完成！
+   - **地牢存檔鎖與滅團存檔**：在 [`M2_DRPG_DUNGEON_TASKS.md`](../3_task_lists/backend/M2_DRPG_DUNGEON_TASKS.md#L39-L44)（`Task M2-3/M2-4`）與 [`CODE_CONVERGENCE_AND_REFACTORING_TASKS.md`](../0_archive/alignment_history/CODE_CONVERGENCE_AND_REFACTORING_TASKS.md#L58-L65)（`Task C2-1/C2-2`）皆已標 `[x]` 完工，但在 [`M8_SAVE_AND_PERSISTENCE_TASKS.md`](../3_task_lists/backend/M8_SAVE_AND_PERSISTENCE_TASKS.md#L42-L44) 的 `Task M8-2` 卻仍標 `[ ]` 未完成！
    - **[`FUTURE_IMPROVEMENTS.md`](../3_task_lists/FUTURE_IMPROVEMENTS.md) 嚴重失修**：
      - 第 41-140 行所有 `對應章節`（`§0.1` ~ `§26`）皆指向已刪除章節（懸空錨點）；
      - 同檔內 `CODE-01`（第 121 行）標 `🔲 待執行`，`DEADCODE-01`（第 132 行，完全同一件事）卻標 `✅ 已完成`；

@@ -39,6 +39,7 @@ public class DrpgRewardService {
   private XpProgressionService xpProgressionService;
   private CharacterSyncService characterSyncService;
   private final com.example.htmlmud.item.ItemFactory itemFactory;
+  private com.example.htmlmud.item.ItemAffixService itemAffixService;
 
   @Autowired(required = false)
   private org.springframework.beans.factory.ObjectProvider<SaveGameService> saveGameServiceProvider;
@@ -52,17 +53,19 @@ public class DrpgRewardService {
       @Autowired(required = false) ApplicationEventPublisher eventPublisher,
       @Autowired(required = false) XpProgressionService xpProgressionService,
       @Autowired(required = false) CharacterSyncService characterSyncService,
-      @Autowired(required = false) com.example.htmlmud.item.ItemFactory itemFactory) {
+      @Autowired(required = false) com.example.htmlmud.item.ItemFactory itemFactory,
+      @Autowired(required = false) com.example.htmlmud.item.ItemAffixService itemAffixService) {
     this.templateReader = templateReader;
     this.dungeonManager = dungeonManager;
     this.eventPublisher = eventPublisher;
     this.xpProgressionService = xpProgressionService != null ? xpProgressionService : new XpProgressionService(this.templateReader);
     this.characterSyncService = characterSyncService != null ? characterSyncService : new CharacterSyncService();
     this.itemFactory = itemFactory != null ? itemFactory : (this.templateReader != null ? new com.example.htmlmud.item.ItemFactory(this.templateReader) : null);
+    this.itemAffixService = itemAffixService != null ? itemAffixService : new com.example.htmlmud.item.ItemAffixService();
   }
 
   public DrpgRewardService(TemplateReader templateReader, DungeonManager dungeonManager) {
-    this(templateReader, dungeonManager, null, null, null, null);
+    this(templateReader, dungeonManager, null, null, null, null, null);
   }
 
   public DrpgRewardService() {
@@ -101,6 +104,14 @@ public class DrpgRewardService {
 
   public void setCharacterSyncService(CharacterSyncService characterSyncService) {
     this.characterSyncService = characterSyncService;
+  }
+
+  public com.example.htmlmud.item.ItemAffixService getItemAffixService() {
+    return itemAffixService;
+  }
+
+  public void setItemAffixService(com.example.htmlmud.item.ItemAffixService itemAffixService) {
+    this.itemAffixService = itemAffixService;
   }
 
   /**
@@ -233,7 +244,27 @@ public class DrpgRewardService {
           String dropIcon = def != null && def.icon() != null ? def.icon() : "📦";
           String dropQuality = def != null && def.quality() != null ? def.quality() : "COMMON";
           String dropDesc = def != null && def.description() != null ? def.description() : "戰鬥中繳獲的戰利品。";
-          boolean added = ctx.getParty().getInventory().addItem(dropItemId, 1);
+
+          boolean added = false;
+          if (def != null && def.isEquipment() && itemFactory != null) {
+            // 裝備類法寶 (武器/防具/飾品/晶片) 透過 ItemFactory 生成獨立槽位，並由 ItemAffixService 隨機附加前後綴
+            PartyItemSlot equipSlot = itemFactory.createPartySlot(dropItemId, 1);
+            if (equipSlot != null) {
+              if (itemAffixService != null) {
+                itemAffixService.applyRandomAffixes(equipSlot);
+              }
+              dropName = equipSlot.getName();
+              dropIcon = equipSlot.getIcon() != null ? equipSlot.getIcon() : dropIcon;
+              dropQuality = equipSlot.getQuality() != null ? equipSlot.getQuality() : dropQuality;
+              dropDesc = equipSlot.getDescription() != null ? equipSlot.getDescription() : dropDesc;
+              added = ctx.getParty().getInventory().addSlot(equipSlot);
+            }
+          }
+
+          if (!added) {
+            added = ctx.getParty().getInventory().addItem(dropItemId, 1);
+          }
+
           if (added) {
             droppedItemNames.add(dropName);
             lootDtos.add(new com.example.htmlmud.combat.BattleVictoryDto.BattleLootDto(

@@ -65,7 +65,6 @@ docs/
 ├── 3_task_lists/                # Level 3: 模組實作清單與路線圖層 (1:1 鏡像對齊 Level 2)
 │   ├── README.md                # 📊 全模組 1:1 實作進度儀表板 (進度中樞與完成度總表)
 │   ├── FUTURE_IMPROVEMENTS.md   # 宏觀演進戰略總表 (優先序矩陣與演進路徑)
-│   ├── CODE_CONVERGENCE_AND_REFACTORING_TASKS.md # 跨模組代碼收斂與重構任務清單
 │   ├── backend/                 # 後端 10 大模組實作與驗收清單 (M1~M9, M3.1)
 │   ├── frontend/                # 前端 6 大表現模組實作與驗收清單 (FE1~FE6)
 │   └── data_schemas/            # 資料架構契約實作與驗收清單 (Dungeon, Item, Skill)
@@ -81,7 +80,7 @@ docs/
 │   └── 背景.txt / 畫面佈局.txt... # 原始小說世界觀與企劃素材
 │
 └── 0_archive/                   # 封存歷史參考資料 (Historical References & Legacy Manuals)
-    ├── alignment_history/        # 歷史四層級深度對齊審查清單封存庫
+    ├── alignment_history/        # 歷史四層級深度對齊審查清單封存庫 (含 CODE_CONVERGENCE_AND_REFACTORING_TASKS.md 等)
     └── future_improvements_history.md # 歷史已完成落地之架構改善庫 (Phase 0~25)
 ```
 
@@ -116,12 +115,11 @@ docs/
 - **核心文件與模組目錄**：
   - [📊 全模組實作進度儀表板 (README.md)](./3_task_lists/README.md)（全專案 19 大模組進度看板與完成度矩陣）
   - [🧭 宏觀演進戰略總表 (FUTURE_IMPROVEMENTS.md)](./3_task_lists/FUTURE_IMPROVEMENTS.md)（演進路徑與優先序總表）
-  - [🔧 代碼收斂與重構清單 (CODE_CONVERGENCE_AND_REFACTORING_TASKS.md)](./3_task_lists/CODE_CONVERGENCE_AND_REFACTORING_TASKS.md)（跨模組代碼收斂與重構任務清單）
   - [🏛️ 後端模組任務清單 (backend/)](./3_task_lists/backend/)（10 大後端模組 M1~M9、M3.1 實作清單）
   - [🎨 前端模組任務清單 (frontend/)](./3_task_lists/frontend/)（6 大前端模組 FE1~FE6 實作清單）
   - [📜 資料契約任務清單 (data_schemas/)](./3_task_lists/data_schemas/)（3 大 Schema 契約實作清單）
 - **歷史與封存指針**：
-  - [四層級深度對齊審查清單封存庫 (alignment_history/)](./0_archive/alignment_history/)（歷史七大審查與治理清單）
+  - [四層級深度對齊審查清單封存庫 (alignment_history/)](./0_archive/alignment_history/)（歷史八大審查與治理清單，含 [跨模組代碼收斂與重構結案存檔 (CODE_CONVERGENCE_AND_REFACTORING_TASKS.md)](./0_archive/alignment_history/CODE_CONVERGENCE_AND_REFACTORING_TASKS.md)、[文件與程式碼一致性對齊結案存檔 (CODE_DOCS_ALIGNMENT_TASKS.md)](./0_archive/alignment_history/CODE_DOCS_ALIGNMENT_TASKS.md)）
   - [已完成改善歷史庫 (future_improvements_history.md)](./0_archive/future_improvements_history.md)（Phase 0~25 落地歸檔）
   - [專案版本交付記錄 (CHANGELOG.md)](../CHANGELOG.md)（專案根目錄標準規範）
 

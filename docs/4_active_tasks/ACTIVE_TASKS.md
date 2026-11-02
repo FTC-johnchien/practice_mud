@@ -11,7 +11,7 @@
 > **當前完成事項**：
 > 1. ✅ **需求層 (L1)**：確立五大核心目標、純單機 85/15 刷寶黃金權重、SAN 護盾生存化（Option A）與靈識三階透鏡轉譯（Option C）。
 > 2. ✅ **規格層 (L2)**：後端 10 大模組 (M1~M9, M3.1)、前端 6 大表現模組 (FE1~FE6)、3 大資料 Schema 契約全數完備並 100% 涵蓋 L1。
-> 3. ✅ **任務庫 (L3)**：落實 1:1 鏡像對齊結構，確立專屬執行計畫 [`CODE_CONVERGENCE_AND_REFACTORING_TASKS.md`](../3_task_lists/CODE_CONVERGENCE_AND_REFACTORING_TASKS.md)。
+> 3. ✅ **任務庫 (L3)**：落實 1:1 鏡像對齊結構，跨模組代碼收斂與重構計畫 [`CODE_CONVERGENCE_AND_REFACTORING_TASKS.md`](../0_archive/alignment_history/CODE_CONVERGENCE_AND_REFACTORING_TASKS.md) 已全數完工結案。
 > 4. ✅ **治理憲法**：於全域文件定錨「三大層級遞進治理與使用者審批鐵律」，以 `.\test.ps1` 全量綠燈為準（基準見 [`docs/3_task_lists/README.md`](../3_task_lists/README.md)）。
 > 5. ✅ **收斂里程碑 (CONV-01)**：三階靈識透鏡轉譯代理 (`CognitiveProxyService`)、營地機能中樞 (`TownHubService` / `TownHubDto`)、營地設施與調息派發 (`TownFacilityCommand`)、16 大標準賽博神通資料矩陣全數落地！
 >
