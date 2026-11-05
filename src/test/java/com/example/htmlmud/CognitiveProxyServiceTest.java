@@ -56,8 +56,8 @@ class CognitiveProxyServiceTest {
             .build(),
         CognitiveLens.builder()
             .minProgress(70)
-            .name("工程師生化兵器組裝台")
-            .desc("【千星科技掃描】工程師遺留的自動化生化兵器組裝基座，可分解外神殘骸與重構軍用義體。")
+            .name("千星重工淘汰離子切割爐")
+            .desc("【千星科技掃描】千星聯合科技淘汰的工業級重型離子切割機，被黑煞宗煉器峰奉為「真火神爐」投餵精血潤滑，可分解外神殘骸與重鑄裝備。")
             .glitch(true)
             .build()
     );
@@ -78,8 +78,8 @@ class CognitiveProxyServiceTest {
 
     // 3. 後期 85% (科技覺醒，揭示真容)
     ResolvedCognitiveView tier3 = service.resolve("未知設施", "無描述", lenses, 85);
-    assertEquals("工程師生化兵器組裝台", tier3.name());
-    assertEquals("【千星科技掃描】工程師遺留的自動化生化兵器組裝基座，可分解外神殘骸與重構軍用義體。", tier3.description());
+    assertEquals("千星重工淘汰離子切割爐", tier3.name());
+    assertEquals("【千星科技掃描】千星聯合科技淘汰的工業級重型離子切割機，被黑煞宗煉器峰奉為「真火神爐」投餵精血潤滑，可分解外神殘骸與重鑄裝備。", tier3.description());
     assertTrue(tier3.glitch());
     assertEquals(PerceptionTier.TRANSCENDED_TECH, tier3.tier());
   }

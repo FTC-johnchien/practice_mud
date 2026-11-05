@@ -123,6 +123,117 @@ class CyberSkillAndItemAffixTest {
     assertThat(sword.getTotalBonusMaxDamage()).isEqualTo(20); // 15 + 5
     assertThat(sword.getTotalBonusDefense()).isEqualTo(5);    // 2 + 3
     assertThat(sword.getTotalPoiseBreakPower()).isEqualTo(30); // 20 + 10
+
+    // 附加生命與道心詞綴
+    ItemAffix prefixHp = ItemAffix.builder()
+        .id("affix_hp_prefix")
+        .type(ItemAffix.AffixType.PREFIX)
+        .name("長生之")
+        .statKey("bonusHp")
+        .value(40.0)
+        .build();
+    ItemAffix suffixSan = ItemAffix.builder()
+        .id("affix_san_suffix")
+        .type(ItemAffix.AffixType.SUFFIX)
+        .name("·定心")
+        .statKey("bonusSan")
+        .value(15.0)
+        .build();
+    sword.addAffix(prefixHp);
+    sword.addAffix(suffixSan);
+
+    assertThat(sword.getTotalBonusHp()).isEqualTo(40);
+    assertThat(sword.getTotalBonusSan()).isEqualTo(15);
+
+    // 驗證 toItemInstance() 完整保留 affixes 與 poiseBreakPower
+    var inst = sword.toItemInstance();
+    assertThat(inst.getDefinitionId()).isEqualTo("bronze_sword");
+    assertThat(inst.getPoiseBreakPower()).isEqualTo(20);
+    assertThat(inst.getAffixes()).hasSize(5);
+
+    // 驗證穿戴至 PartyMember 後動態匯總裝備削韌加成與氣血/道心
+    com.example.htmlmud.domain.model.entity.LivingStats memberStats = new com.example.htmlmud.domain.model.entity.LivingStats();
+    memberStats.setMaxHp(100);
+    memberStats.setHp(100);
+    com.example.htmlmud.party.PartyMember member = com.example.htmlmud.party.PartyMember.builder()
+        .id("test-member")
+        .name("凌劍客")
+        .stats(memberStats)
+        .maxSan(100)
+        .currentSan(100)
+        .build();
+
+    assertThat(member.getEquippedPoiseBreakBonus()).isEqualTo(0);
+
+    member.equip(EquipmentSlot.MAIN_HAND, sword);
+    assertThat(member.getEquippedPoiseBreakBonus()).isEqualTo(30);
+    assertThat(member.getStats().getMaxHp()).isEqualTo(140); // 100 + 40
+    assertThat(member.getStats().getHp()).isEqualTo(140);
+    assertThat(member.getMaxSan()).isEqualTo(115); // 100 + 15
+    assertThat(member.getCurrentSan()).isEqualTo(115);
+
+    // 卸除裝備
+    member.unequip(EquipmentSlot.MAIN_HAND);
+    assertThat(member.getEquippedPoiseBreakBonus()).isEqualTo(0);
+    assertThat(member.getStats().getMaxHp()).isEqualTo(100);
+    assertThat(member.getMaxSan()).isEqualTo(100);
+  }
+
+  @Test
+  @DisplayName("ALIGN2-01: 測試穿戴高 poiseBreakPower 武器在戰鬥中造成額外罡氣削韌與破防")
+  void testEquippedPoiseBreakBonusInCombatSettlement() {
+    PartyItemSlot heavyBreaker = PartyItemSlot.builder()
+        .slotId("slot_breaker")
+        .itemId("plasma_hammer")
+        .name("等離子重錘")
+        .equipSlot(EquipmentSlot.MAIN_HAND)
+        .itemType(ItemType.WEAPON)
+        .poiseBreakPower(25)
+        .build();
+
+    ItemAffix affixBreach = ItemAffix.builder()
+        .id("affix_breach")
+        .type(ItemAffix.AffixType.SUFFIX)
+        .name("·破陣")
+        .statKey("poiseBreakPower")
+        .value(15.0)
+        .build();
+    heavyBreaker.addAffix(affixBreach);
+    assertThat(heavyBreaker.getTotalPoiseBreakPower()).isEqualTo(40);
+
+    com.example.htmlmud.party.PartyMember attacker = com.example.htmlmud.party.PartyMember.builder()
+        .id("m_breaker")
+        .name("破陣戰將")
+        .alive(true)
+        .build();
+    attacker.equip(EquipmentSlot.MAIN_HAND, heavyBreaker);
+    assertThat(attacker.getEquippedPoiseBreakBonus()).isEqualTo(40);
+
+    // 測試敵方怪物承受削韌
+    com.example.htmlmud.combat.BattleEnemy boss = com.example.htmlmud.combat.BattleEnemy.builder()
+        .id("boss_puppet")
+        .name("機關巨獸")
+        .hp(500)
+        .maxHp(500)
+        .poise(50)
+        .maxPoise(50)
+        .alive(true)
+        .build();
+
+    assertThat(boss.isPoiseBroken()).isFalse();
+
+    // 普攻削韌加成 (40 點)
+    int poiseBonus = attacker.getEquippedPoiseBreakBonus();
+    boss.applyPoiseDamage(poiseBonus);
+    assertThat(boss.getPoise()).isEqualTo(10);
+    assertThat(boss.isPoiseBroken()).isFalse();
+
+    // 技能基礎削韌 20 點 + 裝備削韌 40 點 = 60 點，徹底擊潰剩餘 10 點罡氣
+    int skillPoise = 20 + attacker.getEquippedPoiseBreakBonus();
+    boss.applyPoiseDamage(skillPoise);
+    assertThat(boss.getPoise()).isEqualTo(0);
+    assertThat(boss.isPoiseBroken()).isTrue();
+    assertThat(boss.getPoiseBrokenTicksRemaining()).isEqualTo(14);
   }
 
   @Test

@@ -77,7 +77,7 @@ class TownHubServiceTest {
     assertEquals(PerceptionTier.TRANSCENDED_TECH, hub.perceptionTier());
 
     FacilityDto forge = hub.facilities().stream().filter(f -> "fac_forge".equals(f.id())).findFirst().orElseThrow();
-    assertEquals("工程師生化兵器組裝台", forge.name());
+    assertEquals("千星重工淘汰離子切割爐", forge.name());
     assertTrue(forge.glitch());
 
     FacilityDto chipLab = hub.facilities().stream().filter(f -> "fac_chip_lab".equals(f.id())).findFirst().orElseThrow();

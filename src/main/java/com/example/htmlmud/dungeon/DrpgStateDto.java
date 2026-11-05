@@ -15,6 +15,7 @@ import com.example.htmlmud.template.TemplateReader;
 import com.example.htmlmud.combat.BattleViewDto;
 import com.example.htmlmud.combat.PartySkillViewDto;
 import com.example.htmlmud.combat.ActiveBuffDto;
+import com.example.htmlmud.item.ItemAffix;
 
 public record DrpgStateDto(
     String type,
@@ -607,11 +608,42 @@ public record DrpgStateDto(
       int bonusDefense,
       int bonusHp,
       int bonusSan,
+      int poiseBreakPower,
+      List<ItemAffix> affixes,
       boolean consumable,
       boolean weapon,
       boolean armor,
       boolean equipment
   ) {
+    public PartyItemSlotViewDto(
+        String slotId,
+        String itemId,
+        String name,
+        String icon,
+        String itemType,
+        String subType,
+        String equipSlot,
+        int count,
+        String description,
+        String quality,
+        String effectType,
+        int effectValue,
+        String grantedSkillName,
+        int bonusMinDamage,
+        int bonusMaxDamage,
+        int bonusDefense,
+        int bonusHp,
+        int bonusSan,
+        boolean consumable,
+        boolean weapon,
+        boolean armor,
+        boolean equipment
+    ) {
+      this(slotId, itemId, name, icon, itemType, subType, equipSlot, count, description, quality,
+          effectType, effectValue, grantedSkillName, bonusMinDamage, bonusMaxDamage, bonusDefense,
+          bonusHp, bonusSan, 0, List.of(), consumable, weapon, armor, equipment);
+    }
+
     public static PartyItemSlotViewDto of(com.example.htmlmud.party.PartyItemSlot s) {
       if (s == null) return null;
       return new PartyItemSlotViewDto(
@@ -628,11 +660,13 @@ public record DrpgStateDto(
           s.getEffectType(),
           s.getEffectValue(),
           s.getGrantedSkillName(),
-          s.getBonusMinDamage(),
-          s.getBonusMaxDamage(),
-          s.getBonusDefense(),
-          s.getBonusHp(),
-          s.getBonusSan(),
+          s.getTotalBonusMinDamage(),
+          s.getTotalBonusMaxDamage(),
+          s.getTotalBonusDefense(),
+          s.getTotalBonusHp(),
+          s.getTotalBonusSan(),
+          s.getTotalPoiseBreakPower(),
+          s.getAffixes() != null ? new ArrayList<>(s.getAffixes()) : List.of(),
           s.isConsumable(),
           s.isWeapon(),
           s.isArmor(),
@@ -647,7 +681,7 @@ public record DrpgStateDto(
       List<PartyItemSlotViewDto> slots
   ) {
     public static PartyInventoryViewDto of(com.example.htmlmud.party.PartyInventory inv) {
-      if (inv == null) return new PartyInventoryViewDto(30, 0, List.of());
+      if (inv == null) return new PartyInventoryViewDto(40, 0, List.of());
       List<PartyItemSlotViewDto> slotDtos = inv.getSlots().stream()
           .map(PartyItemSlotViewDto::of)
           .toList();

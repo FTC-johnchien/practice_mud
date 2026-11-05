@@ -258,6 +258,10 @@ public class DrpgCombatLoop {
                 dmg = com.example.htmlmud.combat.CombatRules.applyPoiseBreakCrit(dmg, true);
               }
               target.takeDamage(dmg);
+              int poiseBonus = member.getEquippedPoiseBreakBonus();
+              if (poiseBonus > 0 && target.isAlive()) {
+                target.applyPoiseDamage(poiseBonus);
+              }
               checkAndTriggerPhaseTransition(player, ctx, target);
               member.addThreat(dmg);
               target.addThreat(member.getId(), dmg);
@@ -954,7 +958,8 @@ public class DrpgCombatLoop {
               broadcastLog(player, ctx, "\u001B[1;36m   ↳ ☯️【靈氣逆流】" + e.getName() + " 吸收 " + dt + " 威能，反獲治療 " + healAmt + " 點氣血！\u001B[0m");
             } else {
               int[] dmgRef = new int[]{dmg};
-              int[] poiseDmgRef = new int[]{skill.getPoiseDamage()};
+              int basePoise = skill.getPoiseDamage() + (member != null ? member.getEquippedPoiseBreakBonus() : 0);
+              int[] poiseDmgRef = new int[]{basePoise};
               resolveElementalReactionAndDetonation(player, ctx, member, skill, e, dt, dmgRef, poiseDmgRef);
               dmg = dmgRef[0];
               int finalPoiseDmg = poiseDmgRef[0];
@@ -1053,7 +1058,8 @@ public class DrpgCombatLoop {
             broadcastLog(player, ctx, "\u001B[1;36m" + tag + "☯️【靈氣逆流】" + target.getName() + " 運轉道體，將【" + skill.getName() + "】之 " + dt + " 威能吸收，反獲治療 " + healAmt + " 點氣血！\u001B[0m");
           } else {
             int[] dmgRef = new int[]{dmg};
-            int[] poiseDmgRef = new int[]{skill.getPoiseDamage()};
+            int basePoise = skill.getPoiseDamage() + (member != null ? member.getEquippedPoiseBreakBonus() : 0);
+            int[] poiseDmgRef = new int[]{basePoise};
             resolveElementalReactionAndDetonation(player, ctx, member, skill, target, dt, dmgRef, poiseDmgRef);
             dmg = dmgRef[0];
             int finalPoiseDmg = poiseDmgRef[0];

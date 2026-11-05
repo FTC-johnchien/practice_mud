@@ -185,6 +185,7 @@ public class ComboResolver {
           hits
       ));
     } else {
+      int comboPoise = skill.getPoiseDamage() + (participants != null ? participants.stream().mapToInt(PartyMember::getEquippedPoiseBreakBonus).sum() : 0);
       if (skill.isAoe()) {
         List<BattleHit> hits = new ArrayList<>();
         for (BattleEnemy e : ctx.getEnemies()) {
@@ -192,6 +193,9 @@ public class ComboResolver {
             boolean isStaggerCrit = e.isPoiseBroken();
             int dmg = isStaggerCrit ? com.example.htmlmud.combat.CombatRules.applyPoiseBreakCrit(baseDmg, true) : baseDmg;
             e.takeDamage(dmg);
+            if (comboPoise > 0 && e.isAlive()) {
+              e.applyPoiseDamage(comboPoise);
+            }
             if (e.isAlive() && e.checkPhaseTransition() > e.getCurrentPhase()) {
               int nextPhase = e.checkPhaseTransition();
               e.transitionToPhase(nextPhase);
@@ -234,6 +238,9 @@ public class ComboResolver {
           boolean isStaggerCrit = target.isPoiseBroken();
           int dmg = isStaggerCrit ? com.example.htmlmud.combat.CombatRules.applyPoiseBreakCrit(baseDmg, true) : baseDmg;
           target.takeDamage(dmg);
+          if (comboPoise > 0 && target.isAlive()) {
+            target.applyPoiseDamage(comboPoise);
+          }
           if (target.isAlive() && target.checkPhaseTransition() > target.getCurrentPhase()) {
             int nextPhase = target.checkPhaseTransition();
             target.transitionToPhase(nextPhase);

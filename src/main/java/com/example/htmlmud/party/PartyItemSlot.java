@@ -145,6 +145,30 @@ public class PartyItemSlot {
     return sum;
   }
 
+  public int getTotalBonusHp() {
+    int sum = bonusHp;
+    if (affixes != null) {
+      for (var a : affixes) {
+        if ("bonusHp".equals(a.statKey()) || "hp".equals(a.statKey()) || "maxHp".equals(a.statKey())) {
+          sum += (int) a.value();
+        }
+      }
+    }
+    return sum;
+  }
+
+  public int getTotalBonusSan() {
+    int sum = bonusSan;
+    if (affixes != null) {
+      for (var a : affixes) {
+        if ("bonusSan".equals(a.statKey()) || "san".equals(a.statKey()) || "maxSan".equals(a.statKey())) {
+          sum += (int) a.value();
+        }
+      }
+    }
+    return sum;
+  }
+
   public boolean isConsumable() {
     return itemType == ItemType.CONSUMABLE || "SKILL_CORE".equals(subType);
   }
@@ -286,6 +310,8 @@ public class PartyItemSlot {
         .instanceId(this.slotId != null ? this.slotId : java.util.UUID.randomUUID().toString())
         .definitionId(this.itemId)
         .quantity(this.count > 0 ? this.count : 1)
+        .affixes(this.affixes != null ? new java.util.ArrayList<>(this.affixes) : new java.util.ArrayList<>())
+        .poiseBreakPower(this.poiseBreakPower)
         .build();
   }
 
@@ -309,8 +335,8 @@ public class PartyItemSlot {
         .bonusMinDamage(getTotalBonusMinDamage())
         .bonusMaxDamage(getTotalBonusMaxDamage())
         .bonusDefense(getTotalBonusDefense())
-        .bonusHp(this.bonusHp)
-        .bonusSan(this.bonusSan)
+        .bonusHp(getTotalBonusHp())
+        .bonusSan(getTotalBonusSan())
         .consumable(isConsumable())
         .weapon(isWeapon())
         .armor(isArmor())

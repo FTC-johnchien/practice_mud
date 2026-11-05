@@ -254,6 +254,14 @@ public class PartyMember implements Combatant {
     return Math.max(0, base);
   }
 
+  /**
+   * 彙總身上已穿戴裝備之削韌破防強度總和 (含隨機道韻詞綴)
+   */
+  @JsonIgnore
+  public int getEquippedPoiseBreakBonus() {
+    return (equipment != null) ? equipment.values().stream().mapToInt(PartyItemSlot::getTotalPoiseBreakPower).sum() : 0;
+  }
+
   public long getEffectiveAttackIntervalMs() {
     double speedPct = getStatModifierSum("SPEED_PCT");
     if (speedPct != 0) {
@@ -273,13 +281,13 @@ public class PartyMember implements Combatant {
     PartyItemSlot old = unequip(slot);
     if (item != null) {
       this.equipment.put(slot, item);
-      if (item.getBonusHp() > 0 && stats != null) {
-        stats.setMaxHp(stats.getMaxHp() + item.getBonusHp());
-        stats.setHp(stats.getHp() + item.getBonusHp());
+      if (item.getTotalBonusHp() > 0 && stats != null) {
+        stats.setMaxHp(stats.getMaxHp() + item.getTotalBonusHp());
+        stats.setHp(stats.getHp() + item.getTotalBonusHp());
       }
-      if (item.getBonusSan() > 0) {
-        this.maxSan += item.getBonusSan();
-        this.currentSan += item.getBonusSan();
+      if (item.getTotalBonusSan() > 0) {
+        this.maxSan += item.getTotalBonusSan();
+        this.currentSan += item.getTotalBonusSan();
       }
     }
     return old;
@@ -292,12 +300,12 @@ public class PartyMember implements Combatant {
     if (slot == null || equipment == null) return null;
     PartyItemSlot old = this.equipment.remove(slot);
     if (old != null) {
-      if (old.getBonusHp() > 0 && stats != null) {
-        stats.setMaxHp(Math.max(1, stats.getMaxHp() - old.getBonusHp()));
+      if (old.getTotalBonusHp() > 0 && stats != null) {
+        stats.setMaxHp(Math.max(1, stats.getMaxHp() - old.getTotalBonusHp()));
         stats.setHp(Math.min(stats.getHp(), stats.getMaxHp()));
       }
-      if (old.getBonusSan() > 0) {
-        this.maxSan = Math.max(1, this.maxSan - old.getBonusSan());
+      if (old.getTotalBonusSan() > 0) {
+        this.maxSan = Math.max(1, this.maxSan - old.getTotalBonusSan());
         this.currentSan = Math.min(this.currentSan, this.maxSan);
       }
     }

@@ -64,6 +64,7 @@ docs/
 │
 ├── 3_task_lists/                # Level 3: 模組實作清單與路線圖層 (1:1 鏡像對齊 Level 2)
 │   ├── README.md                # 📊 全模組 1:1 實作進度儀表板 (進度中樞與完成度總表)
+│   ├── CODE_DOCS_ALIGNMENT_V2_TASKS.md # 第二階段：程式碼與 L2/L3/L4 深度對齊專項清單
 │   ├── FUTURE_IMPROVEMENTS.md   # 宏觀演進戰略總表 (優先序矩陣與演進路徑)
 │   ├── backend/                 # 後端 10 大模組實作與驗收清單 (M1~M9, M3.1)
 │   ├── frontend/                # 前端 6 大表現模組實作與驗收清單 (FE1~FE6)
@@ -114,6 +115,7 @@ docs/
 - **鏡像對齊規範**：本目錄嚴格與 `docs/2_specifications/` 保持 1:1 模組鏡像結構。當 L1 需求變更時同步更新 L2 規格；當 L2 模組規格異動時，L3 對應模組檔案必須同步更新其驗收項目。
 - **核心文件與模組目錄**：
   - [📊 全模組實作進度儀表板 (README.md)](./3_task_lists/README.md)（全專案 19 大模組進度看板與完成度矩陣）
+  - [📋 第二階段：程式碼與文件深度對齊專項清單 (CODE_DOCS_ALIGNMENT_V2_TASKS.md)](./3_task_lists/CODE_DOCS_ALIGNMENT_V2_TASKS.md)（P0 缺口修復、營地卡牌接線與 L2~L4 契約對齊 12 步清單）
   - [🧭 宏觀演進戰略總表 (FUTURE_IMPROVEMENTS.md)](./3_task_lists/FUTURE_IMPROVEMENTS.md)（演進路徑與優先序總表）
   - [🏛️ 後端模組任務清單 (backend/)](./3_task_lists/backend/)（10 大後端模組 M1~M9、M3.1 實作清單）
   - [🎨 前端模組任務清單 (frontend/)](./3_task_lists/frontend/)（6 大前端模組 FE1~FE6 實作清單）

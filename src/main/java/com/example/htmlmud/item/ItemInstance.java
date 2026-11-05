@@ -36,6 +36,12 @@ public class ItemInstance {
   private Map<String, Object> dynamicProps = new HashMap<>();
 
   @Builder.Default
+  private List<ItemAffix> affixes = new ArrayList<>();
+
+  @Builder.Default
+  private int poiseBreakPower = 0;
+
+  @Builder.Default
   private List<ItemInstance> contents = new ArrayList<>();
 
   /**
