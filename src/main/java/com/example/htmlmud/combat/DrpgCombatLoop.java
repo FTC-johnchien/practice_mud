@@ -556,15 +556,13 @@ public class DrpgCombatLoop {
           player.sendJson(new com.example.htmlmud.combat.BattleEventsDto(ctx.getBattleId(), finalEvents));
         }
       }
-      if (activeBattles != null) {
+      if (activeBattles != null && ctx != null) {
         if (player != null) {
-          if (player.getName() != null) activeBattles.remove(player.getName());
-          if (player.getId() != null) activeBattles.remove(player.getId());
+          if (player.getName() != null) activeBattles.remove(player.getName(), ctx);
+          if (player.getId() != null) activeBattles.remove(player.getId(), ctx);
         }
-        if (ctx != null) {
-          if (ctx.getPlayerId() != null) activeBattles.remove(ctx.getPlayerId());
-          if (ctx.getBattleId() != null) activeBattles.remove(ctx.getBattleId());
-        }
+        if (ctx.getPlayerId() != null) activeBattles.remove(ctx.getPlayerId(), ctx);
+        if (ctx.getBattleId() != null) activeBattles.remove(ctx.getBattleId(), ctx);
       }
       if (stateBroadcaster != null && player != null) {
         stateBroadcaster.accept(player);

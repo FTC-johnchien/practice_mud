@@ -147,14 +147,14 @@ public class Party {
         return target.getName() + " 早已領悟掌握該項道法！";
       }
       getInventory().removeItem(slotId, 1);
-      return "✨ " + target.getName() + " 煉化吸收了【" + slot.getName() + "】，神魂共鳴，成功領悟掌握新絕學：【" + newSkill.getName() + "】！";
+      return "✨ " + target.getName() + " 煉化吸收了【" + slot.getDisplayNameWithAffixes() + "】，神魂共鳴，成功領悟掌握新絕學：【" + newSkill.getName() + "】！";
     }
 
     if (slot.getItemType() == com.example.htmlmud.domain.model.enums.ItemType.CONSUMABLE) {
       if ("HEAL_HP".equals(slot.getEffectType())) {
         target.heal(slot.getEffectValue());
         getInventory().removeItem(slotId, 1);
-        return "🌿 為 " + target.getName() + " 服用【" + slot.getName() + "】，氣血恢復 " + slot.getEffectValue() + " 點！";
+        return "🌿 為 " + target.getName() + " 服用【" + slot.getDisplayNameWithAffixes() + "】，氣血恢復 " + slot.getEffectValue() + " 點！";
       } else if ("RESTORE_SAN".equals(slot.getEffectType())) {
         target.restoreSan(slot.getEffectValue());
         // 若隊員處於走火入魔期 (CHAOS)，恢復後若 SAN > 0 則解除走火入魔！
@@ -162,14 +162,14 @@ public class Party {
           target.setMadnessState(PartyMember.MadnessState.SANE);
           target.setAberrationCounter(0);
           getInventory().removeItem(slotId, 1);
-          return "✨ 為 " + target.getName() + " 服用【" + slot.getName() + "】，心魔被太華清氣驅散，走火入魔狀態解除！道心恢復至 " + target.getCurrentSan() + " 點！";
+          return "✨ 為 " + target.getName() + " 服用【" + slot.getDisplayNameWithAffixes() + "】，心魔被太華清氣驅散，走火入魔狀態解除！道心恢復至 " + target.getCurrentSan() + " 點！";
         }
         getInventory().removeItem(slotId, 1);
-        return "✨ 為 " + target.getName() + " 使用【" + slot.getName() + "】，道心平復，恢復 " + slot.getEffectValue() + " 點 SAN！";
+        return "✨ 為 " + target.getName() + " 使用【" + slot.getDisplayNameWithAffixes() + "】，道心平復，恢復 " + slot.getEffectValue() + " 點 SAN！";
       } else if ("RESTORE_MP".equals(slot.getEffectType())) {
         target.restoreMp(slot.getEffectValue());
         getInventory().removeItem(slotId, 1);
-        return "🔮 為 " + target.getName() + " 服用【" + slot.getName() + "】，真元恢復 " + slot.getEffectValue() + " 點！";
+        return "🔮 為 " + target.getName() + " 服用【" + slot.getDisplayNameWithAffixes() + "】，真元恢復 " + slot.getEffectValue() + " 點！";
       }
     }
 
@@ -221,12 +221,12 @@ public class Party {
     }
 
     return switch (targetSlot) {
-      case MAIN_HAND -> "⚔️ " + target.getName() + " 裝備了武器【" + slot.getName() + "】！攻擊力顯著提升！";
-      case OFF_HAND -> "🛡️ " + target.getName() + " 裝備了副手【" + slot.getName() + "】！防禦加成提升！";
-      case HEAD -> "👑 " + target.getName() + " 穿戴了頭部防具【" + slot.getName() + "】！防禦與屬性提升！";
-      case BODY -> "🥋 " + target.getName() + " 穿戴了防具【" + slot.getName() + "】！防禦與氣血提升！";
-      case FEET -> "👢 " + target.getName() + " 穿戴了靴履【" + slot.getName() + "】！身法敏捷提升！";
-      case ACCESSORY_1, ACCESSORY_2 -> "💍 " + target.getName() + " 佩戴了法寶【" + slot.getName() + "】(" + targetSlot.getDisplayName() + ")！靈韻道心增幅！";
+      case MAIN_HAND -> "⚔️ " + target.getName() + " 裝備了武器【" + slot.getDisplayNameWithAffixes() + "】！攻擊力顯著提升！";
+      case OFF_HAND -> "🛡️ " + target.getName() + " 裝備了副手【" + slot.getDisplayNameWithAffixes() + "】！防禦加成提升！";
+      case HEAD -> "👑 " + target.getName() + " 穿戴了頭部防具【" + slot.getDisplayNameWithAffixes() + "】！防禦與屬性提升！";
+      case BODY -> "🥋 " + target.getName() + " 穿戴了防具【" + slot.getDisplayNameWithAffixes() + "】！防禦與氣血提升！";
+      case FEET -> "👢 " + target.getName() + " 穿戴了靴履【" + slot.getDisplayNameWithAffixes() + "】！身法敏捷提升！";
+      case ACCESSORY_1, ACCESSORY_2 -> "💍 " + target.getName() + " 佩戴了法寶【" + slot.getDisplayNameWithAffixes() + "】(" + targetSlot.getDisplayName() + ")！靈韻道心增幅！";
     };
   }
 
@@ -265,12 +265,12 @@ public class Party {
     if (old != null) {
       getInventory().addSlot(old);
       if (targetSlot == com.example.htmlmud.item.EquipmentSlot.MAIN_HAND) {
-        return "🗡️ " + target.getName() + " 卸下了武器【" + old.getName() + "】。";
+        return "🗡️ " + target.getName() + " 卸下了武器【" + old.getDisplayNameWithAffixes() + "】。";
       } else if (targetSlot == com.example.htmlmud.item.EquipmentSlot.BODY) {
-        return "🥋 " + target.getName() + " 卸下了防具【" + old.getName() + "】。";
+        return "🥋 " + target.getName() + " 卸下了防具【" + old.getDisplayNameWithAffixes() + "】。";
       } else {
         String icon = (old.getIcon() != null) ? old.getIcon() : "📦";
-        return icon + " " + target.getName() + " 卸下了" + targetSlot.getDisplayName() + "【" + old.getName() + "】。";
+        return icon + " " + target.getName() + " 卸下了" + targetSlot.getDisplayName() + "【" + old.getDisplayNameWithAffixes() + "】。";
       }
     }
 

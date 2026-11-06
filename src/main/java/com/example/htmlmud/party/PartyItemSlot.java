@@ -9,7 +9,9 @@ import com.example.htmlmud.item.EquipmentSlot;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.template.model.ItemTemplate;
 import com.example.htmlmud.domain.model.view.ItemView;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -74,6 +76,7 @@ public class PartyItemSlot {
     this.affixes.add(affix);
   }
 
+  @JsonIgnore
   public String getDisplayNameWithAffixes() {
     if (affixes == null || affixes.isEmpty()) {
       return name;
@@ -86,17 +89,32 @@ public class PartyItemSlot {
         .filter(a -> a.type() == com.example.htmlmud.item.ItemAffix.AffixType.SUFFIX)
         .map(com.example.htmlmud.item.ItemAffix::name)
         .collect(java.util.stream.Collectors.joining(""));
-    return prefixStr + (name != null ? name : "") + suffixStr;
+    String base = (name != null) ? name : "";
+    if (!prefixStr.isEmpty() && base.startsWith(prefixStr)) {
+      base = base.substring(prefixStr.length());
+    }
+    if (!suffixStr.isEmpty() && base.endsWith(suffixStr)) {
+      base = base.substring(0, base.length() - suffixStr.length());
+    }
+    return prefixStr + base + suffixStr;
   }
 
+  @JsonProperty("name")
   public String getName() {
-    return getDisplayNameWithAffixes();
+    return this.name;
   }
 
+  @JsonProperty("name")
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  @JsonIgnore
   public String getBaseName() {
     return this.name;
   }
 
+  @JsonIgnore
   public int getTotalBonusMinDamage() {
     int sum = bonusMinDamage;
     if (affixes != null) {
@@ -109,6 +127,7 @@ public class PartyItemSlot {
     return sum;
   }
 
+  @JsonIgnore
   public int getTotalBonusMaxDamage() {
     int sum = bonusMaxDamage;
     if (affixes != null) {
@@ -121,6 +140,7 @@ public class PartyItemSlot {
     return sum;
   }
 
+  @JsonIgnore
   public int getTotalBonusDefense() {
     int sum = bonusDefense;
     if (affixes != null) {
@@ -133,6 +153,7 @@ public class PartyItemSlot {
     return sum;
   }
 
+  @JsonIgnore
   public int getTotalPoiseBreakPower() {
     int sum = poiseBreakPower;
     if (affixes != null) {
@@ -145,6 +166,7 @@ public class PartyItemSlot {
     return sum;
   }
 
+  @JsonIgnore
   public int getTotalBonusHp() {
     int sum = bonusHp;
     if (affixes != null) {
@@ -157,6 +179,7 @@ public class PartyItemSlot {
     return sum;
   }
 
+  @JsonIgnore
   public int getTotalBonusSan() {
     int sum = bonusSan;
     if (affixes != null) {
@@ -169,35 +192,43 @@ public class PartyItemSlot {
     return sum;
   }
 
+  @JsonIgnore
   public boolean isConsumable() {
     return itemType == ItemType.CONSUMABLE || "SKILL_CORE".equals(subType);
   }
 
+  @JsonIgnore
   public boolean isEquipment() {
     return isWeapon() || isArmor() || isShield() || isAccessory() || equipSlot != null;
   }
 
+  @JsonIgnore
   public boolean isWeapon() {
     return itemType == ItemType.WEAPON || equipSlot == EquipmentSlot.MAIN_HAND;
   }
 
+  @JsonIgnore
   public boolean isShield() {
     return itemType == ItemType.SHIELD || equipSlot == EquipmentSlot.OFF_HAND;
   }
 
+  @JsonIgnore
   public boolean isAccessory() {
     return itemType == ItemType.ACCESSORY || (equipSlot != null && equipSlot.isAccessory());
   }
 
+  @JsonIgnore
   public boolean isArmor() {
     return itemType == ItemType.ARMOR
         || (equipSlot != null && (equipSlot == EquipmentSlot.BODY || equipSlot == EquipmentSlot.HEAD || equipSlot == EquipmentSlot.FEET));
   }
 
+  @JsonIgnore
   public boolean isStackable() {
     return itemType == ItemType.CONSUMABLE || itemType == ItemType.MATERIAL;
   }
 
+  @JsonIgnore
   public boolean isEmpty() {
     return itemId == null || itemId.isBlank() || count <= 0;
   }

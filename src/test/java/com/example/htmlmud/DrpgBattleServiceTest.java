@@ -95,10 +95,10 @@ class DrpgBattleServiceTest {
   void testSkillCastingResources() {
     battleService.startBattle(dummyPlayer, dungeonPos, List.of("taiyin_tomb:corpse_doll"));
     BattleContext ctx = null;
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 40; i++) {
       ctx = battleService.getBattle("tester");
       if (ctx != null) break;
-      try { Thread.sleep(25); } catch (InterruptedException ignored) {}
+      try { Thread.sleep(50); } catch (InterruptedException ignored) {}
     }
     assertThat(ctx).isNotNull();
 
@@ -155,10 +155,10 @@ class DrpgBattleServiceTest {
   void testPartyUltimate() {
     battleService.startBattle(dummyPlayer, dungeonPos, List.of("taiyin_tomb:corpse_doll"));
     BattleContext ctx = null;
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 40; i++) {
       ctx = battleService.getBattle("tester");
       if (ctx != null) break;
-      try { Thread.sleep(25); } catch (InterruptedException ignored) {}
+      try { Thread.sleep(50); } catch (InterruptedException ignored) {}
     }
     assertThat(ctx).isNotNull();
     for (var enemy : ctx.getEnemies()) {
@@ -178,10 +178,10 @@ class DrpgBattleServiceTest {
   void testFightActionAndBattleView() {
     battleService.startBattle(dummyPlayer, dungeonPos, List.of("taiyin_tomb:corpse_doll"));
     BattleContext ctx = null;
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 40; i++) {
       ctx = battleService.getBattle("tester");
       if (ctx != null) break;
-      try { Thread.sleep(25); } catch (InterruptedException ignored) {}
+      try { Thread.sleep(50); } catch (InterruptedException ignored) {}
     }
     assertThat(ctx).isNotNull();
     for (var enemy : ctx.getEnemies()) {

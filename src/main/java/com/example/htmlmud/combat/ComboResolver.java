@@ -393,7 +393,8 @@ public class ComboResolver {
     int totalAtk = aliveMembers.stream().mapToInt(PartyMember::getEffectiveMaxDamage).sum();
     double multiplier = 2.5 + (resonance * 0.5) + finisher.damageMultiplierBonus();
     int finisherDamage = (int) Math.round(totalAtk * multiplier);
-    int poiseDmg = 50 + (resonance * 10) + finisher.poiseBonus();
+    int equippedPoiseBonus = aliveMembers.stream().mapToInt(PartyMember::getEquippedPoiseBreakBonus).sum();
+    int poiseDmg = 50 + (resonance * 10) + finisher.poiseBonus() + equippedPoiseBonus;
     int sanHeal = 15 + finisher.sanHealBonus();
     int hpHeal = 50 + finisher.hpHealBonus();
 

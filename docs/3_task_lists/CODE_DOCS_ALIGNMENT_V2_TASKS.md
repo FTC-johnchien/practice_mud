@@ -42,23 +42,26 @@
 
 ## 🔴 二、Phase 1：P0 實質功能損壞修復與假完工閉環（最高優先）
 
-### - [ ] Task ALIGN2-01 (EQUIP-DTO-AND-COMBAT-POISE): 打通裝備隨機詞綴與 `poiseBreakPower` 之 DTO 投影與戰鬥削韌結算（初審 90% 已落地，待完成複審收尾 3 項）
+### - [x] Task ALIGN2-01 (EQUIP-DTO-AND-COMBAT-POISE): 打通裝備隨機詞綴與 `poiseBreakPower` 之 DTO 投影與戰鬥削韌結算（二審 100% 已落地，2 項衍生問題已根除結案）
 - **目標檔案**：
   - `src/main/java/com/example/htmlmud/dungeon/DrpgStateDto.java`
   - `src/main/java/com/example/htmlmud/party/PartyItemSlot.java`
+  - `src/main/java/com/example/htmlmud/party/Party.java`
   - `src/main/java/com/example/htmlmud/party/PartyMember.java`
   - `src/main/java/com/example/htmlmud/combat/DrpgCombatLoop.java`
+  - `src/main/java/com/example/htmlmud/combat/DrpgRewardService.java`
+  - `src/main/java/com/example/htmlmud/combat/DrpgBattleService.java`
   - `src/main/java/com/example/htmlmud/combat/ComboResolver.java`
   - `src/main/resources/static/js/modals/party-equipment-tab.js`
   - `src/test/java/com/example/htmlmud/CyberSkillAndItemAffixTest.java`
   - `src/test/java/com/example/htmlmud/DrpgStateDtoTest.java`
-- **已完成基礎（第一輪實作已就緒，勿回退）**：
-  - `DrpgStateDto.PartyItemSlotViewDto` 已補齊 `poiseBreakPower`、`affixes` 與含詞綴攻防血理智總值，空行囊 fallback 容量已改為 `40`；`PartyItemSlot.toItemInstance()` 已複製 `affixes` 與 `poiseBreakPower`；`PartyMember.getEquippedPoiseBreakBonus()` 與穿脫血量／理智詞綴加成、`DrpgCombatLoop`（普攻／單體／AOE）與 `ComboResolver`（2P/3P 合體技）削韌加成已接線。
-- **指導員複審待補項目（請執行員完成以下 3 點並驗證通過後，再勾選 `[x]`）**：
-  1. **修復 Jackson 存讀檔詞綴名稱無限疊加 Bug（P0 必測）**：`PartyItemSlot.java`（L92–94）目前讓 `getName()` 回傳已拼好詞綴的 `getDisplayNameWithAffixes()`，導致 `SaveData` 經 Jackson 存檔時將 `"超頻之寒霜靈刃·破陣"` 寫入 JSON `"name"`，讀檔反序列化回 `this.name` 後再次呼叫 `getName()` 會重複疊加成 `"超頻之超頻之寒霜靈刃·破陣·破陣"`。請將 Jackson 持久化的 `"name"` 綁定純基礎名稱欄位（並為 `getDisplayNameWithAffixes()`、`getBaseName()`、`getTotalBonus*()`、`getTotalPoiseBreakPower()` 等衍生計算 getter 補上 `@JsonIgnore` 避免污染存檔 JSON，同時確保 `PartyItemSlotViewDto.of()` 與顯示端仍輸出含詞綴完整名稱）；於 `CyberSkillAndItemAffixTest` 新增真實 Jackson `ObjectMapper` 連續兩次序列化／反序列化 Round-trip 測試，斷言名稱與詞綴絕不重複疊加。
-  2. **補齊 5 人陣終結技裝備削韌加成與真實戰鬥引擎測試**：在 `ComboResolver.java` L396 的 5 人陣法終結技 `poiseDmg` 計算一併納入存活隊員的 `getEquippedPoiseBreakBonus()` 總和；並重構 `CyberSkillAndItemAffixTest.testEquippedPoiseBreakBonusInCombatSettlement`，改為**真實呼叫 `DrpgCombatLoop` 或 `ComboResolver` 的戰鬥結算流程**驗證首領削韌差值（禁止僅在測試內手動相加數值餵給 `BattleEnemy.applyPoiseDamage`）。
-  3. **補齊前端已穿戴槽位與行囊武器列之削韌顯示**：在 `src/main/resources/static/js/modals/party-equipment-tab.js` 的行囊武器摘要（L224–225）與角色裝備欄列（L1010–1015 `statsParts`）補上非零 `poiseBreakPower` 的 `削韌 +X` 顯示，使行囊、角色主欄與更換比較視窗三處一致。
-- **驗收標準**：Jackson 連續存讀檔詞綴名稱零疊加；真實戰鬥結算迴圈與 5P 終結技套用裝備削韌；前端三處裝備介面一致顯示削韌與詞綴；`.\scripts\check-doc-links.ps1` 與 `.\test.ps1` 全綠。
+  - `src/test/java/com/example/htmlmud/DrpgBattleServiceTest.java`
+- **已驗收通過項目（勿回退）**：
+  - ✅ DTO 詞綴／削韌投影與 40 格空背包預設、`PartyItemSlot` `@JsonProperty("name")` + 16 個衍生 getter `@JsonIgnore` 與 `ObjectMapper` 雙重往返測試、`ComboResolver` 合擊與 5P 終結技真實戰鬥削韌測試、`party-equipment-tab.js` 三處削韌與詞綴顯示皆已到位。
+- **指導員二審待補項目（完成以下 2 點並確保 `.\test.ps1` 0 失敗後勾選 `[x]`）**：
+  1. **補齊 `getName()` 改回純基礎名稱後之掉落／穿戴展示名稱（Side-effect 修正）**：因 `PartyItemSlot.getName()` 現回傳純基礎名，導致 `DrpgRewardService.java` L256（戰鬥結算掉落卡牌 `dropName = equipSlot.getName()`）、`Party.java` L224–230（穿戴裝備回饋訊息）與 `src/main/java/com/example/htmlmud/application/command/impl/EquipCommand.java` L129 漏顯示隨機前後綴（如掉出神兵只顯示白板名）。請將上述展示端改呼叫 `getDisplayNameWithAffixes()`。
+  2. **根治 `DrpgBattleServiceTest` 虛擬執行緒競態紅燈（實跑 `.\test.ps1` 於 L103 失敗）**：上一場測試 `cancel(true)` 後，舊虛擬執行緒非同步進入 `DrpgCombatLoop.java` L560–568 `finally`（及 `DrpgRewardService.java` L123–124 / L341–342、`DrpgBattleService.java` L958），以單參數 `activeBattles.remove(player.getName())` **無條件誤刪了下一場測試剛建立的新 `BattleContext`**（單純在 `DrpgBattleServiceTest` 加長 `sleep` 無法修復已被誤刪的 `ctx`）。請將上述移除呼叫全面改為雙參數原子條件移除 `activeBattles.remove(key, ctx)`，確保舊戰鬥迴圈收尾絕不覆蓋新戰鬥。
+- **驗收標準**：戰鬥掉落卡牌與穿戴訊息正確顯示含詞綴全名；連續執行 `.\test.ps1` 與 `.\scripts\check-doc-links.ps1` 100% 綠燈（0 Failures）。
 
 ---
 

@@ -649,7 +649,7 @@ public record DrpgStateDto(
       return new PartyItemSlotViewDto(
           s.getSlotId(),
           s.getItemId(),
-          s.getName(),
+          s.getDisplayNameWithAffixes(),
           s.getIcon(),
           s.getItemType() != null ? s.getItemType().name() : "MISC",
           s.getSubType(),

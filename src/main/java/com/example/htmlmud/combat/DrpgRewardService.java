@@ -119,9 +119,9 @@ public class DrpgRewardService {
    */
   public void resolveVictory(Player player, BattleContext ctx, DungeonPosition pos,
       Map<String, BattleContext> activeBattles, Consumer<Player> stateBroadcaster) {
-    if (player != null && activeBattles != null) {
-      if (player.getName() != null) activeBattles.remove(player.getName());
-      if (player.getId() != null) activeBattles.remove(player.getId());
+    if (player != null && activeBattles != null && ctx != null) {
+      if (player.getName() != null) activeBattles.remove(player.getName(), ctx);
+      if (player.getId() != null) activeBattles.remove(player.getId(), ctx);
     }
 
     int totalXp = ctx.getEnemies().stream().mapToInt(BattleEnemy::getXp).sum();
@@ -253,7 +253,7 @@ public class DrpgRewardService {
               if (itemAffixService != null) {
                 itemAffixService.applyRandomAffixes(equipSlot);
               }
-              dropName = equipSlot.getName();
+              dropName = equipSlot.getDisplayNameWithAffixes();
               dropIcon = equipSlot.getIcon() != null ? equipSlot.getIcon() : dropIcon;
               dropQuality = equipSlot.getQuality() != null ? equipSlot.getQuality() : dropQuality;
               dropDesc = equipSlot.getDescription() != null ? equipSlot.getDescription() : dropDesc;
@@ -337,9 +337,9 @@ public class DrpgRewardService {
    */
   public void resolveDefeat(Player player, BattleContext ctx, DungeonPosition pos,
       Map<String, BattleContext> activeBattles, Consumer<Player> stateBroadcaster) {
-    if (player != null && activeBattles != null) {
-      if (player.getName() != null) activeBattles.remove(player.getName());
-      if (player.getId() != null) activeBattles.remove(player.getId());
+    if (player != null && activeBattles != null && ctx != null) {
+      if (player.getName() != null) activeBattles.remove(player.getName(), ctx);
+      if (player.getId() != null) activeBattles.remove(player.getId(), ctx);
     }
 
     // 扣除 SAN 並救治至 30% HP

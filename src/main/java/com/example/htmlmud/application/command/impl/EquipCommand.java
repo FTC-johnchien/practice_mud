@@ -126,17 +126,20 @@ public class EquipCommand implements PlayerCommand {
       return "\u001B[1;30m(空)\u001B[0m";
     }
     StringBuilder desc = new StringBuilder();
-    desc.append(slot.getName());
+    desc.append(slot.getDisplayNameWithAffixes());
     if (slot.isWeapon()) {
-      desc.append(" [攻 +").append(slot.getBonusMinDamage()).append("~").append(slot.getBonusMaxDamage()).append("]");
-    } else if (slot.isArmor() || slot.isShield()) {
-      desc.append(" [防 +").append(slot.getBonusDefense());
-      if (slot.getBonusHp() > 0) desc.append(", 氣血 +").append(slot.getBonusHp());
+      desc.append(" [攻 +").append(slot.getTotalBonusMinDamage()).append("~").append(slot.getTotalBonusMaxDamage());
+      if (slot.getTotalPoiseBreakPower() > 0) desc.append(", 削韌 +").append(slot.getTotalPoiseBreakPower());
       desc.append("]");
-    } else if (slot.getBonusSan() > 0 || slot.getBonusDefense() > 0) {
+    } else if (slot.isArmor() || slot.isShield()) {
+      desc.append(" [防 +").append(slot.getTotalBonusDefense());
+      if (slot.getTotalBonusHp() > 0) desc.append(", 氣血 +").append(slot.getTotalBonusHp());
+      if (slot.getTotalPoiseBreakPower() > 0) desc.append(", 削韌 +").append(slot.getTotalPoiseBreakPower());
+      desc.append("]");
+    } else if (slot.getTotalBonusSan() > 0 || slot.getTotalBonusDefense() > 0) {
       desc.append(" [");
-      if (slot.getBonusSan() > 0) desc.append("道心 +").append(slot.getBonusSan()).append(" ");
-      if (slot.getBonusDefense() > 0) desc.append("防 +").append(slot.getBonusDefense());
+      if (slot.getTotalBonusSan() > 0) desc.append("道心 +").append(slot.getTotalBonusSan()).append(" ");
+      if (slot.getTotalBonusDefense() > 0) desc.append("防 +").append(slot.getTotalBonusDefense());
       desc.append("]");
     }
     return desc.toString();

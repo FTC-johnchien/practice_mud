@@ -222,9 +222,15 @@ export function renderItemsListHtml(itemTab, secFilter, party) {
 
       let effectDesc = '';
       if (item.weapon) {
-        effectDesc = `<span style="color:#f87171;">🗡️ 攻 +${item.bonusMinDamage}~${item.bonusMaxDamage}</span>`;
+        let wpParts = [`🗡️ 攻 +${item.bonusMinDamage}~${item.bonusMaxDamage}`];
+        if (item.poiseBreakPower) wpParts.push(`💥 削韌 +${item.poiseBreakPower}`);
+        if (item.affixes && item.affixes.length > 0) wpParts.push(`✨ 詞綴×${item.affixes.length}`);
+        effectDesc = `<span style="color:#f87171;">${wpParts.join(' ')}</span>`;
       } else if (item.armor) {
-        effectDesc = `<span style="color:#60a5fa;">🥋 防 +${item.bonusDefense}, 血 +${item.bonusHp}</span>`;
+        let arParts = [`🥋 防 +${item.bonusDefense}, 血 +${item.bonusHp}`];
+        if (item.poiseBreakPower) arParts.push(`💥 削韌 +${item.poiseBreakPower}`);
+        if (item.affixes && item.affixes.length > 0) arParts.push(`✨ 詞綴×${item.affixes.length}`);
+        effectDesc = `<span style="color:#60a5fa;">${arParts.join(' ')}</span>`;
       } else if (item.effectType === 'HEAL_HP') {
         effectDesc = `<span style="color:#34d399;">🌿 服用回復 ${item.effectValue} HP</span>`;
       } else if (item.effectType === 'RESTORE_SAN') {
@@ -1009,9 +1015,11 @@ export function renderTeamEquipmentOverview(party) {
       if (item) {
         let statsParts = [];
         if (item.bonusMinDamage || item.bonusMaxDamage) statsParts.push(`攻 +${item.bonusMinDamage}~${item.bonusMaxDamage}`);
+        if (item.poiseBreakPower) statsParts.push(`削韌 +${item.poiseBreakPower}`);
         if (item.bonusDefense) statsParts.push(`防 +${item.bonusDefense}`);
         if (item.bonusHp) statsParts.push(`血 +${item.bonusHp}`);
         if (item.bonusSan) statsParts.push(`心 +${item.bonusSan}`);
+        if (item.affixes && item.affixes.length > 0) statsParts.push(`✨ 詞綴×${item.affixes.length}`);
         const statStr = statsParts.length > 0 ? statsParts.join(' ') : '裝備中';
 
         return `

@@ -955,7 +955,9 @@ public class DrpgBattleService {
       ctx.setState(BattleState.FLED);
       broadcastLog(player, ctx, "\u001B[1;33m🏃【遁地金光】小隊捏碎遁符，借陰風遁出百丈！代價道心微顫 (-5 SAN)！\u001B[0m");
       rewardService.postBattleCleanup(player, ctx);
-      activeBattles.remove(player.getName());
+      if (player != null && player.getName() != null) {
+        activeBattles.remove(player.getName(), ctx);
+      }
       pushDrpgState(player, pos, null);
       player.reply("你成功擺脫了妖邪的追擊！");
     } else {
