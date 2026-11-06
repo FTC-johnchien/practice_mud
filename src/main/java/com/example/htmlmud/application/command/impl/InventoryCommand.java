@@ -99,10 +99,16 @@ public class InventoryCommand implements PlayerCommand {
           sb.append(" [武器: 攻 +").append(s.getBonusMinDamage()).append("~").append(s.getBonusMaxDamage()).append("]");
         } else if (s.isArmor()) {
           sb.append(" [防具: 防 +").append(s.getBonusDefense()).append(", 氣血 +").append(s.getBonusHp()).append("]");
-        } else if ("RESTORE_SAN".equals(s.getEffectType())) {
-          sb.append(" [清心符: 回復 ").append(s.getEffectValue()).append(" SAN，解走火入魔]");
-        } else if ("HEAL_HP".equals(s.getEffectType())) {
+        } else if ("RESTORE_SAN".equals(s.getEffectType()) || "RESTORE_SAN_MP".equals(s.getEffectType())) {
+          if ("RESTORE_SAN_MP".equals(s.getEffectType()) || (s.getItemId() != null && s.getItemId().contains("purify_tea"))) {
+            sb.append(" [清心靈茶: 回復 ").append(s.getEffectValue()).append(" SAN 與 20 MP]");
+          } else {
+            sb.append(" [清心符: 回復 ").append(s.getEffectValue()).append(" SAN，解走火入魔]");
+          }
+        } else if ("HEAL_HP".equals(s.getEffectType()) || "HEAL".equals(s.getEffectType())) {
           sb.append(" [靈丹: 回復 ").append(s.getEffectValue()).append(" HP]");
+        } else if ("RESTORE_MP".equals(s.getEffectType())) {
+          sb.append(" [法力露: 回復 ").append(s.getEffectValue()).append(" MP]");
         } else if ("LEARN_SKILL".equals(s.getEffectType())) {
           sb.append(" \u001B[1;35m[血肉道種: 可領悟【").append(s.getGrantedSkillName()).append("】]\u001B[0m");
         }

@@ -116,6 +116,22 @@ class DungeonDefeatSettlementTest {
     saveGameService.deleteSave(1);
   }
 
+  private void awaitCapturedMessage(java.util.function.Predicate<String> predicate, long timeoutMs) {
+    long deadline = System.currentTimeMillis() + timeoutMs;
+    while (System.currentTimeMillis() < deadline) {
+      if (capturedMessages.stream().anyMatch(predicate)) {
+        return;
+      }
+      try {
+        Thread.sleep(10);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        break;
+      }
+    }
+    assertThat(capturedMessages).anyMatch(predicate);
+  }
+
   @Test
   @DisplayName("Task C2-1 (M2-3): 地牢全滅戰敗結算——自動遣返營地、虛弱復甦30%氣血、扣除20點SAN並觸發AutoSave")
   void testDungeonWipeDefeatSettlement() {
@@ -193,7 +209,7 @@ class DungeonDefeatSettlementTest {
 
       capturedMessages.clear();
       saveCommand.execute("1");
-      assertThat(capturedMessages).anyMatch(r -> r.contains("地脈煞氣擾動") && r.contains("唯有抵達脫離石階或安全生路"));
+      awaitCapturedMessage(r -> r.contains("地脈煞氣擾動") && r.contains("唯有抵達脫離石階或安全生路"), 1000);
       assertThat(saveGameService.readSlotSummary(1, "槽位1").isEmpty()).isTrue();
 
       // 2. 移動至生路撤離石階 (< STAIRS_UP)
@@ -205,7 +221,7 @@ class DungeonDefeatSettlementTest {
       assertTrue(saveGameService.isManualSaveAllowed(player), "在撤離石階處應允許手動存檔");
 
       saveCommand.execute("1 墨竹礦坑石階存檔");
-      assertThat(capturedMessages).anyMatch(r -> r.contains("道印封存") && r.contains("存檔槽位 1"));
+      awaitCapturedMessage(r -> r.contains("道印封存") && r.contains("存檔槽位 1"), 1000);
       assertThat(saveGameService.readSlotSummary(1, "槽位1").isEmpty()).isFalse();
 
       // 3. 移動至神秘殘碑生門 (EVENT '!')
@@ -218,7 +234,7 @@ class DungeonDefeatSettlementTest {
       assertTrue(saveGameService.isManualSaveAllowed(player), "在古仙殘碑生門處應允許手動存檔");
 
       saveCommand.execute("1 古仙殘碑入定");
-      assertThat(capturedMessages).anyMatch(r -> r.contains("道印封存") && r.contains("存檔槽位 1"));
+      awaitCapturedMessage(r -> r.contains("道印封存") && r.contains("存檔槽位 1"), 1000);
       assertThat(saveGameService.readSlotSummary(1, "槽位1").isEmpty()).isFalse();
 
       // 4. 回到地表營地 (inDungeon = false)

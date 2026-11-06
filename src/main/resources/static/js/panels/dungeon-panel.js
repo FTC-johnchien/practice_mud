@@ -186,7 +186,7 @@ export function renderMinimap(dungeon) {
           <div class="torch-bar-fill ${torchInfo.cls}" style="width: ${torchLight}%"></div>
         </div>
         <span class="torch-val-text">${torchLight}%</span>
-        <button type="button" class="torch-light-btn" onclick="window.cmd && window.cmd('dungeon torch')" title="消耗行囊火把或10靈石點火照亮 (dungeon torch)">🔥 點火</button>
+        <button type="button" class="torch-light-btn" data-action="dungeon-torch" title="消耗行囊火把或10靈石點火照亮 [T] (dungeon torch)">🔥 點火</button>
       </div>
     `;
   }

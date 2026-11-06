@@ -280,7 +280,7 @@ export function updateContextActionBar(mode, inBattle) {
     if (townActions) townActions.classList.add('hidden');
     if (dungeonActions) dungeonActions.classList.remove('hidden');
     if (hintText) {
-      hintText.innerText = '🧭 靈境探索中 ‧ WASD/羅盤步進 ‧ I: 探查 ‧ R: 調息 ‧ B: 行囊 ‧ C: 選單 ‧ 1~5: 招式';
+      hintText.innerText = '🧭 靈境探索中 ‧ WASD/羅盤步進 ‧ I: 探查 ‧ R: 調息 ‧ T: 點火 ‧ B: 行囊 ‧ C: 選單 ‧ 1~5: 招式';
     }
   }
 }
@@ -614,6 +614,11 @@ export function initKeyboardControls() {
     } else if (key === 'r') {
       e.preventDefault();
       triggerRestAction();
+    } else if (key === 't') {
+      if (store.get('mode') === 'DUNGEON') {
+        e.preventDefault();
+        sendCmd('dungeon torch');
+      }
     } else if (key === 'u') {
       e.preventDefault();
       triggerFormationUltimate();
@@ -684,6 +689,9 @@ export function initEventDelegation() {
         break;
       case 'toggle-radar-mode':
         toggleRadarViewMode();
+        break;
+      case 'dungeon-torch':
+        sendCmd('dungeon torch');
         break;
       case 'town-move':
         sendTownMove(target.getAttribute('data-dir'));

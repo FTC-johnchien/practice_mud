@@ -151,20 +151,29 @@ public class Party {
     }
 
     if (slot.getItemType() == com.example.htmlmud.domain.model.enums.ItemType.CONSUMABLE) {
-      if ("HEAL_HP".equals(slot.getEffectType())) {
+      if ("HEAL_HP".equals(slot.getEffectType()) || "HEAL".equals(slot.getEffectType())) {
         target.heal(slot.getEffectValue());
         getInventory().removeItem(slotId, 1);
         return "🌿 為 " + target.getName() + " 服用【" + slot.getDisplayNameWithAffixes() + "】，氣血恢復 " + slot.getEffectValue() + " 點！";
-      } else if ("RESTORE_SAN".equals(slot.getEffectType())) {
+      } else if ("RESTORE_SAN".equals(slot.getEffectType()) || "RESTORE_SAN_MP".equals(slot.getEffectType())) {
         target.restoreSan(slot.getEffectValue());
+        int restoredMp = 0;
+        if ("RESTORE_SAN_MP".equals(slot.getEffectType()) || (slot.getItemId() != null && slot.getItemId().contains("purify_tea"))) {
+          restoredMp = 20; // 辟邪清心靈茶規格: 回復 25 SAN 與 20 MP (M6 規格)
+          target.restoreMp(restoredMp);
+        }
         // 若隊員處於走火入魔期 (CHAOS)，恢復後若 SAN > 0 則解除走火入魔！
         if (target.getMadnessState() == PartyMember.MadnessState.CHAOS && target.getCurrentSan() > 0) {
           target.setMadnessState(PartyMember.MadnessState.SANE);
           target.setAberrationCounter(0);
           getInventory().removeItem(slotId, 1);
-          return "✨ 為 " + target.getName() + " 服用【" + slot.getDisplayNameWithAffixes() + "】，心魔被太華清氣驅散，走火入魔狀態解除！道心恢復至 " + target.getCurrentSan() + " 點！";
+          return "✨ 為 " + target.getName() + " 服用【" + slot.getDisplayNameWithAffixes() + "】，心魔被太華清氣驅散，走火入魔狀態解除！道心恢復至 " + target.getCurrentSan() + " 點！"
+              + (restoredMp > 0 ? "（真元同時凝練回復 " + restoredMp + " 點）" : "");
         }
         getInventory().removeItem(slotId, 1);
+        if (restoredMp > 0) {
+          return "✨ 為 " + target.getName() + " 服用【" + slot.getDisplayNameWithAffixes() + "】，道心平復，恢復 " + slot.getEffectValue() + " 點 SAN，真元凝練回復 " + restoredMp + " 點 MP！";
+        }
         return "✨ 為 " + target.getName() + " 使用【" + slot.getDisplayNameWithAffixes() + "】，道心平復，恢復 " + slot.getEffectValue() + " 點 SAN！";
       } else if ("RESTORE_MP".equals(slot.getEffectType())) {
         target.restoreMp(slot.getEffectValue());

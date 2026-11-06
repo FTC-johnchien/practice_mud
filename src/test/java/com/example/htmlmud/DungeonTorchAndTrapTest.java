@@ -49,6 +49,9 @@ class DungeonTorchAndTrapTest {
   @Autowired
   private com.example.htmlmud.combat.DrpgBattleService battleService;
 
+  @Autowired
+  private com.example.htmlmud.town.TownHubService townHubService;
+
   private Player testPlayer;
 
   @BeforeEach
@@ -351,6 +354,31 @@ class DungeonTorchAndTrapTest {
       }
       assertThat(doorTile.isTriggered()).isTrue();
       assertThat(vanguard.getCurrentSp()).isEqualTo(beforeSp + 20);
+    });
+  }
+
+  @Test
+  @DisplayName("7. 驗證地牢別名映射防呆 (dungeon enter mozhu_mines -> mozhu_mines_b1f 與 taiyin_tomb -> taiyin_tomb_b1f)")
+  void testDungeonEnterAliasMapping() {
+    ScopedValue.where(MudContext.CURRENT_PLAYER, testPlayer).run(() -> {
+      testPlayer.setInDungeon(false);
+
+      // 輸入別名 mozhu_mines 應成功映射至 mozhu_mines_b1f
+      dungeonCommand.execute("dungeon enter mozhu_mines");
+      assertThat(testPlayer.isInDungeon()).isTrue();
+      DungeonPosition pos1 = dungeonManager.getOrCreatePosition(testPlayer.getName(), null);
+      assertThat(pos1.getFloorId()).isEqualTo("mozhu_mines_b1f");
+
+      // 切換別名 taiyin_tomb 應成功映射至 taiyin_tomb_b1f
+      dungeonCommand.execute("dungeon switch taiyin_tomb");
+      DungeonPosition pos2 = dungeonManager.getOrCreatePosition(testPlayer.getName(), null);
+      assertThat(pos2.getFloorId()).isEqualTo("taiyin_tomb_b1f");
+
+      // 驗證 facilities.json 的 targetDungeons 正確設定為真實樓層 ID
+      var hub = townHubService.getTownHub("newbie_village", 0);
+      var portal = hub.facilities().stream().filter(f -> "fac_dungeon_portal".equals(f.id())).findFirst();
+      assertThat(portal).isPresent();
+      assertThat(portal.get().targetDungeons()).contains("mozhu_mines_b1f", "taiyin_tomb_b1f");
     });
   }
 }

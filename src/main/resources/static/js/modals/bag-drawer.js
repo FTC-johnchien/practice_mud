@@ -69,10 +69,14 @@ export function renderBagDrawer() {
       effectDesc = `🗡️ 攻擊力 +${item.bonusMinDamage}~${item.bonusMaxDamage}`;
     } else if (item.armor) {
       effectDesc = `🥋 防禦 +${item.bonusDefense}, 氣血 +${item.bonusHp}`;
-    } else if (item.effectType === 'HEAL_HP') {
+    } else if (item.effectType === 'HEAL_HP' || item.effectType === 'HEAL') {
       effectDesc = `🌿 服用回復 ${item.effectValue} HP`;
-    } else if (item.effectType === 'RESTORE_SAN') {
-      effectDesc = `📜 服用回復 ${item.effectValue} SAN (解走火入魔)`;
+    } else if (item.effectType === 'RESTORE_SAN' || item.effectType === 'RESTORE_SAN_MP') {
+      effectDesc = (item.effectType === 'RESTORE_SAN_MP' || (item.itemId && item.itemId.includes('purify_tea')))
+        ? `🍵 飲用回復 ${item.effectValue} SAN ‧ 20 MP`
+        : `📜 服用回復 ${item.effectValue} SAN (解走火入魔)`;
+    } else if (item.effectType === 'RESTORE_MP') {
+      effectDesc = `🔮 服用回復 ${item.effectValue} MP`;
     } else if (item.effectType === 'LEARN_SKILL') {
       effectDesc = `🧬 煉化領悟絕學【${escapeHtml(item.grantedSkillName || '道種')}】`;
     }

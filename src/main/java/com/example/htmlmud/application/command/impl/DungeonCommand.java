@@ -89,9 +89,9 @@ public class DungeonCommand implements PlayerCommand {
         } else {
           targetFloor = "mozhu_mines_b1f";
         }
-      } else if (targetFloor.equals("mozhu") || targetFloor.equals("mine")) {
+      } else if (targetFloor.equals("mozhu") || targetFloor.equals("mine") || targetFloor.equals("mozhu_mines")) {
         targetFloor = "mozhu_mines_b1f";
-      } else if (targetFloor.equals("taiyin") || targetFloor.equals("tomb")) {
+      } else if (targetFloor.equals("taiyin") || targetFloor.equals("tomb") || targetFloor.equals("taiyin_tomb")) {
         targetFloor = "taiyin_tomb_b1f";
       }
       DungeonFloor target = dungeonManager.getFloor(targetFloor);

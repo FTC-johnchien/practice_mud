@@ -65,7 +65,7 @@
 
 ---
 
-### - [ ] Task ALIGN2-02 (DUNGEON-TORCH-PORTAL-CONSUMABLES): 修復地牢「🔥 點火」按鈕、傳送門地牢 ID 斷鏈與 4 種補血消耗品失效
+### - [x] Task ALIGN2-02 (DUNGEON-TORCH-PORTAL-CONSUMABLES): 修復地牢「🔥 點火」按鈕、傳送門地牢 ID 斷鏈與 4 種補血消耗品失效（複審 100% 已落地結案）
 - **目標檔案**：
   - `src/main/resources/static/js/panels/dungeon-panel.js`
   - `src/main/resources/static/js/app.js`
@@ -75,39 +75,47 @@
   - `src/main/resources/data/global/items/consumables/consumables.json`
   - `src/test/java/com/example/htmlmud/DungeonTorchAndTrapTest.java`
   - `src/test/java/com/example/htmlmud/UnifiedPartyEconomyTest.java`
-- **現況問題**：
-  1. `dungeon-panel.js` L189 點火按鈕寫 `onclick="window.cmd && window.cmd('dungeon torch')"`，但全域無 `window.cmd`，點擊完全無效；且探索態缺 `[T]` 點火快捷鍵。
-  2. `facilities.json` L165 寫 `"targetDungeons": ["mozhu_mines", "taiyin_tomb_b1f"]`，與真實樓層 ID `"mozhu_mines_b1f"` 不符，且 `DungeonCommand` L92–99 未映射 `"mozhu_mines"`。
-  3. `consumables.json` 中 `village_bread`、`healing_salve`、`corrupted_spirit_stone`、`healing_potion` 之效果碼為 `"HEAL"`，但 `Party.useItemOnMember`（L154）只認 `"HEAL_HP"`，導致 4 種補藥使用失敗；且 `purify_tea`（辟邪清心靈茶）漏回 [`M6_ITEM_AND_ECONOMY.md`](../2_specifications/backend/M6_ITEM_AND_ECONOMY.md) 所載之 20 MP。
-- **實作步驟**：
-  1. 移除 `dungeon-panel.js` L189 的內聯 `onclick`，改為 `data-action="dungeon-torch"` 並於 `app.js` 全域點擊委派與非戰鬥探索態鍵盤 `T` 鍵綁定送出 `'dungeon torch'`。
-  2. 將 `facilities.json` L165 `"mozhu_mines"` 修正為 `"mozhu_mines_b1f"`，同時在 `DungeonCommand` 別名映射補充 `"mozhu_mines" -> "mozhu_mines_b1f"` 雙重防呆。
-  3. 在 `Party.useItemOnMember` 同時支援 `"HEAL"` 與 `"HEAL_HP"`（並將 `consumables.json` 統一規範化，讓 `purify_tea` 支援複合回復或明確對齊規格與資料），補充單元測試驗證上述 4 種補藥與清心茶均可正常生效。
-- **驗收標準**：點擊「🔥 點火」或按 `T` 鍵正常消耗火把補光；4 種補血消耗品與清心茶於小隊行囊使用 100% 成功並扣除數量；`.\test.ps1` 全綠。
+  - `src/test/java/com/example/htmlmud/DungeonDefeatSettlementTest.java`
+- **已驗收通過項目（勿回退）**：
+  - ✅ `dungeon-panel.js` 已改用 `data-action="dungeon-torch"` 移除無效 `window.cmd`；`facilities.json` 與 `DungeonCommand` 已對齊 `"mozhu_mines_b1f"` 並補上別名防呆；`consumables.json`、`Party.useItemOnMember`、`InventoryCommand`、`bag-drawer.js` 與 `party-equipment-tab.js` 已完整打通 4 種補血道具與 `purify_tea`（25 SAN + 20 MP）雙回復及單元測試。
+- **指導員複審待補項目（完成以下 2 點並確保全量 `.\test.ps1` 0 失敗後勾選 `[x]`）**：
+  1. **限定 `[T]` 點火快捷鍵僅於地牢模式觸發**：`src/main/resources/static/js/app.js` L617–619 目前未判斷模式，導致玩家在城鎮（`TOWN`）按 `T` 鍵也會發送 `'dungeon torch'` 並收到無效導航提示。請加上 `if (store.get('mode') === 'DUNGEON')` 保護（僅在地牢非戰鬥探索態觸發點火）。
+  2. **修復全量 `.\test.ps1` 中 `DungeonDefeatSettlementTest` 之虛擬執行緒信箱競態紅燈**：連續兩輪實跑全量 `.\test.ps1`（409 測）均於 `DungeonDefeatSettlementTest.java` L196 失敗——原因是 `saveCommand.execute("1")` 在走廊阻擋存檔時無磁碟 I/O 耗時，`player.reply(...)` 投遞至 `VirtualActor` 非同步信箱尚未寫入 `capturedMessages` 主執行緒便立即斷言（待 AssertJ 印出錯誤時訊息才剛抵達）。請為 `DungeonDefeatSettlementTest.java` L196、L208、L221 之 `capturedMessages` 斷言封裝短暫輪詢等待輔助方法（如最多等待 500ms），確保全量 `.\test.ps1` 100% 穩定通過。
+- **驗收標準**：僅地牢探索態按 `T` 觸發點火；4 種補藥與清心茶全數生效；全量 `.\test.ps1`（409 測）與 `.\scripts\check-doc-links.ps1` 0 失敗。
 
 ---
 
 ### - [ ] Task ALIGN2-03 (COMBAT-DAMAGETYPE-AND-FORMATION-BUGS): 修復 `DamageType`、5P 萬象終結技死分支與 5 人陣破陣條件
 - **目標檔案**：
   - `src/main/java/com/example/htmlmud/domain/model/enums/DamageType.java`
-  - `src/main/java/com/example/htmlmud/combat/CombatRules.java`
   - `src/main/java/com/example/htmlmud/combat/DrpgCombatLoop.java`
+  - `src/main/java/com/example/htmlmud/party/PartyMemberSkill.java`
   - `src/main/java/com/example/htmlmud/combat/FormationFinisherClassifier.java`
+  - `src/main/java/com/example/htmlmud/party/FormationTemplate.java`
   - `src/main/java/com/example/htmlmud/party/FormationEngine.java`
+  - `src/main/java/com/example/htmlmud/party/Party.java`
   - `src/main/resources/data/formations/formations.json`
   - `src/main/java/com/example/htmlmud/template/DataIntegrityValidator.java`
+  - `docs/2_specifications/backend/M3_COMBAT_ENGINE.md`
+  - `src/test/java/com/example/htmlmud/FormationFinisherClassifierTest.java`
   - `src/test/java/com/example/htmlmud/CrossComboAndFormationResonanceTest.java`
   - `src/test/java/com/example/htmlmud/PartyFormationTest.java`
-- **現況問題**：
-  1. `DamageType.java` L13 將 `METAL` 父類設為 `PHYSICAL`，導致 `CombatRules.java` L347 `type.is(DamageType.PHYSICAL)` 恆為真，金系法術無法觸發抗性 `>1.0` 逆流回血；且缺少 `CHAOS` 與 `FORCE` 枚舉，使 `party_skills.json` 與 `FormationFinisherClassifier` 多招技能在 `DrpgCombatLoop.java` L933–936 靜默退化為 `PHYSICAL`。
-  2. `FormationFinisherClassifier.java` L266–270 內層多寫了 `if (distinctSchools.size() == 4)`，導致「3 不同門派 + 主角 `UNIVERSAL` 萬象陣眼」永遠無法觸發 `ALL_UNIVERSAL`。
-  3. `FormationEngine.java` L132 寫 `alive != ft.getRequiredPartySize()`，使 5 人陣只要陣亡 1 人立即破陣，存活孔位自動遞補形同虛設。
-- **實作步驟**：
-  1. 將 `DamageType.METAL` 父類改為 `MAGIC`（確認不影響純物理斬擊／穿刺／鈍擊測試），新增 `CHAOS(DARK)`（或對齊混沌系）與 `FORCE(MAGIC)` 枚舉；並在 `DataIntegrityValidator.validateSkills` 加入技能 `damageType` 合法枚舉校驗（杜絕日後靜默退化），同時清理 `DrpgCombatLoop` L682–688 以中文技能名猜測屬性的硬編碼 fallback。
-  2. 修正 `FormationFinisherClassifier.java` L266–270，移除死分支使 `3 門派 + UNIVERSAL (alive >= 4)` 正確回傳 `ALL_UNIVERSAL`。
-  3. 將 `FormationEngine.checkAndBreakFormation` 與 `formations.json` 的最低維持人數解耦（例如支援 `minAliveCount` 預設 `3` 或將 `alive < minRequiredAlive` 作為破陣條件），使 5 人陣在陣亡 1~2 人時能正常執行存活孔位自動遞補，低於門檻才破陣。
-  4. 於 `CrossComboAndFormationResonanceTest` 與 `PartyFormationTest` 新增測試覆蓋上述 4 項修復。
-- **驗收標準**：金系抗性逆流、`CHAOS`/`FORCE` 傷害屬性、3+萬象混元終結技、5 人陣死 1 人自動遞補全數通過單元測試且啟動期 `DataIntegrityValidator` 零錯誤。
+- **指導員派工前預審地雷清單（實作時務必遵守）**：
+  1. **`DamageType`、技能屬性校驗與硬編碼猜字清理**：
+     - `DamageType.java` L13 將 `METAL(PHYSICAL)` 移至道法系改為 `METAL(MAGIC)`（使 `CombatRules.resolveResistance` L347 不再攔截金系逆流回血），並新增 `FORCE(MAGIC)` 與 `CHAOS(DARK)`；同步更新 [`M3_COMBAT_ENGINE.md`](../2_specifications/backend/M3_COMBAT_ENGINE.md) L118–170 繼承樹說明。
+     - `PartyMemberSkill.fromSkillTemplate`（L469 附近）補齊從 `tpl.getMechanics().damageType()` 映射 `.damageType(...)`。
+     - `DrpgCombatLoop.resolveSkillDamageType`（L668–696）：**刪除 L684–691 以中英文名稱包含 `"炎"`/`"火"`/`"魔"` 猜測屬性的硬編碼 fallback**，但**保留 `skill.getTags()` 標籤解析**（可升級為比對合法 `DamageType` 名稱，確保 `BattlePresentationEventsTest` L142 等以 `tags` 標註屬性的測試相容）。
+     - `DataIntegrityValidator.validateSkills`（L353–362）對所有 `PartyMemberSkill.getDamageType()` 與 `FormationFinisherClassifier.getAllSpecs()` 執行 `DamageType.valueOf(...)` 校驗（非法值寫入 `errors`）。
+  2. **`FormationFinisherClassifier.java` L266–270 萬象混元死分支（防誤傷 `testFourTrioFinishers` 地雷！）**：
+     - ⚠️ **嚴禁直接只刪內層 `if (distinctSchools.size() == 4)`**！因為 `FormationFinisherClassifierTest.testFourTrioFinishers`（L138–155）測試的 5 人三才隊（如 `"UNIVERSAL", "CULTIVATOR", "CULTIVATOR", "CTHULHU", "HIGH_TECH"`）擁有 `alive.size() == 5`、`distinctSchools.size() == 3`、`universalCount == 1`，但其非萬象成員為 `2+1+1`（`nonUniversalCount == 4`，刻意重複修仙並排除工程師），必須落入後方 `TRIO_*` 分支！
+     - 正確條件：設 `int nonUniversalCount = alive.size() - universalCount;`，僅當 `distinctSchools.size() == 4 || (distinctSchools.size() == 3 && nonUniversalCount == 3 && universalCount > 0)`（即 3 名非萬象隊員各屬不同門派 `1+1+1` 無重複，且有 `UNIVERSAL` 補足第 4 門派，如 4 人存活隊伍或雙 `UNIVERSAL` 5 人隊）時回傳 `ALL_UNIVERSAL`。
+  3. **`FormationTemplate`、`Party.isFormationActive` 與 `FormationEngine.checkAndBreakFormation` 三處同步解耦（防既有測試衝突地雷！）**：
+     - 在 `FormationTemplate.java` 新增 `@Builder.Default private int minAliveCount = 0;` 與輔助方法 `getEffectiveMinAliveCount()`（若 `minAliveCount > 0` 回傳該值，否則回傳 `Math.min(requiredPartySize, 3)`；並在 `formations.json` 為 2 人陣設 `2`、3~5 人陣設 `3`）。
+     - ⚠️ **保持編隊選陣門檻不變**：`FormationTemplate.isEligibleForParty`（檢查 `party.size() == requiredPartySize`）與 `FormationEngine.isFormationEligible`（檢查 `effSize == requiredPartySize`）**維持原判**，確保 `PartyFormationTest` L167（遣散隊員自動降級陣法）與 L250（死 1 人手動切換 4 人陣）不回歸。
+     - ⚠️ **同步更新 `Party.java` L294–301 `isFormationActive()`**：必須同時檢查「編制總人數 `members.size() >= reqSize`」（確保 `PartyFormationTest` L362 之「3 人隊伍強裝 4 人陣 `isFormationActive() == false`」繼續通過）且「存活人數 `effSize >= ft.getEffectiveMinAliveCount() && effSize <= reqSize`」！
+     - **更新 `FormationEngine.checkAndBreakFormation`（L131–143）**：將人數破陣條件改為 `alive < ft.getEffectiveMinAliveCount()`；且當隊員陣亡但**未達破陣門檻**（如 5 人陣剩 4 或 3 人存活且必要職業仍在）時，**必須呼叫 `party.alignFormationRows(); party.refreshFormation();`** 即時將存活隊員自動遞補至 `Slot 0..alive-1` 並清除死者孔位 Buff！
+     - **同步演進 `PartyFormationTest.testFormationEngineBreakOnMemberDeath`（L217–246）**：原測試在 5 人五行陣死第 1 人時即斷言破陣；請改為驗證「死第 1~2 人（剩 4、3 人）時**不破陣且自動遞補孔位與 Buff**，死第 3 人（剩 2 人 `< 3`）時才觸發**陣法崩解、靈威歸零與 Buff 清空**」，並額外補測「鳳天舞之陣唯一必要職業（如法師墨衍）陣亡時，縱使剩 4 人仍立即破陣」。
+- **驗收標準**：金系 `METAL` 抗性 `>1.0` 逆流回血、`CHAOS`/`FORCE` 真實技能傷害屬性結算、`1+1+1+UNIVERSAL` 萬象混元終結技（且不破壞 4 組三才鼎立測試）、5 人陣死 1~2 人存活孔位與 Buff 自動遞補、低於 `minAliveCount` 或缺必要職業破陣全數通過測試；全量 `.\test.ps1` 與 `.\scripts\check-doc-links.ps1` 0 失敗。
 
 ---
 

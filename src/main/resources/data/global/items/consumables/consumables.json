@@ -7,7 +7,7 @@
     "type": "CONSUMABLE",
     "subType": "FOOD",
     "behavior": {
-      "effect": "HEAL",
+      "effect": "HEAL_HP",
       "value": 20
     },
     "value": 2,
@@ -22,7 +22,7 @@
     "type": "CONSUMABLE",
     "subType": "TALISMAN",
     "behavior": {
-      "effect": "RESTORE_SAN",
+      "effect": "RESTORE_SAN_MP",
       "value": 25
     },
     "value": 5,
@@ -37,7 +37,7 @@
     "type": "CONSUMABLE",
     "subType": "POTION",
     "behavior": {
-      "effect": "HEAL",
+      "effect": "HEAL_HP",
       "value": 60
     },
     "value": 8,
@@ -84,7 +84,7 @@
     "type": "CONSUMABLE",
     "subType": "POTION",
     "behavior": {
-      "effect": "HEAL",
+      "effect": "HEAL_HP",
       "value": 50
     },
     "value": 15,
@@ -99,7 +99,7 @@
     "type": "CONSUMABLE",
     "subType": "POTION",
     "behavior": {
-      "effect": "HEAL",
+      "effect": "HEAL_HP",
       "value": 40
     },
     "value": 10,

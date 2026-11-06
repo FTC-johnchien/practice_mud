@@ -40,7 +40,7 @@ public class PartyItemSlot {
   private String quality = "COMMON";
 
   // 消耗品或遺物效果
-  private String effectType; // HEAL_HP, RESTORE_SAN, RESTORE_MP, LEARN_SKILL
+  private String effectType; // HEAL_HP, RESTORE_SAN, RESTORE_MP, RESTORE_SAN_MP, LEARN_SKILL
   private int effectValue;
 
   // 技能道種專屬 (若是異變隊員遺物)

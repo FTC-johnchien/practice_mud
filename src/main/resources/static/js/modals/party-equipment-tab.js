@@ -150,10 +150,10 @@ export function renderItemsListHtml(itemTab, secFilter, party) {
       const isUsable = Boolean(item.consumable || item.effectType);
       if (!isUsable) return false;
       if (currentSec === 'HEAL') {
-        return item.effectType === 'HEAL_HP' || item.effectType === 'RESTORE_SAN';
+        return item.effectType === 'HEAL_HP' || item.effectType === 'HEAL' || item.effectType === 'RESTORE_SAN' || item.effectType === 'RESTORE_SAN_MP' || item.effectType === 'RESTORE_MP';
       }
       if (currentSec === 'BUFF') {
-        return item.effectType === 'BUFF' || item.effectType === 'LEARN_SKILL' || (item.effectType !== 'HEAL_HP' && item.effectType !== 'RESTORE_SAN');
+        return item.effectType === 'BUFF' || item.effectType === 'LEARN_SKILL' || (item.effectType !== 'HEAL_HP' && item.effectType !== 'HEAL' && item.effectType !== 'RESTORE_SAN' && item.effectType !== 'RESTORE_SAN_MP' && item.effectType !== 'RESTORE_MP');
       }
       return true;
     } else if (itemTab === 'QUEST') {
@@ -231,10 +231,14 @@ export function renderItemsListHtml(itemTab, secFilter, party) {
         if (item.poiseBreakPower) arParts.push(`💥 削韌 +${item.poiseBreakPower}`);
         if (item.affixes && item.affixes.length > 0) arParts.push(`✨ 詞綴×${item.affixes.length}`);
         effectDesc = `<span style="color:#60a5fa;">${arParts.join(' ')}</span>`;
-      } else if (item.effectType === 'HEAL_HP') {
+      } else if (item.effectType === 'HEAL_HP' || item.effectType === 'HEAL') {
         effectDesc = `<span style="color:#34d399;">🌿 服用回復 ${item.effectValue} HP</span>`;
-      } else if (item.effectType === 'RESTORE_SAN') {
-        effectDesc = `<span style="color:#c084fc;">📜 服用回復 ${item.effectValue} SAN (定神)</span>`;
+      } else if (item.effectType === 'RESTORE_SAN' || item.effectType === 'RESTORE_SAN_MP') {
+        effectDesc = (item.effectType === 'RESTORE_SAN_MP' || (item.itemId && item.itemId.includes('purify_tea')))
+          ? `<span style="color:#c084fc;">🍵 飲用回復 ${item.effectValue} SAN ‧ 20 MP</span>`
+          : `<span style="color:#c084fc;">📜 服用回復 ${item.effectValue} SAN (定神)</span>`;
+      } else if (item.effectType === 'RESTORE_MP') {
+        effectDesc = `<span style="color:#60a5fa;">🔮 服用回復 ${item.effectValue} MP</span>`;
       } else if (item.effectType === 'LEARN_SKILL') {
         effectDesc = `<span style="color:#fde047;">🧬 煉化領悟絕學【${item.grantedSkillName || '道種'}】</span>`;
       } else if (item.effectType === 'BUFF') {

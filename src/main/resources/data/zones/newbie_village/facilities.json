@@ -162,7 +162,7 @@
     "description": "墨竹山封閉禁區與黑煞宗地底礦道入口，石階延伸向未知地底深淵母神卵鞘。",
     "npcId": "portal_guide",
     "npcName": "礦道守衛",
-    "targetDungeons": ["mozhu_mines", "taiyin_tomb_b1f"],
+    "targetDungeons": ["mozhu_mines_b1f", "taiyin_tomb_b1f"],
     "actions": ["SELECT_DUNGEON", "ENTER_EXPEDITION"],
     "isOpen": true,
     "lenses": [

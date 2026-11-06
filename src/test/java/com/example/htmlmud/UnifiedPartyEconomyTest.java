@@ -286,4 +286,77 @@ class UnifiedPartyEconomyTest {
     assertThat(scytheSlot.getTotalBonusMinDamage() + scytheSlot.getTotalBonusMaxDamage() + scytheSlot.getTotalPoiseBreakPower())
         .isGreaterThan(scytheSlot.getBonusMinDamage() + scytheSlot.getBonusMaxDamage() + scytheSlot.getPoiseBreakPower());
   }
+
+  @Test
+  @DisplayName("ALIGN2-02: 驗證 4 種補藥 (village_bread, healing_salve, corrupted_spirit_stone, healing_potion) 與清心茶 (purify_tea) 正常生效")
+  void testConsumablesHealingAndPurifyTeaRestoresSanAndMp() {
+    Party party = partyService.getOrCreateParty(testPlayer);
+    com.example.htmlmud.party.PartyMember leader = party.getLeader();
+    party.getInventory().getSlots().clear();
+
+    // 1. 驗證 4 種補血消耗品 (無論效果標記為 HEAL 或 HEAL_HP)
+    List<String> healItems = List.of("village_bread", "healing_salve", "corrupted_spirit_stone", "healing_potion");
+    for (String itemId : healItems) {
+      party.getInventory().addItem(itemId, 1);
+      com.example.htmlmud.party.PartyItemSlot slot = party.getInventory().getSlots().stream()
+          .filter(s -> s.getItemId().contains(itemId))
+          .findFirst().orElseThrow();
+
+      // 先將生命降低
+      leader.getStats().setHp(20);
+      int beforeHp = leader.getStats().getHp();
+      int expectedHeal = slot.getEffectValue();
+
+      String msg = party.useItemOnMember(slot.getSlotId(), 0);
+      assertThat(msg).contains("氣血恢復");
+      assertThat(leader.getStats().getHp()).isEqualTo(beforeHp + expectedHeal);
+    }
+
+    // 2. 驗證向後相容: 即使 slot 的 effectType 為歷史 "HEAL"，依然可正常回復 HP
+    com.example.htmlmud.party.PartyItemSlot legacySlot = com.example.htmlmud.party.PartyItemSlot.builder()
+        .slotId("slot-legacy-heal")
+        .itemId("legacy_herb")
+        .name("上古仙草")
+        .itemType(com.example.htmlmud.domain.model.enums.ItemType.CONSUMABLE)
+        .effectType("HEAL")
+        .effectValue(30)
+        .count(1)
+        .build();
+    party.getInventory().getSlots().add(legacySlot);
+    leader.getStats().setHp(10);
+    String legacyMsg = party.useItemOnMember("slot-legacy-heal", 0);
+    assertThat(legacyMsg).contains("氣血恢復 30 點");
+    assertThat(leader.getStats().getHp()).isEqualTo(40);
+
+    // 3. 驗證辟邪清心靈茶 (purify_tea): 回復 25 SAN 與 20 MP (對齊 M6 規格)
+    party.getInventory().addItem("purify_tea", 1);
+    com.example.htmlmud.party.PartyItemSlot teaSlot = party.getInventory().getSlots().stream()
+        .filter(s -> s.getItemId().contains("purify_tea"))
+        .findFirst().orElseThrow();
+
+    leader.setCurrentSan(60);
+    leader.getStats().setMp(10);
+    int beforeMp = leader.getStats().getMp();
+
+    String teaMsg = party.useItemOnMember(teaSlot.getSlotId(), 0);
+    assertThat(teaMsg).contains("道心平復");
+    assertThat(teaMsg).contains("真元凝練回復 20 點 MP");
+    assertThat(leader.getCurrentSan()).isEqualTo(85);
+    assertThat(leader.getStats().getMp()).isEqualTo(beforeMp + 20);
+
+    // 4. 驗證處於 CHAOS 狀態下飲用 purify_tea 解除心魔並同時回復 MP
+    party.getInventory().addItem("purify_tea", 1);
+    com.example.htmlmud.party.PartyItemSlot teaSlot2 = party.getInventory().getSlots().stream()
+        .filter(s -> s.getItemId().contains("purify_tea"))
+        .findFirst().orElseThrow();
+    leader.setCurrentSan(0);
+    leader.setMadnessState(com.example.htmlmud.party.PartyMember.MadnessState.CHAOS);
+    leader.getStats().setMp(5);
+    String chaosMsg = party.useItemOnMember(teaSlot2.getSlotId(), 0);
+    assertThat(chaosMsg).contains("走火入魔狀態解除");
+    assertThat(chaosMsg).contains("真元同時凝練回復 20 點");
+    assertThat(leader.getMadnessState()).isEqualTo(com.example.htmlmud.party.PartyMember.MadnessState.SANE);
+    assertThat(leader.getCurrentSan()).isEqualTo(25);
+    assertThat(leader.getStats().getMp()).isEqualTo(25);
+  }
 }
