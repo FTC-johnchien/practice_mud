@@ -671,23 +671,23 @@ public class DrpgCombatLoop {
       return skill.getDamageType().toUpperCase();
     }
     if (skill.getTags() != null) {
+      String resolvedTag = null;
       for (String tag : skill.getTags()) {
-        String upper = tag.toUpperCase();
-        if (upper.equals("FIRE") || upper.equals("ICE") || upper.equals("LIGHTNING")
-            || upper.equals("POISON") || upper.equals("HOLY") || upper.equals("DARK")
-            || upper.equals("MAGIC") || upper.equals("SONIC") || upper.equals("SLASH")
-            || upper.equals("PIERCE") || upper.equals("BLUNT")) {
-          return upper;
+        try {
+          DamageType dt = DamageType.valueOf(tag.trim().toUpperCase());
+          if (dt != DamageType.PHYSICAL && dt != DamageType.MAGIC) {
+            return dt.name();
+          }
+          if (resolvedTag == null) {
+            resolvedTag = dt.name();
+          }
+        } catch (IllegalArgumentException ignored) {
         }
       }
+      if (resolvedTag != null) {
+        return resolvedTag;
+      }
     }
-    String combined = ((skill.getId() != null ? skill.getId() : "") + " " + (skill.getName() != null ? skill.getName() : "")).toLowerCase();
-    if (combined.contains("fire") || combined.contains("炎") || combined.contains("火")) return "FIRE";
-    if (combined.contains("ice") || combined.contains("frost") || combined.contains("冰") || combined.contains("寒")) return "ICE";
-    if (combined.contains("thunder") || combined.contains("lightning") || combined.contains("雷") || combined.contains("電")) return "LIGHTNING";
-    if (combined.contains("holy") || combined.contains("聖") || combined.contains("光") || combined.contains("甘露")) return "HOLY";
-    if (combined.contains("dark") || combined.contains("shadow") || combined.contains("暗") || combined.contains("煞") || combined.contains("魔")) return "DARK";
-    if (combined.contains("poison") || combined.contains("毒")) return "POISON";
 
     if (member != null && member.getMainHandWeaponType() != null) {
       return resolveWeaponDamageType(member.getMainHandWeaponType());

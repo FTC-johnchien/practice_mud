@@ -263,10 +263,10 @@ public final class FormationFinisherClassifier {
     }
 
     // 3. 四大體系俱全 (4 門派全在，或 3 門派 + UNIVERSAL 萬象陣眼補足第 4 門派)
-    if (distinctSchools.size() == 4 || (distinctSchools.size() == 3 && universalCount > 0 && alive.size() >= 4)) {
-      if (distinctSchools.size() == 4) {
-        return ALL_UNIVERSAL;
-      }
+    int nonUniversalCount = alive.size() - universalCount;
+    if (distinctSchools.size() == 4
+        || (distinctSchools.size() == 3 && nonUniversalCount == 3 && universalCount > 0)) {
+      return ALL_UNIVERSAL;
     }
 
     // 4. 雙曜交織型 (2 種體系)

@@ -5,6 +5,7 @@
     "description": "太陰初判，分立陰陽兩儀。一人前鋒定陽位，一人後方秉陰生，陰陽相濟，二人同心。",
     "passiveAura": "【陰陽相生】全隊攻擊力提高 10%，受擊閃避機率提高 10%。",
     "requiredPartySize": 2,
+    "minAliveCount": 2,
     "basic": true,
     "requiredClasses": [],
     "ultimateSkill": {
@@ -47,6 +48,7 @@
     "description": "取天、地、人三才相成之妙。天位主生殺破軍，地位承濁煞地載，人位引天地靈氣調和。",
     "passiveAura": "【三才合一】全隊暴擊率提高 10%，道心動搖機率下降 15%。",
     "requiredPartySize": 3,
+    "minAliveCount": 3,
     "basic": true,
     "requiredClasses": [],
     "ultimateSkill": {
@@ -100,6 +102,7 @@
     "description": "正統道家護法大陣，依青龍、白虎、朱雀、玄武四象而列，鎮守心神，破除污濁煞氣。",
     "passiveAura": "【辟邪靈言】全隊受擊傷害減少 10%，道心動搖機率下降 25%。",
     "requiredPartySize": 4,
+    "minAliveCount": 3,
     "basic": true,
     "requiredClasses": [],
     "ultimateSkill": {
@@ -164,6 +167,7 @@
     "description": "道門五行五方正統大陣，金、木、水、火、土五元相生相剋，攻守皆備，混元無漏。（2前1中2後經典佈局）",
     "passiveAura": "【五行相生】全隊受擊傷害減免 10%，全招式威力提升 10%。",
     "requiredPartySize": 5,
+    "minAliveCount": 3,
     "basic": true,
     "requiredClasses": [],
     "ultimateSkill": {
@@ -239,6 +243,7 @@
     "description": "源自凡間古典軍團的十字實戰陣形，純憑凡人之力演化至極境的軍陣。不假道法靈符，純以鋼甲巨盾固守先鋒，兩翼遊擊突刺，中軍戰鼓雷鳴，專注純粹之物理劈斬與嚴密防衛。（需體修/戰士編制）",
     "passiveAura": "【軍道金湯】全隊物理防禦提升 25%，物理破甲率提高 15%，突前先鋒吸引敵方 65% 單體攻擊。",
     "requiredPartySize": 5,
+    "minAliveCount": 3,
     "basic": false,
     "requiredClasses": ["WARRIOR"],
     "ultimateSkill": {
@@ -314,6 +319,7 @@
     "description": "源自浪漫沙加與修仙四象朱雀靈力的傳世奇陣。由中央核心（帝王/主坦）如鳳凰涅槃般凝聚狂烈真火吸引天地仇恨，四角羽翼高速迴旋掠殺。（需戰/法/牧鐵三角編制）",
     "passiveAura": "【鳳天涅槃】中央陣眼吸引敵方 80% 火力並大幅提高招架與閃避；隊員倒地時有 20% 機率涅槃浴火復生（回復 25% 氣血）。",
     "requiredPartySize": 5,
+    "minAliveCount": 3,
     "basic": false,
     "requiredClasses": ["WARRIOR", "MAGE", "CLERIC"],
     "ultimateSkill": {
@@ -389,6 +395,7 @@
     "description": "東方青龍靈尊之陣，身若遊龍穿雲破霧。全隊流線穿插排布，靈動無匹，天下武功唯快不破，迅如疾風驟雨。（需刺客/敏捷系遊俠）",
     "passiveAura": "【龍騰九霄】全隊速度提升 30%，攻擊命中與連擊率提升 20%，調息（GCD）減免 15%。",
     "requiredPartySize": 5,
+    "minAliveCount": 3,
     "basic": false,
     "requiredClasses": ["ROGUE"],
     "ultimateSkill": {
@@ -469,6 +476,7 @@
     "description": "西方白虎殺神大陣，主兵戈殺伐。三尖刀鋒如猛虎銳齒突出撕咬，全隊如猛虎下山狂暴撲殺，破甲無雙，以攻代守。（需體修/戰士編制）",
     "passiveAura": "【白虎破堅】全隊物理攻擊力提升 25%，無視敵方 30% 護甲，近戰暴擊傷害提升 30%。",
     "requiredPartySize": 5,
+    "minAliveCount": 3,
     "basic": false,
     "requiredClasses": ["WARRIOR"],
     "ultimateSkill": {
@@ -544,6 +552,7 @@
     "description": "北方玄武真武鎮守大陣，蛇龜相交，重逾泰山。全軍如玄武巨甲堅不可摧，反震萬鈞之力，護持道心不墜。（需體修/戰士編制）",
     "passiveAura": "【玄武金身】全隊受擊傷害減免 20%，受擊反震 25% 傷害，全隊道心動搖機率下降 40%。",
     "requiredPartySize": 5,
+    "minAliveCount": 3,
     "basic": false,
     "requiredClasses": ["WARRIOR"],
     "ultimateSkill": {
@@ -619,6 +628,7 @@
     "description": "參照域外不可名狀星屑所創的凶煞魔陣，以瘋狂與道心為代價，換取撕裂虛空的毀滅威能。（需法師編制）",
     "passiveAura": "【深淵共鳴】全隊道術傷害提高 25%，但每場戰鬥開始全員損失 3 點道心 SAN。",
     "requiredPartySize": 5,
+    "minAliveCount": 3,
     "basic": false,
     "requiredClasses": ["MAGE"],
     "ultimateSkill": {

@@ -115,14 +115,14 @@ sequenceDiagram
 └────────────────────┴───────────────────────────────────────────────────┘
 ```
 
-### 1. 第一層：底層傷害類型 [`DamageType`](../../../src/main/java/com/example/htmlmud/domain/model/enums/DamageType.java)（20 種繼承樹）
+### 1. 第一層：底層傷害類型 [`DamageType`](../../../src/main/java/com/example/htmlmud/domain/model/enums/DamageType.java)（22 種繼承樹）
 代碼中以單一繼承樹組織，支援 `type.is(parent)` 多態檢定：
 - **`PHYSICAL` (物理根類別)**：
   - `SLASH`（揮砍）：刀劍類鋒刃斬擊。
   - `PIERCE`（穿刺）：槍矛箭矢點狀破甲。
   - `BLUNT`（鈍擊）：戰錘巨棒重型打擊。
-  - `METAL`（金石）：金屬銳器實體衝擊。
 - **`MAGIC` (法術根類別)**：
+  - `METAL`（庚金）：庚金銳氣／白虎道法，歸屬法術系以支援五行抗性逆流回血。
   - `FIRE`（烈火）：赤煞焚燒。
   - `ICE`（冰霜）：玄冥極寒。
   - `WATER`（坎水）：巨浪激流。
@@ -131,8 +131,9 @@ sequenceDiagram
   - `EARTH`（厚土）：大地重壓。
   - `WOOD`（草木）：青囊生發。
   - `POISON`（毒素）：陰毒瘴氣。
+  - `FORCE`（念力）：真元念力／神識衝擊。
   - `HOLY`（神聖）/ `LIGHT`（天光）：純陽正道、辟邪驅煞。
-  - `DARK`（幽冥）/ `CORRUPT`（陰煞/混沌）：古神侵蝕、魔道濁氣。
+  - `DARK`（幽冥）/ `CORRUPT`（陰煞）/ `CHAOS`（混沌）：古神侵蝕、外神煞氣、魔道濁氣。
 - **特殊類別**：
   - `SONIC`（音波）：無視常規物防之震盪傷害。
   - `TRUE`（真實傷害）：天道不可抗拒之真實扣血，不計護甲與抗性折減。
@@ -141,7 +142,7 @@ sequenceDiagram
 修仙世界講究五行生剋與道法抗衡，用於抗性面板、天道靈氣克制與「順成人逆成仙」之回血維度：
 - **五行天道靈氣**：金 (`METAL`)、木 (`WOOD`/`POISON`)、水 (`WATER`/`ICE`)、火 (`FIRE`)、土 (`EARTH`)。
 - **乾坤氣象靈氣**：風 (`WIND`)、雷 (`LIGHTNING`)。
-- **陰陽造化靈氣**：陰煞 (`DARK`/`CORRUPT`)、純陽 (`HOLY`/`LIGHT`)。
+- **陰陽造化靈氣**：陰煞 (`DARK`/`CORRUPT`/`CHAOS`)、純陽 (`HOLY`/`LIGHT`)。
 
 ### 3. 第三層：狀態機制標籤 (Status & Skill Mechanism Tags)
 用於技能反制檢定、Boss 施法蓄力打斷與戰術決策：
@@ -165,11 +166,11 @@ public static ResistanceResult resolveResistance(int rawDamage, DamageType type,
 ```
 
 1. **物理保底穿透原則**：
-   - 物理系傷害（`PHYSICAL` 及其派生 `SLASH/PIERCE/BLUNT/METAL`）不走元素逆流回血。
+   - 物理系傷害（`PHYSICAL` 及其派生 `SLASH/PIERCE/BLUNT`）不走元素逆流回血。
    - 為防止極限堆防禦導致「絕對無敵死鎖」，物理抗性最高折減至 90%（**保底 10% 穿透**）：
      $$\text{FinalDamage} = \max(1, \text{RawDamage} \times \max(0.1, 1.0 - \text{Resistance}))$$
 2. **五行法術逆流回血原則 (Absorption & Healing)**：
-   - 當怪物或修士修煉特定真功，使某屬性抗性大於 100%（$\text{Resistance} > 1.0$，如火靈真身火抗 125%）：
+   - 當怪物或修士修煉特定真功，使某屬性抗性大於 100%（$\text{Resistance} > 1.0$，如火靈真身火抗 125%、庚金劍煞金抗 125%）：
    - **承受傷害歸零**，超額部分化為甘霖，**逆流轉化為氣血回復**！
      $$\text{HealAmount} = \text{round}(\text{RawDamage} \times (\text{Resistance} - 1.0))$$
    - 完美還原修仙小說中「用火法轟擊火精靈反而為其療傷」的神妙機制。

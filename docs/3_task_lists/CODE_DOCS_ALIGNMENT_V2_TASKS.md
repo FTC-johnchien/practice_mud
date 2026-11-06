@@ -17,7 +17,10 @@
 >    - **P0 最優先**：優先修復「清單已勾選 `[x]` 但執行期未接通」之斷層與實質程式碼 Bug（`ALIGN2-01` ~ `ALIGN2-05`）。
 >    - **營地中樞排入開發**：正式將後端 `TownHubDto` 接通前端六大設施卡牌並移除 MUD 東南西北出口羅盤（`ALIGN2-06`）。
 >    - **L2 規格誠實化校準**：針對短期不重寫之協定（WebSocket `INPUT`）、Schema 欄位與未實作視覺功能（如 `#viewport-canvas`、鐵匠重鑄），**一律以現行真實程式碼為準修正 L2 文件，並將理想設計移入或標註 `【待深入討論／長線演進藍圖】`**（`ALIGN2-08` ~ `ALIGN2-10`）。
-> 4. **完工勾選紅線（DoD）**：任何任務標記 `[x]` 前，必須先 `read_file` 查證實體代碼、補齊對應測試，並實跑 `.\scripts\check-doc-links.ps1` 與 `.\test.ps1` 取得 Exit Code `0`。全部 12 項完成後，將本檔封存至 [`docs/0_archive/alignment_history/`](../0_archive/alignment_history/)。
+> 4. **完工勾選紅線（DoD）**：任何任務標記 `[x]` 前，必須先讀檔查證實體代碼、補齊真實行為測試（禁止手算純數學假測試），並在終端機完整執行全量驗證（**嚴禁只跑單一 `-Dtest` 即宣稱完工**）：
+>    - `powershell -ExecutionPolicy Bypass -File .\test.ps1`（確認 409+ 測試 `Failures: 0, Errors: 0`）
+>    - `powershell -ExecutionPolicy Bypass -File .\scripts\check-doc-links.ps1`（確認 Exit Code `0`）
+>    全部 12 項完成後，將本檔封存至 [`docs/0_archive/alignment_history/`](../0_archive/alignment_history/)。
 
 ---
 
@@ -42,54 +45,26 @@
 
 ## 🔴 二、Phase 1：P0 實質功能損壞修復與假完工閉環（最高優先）
 
-### - [x] Task ALIGN2-01 (EQUIP-DTO-AND-COMBAT-POISE): 打通裝備隨機詞綴與 `poiseBreakPower` 之 DTO 投影與戰鬥削韌結算（二審 100% 已落地，2 項衍生問題已根除結案）
-- **目標檔案**：
-  - `src/main/java/com/example/htmlmud/dungeon/DrpgStateDto.java`
-  - `src/main/java/com/example/htmlmud/party/PartyItemSlot.java`
-  - `src/main/java/com/example/htmlmud/party/Party.java`
-  - `src/main/java/com/example/htmlmud/party/PartyMember.java`
-  - `src/main/java/com/example/htmlmud/combat/DrpgCombatLoop.java`
-  - `src/main/java/com/example/htmlmud/combat/DrpgRewardService.java`
-  - `src/main/java/com/example/htmlmud/combat/DrpgBattleService.java`
-  - `src/main/java/com/example/htmlmud/combat/ComboResolver.java`
-  - `src/main/resources/static/js/modals/party-equipment-tab.js`
-  - `src/test/java/com/example/htmlmud/CyberSkillAndItemAffixTest.java`
-  - `src/test/java/com/example/htmlmud/DrpgStateDtoTest.java`
-  - `src/test/java/com/example/htmlmud/DrpgBattleServiceTest.java`
-- **已驗收通過項目（勿回退）**：
-  - ✅ DTO 詞綴／削韌投影與 40 格空背包預設、`PartyItemSlot` `@JsonProperty("name")` + 16 個衍生 getter `@JsonIgnore` 與 `ObjectMapper` 雙重往返測試、`ComboResolver` 合擊與 5P 終結技真實戰鬥削韌測試、`party-equipment-tab.js` 三處削韌與詞綴顯示皆已到位。
-- **指導員二審待補項目（完成以下 2 點並確保 `.\test.ps1` 0 失敗後勾選 `[x]`）**：
-  1. **補齊 `getName()` 改回純基礎名稱後之掉落／穿戴展示名稱（Side-effect 修正）**：因 `PartyItemSlot.getName()` 現回傳純基礎名，導致 `DrpgRewardService.java` L256（戰鬥結算掉落卡牌 `dropName = equipSlot.getName()`）、`Party.java` L224–230（穿戴裝備回饋訊息）與 `src/main/java/com/example/htmlmud/application/command/impl/EquipCommand.java` L129 漏顯示隨機前後綴（如掉出神兵只顯示白板名）。請將上述展示端改呼叫 `getDisplayNameWithAffixes()`。
-  2. **根治 `DrpgBattleServiceTest` 虛擬執行緒競態紅燈（實跑 `.\test.ps1` 於 L103 失敗）**：上一場測試 `cancel(true)` 後，舊虛擬執行緒非同步進入 `DrpgCombatLoop.java` L560–568 `finally`（及 `DrpgRewardService.java` L123–124 / L341–342、`DrpgBattleService.java` L958），以單參數 `activeBattles.remove(player.getName())` **無條件誤刪了下一場測試剛建立的新 `BattleContext`**（單純在 `DrpgBattleServiceTest` 加長 `sleep` 無法修復已被誤刪的 `ctx`）。請將上述移除呼叫全面改為雙參數原子條件移除 `activeBattles.remove(key, ctx)`，確保舊戰鬥迴圈收尾絕不覆蓋新戰鬥。
-- **驗收標準**：戰鬥掉落卡牌與穿戴訊息正確顯示含詞綴全名；連續執行 `.\test.ps1` 與 `.\scripts\check-doc-links.ps1` 100% 綠燈（0 Failures）。
+### - [x] Task ALIGN2-01 (EQUIP-DTO-AND-COMBAT-POISE): 打通裝備隨機詞綴與 `poiseBreakPower` 之 DTO 投影與戰鬥削韌結算（100% 驗收結案）
+- **核心落點**：`DrpgStateDto.java`、`PartyItemSlot.java`、`Party.java`、`PartyMember.java`、`DrpgCombatLoop.java`、`DrpgRewardService.java`、`DrpgBattleService.java`、`ComboResolver.java`、`EquipCommand.java`、`party-equipment-tab.js` 及對應測試。
+- **結案摘要**：✅ 完成 DTO 詞綴／削韌投影與 40 格預設行囊、`PartyItemSlot` `@JsonProperty("name")` 純基礎名持久化 + `getDisplayNameWithAffixes()` 展示分離、普攻／技能／合擊／5P 終結技真實裝備削韌結算，以及 `activeBattles.remove(key, ctx)` 原子條件移除修復虛擬執行緒競態。
 
 ---
 
-### - [x] Task ALIGN2-02 (DUNGEON-TORCH-PORTAL-CONSUMABLES): 修復地牢「🔥 點火」按鈕、傳送門地牢 ID 斷鏈與 4 種補血消耗品失效（複審 100% 已落地結案）
-- **目標檔案**：
-  - `src/main/resources/static/js/panels/dungeon-panel.js`
-  - `src/main/resources/static/js/app.js`
-  - `src/main/resources/data/zones/newbie_village/facilities.json`
-  - `src/main/java/com/example/htmlmud/application/command/impl/DungeonCommand.java`
-  - `src/main/java/com/example/htmlmud/party/Party.java`
-  - `src/main/resources/data/global/items/consumables/consumables.json`
-  - `src/test/java/com/example/htmlmud/DungeonTorchAndTrapTest.java`
-  - `src/test/java/com/example/htmlmud/UnifiedPartyEconomyTest.java`
-  - `src/test/java/com/example/htmlmud/DungeonDefeatSettlementTest.java`
-- **已驗收通過項目（勿回退）**：
-  - ✅ `dungeon-panel.js` 已改用 `data-action="dungeon-torch"` 移除無效 `window.cmd`；`facilities.json` 與 `DungeonCommand` 已對齊 `"mozhu_mines_b1f"` 並補上別名防呆；`consumables.json`、`Party.useItemOnMember`、`InventoryCommand`、`bag-drawer.js` 與 `party-equipment-tab.js` 已完整打通 4 種補血道具與 `purify_tea`（25 SAN + 20 MP）雙回復及單元測試。
-- **指導員複審待補項目（完成以下 2 點並確保全量 `.\test.ps1` 0 失敗後勾選 `[x]`）**：
-  1. **限定 `[T]` 點火快捷鍵僅於地牢模式觸發**：`src/main/resources/static/js/app.js` L617–619 目前未判斷模式，導致玩家在城鎮（`TOWN`）按 `T` 鍵也會發送 `'dungeon torch'` 並收到無效導航提示。請加上 `if (store.get('mode') === 'DUNGEON')` 保護（僅在地牢非戰鬥探索態觸發點火）。
-  2. **修復全量 `.\test.ps1` 中 `DungeonDefeatSettlementTest` 之虛擬執行緒信箱競態紅燈**：連續兩輪實跑全量 `.\test.ps1`（409 測）均於 `DungeonDefeatSettlementTest.java` L196 失敗——原因是 `saveCommand.execute("1")` 在走廊阻擋存檔時無磁碟 I/O 耗時，`player.reply(...)` 投遞至 `VirtualActor` 非同步信箱尚未寫入 `capturedMessages` 主執行緒便立即斷言（待 AssertJ 印出錯誤時訊息才剛抵達）。請為 `DungeonDefeatSettlementTest.java` L196、L208、L221 之 `capturedMessages` 斷言封裝短暫輪詢等待輔助方法（如最多等待 500ms），確保全量 `.\test.ps1` 100% 穩定通過。
-- **驗收標準**：僅地牢探索態按 `T` 觸發點火；4 種補藥與清心茶全數生效；全量 `.\test.ps1`（409 測）與 `.\scripts\check-doc-links.ps1` 0 失敗。
+### - [x] Task ALIGN2-02 (DUNGEON-TORCH-PORTAL-CONSUMABLES): 修復地牢「🔥 點火」按鈕、傳送門地牢 ID 斷鏈與 4 種補血消耗品失效（100% 驗收結案）
+- **核心落點**：`dungeon-panel.js`、`app.js`、`facilities.json`、`DungeonCommand.java`、`Party.java`、`PartyItemSlot.java`、`InventoryCommand.java`、`consumables.json`、`bag-drawer.js`、`party-equipment-tab.js` 及 `DungeonTorchAndTrapTest`、`UnifiedPartyEconomyTest`、`DungeonDefeatSettlementTest`。
+- **結案摘要**：✅ 移除無效 `window.cmd` 改用 `data-action="dungeon-torch"` 並限定地牢探索態 `[T]` 快捷鍵；對齊 `"mozhu_mines_b1f"` 與別名防呆；打通 4 種補血藥與 `purify_tea`（25 SAN + 20 MP）雙回復；以 `awaitCapturedMessage` 根除 `VirtualActor` 非同步信箱測試競態（409 測全綠）。
 
 ---
 
-### - [ ] Task ALIGN2-03 (COMBAT-DAMAGETYPE-AND-FORMATION-BUGS): 修復 `DamageType`、5P 萬象終結技死分支與 5 人陣破陣條件
+### - [x] Task ALIGN2-03 (COMBAT-DAMAGETYPE-AND-FORMATION-BUGS): 修復 `DamageType`、5P 萬象終結技死分支與 5 人陣破陣條件（100% 驗收結案）
+- **核心落點**：`DamageType.java`、`PartyMemberSkill.java`、`DrpgCombatLoop.java`、`FormationFinisherClassifier.java`、`FormationTemplate.java`、`FormationEngine.java`、`Party.java`、`formations.json`、`DataIntegrityValidator.java`、`M3_COMBAT_ENGINE.md` 及對應測試（`CrossComboAndFormationResonanceTest`、`FormationFinisherClassifierTest`、`PartyFormationTest`）。
+- **結案摘要**：✅ 修正 `DamageType`（`METAL` 轉入 `MAGIC` 支援抗性逆流回血，新增 `FORCE`/`CHAOS`）；打通 `SkillTemplate.damageType` 投影與啟動期 Fail-Fast 校驗；移除屬性硬編碼猜測並保留合法標籤解析；修復 5P 萬象混元終結技判定死分支；解耦陣法最低存活人數 `minAliveCount` 與陣亡孔位自動遞補，並實裝必要職業陣亡破陣機制（411 測全綠，check-doc-links 0 錯誤）。
+
 - **目標檔案**：
   - `src/main/java/com/example/htmlmud/domain/model/enums/DamageType.java`
-  - `src/main/java/com/example/htmlmud/combat/DrpgCombatLoop.java`
   - `src/main/java/com/example/htmlmud/party/PartyMemberSkill.java`
+  - `src/main/java/com/example/htmlmud/combat/DrpgCombatLoop.java`
   - `src/main/java/com/example/htmlmud/combat/FormationFinisherClassifier.java`
   - `src/main/java/com/example/htmlmud/party/FormationTemplate.java`
   - `src/main/java/com/example/htmlmud/party/FormationEngine.java`
@@ -100,26 +75,44 @@
   - `src/test/java/com/example/htmlmud/FormationFinisherClassifierTest.java`
   - `src/test/java/com/example/htmlmud/CrossComboAndFormationResonanceTest.java`
   - `src/test/java/com/example/htmlmud/PartyFormationTest.java`
-- **指導員派工前預審地雷清單（實作時務必遵守）**：
-  1. **`DamageType`、技能屬性校驗與硬編碼猜字清理**：
-     - `DamageType.java` L13 將 `METAL(PHYSICAL)` 移至道法系改為 `METAL(MAGIC)`（使 `CombatRules.resolveResistance` L347 不再攔截金系逆流回血），並新增 `FORCE(MAGIC)` 與 `CHAOS(DARK)`；同步更新 [`M3_COMBAT_ENGINE.md`](../2_specifications/backend/M3_COMBAT_ENGINE.md) L118–170 繼承樹說明。
-     - `PartyMemberSkill.fromSkillTemplate`（L469 附近）補齊從 `tpl.getMechanics().damageType()` 映射 `.damageType(...)`。
-     - `DrpgCombatLoop.resolveSkillDamageType`（L668–696）：**刪除 L684–691 以中英文名稱包含 `"炎"`/`"火"`/`"魔"` 猜測屬性的硬編碼 fallback**，但**保留 `skill.getTags()` 標籤解析**（可升級為比對合法 `DamageType` 名稱，確保 `BattlePresentationEventsTest` L142 等以 `tags` 標註屬性的測試相容）。
-     - `DataIntegrityValidator.validateSkills`（L353–362）對所有 `PartyMemberSkill.getDamageType()` 與 `FormationFinisherClassifier.getAllSpecs()` 執行 `DamageType.valueOf(...)` 校驗（非法值寫入 `errors`）。
-  2. **`FormationFinisherClassifier.java` L266–270 萬象混元死分支（防誤傷 `testFourTrioFinishers` 地雷！）**：
-     - ⚠️ **嚴禁直接只刪內層 `if (distinctSchools.size() == 4)`**！因為 `FormationFinisherClassifierTest.testFourTrioFinishers`（L138–155）測試的 5 人三才隊（如 `"UNIVERSAL", "CULTIVATOR", "CULTIVATOR", "CTHULHU", "HIGH_TECH"`）擁有 `alive.size() == 5`、`distinctSchools.size() == 3`、`universalCount == 1`，但其非萬象成員為 `2+1+1`（`nonUniversalCount == 4`，刻意重複修仙並排除工程師），必須落入後方 `TRIO_*` 分支！
-     - 正確條件：設 `int nonUniversalCount = alive.size() - universalCount;`，僅當 `distinctSchools.size() == 4 || (distinctSchools.size() == 3 && nonUniversalCount == 3 && universalCount > 0)`（即 3 名非萬象隊員各屬不同門派 `1+1+1` 無重複，且有 `UNIVERSAL` 補足第 4 門派，如 4 人存活隊伍或雙 `UNIVERSAL` 5 人隊）時回傳 `ALL_UNIVERSAL`。
-  3. **`FormationTemplate`、`Party.isFormationActive` 與 `FormationEngine.checkAndBreakFormation` 三處同步解耦（防既有測試衝突地雷！）**：
-     - 在 `FormationTemplate.java` 新增 `@Builder.Default private int minAliveCount = 0;` 與輔助方法 `getEffectiveMinAliveCount()`（若 `minAliveCount > 0` 回傳該值，否則回傳 `Math.min(requiredPartySize, 3)`；並在 `formations.json` 為 2 人陣設 `2`、3~5 人陣設 `3`）。
-     - ⚠️ **保持編隊選陣門檻不變**：`FormationTemplate.isEligibleForParty`（檢查 `party.size() == requiredPartySize`）與 `FormationEngine.isFormationEligible`（檢查 `effSize == requiredPartySize`）**維持原判**，確保 `PartyFormationTest` L167（遣散隊員自動降級陣法）與 L250（死 1 人手動切換 4 人陣）不回歸。
-     - ⚠️ **同步更新 `Party.java` L294–301 `isFormationActive()`**：必須同時檢查「編制總人數 `members.size() >= reqSize`」（確保 `PartyFormationTest` L362 之「3 人隊伍強裝 4 人陣 `isFormationActive() == false`」繼續通過）且「存活人數 `effSize >= ft.getEffectiveMinAliveCount() && effSize <= reqSize`」！
-     - **更新 `FormationEngine.checkAndBreakFormation`（L131–143）**：將人數破陣條件改為 `alive < ft.getEffectiveMinAliveCount()`；且當隊員陣亡但**未達破陣門檻**（如 5 人陣剩 4 或 3 人存活且必要職業仍在）時，**必須呼叫 `party.alignFormationRows(); party.refreshFormation();`** 即時將存活隊員自動遞補至 `Slot 0..alive-1` 並清除死者孔位 Buff！
-     - **同步演進 `PartyFormationTest.testFormationEngineBreakOnMemberDeath`（L217–246）**：原測試在 5 人五行陣死第 1 人時即斷言破陣；請改為驗證「死第 1~2 人（剩 4、3 人）時**不破陣且自動遞補孔位與 Buff**，死第 3 人（剩 2 人 `< 3`）時才觸發**陣法崩解、靈威歸零與 Buff 清空**」，並額外補測「鳳天舞之陣唯一必要職業（如法師墨衍）陣亡時，縱使剩 4 人仍立即破陣」。
-- **驗收標準**：金系 `METAL` 抗性 `>1.0` 逆流回血、`CHAOS`/`FORCE` 真實技能傷害屬性結算、`1+1+1+UNIVERSAL` 萬象混元終結技（且不破壞 4 組三才鼎立測試）、5 人陣死 1~2 人存活孔位與 Buff 自動遞補、低於 `minAliveCount` 或缺必要職業破陣全數通過測試；全量 `.\test.ps1` 與 `.\scripts\check-doc-links.ps1` 0 失敗。
+- **手術刀級實作規格與防呆邊界**：
+  1. **`DamageType` 修正、技能屬性映射與啟動期 Fail-Fast 校驗**：
+     - `DamageType.java`：將 L13 `METAL(PHYSICAL)` 移至道法系改為 `METAL(MAGIC)`（使 `CombatRules.resolveResistance` L347 `type.is(DamageType.PHYSICAL)` 為 `false`，讓金系道法支援抗性 `> 1.0` 逆流回血，且不影響 `PHYSICAL/SLASH/PIERCE/BLUNT` 的 10% 保底穿透）；新增 `FORCE(MAGIC)` 與 `CHAOS(DARK)`；同步更新 [`M3_COMBAT_ENGINE.md`](../2_specifications/backend/M3_COMBAT_ENGINE.md) L118–170 之 `DamageType` 繼承樹描述。
+     - `PartyMemberSkill.java`：於 `fromSkillTemplate(SkillTemplate tpl)`（L469 附近）補上：若 `tpl.getMechanics() != null && tpl.getMechanics().damageType() != null`，寫入 `.damageType(tpl.getMechanics().damageType().name())`。
+     - `DrpgCombatLoop.java`：於 `resolveSkillDamageType`（L668–696）**移除 L684–691 以中英文技能名包含 `"炎"`/`"火"`/`"魔"` 猜測屬性的硬編碼 fallback**；⚠️ **務必保留 `skill.getTags()` 標籤解析**（可升級為檢查 tag 是否對應合法 `DamageType` 名稱，確保 `BattlePresentationEventsTest` L142 以 `tags(List.of("LIGHTNING"))` 標記屬性的測試不回歸）。
+     - `DataIntegrityValidator.java`：於 `validateSkills`（L353–362）對所有 `PartyMemberSkill` 的非空 `getDamageType()` 及 `FormationFinisherClassifier.getAllSpecs().values()` 的 `damageType()` 執行 `DamageType.valueOf(val.trim().toUpperCase())` 校驗，非法值加入 `errors` 觸發 Fail-Fast。
+  2. **`FormationFinisherClassifier` 萬象混元分支修正（防誤傷 `testFourTrioFinishers` 地雷！）**：
+     - ⚠️ **嚴禁只刪除 `FormationFinisherClassifier.java` L267 內層的 `if (distinctSchools.size() == 4)`**！因為 `FormationFinisherClassifierTest.testFourTrioFinishers`（L138–155）的 5 人三才隊（如 `"UNIVERSAL", "CULTIVATOR", "CULTIVATOR", "CTHULHU", "HIGH_TECH"`）滿足 `distinctSchools.size() == 3 && universalCount == 1 && alive.size() == 5`，但其非萬象成員為 `2+1+1`（刻意堆疊 2 名修仙並排除工程師），必須落入後方 `TRIO_*` 分支！
+     - 請於 L265–271 計算 `int nonUniversalCount = alive.size() - universalCount;`，改寫為：
+       ```java
+       if (distinctSchools.size() == 4
+           || (distinctSchools.size() == 3 && nonUniversalCount == 3 && universalCount > 0)) {
+         return ALL_UNIVERSAL;
+       }
+       ```
+       使「4 門派俱全」或「3 名非萬象成員各屬不同門派（`1+1+1` 無重複）+ `UNIVERSAL` 萬象陣眼補足第 4 門派」精準回傳 `ALL_UNIVERSAL`，且 4 組 `TRIO_*` 測試 100% 保持綠燈。
+  3. **5 人陣減員存活孔位自動遞補與破陣門檻解耦（三處同步！）**：
+     - `FormationTemplate.java` & `formations.json`：在 `FormationTemplate` 新增 `@Builder.Default private int minAliveCount = 0;` 與輔助方法 `public int getEffectiveMinAliveCount() { return minAliveCount > 0 ? minAliveCount : (requiredPartySize > 0 ? Math.min(requiredPartySize, 3) : 1); }`；在 `formations.json` 為 2 人陣設 `"minAliveCount": 2`，為 3、4、5 人陣設 `"minAliveCount": 3`。
+     - ⚠️ **保持選陣／編隊門檻原判不變**：`FormationTemplate.isEligibleForParty`（檢查 `party.size() != requiredPartySize`）與 `FormationEngine.isFormationEligible`（檢查 `formation.getRequiredPartySize() != effSize`）**維持原樣**，確保 `PartyFormationTest.testPartyMemberChangeFallback` 與 `testFormationEngineAutoMappingOnSwitchToFourPersonFormation` 不壞。
+     - `Party.java`（L294–301 `isFormationActive()`）：將 `effSize != equippedFormation.getRequiredPartySize()` 改為同時檢驗編制總人數與存活區間：
+       ```java
+       int reqSize = equippedFormation.getRequiredPartySize();
+       int minAlive = equippedFormation.getEffectiveMinAliveCount();
+       if (reqSize > 0 && (members.size() < reqSize || effSize > reqSize || effSize < minAlive)) {
+         return false;
+       }
+       ```
+       （`members.size() < reqSize` 確保 `PartyFormationTest` L362「3 人編制隊伍強裝 4 人陣 `isFormationActive() == false`」繼續通過；而 5 人隊戰鬥中死 1~2 人剩 4 或 3 人時 `isFormationActive()` 維持 `true`！）
+     - `FormationEngine.java`（L124–143 `checkAndBreakFormation`）：將 L132 破陣條件改為 `int minAlive = ft.getEffectiveMinAliveCount(); if (ft.getRequiredPartySize() > 0 && alive < minAlive)`；若人數與 `checkClassRequirements` 皆通過（未破陣），**必須在 `return null;` 前呼叫 `party.alignFormationRows(); party.refreshFormation();`**，即時清除陣亡者 `buff_formation_slot_*` 並將存活隊員自動遞補至 `Slot 0..alive-1`！
+  4. **真實行為測試要求**：
+     - `CrossComboAndFormationResonanceTest.java`：驗證 `CombatRules.resolveResistance(100, DamageType.METAL, 1.25)` 逆流回血（`damage == 0, heal == 25`）且 `SLASH` 保底穿透不回血；並透過真實 `DrpgCombatLoop.applySkillEffects` 施放 `"CHAOS"` 與 `"FORCE"` 技能驗證父類抗性折算與 `BattleEvent.damageType()`。
+     - `FormationFinisherClassifierTest.java`：新增測試驗證 4 人存活隊（`"UNIVERSAL", "CULTIVATOR", "ENGINEER", "HIGH_TECH"`）與 5 人雙萬象隊（`"UNIVERSAL", "UNIVERSAL", "CULTIVATOR", "ENGINEER", "HIGH_TECH"`）回傳 `ALL_UNIVERSAL`，且 `testFourTrioFinishers` 全過。
+     - `PartyFormationTest.java`：演進 L217 `testFormationEngineBreakOnMemberDeath`——驗證 5 人《五行混元陣》死第 1、2 人（剩 4、3 人）時**不破陣、靈威保留、死者孔位 Buff 移除且存活者自動遞補孔位**，死第 3 人（剩 2 人 `< 3`）時**破陣、靈威歸零、全員孔位 Buff 清空**；另新增測試驗證《鳳天舞之陣》唯一法師（墨衍）陣亡時，縱使剩 4 人仍因缺必要職業立即破陣。
+- **驗收標準**：執行 `powershell -ExecutionPolicy Bypass -File .\test.ps1` 與 `powershell -ExecutionPolicy Bypass -File .\scripts\check-doc-links.ps1` 均為 0 失敗後，將本項勾選為 `[x]`。
 
 ---
 
-### - [ ] Task ALIGN2-04 (LEGACY-JS-CRASH-AND-LOG-ROUTING): 消除 `mud-core.js` 會話接管 `TypeError` 並統一導流日誌至 `message-log-panel.js`
+### - [ ] 🎯 當前派工 — Task ALIGN2-04 (LEGACY-JS-CRASH-AND-LOG-ROUTING): 消除 `mud-core.js` 會話接管 `TypeError` 並統一導流日誌至 `message-log-panel.js`
 - **目標檔案**：
   - `src/main/resources/static/index.html`
   - `src/main/resources/static/js/mud-core.js`

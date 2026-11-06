@@ -86,8 +86,9 @@ class FormationFinisherClassifierTest {
   }
 
   @Test
-  @DisplayName("REFACTOR-P1-02: 驗證萬象混元型小隊終結技判定 (四大道統均涵蓋)")
+  @DisplayName("REFACTOR-P1-02: 驗證萬象混元型小隊終結技判定 (四大道統均涵蓋，含 4 人存活與 5 人雙 UNIVERSAL 遞補)")
   void testUniversalFinisher() {
+    // 5 人全員在場且涵蓋四大道統 (1 UNIVERSAL + 4 道統)
     Party universalParty = createPartyWithSchools("UNIVERSAL", "CULTIVATOR", "ENGINEER", "HIGH_TECH", "CTHULHU");
     FormationFinisherSpec spec = FormationFinisherClassifier.classify(universalParty);
     assertThat(spec.id()).isEqualTo("finisher_all_universal");
@@ -95,6 +96,18 @@ class FormationFinisherClassifierTest {
     assertThat(spec.damageType()).isEqualTo("CHAOS");
     assertThat(spec.damageMultiplierBonus()).isEqualTo(1.0);
     assertThat(spec.poiseBonus()).isEqualTo(60);
+
+    // 4 人小隊（1 UNIVERSAL + 3 種不同道統，UNIVERSAL 自動視為第 4 道統補位）
+    Party fourManUniversal = createPartyWithSchools("UNIVERSAL", "CULTIVATOR", "ENGINEER", "HIGH_TECH");
+    FormationFinisherSpec spec4 = FormationFinisherClassifier.classify(fourManUniversal);
+    assertThat(spec4.id()).isEqualTo("finisher_all_universal");
+    assertThat(spec4.name()).isEqualTo("【大衍混元·諸天萬象開天闢地神劫】");
+
+    // 5 人小隊含 2 位 UNIVERSAL 與 3 種不同道統
+    Party doubleUniversal = createPartyWithSchools("UNIVERSAL", "UNIVERSAL", "CULTIVATOR", "ENGINEER", "HIGH_TECH");
+    FormationFinisherSpec specDouble = FormationFinisherClassifier.classify(doubleUniversal);
+    assertThat(specDouble.id()).isEqualTo("finisher_all_universal");
+    assertThat(specDouble.name()).isEqualTo("【大衍混元·諸天萬象開天闢地神劫】");
   }
 
   @Test

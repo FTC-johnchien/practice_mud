@@ -359,6 +359,23 @@ public class DataIntegrityValidator implements ApplicationRunner {
       if (psk.getOverclockTier() < 0 || psk.getOverclockTier() > 3) {
         errors.add("小隊技能 [" + psk.getId() + "] 超頻階級 overclockTier (" + psk.getOverclockTier() + ") 超出合法範圍 [0, 3]！");
       }
+      if (psk.getDamageType() != null && !psk.getDamageType().isBlank()) {
+        try {
+          com.example.htmlmud.domain.model.enums.DamageType.valueOf(psk.getDamageType().trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+          errors.add("小隊技能 [" + psk.getId() + "] 包含無效的 damageType: [" + psk.getDamageType() + "]！");
+        }
+      }
+    }
+
+    for (var spec : com.example.htmlmud.combat.FormationFinisherClassifier.getAllSpecs().values()) {
+      if (spec.damageType() != null && !spec.damageType().isBlank()) {
+        try {
+          com.example.htmlmud.domain.model.enums.DamageType.valueOf(spec.damageType().trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+          errors.add("陣法終結技 [" + spec.id() + "] 包含無效的 damageType: [" + spec.damageType() + "]！");
+        }
+      }
     }
     return count + partySkills.size();
   }

@@ -128,9 +128,10 @@ public class FormationEngine {
     FormationTemplate ft = party.getEquippedFormation();
     int alive = party.getAliveCount();
 
-    // 1. 人數檢驗 (若存活人數小於陣法要求人數)
-    if (ft.getRequiredPartySize() > 0 && alive != ft.getRequiredPartySize()) {
-      return breakFormation(party, "因" + triggerReason + "，隊伍存活人數變為 " + alive + " 人，無法維持【" + ft.getName() + "】（需 " + ft.getRequiredPartySize() + " 人），陣法崩解！陣法加成與靈威皆已消散！");
+    // 1. 人數檢驗 (若存活人數低於維持陣法之最低人數門檻)
+    int minAlive = ft.getEffectiveMinAliveCount();
+    if (ft.getRequiredPartySize() > 0 && alive < minAlive) {
+      return breakFormation(party, "因" + triggerReason + "，隊伍存活人數變為 " + alive + " 人，低於維持【" + ft.getName() + "】之最低門檻（需 " + minAlive + " 人），陣法崩解！陣法加成與靈威皆已消散！");
     }
 
     // 2. 職業檢驗 (若陣亡後缺少維持陣法之必要職業)
@@ -139,6 +140,9 @@ public class FormationEngine {
       return breakFormation(party, "因" + triggerReason + "，隊伍存活成員中缺少維持陣法之必要職業（" + String.join("、", missing) + "），【" + ft.getName() + "】陣法崩解！陣法加成與靈威皆已消散！");
     }
 
+    // 未破陣：清除陣亡者 Buff 並重新對齊存活隊員站位與孔位
+    party.alignFormationRows();
+    party.refreshFormation();
     return null;
   }
 

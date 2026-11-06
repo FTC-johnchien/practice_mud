@@ -296,7 +296,9 @@ public class Party {
       return false;
     }
     int effSize = getAliveCount();
-    if (equippedFormation.getRequiredPartySize() > 0 && effSize != equippedFormation.getRequiredPartySize()) {
+    int reqSize = equippedFormation.getRequiredPartySize();
+    int minAlive = equippedFormation.getEffectiveMinAliveCount();
+    if (reqSize > 0 && (members.size() < reqSize || effSize > reqSize || effSize < minAlive)) {
       return false;
     }
     if (equippedFormation.getRequiredClasses() != null && !equippedFormation.getRequiredClasses().isEmpty()) {

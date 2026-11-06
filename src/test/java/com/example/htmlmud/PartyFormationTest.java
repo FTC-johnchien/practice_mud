@@ -214,7 +214,7 @@ class PartyFormationTest {
   }
 
   @Test
-  @DisplayName("測試 FormationEngine：隊員陣亡即時觸發破陣、清除 Buff 與靈威")
+  @DisplayName("測試 FormationEngine：5 人陣法在 minAliveCount(3) 內減員自動遞補孔位不破陣，低於閾值才破陣")
   void testFormationEngineBreakOnMemberDeath() {
     var formationEngine = new com.example.htmlmud.party.FormationEngine();
     var fiveElements = partyService.getFormation("formation_five_elements");
@@ -225,14 +225,45 @@ class PartyFormationTest {
     party.setFormationEnergy(100);
     assertTrue(party.canCastUltimate());
 
-    // 隊員 #3 (index 2) 陣亡
-    PartyMember victim = party.getMembers().get(2);
-    victim.setAlive(false);
+    // 1. 隊員 #3 (index 2) 陣亡 (存活 4 人 >= minAliveCount 3)
+    PartyMember victim1 = party.getMembers().get(2);
+    victim1.setAlive(false);
 
-    // 觸發破陣檢驗
-    String breakMsg = formationEngine.checkAndBreakFormation(party, victim.getName() + " 力竭倒下");
-    assertNotNull(breakMsg, "減員應產生破陣提示");
-    assertTrue(breakMsg.contains("陣法崩解"));
+    String breakMsg1 = formationEngine.checkAndBreakFormation(party, victim1.getName() + " 力竭倒下");
+    assertNull(breakMsg1, "存活 4 人 >= minAliveCount(3) 時陣法不應崩解");
+    assertFalse(party.isFormationBroken(), "陣法不應標記為崩解");
+    assertEquals(100, party.getFormationEnergy(), "靈威應被保留");
+    assertTrue(party.canCastUltimate());
+
+    // 驗證孔位自動遞補：index 0->slot 0, index 1->slot 1, index 2->null, index 3->slot 2, index 4->slot 3
+    assertEquals(0, party.getSlotForMember(0).getSlotIndex());
+    assertEquals(1, party.getSlotForMember(1).getSlotIndex());
+    assertNull(party.getSlotForMember(2));
+    assertEquals(2, party.getSlotForMember(3).getSlotIndex());
+    assertEquals(3, party.getSlotForMember(4).getSlotIndex());
+
+    // 2. 隊員 #4 (index 3) 陣亡 (存活 3 人 == minAliveCount 3)
+    PartyMember victim2 = party.getMembers().get(3);
+    victim2.setAlive(false);
+
+    String breakMsg2 = formationEngine.checkAndBreakFormation(party, victim2.getName() + " 力竭倒下");
+    assertNull(breakMsg2, "存活 3 人 == minAliveCount(3) 時陣法仍不應崩解");
+    assertFalse(party.isFormationBroken());
+    assertEquals(100, party.getFormationEnergy());
+
+    // 驗證孔位再度遞補：index 0->slot 0, index 1->slot 1, index 4->slot 2
+    assertEquals(0, party.getSlotForMember(0).getSlotIndex());
+    assertEquals(1, party.getSlotForMember(1).getSlotIndex());
+    assertNull(party.getSlotForMember(3));
+    assertEquals(2, party.getSlotForMember(4).getSlotIndex());
+
+    // 3. 隊員 #5 (index 4) 陣亡 (存活 2 人 < minAliveCount 3 -> 觸發破陣)
+    PartyMember victim3 = party.getMembers().get(4);
+    victim3.setAlive(false);
+
+    String breakMsg3 = formationEngine.checkAndBreakFormation(party, victim3.getName() + " 力竭倒下");
+    assertNotNull(breakMsg3, "存活 2 人低於最小下限 3 人應產生破陣提示");
+    assertTrue(breakMsg3.contains("陣法崩解"));
     assertTrue(party.isFormationBroken(), "隊伍陣法應被標記為崩解");
     assertEquals(0, party.getFormationEnergy(), "靈威應清零");
     assertFalse(party.canCastUltimate(), "崩解後無法施展奧義");
@@ -243,6 +274,33 @@ class PartyFormationTest {
         assertFalse(m.hasActiveBuff("buff_formation_slot_" + i), "破陣後陣法 Buff 應被清除");
       }
     }
+  }
+
+  @Test
+  @DisplayName("測試 FormationEngine：必要職業成員陣亡時立即破陣 (即使存活人數 >= minAliveCount)")
+  void testFormationEngineBreakOnRequiredClassDeath() {
+    var formationEngine = new com.example.htmlmud.party.FormationEngine();
+    var phoenix = partyService.getFormation("formation_phoenix");
+    assertNotNull(phoenix);
+
+    formationEngine.applyFormation(party, phoenix);
+    assertFalse(party.isFormationBroken());
+    party.setFormationEnergy(100);
+    assertTrue(party.canCastUltimate());
+
+    // 隊員 #5 (index 4: 墨衍) 為小隊唯一的 MAGE
+    PartyMember mageVictim = party.getMembers().get(4);
+    assertEquals("MAGE", mageVictim.getClassId());
+    mageVictim.setAlive(false);
+
+    // 觸發破陣檢驗 (此時存活 4 人 >= minAliveCount 3，但缺少必要職業 MAGE)
+    String breakMsg = formationEngine.checkAndBreakFormation(party, mageVictim.getName() + " 陣亡倒下");
+    assertNotNull(breakMsg, "缺少必要職業應立即觸發破陣");
+    assertTrue(breakMsg.contains("陣法崩解"));
+    assertTrue(breakMsg.contains("法術輸出") || breakMsg.contains("MAGE"));
+    assertTrue(party.isFormationBroken(), "隊伍陣法應被標記為崩解");
+    assertEquals(0, party.getFormationEnergy(), "靈威應清零");
+    assertFalse(party.canCastUltimate());
   }
 
   @Test

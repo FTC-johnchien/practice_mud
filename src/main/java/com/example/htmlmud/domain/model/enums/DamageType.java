@@ -10,10 +10,10 @@ public enum DamageType {
   SLASH(PHYSICAL), // 揮砍
   PIERCE(PHYSICAL), // 穿刺
   BLUNT(PHYSICAL), // 鈍擊
-  METAL(PHYSICAL), // 金 / 金石
 
   // === 魔法 / 元素道法系 ===
   MAGIC(null), // 魔法 (根類別)
+  METAL(MAGIC), // 金 / 金石 (庚金銳氣 / 白虎道法)
   FIRE(MAGIC), // 火焰 (赤煞)
   ICE(MAGIC), // 冰霜 (玄冥)
   WATER(MAGIC), // 水
@@ -22,10 +22,12 @@ public enum DamageType {
   EARTH(MAGIC), // 土 (歸塵厚土)
   WOOD(MAGIC), // 木 (青囊草木)
   POISON(MAGIC), // 毒素
+  FORCE(MAGIC), // 力場 / 真元念力
   HOLY(MAGIC), // 神聖 / 純陽
   LIGHT(HOLY), // 光
   DARK(MAGIC), // 暗影 / 幽冥
-  CORRUPT(DARK), // 陰煞 / 混沌
+  CORRUPT(DARK), // 陰煞
+  CHAOS(DARK), // 混沌 / 外神煞氣
 
   // === 特殊 ===
   SONIC(null), // 音波

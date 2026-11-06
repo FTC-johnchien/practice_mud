@@ -15,6 +15,7 @@ import com.example.htmlmud.combat.BattleEnemy;
 import com.example.htmlmud.combat.ComboResolver;
 import com.example.htmlmud.combat.DrpgCombatLoop;
 import com.example.htmlmud.domain.model.entity.LivingStats;
+import com.example.htmlmud.domain.model.enums.DamageType;
 import com.example.htmlmud.party.FormationTemplate;
 import com.example.htmlmud.party.Party;
 import com.example.htmlmud.party.PartyMember;
@@ -247,5 +248,71 @@ public class CrossComboAndFormationResonanceTest {
     int damageDealtInStep2 = bossHpAfterStep1 - boss.getHp();
     // 驗證 Step 2 成功擊中並造成傷害 (包含雙星合璧加成)
     assertTrue(damageDealtInStep2 >= 15, "Step 2 應包含雙星合璧加成傷害 (預期 >= 15, 實際: " + damageDealtInStep2 + ")");
+  }
+
+  @Test
+  @DisplayName("F3-01-05: 庚金抗性逆流回血 vs 揮砍物理保底穿透，以及 CHAOS/FORCE 技能傷害類型解析驗證")
+  void testMetalResistanceReverseHealingAndPhysicalPenetration() {
+    // 1. 驗證 METAL (屬於 MAGIC) 在抗性 1.25 時逆流回血
+    var metalRes = CombatRules.resolveResistance(100, DamageType.METAL, 1.25);
+    assertEquals(0, metalRes.damage(), "METAL 抗性 125% 時承受傷害應歸零");
+    assertEquals(25, metalRes.heal(), "METAL 抗性 125% 超額 25% 應逆流為 25 點治療");
+
+    // 2. 驗證 SLASH (屬於 PHYSICAL) 在抗性 1.25 時保底 10% 穿透且不回血
+    var slashRes = CombatRules.resolveResistance(100, DamageType.SLASH, 1.25);
+    assertEquals(10, slashRes.damage(), "SLASH 物理傷害應享有 10% 保底穿透 (100 * 0.1 = 10)");
+    assertEquals(0, slashRes.heal(), "物理傷害絕不走元素逆流回血");
+
+    // 3. 驗證 CHAOS 與 FORCE 技能傷害類型在 DrpgCombatLoop 解析與 BattleEvent 中的派發
+    Party party = new Party();
+    LivingStats stats = new LivingStats();
+    stats.setHp(100);
+    stats.setMaxHp(100);
+    PartyMember member = PartyMember.builder()
+        .id("p-tester")
+        .name("凌霄劍修")
+        .stats(stats)
+        .baseMinDamage(30)
+        .baseMaxDamage(30)
+        .row(RowPosition.FRONT)
+        .alive(true)
+        .build();
+    party.addMember(member);
+
+    BattleEnemy enemy = BattleEnemy.builder()
+        .id("e-target")
+        .name("受試妖魔")
+        .hp(500)
+        .maxHp(500)
+        .alive(true)
+        .build();
+
+    BattleContext ctx = new BattleContext();
+    ctx.setParty(party);
+    ctx.setEnemies(new ArrayList<>(List.of(enemy)));
+
+    PartyMemberSkill chaosSkill = PartyMemberSkill.builder()
+        .id("skill_chaos_blast")
+        .name("幽冥混沌波")
+        .damageType("CHAOS")
+        .damageMultiplier(1.0)
+        .build();
+
+    drpgCombatLoop.applySkillEffects(null, ctx, member, chaosSkill, 0, "施展");
+    assertFalse(ctx.getPendingEvents().isEmpty(), "施展技能後應產生戰鬥事件");
+    var chaosEvent = ctx.getPendingEvents().poll();
+    assertEquals("CHAOS", chaosEvent.damageType(), "混沌技能事件之傷害類型應為 CHAOS");
+
+    PartyMemberSkill forceSkill = PartyMemberSkill.builder()
+        .id("skill_force_pulse")
+        .name("真元念力衝")
+        .damageType("FORCE")
+        .damageMultiplier(1.0)
+        .build();
+
+    drpgCombatLoop.applySkillEffects(null, ctx, member, forceSkill, 0, "施展");
+    assertFalse(ctx.getPendingEvents().isEmpty());
+    var forceEvent = ctx.getPendingEvents().poll();
+    assertEquals("FORCE", forceEvent.damageType(), "念力技能事件之傷害類型應為 FORCE");
   }
 }

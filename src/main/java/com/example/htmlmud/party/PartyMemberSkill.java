@@ -466,6 +466,11 @@ public class PartyMemberSkill implements UnifiedSkill {
 
     int threatVal = isTaunt ? 600 : (rawTags.contains("HIGH_THREAT") ? 300 : 0);
 
+    String dmgType = "PHYSICAL";
+    if (tpl.getMechanics() != null && tpl.getMechanics().damageType() != null) {
+      dmgType = tpl.getMechanics().damageType().name();
+    }
+
     return PartyMemberSkill.builder()
         .id(tpl.getId())
         .name(tpl.getName())
@@ -473,6 +478,7 @@ public class PartyMemberSkill implements UnifiedSkill {
         .description(tpl.getDescription())
         .skillType(tpl.getType())
         .category(category)
+        .damageType(dmgType)
         .costType(costType)
         .costValue(costValue)
         .spCost(sp)

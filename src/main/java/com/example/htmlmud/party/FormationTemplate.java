@@ -19,12 +19,18 @@ public class FormationTemplate {
   @Builder.Default
   private int requiredPartySize = 5;
   @Builder.Default
+  private int minAliveCount = 0;
+  @Builder.Default
   private boolean basic = false;
   @Builder.Default
   private List<String> requiredClasses = new ArrayList<>();
   @Builder.Default
   private List<FormationSlot> slots = new ArrayList<>();
   private FormationSkill ultimateSkill;
+
+  public int getEffectiveMinAliveCount() {
+    return minAliveCount > 0 ? minAliveCount : (requiredPartySize > 0 ? Math.min(requiredPartySize, 3) : 1);
+  }
 
   public FormationSlot getSlot(int index) {
     if (slots != null && index >= 0 && index < slots.size()) {
