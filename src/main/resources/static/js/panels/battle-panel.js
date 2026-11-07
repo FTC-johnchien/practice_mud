@@ -871,16 +871,6 @@ export function renderCombatCommandDock(party, selectedMemberIdx) {
 
   if (!actionsColEl || !contentColEl) return;
 
-  if (!contentColEl.dataset.hasSkillClickListener) {
-    contentColEl.dataset.hasSkillClickListener = 'true';
-    contentColEl.addEventListener('click', (ev) => {
-      const card = ev.target.closest('.dock-mini-skill');
-      if (card && !card.classList.contains('empty-slot') && !card.classList.contains('disabled')) {
-        handleDockSkillCardClick(ev, card);
-      }
-    });
-  }
-
   const activeTab = store.get('dockSkillTab') || 'DEFAULT';
 
   // Left Column: Actions (只有隊員或分頁改變時才重建，否則保持 DOM)
@@ -890,13 +880,13 @@ export function renderCombatCommandDock(party, selectedMemberIdx) {
     actionsColEl.dataset.actionKey = actionKey;
     actionsColEl.innerHTML = `
       <div style="color: var(--text-color); font-weight: bold; margin-bottom: 2px; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${safeMemberName}</div>
-      <div class="dock-action-btn ${activeTab === 'DEFAULT' ? 'active' : ''}" onclick="setDockSkillTab('DEFAULT')">
+      <div class="dock-action-btn ${activeTab === 'DEFAULT' ? 'active' : ''}" data-action="set-dock-skill-tab" data-tab="DEFAULT">
         <span>屬性與狀態</span><span>👁️</span>
       </div>
-      <div class="dock-action-btn ${activeTab === 'SKILL' ? 'active' : ''}" onclick="setDockSkillTab('SKILL')">
+      <div class="dock-action-btn ${activeTab === 'SKILL' ? 'active' : ''}" data-action="set-dock-skill-tab" data-tab="SKILL">
         <span>戰陣武技</span><span>⚔️</span>
       </div>
-      <div class="dock-action-btn ${activeTab === 'SPELL' ? 'active' : ''}" onclick="setDockSkillTab('SPELL')">
+      <div class="dock-action-btn ${activeTab === 'SPELL' ? 'active' : ''}" data-action="set-dock-skill-tab" data-tab="SPELL">
         <span>仙道法術</span><span>✨</span>
       </div>
     `;
@@ -1047,8 +1037,8 @@ export function renderCombatCommandDock(party, selectedMemberIdx) {
             <div class="dock-mini-skill ${disabled ? 'disabled' : ''}"
                  data-skill-id="${safeSkillId}"
                  data-skill-name="${safeSkillName}"
-                 title="${safeSkillName}\n${safeSkillDesc}${onCd ? '\n[調息中 ' + cdSec + '秒]' : ''}"
-                 onclick="handleDockSkillCardClick(event, this)">
+                 data-action="dock-skill-card-click"
+                 title="${safeSkillName}\n${safeSkillDesc}${onCd ? '\n[調息中 ' + cdSec + '秒]' : ''}">
               <span class="skill-icon">${safeSkillIcon}</span>
               <span class="skill-name">${safeSkillName}</span>
               <span class="skill-cost">${costLabel}</span>
@@ -1065,9 +1055,9 @@ export function renderCombatCommandDock(party, selectedMemberIdx) {
             ${slotsHtml}
           </div>
           <div class="dock-skill-pagination">
-            <button class="page-btn" ${currentPage <= 1 ? 'disabled' : ''} onclick="changeDockSkillPage(-1)">◀</button>
+            <button class="page-btn" ${currentPage <= 1 ? 'disabled' : ''} data-action="change-dock-skill-page" data-delta="-1">◀</button>
             <span>頁次 ${currentPage} / ${totalPages}</span>
-            <button class="page-btn" ${currentPage >= totalPages ? 'disabled' : ''} onclick="changeDockSkillPage(1)">▶</button>
+            <button class="page-btn" ${currentPage >= totalPages ? 'disabled' : ''} data-action="change-dock-skill-page" data-delta="1">▶</button>
           </div>
         </div>
       `;
@@ -1249,6 +1239,23 @@ export function selectPartyMemberForSkill(idx) {
   } else {
     selectPartyMember(idx);
   }
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest('[data-action]');
+    if (!target) return;
+    const action = target.getAttribute('data-action');
+    if (action === 'set-dock-skill-tab') {
+      const tab = target.getAttribute('data-tab');
+      setDockSkillTab(tab);
+    } else if (action === 'dock-skill-card-click') {
+      handleDockSkillCardClick(e, target);
+    } else if (action === 'change-dock-skill-page') {
+      const delta = parseInt(target.getAttribute('data-delta'), 10);
+      changeDockSkillPage(delta);
+    }
+  });
 }
 
 // 相容掛載至 window

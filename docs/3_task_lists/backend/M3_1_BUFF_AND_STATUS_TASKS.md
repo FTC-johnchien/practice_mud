@@ -11,6 +11,8 @@
 
 - **核心實體與枚舉**：
   - [`BuffCategory.java`](../../../src/main/java/com/example/htmlmud/domain/model/enums/BuffCategory.java)（`STAT_MODIFIER`, `HOT_DOT`, `CONTROL`, `SHIELD`, `PRIMER`）
+  - [`ActiveBuff.java`](../../../src/main/java/com/example/htmlmud/combat/ActiveBuff.java)（狀態實例與生命週期資料模型）
+  - [`BuffSettlementService.java`](../../../src/main/java/com/example/htmlmud/combat/BuffSettlementService.java)（狀態效果結算與生命週期驅動服務）
   - [`CombatRules.java`](../../../src/main/java/com/example/htmlmud/combat/CombatRules.java)（狀態反應與結算純函數）
   - [`DrpgCombatLoop.java`](../../../src/main/java/com/example/htmlmud/combat/DrpgCombatLoop.java)（500ms Tick 周期調度）
 - **關聯驗證測試**：

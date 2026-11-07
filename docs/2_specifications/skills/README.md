@@ -11,7 +11,9 @@
 
 全專案技能體系採 **模組化獨立分檔治理 (Feature-by-Tree)**，劃分為四大歷史淵源與 17 棵專精樹。每份規格檔案詳述其四階主動戰技（煉氣、築基、金丹、元嬰大絕招）、常駐道骨/晶片插槽、數值公式、底層科技真相與連攜搭配：
 
-> 💡 **分階實裝說明**：17 專精樹為四大淵源完整架構藍圖；當前 VS-01 垂直切片優先實裝並驗收代表性核心專精樹與基礎合擊，其餘隨後續章節分批擴充。
+> 💡 **分階實裝說明與數值唯一事實來源（SSoT）聲明**：
+> - **架構藍圖**：17 專精樹子規格檔（[`TREE_01`](1_cultivator/TREE_01_GOLD_SWORD.md) ~ [`TREE_17`](4_cthulhu/TREE_17_NULL_VOID.md)）定義四大淵源各樹之戰術機制、階梯技能名與四階演進藍圖；當前 VS-01 垂直切片優先實裝並驗收代表性核心專精樹與基礎合擊，其餘隨後續章節分批擴充。
+> - **數值 SSoT**：所有技能執行期具體平衡參數（如 `tier`、`cooldownMs`、`costType`/`costValue`、`damageMultiplier`、`poiseDamage`）一律以 `src/main/resources/data/party/party_skills.json` 為唯一生效 SSoT（消除靜態數值漂移疑慮）。
 
 ```text
 docs/2_specifications/skills/

@@ -68,7 +68,7 @@ graph TD
   - 提供全隊一鍵休整、補給整備與冒險出征校驗。
   - 管理駐留生靈（NPC）劇情分支樹與對話任務分發，徹底淘汰 MUD 房間 exits 拓撲。
 - **代表類別**：
-  - `TownHubService`, `CognitiveProxyService`, `DialogueService`, `TownHubDto`
+  - `TownHubService`, `CognitiveProxyService`, `TownHubDto`, `FacilityDto`, `PerceptionTier`
 - **資料設定來源**：
   - `src/main/resources/data/zones/newbie_village/facilities.json`（舊路徑 `data/hub/facilities.json` 【歷史／已除役】）、`data/hub/dialogues.json` 【已決議待實作】
 
@@ -110,7 +110,7 @@ graph TD
 - **代表類別**：
   - `BuffSettlementService`, `ActiveBuff`, `Buffable`, `BuffCategory`, `ActiveBuffDto`, `CombatRules`
 - **資料設定來源**：
-  - `src/main/resources/data/party/party_skills.json`, `data/buffs/`
+  - `src/main/resources/data/party/party_skills.json`, `src/main/resources/data/global/skills/classes/**/*.json`
 
 ### 4. M4: 小隊、生靈與陣法模組 (Party, Living & Formation)
 - 📖 **詳細技術手冊**：[`backend/M4_PARTY_AND_FORMATION.md`](backend/M4_PARTY_AND_FORMATION.md)
@@ -134,7 +134,7 @@ graph TD
   - 境界突破（練氣 ➔ 築基 ➔ 金丹...）與自由屬性點分配。
   - 解算 17 專精樹四階主動武技、道骨晶片插槽、2~4人合體技與 15 大全隊終結技。
 - **代表類別**：
-  - `UnifiedSkill`, `PartyMemberSkill`, `ComboResolver`, `SocketService`, `XpProgressionService`, `SkillCostService`, `FormulaEvaluator`
+  - `UnifiedSkill`, `PartyMemberSkill`, `ComboResolver`, `FormationFinisherClassifier`, `DrpgSkillRules`, `XpProgressionService`
 - **資料設定來源**：
   - `src/main/resources/data/global/classes.json`, `data/party/party_skills.json`
 
@@ -143,7 +143,7 @@ graph TD
 - **核心職責**：
   - 裝備槽位管理（武器 `MAIN_HAND`/`OFF_HAND`、頭部 `HEAD`、胸甲 `BODY`、鞋子 `FEET`、飾品 `ACCESSORY_1`/`ACCESSORY_2` 5+2 結構）。
   - 40 格小隊共用儲物袋（`PartyInventory`）與堆疊機制。
-  - **多階靈識認知透鏡 (`lenses`) 轉譯**：協同 `CognitiveProxyService`，根據知識與晶片加載度將素材由「一團怪物的血肉」動態解密為「工程師生化晶片」。
+  - **多階靈識認知透鏡 (`lenses`) 轉譯【待深入討論／長線演進藍圖】**：協同 `CognitiveProxyService`，根據知識與晶片加載度將素材由「一團怪物的血肉」動態解密為「工程師生化晶片」。營地設施三階轉譯已現行實裝。
   - 貨棧買賣交易、貨幣（碎銀、靈石）扣除、消耗品使用（百草金創藥、辟邪靈茶）。
 - **代表類別**：
   - `PartyInventory`, `PartyItemSlot`, `GameItem`, `CognitiveProxyService`, `ShopCommand`, `DropCommand`, `GetCommand`
@@ -170,19 +170,18 @@ graph TD
   - 存檔版本治理（`schemaVersion`）與自動備份（`.bak`）回滾防禦機制。
   - 關鍵時機自動觸發：進入/撤離地牢、戰勝結算、離線前排空。
 - **代表類別**：
-  - `SaveGameService`, `AutoSaveService`, `SaveData`, `CharacterSave`, `RoomPersistenceService`
+  - `SaveGameService`, `SaveMigrationPipeline`, `SaveData`, `SaveSlotDto`, `SaveCorruptedException`
 - **存檔存放目錄**：
   - `saves/slot_*.json`, `saves/autosave.json`
 
 ### 9. M9: 單機 DRPG 狀態管線與事件協定模組 (State Pipeline & Events)
 - 📖 **詳細技術手冊**：[`backend/M9_STATE_PIPELINE_AND_EVENTS.md`](backend/M9_STATE_PIPELINE_AND_EVENTS.md)
 - **核心職責**：
-  - 專為純單機第一人稱 Hack-and-Slash DRPG 設計的結構化動作協定 (Action Protocol)。
-  - 徹底廢除文字命令行，由前端按鈕與鍵盤發送 `MOVE`、`CAST_SKILL`、`TOWN_FACILITY` 等結構化動作。
-  - 後端以 `DrpgStateDto` 單一全景契約推送狀態（地牢走廊視角、5 人小隊、40 格公共行囊、戰鬥擂台）。
+  - 現行採用文字指令輸入協定（`GameCommand.Input`），由前端按鈕或鍵盤透過 WebSocket 發送，經主角信箱派發予 `CommandDispatcher`；結構化 Action Protocol 標註為長線演進藍圖。
+  - 後端以 `DrpgStateDto` 單一全景契約推送狀態（地牢視角、營地視角、5 人小隊、40 格公共行囊、戰鬥擂台）。
   - 基於 Java 21/25 虛擬執行緒調度輕量戰鬥 500ms 時間線迴圈 (`DrpgCombatLoop`)。
 - **代表類別**：
-  - `DrpgActionDispatcher`, `DrpgWebSocketHandler`, `GameStateBroadcastService`, `DrpgCombatLoop`, `DrpgStateDto`
+  - `CommandDispatcher`, `MudWebSocketHandler`, `GameStateBroadcastService`, `SessionRegistry`, `DrpgCombatLoop`, `DrpgStateDto`
 
 
 ---
@@ -236,16 +235,16 @@ static/
 [玩家在鍵盤按下 'W' 鍵]
        │
        ▼
-1. FE-1 (app.js) 捕獲按鍵，向 M9 (DrpgActionDispatcher) 送出結構化動作: MOVE("w")
+1. FE-1 (app.js) 捕獲按鍵，向 M9 (MudWebSocketHandler) 送出輸入指令: {"type": "INPUT", "text": "step w"}
        │
        ▼
-2. M9 調度至 M2 (DungeonNavigator)，解算網格位移
+2. M9 經主角信箱調度 CommandDispatcher，路由至 M2 (DungeonCommand / DungeonNavigator) 解算網格位移
        │
        ▼
-3. M2 解算 (x, y) 座標，更新 visited 迷霧矩陣，並向 M9 回傳全景狀態 (DrpgStateDto)
+3. M2 解算 (x, y) 座標，更新 visited 迷霧矩陣，並向 M9 廣播全景狀態 (DrpgStateDto)
        │
        ▼
-4. M2 檢定 dangerRate，判定遭遇外神畸變魔物，立即啟動 M3 (DrpgBattleService)
+4. M2 檢定 dangerLevel，判定遭遇外神畸變魔物，立即啟動 M3 (DrpgBattleService)
        │
        ▼
 5. M3 從 M7 (TemplateRepository) 載入怪物模板，並從 M4 (PartyService) 取得 5 人小隊站位
@@ -262,10 +261,10 @@ static/
    - M7 (TemplateReader) 觸發 QuestTemplate 劇情對話解算
        │
        ▼
-8. M8 (AutoSaveService) 自動觸發戰後安全快照，寫入 saves/autosave.json
+8. M8 (SaveGameService) 自動觸發戰後安全快照，寫入 saves/autosave.json (slot 0)
        │
        ▼
-9. M9 將全景狀態組裝為 DrpgStateDto.of(...) 推送給前端
+9. M9 (GameStateBroadcastService) 將全景狀態組裝為 DrpgStateDto 推送給前端
        │
        ▼
 10. 前端 FE-3 (battle-panel) 播放破防爆裂動效，彈出 FE-5 (victory-modal) 戰利品收納！
@@ -281,7 +280,7 @@ static/
 - **隊友 Gambit 規則鏈引擎 (M4 擴展) 【現行已驗證】**：
   - 為 4 名招募夥伴實作 FFXII 風格的條件式戰術規則鏈（例如：「隊友血量 < 35% ➔ 施放回春術」、「敵怪處於破防虛弱 ➔ 施放太白重擊」），100% 透過 JSON 規則檔驅動，讓單人掌控 5 人小隊流暢自如。
 - **陣法聯攜技與五行連鎖反應 (M3 & M4 協同) 【現行已驗證】**：
-  - 五行靈氣環境共鳴：前排土系修士施加「流沙束縛」後，後排木系修士觸發「藤蔓絞殺」產生額外 50% 破防傷害。
+  - 支援 `CombatRules.ElementalReaction` 真實四反應（冰火氣化爆裂 2.0x、雷水感電傳導 1.5x、太極混沌湮滅 1.5x +50 削韌、火毒三昧燎原 1.8x）與 3.5s 跨隊員陣法連攜合擊。
 - **隨機詞綴裝備掉落 (M6 擴展) 【現行已驗證】**：
   - 詞綴庫（`prefix` / `suffix`）提供多樣化屬性隨機詞條，支撐刷寶養成循環。
 
@@ -295,7 +294,7 @@ static/
 - **多槽位原子存檔與自動備份 (M8 擴展)**：
   - 實作安全雙寫入策略（先寫入 `.json.tmp`，完成校驗後原子替換 `slot_N.json`），並自動留存 `.bak` 歷史版本，防止突發斷電或系統當機導致存檔損壞。
 - **存檔 Schema 自動向上遷移 (Schema Migration Pipeline)**：
-  - 面對未來的數值或屬性擴充，透過宣告式遷移器（`SaveDataMigrator`）自動將舊版存檔平滑升級至最新結構。
+  - 面對未來的數值或屬性擴充，透過宣告式遷移管線（`SaveMigrationPipeline`）自動將舊版存檔平滑升級至最新結構。
 
 ### 4. 資料驅動設計與零硬編碼 (100% Data-Driven Architecture)
 - **純靜態資料驅動 (100% Data-Driven)**：

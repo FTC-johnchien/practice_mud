@@ -161,8 +161,8 @@
 
         <div class="guide-card">
           <div class="guide-card-icon">🧠</div>
-          <div class="guide-card-title">三、道心 SAN 與走火入魔</div>
-          <p class="guide-card-text">SAN 歸 0 進入 <strong>走火入魔 (傷害+100%、自殘 15%、40% 背刺隊友)</strong>；可施符 <strong>[施符鎮魔]</strong> 凍結失控；計數滿 100% 將異變為敵方 Boss，討伐可剖出【道核】傳承其生前絕學！</p>
+          <div class="guide-card-title">三、道心 SAN 護盾與精神萎靡</div>
+          <p class="guide-card-text">地牢幽暗探索會損耗 <strong>道心 SAN 護盾</strong>（可點燃火把維持光明）。SAN 歸 0 時附加 <strong>【精神萎靡】（輸出傷害降低 15%，絕不失控背刺隊友）</strong>；服用清心符、清心靈茶或返營調息即可恢復清明！</p>
         </div>
 
         <div class="guide-card">
@@ -329,55 +329,26 @@
             </div>
             <span id="town-room-id-tag" class="coord-tag">newbie_village:inn</span>
           </div>
-          <button class="radar-mini-btn" data-action="toggle-radar-dock" title="切換主舞台與日誌左右停靠">⮃ 換邊</button>
+          <div class="town-top-actions">
+            <button class="town-top-btn" data-action="camp-rest" title="營地全隊休整調息 (R)">🌿 營地調息 (R)</button>
+            <button class="town-top-btn" data-action="toggle-bag" title="開啟隊伍公共行囊 (B)">🎒 行囊 (B)</button>
+            <button class="radar-mini-btn" data-action="toggle-radar-dock" title="切換主舞台與日誌左右停靠">⮃ 換邊</button>
+          </div>
         </div>
 
         <div id="town-room-desc" class="town-desc-card">
           一家樸素溫馨的小客棧，空氣中飄著麥酒與烤麵包的香氣。
         </div>
 
-        <!-- 城鎮中段：左側導航羅盤，右側環境生靈與地面物品（直排無須向下捲動） -->
+        <!-- 城鎮中段：左側營地機能設施，右側環境生靈與地面物品（直排無須向下捲動） -->
         <div class="town-stage-body">
-          <!-- 左欄：道路羅盤與特殊出路 -->
-          <div class="town-stage-left">
-            <div class="town-compass-section">
-              <div class="town-section-title">🧭 道路方位 (WASD / 點擊移動)</div>
-              <div class="compass-grid">
-                <button class="compass-corner-btn compass-corner-nw" data-action="trigger-rest" title="凝神打坐吐納回復氣血 (rest / R)">
-                  <span class="compass-dir">🌿 打坐</span>
-                  <span class="compass-target">調息 (R)</span>
-                </button>
-                <button id="exit-btn-north" class="compass-btn compass-north disabled" data-action="town-move" data-dir="north">
-                  <span class="compass-dir">▲ 北</span>
-                  <span class="compass-target" id="exit-name-north">無出路</span>
-                </button>
-                <button class="compass-corner-btn compass-corner-ne" data-action="send-cmd" data-cmd="look" title="仔細環視當前客棧街道與生靈 (look / L)">
-                  <span class="compass-dir">👀 環顧</span>
-                  <span class="compass-target">查探 (L)</span>
-                </button>
-                <button id="exit-btn-west" class="compass-btn compass-west disabled" data-action="town-move" data-dir="west">
-                  <span class="compass-dir">◀ 西</span>
-                  <span class="compass-target" id="exit-name-west">無出路</span>
-                </button>
-                <div class="compass-center" title="當前客棧街道 (look)" data-action="send-cmd" data-cmd="look" style="cursor: pointer;">🧭</div>
-                <button id="exit-btn-east" class="compass-btn compass-east disabled" data-action="town-move" data-dir="east">
-                  <span class="compass-dir">東 ▶</span>
-                  <span class="compass-target" id="exit-name-east">無出路</span>
-                </button>
-                <button class="compass-corner-btn compass-corner-sw" data-action="toggle-bag" title="開啟隊伍公共行囊 (B)">
-                  <span class="compass-dir">🎒 行囊</span>
-                  <span class="compass-target">背包 (B)</span>
-                </button>
-                <button id="exit-btn-south" class="compass-btn compass-south disabled" data-action="town-move" data-dir="south">
-                  <span class="compass-dir">▼ 南</span>
-                  <span class="compass-target" id="exit-name-south">無出路</span>
-                </button>
-                <button class="compass-corner-btn compass-corner-se" data-action="send-cmd" data-cmd="get all" title="拾取當前地面所有散落靈物 (get all)">
-                  <span class="compass-dir">📦 拾取</span>
-                  <span class="compass-target">全取 (G)</span>
-                </button>
+          <!-- 左欄：營地機能設施（六大設施卡牌） -->
+          <div class="town-stage-left town-facilities-column">
+            <div class="town-facilities-section">
+              <div class="town-section-title">🏛️ 營地機能設施 <span id="town-perception-badge" class="entity-count-badge"></span></div>
+              <div id="town-facilities-grid" class="town-hub-grid">
+                <!-- 由 town-panel.js 動態渲染六大設施卡牌 -->
               </div>
-              <div id="town-special-exits" class="town-special-exits"></div>
             </div>
           </div>
 
@@ -616,7 +587,7 @@
           <button class="drawer-close-btn" data-action="close-dev-console">✕</button>
         </div>
         <div class="dev-console-input-wrap">
-          <input type="text" id="dev-cmd-input" class="dev-cmd-input-field" placeholder="輸入除錯或自訂 MUD 指令 (例如: look, saves, party, shop, who)..." autocomplete="off">
+          <input type="text" id="dev-cmd-input" class="dev-cmd-input-field" placeholder="輸入除錯或自訂 MUD 指令 (例如: look, saves, party, shop)..." autocomplete="off">
           <button class="send-btn" data-action="send-dev">發送</button>
         </div>
         <div class="dev-console-quick-actions" style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">

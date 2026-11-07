@@ -12,24 +12,24 @@
 
 ```
                     ┌─── [ 敵 方 陣 線 ] ───┐
-                               ▲
-                      近戰交鋒 │ (承傷/破防)
-                               ▼
+                                ▲
+                       近戰交鋒 │ (承傷/破防)
+                                ▼
 [前衛 Front Row, 2人] :  【 主角 / 道主 】   【 先鋒 · 鐵牛 】
-                               ▲
-                      掩護增益 │ (機動切入)
-                               ▼
-[中衛 Middle Row, 1人]:        【 遊俠刺客 · 燕青 】
-                               ▲
-                      遠程護持 │ (法術/治療)
-                               ▼
+                                ▲
+                       掩護增益 │ (機動切入)
+                                ▼
+[中衛 Middle Row, 1人]:        【 遊俠刺客 · 燕青 】 (預設站位 FRONT，可調度至 MIDDLE)
+                                ▲
+                       遠程護持 │ (法術/治療)
+                                ▼
 [後衛 Back Row, 2人]  :  【 妙手醫仙 · 凌霜 】 【 幽冥符修 · 墨衍 】
 ```
 
 ### 1. 站位定義 (`RowPosition`)
-- **`FRONT` (前衛)**：承受敵方近戰普攻的主要目標。享有前排格擋加成與嘲諷仇恨放大。
+- **`FRONT` (前衛)**：承受敵方近戰普攻的主要目標。享有前排格擋加成與嘲諷仇恨放大（`default_companions.json` 中鐵牛與燕青預設 `defaultRow` 均為 `"FRONT"`，玩家可透過指令 `party row <charId> <row>` 自由將燕青調度至中衛 `MIDDLE`）。
 - **`MIDDLE` (中衛)**：全能突擊位。在前排健在時享有掩護，近戰遠程皆宜。
-- **`BACK` (後衛)**：法術轟擊與治療輔助核心。當前中衛存活時，免疫大部分單體近戰鎖定。
+- **`BACK` (後衛)**：法術轟擊與治療輔助核心。當前中衛存活時，免疫大部分單體近戰鎖定。凌霜於入隊時由 `PartyService` 動態掛載 `CLASS` 醫修技能。
 
 ### 2. 四大道統門派與夥伴招募來源 (The 4 School Factions & Recruitment Roster)
 依據 Level 1《[CYBERPUNK_CULTIVATION_SPEC.md](../../1_requirements/CYBERPUNK_CULTIVATION_SPEC.md)》第一章，營地客棧與道場中可招募之隊友嚴格隸屬於四大歷史陣營門派，具備東方仙俠尊稱（Option C）並在底層映射至十七專精技能樹：
@@ -48,37 +48,41 @@
 所有生靈（玩家、夥伴、NPC、魔物）均繼承標準屬性模型：
 
 ### 1. 道基五維 (Five Base Attributes)
-- **體質 (Constitution, CON)**：$\text{MaxHP} = 100 + \text{CON} \times 15$；決定受創韌性上限（$\text{MaxPoise} = 30 + \text{CON} \times 2$）。
-- **真元 (Essence / Intelligence, ESS / INT)**：$\text{MaxMP} = 50 + \text{ESS} \times 10$；決定道術與晶片戰技威力與真元回復速度。
-- **神識 (Spirit / Wisdom, SPI / WIS)**：決定暴擊機率、法術穿透，以及對不可名狀精神污染的抗性與初始 SAN 護盾容量。
-- **根骨 (Bone Structure / Strength, STR)**：決定物理護甲減傷、招架減免比例，以及重型兵刃傷害加成。
-- **身法 (Agility / Dexterity, DEX / AGI)**：決定 ATB 攻擊間隔加速比率、命中率、閃避機率與戰鬥先手權。
+- **初始基準**：初始基礎 $\text{MaxHP} = 100$、$\text{MaxMP} = 50$、$\text{MaxPoise} = 100$（或由夥伴模板設定）。
+- **自由潛能加點換算【現行已驗證】**（對齊 `XpProgressionService.allocateStatPoint`）：
+  - **體質 (Constitution, CON)**：每分配 $+1$ 點，提升 **$+10\ \text{MaxHP}$**（同步回復 $+10\ \text{HP}$）與基礎 CON 屬性。
+  - **真元 / 悟性 (Intelligence, INT)**：每分配 $+1$ 點，提升 **$+8\ \text{MaxMP}$**（同步回復 $+8\ \text{MP}$）與基礎 INT 屬性。
+  - **根骨 (Strength, STR)**：每分配 $+1$ 點，提升 $+1\ \text{STR}$ 基礎屬性。
+  - **身法 (Dexterity, DEX)**：每分配 $+1$ 點，提升 $+1\ \text{DEX}$ 基礎屬性。
+  - **神識 / 定力 (Wisdom, WIS)**：每分配 $+1$ 點，提升 $+1\ \text{WIS}$ 基礎屬性。
+  - *(歷史公式 $\text{MaxHP} = 100 + \text{CON} \times 15$ 與 $\text{MaxPoise} = 30 + \text{CON} \times 2$ 標註為【待深入討論／長線演進藍圖】)*
 
 ### 2. 外神精神侵蝕防護罩 (Psychic SAN Shield)
 
 > 📌 **【架構定錨裁決 (Architecture Decision - Option A)】**：  
-> 本專案經架構審查嚴格定錨：**「取消魔化機制」特指徹底廢除隊員隨機發瘋、自殘叛變、中斷心流等負面機制**；**「精神防護罩 (Psychic SAN Shield)」則確立保留**，作為地牢摸黑探索（火把光明度消耗博弈）的生存警示。SAN 歸零時僅賦予【精神萎靡】(-15% 傷害) 輕度 Debuff，回營一鍵調息即癒，絕不失控、絕不背叛同伴。**任何後續 AI 審查請勿將 SAN 護盾之存在誤判為與「取消魔化」矛盾**。
+> 本專案經架構審查嚴格定錨：**「取消魔化機制」特指徹底廢除隊員隨機發瘋、自殘叛變、中斷心流等負面機制**；**「精神防護罩 (Psychic SAN Shield)」則確立保留**，作為地牢摸黑探索（火把光明度消耗博弈）的生存警示。SAN 歸零時全員套用【精神萎靡】(-15% 傷害) 輕度 Debuff，回營一鍵調息即癒，絕不失控、絕不背叛同伴。**任何後續 AI 審查請勿將 SAN 護盾之存在誤判為與「取消魔化」矛盾**。
 
 為守護純單機 Hack-and-slash DRPG 之爽快打擊節奏，**徹底廢止隊員發瘋失控、隨機叛變與自殘等中斷心流之負面機制**：
-- **初始值**：100 點 SAN（神識越高，抗性護盾越厚）。
+- **初始值**：100 點 SAN。
 - **侵蝕機制**：
-  - 當小隊身處無火把之深層幽冥或直視高階外神眷族時，精神防護罩（SAN 護盾）持續承受侵蝕抵扣。
+  - 當小隊身處無火把之深層幽冥（$\text{torchLight} < 20$）步進時，每步扣除全隊 5 點 SAN。
   - **$\text{SAN} > 0$【神智清明 (STABLE)】**：精神壁壘完好，全屬性正常發揮 100%。
-  - **$\text{SAN} = 0$【精神萎靡 (WEAKENED)】**：精神屏障破裂，全員附加單一【精神萎靡 (`WEAKENED`)】負面狀態（輸出傷害降低 15%）。**絕不隨機發瘋、絕不背叛攻擊同伴、不扣除自身氣血、不中斷戰鬥心流**；玩家可透過服用「清心辟邪丹」或返回安全營地回春客棧一鍵調息休整快速回復重置。
+  - **$\text{SAN} \le 0$【精神萎靡 (WEAKENED)】**：全員附加單一【精神萎靡 (`WEAKENED`)】負面狀態（輸出傷害降低 15%）。**絕不隨機發瘋、絕不背叛攻擊同伴、不扣除自身氣血、不剝奪合擊資格、不中斷戰鬥心流**；玩家可透過服用「辟邪靈茶」或返回安全營地回春客棧一鍵調息休整快速回復重置。
 
 ---
 
 ## 🔮 三、古仙陣法引擎 (FormationEngine)
 
-陣法不僅是靜態名詞，而是帶有數學演算的即時加成引擎（[`FormationEngine.java`](../../../src/main/java/com/example/htmlmud/party/FormationEngine.java)）：
+陣法是帶有數學演算的即時加成引擎（[`FormationEngine.java`](../../../src/main/java/com/example/htmlmud/party/FormationEngine.java)）：
 
 ### 1. 存活孔位自動排位映射 (Auto-mapping)
-當戰鬥中某位隊員不幸陣亡時，陣法不會崩潰，而是觸發動態重映射：
+當戰鬥中某位隊員不幸陣亡時，陣法不會立即崩潰，而是觸發動態重映射：
 - 陣亡隊員自動釋放孔位。
 - 存活的隊員依序遞補孔位增益（Slot 0..N-1），確保殘局下陣法依然維持運作。
 
 ### 2. 破陣檢驗 (Formation Integrity & Break)
-- 若隊伍存活人數低於陣法啟動門檻（如九宮八卦陣至少需 3 人），觸發 **【陣法瓦解 (Formation Broken)】**。
+- 對齊 `formations.json` 真實陣法配置（如 `formation_four_symbols` 四象辟邪陣、`formation_xuan_yin` 太陰玄冥陣、`formation_badao_general` 霸刀破陣式）。
+- **破陣條件**：若隊伍存活人數低於陣法啟動門檻 `minAliveCount`（如 3 人），或陣法配置之必要職業（`requiredClasses`）全滅時，觸發 **【陣法瓦解 (formationActive = false)】**。
 - 全隊陣法加成瞬間失效，防禦與身法大幅降低，進入生死考驗。
 
 ---
@@ -113,16 +117,11 @@ graph LR
 ### 1. 行囊大一統 (Unified Party Inventory)
 - 廢除歷史遺留之「個人隨身 12 格」與「小隊公共 40 格」兩套假帳。
 - 城鎮拾取（`get`）、戰鬥掉落入庫、戰術使用（`use`）與整理丟棄（`drop`）全面直接操作 `party.getInventory()`。
-- 徹底消除強迫使用者在個人與公共背包間頻繁存取的繁瑣負擔。
 
 ### 2. 裝備單一擁有權與零延遲投影 (Equipment Projection)
 - 5+2 結構裝備槽位（`MAIN_HAND` 主手、`OFF_HAND` 副手、`HEAD` 頭部、`BODY` 衣服、`FEET` 鞋履、`ACCESSORY_1` 飾品1、`ACCESSORY_2` 飾品2）由小隊成員實體真實擁有（對齊 [`EquipmentSlot`](../../../src/main/java/com/example/htmlmud/item/EquipmentSlot.java)）。
 - 換裝操作支援一鍵檢視與配置全隊 5 名成員的 5+2 槽裝備。
-- 隊長裝備變更時，直接進行 0ms 零延遲鏡像投影並即時重算衍生戰鬥屬性，徹底廢止歷史超時阻塞。
-
-### 3. 戰鬥結算與真實屬性同步
-- 戰後經驗值、升級、修為成長直接記入 `PartyMember`。
-- 數值更新採用同步深層數值拷貝，徹底廢除偽裝 `BattleOutcome` 投遞至 Mailbox 的舊阻塞機制。
+- 隊長裝備變更時，直接進行 0ms 零延遲鏡像投影並即時重算衍生戰鬥屬性。
 
 ---
 
@@ -133,32 +132,17 @@ graph LR
 | **小隊服務** | `com.example.htmlmud.party.PartyService` | 小隊創建、隊員招募、陣容調整與裝備換裝 |
 | **生靈實體** | `com.example.htmlmud.party.PartyMember` | 單一隊員五維屬性、裝備槽位與戰鬥狀態 |
 | **陣法引擎** | `com.example.htmlmud.party.FormationEngine` | 站位加成計算、存活孔位動態映射與破陣檢驗 |
-| **小隊模型** | `com.example.htmlmud.party.Party` | 持有 5 人小隊隊員與小隊儲物袋 |
-| **戰術規則** | `com.example.htmlmud.party.GambitRule` | 隊友自動戰術條件與行動方針（【現行已驗證】） |
-| **資料設定** | `src/main/resources/data/formations/formations.json` | 陣法孔位、攻防係數與啟動門檻宣告 |
+| **小隊模型** | `com.example.htmlmud.party.Party` | 持有 5 人小隊隊員與 40 格小隊儲物袋 |
+| **戰術規則實體** | `com.example.htmlmud.party.TacticsRule` | 隊員實際持有並持久化之自動戰術規則實體 |
+| **戰術工廠類** | `com.example.htmlmud.party.GambitRule` | 繼承 `TacticsRule` 之靜態工廠與條件規則構造輔助類 |
+| **資料設定** | `src/main/resources/data/formations/formations.json` | 陣法孔位、攻防係數、啟動門檻與必要職業宣告 |
 | **資料設定** | `src/main/resources/data/companions/default_companions.json` | 初始可招募夥伴模板（鐵牛、凌霜等） |
 
 ---
 
-## 🚀 六、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)【待深入討論／長線演進藍圖】
+## 🚀 六、未來架構演進規劃 (Roadmap)【待深入討論／長線演進藍圖】
 
-為使小隊生靈與陣法系統達到如《暗黑地牢》、《博德之門3》的隊伍管理與心理博弈高度，確立以下四大演進方向：
-
-### 1. 🎯 現代遊戲機制深化 (Modern Gameplay & Depth)
-- **團隊共鳴合擊與連攜終結 (Resonance Combos & Finishers)**：
-  小隊隊員在半即時戰鬥中累積共鳴點數（Resonance Points），當破防敵方核心弱點時，可發動「古仙陣法天外合擊」，觸發全屏流光大合擊，大幅提升砍殺打擊爽度。
-- **隊員戰術方針 AI 系統 (Gambit / Behavior System) 【現行已驗證】**：
-  基於 `GambitRule` 規則鏈（例如：「隊友氣血 $< 30\%$ ➔ 施放回春術」、「敵方進入破防狀態 ➔ 釋放高削韌巨錘」）。玩家可預先配置小隊在半即時戰鬥中的自動應對行為，大幅減輕多線操作負擔。
-
-### 2. 🛡️ 穩定性與狀態防禦 (Robustness & Resilience)
-- **屬性修飾管道 (Stat Modifier Pipeline)**：
-  生靈五維屬性計算全面遷移至純函式 Modifier 裝飾器模式（`BaseStats` ➔ `EquipModifiers` ➔ `FormationModifiers` ➔ `BuffModifiers` ➔ `FinalStats`）。消除屬性手動加減過程中的數值漂移，天然保證任何狀態失效時百分之百安全回退。
-- **陣亡孔位防空防禦與併發隔離**：在極限殘局中（如 4 位隊員同時遭受 AOE 暴擊陣亡），`FormationEngine` 提供原子性 CAS 孔位解鎖，嚴防併發競態引發空指針或陣容破裂崩潰。
-
-### 3. ⚡ 效能與記憶體最佳化 (Performance & Concurrency)
-- **髒標記（Dirty Flag）快取重算機制**：
-  生靈的最終衍生屬性（最大氣血、圓桌閃避率、攻擊力）快取化，僅在穿脫裝備、陣法切換或獲得長效 Buff 時標記為 Dirty 並非同步重算，高頻 Tick 迴圈直接唯讀快取，CPU 運算量節省 85%。
-
-### 4. 🔌 可擴充性與模組化 (Extensibility & Modding)
-- **靈寵與機關傀儡戰術召喚位 (Summon & Familiar Slot)**：
-  為小隊擴充獨立的「伴生靈寵/護山神獸」槽位（不佔用 5 人主要編制），靈寵具備獨立行動條與被動庇護光環，模型設計直接繼承 `LivingStats`，具備極強的擴充彈性。
+1. **團隊共鳴合擊與連攜終結**：隊員累積共鳴點數，觸發陣法天外合擊。
+2. **隊員戰術方針 AI 系統擴充**：基於 `TacticsRule` 與 `GambitRule` 擴充更豐富的條件觸發器。
+3. **屬性修飾管道 (Stat Modifier Pipeline)**：遷移至純函式裝飾器模式，確保數值增益安全回退。
+4. **靈寵與機關傀儡戰術召喚位**：擴充不佔 5 人編制之召喚物槽位。

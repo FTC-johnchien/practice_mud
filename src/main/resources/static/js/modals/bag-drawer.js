@@ -74,7 +74,7 @@ export function renderBagDrawer() {
     } else if (item.effectType === 'RESTORE_SAN' || item.effectType === 'RESTORE_SAN_MP') {
       effectDesc = (item.effectType === 'RESTORE_SAN_MP' || (item.itemId && item.itemId.includes('purify_tea')))
         ? `🍵 飲用回復 ${item.effectValue} SAN ‧ 20 MP`
-        : `📜 服用回復 ${item.effectValue} SAN (解走火入魔)`;
+        : `📜 服用回復 ${item.effectValue} SAN (解精神萎靡)`;
     } else if (item.effectType === 'RESTORE_MP') {
       effectDesc = `🔮 服用回復 ${item.effectValue} MP`;
     } else if (item.effectType === 'LEARN_SKILL') {

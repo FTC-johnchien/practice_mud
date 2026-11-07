@@ -157,13 +157,13 @@ export function renderItemsListHtml(itemTab, secFilter, party) {
       }
       return true;
     } else if (itemTab === 'QUEST') {
-      return item.itemType === 'QUEST' || item.subType === 'QUEST' || item.quality === 'QUEST';
+      return item.itemType === 'QUEST' || item.itemType === 'KEY_ITEM' || item.subType === 'QUEST' || item.subType === 'KEY_ITEM' || item.quality === 'QUEST';
     } else {
       // ALL
       if (currentSec === 'EQUIP') return Boolean(item.weapon || item.armor || item.equipment || item.itemType === 'WEAPON' || item.itemType === 'ARMOR' || item.itemType === 'SHIELD' || item.itemType === 'ACCESSORY');
       if (currentSec === 'CONSUMABLE') return Boolean(item.consumable);
-      if (currentSec === 'QUEST') return item.itemType === 'QUEST' || item.subType === 'QUEST' || item.quality === 'QUEST';
-      if (currentSec === 'MISC') return !item.weapon && !item.armor && !item.equipment && !item.consumable && item.itemType !== 'QUEST';
+      if (currentSec === 'QUEST') return item.itemType === 'QUEST' || item.itemType === 'KEY_ITEM' || item.subType === 'QUEST' || item.subType === 'KEY_ITEM' || item.quality === 'QUEST';
+      if (currentSec === 'MISC') return !item.weapon && !item.armor && !item.equipment && !item.consumable && item.itemType !== 'QUEST' && item.itemType !== 'KEY_ITEM';
       return true;
     }
   });
@@ -278,7 +278,7 @@ export function renderItemsListHtml(itemTab, secFilter, party) {
             }).join('')}
           </div>
         `;
-      } else if (item.itemType === 'QUEST' || item.subType === 'QUEST' || item.quality === 'QUEST') {
+      } else if (item.itemType === 'QUEST' || item.itemType === 'KEY_ITEM' || item.subType === 'QUEST' || item.subType === 'KEY_ITEM' || item.quality === 'QUEST') {
         actionButtons = `<span style="font-size:var(--font-xs);color:#fde047;background:rgba(253,224,71,0.15);border:1px solid #ca8a04;padding:2px 8px;border-radius:4px;">📜 機緣信物</span>`;
       }
 
@@ -739,13 +739,13 @@ export function changeEquipPickerPage(delta) {
 
 export function confirmEquipItem(slotId, memberIdx) {
   if (!slotId) return;
-  send(`item equip ${slotId} ${memberIdx}`);
+  send(`equip ${slotId} ${memberIdx}`);
   drpgState.equipPicker = null;
 }
 
 export function confirmUnequipItem(slotAlias, memberIdx) {
   if (!slotAlias) return;
-  send(`item unequip ${slotAlias} ${memberIdx}`);
+  send(`unequip ${slotAlias} ${memberIdx}`);
   drpgState.equipPicker = null;
 }
 

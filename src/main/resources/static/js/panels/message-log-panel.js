@@ -203,6 +203,7 @@ export function initMessageLogControls() {
 // 相容掛載至 window
 if (typeof window !== 'undefined') {
   window.appendHtml = appendLog;
+  window.appendLog = appendLog;
   window.filterLog = filterLog;
   window.toggleLogCollapse = toggleLogCollapse;
   window.clearLog = clearLog;

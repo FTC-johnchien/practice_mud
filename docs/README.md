@@ -115,13 +115,12 @@ docs/
 - **鏡像對齊規範**：本目錄嚴格與 `docs/2_specifications/` 保持 1:1 模組鏡像結構。當 L1 需求變更時同步更新 L2 規格；當 L2 模組規格異動時，L3 對應模組檔案必須同步更新其驗收項目。
 - **核心文件與模組目錄**：
   - [📊 全模組實作進度儀表板 (README.md)](./3_task_lists/README.md)（全專案 19 大模組進度看板與完成度矩陣）
-  - [📋 第二階段：程式碼與文件深度對齊專項清單 (CODE_DOCS_ALIGNMENT_V2_TASKS.md)](./3_task_lists/CODE_DOCS_ALIGNMENT_V2_TASKS.md)（P0 缺口修復、營地卡牌接線與 L2~L4 契約對齊 12 步清單）
   - [🧭 宏觀演進戰略總表 (FUTURE_IMPROVEMENTS.md)](./3_task_lists/FUTURE_IMPROVEMENTS.md)（演進路徑與優先序總表）
   - [🏛️ 後端模組任務清單 (backend/)](./3_task_lists/backend/)（10 大後端模組 M1~M9、M3.1 實作清單）
   - [🎨 前端模組任務清單 (frontend/)](./3_task_lists/frontend/)（6 大前端模組 FE1~FE6 實作清單）
   - [📜 資料契約任務清單 (data_schemas/)](./3_task_lists/data_schemas/)（3 大 Schema 契約實作清單）
 - **歷史與封存指針**：
-  - [四層級深度對齊審查清單封存庫 (alignment_history/)](./0_archive/alignment_history/)（歷史八大審查與治理清單，含 [跨模組代碼收斂與重構結案存檔 (CODE_CONVERGENCE_AND_REFACTORING_TASKS.md)](./0_archive/alignment_history/CODE_CONVERGENCE_AND_REFACTORING_TASKS.md)、[文件與程式碼一致性對齊結案存檔 (CODE_DOCS_ALIGNMENT_TASKS.md)](./0_archive/alignment_history/CODE_DOCS_ALIGNMENT_TASKS.md)）
+  - [四層級深度對齊審查清單封存庫 (alignment_history/)](./0_archive/alignment_history/)（歷史審查與治理清單，含 [第二階段程式碼與文件深度對齊結案存檔 (CODE_DOCS_ALIGNMENT_V2_TASKS.md)](./0_archive/alignment_history/CODE_DOCS_ALIGNMENT_V2_TASKS.md)、[第一階段文件與程式碼一致性對齊結案存檔 (CODE_DOCS_ALIGNMENT_TASKS.md)](./0_archive/alignment_history/CODE_DOCS_ALIGNMENT_TASKS.md)、[跨模組代碼收斂與重構結案存檔 (CODE_CONVERGENCE_AND_REFACTORING_TASKS.md)](./0_archive/alignment_history/CODE_CONVERGENCE_AND_REFACTORING_TASKS.md)）
   - [已完成改善歷史庫 (future_improvements_history.md)](./0_archive/future_improvements_history.md)（Phase 0~25 落地歸檔）
   - [專案版本交付記錄 (CHANGELOG.md)](../CHANGELOG.md)（專案根目錄標準規範）
 

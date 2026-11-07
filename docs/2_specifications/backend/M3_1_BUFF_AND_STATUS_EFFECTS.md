@@ -19,13 +19,13 @@
 ```mermaid
 graph TD
     subgraph DataDriven ["資料驅動與配置"]
-        BuffJSON["buffs.json / party_skills.json"]
+        BuffJSON["party_skills.json / global/skills/**/*.json"]
     end
 
     subgraph ServiceLayer ["結算核心 (BuffSettlementService)"]
         Apply["applyBuff() / 刷新與堆疊策略"]
         Tick["processTicks() / 週期性跳字 (DoT/HoT)"]
-        Shield["absorbDamage() / 最短時效護盾優先抵扣"]
+        Shield["Buffable.absorbShieldDamage() / 最短時效護盾優先抵扣"]
         Gate["門控查詢 (isControlled / isSilenced)"]
     end
 
@@ -222,7 +222,7 @@ public void decrementTick() {
 
 ---
 
-## 📦 七、Phase 1 核心收斂矩陣 (6 款經典狀態)
+## 📦 七、Phase 1 核心收斂矩陣 (6 款真實狀態)
 
 ```
 ┌──────────────────┬───────────┬──────┬───────────────┬──────────────────┐
@@ -231,20 +231,20 @@ public void decrementTick() {
 │ buff_fudo_myoo   │ 不動明王⚡│SHIELD│ 30% MaxHP 護盾│ class_warrior_   │
 │                  │           │      │ 減傷 30%      │ iron_wall        │
 ├──────────────────┼───────────┼──────┼───────────────┼──────────────────┤
-│ debuff_corpse_   │ 玄陰屍毒🧪│ DOT  │ 每2秒14點陰煞 │ spell_corpse_    │
-│ poison           │           │      │ 傷害，疊加5層 │ poison           │
+│ buff_spring_heal │ 春風化雨🌿│ HOT  │ 每2秒恢復25點 │ class_cleric_    │
+│                  │           │      │ 氣血，持續30秒│ spring_rain      │
 ├──────────────────┼───────────┼──────┼───────────────┼──────────────────┤
-│ buff_spring_rain │ 春風化雨🌿│ HOT  │ 每2秒恢復18點 │ class_cleric_    │
-│                  │           │      │ 氣血，持續16秒│ spring_rain      │
+│ buff_soul_primer │ 裂魂印記🩸│PRIMER│ 持續15秒/疊3層│ rogue_shadow_    │
+│                  │           │      │ 供終結引爆    │ strike           │
 ├──────────────────┼───────────┼──────┼───────────────┼──────────────────┤
-│ buff_taiyin_     │ 天罡疾行💨│ STAT │ 攻擊間隔縮短  │ item_speed_charm │
-│ haste            │           │      │ 25% (SPEED_PCT│ (符籙/被動)      │
+│ buff_fire_burn   │ 真火灼燒🔥│ DOT  │ 每2秒18點烈火 │ spell_samadhi_   │
+│                  │           │      │ 傷害，持續10秒│ fire             │
 ├──────────────────┼───────────┼──────┼───────────────┼──────────────────┤
-│ debuff_sunder_   │ 破罡裂甲💔│ STAT │ 護甲防禦降低  │ skill_badao_     │
-│ armor            │           │      │ 35% (DEF_PCT) │ sunder           │
+│ buff_ice_chill   │ 玄冰寒煞❄️│ DOT  │ 每2秒14點冰霜 │ spell_xuanbing_  │
+│                  │           │      │ 傷害，持續10秒│ frost            │
 ├──────────────────┼───────────┼──────┼───────────────┼──────────────────┤
-│ debuff_stun      │ 紫霄雷痹💫│CONTRO│ 無法行動/中斷 │ spell_thunder_   │
-│                  │           │  L   │ 吟唱，持續4秒 │ strike           │
+│ buff_poison_dot  │ 幽冥劇毒🧪│ DOT  │ 每2秒16點陰煞 │ spell_nether_    │
+│                  │           │      │ 毒素傷害      │ poison           │
 └──────────────────┴───────────┴──────┴───────────────┴──────────────────┘
 ```
 
@@ -255,10 +255,10 @@ public void decrementTick() {
 | 項目 | 路徑 / 名稱 | 職責 |
 | :--- | :--- | :--- |
 | **結算服務** | `com.example.htmlmud.combat.BuffSettlementService` | 狀態施加、刷新、Tick 倒數、HoT/DoT 跳字、護盾抵扣 |
-| **實體能力介面** | `com.example.htmlmud.combat.Buffable` | 生靈掛載狀態容器、控場查詢門控 (`isControlled`, `isSilenced`) |
+| **實體能力介面** | `com.example.htmlmud.combat.Buffable` | 生靈掛載狀態容器、控場查詢門控 (`isControlled`, `isSilenced`) 與護盾吸收 |
 | **狀態領域模型** | `com.example.htmlmud.combat.ActiveBuff` | 狀態實體、生命週期判斷 (`isPermanent`, `isExpired`) |
-| **狀態分類枚舉** | `com.example.htmlmud.combat.BuffCategory` | `SHIELD`, `HOT`, `DOT`, `STAT_MODIFIER`, `CONTROL`, `PRIMER` |
-| **狀態傳輸 DTO** | `com.example.htmlmud.domain.dungeon.dto.ActiveBuffDto` | 正規化快照傳輸至前端，含靈氣屬性與聚合標籤 |
+| **狀態分類枚舉** | `com.example.htmlmud.domain.model.enums.BuffCategory` | `SHIELD`, `HOT`, `DOT`, `STAT_MODIFIER`, `CONTROL`, `PRIMER` |
+| **狀態傳輸 DTO** | `com.example.htmlmud.combat.ActiveBuffDto` | 正規化快照傳輸至前端，含靈氣屬性與聚合標籤 |
 | **抗性規則結算** | `com.example.htmlmud.combat.CombatRules` | 一元一次圓桌判定、五行抗性折算與逆流回血 |
 | **資料設定來源** | `src/main/resources/data/party/party_skills.json` | 狀態來源技能、削韌值、靈氣屬性 |
 | **前端 HUD 渲染** | `src/main/resources/static/js/core/buff-hud-helper.js` | 屬性圖示聚合、每秒加總、懸停明細 Tooltip（舊 `static/js/panels/buff-hud-helper.js` 【歷史／已除役】） |
@@ -273,13 +273,13 @@ public void decrementTick() {
 
 ### 1. 🎯 機制更好：複合靈氣反應、狀態引爆與道心共振 (Deeper Gameplay & Synergy)
 
-#### ① 全域九大靈氣複合反應矩陣 (Elemental Chain Reactions) 【現行已驗證】
-擺脫傳統單純的「火抗高扣火血少」，引入現代動作 RPG 的「元素附著與連鎖質變」體系。生靈同時附著兩種靈氣時觸發質變：
-* **🔥 火 (Fire) + ❄️ 冰 (Ice) ➔ 【氣化爆裂 (Vaporize)】**：瞬間清空兩種狀態，造成 $2.0\times$ 穿透真實傷害並附帶擊退擊倒。
-* **💧 水 (Water) + ⚡ 雷 (Lightning) ➔ 【感電傳導 (Electro-Charged)】**：在目標同排（Row）所有敵怪間引發電弧跳躍，造成連鎖硬直與削韌。
-* **🌿 木 (Wood) + 🔥 火 (Fire) ➔ 【三昧燎原 (Combustion Spread)】**：點燃目標體內木靈，DoT 傷害提升 $150\%$，並將灼燒傳染給相鄰目標。
-* **🌑 陰煞 (Dark) + ☀️ 純陽 (Holy) ➔ 【太極混沌湮滅 (Chaos Annihilation)】**：道門終極碰撞，直接扣減目標 $50$ 點罡氣破防值（Poise），強制引發破防失衡！
-* **⛰️ 土 (Earth) + 🪙 金 (Metal) ➔ 【金石固元 (Stonewall Resonance)】**：友方受到土金雙重加持時，生成具備 50% 物理反傷的暗金反震壁障。
+#### ① 全域九大靈氣複合反應矩陣 (Elemental Chain Reactions)
+生靈同時附著兩種靈氣時觸發質變：
+* **🔥 火 (Fire) + ❄️ 冰 (Ice) ➔ 【氣化爆裂 (Vaporize)】**【現行已驗證】：清空兩種狀態，造成 $2.0\times$ 穿透真實傷害並附帶 20 點削韌。
+* **💧 水 (Water) + ⚡ 雷 (Lightning) ➔ 【感電傳導 (Electro-Charged)】**【現行已驗證】：在目標同排（Row）所有敵怪間引發電弧跳躍，造成 $1.5\times$ 傷害與 10 點額外削韌。
+* **🌿 木 (Wood) / 🧪 毒 (Poison) + 🔥 火 (Fire) ➔ 【三昧燎原 (Combustion)】**【現行已驗證】：點燃目標體內木靈/毒煞，造成 $1.8\times$ 烈焰衝擊與 15 點削韌（相鄰目標傳染標註為【待深入討論／長線演進藍圖】）。
+* **🌑 陰煞 (Dark/Corrupt) + ☀️ 純陽 (Holy/Light) ➔ 【太極混沌湮滅 (Chaos Annihilation)】**【現行已驗證】：陰陽交泰太極混沌湮滅，造成 $1.5\times$ 重創並直接扣減目標 $50$ 點罡氣破防值（Poise）！
+* **⛰️ 土 (Earth) + 🪙 金 (Metal) ➔ 【金石固元 (Stonewall Resonance)】**【待深入討論／長線演進藍圖】：友方受到土金雙重加持時，生成具備 50% 物理反傷的暗金反震壁障。
 
 #### ② 狀態引子與引爆機制 (Primer & Detonator Combos) 【現行已驗證】
 借鑒現代戰術射擊與 ARPG 的協同玩法：

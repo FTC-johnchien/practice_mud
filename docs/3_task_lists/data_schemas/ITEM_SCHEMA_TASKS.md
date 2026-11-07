@@ -14,7 +14,9 @@
   - `src/main/resources/data/global/items/weapons/`
 - **核心實體與載入模型**：
   - [`ItemTemplate.java`](../../../src/main/java/com/example/htmlmud/template/model/ItemTemplate.java)
+  - [`PartyItemSlot.java`](../../../src/main/java/com/example/htmlmud/party/PartyItemSlot.java)
   - [`ItemAffix.java`](../../../src/main/java/com/example/htmlmud/item/ItemAffix.java)
+  - [`ItemAffixService.java`](../../../src/main/java/com/example/htmlmud/item/ItemAffixService.java)
 - **關聯驗證測試**：
   - [`CyberSkillAndItemAffixTest.java`](../../../src/test/java/com/example/htmlmud/CyberSkillAndItemAffixTest.java)（100% 綠燈）
 
@@ -27,7 +29,7 @@
 - [x] **SCHEMA-SLOT-OPTIONAL (非裝備槽位鬆綁)**
   - 任務道具、消耗品等 `itemType` 允許 `slot` 為選填或 null。
 - [x] **SCHEMA-TRACKER-CHIP (加密追蹤晶片資料建立)**
-  - 正式建立 `item_chip_qianxing_tracker` 定義，具備 `speed` 與 `poiseBreakPower` 屬性。
+  - 正式建立 `item_chip_qianxing_tracker` 定義，具備 `stats.slot ("ACCESSORY_2")`、`stats.attackSpeed (8)`、`stats.poiseBreakPower (12)` 與 `LEGENDARY` 傳說品質屬性。
 
 ---
 
@@ -35,6 +37,6 @@
 
 - [ ] **Task ITEM-SCHEMA-1 (VS-01 掉落驗收): 首領掉落與隨機詞綴產出實測**
   - **目標**：驗證戰鬥掉落時，`DrpgRewardService` 產出之裝備 100% 吻合 `ITEM_SCHEMA` 實例規範。
-- [ ] **Task ITEM-SCHEMA-2 (LENSES-SCHEMA-VALIDATION): 物品多階靈識認知透鏡資料契約驗證**
+- [ ] **Task ITEM-SCHEMA-2 (LENSES-SCHEMA-VALIDATION)【待深入討論／長線演進藍圖】：物品多階靈識認知透鏡資料契約驗證**
   - **目標**：驗證 `items.json` 與各類別裝備/素材 JSON 中 `lenses` 陣列（`minProgress`, `name`, `desc`）結構契約，確保資料合法性。
   - **驗收標準**：`DataIntegrityValidator` 啟動期檢驗 `lenses` 格式正確，無階級進度重疊或逆序破窗。

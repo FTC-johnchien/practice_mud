@@ -44,6 +44,7 @@ public class GameStateBroadcastService {
   private final DrpgBattleService battleService;
   private final WorldManager worldManager;
   private final TemplateReader templateReader;
+  private final com.example.htmlmud.town.TownHubService townHubService;
 
   @jakarta.annotation.PostConstruct
   public void init() {
@@ -109,63 +110,26 @@ public class GameStateBroadcastService {
     }
 
     List<TownNpcDto> npcs = new ArrayList<>();
+    java.util.Set<String> seenNpcIds = new java.util.HashSet<>();
     for (Mob mob : room.getMobs()) {
       if (mob == null || !mob.isValid()) continue;
       String id = mob.getTemplate().id();
-      String alias = (mob.getAliases() != null && !mob.getAliases().isEmpty()) ? mob.getAliases().get(0) : id;
-      String name = mob.getName();
-      String title = mob.getTemplate().lookDescription();
-      if (title == null || title.isBlank()) title = mob.getTemplate().description();
-      String status = "狀態佳";
+      if (seenNpcIds.add(id)) {
+        npcs.add(buildTownNpcDto(mob, party));
+      }
+    }
 
-      List<TownCapabilityDto> caps = new ArrayList<>();
-      List<NpcCapability> templateCaps = mob.getTemplate().capabilities();
-      if (templateCaps != null && !templateCaps.isEmpty()) {
-        for (NpcCapability cap : templateCaps) {
-          if (cap.isType(NpcCapabilityType.RECRUIT)) {
-            boolean inParty = (party != null && party.getMembers() != null && party.getMembers().stream().anyMatch(m ->
-                (m.getId() != null && (m.getId().equals(id) || m.getId().contains(alias))) ||
-                (m.getName() != null && (m.getName().contains(name) || name.contains(m.getName())))));
-            if (inParty) {
-              caps.add(new TownCapabilityDto("DISMISS", "請離隊友", "dismiss " + alias, "👋"));
-            } else {
-              caps.add(new TownCapabilityDto("RECRUIT", cap.label(), cap.command() != null ? cap.command() : "recruit " + alias, cap.icon() != null ? cap.icon() : "🤝"));
-            }
-          } else {
-            caps.add(new TownCapabilityDto(cap.type(), cap.label(), cap.command(), cap.icon()));
+    if (!"newbie_village:inn".equals(tmpl.id()) && worldManager != null) {
+      Room innRoom = worldManager.getRoomActor("newbie_village:inn");
+      if (innRoom != null && innRoom.getMobs() != null) {
+        for (Mob mob : innRoom.getMobs()) {
+          if (mob == null || !mob.isValid()) continue;
+          String id = mob.getTemplate().id();
+          if (seenNpcIds.add(id)) {
+            npcs.add(buildTownNpcDto(mob, party));
           }
         }
-      } else {
-        if (mob.getTemplate().kind() == MobKind.FRIENDLY) {
-          caps.add(new TownCapabilityDto("TALK", "交談", "ask " + alias, "💬"));
-        }
-        if (mob.getTemplate().shopId() != null) {
-          caps.add(new TownCapabilityDto("SHOP", "貨棧買賣", "shop", "🛒"));
-        }
-        // 資料驅動：查詢是否為已註冊之伴侶模板，取代字串寫死匹配
-        String cleanId = id.contains(":") ? id.substring(id.indexOf(":") + 1) : id;
-        if (templateReader != null && templateReader.findCompanion(cleanId).isPresent()) {
-          boolean inParty = (party != null && party.getMembers() != null && party.getMembers().stream().anyMatch(m ->
-              (m.getId() != null && (m.getId().equals(id) || m.getId().contains(alias) || m.getId().endsWith(cleanId))) ||
-              (m.getName() != null && (m.getName().contains(name) || name.contains(m.getName())))));
-          if (inParty) {
-            caps.add(new TownCapabilityDto("DISMISS", "請離隊友", "dismiss " + alias, "👋"));
-          } else {
-            caps.add(new TownCapabilityDto("RECRUIT", "招募入隊", "recruit " + alias, "🤝"));
-          }
-        }
-        if (mob.getTemplate().kind() == MobKind.AGGRESSIVE || mob.getTemplate().kind() == MobKind.BOSS) {
-          caps.add(new TownCapabilityDto("FIGHT", "拔劍迎擊", "kill " + alias, "⚔️"));
-        }
       }
-
-      String mobRank = (mob.getTemplate().rank() != null) ? mob.getTemplate().rank().name() : "NORMAL";
-      boolean isUnique = mob.getTemplate().isUnique();
-      if ((title == null || title.isBlank()) && mob.getTemplate().rank() != null && mob.getTemplate().rank() != com.example.htmlmud.domain.model.enums.MobRank.NORMAL) {
-        title = mob.getTemplate().rank().getDisplayName();
-      }
-
-      npcs.add(new TownNpcDto(id, alias, name, title, status, caps, mobRank, isUnique));
     }
 
     List<TownItemDto> items = new ArrayList<>();
@@ -178,11 +142,70 @@ public class GameStateBroadcastService {
       items.add(new TownItemDto(item.getId(), displayName, "📦", 1));
     }
 
+    var hub = (townHubService != null) ? townHubService.getTownHub(zoneId, player.getChipRate()) : null;
     var battleView = battleService.createBattleView(player.getName());
     DrpgStateDto dto = DrpgStateDto.ofTown(
         zoneId, zoneName, tmpl.id(), tmpl.name(), tmpl.description(), safe, exits, npcs, items, party, battleView,
-        templateReader
+        templateReader, hub
     );
     player.sendJson(dto);
+  }
+
+  private TownNpcDto buildTownNpcDto(Mob mob, Party party) {
+    String id = mob.getTemplate().id();
+    String alias = (mob.getAliases() != null && !mob.getAliases().isEmpty()) ? mob.getAliases().get(0) : id;
+    String name = mob.getName();
+    String title = mob.getTemplate().lookDescription();
+    if (title == null || title.isBlank()) title = mob.getTemplate().description();
+    String status = "狀態佳";
+
+    List<TownCapabilityDto> caps = new ArrayList<>();
+    List<NpcCapability> templateCaps = mob.getTemplate().capabilities();
+    if (templateCaps != null && !templateCaps.isEmpty()) {
+      for (NpcCapability cap : templateCaps) {
+        if (cap.isType(NpcCapabilityType.RECRUIT)) {
+          boolean inParty = (party != null && party.getMembers() != null && party.getMembers().stream().anyMatch(m ->
+              (m.getId() != null && (m.getId().equals(id) || m.getId().contains(alias))) ||
+              (m.getName() != null && (m.getName().contains(name) || name.contains(m.getName())))));
+          if (inParty) {
+            caps.add(new TownCapabilityDto("DISMISS", "請離隊友", "dismiss " + alias, "👋"));
+          } else {
+            caps.add(new TownCapabilityDto("RECRUIT", cap.label(), cap.command() != null ? cap.command() : "recruit " + alias, cap.icon() != null ? cap.icon() : "🤝"));
+          }
+        } else {
+          caps.add(new TownCapabilityDto(cap.type(), cap.label(), cap.command(), cap.icon()));
+        }
+      }
+    } else {
+      if (mob.getTemplate().kind() == MobKind.FRIENDLY) {
+        caps.add(new TownCapabilityDto("TALK", "交談", "ask " + alias, "💬"));
+      }
+      if (mob.getTemplate().shopId() != null) {
+        caps.add(new TownCapabilityDto("SHOP", "貨棧買賣", "shop", "🛒"));
+      }
+      // 資料驅動：查詢是否為已註冊之伴侶模板，取代字串寫死匹配
+      String cleanId = id.contains(":") ? id.substring(id.indexOf(":") + 1) : id;
+      if (templateReader != null && templateReader.findCompanion(cleanId).isPresent()) {
+        boolean inParty = (party != null && party.getMembers() != null && party.getMembers().stream().anyMatch(m ->
+            (m.getId() != null && (m.getId().equals(id) || m.getId().contains(alias) || m.getId().endsWith(cleanId))) ||
+            (m.getName() != null && (m.getName().contains(name) || name.contains(m.getName())))));
+        if (inParty) {
+          caps.add(new TownCapabilityDto("DISMISS", "請離隊友", "dismiss " + alias, "👋"));
+        } else {
+          caps.add(new TownCapabilityDto("RECRUIT", "招募入隊", "recruit " + alias, "🤝"));
+        }
+      }
+      if (mob.getTemplate().kind() == MobKind.AGGRESSIVE || mob.getTemplate().kind() == MobKind.BOSS) {
+        caps.add(new TownCapabilityDto("FIGHT", "拔劍迎擊", "kill " + alias, "⚔️"));
+      }
+    }
+
+    String mobRank = (mob.getTemplate().rank() != null) ? mob.getTemplate().rank().name() : "NORMAL";
+    boolean isUnique = mob.getTemplate().isUnique();
+    if ((title == null || title.isBlank()) && mob.getTemplate().rank() != null && mob.getTemplate().rank() != com.example.htmlmud.domain.model.enums.MobRank.NORMAL) {
+      title = mob.getTemplate().rank().getDisplayName();
+    }
+
+    return new TownNpcDto(id, alias, name, title, status, caps, mobRank, isUnique);
   }
 }

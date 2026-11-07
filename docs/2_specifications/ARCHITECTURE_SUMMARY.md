@@ -16,9 +16,9 @@ src/main/java/com/example/htmlmud/
 ├── town/           # M1: 營地中樞與功能設施 (TownHubService, CognitiveProxyService, TownHubDto)
 ├── dungeon/        # M2: DRPG 網格地牢 (DungeonManager, DungeonFloor, DungeonNavigator, DungeonTile)
 ├── combat/         # M3/M3.1: 戰鬥引擎與狀態 (CombatRules, DrpgCombatLoop, DrpgBattleService, ComboResolver, BuffSettlementService)
-├── party/          # M4: 小隊、生靈與陣法 (PartyService, Party, PartyMember, FormationEngine, GambitRule)
+├── party/          # M4: 小隊、生靈與陣法 (PartyService, Party, PartyMember, FormationEngine, TacticsRule, GambitRule)
 ├── progression/    # M5: 成長與技能樹 (XpProgressionService, DrpgSkillRules, SkillDefinition)
-├── item/           # M6: 物品與經濟 (UnifiedPartyEconomyService, ItemFactory, ItemInstance, EquipmentSlot)
+├── item/           # M6: 物品與經濟 (UnifiedPartyEconomyService, ItemAffixService, ItemFactory, EquipmentSlot)
 ├── template/       # M7: 資料驅動模板與校驗 (TemplateCatalog, TemplateRepository, TemplateReader, DataIntegrityValidator)
 ├── save/           # M8: 存檔持久化與遷移 (SaveGameService, SaveData, SaveSlotDto, SaveMigrationPipeline)
 ├── pipeline/       # M9: 狀態與通訊管線 (CommandDispatcher, GameStateBroadcastService, MudWebSocketHandler, SessionRegistry)
@@ -110,7 +110,7 @@ src/main/java/com/example/htmlmud/
 
 ### 1. 單機事件與沉浸探索 (Single-Player Exploration & Dynamic World)
 - **輕量領域事件 (Domain Events)**：
-  - 核心戰鬥結算與角色成長引入以虛擬執行緒為基礎的本機輕量事件：狀態變更由 `EntityDamagedEvent`、`ItemAcquiredEvent`、`LevelAdvancedEvent` 事件序列所驅動，具備 100% 戰況重播與本機稽核能力。
+  - 核心戰鬥結算與角色成長引入以虛擬執行緒為基礎的本機輕量事件：狀態變更由 `PlayerEvents.ItemAcquired`、`PlayerEvents.LevelUp`、`MobEvents.MobDead` 事件序列所驅動，具備 100% 戰況重播與本機稽核能力。
 - **DRPG 迷宮步進探索手感**：
   - 2D 矩陣即時雷達、迷霧開圖、暗雷隨機遭遇、陷阱機關解謎、階梯撤離與地牢生存博弈。
 

@@ -11,9 +11,11 @@ import com.example.htmlmud.domain.actor.impl.Player;
 import com.example.htmlmud.combat.BattleContext;
 import com.example.htmlmud.combat.BattleEnemy;
 import com.example.htmlmud.combat.DrpgBattleService;
+import com.example.htmlmud.combat.DrpgCombatLoop;
 import com.example.htmlmud.dungeon.Direction;
 import com.example.htmlmud.dungeon.DungeonPosition;
 import com.example.htmlmud.dungeon.DungeonManager;
+import com.example.htmlmud.dungeon.DrpgStateDto;
 import com.example.htmlmud.domain.model.entity.LivingStats;
 import com.example.htmlmud.domain.model.enums.ItemType;
 import com.example.htmlmud.party.Party;
@@ -36,6 +38,9 @@ class PartyInventoryAndMadnessTest {
 
   @Autowired
   private DrpgBattleService battleService;
+
+  @Autowired
+  private DrpgCombatLoop drpgCombatLoop;
 
   private Player dummyPlayer;
   private DungeonPosition dungeonPos;
@@ -133,7 +138,7 @@ class PartyInventoryAndMadnessTest {
     assertThat(talisman).isNotNull();
 
     String res = party.useItemOnMember(talisman.getSlotId(), 1);
-    assertThat(res).contains("走火入魔狀態解除");
+    assertThat(res).contains("精神萎靡狀態解除");
     assertThat(iron.getMadnessState()).isEqualTo(PartyMember.MadnessState.SANE);
     assertThat(iron.getCurrentSan()).isGreaterThan(0);
   }
@@ -254,6 +259,129 @@ class PartyInventoryAndMadnessTest {
 
     // 隊長氣血完全不受影響（絕無背刺攻擊）
     assertThat(leader.getStats().getHp()).isEqualTo(leaderInitialHp);
+  }
+
+  @Test
+  @DisplayName("Option A 驗證 1: 主角 (Leader, memberIdx = 0) 在 SAN = 0 精神萎靡下真實承受 -15% 減傷")
+  void testLeaderWeakenedDamageReductionAtZeroSan() {
+    Party party = partyService.getOrCreateParty("madness_tester");
+    PartyMember leader = party.getMembers().get(0);
+    assertThat(leader).isNotNull();
+    // 固定攻防基數消除等級差異，確保統計抽樣穩定
+    leader.setBaseMinDamage(50);
+    leader.setBaseMaxDamage(50);
+    leader.unequipWeapon();
+
+    PartyMemberSkill attackSkill = PartyMemberSkill.builder()
+        .id("test_slash")
+        .name("斷浪斬")
+        .damageType("SLASH")
+        .damageMultiplier(1.0)
+        .build();
+
+    // 1. SAN = 100 正常狀態下抽樣統計傷害 (50 次抽樣消除 ±10% 傷害浮動)
+    leader.setCurrentSan(100);
+    leader.setMadnessState(PartyMember.MadnessState.SANE);
+
+    long totalDmgNormal = 0;
+    int samples = 50;
+    for (int i = 0; i < samples; i++) {
+      BattleEnemy enemy = BattleEnemy.builder().id("e-norm-" + i).name("試道妖傀").hp(10000).maxHp(10000).alive(true).build();
+      BattleContext ctx = new BattleContext();
+      ctx.setParty(party);
+      ctx.setEnemies(new java.util.ArrayList<>(List.of(enemy)));
+      drpgCombatLoop.applySkillEffects(null, ctx, leader, attackSkill, 0, "施展");
+      totalDmgNormal += (10000 - enemy.getHp());
+    }
+    assertThat(totalDmgNormal).isGreaterThan(0);
+
+    // 2. SAN = 0 精神萎靡 (CHAOS) 狀態下抽樣統計傷害
+    leader.setCurrentSan(0);
+    leader.setMadnessState(PartyMember.MadnessState.CHAOS);
+
+    long totalDmgWeakened = 0;
+    for (int i = 0; i < samples; i++) {
+      BattleEnemy enemy = BattleEnemy.builder().id("e-weak-" + i).name("試道妖傀").hp(10000).maxHp(10000).alive(true).build();
+      BattleContext ctx = new BattleContext();
+      ctx.setParty(party);
+      ctx.setEnemies(new java.util.ArrayList<>(List.of(enemy)));
+      drpgCombatLoop.applySkillEffects(null, ctx, leader, attackSkill, 0, "施展");
+      totalDmgWeakened += (10000 - enemy.getHp());
+    }
+    assertThat(totalDmgWeakened).isGreaterThan(0);
+
+    // 驗證精神萎靡確實削弱傷害約 15% (比率介於 0.80 至 0.90 之間)
+    double ratio = (double) totalDmgWeakened / totalDmgNormal;
+    assertThat(ratio).isBetween(0.80, 0.90);
+  }
+
+  @Test
+  @DisplayName("Option A 驗證 2: DrpgStateDto 的 sanLevel 投影與 PartyMember 五階道心描述對齊")
+  void testSanLevelProjectionAndSanityStatusIntervals() {
+    Party party = partyService.getOrCreateParty("madness_tester");
+    PartyMember member = party.getMembers().get(0);
+    member.setMaxSan(100);
+
+    // 1. 驗證 PartyMember.getSanityStatus() 五階文案
+    member.setMadnessState(PartyMember.MadnessState.SANE);
+
+    member.setCurrentSan(100);
+    assertThat(member.getSanityStatus()).isEqualTo("【道心澄澈】");
+
+    member.setCurrentSan(60);
+    assertThat(member.getSanityStatus()).isEqualTo("【心神恍惚】");
+
+    member.setCurrentSan(30);
+    assertThat(member.getSanityStatus()).isEqualTo("【神識動搖】");
+
+    member.setCurrentSan(15);
+    assertThat(member.getSanityStatus()).isEqualTo("【靈台瀕危】");
+
+    member.setCurrentSan(0);
+    assertThat(member.getSanityStatus()).isEqualTo("【精神萎靡】");
+
+    member.setCurrentSan(80);
+    member.setMadnessState(PartyMember.MadnessState.CHAOS);
+    assertThat(member.getSanityStatus()).isEqualTo("【精神萎靡】");
+
+    // 2. 驗證 DrpgStateDto.toPartyViewDto 於 san <= 20 時投影為 WEAKENED
+    member.setMadnessState(PartyMember.MadnessState.SANE);
+    member.setCurrentSan(15);
+    var partyView = DrpgStateDto.toPartyViewDto(party, null);
+    assertThat(partyView.members().get(0).sanLevel()).isEqualTo("WEAKENED");
+
+    member.setCurrentSan(40);
+    var partyViewDanger = DrpgStateDto.toPartyViewDto(party, null);
+    assertThat(partyViewDanger.members().get(0).sanLevel()).isEqualTo("DANGER");
+
+    member.setCurrentSan(70);
+    var partyViewWarning = DrpgStateDto.toPartyViewDto(party, null);
+    assertThat(partyViewWarning.members().get(0).sanLevel()).isEqualTo("WARNING");
+
+    member.setCurrentSan(90);
+    var partyViewNormal = DrpgStateDto.toPartyViewDto(party, null);
+    assertThat(partyViewNormal.members().get(0).sanLevel()).isEqualTo("NORMAL");
+  }
+
+  @Test
+  @DisplayName("Option A 驗證 3: 服用清心符解除精神萎靡並恢復清明")
+  void testPurifyTalismanClearsWeakenedState() {
+    Party party = partyService.getOrCreateParty("madness_tester");
+    party.getInventory().addItem("purify_talisman", 1);
+    PartyMember leader = party.getMembers().get(0);
+
+    leader.setCurrentSan(0);
+    leader.setMadnessState(PartyMember.MadnessState.CHAOS);
+    assertThat(leader.getSanityStatus()).isEqualTo("【精神萎靡】");
+
+    PartyItemSlot talisman = party.getInventory().getSlots().stream()
+        .filter(s -> "RESTORE_SAN".equals(s.getEffectType()))
+        .findFirst().orElseThrow();
+
+    String res = party.useItemOnMember(talisman.getSlotId(), 0);
+    assertThat(res).contains("精神萎靡狀態解除");
+    assertThat(leader.getMadnessState()).isEqualTo(PartyMember.MadnessState.SANE);
+    assertThat(leader.getCurrentSan()).isGreaterThan(0);
   }
 }
 

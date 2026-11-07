@@ -59,17 +59,22 @@ sequenceDiagram
 1. **未命中 (Miss Chance)**：
    $$\text{Miss} = \text{clamp}(0.02, 0.25, 0.05 + \max(0, \text{Def.DEX} - \text{Atk.DEX}) \times 0.005)$$
 2. **身法閃避 (Dodge Chance)**：
-   $$\text{Dodge} = \text{clamp}(0.05, 0.75, \text{BaseDodge} + \text{Def.DEX} \times 0.008 - \text{Atk.DEX} \times 0.003)$$
-   *(若防禦者處於破防狀態 Poise Broken，閃避機率強制為 0)*
+   - 需具備閃避技能且未破防（Poise Broken）：
+     $$\text{Dodge} = \text{clamp}(0.05, 0.75, \text{BaseDodge} + \text{Def.DEX} \times 0.008 - \text{Atk.DEX} \times 0.003)$$
 3. **招架偏斜 (Parry Chance)**：
-   $$\text{Parry} = \text{clamp}(0.05, 0.60, \text{BaseParry} + \text{Def.STR} \times 0.004 + \text{Def.DEX} \times 0.004)$$
-   *(招架成功可減免 50% 物理傷害，並有機會觸發反擊 Riposte)*
+   - 需具備招架技能且未破防：
+     $$\text{Parry} = \text{clamp}(0.05, 0.65, \text{BaseParry} + \text{Def.STR} \times 0.004 + \text{Def.DEX} \times 0.004)$$
+   - 招架成功減免 50%（或技能指定）物理傷害。
 4. **盾牌格擋 (Block Chance)**：
-   - 若防禦者配備盾牌：
-     $$\text{Block} = \text{clamp}(0.10, 0.80, 0.20 + \text{Def.CON} \times 0.006)$$
-   - 格擋成功減免護甲固定值，剩餘傷害再穿透。
-5. **暴擊 (Critical Strike)**：
-   - 命中成功後，根據攻擊者神識（Spirit）與武器暴擊率骰算，造成 $1.5\sim 2.0\times$ 致命傷害。
+   - 防禦者配備盾牌時：
+     $$\text{Block} = \text{clamp}(0.10, 0.60, 0.20 + \text{Def.CON} \times 0.003)$$
+   - 格擋成功減免護甲固定值 $\max(5, \text{shieldBonusDef} \times 2 + \text{Def.CON} / 2)$，剩餘傷害再穿透。
+5. **總防禦上限安全收斂 (Max Total Defense)**：
+   - 若 $\text{Miss} + \text{Dodge} + \text{Parry} + \text{Block} > 0.75$，四者等比例縮放至總和 $0.75$。
+6. **暴擊判定 (Critical Strike)**：
+   - 於同一張一元圓桌內一次擲骰判定（緊接於 Block 扇區之後），基礎暴擊率為：
+     $$\text{Crit} = \text{clamp}(0.05, 0.35, 0.05 + \text{Atk.DEX} \times 0.002)$$
+   - 並受剩餘扇區 $\max(0.01, \text{RemainingPool} - 0.05)$ 限制，造成固定 $1.5\times$ 暴擊傷害（若防禦者處於破防力竭狀態則額外享有 $1.20\times$ 加成）。
 
 ---
 
@@ -177,7 +182,7 @@ public static ResistanceResult resolveResistance(int rawDamage, DamageType type,
 
 ### 6. 全系統時間心跳層級排程字典 (Timing & Heartbeat Hierarchy)
 系統遵循清晰的階層化排程架構，各層頻率互不混淆：
-1. **底層世界定時器 (`WorldPulse.pulse`)**：`@Scheduled(fixedRate = 100)` (100ms 輪詢)，作為伺服端全局最小心跳單位。
+1. **底層世界定時器 (`WorldPulse.pulse`)**：`@Scheduled(fixedRate = 100)` (100ms 定時輪詢)，作為伺服端全局最小心跳單位。有玩家之房間每 100ms 推進，無玩家之房間依 `respawnTime`（預設 300 秒 = 3,000 Ticks）執行生靈刷新。
 2. **戰鬥虛擬執行緒迴圈 (`DrpgCombatLoop`)**：獨立執行緒 500ms 迴圈（`Thread.sleep(500)`），推進行動間隔冷卻與意圖蓄力。
 3. **狀態效果推進 (`BuffSettlementService` / `ActiveBuff`)**：基準 1 Tick = 500ms（戰鬥中由 CombatLoop 驅動；常態由 WorldPulse 推進），推進 DoT/HoT 與倒數。
 4. **世界生靈巡邏與刷新**：3,000ms（由 `WorldPulse` 計數器計數 30 Ticks 觸發），負責怪物刷新與大世界巡邏。
@@ -193,7 +198,7 @@ public static ResistanceResult resolveResistance(int rawDamage, DamageType type,
 本戰鬥引擎（M3）透過 `BuffSettlementService` 與 `Buffable` 介面與 M3-1 子模組緊密整合：
 1. **時間線驅動**：`DrpgCombatLoop` 於每輪 Tick 呼叫 `BuffSettlementService.processTicks(entity)` 推進狀態倒數與結算持續傷害/治療 (DoT/HoT)。
 2. **控場門控檢驗**：在發起普通攻擊或引導施法前，透過 `buffable.isControlled()` 與 `buffable.isSilenced()` 即時判定是否中斷或跳過行動。
-3. **傷害吸收與抗性折抵**：生靈遭受傷害扣血前，先由 `BuffSettlementService.absorbDamage()` 依最短時效優先抵扣護盾，穿透部分再交由 `CombatRules.resolveResistance()` 折算抗性與逆流回血。
+3. **傷害吸收與抗性折抵**：生靈遭受傷害扣血前，先由 `Buffable.absorbShieldDamage(int)` 依最短時效優先抵扣護盾，穿透部分再交由 `CombatRules.resolveResistance()` 折算抗性與逆流回血。
 
 ---
 
@@ -253,8 +258,8 @@ public static ResistanceResult resolveResistance(int rawDamage, DamageType type,
 | **智慧索敵** | `com.example.htmlmud.combat.DrpgEnemyTacticsService` | 前排加成、嘲諷係數與仇恨演算 |
 | **戰果結算** | `com.example.htmlmud.combat.DrpgRewardService` | 經驗派發、40格小隊公共行囊入庫與任務擊殺事件通知 |
 | **生靈狀態連動** | `BattleContext.onBattleEnd` | 戰鬥結束大世界 Mob 實體標記死亡、停止心跳與移出房間 |
-| **戰況視圖契約** | `com.example.htmlmud.domain.dungeon.dto.BattleEnemyViewDto` | 前端戰況實體 DTO（含 `currentAction`, `actionProgressPercent`, `interruptible`） |
-| **精簡敵方傳輸** | `com.example.htmlmud.domain.dungeon.dto.BattleEnemyDto` / `CombatMobDto` | 敵方蓄力與打斷即時狀態傳輸合約 |
+| **戰況視圖契約** | `com.example.htmlmud.combat.BattleEnemyViewDto` | 前端戰況實體 DTO（含 `currentAction`, `actionProgressPercent`, `interruptible`） |
+| **全景戰鬥視圖** | `com.example.htmlmud.combat.BattleViewDto` | 戰鬥整體狀態傳輸契約（含 `inBattle`, `battleState`, `enemies`, `logs`） |
 | **資料設定** | `src/main/resources/data/party/party_skills.json` | 小隊技能傷害、削韌值、蓄力 `castTimeMs` 與打斷 `interruptible` 標籤 |
 | **資料設定** | `src/main/resources/data/zones/*/mobs.json` | 怪物基礎屬性、五行抗性、攻擊間隔與怪物蓄力前搖 `castTimeMs` |
 

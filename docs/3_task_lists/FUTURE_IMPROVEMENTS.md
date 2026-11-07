@@ -22,7 +22,7 @@
 > 2. ⚡ **戰鬥爽快 (Impactful Combat)**：半即時快節奏砍殺、破防削韌（Poise Break）、反制打斷、元素連鎖、連攜合擊與 FCT 大字浮動傷害。
 > 3. 🧬 **技能組合 (Skill Synergy)**：四大流派技能構建、元素反應爆發、Gambit 隊友自動戰術方針。
 > 4. 💎 **裝備收集 (Loot Progression)**：高頻掉落、隨機詞綴、多階稀有度與數值爽感。
-> 5. 📈 **角色養成 (Character Progression)**：5 人小隊自由構築、特工晶片超頻插槽、基因補完、天賦樹加點。
+> 5. 📈 **角色養成 (Character Progression)**：5 人小隊自由構築、特工晶片超頻插槽、道骨天賦加點與境界突破。
 >
 > **歷史任務除役與封存標記 (Deprecations)**：
 > - ❌ **MUD 房間拓撲與 exits 位移除役**：舊規劃中涉及 `rooms.json`、`north/south` 房間移動、房間生靈巡邏與文字命令行者全數除役，由 [`backend/M1_TOWN_HUB_AND_FACILITIES.md`](../2_specifications/backend/M1_TOWN_HUB_AND_FACILITIES.md)（選單式營地）與 [`backend/M2_DRPG_DUNGEON.md`](../2_specifications/backend/M2_DRPG_DUNGEON.md)（第一人稱網格地牢）全面取代。
@@ -38,15 +38,15 @@
 > - 歷史 MUD 雙軌割裂分析（原路徑 Q、R）與早期審查補丁表已正式除役並移入 [`alignment_history/`](../0_archive/alignment_history/) 封存。
 
 ### 🌟 領域一：純單機 Hack-and-slash 戰鬥與內容推進 (詳見 [`backend/M3_COMBAT_ENGINE_TASKS.md`](backend/M3_COMBAT_ENGINE_TASKS.md) 與 [`data_schemas/`](data_schemas/))
-- [ ] **路徑 M: 敵方行動預告、反制窗口與首領階段** (M3) — **Priority: P1 / P2**
-- [ ] **路徑 O: 生動畫面呈現與淡化文字閱讀轉型藍圖 (去文字化主舞台)** (FE3) — **Priority: P1 / P2**
-- [ ] **路徑 Z: 五大核心目標中長程內容拓展藍圖 (二章太陰前進基地、三章外神核心神殿、四大淵源17專精樹、隨機詞綴庫)** (M5 / M6) — **Priority: P1 / P2 (內容核心)**
+- **路徑 M: 敵方行動預告、反制窗口與首領階段** (M3) — **Priority: P1 / P2**（✅ 已於 M3/FE3 核心實裝蓄力前搖與打斷反制）
+- **路徑 O: 生動畫面呈現與淡化文字閱讀轉型藍圖 (去文字化主舞台)** (FE3) — **Priority: P1 / P2**
+- **路徑 Z: 五大核心目標中長程內容拓展藍圖 (二章太陰前進基地、三章外神核心神殿、四大淵源17專精樹、隨機詞綴庫)** (M5 / M6) — **Priority: P1 / P2 (內容核心)**
 
 ### 🛡️ 領域二：底層品質守護、硬編碼清剿與測試加速 (詳見 [`backend/M8_SAVE_AND_PERSISTENCE_TASKS.md`](backend/M8_SAVE_AND_PERSISTENCE_TASKS.md) 與 [`frontend/FE1_CORE_STATE_TASKS.md`](frontend/FE1_CORE_STATE_TASKS.md))
-- [ ] **路徑 P: 全專案功能與設定資料硬編碼實地盤查與清理藍圖** (M7) — **Priority: P1 / P2**
-- [ ] **路徑 S: Buff 契約與可靠性護欄第二輪驗收** (M3.1) — **Priority: P1 / P2**
-- [ ] **路徑 Y: 單機語意純化與全域硬編碼大清剿 (SP-PURITY & DATA-CORE)** (M7) — **Priority: P1**
-- [ ] **路徑 K: 測試工程分層加速與系統可觀測性** (TEST) — **Priority: P3**
+- **路徑 P: 全專案功能與設定資料硬編碼實地盤查與清理藍圖** (M7) — **Priority: P1 / P2**
+- **路徑 S: Buff 契約與可靠性護欄第二輪驗收** (M3.1) — **Priority: P1 / P2**
+- **路徑 Y: 單機語意純化與全域硬編碼大清剿 (SP-PURITY & DATA-CORE)** (M7) — **Priority: P1**（✅ 已於 M7 集中校驗器與 ALIGN2 專項完工）
+- **路徑 K: 測試工程分層加速與系統可觀測性** (TEST) — **Priority: P3**
 
 ---
 
@@ -104,11 +104,11 @@
 | **P2** | DATA-05 | 走火入魔數值與宋天衡專屬掉落資料化 [歷史存檔：狂亂異變機制已於 L1 裁決除役] | 戰鬥機制配置化 | M3 | 📜 歷史完成 (已除役) |
 | **P2** | TOWN-02 | 客棧標籤化 (`SAFE_ZONE`) 與商店台詞動態化、典當支援 | 城鎮設施通用化 | M1 | 🔲 待執行 |
 | **P2** | CONF-01 | 開局物資、調息數值與重生房間納入 `GameConfig` 配置 | 全域配置集中化 | M7 | ✅ 已完成 |
-| **P2** | FE-02 | 地塊 Tooltip 動態化與前端裝備槽位判定純淨化 | 前端健壯性 | FE2 / FE5 | 🔲 待執行 |
+| **P2** | FE-02 | 地塊 Tooltip 動態化與前端裝備槽位判定純淨化 | 前端健壯性 | FE2 / FE5 | ✅ 已完成 |
 | **P2** | UNIFY-04 | 生靈與敵怪生命週期閉環 (`Mob` ↔ `BattleEnemy`) | 世界生態閉環 | M3 | 🔲 待執行 |
 | **P2** | UNIFY-05 | 技能 Single Source of Truth (Canonical 貫穿全流程) | 技能架構收斂 | M5 | 🔲 待執行 |
-| **P2** | COMBAT-REACT-01 | 玩家反制、Gambit 意圖協作與首領階段 | 戰術深度與遭遇變化 | M3 | 🔲 待執行 |
-| **P2** | COMBAT-DATA-DOC-01 | SAN 精神護盾數值與【精神萎靡】狀態資料化、文件現況與測試摘要同步 | 資料驅動與文件治理 | M3.1 / M3 | 🔲 待執行 |
+| **P2** | COMBAT-REACT-01 | 玩家反制、Gambit 意圖協作與首領階段 | 戰術深度與遭遇變化 | M3 | ✅ 已完成 |
+| **P2** | COMBAT-DATA-DOC-01 | SAN 精神護盾數值與【精神萎靡】狀態資料化、文件現況與測試摘要同步 | 資料驅動與文件治理 | M3.1 / M3 | ✅ 已完成 |
 | **P2** | COMBAT-FX-RULE-04 | 我方暴擊/未命中規則與一排目標範圍規則獨立化 | 戰鬥平衡與機制定義 | M3 / FE3 | 🔲 待決議 |
 | **P1** | ASYNC-03 | Write-Behind 提交/停機原子協定、滿載明確回報與競態測試 | 持久化資料可靠性 | M8 | ✅ 已完成 |
 | **P1** | NET-01-VERIFY | 重新驗證本機/公開 WebSocket 身分驗證與部署邊界 | 外部連線信任邊界 | M9 | 🔲 待驗證 |

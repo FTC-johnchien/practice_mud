@@ -162,12 +162,12 @@ public class Party {
           restoredMp = 20; // 辟邪清心靈茶規格: 回復 25 SAN 與 20 MP (M6 規格)
           target.restoreMp(restoredMp);
         }
-        // 若隊員處於走火入魔期 (CHAOS)，恢復後若 SAN > 0 則解除走火入魔！
+        // 若隊員處於精神萎靡期 (CHAOS)，恢復後若 SAN > 0 則解除精神萎靡！
         if (target.getMadnessState() == PartyMember.MadnessState.CHAOS && target.getCurrentSan() > 0) {
           target.setMadnessState(PartyMember.MadnessState.SANE);
           target.setAberrationCounter(0);
           getInventory().removeItem(slotId, 1);
-          return "✨ 為 " + target.getName() + " 服用【" + slot.getDisplayNameWithAffixes() + "】，心魔被太華清氣驅散，走火入魔狀態解除！道心恢復至 " + target.getCurrentSan() + " 點！"
+          return "✨ 為 " + target.getName() + " 服用【" + slot.getDisplayNameWithAffixes() + "】，心魔陰霾被太華清氣驅散，精神萎靡狀態解除！道心恢復至 " + target.getCurrentSan() + " 點！"
               + (restoredMp > 0 ? "（真元同時凝練回復 " + restoredMp + " 點）" : "");
         }
         getInventory().removeItem(slotId, 1);

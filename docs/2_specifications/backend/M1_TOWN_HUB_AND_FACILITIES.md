@@ -12,8 +12,8 @@
 
 ```mermaid
 graph TD
-    Client["前端營地介面 (FE4 Town Hub Panel)"] -->|ActionCommand: ENTER_FACILITY / INTERACT_NPC| Pipeline["M9 動作管線 (ActionPipeline)"]
-    Pipeline --> HubService["TownHubService 營地中樞服務"]
+    Client["前端營地介面 (FE4 Town Hub Panel)"] -->|GameCommand.Input ("town_facility ..." / "talk ...")| Dispatcher["CommandDispatcher 指令分發器"]
+    Dispatcher --> HubService["TownHubService 營地中樞服務"]
     
     HubService --> FacForge["百煉堂 (The Forge & Scrap Workshop)"]
     HubService --> FacLab["靈台藏經閣 (Cultivation Dojo & Chip Lab)"]
@@ -24,7 +24,7 @@ graph TD
     
     HubService --> NpcDialogue["NPC 劇情對話樹 (Dialogue Tree Service)"]
     
-    HubService -->|產出營地投影| StateDto["TownHubDto (納入 DrpgStateDto)"]
+    HubService -->|產出營地中樞投影| StateDto["TownHubDto (掛載於 DrpgStateDto.town.hub)"]
 ```
 
 ### 核心職責劃分
@@ -42,9 +42,10 @@ graph TD
 ### 1. 百煉堂 (The Forge & Scrap Workshop)
 - **表層仙俠語意**：宗門神兵古鐵百煉堂，長老爐火純青，傳承神兵開光與法寶注靈之法。
 - **實戰業務職責**：
-  - **分解與提煉 (Salvage)**：將地牢刷出的廢棄法寶與金屬殘骸分解為煉器玄鐵與靈石。
-  - **數值強化 (Refinement)**：消耗礦石提升武器物理傷害與防具護甲韌性。
-  - **詞綴重鑄 (Affix Reforge)**：洗鍊稀有裝備的隨機詞綴（如提升削韌效率、增加連鎖暴擊率）。
+  - 目前點擊設施觸發 `OPEN_FACILITY` 面板交互，裝備詞綴由掉落生成引擎（`ItemAffixService`）即時驅動。
+  - **分解與提煉 (Salvage)【已決議待實作】**：將地牢刷出的廢棄法寶與金屬殘骸分解為煉器玄鐵與靈石。
+  - **數值強化 (Refinement)【已決議待實作】**：消耗礦石提升武器物理傷害與防具護甲韌性。
+  - **詞綴重鑄 (Affix Reforge)【已決議待實作】**：洗鍊稀有裝備的隨機詞綴（如提升削韌效率、增加連鎖暴擊率）。
 
 ### 2. 靈台藏經閣 (Cultivation Dojo & Chip Lab)
 - **表層仙俠語意**：宗門秘藏道統閣，供奉前世宿慧玉簡與通靈靈骨，由引路道者協助修士調試周天。
@@ -75,7 +76,7 @@ graph TD
 ### 6. 廢棄礦脈坑道 (Dungeon Extraction Portal)
 - **表層仙俠語意**：墨竹山封閉禁區與黑煞宗地底礦道入口，石階延伸向未知地底深淵。
 - **實戰業務職責**：
-  - **區域選擇**：選擇進入目標地牢（如「黑煞宗地底礦脈・深坑一階」）。
+  - **區域選擇**：選擇進入目標地牢（如「墨竹礦脈地下深度一階 `mozhu_mines_b1f`」）。
   - **出征安全校驗**：檢查小隊是否編制完整、行囊是否有必要照明物資，確認後進入第一人稱 3D 走格子視圖。
 
 ---
@@ -90,7 +91,7 @@ graph TD
 
 ## 💬 三、NPC 劇情對話與任務分發機制 (Dialogue & Quests)
 
-NPC 交互徹底廢除 MUD 文字指令（如 `look npc`、`ask elder about sword`），全部由結構化 JSON 驅動，且其對話文字同樣受 `CognitiveProxyService` 轉譯保護：
+NPC 交互徹底廢除 MUD 文字指令（如 `look npc`、`ask elder about sword`），全部由結構化協定驅動，且其對話文字同樣受 `CognitiveProxyService` 轉譯保護：
 
 ### 對話樹範本結構 (`data/hub/dialogues.json` 【已決議待實作】)
 ```json
@@ -136,17 +137,30 @@ NPC 交互徹底廢除 MUD 文字指令（如 `look npc`、`ask elder about swor
 
 ## 🔄 四、狀態契約與全景投影 (State Contract)
 
-營地狀態以純單機 DTO 的形式聚合於 `DrpgStateDto`：
+營地狀態以純單機 DTO 的形式聚合於 `DrpgStateDto.town.hub` 並於 `TOWN_HUB` 事件廣播：
 
 ```java
 public record TownHubDto(
-    String hubId,                  // 如 "hub_ore_mine_shelter"
-    String hubName,                // 如 "黑煞宗廢棄下層礦脈避難所"
-    String backgroundScene,        // 背景場景圖資源路徑
-    String atmosphericAudio,       // 營地背景氛圍音效
-    List<FacilityInfoDto> facilities, // 可用設施清單（名稱、圖標、解鎖狀態）
-    List<NpcSummaryDto> activeNpcs,   // 駐留 NPC 名單
-    CurrentDialogueDto currentDialogue // 當前進行中的對話（若有，否則 null）
+    String zoneId,
+    String zoneName,
+    String description,
+    int chipRate,
+    PerceptionTier perceptionTier,
+    List<FacilityDto> facilities
+) {}
+
+public record FacilityDto(
+    String id,
+    String name,
+    String facilityType,
+    String icon,
+    String description,
+    String npcId,
+    String npcName,
+    List<String> targetDungeons,
+    List<String> actions,
+    boolean isOpen,
+    boolean glitch
 ) {}
 ```
 

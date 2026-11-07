@@ -221,8 +221,13 @@ public class UnifiedSkillAndSpCombatTest {
     assertTrue(enemy.getHp() < 500, "敵怪應受到重創");
     assertFalse(logs.isEmpty(), "應產生小隊合擊廣播日誌");
 
-    // 驗證失控狀態下排除合擊資格
+    // 驗證 Option A：精神萎靡 (CHAOS) 仍可參與合擊，僅陣亡時排除合擊資格
+    warrior.setCurrentSp(100);
+    rogue.setCurrentSp(100);
     warrior.setMadnessState(PartyMember.MadnessState.CHAOS);
-    assertFalse(comboResolver.canExecuteCombo(ctx, comboSkill), "隊員走火入魔 (CHAOS) 時不得參與合擊");
+    assertTrue(comboResolver.canExecuteCombo(ctx, comboSkill), "Option A：精神萎靡 (CHAOS) 隊員仍可參與合擊，不中斷戰鬥心流");
+
+    warrior.setAlive(false);
+    assertFalse(comboResolver.canExecuteCombo(ctx, comboSkill), "陣亡隊員不得參與合擊");
   }
 }

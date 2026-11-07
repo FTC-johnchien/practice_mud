@@ -1,5 +1,6 @@
 import { store } from '../core/state-store.js';
 import { sendCmd } from '../core/cmd-dispatcher.js';
+import { escapeHtml } from '../core/ui-utils.js';
 
 /**
  * 陣法戰陣子模組 (Party Formation Tab)
@@ -107,26 +108,26 @@ export function renderFormationLibraryView(party) {
             當前出戰人數：${(party.members || []).length} 人 | 存活人數：${(party.members || []).filter(m => (m.alive !== undefined ? m.alive : m.hp > 0)).length} 人
           </div>
         </div>
-        <button class="act-btn" onclick="window.toggleFormationViewMode('TACTICAL')" style="background:#0284c7;color:#fff;padding:6px 14px;font-size:var(--font-xs);border:none;border-radius:4px;cursor:pointer;font-weight:bold;">
+        <button class="act-btn" data-action="toggle-formation-view-mode" data-mode="TACTICAL" style="background:#0284c7;color:#fff;padding:6px 14px;font-size:var(--font-xs);border:none;border-radius:4px;cursor:pointer;font-weight:bold;">
           🛡️ 返回 5×3 戰陣盤
         </button>
       </div>
 
       <!-- 人數分類頁籤 (2 / 3 / 4 / 5 人分類) -->
       <div style="display:flex;gap:8px;border-bottom:1px solid #334155;padding-bottom:8px;flex-wrap:wrap;">
-        <button class="act-btn btn-sm ${currentFilter === 'ALL' ? 'active' : ''}" onclick="window.setFormationFilterSize('ALL')" style="padding:4px 12px;font-size:var(--font-xs);background:${currentFilter === 'ALL' ? '#38bdf8' : '#1e293b'};color:${currentFilter === 'ALL' ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
+        <button class="act-btn btn-sm ${currentFilter === 'ALL' ? 'active' : ''}" data-action="set-formation-filter-size" data-size="ALL" style="padding:4px 12px;font-size:var(--font-xs);background:${currentFilter === 'ALL' ? '#38bdf8' : '#1e293b'};color:${currentFilter === 'ALL' ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
           全部 (${countAll})
         </button>
-        <button class="act-btn btn-sm ${currentFilter === 5 ? 'active' : ''}" onclick="window.setFormationFilterSize(5)" style="padding:4px 12px;font-size:var(--font-xs);background:${currentFilter === 5 ? '#38bdf8' : '#1e293b'};color:${currentFilter === 5 ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
+        <button class="act-btn btn-sm ${currentFilter === 5 ? 'active' : ''}" data-action="set-formation-filter-size" data-size="5" style="padding:4px 12px;font-size:var(--font-xs);background:${currentFilter === 5 ? '#38bdf8' : '#1e293b'};color:${currentFilter === 5 ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
           5人陣法 (${count5})
         </button>
-        <button class="act-btn btn-sm ${currentFilter === 4 ? 'active' : ''}" onclick="window.setFormationFilterSize(4)" style="padding:4px 12px;font-size:var(--font-xs);background:${currentFilter === 4 ? '#38bdf8' : '#1e293b'};color:${currentFilter === 4 ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
+        <button class="act-btn btn-sm ${currentFilter === 4 ? 'active' : ''}" data-action="set-formation-filter-size" data-size="4" style="padding:4px 12px;font-size:var(--font-xs);background:${currentFilter === 4 ? '#38bdf8' : '#1e293b'};color:${currentFilter === 4 ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
           4人陣法 (${count4})
         </button>
-        <button class="act-btn btn-sm ${currentFilter === 3 ? 'active' : ''}" onclick="window.setFormationFilterSize(3)" style="padding:4px 12px;font-size:var(--font-xs);background:${currentFilter === 3 ? '#38bdf8' : '#1e293b'};color:${currentFilter === 3 ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
+        <button class="act-btn btn-sm ${currentFilter === 3 ? 'active' : ''}" data-action="set-formation-filter-size" data-size="3" style="padding:4px 12px;font-size:var(--font-xs);background:${currentFilter === 3 ? '#38bdf8' : '#1e293b'};color:${currentFilter === 3 ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
           3人陣法 (${count3})
         </button>
-        <button class="act-btn btn-sm ${currentFilter === 2 ? 'active' : ''}" onclick="window.setFormationFilterSize(2)" style="padding:4px 12px;font-size:var(--font-xs);background:${currentFilter === 2 ? '#38bdf8' : '#1e293b'};color:${currentFilter === 2 ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
+        <button class="act-btn btn-sm ${currentFilter === 2 ? 'active' : ''}" data-action="set-formation-filter-size" data-size="2" style="padding:4px 12px;font-size:var(--font-xs);background:${currentFilter === 2 ? '#38bdf8' : '#1e293b'};color:${currentFilter === 2 ? '#0f172a' : '#cbd5e1'};border:1px solid #475569;font-weight:bold;border-radius:4px;">
           2人陣法 (${count2})
         </button>
       </div>
@@ -146,7 +147,7 @@ export function renderFormationLibraryView(party) {
           } else if (isCurrent) {
             actionBtn = '<span style="font-size:var(--font-xs);color:#34d399;font-weight:bold;background:rgba(52,211,153,0.15);padding:2px 8px;border-radius:4px;border:1px solid #34d399;">✔ 當前運轉中</span>';
           } else if (isSelectable) {
-            actionBtn = `<button class="act-btn btn-sm" onclick="send('formation equip ${f.id}')" style="padding:4px 12px;font-size:var(--font-xs);background:#0284c7;color:#fff;font-weight:bold;">結成此陣</button>`;
+            actionBtn = `<button class="act-btn btn-sm" data-action="send-cmd" data-cmd="formation equip ${escapeHtml(f.id)}" style="padding:4px 12px;font-size:var(--font-xs);background:#0284c7;color:#fff;font-weight:bold;">結成此陣</button>`;
           } else {
             actionBtn = `<span style="font-size:var(--font-xs);color:#ef4444;background:rgba(239,68,68,0.15);border:1px solid #ef4444;padding:2px 8px;border-radius:4px;" title="${f.lockReason || '隊伍條件不符'}">🔒 ${f.lockReason || '不可選'}</span>`;
           }
@@ -200,13 +201,13 @@ export function renderFormationLibraryView(party) {
 
       <!-- 分頁導航控制列 -->
       <div style="display:flex;justify-content:center;align-items:center;gap:12px;padding:8px 0;margin-top:6px;">
-        <button class="act-btn btn-sm" onclick="window.changeFormationPage(-1)" ${safePage === 0 ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>
+        <button class="act-btn btn-sm" data-action="change-formation-page" data-delta="-1" ${safePage === 0 ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>
           ◀ 上一頁
         </button>
         <span style="font-size:var(--font-xs);color:#94a3b8;">
           第 <span style="color:#e2e8f0;font-weight:bold;">${safePage + 1}</span> / ${totalPages} 頁 (共 ${filteredList.length} 個陣法)
         </span>
-        <button class="act-btn btn-sm" onclick="window.changeFormationPage(1)" ${safePage >= totalPages - 1 ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>
+        <button class="act-btn btn-sm" data-action="change-formation-page" data-delta="1" ${safePage >= totalPages - 1 ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>
           下一頁 ▶
         </button>
       </div>
@@ -355,7 +356,7 @@ export function renderTeamFormationView(party) {
               : '全隊受陣形靈威加持，陣眼與孔位契合時可爆發專屬屬性增幅。'}
           </span>
         </div>
-        <button class="act-btn" onclick="window.toggleFormationViewMode('LIBRARY')" style="background:#0284c7;color:#fff;padding:6px 14px;font-size:var(--font-xs);border:none;border-radius:4px;cursor:pointer;font-weight:bold;box-shadow:0 2px 6px rgba(2,132,199,0.4);">
+        <button class="act-btn" data-action="toggle-formation-view-mode" data-mode="LIBRARY" style="background:#0284c7;color:#fff;padding:6px 14px;font-size:var(--font-xs);border:none;border-radius:4px;cursor:pointer;font-weight:bold;box-shadow:0 2px 6px rgba(2,132,199,0.4);">
           📚 切換陣法 (典籍庫)
         </button>
       </div>
@@ -398,4 +399,24 @@ export function renderTeamFormationView(party) {
       </div>
     </div>
   `;
+}
+
+// 模組級事件委派監聽 (CSP 零內聯事件)
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest ? e.target.closest('[data-action]') : null;
+    if (!target) return;
+    const action = target.getAttribute('data-action');
+    if (action === 'toggle-formation-view-mode') {
+      const mode = target.getAttribute('data-mode') || 'TACTICAL';
+      toggleFormationViewMode(mode);
+    } else if (action === 'set-formation-filter-size') {
+      const sizeStr = target.getAttribute('data-size');
+      const size = sizeStr === 'ALL' ? 'ALL' : parseInt(sizeStr, 10);
+      setFormationFilterSize(size);
+    } else if (action === 'change-formation-page') {
+      const delta = parseInt(target.getAttribute('data-delta'), 10) || 0;
+      changeFormationPage(delta);
+    }
+  });
 }

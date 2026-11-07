@@ -25,6 +25,13 @@ public class TalkCommand implements PlayerCommand {
 
   private final PartyService partyService;
 
+  @org.springframework.beans.factory.annotation.Autowired(required = false)
+  private com.example.htmlmud.domain.world.WorldManager worldManager;
+
+  public void setWorldManager(com.example.htmlmud.domain.world.WorldManager worldManager) {
+    this.worldManager = worldManager;
+  }
+
   @Override
   public String getKey() {
     return "talk";
@@ -60,6 +67,16 @@ public class TalkCommand implements PlayerCommand {
     Optional<Living> foundLiving = room.getLivings().stream()
         .filter(l -> l.isValid() && isMatch(l, lowerTarget))
         .findFirst();
+
+    com.example.htmlmud.domain.world.WorldManager wm = (this.worldManager != null) ? this.worldManager : self.getWorldManager();
+    if (foundLiving.isEmpty() && !self.isInDungeon() && wm != null) {
+      Room innRoom = wm.getRoomActor("newbie_village:inn");
+      if (innRoom != null && innRoom.getLivings() != null) {
+        foundLiving = innRoom.getLivings().stream()
+            .filter(l -> l.isValid() && isMatch(l, lowerTarget))
+            .findFirst();
+      }
+    }
 
     if (foundLiving.isPresent()) {
       talkWithLiving(self, foundLiving.get());

@@ -377,9 +377,9 @@ public class PartyMember implements Combatant {
     } else if (ratio >= 0.5) {
       return "【心神恍惚】";
     } else if (ratio >= 0.2) {
-      return "【狂亂囈語】";
+      return "【神識動搖】";
     } else {
-      return "【心魔滋生】";
+      return "【靈台瀕危】";
     }
   }
 

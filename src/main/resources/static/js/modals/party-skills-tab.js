@@ -1,5 +1,6 @@
 import { store } from '../core/state-store.js';
 import { sendCmd } from '../core/cmd-dispatcher.js';
+import { escapeHtml } from '../core/ui-utils.js';
 import { getMemberSlotItem, getPassiveSkillDisplayName } from './party-equipment-tab.js';
 
 /**
@@ -219,31 +220,31 @@ export function renderMemberSkillsView(m, memberIdx, party, skillTab) {
       let actionBtn = '';
       if (it.canFieldCast) {
         if (it.isGeneralRest) {
-          actionBtn = `<button class="act-btn btn-sm btn-green" onclick="window.triggerRestAction()" style="font-size:13px;padding:4px 12px;">🌿 調息吐納</button>`;
+          actionBtn = `<button class="act-btn btn-sm btn-green" data-action="trigger-rest" style="font-size:13px;padding:4px 12px;">🌿 調息吐納</button>`;
         } else {
-          actionBtn = `<button class="act-btn btn-sm btn-blue" onclick="send('skill cast ${memberIdx} ${it.id} 0')" style="font-size:13px;padding:4px 12px;">⚡ 施展</button>`;
+          actionBtn = `<button class="act-btn btn-sm btn-blue" data-action="send-cmd" data-cmd="skill cast ${memberIdx} ${escapeHtml(it.id)} 0" style="font-size:13px;padding:4px 12px;">⚡ 施展</button>`;
         }
       } else if (it.isStance) {
         if (it.isCurrent) {
           actionBtn = `
             <div style="display:flex;align-items:center;gap:6px;">
               <span style="font-size:var(--font-xs);color:#34d399;font-weight:bold;background:rgba(52,211,153,0.15);padding:2px 8px;border-radius:4px;border:1px solid #34d399;">✔ 當前主力</span>
-              <button class="act-btn btn-sm" onclick="send('party enable ${memberIdx} none')" style="font-size:var(--font-xs);padding:2px 6px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;" title="卸下還原為基礎預設">✕ 卸下</button>
+              <button class="act-btn btn-sm" data-action="send-cmd" data-cmd="party enable ${memberIdx} none" style="font-size:var(--font-xs);padding:2px 6px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;" title="卸下還原為基礎預設">✕ 卸下</button>
             </div>
           `;
         } else {
-          actionBtn = `<button class="act-btn btn-sm" onclick="send('party enable ${memberIdx} ${it.id}')" style="font-size:var(--font-xs);padding:3px 10px;">⚔️ 設為主力</button>`;
+          actionBtn = `<button class="act-btn btn-sm" data-action="send-cmd" data-cmd="party enable ${memberIdx} ${escapeHtml(it.id)}" style="font-size:var(--font-xs);padding:3px 10px;">⚔️ 設為主力</button>`;
         }
       } else if (it.isPassive) {
         if (it.isCurrent) {
           actionBtn = `
             <div style="display:flex;align-items:center;gap:6px;">
               <span style="font-size:var(--font-xs);color:#c084fc;font-weight:bold;background:rgba(192,132,252,0.15);padding:2px 8px;border-radius:4px;border:1px solid #c084fc;">✔ 運轉中</span>
-              <button class="act-btn btn-sm" onclick="send('party enable ${memberIdx} none ${it.category || ''}')" style="font-size:var(--font-xs);padding:2px 6px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;" title="卸下還原為基礎預設">✕ 卸下</button>
+              <button class="act-btn btn-sm" data-action="send-cmd" data-cmd="party enable ${memberIdx} none ${escapeHtml(it.category || '')}" style="font-size:var(--font-xs);padding:2px 6px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;" title="卸下還原為基礎預設">✕ 卸下</button>
             </div>
           `;
         } else {
-          actionBtn = `<button class="act-btn btn-sm" onclick="send('party enable ${memberIdx} ${it.id}')" style="font-size:var(--font-xs);padding:3px 10px;">🧘 裝配心法</button>`;
+          actionBtn = `<button class="act-btn btn-sm" data-action="send-cmd" data-cmd="party enable ${memberIdx} ${escapeHtml(it.id)}" style="font-size:var(--font-xs);padding:3px 10px;">🧘 裝配心法</button>`;
         }
       } else {
         actionBtn = `<span style="font-size:var(--font-xs);color:#38bdf8;background:rgba(56,189,248,0.15);padding:2px 8px;border-radius:4px;">戰鬥絕技</span>`;
@@ -389,7 +390,7 @@ export function renderSkillPickerView(party) {
     candidateListHtml = pagedCandidates.map(it => {
       const isSelected = (it.id === picker.selectedSkillId);
       return `
-        <div class="equip-candidate-card ${isSelected ? 'is-selected' : ''}" onclick="window.selectSkillPickerItem('${it.id}')">
+        <div class="equip-candidate-card ${isSelected ? 'is-selected' : ''}" data-action="select-skill-picker-item" data-skill-id="${escapeHtml(it.id)}">
           <div style="font-size:24px;width:40px;height:40px;background:#0b1120;border:1px solid #334155;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             ${it.icon}
           </div>
@@ -402,11 +403,11 @@ export function renderSkillPickerView(party) {
             <div style="font-size:var(--font-xs);color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${it.desc}</div>
           </div>
           ${it.isCurrent ? `
-            <button class="act-btn btn-sm btn-red" onclick="event.stopPropagation();window.confirmUnequipSkill(${memberIdx}, '${category}');" style="font-size:var(--font-xs);padding:3px 10px;flex-shrink:0;">
+            <button class="act-btn btn-sm btn-red" data-action="confirm-unequip-skill" data-member-idx="${memberIdx}" data-slot-key="${escapeHtml(category)}" style="font-size:var(--font-xs);padding:3px 10px;flex-shrink:0;">
               ✕ 卸下
             </button>
           ` : `
-            <button class="act-btn btn-sm btn-blue" onclick="event.stopPropagation();window.confirmEquipSkill(${memberIdx}, '${it.id}', '${category}');" style="font-size:var(--font-xs);padding:3px 10px;flex-shrink:0;">
+            <button class="act-btn btn-sm btn-blue" data-action="confirm-equip-skill" data-member-idx="${memberIdx}" data-skill-id="${escapeHtml(it.id)}" data-category="${escapeHtml(category)}" style="font-size:var(--font-xs);padding:3px 10px;flex-shrink:0;">
               ⚡ 啟用
             </button>
           `}
@@ -428,7 +429,7 @@ export function renderSkillPickerView(party) {
           <div style="background:#1e293b;border:1px solid #334155;border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:8px;">
             <div style="font-size:13px;font-weight:bold;color:#cbd5e1;">當前運轉功法：</div>
             <div style="font-size:15px;font-weight:bold;color:#38bdf8;">${curEquippedName}</div>
-            <button class="act-btn btn-sm btn-red" onclick="window.confirmUnequipSkill(${memberIdx}, '${category}')" style="font-size:13px;padding:6px 14px;margin-top:6px;">
+            <button class="act-btn btn-sm btn-red" data-action="confirm-unequip-skill" data-member-idx="${memberIdx}" data-slot-key="${escapeHtml(category)}" style="font-size:13px;padding:6px 14px;margin-top:6px;">
               ✕ 卸下還原為預設 (無)
             </button>
           </div>
@@ -477,15 +478,15 @@ export function renderSkillPickerView(party) {
         <!-- 操作按鈕列 -->
         <div style="display:flex;gap:10px;margin-top:6px;">
           ${selectedCandidate.isCurrent ? `
-            <button class="act-btn btn-red" onclick="window.confirmUnequipSkill(${memberIdx}, '${category}')" style="flex:1;font-size:14px;font-weight:bold;padding:10px 16px;">
+            <button class="act-btn btn-red" data-action="confirm-unequip-skill" data-member-idx="${memberIdx}" data-slot-key="${escapeHtml(category)}" style="flex:1;font-size:14px;font-weight:bold;padding:10px 16px;">
               ✕ 卸下當前套路 (還原為預設)
             </button>
           ` : `
-            <button class="act-btn btn-blue" onclick="window.confirmEquipSkill(${memberIdx}, '${selectedCandidate.id}', '${category}')" style="flex:1;font-size:14px;font-weight:bold;padding:10px 16px;">
+            <button class="act-btn btn-blue" data-action="confirm-equip-skill" data-member-idx="${memberIdx}" data-skill-id="${escapeHtml(selectedCandidate.id)}" data-category="${escapeHtml(category)}" style="flex:1;font-size:14px;font-weight:bold;padding:10px 16px;">
               ✨ 即刻啟用此功法
             </button>
             ${curEquippedName ? `
-              <button class="act-btn btn-red" onclick="window.confirmUnequipSkill(${memberIdx}, '${category}')" style="font-size:13px;padding:10px 14px;">
+              <button class="act-btn btn-red" data-action="confirm-unequip-skill" data-member-idx="${memberIdx}" data-slot-key="${escapeHtml(category)}" style="font-size:13px;padding:10px 14px;">
                 ✕ 還原預設
               </button>
             ` : ''}
@@ -658,7 +659,7 @@ export function renderMemberSpellbook(m, memberIdx) {
     } else if (it.canSwitch) {
       const switchLabel = (curTab === 'PASSIVES') ? '⚡ 裝配心法' : '⚡ 啟用套路';
       const switchTitle = (curTab === 'PASSIVES') ? '裝配至常駐被動心法槽位' : '啟用為當前主力普攻套路';
-      actBtnHtml = `<button class="spell-switch-btn" onclick="send('party enable ${memberIdx} ${it.id}')" title="${switchTitle}">${switchLabel}</button>`;
+      actBtnHtml = `<button class="spell-switch-btn" data-action="send-cmd" data-cmd="party enable ${memberIdx} ${escapeHtml(it.id)}" title="${switchTitle}">${switchLabel}</button>`;
     } else if (curTab === 'SKILLS') {
       actBtnHtml = '<span style="font-size:var(--font-xs);color:#60a5fa;">戰鬥快捷施展</span>';
     }
@@ -685,7 +686,7 @@ export function renderMemberSpellbook(m, memberIdx) {
     const isSelected = (curTab === t.key);
     return `
       <button class="spellbook-tab-btn ${isSelected ? 'active' : ''}"
-        onclick="window.switchSpellbookTab(${memberIdx}, '${t.key}')" title="${t.label}">
+        data-action="switch-spellbook-tab" data-member-idx="${memberIdx}" data-tab="${escapeHtml(t.key)}" title="${t.label}">
         ${t.label} (${t.count})
       </button>
     `;
@@ -719,9 +720,9 @@ export function renderMemberSpellbook(m, memberIdx) {
             ${spellsGridHtml}
           </div>
           <div class="spellbook-pagination">
-            <button class="spellbook-page-btn" onclick="window.switchSpellbookPage(${memberIdx}, -1)" ${curPage <= 1 ? 'disabled' : ''}>◀ 上一頁</button>
+            <button class="spellbook-page-btn" data-action="switch-spellbook-page" data-member-idx="${memberIdx}" data-delta="-1" ${curPage <= 1 ? 'disabled' : ''}>◀ 上一頁</button>
             <span>第 ${curPage} 頁 / 共 ${totalPages} 頁 (共 ${items.length} 條目)</span>
-            <button class="spellbook-page-btn" onclick="window.switchSpellbookPage(${memberIdx}, 1)" ${curPage >= totalPages ? 'disabled' : ''}>下一頁 ▶</button>
+            <button class="spellbook-page-btn" data-action="switch-spellbook-page" data-member-idx="${memberIdx}" data-delta="1" ${curPage >= totalPages ? 'disabled' : ''}>下一頁 ▶</button>
           </div>
         </div>
         <div class="wow-spellbook-tabs">
@@ -730,7 +731,7 @@ export function renderMemberSpellbook(m, memberIdx) {
       </div>
       <div style="margin-top:12px;padding:8px 14px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);border-radius:6px;display:flex;align-items:center;justify-content:space-between;font-size:var(--font-xs);color:#c7d2fe;">
         <span>☯️ <strong>全隊陣法奧義</strong>屬於全隊共有，不局限於個人武學。請前往全隊陣法面板進行切換與站位調配。</span>
-        <button class="act-btn btn-sm" onclick="selectPartyFormationTab()" style="padding:3px 10px;font-size:var(--font-xs);background:#4f46e5;color:#fff;">前往全隊陣法 ➔</button>
+        <button class="act-btn btn-sm" data-action="select-party-formation-tab" style="padding:3px 10px;font-size:var(--font-xs);background:#4f46e5;color:#fff;">前往全隊陣法 ➔</button>
       </div>
     </div>
   `;
@@ -749,4 +750,33 @@ export function switchSpellbookPage(memberIdx, delta) {
   drpgState.spellbookState[memberIdx].page = Math.max(1, (drpgState.spellbookState[memberIdx].page || 1) + delta);
   const render = getRenderPartyModal();
   if (render) render();
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest('[data-action]');
+    if (!target) return;
+    const action = target.getAttribute('data-action');
+    if (action === 'select-skill-picker-item') {
+      const skillId = target.getAttribute('data-skill-id');
+      selectSkillPickerItem(skillId);
+    } else if (action === 'confirm-equip-skill') {
+      const memberIdx = parseInt(target.getAttribute('data-member-idx'), 10);
+      const skillId = target.getAttribute('data-skill-id');
+      const category = target.getAttribute('data-category');
+      confirmEquipSkill(memberIdx, skillId, category);
+    } else if (action === 'switch-spellbook-tab') {
+      const memberIdx = parseInt(target.getAttribute('data-member-idx'), 10);
+      const tab = target.getAttribute('data-tab');
+      switchSpellbookTab(memberIdx, tab);
+    } else if (action === 'switch-spellbook-page') {
+      const memberIdx = parseInt(target.getAttribute('data-member-idx'), 10);
+      const delta = parseInt(target.getAttribute('data-delta'), 10);
+      switchSpellbookPage(memberIdx, delta);
+    } else if (action === 'select-party-formation-tab') {
+      if (typeof window !== 'undefined' && window.selectPartyFormationTab) {
+        window.selectPartyFormationTab();
+      }
+    }
+  });
 }

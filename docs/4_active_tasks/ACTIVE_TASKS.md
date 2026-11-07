@@ -14,6 +14,7 @@
 > 3. ✅ **任務庫 (L3)**：落實 1:1 鏡像對齊結構，跨模組代碼收斂與重構計畫 [`CODE_CONVERGENCE_AND_REFACTORING_TASKS.md`](../0_archive/alignment_history/CODE_CONVERGENCE_AND_REFACTORING_TASKS.md) 已全數完工結案。
 > 4. ✅ **治理憲法**：於全域文件定錨「三大層級遞進治理與使用者審批鐵律」，以 `.\test.ps1` 全量綠燈為準（基準見 [`docs/3_task_lists/README.md`](../3_task_lists/README.md)）。
 > 5. ✅ **收斂里程碑 (CONV-01)**：三階靈識透鏡轉譯代理 (`CognitiveProxyService`)、營地機能中樞 (`TownHubService` / `TownHubDto`)、營地設施與調息派發 (`TownFacilityCommand`)、16 大標準賽博神通資料矩陣全數落地！
+> 6. ✅ **第二階段深度對齊里程碑 (ALIGN-V2)**：完成 P0 五大實質功能斷層修補（裝備詞綴與削韌投影、火把/傳送門/補血藥修復、DamageType 與 5P 萬象終結技/陣法存活遞補、會話接管日誌導流、Option A 精神萎靡收斂）、營地六大設施卡牌前端接線、零內聯 `onclick` CSP 收斂，以及 L2/L3 全量文件誠實化校準（416+ 測試全綠，check-doc-links 0 錯誤）。
 >
 > 🎯 **當前唯一推進焦點**：**Milestone VS-01 — 第一章序幕垂直切片：黑煞宗地底礦脈・採礦奴隸與特工覺醒 (Vertical Slice, P1)**。
 
@@ -22,40 +23,44 @@
 ## 📌 當前焦點里程碑：Milestone VS-01 — 第一章序幕垂直切片：黑煞宗地底礦脈・採礦奴隸與特工覺醒 (Vertical Slice, P1)
 
 - **核心目標對齊**：依據三大戰略與【五大核心目標】（世界觀介紹、戰鬥爽快、技能組合、裝備收集、角色養成），徹底取消道心崩潰魔化設計，打造首個完整閉環的純單機 Hack-and-slash DRPG 序章！
-- **背景設定融合**：主角在黑煞宗地底奴役通鋪甦醒，特工晶片加載 12%，在萬年母神卵鞘地殼深處面臨塌陷與退化妖獸，收集黑煞煞石，反殺密室修士並繳獲千星科技加密追蹤晶片。
+- **背景設定融合**：主角在黑煞宗地底奴役通鋪甦醒，特工晶片加載 12%，在森羅星活體古神偽地殼（萬年母神卵鞘表象）深處面臨塌陷與退化妖獸，收集黑煞煞石，反殺密室修士並繳獲千星聯合科技加密追蹤晶片。
+- **主角身分與開局定位聲明**：遊戲玩家主角 ≠ 小說參考主角，玩家正式出身與第一章劇情列為 **【待深入討論】**；現行 Milestone VS-01 定位為「機制驗證垂直切片（過渡原型）」基準。
 - **資料契約綁定**：全任務 100% 依循 `DUNGEON_SCHEMA.md`、`ITEM_SCHEMA.md` 與 `SKILL_SCHEMA.md`，以 `.\test.ps1` 全量綠燈為準（基準見 [`docs/3_task_lists/README.md`](../3_task_lists/README.md)）。
 
 ### 📋 微任務清單 (Micro-Tasks)
 
 - [ ] **Task 1 (VS-01-LORE-GEOLOGY): 黑煞宗地底礦脈地質與外神卵鞘偽地殼環境重塑 (世界觀介紹)**
   - **目標檔案**：`src/main/resources/data/dungeons/mozhu_mines_b1f.json`、[`DUNGEON_SCHEMA.md`](../2_specifications/data_schemas/DUNGEON_SCHEMA.md)
-  - **契約規範**：依循 `DUNGEON_SCHEMA.md` 規範 10x10 地牢網格，確認黑煞煞石岩壁 (`#`)、腐朽枕木坑道 (`.`)、避煞木門 (`D`)、雜役木箱 (`T`)、墨家殘碑 (`E`)、外神卵塊菌絲泥沼 (`X`)、虛月血肉祭壇首領房 (`B`) 地貌 Legend 與遇敵配置 (`encounters.dangerRate=15`)。
-  - **驗收標準**：地圖資料 100% 通過 `DataIntegrityValidator` 檢驗；進入地城時第一人稱描述精準呈現克蘇魯外神卵鞘地質異變。
+  - **契約規範**：依循 `DUNGEON_SCHEMA.md` 規範 10x10 地牢網格，確認黑煞煞石岩壁 (`#`)、腐朽枕木坑道 (`.`)、避煞木門 (`D`)、雜役木箱 (`T`)、墨家殘碑 (`E`)、外神卵塊菌絲泥沼 (`X`)、虛月血肉祭壇首領房 (`B`) 地貌 Legend 與遇敵配置（`encounters.dangerRate` 與 `encounters.mobs`，數值以 `mozhu_mines_b1f.json` 為唯一生效 SSoT）。
+  - **驗收標準**：地圖資料 100% 通過 `DataIntegrityValidator` 檢驗與 `MozhuMinesDungeonIntegrationTest`；進入地城時第一人稱環境敘事與探索文字卡沉浸感端到端驗收。
 
 - [ ] **Task 2 (VS-01-AGENT-HUD): 主角特工晶片 HUD 視界 (12%...) 與道基五維初始潛能點加點 (世界觀 + 角色養成)**
-  - **目標檔案**：[`Player.java`](../../src/main/java/com/example/htmlmud/domain/actor/impl/Player.java)、[`PartyMember.java`](../../src/main/java/com/example/htmlmud/party/PartyMember.java)、`party-overview-tab.js` (預計於 `src/main/resources/static/js/modals/` 模組化新建或擴充 `party-modal.js`)
+  - **目標檔案**：[`Player.java`](../../src/main/java/com/example/htmlmud/domain/actor/impl/Player.java)、[`PartyMember.java`](../../src/main/java/com/example/htmlmud/party/PartyMember.java)、`src/main/resources/static/js/modals/party-equipment-tab.js`、`src/main/resources/static/js/modals/party-modal.js`、`src/main/resources/static/js/panels/town-panel.js`
   - **契約規範**：對齊 Level 2 [`M4_PARTY_AND_FORMATION.md`](../2_specifications/backend/M4_PARTY_AND_FORMATION.md)（道基五維體系）與 [`M5_SKILL_AND_PROGRESSION.md`](../2_specifications/backend/M5_SKILL_AND_PROGRESSION.md)（潛能點與成長曲線）；隊長初始加載「特工覺醒度 12%」，分配 5 點自由道基潛能點（體質、真元、神識、根骨、身法）。
-  - **驗收標準**：後端提供潛能點分配 Action 與 DTO 投影，加點即時轉化為 HP/MP/攻防速五維屬性；前端隊伍面板提供直觀加點 UI；專屬單元測試綠燈。
+  - **驗收標準**：後端 `party stat add` 指令、前端 `party-equipment-tab.js` 道基五維 `[+1]` 按鈕與營地 `#town-perception-badge` 晶片加載徽章已實裝；剩餘聚焦於 ① 隊長初始配發 5 點自由道基潛能點；② 在小隊總覽／隊員面板同步顯示特工晶片加載度進度條並補齊端到端測試。
 
 - [x] **Task 3 (VS-01-CYBER-SKILLS): 首批賽博特工戰技資料驅動配置【剎那千秋步】與【玄冥幾丁刃】(戰鬥爽快 + 技能組合)**
   - **目標檔案**：`src/main/resources/data/party/party_skills.json`、[`SKILL_SCHEMA.md`](../2_specifications/data_schemas/SKILL_SCHEMA.md)、[`docs/2_specifications/skills/3_high_tech/TREE_10_TIME_OVERCLOCK.md`](../2_specifications/skills/3_high_tech/TREE_10_TIME_OVERCLOCK.md)、[`docs/2_specifications/skills/4_cthulhu/TREE_14_CHITIN_BLADE.md`](../2_specifications/skills/4_cthulhu/TREE_14_CHITIN_BLADE.md)
   - **契約規範**：依循 `SKILL_SCHEMA.md` 規範與 Option C（仙俠先行 × 底層真相揭示），對齊 `party_skills.json` 序章核心戰技與雙星合體技：
-    - `skill_time_tier1_step`（【剎那千秋步】）：淵源 `HIGH_TECH`、專精樹 `tree_time_overclock`、階級 `tier=1`、`comboRole=PRIMER`、破防削韌 25、提供身法 GCD 壓縮與前搖打斷。底層真相為神經突觸瞬態超頻電流。
-    - `skill_chitin_tier1_blade`（【玄冥幾丁刃】）：淵源 `CTHULHU`、專精樹 `tree_chitin_blade`、階級 `tier=1`、`comboRole=DETONATOR`、破防削韌 45、引爆 Primer 裂魂標記造成 1.5x 爆裂。底層真相為外神母體退化基因刺激骨刃急速外生。
-    - `combo_chitin_kinetic_superconductor`（【生化超導·破空磁煞幾丁刃】）：傳奇雙星名招，幾丁質 ＋ 電磁動能，一刀兩斷貫穿全列，造成 100% 暴擊穿甲。
-  - **驗收標準**：`DataIntegrityValidator` 啟動檢驗零警告；在 `DrpgCombatLoop` 戰鬥中驗證發動 Primer 裂魂標記與 Detonator 引爆震盪衝擊波。已於 `ElementalReactionAndDetonateTest` 驗收完備。
+    - `skill_time_tier1_step`（【剎那千秋步】）：淵源 `HIGH_TECH`、專精樹 `tree_time_overclock`、階級 `tier=1`、`comboRole=PRIMER`，削韌與冷卻數值以 `party_skills.json` 為唯一生效 SSoT。底層真相為神經突觸瞬態超頻電流。
+    - `skill_chitin_tier1_blade`（【玄冥幾丁刃】）：淵源 `CTHULHU`、專精樹 `tree_chitin_blade`、階級 `tier=1`、`comboRole=DETONATOR`，命中帶有 Primer 印記目標時引爆震盪衝擊波，具體數值以 `party_skills.json` 為唯一生效 SSoT。底層真相為外神母體退化基因刺激骨刃急速外生。
+    - `combo_chitin_kinetic_superconductor`（【生化超導·破空磁煞幾丁刃】）：傳奇雙星名招 `synergyType=2P_COMBO`，幾丁質 ＋ 電磁動能貫穿打擊，數值以 `party_skills.json` 為唯一生效 SSoT。
+  - **驗收標準**：`DataIntegrityValidator` 啟動檢驗零警告；在 `DrpgCombatLoop` 戰鬥中驗證發動 Primer 裂魂標記與 Detonator 引爆震盪衝擊波。已於 `CyberSkillAndItemAffixTest`、`WorldDataIntegrityTest` 與 `ElementalReactionAndDetonateTest` 驗收完備。
 
 - [ ] **Task 4 (VS-01-LOOT-CHIP): 首領掉落【千星科技加密追蹤晶片】與隨機詞綴裝備掉落驗收 (裝備收集 + 全量測試綠燈守護)**
-  - **目標檔案**：`src/main/resources/data/global/items/quest/quest_items.json`、[`ITEM_SCHEMA.md`](../2_specifications/data_schemas/ITEM_SCHEMA.md)、[`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/combat/DrpgRewardService.java)
+  - **目標檔案**：`src/main/resources/data/global/items/quest/quest_items.json`、[`ITEM_SCHEMA.md`](../2_specifications/data_schemas/ITEM_SCHEMA.md)、[`DrpgRewardService.java`](../../src/main/java/com/example/htmlmud/combat/DrpgRewardService.java)、[`ItemAffixService.java`](../../src/main/java/com/example/htmlmud/item/ItemAffixService.java)、`src/main/resources/static/js/modals/victory-modal.js`
   - **契約規範**：依循 `ITEM_SCHEMA.md` 規範：
-    - 黑煞宗礦脈首領（密室畸變修士·宋天衡）掉落專屬任務道核 `item_chip_qianxing_tracker`（千星科技加密追蹤晶片）。
-    - 戰鬥結算掉落武器/防具自動隨機掛載前綴與後綴詞條（例如：`超頻的黑煞短匕` 附帶削韌強度）。
-  - **驗收標準**：`victory-modal.js` 結算視窗金色 3D 翻牌正確呈現晶片與隨機詞綴裝備；以 `.\test.ps1` 全量綠燈為準（基準見 [`docs/3_task_lists/README.md`](../3_task_lists/README.md)）。
+    - 黑煞宗礦脈首領（密室畸變修士·宋天衡）必定掉落專屬任務道核 `item_chip_qianxing_tracker`（千星聯合科技加密特工晶片，`LEGENDARY` 品質）。
+    - 戰鬥結算掉落武器/防具自動隨機掛載前後綴詞條（例如：`超頻的黑煞短匕` 附帶削韌強度）。
+  - **驗收標準**：`quest_items.json`、首領必掉配置與 `ItemAffixService` 已落地；剩餘聚焦於首領擊殺掉落晶片與 `victory-modal.js` 金色 3D 翻牌呈現之端到端整合驗收測試；以 `.\test.ps1` 全量綠燈為準（基準見 [`docs/3_task_lists/README.md`](../3_task_lists/README.md)）。
 
 
 ---
 
 ## 🏆 已完成里程碑 (Completed Milestones)
+
+- [x] **Milestone ALIGN-V2 — 第二階段：程式碼與 L2/L3/L4 文件深度對齊與 P0 斷層清零 (Code & Docs Alignment Phase 2)**
+  - 完成 P0 五大實質功能斷層修補（裝備隨機詞綴與削韌投影、地牢點火／傳送門 ID／補血消耗品、DamageType 與 5P 萬象終結技／陣法減員存活遞補、會話接管日誌導流、Option A 精神萎靡收斂）、營地中樞六大設施卡牌前端接線、全專案 0 處內聯 onclick CSP 事件委派收斂，以及 L2 規格手冊、L3 任務清單全量誠實化校準（416+ 測試全綠，522+ 內部連結 100% 通過）。
 
 - [x] **Milestone REFACTOR-PHASE-4 — 階段四：舊代碼除役與架構看門狗 (Phase 4 Legacy Purge & Guardrails)**
   - Task 1 (LEGACY-CODE-PURGE): 物理除役廢棄代碼：安全審查並移除未引用的過渡類別（`LivingStateService`、`infra.util.IdUtils`、`infra.util.RandomUtil`、`ExitDeserializer`、`RoomDescriptionDeserializer`）與歷史搬移後殘留之空目錄。
@@ -218,8 +223,8 @@
 ### 📌 Milestone VS-02 — 第二章：太陰古塚・生化道奴與古修士遺藏 (P2)
 - **核心內容**：推進至地牢 `taiyin_tomb_b1f.json`，挑戰雙階段守墓道奴，解鎖五大陣法動態切換與高級詞綴鍛造。
 
-### 📌 Milestone VS-03 — 第三章：千星殖民巨艦墜毀核心・神經網絡逆向工程 (P2)
-- **核心內容**：探索飛船殘骸高危區域，解鎖特工晶片 50%+ 深度超頻與虛數靈能流派神通。
+### 📌 Milestone VS-03 — 第三章：古代工程師地心重工深井・千星軌道訊號逆向工程 (P2)
+- **核心內容**：深入古代工程師行星採掘深井核心區域，截獲同步軌道「銜尾蛇號」加密通訊，解鎖特工晶片 70%+ 真理洞察位階與高階四大淵源專精樹（Tier 3~4）神通。
 
 ---
 

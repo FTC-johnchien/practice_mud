@@ -17,6 +17,7 @@
   - [`ItemDefinition.java`](../../../src/main/java/com/example/htmlmud/item/ItemDefinition.java)（物品不可變規範模型）
   - [`ItemInstance.java`](../../../src/main/java/com/example/htmlmud/item/ItemInstance.java)（運行期道具實體）
   - [`ItemAffix.java`](../../../src/main/java/com/example/htmlmud/item/ItemAffix.java)（隨機詞綴實體：PREFIX / SUFFIX，動態屬性累加）
+  - [`ItemAffixService.java`](../../../src/main/java/com/example/htmlmud/item/ItemAffixService.java)（隨機前後綴詞綴生成、掛載與數值加持服務）
   - [`PartyItemSlot.java`](../../../src/main/java/com/example/htmlmud/party/PartyItemSlot.java)（掛載詞綴之裝備插槽與動態命名）
   - [`EquipmentSlot.java`](../../../src/main/java/com/example/htmlmud/item/EquipmentSlot.java)（5+2 裝備槽位枚舉）
   - [`ItemFactory.java`](../../../src/main/java/com/example/htmlmud/item/ItemFactory.java)（集中化道具工廠）
@@ -41,7 +42,7 @@
 - [x] **M6-POISE-BREAK-POWER (削韌破防強度裝備屬性)**
   - 武器裝備支援 `poiseBreakPower`，戰鬥中直接增強隊員對敵方罡氣的破防打擊效力。
 - [x] **M6-QUEST-CHIP-DATA (千星加密追蹤晶片資料實裝)**
-  - 在 `src/main/resources/data/global/items/quest/quest_items.json` 正式建立 `item_chip_qianxing_tracker` 定義。
+  - 在 `src/main/resources/data/global/items/quest/quest_items.json` 正式建立 `item_chip_qianxing_tracker`（千星聯合科技加密特工晶片，`LEGENDARY` 傳說品質，`slot: ACCESSORY_2`、`attackSpeed: 8`、`poiseBreakPower: 12`）定義。
 
 ---
 
@@ -50,9 +51,9 @@
 - [ ] **Task M6-1 (VS-01-LOOT-CHIP / ACTIVE-TASK-4): 首領掉落任務晶片與隨機詞綴結算驗收**
   - **目標**：首領擊敗後由 `DrpgRewardService` 必定掉落 `item_chip_qianxing_tracker`，其餘武器隨機掛載前後綴詞條。
   - **驗收標準**：`victory-modal.js` 正確展示金色晶片與詞綴裝備，測試全綠。
-- [ ] **Task M6-2 (WORKSHOP-REFORGE-AND-UPGRADE): 百煉堂裝備分解、數值強化與道韻洗練重鑄**
+- [ ] **Task M6-2 (WORKSHOP-REFORGE-AND-UPGRADE)【已決議待實作】：百煉堂裝備分解、數值強化與道韻洗練重鑄**
   - **目標**：在營地百煉堂消耗靈石與煞晶素材，提供裝備基礎屬性強化（`UPGRADE` / Refinement，如強化 +1~+9 提升攻擊力與護甲），以及洗練前後綴詞條數值或替換詞綴。
   - **驗收標準**：強化與重鑄後數值在 `affixPool` 定義範圍內合理浮動，存讀檔一致。
-- [ ] **Task M6-3 (COGNITIVE-ITEM-LENSES): 物品與素材之多階靈識認知代理過濾實作**
+- [ ] **Task M6-3 (COGNITIVE-ITEM-LENSES)【待深入討論／長線演進藍圖】：物品與素材之多階靈識認知代理過濾實作**
   - **目標**：在 `ItemTemplate` 與 `GameItem` 支援 `lenses` 陣列解析，對接 `CognitiveProxyService.filterItem(item, chipLoadingRate)`，使地牢掉落素材依晶片加載度由「一團怪物的血肉」動態解密為「活性神經幾丁質」及「仿生兵器晶片」。
   - **驗收標準**：單元測試驗證不同晶片加載度下，物品 DTO 投影精準輸出對應階級名稱、描述與 `glitch` 標籤。

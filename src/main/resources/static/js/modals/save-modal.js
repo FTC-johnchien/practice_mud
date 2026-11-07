@@ -123,7 +123,8 @@ function renderSaveSlots() {
         const saveBtn = document.createElement('button');
         saveBtn.className = 'slot-btn slot-btn-save';
         saveBtn.innerText = '💾 存檔於此';
-        saveBtn.onclick = () => triggerSaveSlot(slot.slotId);
+        saveBtn.setAttribute('data-action', 'save-slot');
+        saveBtn.setAttribute('data-slot-id', slot.slotId);
         actionsCol.appendChild(saveBtn);
       }
     } else {
@@ -131,7 +132,8 @@ function renderSaveSlots() {
       const loadBtn = document.createElement('button');
       loadBtn.className = 'slot-btn slot-btn-load';
       loadBtn.innerText = isAuto ? '📂 載入自動存檔' : '📂 載入此檔';
-      loadBtn.onclick = () => triggerLoadSlot(slot.slotId);
+      loadBtn.setAttribute('data-action', 'load-slot');
+      loadBtn.setAttribute('data-slot-id', slot.slotId);
       actionsCol.appendChild(loadBtn);
 
       if (!isAuto) {
@@ -139,7 +141,8 @@ function renderSaveSlots() {
         const saveBtn = document.createElement('button');
         saveBtn.className = 'slot-btn slot-btn-save';
         saveBtn.innerText = '💾 覆蓋存檔';
-        saveBtn.onclick = () => triggerSaveSlot(slot.slotId);
+        saveBtn.setAttribute('data-action', 'save-slot');
+        saveBtn.setAttribute('data-slot-id', slot.slotId);
         actionsCol.appendChild(saveBtn);
 
         // 刪除按鈕
@@ -147,7 +150,8 @@ function renderSaveSlots() {
         delBtn.className = 'slot-btn slot-btn-del';
         delBtn.innerText = '🗑️';
         delBtn.title = '刪除此存檔';
-        delBtn.onclick = () => triggerDeleteSlot(slot.slotId);
+        delBtn.setAttribute('data-action', 'delete-slot');
+        delBtn.setAttribute('data-slot-id', slot.slotId);
         actionsCol.appendChild(delBtn);
       }
     }
@@ -158,6 +162,12 @@ function renderSaveSlots() {
 }
 
 function triggerSaveSlot(slotId) {
+  const existingSlot = (drpgState.saveSlots || []).find(s => s.slotId === slotId);
+  if (existingSlot && !existingSlot.empty) {
+    if (!window.confirm(`【存檔槽位 ${slotId}】已有紀錄「${existingSlot.title || '舊存檔'}」，確定要覆蓋此存檔嗎？`)) {
+      return;
+    }
+  }
   const defaultName = (drpgState.lastParty && drpgState.lastParty.members && drpgState.lastParty.members[0])
       ? drpgState.lastParty.members[0].name + '的太陰道途'
       : '';

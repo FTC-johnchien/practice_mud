@@ -28,7 +28,7 @@
 - [x] **SCHEMA-OVERCLOCK-TIERS (超頻階級 0~3 驗證)**
   - 整合 `DataIntegrityValidator` Fail-Fast 檢驗，階級超界立即阻斷。
 - [x] **Task SKILL-SCHEMA-2 (16-CANONICAL-SKILLS-VALIDATION): 16 大標準賽博技能 Schema 契約齊備性驗證（仙俠神通名契約）**
-  - 依據 `SKILL_SCHEMA.md` 規範，`party_skills.json` 包含四大流派之基礎技能定義，`name` 欄位為古典仙俠神通名，且 `cyberSchool`、`comboRole`、`poiseDamage` 契約無遺漏。
+  - 依據 `SKILL_SCHEMA.md` 規範，`party_skills.json` 包含四大流派之基礎技能定義，`name` 欄位為古典仙俠神通名，且 `originSchool`、`comboRole`、`poiseDamage` 契約無遺漏。
   - `CyberSkillAndItemAffixTest` 單元測試全數 100% 綠燈。
 - [x] **Task SKILL-SCHEMA-1 (VS-01 戰鬥連攜實測): 戰鬥中 Primer 標記與 Detonator 引爆閉環驗收**
   - 驗證技能發動後 DTO 投影正確攜帶 `comboRole`，戰鬥中正確發動 50% 震盪衝擊波。
@@ -37,6 +37,6 @@
 
 ## ⏳ 三、未竟待辦與演進項目 (Pending Backlog)
 
-- [ ] **Task SKILL-SCHEMA-3 (17-TREES-AND-TIER4-ULTIMATES-SCHEMA): 四大淵源十七專精樹與合體技契約升級**
-  - **目標**：升級 `SKILL_SCHEMA.md` 實體驗證模型，支援四大淵源（`CULTIVATOR`, `ENGINEER`, `HIGH_TECH`, `CTHULHU`）、17 專精樹 ID、Tier 1~4 四階武技（含元嬰大絕招）、道骨晶片插槽模型 (`PassiveTalentTemplate`)，以及小隊多維動態終結技契約 (`SynergySkillTemplate`)。
-  - **驗收標準**：撰寫 `SkillSchemaExpansionTest` 驗證新架構 JSON 反序列化與各欄位校驗 100% 通過。
+- [ ] **Task SKILL-SCHEMA-3 (PASSIVE-SOCKET-AND-SYNERGY-SCHEMA)【待深入討論／長線演進藍圖】：道骨晶片插槽模型 (PassiveTalentTemplate) 與獨立動態終結技契約擴充**
+  - **目標**：在已落地四大淵源（`CULTIVATOR`, `ENGINEER`, `HIGH_TECH`, `CTHULHU`）與 17 專精樹基礎上，擴充道骨晶片插槽模型 (`PassiveTalentTemplate`)，以及小隊多維動態終結技契約 (`SynergySkillTemplate`)。
+  - **驗收標準**：撰寫擴充測試驗證道骨插槽與動態終結技 JSON 反序列化與各欄位校驗 100% 通過。

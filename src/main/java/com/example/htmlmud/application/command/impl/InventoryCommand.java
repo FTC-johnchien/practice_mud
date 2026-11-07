@@ -103,7 +103,7 @@ public class InventoryCommand implements PlayerCommand {
           if ("RESTORE_SAN_MP".equals(s.getEffectType()) || (s.getItemId() != null && s.getItemId().contains("purify_tea"))) {
             sb.append(" [清心靈茶: 回復 ").append(s.getEffectValue()).append(" SAN 與 20 MP]");
           } else {
-            sb.append(" [清心符: 回復 ").append(s.getEffectValue()).append(" SAN，解走火入魔]");
+            sb.append(" [清心符: 回復 ").append(s.getEffectValue()).append(" SAN，解精神萎靡]");
           }
         } else if ("HEAL_HP".equals(s.getEffectType()) || "HEAL".equals(s.getEffectType())) {
           sb.append(" [靈丹: 回復 ").append(s.getEffectValue()).append(" HP]");

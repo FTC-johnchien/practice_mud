@@ -12,9 +12,15 @@
 - **核心檔案路徑**：
   - `src/main/resources/static/js/modals/party-modal.js`（小隊彈窗容器）
   - `src/main/resources/static/js/modals/party-equipment-tab.js`（5+2 裝備槽位與 Diff 挑選）
+  - `src/main/resources/static/js/modals/party-skills-tab.js`（技能與道骨經法分頁）
+  - `src/main/resources/static/js/modals/party-formation-tab.js`（戰陣典籍與 5×3 陣盤配置分頁）
   - `src/main/resources/static/js/modals/party-tactics-tab.js`（Gambit 隊友戰術方針設定）
+  - `src/main/resources/static/js/modals/bag-drawer.js`（40 格公共行囊抽屜面板）
+  - `src/main/resources/static/js/modals/skill-drawer.js`（隊員即時法術快捷抽屜）
+  - `src/main/resources/static/js/modals/shop-modal.js`（貨棧商人買賣彈窗）
   - `src/main/resources/static/js/modals/save-modal.js`（存檔與槽位管理）
   - `src/main/resources/static/js/modals/victory-modal.js`（戰鬥結算翻牌視窗）
+  - `src/main/resources/static/js/panels/party-hud-panel.js`（常駐小隊戰備抬頭面板）
   - `src/main/resources/static/css/style-04-main-menu.css`、`src/main/resources/static/css/style-06-shop-and-responsive.css`（彈窗與卡片樣式；舊 `src/main/resources/static/css/style-06-modals-and-forms.css`【歷史／已除役】）
 
 ---
@@ -27,14 +33,16 @@
   - 實裝戰術總開關徽章、範本庫下拉選單（斷法/急救/護坦/爆發）與條件目標自訂。
 - [x] **FE5-SAN-LOW-WARN (神識護盾警示邊框)**
   - 隊員神識護盾 (SAN) 低於 50% 時，卡片浮現暗紫符紋警示，提示及時服藥休整。
+- [x] **FE5-KEY-ITEM-ACCESSORY-COMPAT (任務晶片飾品槽位穿戴相容)**
+  - `party-equipment-tab.js` 支援 `KEY_ITEM` / `QUEST` 任務信物晶片掛載於飾品槽位，且過濾器與裝備挑選視圖正常支援。
 
 ---
 
 ## ⏳ 三、未竟待辦與演進項目 (Pending Backlog)
 
-- [ ] **Task FE5-1 (VS-01-AGENT-HUD / ACTIVE-TASK-2): 特工覺醒度 (12%...) 與道基五維加點 UI**
-  - **目標**：在隊伍總覽面板新增「特工覺醒度 12%」進度條，並在道基五維屬性（體質/真元/神識/根骨/身法）旁提供 `[+]` 加點按鈕。
-  - **驗收標準**：玩家點擊加點即時發送 Action，加點即時轉化為 HP/MP/攻防速五維數值。
+- [ ] **Task FE5-1 (VS-01-AGENT-HUD / ACTIVE-TASK-2): 特工加載度同步與道基加點端到端驗收**
+  - **目標**：`party-equipment-tab.js` 已實作道基五維 `[+1]` 潛能點分配按鈕（發送 `party stat add`）且營地 `#town-perception-badge` 已顯示晶片加載度；本任務剩餘聚焦於在小隊總覽／隊員面板同步顯示特工晶片加載度進度條，並配合後端隊長初始 5 點自由潛能點進行端到端驗收。
+  - **驗收標準**：隊員面板加點與加載度進度條數值與後端狀態同步，測試全綠。
 - [ ] **Task FE5-2 (VS-01-LOOT-CHIP / ACTIVE-TASK-4): 結算金色 3D 翻牌呈現加密晶片**
   - **目標**：擊敗首領後，`victory-modal.js` 金色 3D 翻牌專屬動畫呈現 `item_chip_qianxing_tracker`。
   - **驗收標準**：翻牌動畫流暢，展示晶片 12Hz 閃爍特徵。

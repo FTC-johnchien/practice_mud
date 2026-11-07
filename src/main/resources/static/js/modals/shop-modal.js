@@ -102,11 +102,11 @@ function openShopModal(data) {
             <div class="shop-item-desc">${safeDesc}</div>
             <div class="shop-item-actions">
               <div class="shop-qty-picker">
-                <button class="qty-btn" type="button" onclick="adjustShopQty('${safeJsId}', -1)">-</button>
+                <button class="qty-btn" type="button" data-action="adjust-shop-qty" data-item-id="${safeId}" data-delta="-1">-</button>
                 <input type="number" id="shop-qty-${safeId}" class="shop-qty-input" value="1" min="1" max="${maxQty}" />
-                <button class="qty-btn" type="button" onclick="adjustShopQty('${safeJsId}', 1)">+</button>
+                <button class="qty-btn" type="button" data-action="adjust-shop-qty" data-item-id="${safeId}" data-delta="1">+</button>
               </div>
-              <button class="shop-buy-btn" type="button" ${buyBtnDisabled} onclick="triggerShopBuy('${safeJsId}')">${buyBtnText}</button>
+              <button class="shop-buy-btn" type="button" ${buyBtnDisabled} data-action="trigger-shop-buy" data-item-id="${safeId}">${buyBtnText}</button>
             </div>
           </div>
         `;
@@ -160,6 +160,22 @@ function triggerShopBuy(itemId) {
 }
 
 
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest('[data-action]');
+    if (!target) return;
+    const action = target.getAttribute('data-action');
+    if (action === 'adjust-shop-qty') {
+      const itemId = target.getAttribute('data-item-id');
+      const delta = parseInt(target.getAttribute('data-delta'), 10);
+      adjustShopQty(itemId, delta);
+    } else if (action === 'trigger-shop-buy') {
+      const itemId = target.getAttribute('data-item-id');
+      triggerShopBuy(itemId);
+    }
+  });
+}
 
 // 相容掛載至 window 供 HTML 內聯事件呼叫
 if (typeof window !== 'undefined') {

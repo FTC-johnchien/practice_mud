@@ -227,14 +227,12 @@ public class DrpgCombatLoop {
           if (now >= member.getNextAttackTime()) {
             member.setNextAttackTime(now + member.getEffectiveAttackIntervalMs());
 
-            // 精神萎靡檢定 (非主角隊員)
+            // 精神萎靡檢定 (全體隊員含主角)
             boolean isLeader = (player != null && member.getName().equals(player.getName()));
-            if (!isLeader) {
-              // 若 SAN <= 0 且原本正常，進入精神萎靡狀態 (CHAOS)
-              if (member.getCurrentSan() <= 0 && member.getMadnessState() == PartyMember.MadnessState.SANE) {
-                member.setMadnessState(PartyMember.MadnessState.CHAOS);
-                broadcastLog(player, ctx, "\u001B[1;33m⚠️【精神萎靡】" + member.getName() + " 的理智徹底耗盡！陷入精神萎靡狀態（攻擊威力降低 15%）！\u001B[0m");
-              }
+            // 若 SAN <= 0 且原本正常，進入精神萎靡狀態 (CHAOS)
+            if (member.getCurrentSan() <= 0 && member.getMadnessState() == PartyMember.MadnessState.SANE) {
+              member.setMadnessState(PartyMember.MadnessState.CHAOS);
+              broadcastLog(player, ctx, "\u001B[1;33m⚠️【精神萎靡】" + member.getName() + " 的道心消耗殆盡！陷入精神萎靡狀態（攻擊威力降低 15%）！\u001B[0m");
             }
 
             // 隊友戰術 AI 檢定 (非主角隊員自動依據職責施展急救/嘲諷/絕技)
@@ -251,7 +249,7 @@ public class DrpgCombatLoop {
               boolean isStaggerCrit = target.isPoiseBroken();
               int dmg = tacticsService.calculatePlayerDamage(member, target);
               // 若處於精神萎靡狀態，威力衰減 15%
-              if (member.getMadnessState() == PartyMember.MadnessState.CHAOS) {
+              if (member.getMadnessState() == PartyMember.MadnessState.CHAOS || member.getCurrentSan() <= 0) {
                 dmg = Math.max(1, (int) (dmg * 0.85));
               }
               if (isStaggerCrit) {
@@ -944,6 +942,9 @@ public class DrpgCombatLoop {
           if (e.isAlive()) {
             boolean isStaggerCrit = e.isPoiseBroken();
             int rawDmg = (int) (tacticsService.calculatePlayerDamage(member, e) * skill.getDamageMultiplier());
+            if (member != null && (member.getMadnessState() == PartyMember.MadnessState.CHAOS || member.getCurrentSan() <= 0)) {
+              rawDmg = Math.max(1, (int) (rawDmg * 0.85));
+            }
             if (isStaggerCrit) {
               rawDmg = com.example.htmlmud.combat.CombatRules.applyPoiseBreakCrit(rawDmg, true);
             }
@@ -1044,6 +1045,9 @@ public class DrpgCombatLoop {
         if (target != null && target.isAlive()) {
           boolean isStaggerCrit = target.isPoiseBroken();
           int rawDmg = (int) (tacticsService.calculatePlayerDamage(member, target) * skill.getDamageMultiplier());
+          if (member != null && (member.getMadnessState() == PartyMember.MadnessState.CHAOS || member.getCurrentSan() <= 0)) {
+            rawDmg = Math.max(1, (int) (rawDmg * 0.85));
+          }
           if (isStaggerCrit) {
             rawDmg = com.example.htmlmud.combat.CombatRules.applyPoiseBreakCrit(rawDmg, true);
           }

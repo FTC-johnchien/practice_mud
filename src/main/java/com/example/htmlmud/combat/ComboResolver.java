@@ -105,11 +105,10 @@ public class ComboResolver {
   }
 
   /**
-   * 判斷隊員是否具備出招能力（存活且未陷入定身、走火入魔或畸變）
+   * 判斷隊員是否具備出招能力（Option A 裁決：只要存活即可參與合擊，精神萎靡不中斷戰鬥心流）
    */
   public boolean isHealthyCombatant(PartyMember m) {
-    if (m == null || !m.isAlive()) return false;
-    return m.getMadnessState() != PartyMember.MadnessState.CHAOS;
+    return m != null && m.isAlive();
   }
 
   /**

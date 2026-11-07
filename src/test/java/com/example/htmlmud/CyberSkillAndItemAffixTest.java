@@ -473,4 +473,26 @@ class CyberSkillAndItemAffixTest {
     assertThat(hardReboot.getSchool()).isEqualTo(OriginSchool.CTHULHU);
     assertThat(hardReboot.getTreeId()).isEqualTo("tree_null_void");
   }
+
+  @Test
+  @DisplayName("VS-01-TRACKER-CHIP: 驗證千星科技加密追蹤晶片載入契約 (LEGENDARY, ACCESSORY_2, poiseBreakPower=12, 正名千星聯合科技)")
+  void testQianxingTrackerChipTemplateContract() {
+    var itemOpt = templateRepository.getItem("item_chip_qianxing_tracker");
+    assertThat(itemOpt).as("item_chip_qianxing_tracker 應存在於 TemplateRepository").isPresent();
+    var tpl = itemOpt.get();
+    assertThat(tpl.quality()).isEqualTo("LEGENDARY");
+    assertThat(tpl.description())
+        .contains("千星聯合科技")
+        .doesNotContain("千星殖民巨企");
+    assertThat(tpl.equipmentProp()).isNotNull();
+    assertThat(tpl.equipmentProp().slot()).isEqualTo(EquipmentSlot.ACCESSORY_2);
+    assertThat(tpl.equipmentProp().attackSpeed()).isEqualTo(8);
+    assertThat(tpl.equipmentProp().poiseBreakPower()).isEqualTo(12);
+
+    PartyItemSlot slot = PartyItemSlot.fromItemTemplate(tpl, 1, "slot-tracker");
+    assertThat(slot.getQuality()).isEqualTo("LEGENDARY");
+    assertThat(slot.getEquipSlot()).isEqualTo(EquipmentSlot.ACCESSORY_2);
+    assertThat(slot.getPoiseBreakPower()).isEqualTo(12);
+    assertThat(slot.getDescription()).contains("千星聯合科技");
+  }
 }

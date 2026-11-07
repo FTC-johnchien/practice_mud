@@ -73,6 +73,9 @@ public class TownHubService {
   public TownHubDto getTownHub(String zoneId, int chipRate) {
     String actualZoneId = (zoneId != null && !zoneId.isBlank()) ? zoneId : "newbie_village";
     List<FacilityTemplate> templates = zoneFacilitiesCache.getOrDefault(actualZoneId, Collections.emptyList());
+    if (templates.isEmpty() && !"newbie_village".equals(actualZoneId)) {
+      templates = zoneFacilitiesCache.getOrDefault("newbie_village", Collections.emptyList());
+    }
 
     List<FacilityDto> facilityDtos = new ArrayList<>();
     for (FacilityTemplate template : templates) {

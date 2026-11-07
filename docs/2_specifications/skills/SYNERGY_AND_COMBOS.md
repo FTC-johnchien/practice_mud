@@ -107,38 +107,38 @@ graph TD
 
 ## 🌌 六、階梯五：15 大 5 人全隊動態終結技矩陣 (15 Dynamic 5P Finishers)
 
-後端 `ComboResolver` 不受限於死板的「3+2」或「2+3」人數比例，純粹根據出戰 5 人（含主角萬象陣眼與隊友副修道骨）所涵蓋的流派體系集合，自動窮盡分類為 **15 大動態形態**，達成 100% 陣容觸發覆蓋率：
+後端 [`FormationFinisherClassifier.java`](file:///c:/Workspace/my_practice/practice_mud/src/main/java/com/example/htmlmud/combat/FormationFinisherClassifier.java) 不受限於死板的「3+2」或「2+3」人數比例，純粹根據出戰 5 人（含主角萬象陣眼與隊友副修道骨）所涵蓋的流派體系集合，自動窮盡分類為 **15 大動態形態**，達成 100% 陣容觸發覆蓋率（括號內標註真實 Canonical ID）：
 
 ### 1. 四大純粹極限型（單一體系 $\ge 4$ 人）
-| # | 陣容體系標籤 | 終結技名稱 (仙俠先行 × 底層真相) | 戰術機制與砍殺爽點反饋 |
-|---|---|---|---|
-| 01 | **純修仙者隊**<br>($\ge 4$ `CULTIVATOR`) | **【萬劍歸宗·九天太乙誅仙劍陣】**<br>*[Plasma Super-Conductor Cascade]* | 漫天金色飛劍傾瀉，九大元素爆發，全隊 MP 回滿且 10 秒內技能零真元消耗。 |
-| 02 | **純工程師隊**<br>($\ge 4$ `ENGINEER`) | **【大地沉淪·太古神山崩天闕】**<br>*[Planetary Core Gravity Singularity]* | 五座巨碑拔起引發黑洞坍縮，敵怪全體行動條鎖死 5 秒且 Poise 韌性清零。 |
-| 03 | **純高科技隊**<br>($\ge 4$ `HIGH_TECH`) | **【天衍極限·千星神念天網劫】**<br>*[Mil-Spec Grid Overclock: 10000 FLOPS]* | 五大晶片超頻，**真·時停 3 秒**！無數激光切面打出 100% 暴擊真實傷害。 |
-| 04 | **純克蘇魯隊**<br>($\ge 4$ `CTHULHU`) | **【森羅萬象·黑山羊母神血宴】**<br>*[Biological Prime: Macro-Cellular Eruption]* | 地面撕裂爆發千丈血肉觸手引爆全屏 DoT，傷害 100% 轉為治療，倒地隊友原地滿血復活。 |
+| # | Canonical ID | 陣容體系標籤 | 終結技名稱 (仙俠先行 × 底層真相) | 戰術機制與砍殺爽點反饋 |
+|---|---|---|---|---|
+| 01 | `finisher_pure_cultivator` | **純修仙者隊**<br>($\ge 4$ `CULTIVATOR`) | **【萬劍歸宗·九天太乙誅仙劍陣】**<br>*[Plasma Super-Conductor Cascade]* | 漫天金色飛劍傾瀉，九大元素爆發，全隊 MP 回滿且 10 秒內技能零真元消耗。 |
+| 02 | `finisher_pure_engineer` | **純工程師隊**<br>($\ge 4$ `ENGINEER`) | **【大地沉淪·太古神山崩天闕】**<br>*[Planetary Core Gravity Singularity]* | 五座巨碑拔起引發黑洞坍縮，敵怪全體行動條鎖死 5 秒且 Poise 韌性清零。 |
+| 03 | `finisher_pure_high_tech` | **純高科技隊**<br>($\ge 4$ `HIGH_TECH`) | **【天衍極限·千星神念天網劫】**<br>*[Mil-Spec Grid Overclock: 10000 FLOPS]* | 五大晶片超頻，**真·時停 3 秒**！無數激光切面打出 100% 暴擊真實傷害。 |
+| 04 | `finisher_pure_cthulhu` | **純克蘇魯隊**<br>($\ge 4$ `CTHULHU`) | **【森羅萬象·黑山羊母神血宴】**<br>*[Biological Prime: Macro-Cellular Eruption]* | 地面撕裂爆發千丈血肉觸手引爆全屏 DoT，傷害 100% 轉為治療，倒地隊友原地滿血復活。 |
 
 ### 2. 萬象混元型（4 大體系均衡各 1 人 ＋ 主角萬象）
-| # | 陣容體系標籤 | 終結技名稱 (仙俠先行 × 底層真相) | 戰術機制與砍殺爽點反饋 |
-|---|---|---|---|
-| 05 | **萬象混元隊**<br>(仙+工+科+魔各1人) | **【大衍混元·諸天萬象開天闢地神劫】**<br>*[Protocol Genesis: Planetary Cold Reformat]* | **全維度無死角轟殺**：100% 削韌破防 ＋ 全元素擴散 ＋ 唱條打斷 ＋ 裂魂引爆 ＋ 全隊回滿！ |
+| # | Canonical ID | 陣容體系標籤 | 終結技名稱 (仙俠先行 × 底層真相) | 戰術機制與砍殺爽點反饋 |
+|---|---|---|---|---|
+| 05 | `finisher_all_universal` | **萬象混元隊**<br>(仙+工+科+魔各1人) | **【大衍混元·諸天萬象開天闢地神劫】**<br>*[Protocol Genesis: Planetary Cold Reformat]* | **全維度無死角轟殺**：100% 削韌破防 ＋ 全元素擴散 ＋ 唱條打斷 ＋ 裂魂引爆 ＋ 全隊回滿！ |
 
 ### 3. 六大雙曜交織型（隊伍僅由 2 種體系構成，如 3+2、2+3 或 4+1）
-| # | 雙體系組合 | 終結技名稱 (仙俠先行 × 底層真相) | 戰術機制與砍殺爽點反饋 |
-|---|---|---|---|
-| 06 | **修仙 ＋ 克蘇魯**<br>(仙魔雙曜) | **【太極血海·逆亂生死神魔印】**<br>*[Taiji Blood Abyss: Life-Death Inversion Seal]* | 清聖太極劍氣破除護甲，九幽血煞海潮吞噬氣血，斬殺敵怪並為全隊殘血隊友大急救。 |
-| 07 | **高科技 ＋ 工程師**<br>(賽博神機) | **【天基軌道·萬鈞乾坤神機炮】**<br>*[Orbital Kinetic Strike: Terrestrial Anchor Array]* | 工程師地脈定錨引力鎖死，巨企天基衛星發射超音速鎢棒直擊，全屏物理真實巨額粉碎。 |
-| 08 | **修仙 ＋ 高科技**<br>(仙道賽博) | **【九天星網·神念超頻萬劍矩陣】**<br>*[Cyber-Celestial Grid: Neural Overclock Array]* | 晶片高速演算敵怪弱點，飛劍經由電磁超導折射自動鎖定弱點，100% 暴擊破防。 |
-| 09 | **修仙 ＋ 工程師**<br>(天工仙道) | **【天工造化·九嶽神山崩天闕】**<br>*[Prime Genesis: Macro-Tectonic Resonance]* | 五行符文與深井液壓重構共振，地底拔起九座太古巨嶽，強制眩暈全場敵怪 4 秒。 |
-| 10 | **克蘇魯 ＋ 高科技**<br>(生化黑客) | **【生化天羅·黑煞奈米噬魂木馬】**<br>*[Bio-Synthetic Trojan: Macro-Cellular Infiltration]* | 軍規病毒注入黑山羊母體細胞，敵怪全體陷入系統癱瘓，前搖 100% 打斷並持續腐蝕扣血。 |
-| 11 | **克蘇魯 ＋ 工程師**<br>(血肉泰坦) | **【深淵巨擘·太古血肉魔導重機】**<br>*[Abyssal Harvester: Bio-Hydraulic Titan]* | 重型採礦設備與活性魔血融合，召喚巨型血肉液壓泰坦一拳震碎戰場，全隊霸體護甲翻倍。 |
+| # | Canonical ID | 雙體系組合 | 終結技名稱 (仙俠先行 × 底層真相) | 戰術機制與砍殺爽點反饋 |
+|---|---|---|---|---|
+| 06 | `finisher_xian_mo` | **修仙 ＋ 克蘇魯**<br>(仙魔雙曜) | **【太極血海·逆亂生死神魔印】**<br>*[Taiji Blood Abyss: Life-Death Inversion Seal]* | 清聖太極劍氣破除護甲，九幽血煞海潮吞噬氣血，斬殺敵怪並為全隊殘血隊友大急救。 |
+| 07 | `finisher_cyber_engineer` | **高科技 ＋ 工程師**<br>(賽博神機) | **【天基軌道·萬鈞乾坤神機炮】**<br>*[Orbital Kinetic Strike: Terrestrial Anchor Array]* | 工程師地脈定錨引力鎖死，巨企天基衛星發射超音速鎢棒直擊，全屏物理真實巨額粉碎。 |
+| 08 | `finisher_xian_cyber` | **修仙 ＋ 高科技**<br>(仙道賽博) | **【九天星網·神念超頻萬劍矩陣】**<br>*[Cyber-Celestial Grid: Neural Overclock Array]* | 晶片高速演算敵怪弱點，飛劍經由電磁超導折射自動鎖定弱點，100% 暴擊破防。 |
+| 09 | `finisher_xian_engineer` | **修仙 ＋ 工程師**<br>(天工仙道) | **【天工造化·九嶽神山崩天闕】**<br>*[Prime Genesis: Macro-Tectonic Resonance]* | 五行符文與深井液壓重構共振，地底拔起九座太古巨嶽，強制眩暈全場敵怪 4 秒。 |
+| 10 | `finisher_cthulhu_cyber` | **克蘇魯 ＋ 高科技**<br>(生化黑客) | **【生化天羅·黑煞奈米噬魂木馬】**<br>*[Bio-Synthetic Trojan: Macro-Cellular Infiltration]* | 軍規病毒注入黑山羊母體細胞，敵怪全體陷入系統癱瘓，前搖 100% 打斷並持續腐蝕扣血。 |
+| 11 | `finisher_cthulhu_engineer` | **克蘇魯 ＋ 工程師**<br>(血肉泰坦) | **【深淵巨擘·太古血肉魔導重機】**<br>*[Abyssal Harvester: Bio-Hydraulic Titan]* | 重型採礦設備與活性魔血融合，召喚巨型血肉液壓泰坦一拳震碎戰場，全隊霸體護甲翻倍。 |
 
 ### 4. 四大三才鼎立型（隊伍由 3 種體系構成，如 2+2+1 或 3+1+1）
-| # | 三體系組合 | 終結技名稱 (仙俠先行 × 底層真相) | 戰術機制與砍殺爽點反饋 |
-|---|---|---|---|
-| 12 | **修仙 ＋ 克蘇魯 ＋ 高科技**<br>(排除工程) | **【偷天換日·生化天道逆亂真訣】**<br>*[Tri-Matrix Override: Biological Cyber-Dao Singularity]* | 瞬間淨化全隊負面並 200% 反噬敵怪，飛劍附帶血肉撕裂與時序抽幀，全場敵怪混亂。 |
-| 13 | **修仙 ＋ 克蘇魯 ＋ 工程師**<br>(排除科技) | **【冥河重嶽·混沌太虛開山印】**<br>*[Macro-Tectonic Void: Abyssal Lithosphere Siphon]* | 重力聚怪 ➔ 地底黑山羊血海蔓延 ➔ 五行神山壓頂，三段式毀滅打擊，全隊吸血回滿。 |
-| 14 | **修仙 ＋ 高科技 ＋ 工程師**<br>(排除外神) | **【天衍算籌·九天神雷星際裂變陣】**<br>*[Trio Prime: Gravity-EMP Super-Conductive Cataclysm]* | 引力黑洞鎖怪 ➔ 協議 EMP 斷網清空蓄力條 ➔ 九天紫電全屏轟頂破防，全場韌性清零。 |
-| 15 | **克蘇魯 ＋ 高科技 ＋ 工程師**<br>(排除修仙) | **【萬機歸淵·黑山羊奇異點格式化】**<br>*[Techno-Organic Purge: Deep-Well Void Reformat]* | 深井開採口全開，黑山羊幼崽攜等離子過載炸彈席捲戰場，無視防禦造成巨額真實混沌傷害。 |
+| # | Canonical ID | 三體系組合 | 終結技名稱 (仙俠先行 × 底層真相) | 戰術機制與砍殺爽點反饋 |
+|---|---|---|---|---|
+| 12 | `finisher_trio_cultivator_cthulhu_cyber` | **修仙 ＋ 克蘇魯 ＋ 高科技**<br>(排除工程) | **【偷天換日·生化天道逆亂真訣】**<br>*[Tri-Matrix Override: Biological Cyber-Dao Singularity]* | 瞬間淨化全隊負面並 200% 反噬敵怪，飛劍附帶血肉撕裂與時序抽幀，全場敵怪混亂。 |
+| 13 | `finisher_trio_cultivator_cthulhu_engineer` | **修仙 ＋ 克蘇魯 ＋ 工程師**<br>(排除科技) | **【冥河重嶽·混沌太虛開山印】**<br>*[Macro-Tectonic Void: Abyssal Lithosphere Siphon]* | 重力聚怪 ➔ 地底黑山羊血海蔓延 ➔ 五行神山壓頂，三段式毀滅打擊，全隊吸血回滿。 |
+| 14 | `finisher_trio_cultivator_cyber_engineer` | **修仙 ＋ 高科技 ＋ 工程師**<br>(排除外神) | **【天衍算籌·九天神雷星際裂變陣】**<br>*[Trio Prime: Gravity-EMP Super-Conductive Cataclysm]* | 引力黑洞鎖怪 ➔ 協議 EMP 斷網清空蓄力條 ➔ 九天紫電全屏轟頂破防，全場韌性清零。 |
+| 15 | `finisher_trio_cthulhu_cyber_engineer` | **克蘇魯 ＋ 高科技 ＋ 工程師**<br>(排除修仙) | **【萬機歸淵·黑山羊奇異點格式化】**<br>*[Techno-Organic Purge: Deep-Well Void Reformat]* | 深井開採口全開，黑山羊幼崽攜等離子過載炸彈席捲戰場，無視防禦造成巨額真實混沌傷害。 |
 
 ---
 
@@ -168,35 +168,92 @@ graph TD
 
 ## 💾 九、標準合體技資料契約範例 (`party_skills.json`)
 
+### 1. 現行生效之真實 `party_skills.json` 契約範例（`PartyMemberSkill` 格式）
+
 ```json
 [
   {
-    "id": "combo_water_fire_taiji",
+    "id": "combo_water_fire_taichi",
     "name": "【太極水火·兩儀陰陽寂滅印】",
-    "tierLevel": "DUAL_STAR_2P",
-    "synergyType": "SIGNATURE_DUAL",
-    "reactionType": "STEAM",
-    "requiredConditions": {
-      "minPartyAlive": 2,
-      "requiredTrees": ["tree_water_frost", "tree_fire_flame"]
-    },
-    "formationEnergyCost": 40,
-    "effects": {
-      "instantPoiseBreak": false,
-      "allDetonateBonusMultiplier": 2.5,
-      "poiseDamage": 60
-    },
-    "cyberLore": "雙向熱力學逆轉循環：急速超低溫驟冷後瞬間導入千度電漿，熱應力撕裂敵怪結構。"
+    "aliases": [
+      "combo_water_fire_taiji"
+    ],
+    "icon": "🔥🌊",
+    "description": "法師引玄冰真火，醫者融素問靈露，戰士橫刀護法，全隊受擊減免 50% 且全體回復 50 氣血！",
+    "costType": "MP",
+    "costValue": 50,
+    "cooldownMs": 20000,
+    "damageMultiplier": 2.0,
+    "aoe": true,
+    "heal": true,
+    "taunt": false,
+    "stun": false,
+    "healAmount": 50,
+    "sanRestore": 15,
+    "allowedWeapons": [],
+    "synergy": true,
+    "requiredClasses": [
+      "MAGE",
+      "CLERIC",
+      "WARRIOR"
+    ],
+    "minPartyAlive": 3,
+    "requiredFormation": null,
+    "formationEnergyCost": 50,
+    "synergyType": "SIGNATURE_COMBO",
+    "reactionType": "VAPORIZE",
+    "cyberLore": "利用水冷與熱超載相位差引發電漿相變爆縮，形成兩儀力場護佑全隊。"
   },
   {
-    "id": "combo_trio_wanjian_overclock",
+    "id": "combo_chitin_kinetic_superconductor",
+    "name": "【生化超導·破空磁煞幾丁刃】",
+    "icon": "🧬⚡🗡️",
+    "description": "外神漆黑幾丁骨刃與天基電磁動能強烈共鳴超導，一刀兩斷貫穿敵方全體前列，引爆裂魂標記造成 100% 暴擊穿甲！",
+    "costType": "SP",
+    "costValue": 45,
+    "cooldownMs": 15000,
+    "damageMultiplier": 3.8,
+    "damageType": "PHYSICAL",
+    "poiseDamage": 70,
+    "aoe": true,
+    "heal": false,
+    "allowedWeapons": [],
+    "tags": [
+      "CTHULHU",
+      "HIGH_TECH",
+      "SYNERGY",
+      "DETONATOR",
+      "AOE"
+    ],
+    "synergy": true,
+    "requiredClasses": [],
+    "minPartyAlive": 2,
+    "requiredFormation": null,
+    "formationEnergyCost": 35,
+    "synergyType": "SIGNATURE_COMBO",
+    "reactionType": "SUPERCONDUCTOR",
+    "cyberLore": "外神活性幾丁質骨刃充當常溫超導介質，引導微型電磁加速線圈超高頻放電，瞬間熔斷敵方護盾。"
+  }
+]
+```
+
+### 2. 長線演進藍圖：獨立結構化合體技範本 (`SynergySkillTemplate`)【待深入討論／長線演進藍圖】
+
+```json
+[
+  {
+    "id": "blueprint_combo_trio_wanjian_overclock",
     "name": "【千星瞬影·萬劍超頻百步貫腦劫】",
     "tierLevel": "TRI_RESONANCE_3P",
     "synergyType": "SIGNATURE_TRIO",
     "reactionType": "SUPERCONDUCTOR",
     "requiredConditions": {
       "minPartyAlive": 3,
-      "requiredTrees": ["tree_gold_sword", "tree_time_overclock", "tree_kinetic_rails"]
+      "requiredTrees": [
+        "tree_gold_sword",
+        "tree_time_overclock",
+        "tree_kinetic_rails"
+      ]
     },
     "formationEnergyCost": 70,
     "effects": {
@@ -205,40 +262,6 @@ graph TD
       "damageMultiplier": 4.5
     },
     "cyberLore": "神經超頻抽幀鎖定目標死穴，磁軌加速飛劍矩陣以高超音速連續貫穿。"
-  },
-  {
-    "id": "domain_quad_celestial_blade",
-    "name": "【太乙混元·五行四象破天劍煞界】",
-    "tierLevel": "QUAD_DOMAIN_4P",
-    "synergyType": "QUAD_DOMAIN_EXPANSION",
-    "reactionType": "DOMAIN_BURST",
-    "requiredConditions": {
-      "minPartyAlive": 4,
-      "requiredSchools": ["CULTIVATOR", "CULTIVATOR", "CULTIVATOR", "CULTIVATOR"]
-    },
-    "formationEnergyCost": 100,
-    "effects": {
-      "domainDurationSec": 8,
-      "fullPartyMpRefill": true
-    },
-    "cyberLore": "全域超導冷卻回路超頻，形成萬劍收斂閉環矩陣，完全豁免靈氣消耗。"
-  },
-  {
-    "id": "finisher_quintet_xian_mo",
-    "name": "【太極血海·逆亂生死神魔印】",
-    "tierLevel": "QUINTET_FINISHER_5P",
-    "synergyType": "DUAL_XIAN_MO_5P",
-    "requiredConditions": {
-      "minPartyAlive": 5,
-      "requiredSchools": ["CULTIVATOR", "CTHULHU"]
-    },
-    "formationEnergyCost": 100,
-    "effects": {
-      "instantPoiseBreak": true,
-      "partyHealPercent": 0.5,
-      "damageMultiplier": 5.0
-    },
-    "cyberLore": "太極清聖劍氣破除護甲，九幽血煞海潮吞噬氣血，斬殺敵怪並為全隊殘血隊友大急救。"
   }
 ]
 ```

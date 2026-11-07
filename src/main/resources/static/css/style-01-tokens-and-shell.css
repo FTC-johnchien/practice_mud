@@ -1074,6 +1074,7 @@ body, html {
 .san-fill.san-normal { background: var(--san-normal); }
 .san-fill.san-warning { background: var(--san-warning); }
 .san-fill.san-danger { background: var(--san-danger); }
+.san-fill.san-weakened,
 .san-fill.san-madness {
   background: var(--san-madness);
   animation: madness-glitch 1s infinite;
@@ -1104,6 +1105,7 @@ body, html {
 .mini-val.san-normal { color: #a7f3d0; }
 .mini-val.san-warning { color: #fde68a; }
 .mini-val.san-danger { color: #fed7aa; }
+.mini-val.san-weakened,
 .mini-val.san-madness { color: #e9d5ff; font-weight: bold; }
 
 /* 動態互動反饋特效與前方高亮 */

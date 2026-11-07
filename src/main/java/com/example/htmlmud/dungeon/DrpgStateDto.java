@@ -141,9 +141,45 @@ public record DrpgStateDto(
       BattleViewDto battle,
       TemplateReader templateReader
   ) {
-    TownViewDto townView = new TownViewDto(zoneId, zoneName, roomId, roomName, description, safeZone, exits, npcs, items);
+    return ofTown(zoneId, zoneName, roomId, roomName, description, safeZone, exits, npcs, items, party, battle, templateReader, null);
+  }
+
+  public static DrpgStateDto ofTown(
+      String zoneId,
+      String zoneName,
+      String roomId,
+      String roomName,
+      String description,
+      boolean safeZone,
+      List<TownExitDto> exits,
+      List<TownNpcDto> npcs,
+      List<TownItemDto> items,
+      Party party,
+      BattleViewDto battle,
+      TemplateReader templateReader,
+      com.example.htmlmud.town.TownHubDto hub
+  ) {
+    TownViewDto townView = new TownViewDto(zoneId, zoneName, roomId, roomName, description, safeZone, exits, npcs, items, hub);
     PartyViewDto partyView = toPartyViewDto(party, templateReader);
     return new DrpgStateDto("DRPG_STATE", "TOWN", townView, null, partyView, battle);
+  }
+
+  public static DrpgStateDto ofTown(
+      String zoneId,
+      String zoneName,
+      String roomId,
+      String roomName,
+      String description,
+      boolean safeZone,
+      List<TownExitDto> exits,
+      List<TownNpcDto> npcs,
+      List<TownItemDto> items,
+      Party party,
+      BattleViewDto battle,
+      com.example.htmlmud.town.TownHubDto hub
+  ) {
+    return ofTown(zoneId, zoneName, roomId, roomName, description, safeZone, exits, npcs, items, party, battle,
+        party != null ? party.getTemplateReader() : null, hub);
   }
 
   public static PartyViewDto toPartyViewDto(Party party) {
@@ -167,7 +203,7 @@ public record DrpgStateDto(
 
       String level = "NORMAL";
       if (san <= 20) {
-        level = "MADNESS";
+        level = "WEAKENED";
       } else if (san <= 50) {
         level = "DANGER";
       } else if (san <= 75) {
@@ -526,8 +562,16 @@ public record DrpgStateDto(
       boolean safeZone,
       List<TownExitDto> exits,
       List<TownNpcDto> npcs,
-      List<TownItemDto> items
-  ) {}
+      List<TownItemDto> items,
+      com.example.htmlmud.town.TownHubDto hub
+  ) {
+    public TownViewDto(
+        String zoneId, String zoneName, String roomId, String roomName, String description,
+        boolean safeZone, List<TownExitDto> exits, List<TownNpcDto> npcs, List<TownItemDto> items
+    ) {
+      this(zoneId, zoneName, roomId, roomName, description, safeZone, exits, npcs, items, null);
+    }
+  }
 
   public record DungeonViewDto(
       String floorId,

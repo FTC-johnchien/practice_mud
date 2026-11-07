@@ -158,6 +158,11 @@ class TownDungeonDualModeIntegrationTest {
       assertThat(lastJson).contains("凌霜");
       assertThat(lastJson).contains("TALK");
       assertThat(lastJson).contains("RECRUIT");
+      // ALIGN2-06: 驗證 TownHubDto 六大設施
+      assertThat(lastJson).contains("\"hub\":");
+      assertThat(lastJson).contains("fac_forge");
+      assertThat(lastJson).contains("百煉堂");
+      assertThat(lastJson).contains("fac_dungeon_portal");
     });
   }
 
@@ -187,6 +192,12 @@ class TownDungeonDualModeIntegrationTest {
       String townJson = capturedMessages.get(capturedMessages.size() - 1);
       assertThat(townJson).contains("\"mode\":\"TOWN\"");
       assertThat(townJson).contains("mozhu_mines:mine_entrance");
+      // ALIGN2-06: 撤離回到礦坑入口，回退機制應確保依然包含六大設施與駐留夥伴
+      assertThat(townJson).contains("\"hub\":");
+      assertThat(townJson).contains("fac_forge");
+      assertThat(townJson).contains("fac_dungeon_portal");
+      assertThat(townJson).contains("鐵牛");
+      assertThat(townJson).contains("福伯");
     });
   }
 

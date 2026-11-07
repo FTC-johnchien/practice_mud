@@ -2,103 +2,95 @@
 
 > **模組編號**：FE-3  
 > **系統類型**：前端表現層模組  
-> **核心定位**：管理戰鬥擂台佈局、魔物卡牌即時血條/罡氣韌性條/ATB 行動進度條渲染、罡氣破防爆裂與受創螢幕微震、動態打擊飄字系統（暴擊/偏斜/五行逆流回血），以及 Buff HUD 圖標懸停氣泡。
+> **核心定位**：管理戰鬥擂台佈局、魔物卡牌即時血條/罡氣韌性條/施法詠唱條渲染、罡氣破防爆裂與受創螢幕微震、動態打擊飄字系統（暴擊/偏斜/五行逆流回血/元素反應），以及 Buff HUD 屬性膠囊聚合。
 
 ---
 
 ## 🏛️ 一、模組架構與戰鬥擂台佈局
 
-當伺服器推送之 `battle.inBattle === true` 時，前端自動將主視圖無縫切換為戰鬥擂台：
+當伺服器推送之 `battle.inBattle === true` 時，前端自動將中央舞台切換為戰鬥擂台（`#battle-arena-panel`）：
 
 ```
 ┌────────────────────────────────────────────────────────┐
-│                   戰鬥擂台面板佈局                     │
+│               戰鬥擂台三段式面板佈局                   │
+│                (#battle-arena-panel)                   │
 ├────────────────────────────────────────────────────────┤
-│                  【 敵 方 陣 線 】                      │
-│   ┌───────────────────┐     ┌───────────────────┐      │
-│   │   嗜煞食腐鼠      │     │  墨竹山異化魔偶   │      │
-│   │ HP: [████████░░]  │     │ HP: [██████████]  │      │
-│   │ Poise: [████░░░░] │     │ Poise: [████████] │      │
-│   │ ATB:   [████░░░░] │     │ ATB:   [██░░░░░░] │      │
-│   │ Buffs: [🔥x2] [🛡️]│     │ Buffs: [⚡x1]     │      │
-│   └───────────────────┘     └───────────────────┘      │
+│ 1. 上部敵方 5x5 陣線 (#battle-enemies-container)        │
+│    • 魔物卡牌 (.enemy-card) 即時 HP 條、Poise 韌性條   │
+│    • 施法詠唱條 (.enemy-cast-track / .enemy-cast-fill) │
+│    • 聚合 Buff 膠囊 (.buff-aggregated-chip)            │
 ├────────────────────────────────────────────────────────┤
-│                  【 玩 家 戰 術 列 】                   │
-│   [集火目標鎖定]  [技能卡牌快捷列 (GCD 光圈倒數)]      │
+│ 2. 中部交鋒分割線 (.battle-clash-divider, 2px 流光線)   │
+├────────────────────────────────────────────────────────┤
+│ 3. 下部三欄戰備甲板 (#combat-command-dock)             │
+│    • 左欄 (#dock-actions-column): 集火、奧義、撤退按鈕 │
+│    • 中欄 (#battle-party-grid-5x3): 5x3 戰術隊伍盤     │
+│    • 右欄 (#dock-content-column): 技能與狀態詳情       │
+├────────────────────────────────────────────────────────┤
+│ 4. 頂層特效層 (#battle-fx-layer: 飄字與法術流光)       │
 └────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## ⏱️ 二、即時數值儀表與 ATB 動態渲染
+## ⏱️ 二、即時數值儀表與施法詠唱渲染
 
-戰鬥擂台核心託管於 `static/js/panels/battle-panel.js`：
+戰鬥擂台核心託管於 `src/main/resources/static/js/panels/battle-panel.js`：
 
 1. **平滑過渡動畫 (CSS Transition)**：
-   - 氣血條（`hp-bar`）採用 `transition: width 0.25s ease-out`，在遭受連續攻擊時呈現流暢掉血動畫。
+   - 氣血條（`.enemy-hp-bar`）採用平滑過渡，掉血呈現流暢動畫。
 2. **罡氣韌性條 (Poise Bar)**：
-   - 即時顯示敵方剩餘韌性值。當前值越低，顏色由金黃漸變為警戒亮橘。
-3. **ATB 行動進度條 (Action Progress Bar)**：
-   - 根據後端傳入之 `currentProgressMs / actionIntervalMs` 實時推進行動進度，讓玩家清晰預判魔物下一次普通攻擊或戰技爆發的時間點。
+   - 即時顯示敵方剩餘韌性值（`.poise-bar-wrap`）。當韌性歸零時切換為力竭狀態（`.poise-bar-broken`）。
+3. **施法詠唱條 vs ATB 進度條**：
+   - **`【現行已驗證】` 敵方蓄力施法詠唱條 (`.enemy-cast-track` / `.enemy-cast-fill`)**：當 `enemy.isCasting === true` 時顯示蓄力招式名、進度百分比，並以標籤標註 `⚡ 可打斷` 或 `🔒 霸體`。
+   - **`【待深入討論／長線演進藍圖】` 敵方常駐普攻 ATB 進度條**：常態普通攻擊時間線進度條列為長線演進藍圖。
 
 ---
 
 ## 💥 三、破防爆裂與受創反饋 (Poise Break & Impact VFX)【現行已驗證】
 
-為營造極致打擊反饋感，結合 `style-07-battle-fx.css` 實作多層動效【現行已驗證】：
+結合 `style-02-combat-arena.css` 與 `style-07-battle-fx.css` 實作多層動效：
 
-1. **破防虛弱動效 (`vulnerable-pulse`)【現行已驗證】**：
-   - 當敵方韌性歸零（Poise Broken）時，怪物卡片周圍立即爆發紫色碎裂粒子動畫，並附加呼吸式高亮光暈，直觀提示玩家進入輸出黃金時間。
-2. **打斷反制失衡震顫 (`interrupted-break`)【現行已驗證】**：
-   - 當敵方在蓄力前搖窗口內被眩暈（Stun）或打斷技能命中時，卡片觸發 600ms 高頻震顫、猩紅金電邊框閃爍，並即時於目標上方噴發 `⚡ 打斷！` 專屬大字級 FCT 浮動文字。支援 `@media (prefers-reduced-motion)` 無障礙自動降級。
-3. **螢幕微震動效 (`screen-shake`)【現行已驗證】**：
-   - 當生靈遭受重度暴擊（Critical Hit）或破防重擊時，主容器容器瞬間觸發 150ms 隨機位移微震，強化厚重打擊感。
+1. **破防虛弱動效 (`.poise-broken`)**：
+   - 當敵方韌性歸零時，怪物卡片附加 `.poise-broken` 高亮光暈，直觀提示玩家進入輸出黃金時間；飄字發射 `.ftext.ft-poise-break` / `.ft-stagger-crit`（`💥 破防重創!`）。
+2. **打斷反制失衡震顫 (`.react-interrupted`)**：
+   - 當敵方在蓄力前搖窗口內被眩暈（Stun）或打斷技能命中時，卡片觸發 600ms 高頻震顫、猩紅金電邊框閃爍，並即時噴發 `⚡ 打斷！`（`.ftext.ft-interrupt`）。支援 `@media (prefers-reduced-motion)` 無障礙自動降級。
+3. **螢幕微震動效 (`.arena-shake`)**：
+   - 當生靈遭受重度暴擊或破防重擊時，由 `battle-fx-director.js` 的 `shakeArena()` 為擂台容器附加 `.arena-shake` 觸發 150ms 震顫。
 
 ---
 
 ## 🍃 四、多樣態動態打擊飄字系統 (Floating Combat Text)【現行已驗證】
 
-戰鬥中的每一次結算均在目標上方生成短暫飄浮動畫文字，隨後淡出銷毀【現行已驗證】：
+戰鬥中的每一次結算由 `src/main/resources/static/js/fx/floating-text.js`（`spawnFloatingText`）在目標上方生成短暫浮動文字：
 
 | 戰鬥結算事件 | 飄字樣式類別 | 顏色風格 | 呈現效果 |
 | :--- | :--- | :--- | :--- |
-| **常規物理命中** | `.fct-damage` | 純白微亮 | `-45` 向上緩慢浮動 |
-| **致命暴擊** | `.fct-crit` | 金黃璀璨 | `★ CRIT -112 ★` 放大彈跳 |
-| **蓄力招式打斷反制** | `.ftext.ft-interrupt` | 猩紅金電 | `⚡ 打斷！` 爆裂震顫浮動 |
-| **五行吸收逆流回血**| `.fct-heal` | 翡翠靈綠 | `+38 [火靈逆流]` 伴隨甘霖光效 |
-| **身法閃避** | `.fct-dodge` | 青灰幽影 | `閃避 (Dodge)` 橫向側移 |
-| **護甲招架偏斜** | `.fct-parry` | 秘銀亮藍 | `招架 (Parry -50%)` 火星迸發 |
+| **常規物理命中** | `.ftext.dmg-phys` | 純白微亮 | `-45` 向上浮動淡出 |
+| **五行法術傷害** | `.ftext.dmg-fire` / `.dmg-ice` / `.dmg-lightning` / `.dmg-poison` 等 | 靈氣專屬色碼 | 烈火赤紅、玄冰淡藍、天雷亮紫、毒素暗綠 |
+| **致命暴擊** | `.ftext.ft-crit` | 金黃璀璨 | `★ CRIT -112 ★` 放大彈跳 |
+| **破防重創** | `.ftext.ft-stagger-crit` | 紫紅烈焰 | `💥 破防重創!` 伴隨微震 |
+| **蓄力打斷反制** | `.ftext.ft-interrupt` | 猩紅金電 | `⚡ 打斷！` 爆裂震顫 |
+| **氣血回復** | `.ftext.ft-heal` | 翡翠靈綠 | `+38` 伴隨甘霖升騰 |
+| **護盾吸收** | `.ftext.ft-absorb` | 護盾金黃 | `[🛡️ 吸收]` 吸收減免 |
+| **身法閃避** | `.ftext.ft-miss` / `.ft-dodge` | 青灰幽影 | `閃避 (Dodge)` 橫向側移 |
+| **護甲招架偏斜** | `.ftext.ft-parry` | 秘銀亮藍 | `招架 (Parry -50%)` |
+| **盾牌格擋** | `.ftext.ft-block` | 鋼鐵銀灰 | `格擋 (Block)` 堅甲反彈 |
 
 ---
 
-## 🧪 五、Buff HUD 圖標與 Tooltip 懸停氣泡 (`buff-hud-helper.js`)【現行已驗證】
+## 🧪 五、Buff HUD 圖標與膠囊聚合 (`buff-hud-helper.js`)【現行已驗證】
 
-生靈身上的 Buff / Debuff 透過通用輔助模組進行標準化展示【現行已驗證】：
-- **堆疊層數角標 (Badge)**：當 Buff 層數 $> 1$ 時（如中毒 3 層），右下角自動標註數字標籤。
-- **倒數進度光圈**：持續時間環繞圖標邊緣逐步遞減。
-- **動態 Tooltip 氣泡**：滑鼠懸停即時呈現純文字修仙描述（如：「【火煞灼心】每秒扣減 15 點氣血，剩餘 4.2 秒」）。
+生靈身上的 Buff / Debuff 透過 `src/main/resources/static/js/core/buff-hud-helper.js` 進行標準化聚合：
+- **聚合膠囊 (`renderAggregatedBuffBadges`)**：將同類屬性 Buff 聚合渲染為 `.buff-aggregated-chip` 膠囊，顯示靈氣圖標、每秒總值、堆疊層數 `xN`、剩餘秒數 `(Ns)` 與懸停 `title` 明細。
+- **倒數進度光圈【待深入討論／長線演進藍圖】**：環繞圖標邊緣的環形 SVG 倒數光圈列為後續視覺擴充藍圖。
 
 ---
 
-## ⚡ 六、Hack-and-slash 高頻視覺反饋與節奏規範 (H&S Feedback & Presentation Flow)
+## ⚡ 六、高頻戰鬥效能與 DOM 節點防護
 
-為完美支撐「動作戰術 DRPG」的戰鬥爽快感，前端 FE-3 遵循以下高頻視覺回饋與節奏渲染準則：
-
-### 1. FCT 浮動戰況大字視覺分層 (Floating Combat Text Hierarchy)【現行已驗證】
-- **普通傷害**：白色/灰色小字向上漂浮並淡出（`0.8s`）。
-- **暴擊傷害 (CRIT)**：金黃色粗體放大 1.4 倍，帶有彈跳下落動畫（`.ft-crit`）。
-- **破防重創 (STAGGER CRIT)**：紫紅色外發光文字 `💥 破防重創!`，伴隨 150ms 全屏微震（`.ft-stagger-crit`）。
-- **反制打斷 (INTERRUPTED)**：青藍電弧文字 `⚡ 打斷!`，怪物卡片觸發 600ms 高頻震顫（`.react-interrupted`）。
-- **元素反應 (ELEMENTAL REACTIONS)**：專屬雙色流光（蒸發 `.ft-vaporize`、感電 `.ft-electro`、混沌湮滅 `.ft-chaos`、引爆 `.ft-detonation`）。
-- **古仙連攜與天外合擊 (CROSS COMBOS & FINISHER)**：階梯式放大動態文字：
-  - Step 2: `⚔️ 雙星合璧!` (金黃)
-  - Step 3: `🌟 三才混元!` (紫金)
-  - Step 4: `🌌 四象誅仙!` (緋紅)
-  - Finisher: `🌌⚡ 天外合擊!` (彩金全屏高亮，持續 1.5s)。
-
-### 2. 高頻戰鬥效能與 DOM 節點防護
-- 由於半即時下打擊頻率極高，FCT 浮動文字由 `static/js/fx/floating-text.js` 的定容節點池（Max 30 節點）循環覆用，動畫結束立即回收，絕不無限制 appendChild 造成記憶體洩漏或掉幀。
-- 支援 `@media (prefers-reduced-motion)` 無障礙自動降級（關閉震屏，轉為純漸顯）。
+1. **節點數量保護**：`floating-text.js` 設有同時存活上限 **`MAX_ALIVE_TEXTS = 24`**。當畫面上飄字超過 24 個時立即清除最舊節點，動畫結束（800ms）後自動執行 `el.remove()` 釋放記憶體。
+2. **無障礙自動降級**：透過 `@media (prefers-reduced-motion: reduce)` 自動關閉螢幕震顫與高頻震盪。
 
 ---
 
@@ -106,32 +98,20 @@
 
 | 檔案路徑 | 模組定位 | 關鍵導出項目 |
 | :--- | :--- | :--- |
-| `static/js/panels/battle-panel.js` | 戰鬥擂台主控制器 | `renderBattlePanel()`, `spawnDamageNumber()` |
-| `static/js/core/buff-hud-helper.js` | Buff 狀態圖標輔助器 | `renderBuffIcons()`, `buildBuffTooltip()`（舊路徑 `static/js/helpers/buff-hud-helper.js`【歷史／已除役】） |
-| `static/css/style-02-combat-arena.css` | 戰鬥擂台幾何排版 | `.battle-arena`, `.enemy-card`, `.hp-bar`, `.poise-bar` |
-| `static/css/style-03-battle-actions.css` | 戰鬥技能按鈕與冷卻光圈 | `.skill-button`, `.gcd-overlay`, `.target-selector` |
-| `static/css/style-07-battle-fx.css` | 飄字、破防粒子與螢幕震動 | `@keyframes float-up`, `.screen-shake`, `.broken-pulse` |
+| `src/main/resources/static/js/panels/battle-panel.js` | 戰鬥擂台主控制器 | `renderBattleArena()`, `renderBattlePartyQuickBar()`, `renderCombatCommandDock()`, `hideBattleArena()`, `selectBattleTarget()`, `toggleBattleMode()`, `selectPartyMemberForSkill()` |
+| `src/main/resources/static/js/core/buff-hud-helper.js` | Buff 聚合與狀態輔助器 | `aggregateBuffs()`, `renderAggregatedBuffBadges()`, `renderShieldOverlayHtml()`, `renderPoiseBarHtml()`, `resolveStatusPulseClass()` |
+| `src/main/resources/static/js/fx/battle-fx-director.js` | 戰鬥動效編排器 | `fxDirector` (`enqueue()`, `playEvent()`, `clear()`) |
+| `src/main/resources/static/js/fx/floating-text.js` | 打擊飄字產生器 | `spawnFloatingText()`, `spawnInterruptFloatingText()`, `spawnElementalReactionFloatingText()` |
+| `src/main/resources/static/js/fx/fx-geometry.js` | 幾何座標換算器 | `getUnitRect()`, `getUnionRect()` |
+| `src/main/resources/static/js/fx/fx-presets.js` | 動效預設配置表 | `FX_PRESETS`, `resolvePreset()` |
+| `src/main/resources/static/css/style-02-combat-arena.css` | 戰鬥擂台幾何排版 | `.battle-arena-panel`, `.enemy-card`, `.enemy-hp-bar`, `.poise-bar-wrap`, `.enemy-cast-track` |
+| `src/main/resources/static/css/style-03-battle-actions.css` | 戰備甲板與技能卡牌 | `.battle-lower-combat-deck`, `.dock-skill-card`, `.skill-cd-overlay` |
+| `src/main/resources/static/css/style-07-battle-fx.css` | 打擊飄字與震屏特效 | `@keyframes ft-float-up`, `.ftext`, `.arena-shake`, `.poise-broken`, `.react-interrupted` |
 
 ---
 
-## 🚀 八、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)【待深入討論／長線演進藍圖】
+## 🚀 八、未來架構演進規劃 (Roadmap)【待深入討論／長線演進藍圖】
 
-為使戰鬥擂台視覺表現達到「刀光劍影、拳拳到肉、仙法轟鳴」的頂級動態打擊反饋，確立以下四大演進方向：
-
-### 1. 🎯 現代打擊感與視覺反饋 (Modern Combat VFX & Impact)
-- **首領蓄力行動預告警示 (Boss Telegraph Action Bar)**：
-  配合後端 M3 的蓄力打斷機制，首領頭頂展開具備倒數光暈的蓄力長條（Channeling Bar）。若為不可名狀禁咒，蓄力條呈現血紅觸手律動；當玩家成功削韌破防時，蓄力條爆裂破碎並伴隨長達 300ms 的慢動作定格衝擊（Hit Stop），爽快感極致爆棚。
-- **生靈卡牌 CSS 3D 景深傾斜 (3D Card Parallax & Hit Tilt)**：
-  卡牌在受到暴擊重砍時，依據受擊方向產生動態 3D 傾斜角度（RotateX / RotateY）與金屬火花，受擊反饋立體感立竿見影。
-
-### 2. 🛡️ 穩定性與節點防禦 (Robustness & Resilience)
-- **打擊飄字 DOM 節點物件池 (FCT DOM Pool)**：
-  在面對 AOE 仙術（如同時命中 5 隻魔物並觸發多段傷害）時，短時間內可能產生數十個飄字。採用預先分配 30 個節點的循環物件池（Fixed DOM Pool），重複激活與歸還，徹底杜絕頻繁創建與銷毀 DOM 節點造成的記憶體碎屑與 GC 掉幀。
-
-### 3. ⚡ 效能與硬體加速 (Performance & Concurrency)
-- **Web Animations API (WAAPI) 驅動管線**：
-  全面採用瀏覽器原生的 `element.animate()` 取代傳統 JS 定時器或頻繁操作 `classList`，直接將飄字與震動委託給合成器執行緒（Compositor Thread），在低階手機或老舊 PC 上始終維持 60 FPS 滿幀運行。
-
-### 4. 🔌 可擴充性與音效合成 (Web Audio Synthesizer)
-- **純程式碼合成修仙環境音效 (Procedural Audio Synthesis)**：
-  整合現代瀏覽器 Web Audio API，無需下載數十 MB 的 MP3 檔案，純以數學震盪器（Oscillator）與濾波器即時合成立體聲修仙音效：金鐵交戈劍鳴聲、罡氣破碎崩裂震音、五行逆流回血靈音與瀕死心跳囈語。
+1. **首領蓄力行動預告警示 (Boss Telegraph Action Bar)**：長條倒數光暈與破防定格衝擊（Hit Stop）。
+2. **預分配 30 節點循環 DOM Pool**：面對超高頻 AOE 傷害時循環複用固定節點。
+3. **Web Animations API (WAAPI) 驅動管線**：全面委託瀏覽器合成器執行緒實現滿幀流暢度。

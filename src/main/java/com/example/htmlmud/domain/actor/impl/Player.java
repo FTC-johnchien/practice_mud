@@ -46,6 +46,10 @@ public final class Player extends Living {
 
   private final WorldManager manager;
 
+  public WorldManager getWorldManager() {
+    return manager;
+  }
+
   // Actor 內部狀態 (State Machine Context)
   @Setter
   private ConnectionState connectionState = ConnectionState.CONNECTED;

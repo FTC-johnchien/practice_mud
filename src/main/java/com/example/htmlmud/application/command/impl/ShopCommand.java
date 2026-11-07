@@ -90,6 +90,9 @@ public class ShopCommand implements PlayerCommand {
 
     // 依當前房間查詢商店配置
     Optional<ShopTemplate> shopOpt = templateReader.findShopByRoomId(roomId);
+    if (shopOpt.isEmpty() && !self.isInDungeon()) {
+      shopOpt = templateReader.findShop("newbie_village:inn_shop");
+    }
     if (shopOpt.isEmpty()) {
       self.reply("此處荒郊野嶺，並無商販或客棧掌櫃可以交易。（請前往設有貨棧之處）");
       return;

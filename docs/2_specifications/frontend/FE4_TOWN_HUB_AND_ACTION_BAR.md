@@ -2,129 +2,132 @@
 
 > **模組編號**：FE-4  
 > **系統類型**：前端表現層模組  
-> **核心定位**：管理純單機 DRPG 安全營地中樞（Town Hub Panel）選單式視圖、機能設施卡片（裝備工坊、晶片實驗室、道場、醫療站、傳送門）、NPC 劇情名片與對話彈窗，以及常駐底部快捷動作列在「營地整備態 / 地牢步進態 / 半即時砍殺態」的無縫狀態切換。
+> **核心定位**：管理純單機 DRPG 安全營地中樞（Town Hub Panel）選單式視圖、機能設施卡片（裝備工坊、晶片實驗室、道場、醫療站、傳送門）、NPC 劇情名片與地面靈物，以及常駐底部快捷動作列在「營地整備態 / 地牢步進態 / 半即時砍殺態」的無縫狀態切換。
 
 ---
 
 ## 🏛️ 一、模組架構與視圖職責劃分
 
 本模組涵蓋兩大關鍵面板元件：
-1. **營地中樞面板 (`town-panel.js`)**：在營地安全區（`viewMode === 'TOWN'`）主導主舞台視圖佈局，呈現克蘇魯賽博修仙避難所市集氛圍，支援一鍵點擊進入機能設施與 NPC 對話。
-2. **快捷動作列元件**：常駐於螢幕底層（整合於 `static/index.html`，舊規劃檔 `static/js/panels/action-bar-panel.js`【歷史／已除役】），純資料驅動（`data-action`），隨遊戲情境動態變換。
+1. **營地中樞面板 (`src/main/resources/static/js/panels/town-panel.js`)**：在營地安全區（`store.get('mode') === 'TOWN'`）主導主舞台視圖佈局，呈現克蘇魯賽博修仙避難所市集氛圍，支援一鍵點擊進入機能設施與身旁生靈互動。
+2. **快捷動作列元件**：常駐於螢幕底層（整合於 `src/main/resources/static/index.html` 之 `#bottom-control-panel`，舊規劃檔 `static/js/panels/action-bar-panel.js`【歷史／已除役】），純資料驅動（`data-action`），隨遊戲情境動態變換。
 
 ```mermaid
 graph TD
-    StoreState["store.state (中央狀態樹)"] --> StateCheck{"當前場景與戰鬥判定"}
+    StoreState["store.state (中央狀態樹)"] --> StateCheck{"當前模式判定 (store.get('mode'))"}
     
-    StateCheck -- viewMode: TOWN --> ModeTown["【營地整備態】"]
-    ModeTown --> TownHub["六大機能設施卡牌 + 駐留 NPC 名片"]
-    ModeTown --> TownBar["一鍵休整 (Rest) / 行囊整備 (Inventory) / 小隊加點 (Party)"]
+    StateCheck -- mode: TOWN --> ModeTown["【營地整備態】"]
+    ModeTown --> TownHub["六大機能設施卡牌 + 駐留生靈名片 + 地面物品"]
+    ModeTown --> TownBar["全隊調息 (R) / 公共行囊 (B) / 仙道總覽 (C/P) / 存檔 (F5)"]
     
-    StateCheck -- viewMode: DUNGEON 且非戰鬥 --> ModeDungeon["【地牢步進態】"]
-    ModeDungeon --> DpNav["第一人稱前進/後退/轉向 (W/A/S/D)"]
-    ModeDungeon --> DpTorch["使用火把照明 / 探查互動 (Interact) / 檢視地圖 (M)"]
+    StateCheck -- mode: DUNGEON 且非戰鬥 --> ModeDungeon["【地牢步進態】"]
+    ModeDungeon --> DpNav["前進/轉向 (W/A/S/D) / 探查 (I/L) / 點火 (T)"]
+    ModeDungeon --> DpTorch["原地調息 (R) / 迷宮脈衝 (M) / 陣法開關 (F) / 技能抽屜 (1~6)"]
     
     StateCheck -- inBattle: true --> ModeCombat["【半即時砍殺態】"]
-    ModeCombat --> CombatSkills["當前操控隊員技能法術卡 (1~4 鍵) + GCD 遮罩"]
-    ModeCombat --> CombatCombo["破防削韌標記 + 團隊連攜爆發 (Space 鍵)"]
+    ModeCombat --> CombatSkills["當前操控隊員戰備台 (1~6) + 技能 CD 遮罩"]
+    ModeCombat --> CombatCombo["全隊集火 (Space) / 陣法奧義 (U) / 遁地撤退 (Esc)"]
 ```
 
 ---
 
 ## 🏘️ 二、選單式營地中樞佈局 (`town-panel.js`)
 
-徹底廢止 MUD 房間與 exits 出口概念，營地採用現代純單機 DRPG 典範卡片化佈局：
+徹底廢止 MUD 房間與 exits 方位出口概念，營地採用現代純單機 DRPG 卡片化佈局：
+- 主舞台容器為 `#town-nav-panel`（`.town-nav-panel.town-main-stage`）。
+- 左側為 `#town-facilities-grid`（`.town-hub-grid`）與 `#town-perception-badge`（顯示 `晶片加載 X%` 與靈識位階）。
+- 右側為 `#town-npcs-list`（駐留生靈列表）與 `#town-items-list`（地面遺落物品）。
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
 │                      黑煞宗地底礦脈・下層避難營地                      │
 ├────────────────────────────────────────────────────────────────────────┤
-│ 【 營地設施 (Facilities) 】                                            │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                  │
-│  │ 百煉堂       │  │ 靈台藏經閣   │  │ 雜役演武道場 │                  │
-│  │ [鍛造/法寶]  │  │ [道骨/經法]  │  │ [陣法/Gambit]│                  │
-│  └──────────────┘  └──────────────┘  └──────────────┘                  │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────────────┐  │
-│  │ 宗門外門集市 │  │ 回春客棧     │  │ ⚡ 廢棄礦脈入口 (Dungeon Gate)│  │
-│  │ [交易/補給]  │  │ [調息/休整]  │  │ 【出征：墨竹山廢棄礦脈一階】│  │
-│  └──────────────┘  └──────────────┘  └──────────────────────────────┘  │
-├────────────────────────────────────────────────────────────────────────┤
-│ 【 駐留重要生靈 (NPCs) 】                                              │
-│  ┌────────────────────┐   ┌────────────────────┐                       │
-│  │  採礦長老・鐵手    │   │  外門集市遊商・瘸狼│                       │
-│  │  [交談] [主線劇情] │   │  [集市交易/銷贓]   │                       │
-│  └────────────────────┘   └────────────────────┘                       │
-└────────────────────────────────────────────────────────────────────────┘
+│ 【 營地設施 (Facilities) 】        │ 【 駐留重要生靈 (NPCs) 】         │
+│  ┌──────────────┐  ┌──────────────┐ │  ┌────────────────────────────┐   │
+│  │ 百煉堂       │  │ 靈台藏經閣   │ │  │ 採礦長老・鐵手             │   │
+│  │ [鍛造/法寶]  │  │ [道骨/經法]  │ │  │ [交談] [主線指引]           │   │
+│  └──────────────┘  └──────────────┘ │  └────────────────────────────┘   │
+│  ┌──────────────┐  ┌──────────────┐ │  ┌────────────────────────────┐   │
+│  │ 雜役演武道場 │  │ 宗門外門集市 │ │  │ 外門集市遊商・瘸狼         │   │
+│  │ [陣法/戰術]  │  │ [交易/補給]  │ │  │ [貨棧買賣]                 │   │
+│  └──────────────┘  └──────────────┘ │  └────────────────────────────┘   │
+│  ┌──────────────┐  ┌──────────────┐ ├───────────────────────────────────┤
+│  │ 回春客棧     │  │ ⚡ 廢棄礦脈  │ │ 【 地面遺留物 (Ground Items) 】   │
+│  │ [調息/休整]  │  │ [坑道傳送門] │ │  [📦 儲物袋]  [📦 散落靈石]       │
+│  └──────────────┘  └──────────────┘ │                                   │
+└─────────────────────────────────────┴───────────────────────────────────┘
 ```
 
 > 📌 **【靈識認知透鏡與表層仙俠先行渲染準則 (Option C)】**：  
-> 營地設施卡牌文字預設 100% 採用古典仙俠稱謂（百煉堂、靈台藏經閣、雜役演武道場、宗門外門集市、回春客棧、廢棄礦脈入口）。當後端 DTO 標記 `glitch: true` 時，前端觸發 CSS 故障光斑特效（Glitch FX）；當特工晶片加載度突破閾值（>70%）後，卡牌懸停提示與戰術分析視圖動態解鎖賽博底層說明與十六進位代碼。
+> 營地設施文字預設 100% 採用古典仙俠稱謂。當後端 DTO 標記 `glitch: true` 時，前端為卡牌追加 `.facility-glitch` 樣式並渲染 `<span class="facility-glitch-badge">⚠️ 靈識異象</span>`；在認知晶片加載率提升後，動態揭露底層賽博本質。
 
-### 1. 機能設施卡牌點擊事件
-所有按鈕均綁定原生純事件委派標記：
-- `data-action="open-facility" data-facility-id="forge"`：喚出裝備分解與法寶強化模態窗。
-- `data-action="open-facility" data-facility-id="chip-lab"`：開啟前世特工晶片超頻與神經插槽鑲嵌。
-- `data-action="open-facility" data-facility-id="dojo"`：自由調整技能點與隊員自動戰術（Gambit）。
-- `data-action="open-facility" data-facility-id="market"`：喚出外門集市交易、銷贓與火把/藥品補給視窗。
-- `data-action="camp-rest"`：派發一鍵打坐休整，瞬間回滿 HP/MP/SAN 並清除【精神萎靡】狀態。
-- `data-action="enter-dungeon" data-dungeon-id="zone_ore_mine_b1"`：小隊出發進入地牢，視圖平滑切換至第一人稱視口。
+### 1. 六大機能設施卡牌事件委派綁定
+所有設施按鈕均遵循 CSP 零內聯 onclick 規範，透過事件委派派發：
+- **回春客棧 (`fac_clinic`)**：`data-action="camp-rest"`，派發指令 `'camp_rest'`，一鍵回滿全員 HP/MP/SAN 並清除【精神萎靡】負面狀態。
+- **廢棄礦脈坑道 (`fac_dungeon_portal`)**：`data-action="enter-dungeon"`，攜帶 `data-dungeon-id="mozhu_mines_b1f"` 或 `data-dungeon-id="taiyin_tomb_b1f"`，派發指令 `'dungeon enter <dungeonId>'` 進入對應地下迷宮。
+- **雜役演武道場 (`fac_dojo`)**：`data-action="open-facility" data-facility-id="fac_dojo"`，子按鈕綁定 `data-action="open-menu" data-menu="PARTY"|"FORMATION"|"TACTICS"` 直接跳轉對應分頁。
+- **百煉堂 (`fac_forge`)**：`data-action="open-facility" data-facility-id="fac_forge"`，派發 `'town_facility fac_forge'`（或喚出裝備強化換裝分頁）。
+- **靈台藏經閣 (`fac_scripture`)**：`data-action="open-facility" data-facility-id="fac_scripture"`，派發 `'town_facility fac_scripture'`（或開啟道骨技能經法分頁）。
+- **宗門外門集市 (`fac_market`)**：`data-action="open-facility" data-facility-id="fac_market"`，派發 `'town_facility fac_market'`（或打開集市買賣貨棧彈窗）。
 
-### 2. NPC 劇情對話介面
-點擊 NPC 卡片派發 `data-action="interact-npc"`：
-- 彈出帶有頭像、克蘇魯賽博修仙背景與分支選項的對話視窗。
-- 支援劇情推進、情報解鎖與物資交易。
+### 2. 駐留生靈卡片與能力晶片
+- 卡片結構為 `.npc-card`，敵對目標附加 `.is-hostile`，精英／首領分別標註 `.rank-elite` 或 `.rank-boss`。
+- 透過 `normalizeTownCapability(cap, npc)` 將後端 capabilities（`SHOP`, `TALK`, `REST`, `RECRUIT`, `DISMISS`, `QUEST`, `FIGHT`）解析為規格化晶片按鈕：
+  - `<button class="cap-chip cap-{type}" data-action="send-cmd" data-cmd="{command}">`
+- 獨立分支劇情對話彈窗（`.npc-dialogue-modal`）標註為 `【已決議待實作】`。
 
 ---
 
-## ⚡ 三、快捷動作列三態切換機制（舊規劃 `action-bar-panel.js`【歷史／已除役】，現行實作於 `static/index.html` 與 `town-panel.js`）
+## ⚡ 三、快捷動作列與鍵盤快捷鍵三態切換機制
 
-動作列位於螢幕最下方，根據中央狀態進行瞬時切換：
+底部快捷動作列（`#bottom-control-panel`）與全域鍵盤監聽（`src/main/resources/static/js/app.js` `initKeyboardControls`）嚴格依據中央狀態機進行三態無縫切換：
 
-### 1. 營地整備態 (Town Hub State)
-- **快捷操作**：
-  - `[R] 全隊休整`：立即補滿全員氣血（HP）與真元（MP）。
-  - `[I] 小隊行囊`：開啟 40 格公用儲物袋與裝備穿戴。
-  - `[P] 角色養成`：開啟 5 人小隊屬性加點與境界突破面板。
-  - `點擊【啟程出征】`：快速進入地牢傳送門。
-
-### 2. 地牢步進態 (Dungeon Exploration State)
-- **第一人稱視角控制**：
-  - `[W] 前進` / `[S] 後退` / `[A] 左轉向` / `[D] 右轉向`。
-  - `[F] 空間互動`：開寶箱、啟動遠古遺跡開關、解除陷阱。
-  - `[T] 消耗火把`：增加當前區域光明度，防範外神陰煞滋生。
-  - `[M] 樓層地圖`：切換全螢幕已探明迷宮與標記點。
-
-### 3. 半即時砍殺戰鬥態 (Hack-and-slash Combat State)
-- **高頻戰術卡牌**：
-  - `[1~4] 當前隊員法術`：即時施放四大流派技能，支援公共冷卻（GCD）光圈與真元耗損反饋。
-  - `[Tab] 切換目標`：在敵群中切換當前鎖定集火目標。
-  - `[Space] 團隊連攜合擊 (Link Strike)`：當敵方破防（Break）時高亮閃爍，點擊釋放全隊合擊奧義。
-  - `[G] 啟用/暫停自動戰術 (Gambit Toggle)`：一鍵切換小隊託管戰鬥模式。
+| 遊戲模式 / 情境 | 快捷鍵 | 綁定行為 / 派發指令 | 說明 |
+| :--- | :--- | :--- | :--- |
+| **營地整備態**<br>`mode === 'TOWN'` | `[R]` | `camp_rest` | 營地全隊調息，瞬間回滿 HP/MP/SAN 並除萎靡 |
+| | `[B]` | `toggleBagDrawer()` | 開啟／關閉 40 格小隊公共儲物袋抽屜 |
+| | `[C]` / `[P]` | `triggerPartyAction()` | 開啟仙道總覽小隊彈窗（角色屬性／裝備／陣法） |
+| | `[F5]` | `openSaveModal()` | 喚出單機存檔／讀檔管理面板 |
+| **地牢步進態**<br>`mode === 'DUNGEON'`<br>（非戰鬥） | `[W/A/S/D]` / 方向鍵 | `dungeon forward/turn-left/...` | 第一人稱走廊網格步進與轉向 |
+| | `[I]` / `[L]` | `dungeon look` | 凝神探查正前方地塊詳情與機關 |
+| | `[T]` | `dungeon torch` | 點燃火把（提升照明度，壓制外神陰煞湧動） |
+| | `[R]` | `rest` | 地牢原地調息（需防範陰煞夜襲） |
+| | `[M]` | `map` | 迷宮雷達脈衝／拓撲小地圖視圖切換 |
+| | `[F]` | `formation toggle` | 切換當前陣法開關 |
+| | `[1~6]` | `toggleMemberDrawer(idx)` | 展開對應隊員法術技能抽屜 |
+| **半即時砍殺態**<br>`inBattle === true` | `[1~6]` | `selectCombatMember(idx)` | 切換當前操控隊員戰備指揮台 |
+| | `[Space]` | `battle fight`（鍵盤）/ `battle focus`（按鈕） | 全隊集火攻擊當前鎖定敵方目標 |
+| | `[U]` | `formation cast` | 施放當前戰陣奧義大招（如四象破煞、霸刀絕塵） |
+| | `[T]` | `battle target 0` | 快速鎖定敵方陣列首位生靈目標 |
+| | `[B]` | `toggleBagDrawer()` | 戰鬥中即時打開行囊取用丹藥符籙 |
+| | `[C]` / `[P]` | `triggerPartyAction()` | 戰況小隊狀態檢視 |
+| | `[Esc]` | `battle flee` | 嘗試施展五行遁地術脫離戰鬥撤退 |
 
 ---
 
 ## 📱 四、響應式排版適配規範
 
-- **桌機螢幕（Width $\ge 1024\text{px}$）**：
-  依 D1 規範，【現行已驗證】為左右雙主區佈局（左側主舞台/設施卡牌矩陣＋左下 5 人小隊卡，右側全高可摺疊情境敘事情報日誌，支援「⮃ 換邊」左右對調）；【待深入討論／已決議待實作】為 PC 經典三欄式＋底欄日誌。
-- **掌機/行動端（Width $< 1024\text{px}$）**：
-  自動收斂為垂直單欄，點擊按鈕保底 $44 \times 44\text{px}$，避免戰鬥高頻點擊誤觸。
+- **桌機寬螢幕（Width $\ge 900\text{px}$）**：
+  - 雙主區水平佈局：左側為營地設施網格（2 列或 3 列卡牌）＋底部 5 人小隊戰備血條卡，右側為全高可摺疊情境敘事情報日誌（`#log-and-battle-area`，支援左右對調）。
+- **平板與緊湊視窗（Width $< 900\text{px}$ / $< 800\text{px}$）**：
+  - 斷點配置於 `src/main/resources/static/css/style-01-tokens-and-shell.css`（`@media (max-width: 899px)`）與 `src/main/resources/static/css/style-05-town-and-hub.css`（`@media (max-width: 800px)`）。
+  - 自動收斂為垂直單欄流式排版，設施卡牌變為單列滿寬，按鈕觸控保底區域不小於 $40 \times 40\text{px}$，避免移動端或觸控操作誤觸。
 
 ---
 
 ## 🔗 五、代表檔案清單
 
-| 檔案路徑 | 模組定位 | 關鍵導出項目 |
+| 檔案路徑 | 模組定位 | 關鍵導出項目 / 核心元素 |
 | :--- | :--- | :--- |
-| `static/js/panels/town-panel.js` | 營地中樞主控制器與動作列 | `renderTownHub()`, `renderFacilities()`, `renderNpcs()` |
-| `static/index.html` | 頁面結構與常駐快捷動作列 DOM | `#town-hub-panel`, `.bottom-control-panel`（舊動作列面板檔 `static/js/panels/action-bar-panel.js`【歷史／已除役】） |
-| `static/css/style-05-town-and-hub.css` | 營地設施卡牌與 NPC 對話樣式 | `.town-hub-grid`, `.facility-card`, `.npc-dialogue-modal` |
-| `static/css/style-06-shop-and-responsive.css` | 設施功能彈窗與響應式排版 | `.facility-modal`, `@media (max-width: 1024px)` |
+| `src/main/resources/static/js/panels/town-panel.js` | 營地中樞設施控制器 | `renderTownNav()`, `renderTownHub()`, `renderFacilities()`, `normalizeTownCapability()` |
+| `src/main/resources/static/index.html` | 頁面結構與常駐快捷動作列 DOM | `#town-nav-panel`, `#town-facilities-grid`, `#town-npcs-list`, `#town-items-list`, `.bottom-control-panel` |
+| `src/main/resources/static/css/style-05-town-and-hub.css` | 營地中樞卡牌樣式與響應式規則 | `.town-nav-panel`, `.town-hub-grid`, `.facility-card`, `.facility-glitch`, `.npc-card`, `.cap-chip` |
+| `src/main/resources/static/css/style-06-shop-and-responsive.css` | 集市交易貨棧彈窗樣式 | `.shop-modal-card`, `.shop-modal-goods-list`, `.shop-good-card` |
 
 ---
 
 ## 🎯 六、純單機規範守衛
 
-1. **嚴禁文字方向 exits 導航**：介面嚴格禁止出現任何 north/south 出口方塊或方位文字。
-2. **零延遲功能響應**：點擊設施立即展示對應介面，無任何冗長等待或無效指令回傳。
-3. **無縫戰鬥切換**：在戰鬥觸發時，動作列在 150ms 內完成平滑變形，第一時間提供技能釋放反饋。
+1. **嚴禁文字方向 exits 導航**：介面嚴格禁止出現任何 north/south 方位出口方塊或 MUD 導向文字。
+2. **零延遲功能響應**：點擊設施立即展示對應面板或發送命令，無任何冗餘輪詢等待。
+3. **無縫模式切換**：在戰鬥、地牢與營地相互切換時，動作列與鍵盤事件在 150ms 內完成平滑狀態切換，保證戰鬥與探索指令瞬時反饋。

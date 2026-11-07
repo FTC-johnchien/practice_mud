@@ -127,4 +127,41 @@ class DrpgStateDtoTest {
     assertThat(emptyInvDto.usedCount()).isEqualTo(0);
     assertThat(emptyInvDto.slots()).isEmpty();
   }
+
+  @Test
+  @DisplayName("ALIGN2-06: 測試 DrpgStateDto.ofTown 投影正確包含 TownHubDto 六大設施，且隨 chipRate 反映三階認知透鏡與 glitch 狀態")
+  void testTownViewDtoHubProjection() {
+    com.example.htmlmud.town.CognitiveProxyService proxyService = new com.example.htmlmud.town.CognitiveProxyService();
+    com.example.htmlmud.town.TownHubService hubService = new com.example.htmlmud.town.TownHubService(proxyService, new com.fasterxml.jackson.databind.ObjectMapper());
+    hubService.init();
+
+    // 1. chipRate = 12% (第一階：純仙俠表象)
+    com.example.htmlmud.town.TownHubDto hubLow = hubService.getTownHub("newbie_village", 12);
+    assertThat(hubLow.facilities()).hasSize(6);
+    assertThat(hubLow.perceptionTier()).isEqualTo(com.example.htmlmud.town.PerceptionTier.IGNORANT_XIANXIA);
+    assertThat(hubLow.facilities().stream().anyMatch(f -> "fac_forge".equals(f.id()) && f.name().equals("百煉堂"))).isTrue();
+    assertThat(hubLow.facilities().stream().allMatch(f -> !f.glitch())).isTrue();
+
+    DrpgStateDto stateLow = DrpgStateDto.ofTown(
+        "newbie_village", "新手仙鄉", "newbie_village:inn", "客棧", "溫馨客棧", true,
+        java.util.List.of(), java.util.List.of(), java.util.List.of(), null, null, null, hubLow
+    );
+    assertThat(stateLow.town().hub()).isNotNull();
+    assertThat(stateLow.town().hub().facilities()).hasSize(6);
+    assertThat(stateLow.town().hub().chipRate()).isEqualTo(12);
+
+    // 2. chipRate = 45% (第二階：異象微顯)
+    com.example.htmlmud.town.TownHubDto hubMid = hubService.getTownHub("newbie_village", 45);
+    assertThat(hubMid.perceptionTier()).isEqualTo(com.example.htmlmud.town.PerceptionTier.FRACTURED_GLITCH);
+    assertThat(hubMid.facilities().stream().anyMatch(com.example.htmlmud.town.FacilityDto::glitch)).isTrue();
+
+    // 3. chipRate = 80% (第三階：科技覺醒 / 殘酷真相)
+    com.example.htmlmud.town.TownHubDto hubHigh = hubService.getTownHub("newbie_village", 80);
+    assertThat(hubHigh.perceptionTier()).isEqualTo(com.example.htmlmud.town.PerceptionTier.TRANSCENDED_TECH);
+    assertThat(hubHigh.facilities().stream().anyMatch(f -> "fac_forge".equals(f.id()) && f.name().contains("千星重工"))).isTrue();
+
+    // 4. 驗證查無 zoneId (例如地牢撤離之 mozhu_mines) 時自動回退 newbie_village
+    com.example.htmlmud.town.TownHubDto hubFallback = hubService.getTownHub("mozhu_mines", 12);
+    assertThat(hubFallback.facilities()).hasSize(6);
+  }
 }

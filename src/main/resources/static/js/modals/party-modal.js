@@ -192,13 +192,13 @@ export function renderPaginationBar(currentPage, totalPages, totalCount, onPageC
         共 <strong style="color:#e2e8f0;font-size:14px;">${totalCount}</strong> 筆項目 ‧ 每頁上限 20 筆
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
-        <button class="act-btn btn-sm" onclick="${onPageChangeFnName}(-1)" ${safeCurrent <= 1 ? 'disabled style="opacity:0.35;cursor:not-allowed;"' : ''} style="font-size:13px;padding:4px 12px;">
+        <button class="act-btn btn-sm" data-action="pagination-change" data-fn="${escapeHtml(onPageChangeFnName)}" data-delta="-1" ${safeCurrent <= 1 ? 'disabled style="opacity:0.35;cursor:not-allowed;"' : ''} style="font-size:13px;padding:4px 12px;">
           ◀ 上一頁
         </button>
         <span style="font-size:13px;color:#cbd5e1;font-weight:bold;">
           第 ${safeCurrent} / ${safeTotal} 頁
         </span>
-        <button class="act-btn btn-sm" onclick="${onPageChangeFnName}(1)" ${safeCurrent >= safeTotal ? 'disabled style="opacity:0.35;cursor:not-allowed;"' : ''} style="font-size:13px;padding:4px 12px;">
+        <button class="act-btn btn-sm" data-action="pagination-change" data-fn="${escapeHtml(onPageChangeFnName)}" data-delta="1" ${safeCurrent >= safeTotal ? 'disabled style="opacity:0.35;cursor:not-allowed;"' : ''} style="font-size:13px;padding:4px 12px;">
           下一頁 ▶
         </button>
       </div>
@@ -220,7 +220,7 @@ export function renderSystemSlotsHtml(sysMode) {
         <span style="font-size:14px;color:#cbd5e1;font-weight:bold;">⚙️ 系統存讀檔與遊戲控制</span>
         <span style="font-size:13px;color:#94a3b8;margin-left:8px;">(可在此儲存/載入進度，或返回標題畫面)</span>
       </div>
-      <button class="act-btn btn-primary" onclick="if(window.openTitleScreen) { if(window.closePartyModal) window.closePartyModal(); window.openTitleScreen(); }" style="font-size:13px;padding:6px 14px;font-weight:bold;cursor:pointer;">🏠 返回遊戲主封面</button>
+      <button class="act-btn btn-primary" data-action="return-title-screen" style="font-size:13px;padding:6px 14px;font-weight:bold;cursor:pointer;">🏠 返回遊戲主封面</button>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(360px, 1fr));gap:14px;padding:4px 0;">
       ${slots.map(slot => {
@@ -246,12 +246,12 @@ export function renderSystemSlotsHtml(sysMode) {
             </div>
             <div class="slot-actions-col">
               ${slot.empty
-                ? (!isAuto ? `<button class="slot-btn slot-btn-save" onclick="window.triggerSaveSlot(${slot.slotId})" style="font-size:13px;">💾 存檔於此</button>` : '<span style="color:#64748b;font-size:var(--font-xs);">待觸發</span>')
+                ? (!isAuto ? `<button class="slot-btn slot-btn-save" data-action="save-slot" data-slot-id="${slot.slotId}" style="font-size:13px;">💾 存檔於此</button>` : '<span style="color:#64748b;font-size:var(--font-xs);">待觸發</span>')
                 : `
-                  <button class="slot-btn slot-btn-load" onclick="window.triggerLoadSlot(${slot.slotId})" style="font-size:13px;">${isAuto ? '📂 載入自動存檔' : '📂 載入此檔'}</button>
+                  <button class="slot-btn slot-btn-load" data-action="load-slot" data-slot-id="${slot.slotId}" style="font-size:13px;">${isAuto ? '📂 載入自動存檔' : '📂 載入此檔'}</button>
                   ${!isAuto ? `
-                    <button class="slot-btn slot-btn-save" onclick="window.triggerSaveSlot(${slot.slotId})" style="font-size:13px;">💾 覆蓋存檔</button>
-                    <button class="slot-btn slot-btn-del" onclick="window.triggerDeleteSlot(${slot.slotId})" title="刪除此存檔" style="font-size:13px;">🗑️</button>
+                    <button class="slot-btn slot-btn-save" data-action="save-slot" data-slot-id="${slot.slotId}" style="font-size:13px;">💾 覆蓋存檔</button>
+                    <button class="slot-btn slot-btn-del" data-action="delete-slot" data-slot-id="${slot.slotId}" title="刪除此存檔" style="font-size:13px;">🗑️</button>
                   ` : ''}
                 `}
             </div>
@@ -286,8 +286,8 @@ export function renderPartyRosterHtml(party) {
                 <span style="font-size:18px;font-weight:bold;color:${isLeader ? '#fde047' : '#38bdf8'};width:36px;">#${idx + 1}</span>
                 <div>
                   <div style="font-size:15px;font-weight:bold;color:#f1f5f9;display:flex;align-items:center;gap:8px;">
-                    ${isLeader ? '👑' : '👤'} ${mem.name}
-                    <span style="font-size:13px;color:#94a3b8;font-weight:normal;">(${mem.roleTitle || '道友'})</span>
+                    ${isLeader ? '👑' : '👤'} ${escapeHtml(mem.name || '')}
+                    <span style="font-size:13px;color:#94a3b8;font-weight:normal;">(${escapeHtml(mem.roleTitle || '道友')})</span>
                     ${!isAlive ? '<span style="font-size:var(--font-xs);color:#ef4444;font-weight:bold;background:#450a0a;padding:2px 8px;border-radius:4px;">💀 陣亡</span>' : ''}
                   </div>
                   <div style="font-size:13px;color:#64748b;margin-top:4px;">
@@ -296,10 +296,10 @@ export function renderPartyRosterHtml(party) {
                 </div>
               </div>
               <div style="display:flex;align-items:center;gap:10px;">
-                <button class="act-btn btn-sm" onclick="send('party swap ${idx} ${idx - 1}')" ${idx === 0 ? 'disabled style="opacity:0.35;cursor:not-allowed;"' : ''} style="font-size:13px;padding:5px 12px;">
+                <button class="act-btn btn-sm" data-action="send-cmd" data-cmd="party swap ${idx} ${idx - 1}" ${idx === 0 ? 'disabled style="opacity:0.35;cursor:not-allowed;"' : ''} style="font-size:13px;padding:5px 12px;">
                   ▲ 上移
                 </button>
-                <button class="act-btn btn-sm" onclick="send('party swap ${idx} ${idx + 1}')" ${idx === members.length - 1 ? 'disabled style="opacity:0.35;cursor:not-allowed;"' : ''} style="font-size:13px;padding:5px 12px;">
+                <button class="act-btn btn-sm" data-action="send-cmd" data-cmd="party swap ${idx} ${idx + 1}" ${idx === members.length - 1 ? 'disabled style="opacity:0.35;cursor:not-allowed;"' : ''} style="font-size:13px;padding:5px 12px;">
                   ▼ 下移
                 </button>
               </div>
@@ -368,9 +368,9 @@ export function renderPartyModal() {
     return party.members.map((mem, idx) => {
       const isSel = (selIdx === idx);
       return `
-        <button class="party-member-tab-btn ${isSel ? 'active' : ''}" type="button" onclick="selectPartyModalMember(${idx})"
-          style="font-size:13px;padding:6px 12px;" title="#${idx + 1} ${mem.name} (${mem.className || '道友'})">
-          <span style="font-weight:bold;">#${idx + 1} ${mem.name}</span>
+        <button class="party-member-tab-btn ${isSel ? 'active' : ''}" type="button" data-action="select-party-modal-member" data-member-idx="${idx}"
+          style="font-size:13px;padding:6px 12px;" title="#${idx + 1} ${escapeHtml(mem.name || '')} (${mem.className || '道友'})">
+          <span style="font-weight:bold;">#${idx + 1} ${escapeHtml(mem.name || '')}</span>
           ${(idx === 0 && mem.freeStatPoints > 0) ? `<span class="hud-free-points-pill" style="margin-left:4px; font-size:var(--font-xs); padding:1px 5px;">+${mem.freeStatPoints}點</span>` : ''}
         </button>
       `;
@@ -390,7 +390,7 @@ export function renderPartyModal() {
       );
       const formColor = isFormActive ? '#38bdf8' : '#f87171';
       const ultBtn = (party.canCastUltimate && isFormActive)
-        ? `<button class="act-btn btn-ult" onclick="send('formation cast')" style="padding:4px 12px;font-size:13px;">⚡ 施展陣法奧義【${party.ultimateSkillName}】</button>`
+        ? `<button class="act-btn btn-ult" data-action="send-cmd" data-cmd="formation cast" style="padding:4px 12px;font-size:13px;">⚡ 施展陣法奧義【${party.ultimateSkillName}】</button>`
         : (isFormActive
             ? `<span style="color:#94a3b8;font-size:13px;">奧義【${party.ultimateSkillName || '無'}】(充能 ${party.formationEnergy || 0}/100)</span>`
             : `<span style="color:#f87171;font-size:13px;font-weight:bold;">⚠️ 陣法未生效</span>`);
@@ -398,8 +398,8 @@ export function renderPartyModal() {
       if (subHeaderEl) {
         subHeaderEl.innerHTML = `
           <div style="display:flex;align-items:center;gap:10px;">
-            <button class="act-btn ${!isLibrary ? 'btn-blue' : ''}" onclick="window.toggleFormationViewMode('BOARD')" style="font-size:13px;padding:5px 14px;">☯️ 5×3 戰陣盤</button>
-            <button class="act-btn ${isLibrary ? 'btn-blue' : ''}" onclick="window.toggleFormationViewMode('LIBRARY')" style="font-size:13px;padding:5px 14px;">📚 陣法典籍庫</button>
+            <button class="act-btn ${!isLibrary ? 'btn-blue' : ''}" data-action="toggle-formation-view-mode" data-mode="BOARD" style="font-size:13px;padding:5px 14px;">☯️ 5×3 戰陣盤</button>
+            <button class="act-btn ${isLibrary ? 'btn-blue' : ''}" data-action="toggle-formation-view-mode" data-mode="LIBRARY" style="font-size:13px;padding:5px 14px;">📚 陣法典籍庫</button>
           </div>
           <div style="display:flex;align-items:center;gap:12px;font-size:13px;color:#cbd5e1;">
             <span>當前道門陣法：<strong style="color:${formColor};">${party.formationName || '五行混元陣'}</strong></span>
@@ -419,8 +419,8 @@ export function renderPartyModal() {
       if (subHeaderEl) {
         subHeaderEl.innerHTML = `
           <div style="display:flex;align-items:center;gap:10px;">
-            <button class="act-btn ${sysMode === 'load' ? 'btn-blue' : ''}" onclick="window.switchMainMenuTab('SYSTEM', 'load')" style="font-size:13px;padding:5px 14px;">📂 讀取存檔</button>
-            <button class="act-btn ${sysMode === 'save' ? 'btn-blue' : ''}" onclick="window.switchMainMenuTab('SYSTEM', 'save')" style="font-size:13px;padding:5px 14px;">💾 覆蓋存檔</button>
+            <button class="act-btn ${sysMode === 'load' ? 'btn-blue' : ''}" data-action="switch-main-menu-tab" data-tab="SYSTEM" data-sub="load" style="font-size:13px;padding:5px 14px;">📂 讀取存檔</button>
+            <button class="act-btn ${sysMode === 'save' ? 'btn-blue' : ''}" data-action="switch-main-menu-tab" data-tab="SYSTEM" data-sub="save" style="font-size:13px;padding:5px 14px;">💾 覆蓋存檔</button>
           </div>
           <div style="font-size:13px;color:#94a3b8;">
             💡 支援 1 個即時自動存檔與 5 個手動命冊存檔槽位 (按 F5 快捷存檔)
@@ -458,9 +458,9 @@ export function renderPartyModal() {
             ${renderMemberTabButtons()}
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <button class="act-btn btn-sm ${skillTab === 'FIELD_USABLE' ? 'btn-blue' : ''}" onclick="window.setSkillsTab('FIELD_USABLE')" style="font-size:13px;padding:4px 12px;">🌿 可使用 (探索/回復)</button>
-            <button class="act-btn btn-sm ${skillTab === 'ACTIVE' ? 'btn-blue' : ''}" onclick="window.setSkillsTab('ACTIVE')" style="font-size:13px;padding:4px 12px;">⚡ 主動絕技</button>
-            <button class="act-btn btn-sm ${skillTab === 'ALL' ? 'btn-blue' : ''}" onclick="window.setSkillsTab('ALL')" style="font-size:13px;padding:4px 12px;">📖 全部道法</button>
+            <button class="act-btn btn-sm ${skillTab === 'FIELD_USABLE' ? 'btn-blue' : ''}" data-action="set-skills-tab" data-tab="FIELD_USABLE" style="font-size:13px;padding:4px 12px;">🌿 可使用 (探索/回復)</button>
+            <button class="act-btn btn-sm ${skillTab === 'ACTIVE' ? 'btn-blue' : ''}" data-action="set-skills-tab" data-tab="ACTIVE" style="font-size:13px;padding:4px 12px;">⚡ 主動絕技</button>
+            <button class="act-btn btn-sm ${skillTab === 'ALL' ? 'btn-blue' : ''}" data-action="set-skills-tab" data-tab="ALL" style="font-size:13px;padding:4px 12px;">📖 全部道法</button>
           </div>
         `;
       }
@@ -510,12 +510,12 @@ export function renderPartyModal() {
       if (subHeaderEl) {
         subHeaderEl.innerHTML = `
           <div style="display:flex;align-items:center;gap:10px;">
-            <button class="act-btn ${itemTab === 'USABLE' ? 'btn-blue' : ''}" onclick="window.switchMainMenuTab('ITEMS', 'USABLE')" style="font-size:13px;padding:5px 14px;">🧪 可使用 (回復/Buff)</button>
-            <button class="act-btn ${itemTab === 'QUEST' ? 'btn-blue' : ''}" onclick="window.switchMainMenuTab('ITEMS', 'QUEST')" style="font-size:13px;padding:5px 14px;">📜 任務道具</button>
-            <button class="act-btn ${itemTab === 'ALL' ? 'btn-blue' : ''}" onclick="window.switchMainMenuTab('ITEMS', 'ALL')" style="font-size:13px;padding:5px 14px;">📦 全部道具</button>
+            <button class="act-btn ${itemTab === 'USABLE' ? 'btn-blue' : ''}" data-action="switch-main-menu-tab" data-tab="ITEMS" data-sub="USABLE" style="font-size:13px;padding:5px 14px;">🧪 可使用 (回復/Buff)</button>
+            <button class="act-btn ${itemTab === 'QUEST' ? 'btn-blue' : ''}" data-action="switch-main-menu-tab" data-tab="ITEMS" data-sub="QUEST" style="font-size:13px;padding:5px 14px;">📜 任務道具</button>
+            <button class="act-btn ${itemTab === 'ALL' ? 'btn-blue' : ''}" data-action="switch-main-menu-tab" data-tab="ITEMS" data-sub="ALL" style="font-size:13px;padding:5px 14px;">📦 全部道具</button>
           </div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <button class="act-btn" onclick="toggleBagDrawer(true)" style="font-size:13px;padding:5px 12px;background:#334155;" title="展開右側獨立行囊抽屜">🎒 側欄行囊 (B)</button>
+            <button class="act-btn" data-action="open-bag-drawer" style="font-size:13px;padding:5px 12px;background:#334155;" title="展開右側獨立行囊抽屜">🎒 側欄行囊 (B)</button>
           </div>
         `;
       }
@@ -533,11 +533,11 @@ export function renderPartyModal() {
         if (subHeaderEl) {
           subHeaderEl.innerHTML = `
             <div style="display:flex;align-items:center;gap:12px;">
-              <button class="act-btn btn-sm" onclick="window.closeEquipPicker()" style="font-size:13px;padding:4px 12px;background:#334155;">
+              <button class="act-btn btn-sm" data-action="close-equip-picker" style="font-size:13px;padding:4px 12px;background:#334155;">
                 ◀ 返回裝備頁面
               </button>
               <span style="font-size:15px;font-weight:bold;color:#f1f5f9;">
-                🛡️ 裝備挑選與 Diff 比較 - #${pMemIdx + 1} ${pMem ? pMem.name : ''} 的【${drpgState.equipPicker.slotLabel}】
+                🛡️ 裝備挑選與 Diff 比較 - #${pMemIdx + 1} ${pMem ? escapeHtml(pMem.name || '') : ''} 的【${drpgState.equipPicker.slotLabel}】
               </span>
             </div>
             <div style="font-size:13px;color:#94a3b8;">
@@ -554,11 +554,11 @@ export function renderPartyModal() {
         if (subHeaderEl) {
           subHeaderEl.innerHTML = `
             <div style="display:flex;align-items:center;gap:12px;">
-              <button class="act-btn btn-sm" onclick="window.closeSkillPicker()" style="font-size:13px;padding:4px 12px;background:#334155;">
+              <button class="act-btn btn-sm" data-action="close-skill-picker" style="font-size:13px;padding:4px 12px;background:#334155;">
                 ◀ 返回裝備頁面
               </button>
               <span style="font-size:15px;font-weight:bold;color:#f1f5f9;">
-                🧘 功法配置與挑選 - #${pMemIdx + 1} ${pMem ? pMem.name : ''} 的【${drpgState.skillPicker.categoryLabel}】
+                🧘 功法配置與挑選 - #${pMemIdx + 1} ${pMem ? escapeHtml(pMem.name || '') : ''} 的【${drpgState.skillPicker.categoryLabel}】
               </span>
             </div>
             <div style="font-size:13px;color:#94a3b8;">
@@ -577,7 +577,7 @@ export function renderPartyModal() {
             </div>
             <div style="display:flex;align-items:center;gap:12px;">
               <span style="font-size:13px;color:#94a3b8;">💡 點擊槽位可挑選裝備或功法</span>
-              <button class="act-btn btn-sm" onclick="toggleBagDrawer(true)" style="font-size:13px;padding:3px 10px;background:#1e293b;" title="開啟右側獨立行囊抽屜">🎒 側欄行囊 (B)</button>
+              <button class="act-btn btn-sm" data-action="open-bag-drawer" style="font-size:13px;padding:3px 10px;background:#1e293b;" title="開啟右側獨立行囊抽屜">🎒 側欄行囊 (B)</button>
             </div>
           `;
         }
@@ -635,6 +635,90 @@ if (typeof window !== 'undefined') {
   window.confirmEquipSkill = confirmEquipSkill;
   window.confirmUnequipSkill = confirmUnequipSkill;
   window.renderSkillPickerView = renderSkillPickerView;
+}
+
+// 模組級事件委派監聽 (CSP 零內聯事件)
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest ? e.target.closest('[data-action]') : null;
+    if (!target) return;
+    const action = target.getAttribute('data-action');
+    switch (action) {
+      case 'pagination-change': {
+        const fn = target.getAttribute('data-fn');
+        const delta = parseInt(target.getAttribute('data-delta'), 10) || 0;
+        if (fn === 'changeItemsPage') changeItemsPage(delta);
+        else if (fn === 'changeEquipPickerPage') changeEquipPickerPage(delta);
+        else if (fn === 'changeSkillsPage') changeSkillsPage(delta);
+        else if (fn === 'changeSkillPickerPage') changeSkillPickerPage(delta);
+        else if (typeof window !== 'undefined' && typeof window[fn] === 'function') window[fn](delta);
+        break;
+      }
+      case 'return-title-screen': {
+        togglePartyModal(false);
+        if (typeof window !== 'undefined' && typeof window.openTitleScreen === 'function') {
+          window.openTitleScreen();
+        }
+        break;
+      }
+      case 'save-slot': {
+        const slotId = parseInt(target.getAttribute('data-slot-id'), 10);
+        if (!isNaN(slotId) && typeof window !== 'undefined' && typeof window.triggerSaveSlot === 'function') {
+          window.triggerSaveSlot(slotId);
+        }
+        break;
+      }
+      case 'load-slot': {
+        const slotId = parseInt(target.getAttribute('data-slot-id'), 10);
+        if (!isNaN(slotId) && typeof window !== 'undefined' && typeof window.triggerLoadSlot === 'function') {
+          window.triggerLoadSlot(slotId);
+        }
+        break;
+      }
+      case 'delete-slot': {
+        const slotId = parseInt(target.getAttribute('data-slot-id'), 10);
+        if (!isNaN(slotId) && typeof window !== 'undefined' && typeof window.triggerDeleteSlot === 'function') {
+          window.triggerDeleteSlot(slotId);
+        }
+        break;
+      }
+      case 'select-party-modal-member': {
+        const idx = parseInt(target.getAttribute('data-member-idx'), 10);
+        if (!isNaN(idx)) selectPartyModalMember(idx);
+        break;
+      }
+      case 'switch-main-menu-tab': {
+        const tab = target.getAttribute('data-tab');
+        const sub = target.getAttribute('data-sub');
+        switchMainMenuTab(tab, sub);
+        break;
+      }
+      case 'set-skills-tab': {
+        const tab = target.getAttribute('data-tab');
+        setSkillsTab(tab);
+        break;
+      }
+      case 'close-equip-picker': {
+        closeEquipPicker();
+        break;
+      }
+      case 'close-skill-picker': {
+        closeSkillPicker();
+        break;
+      }
+      case 'toggle-formation-view-mode': {
+        const mode = target.getAttribute('data-mode') || 'BOARD';
+        toggleFormationViewMode(mode);
+        break;
+      }
+      case 'open-bag-drawer': {
+        if (typeof window !== 'undefined' && typeof window.toggleBagDrawer === 'function') {
+          window.toggleBagDrawer(true);
+        }
+        break;
+      }
+    }
+  });
 }
 
 // 重新匯出所有模組函式，維持既有 import 介面 100% 向後相容

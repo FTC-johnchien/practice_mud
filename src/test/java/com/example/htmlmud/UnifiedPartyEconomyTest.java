@@ -353,7 +353,7 @@ class UnifiedPartyEconomyTest {
     leader.setMadnessState(com.example.htmlmud.party.PartyMember.MadnessState.CHAOS);
     leader.getStats().setMp(5);
     String chaosMsg = party.useItemOnMember(teaSlot2.getSlotId(), 0);
-    assertThat(chaosMsg).contains("走火入魔狀態解除");
+    assertThat(chaosMsg).contains("精神萎靡狀態解除");
     assertThat(chaosMsg).contains("真元同時凝練回復 20 點");
     assertThat(leader.getMadnessState()).isEqualTo(com.example.htmlmud.party.PartyMember.MadnessState.SANE);
     assertThat(leader.getCurrentSan()).isEqualTo(25);

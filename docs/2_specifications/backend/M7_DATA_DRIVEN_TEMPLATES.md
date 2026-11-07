@@ -8,12 +8,10 @@
 
 ## 📜 一、架構核心哲學：代碼即引擎，資料即世界
 
-傳統 RPG 常犯的架構硬傷是將怪物數值、首領名稱、裝備槽位或任務對話硬編碼在 Java 程式碼中（例如 `if ("甲".contains(name))` 或 `if (mobId.equals("boss_xxx"))`）。
-
 本專案將 **「100% 資料驅動不可篡改」** 定為專案第一紅線：
 1. **Java 程式碼純淨性**：Java 類別只負責通用演算、狀態機調度與通訊協定，**不包含任何遊戲特例字串或特定數值**。
 2. **策劃資料宣告化**：所有地圖、首領、對白、陣法、掉落、商店完全由 JSON 設定檔宣告。
-3. **熱插拔與擴展性**：新增一個全新副本（如雪亭鎮古剎），只需新增 JSON 設定檔，即可自動被系統識別與加載，無需重新編譯 Java 程式碼！
+3. **熱插拔與擴展性**：新增全新副本或技能，只需新增 JSON 設定檔，即可自動被系統識別與加載。
 
 ---
 
@@ -27,11 +25,9 @@ src/main/resources/data/
 │   ├── newbie_village/                 # 桃源新手村安全營地
 │   │   ├── facilities.json             # 選單式營地功能設施與對話
 │   │   ├── mobs.json                   # 營地 NPC 與駐留人員實例
-│   │   └── shops.json                  # 貨棧商品、修復與強化配方
+│   │   └── shops.json                  # 貨棧商品與補給配方
 │   ├── mozhu_mines/                    # 墨竹山外圍
-│   ├── taiyin_tomb/                    # 太陰古塚地宮
-│   ├── silverleaf/                     # 銀葉村
-│   └── snow/                           # 雪亭鎮
+│   └── taiyin_tomb/                    # 太陰古塚地宮
 │
 ├── dungeons/                           # DRPG 第一人稱地牢地圖
 │   ├── mozhu_mines_b1f.json            # 墨竹礦坑一層 (10x10 網格、exitRoomId、遇敵率)
@@ -44,7 +40,7 @@ src/main/resources/data/
 │   └── default_companions.json         # 鐵牛、燕青、凌霜、墨衍的道基五維與初始技能
 │
 ├── formations/                         # 古仙陣法模板
-│   └── formations.json                 # 九宮八卦陣、北斗七星陣的站位增益與仇恨倍率
+│   └── formations.json                 # 四象辟邪陣、太陰玄冥陣、霸刀破陣式的站位增益與啟動門檻
 │
 ├── global/                             # 全域跨區域共享資料庫
 │   ├── items/                          # 裝備、法寶、丹藥與素材屬性模板
@@ -78,26 +74,31 @@ sequenceDiagram
     
     Service->>Repo: 建構子注入 TemplateReader 埠
     Service->>Repo: 呼叫 findMob(id), findItem(id), findQuestByTriggerMob(id)
-    Note over Service: 業務代碼完全依賴抽象 TemplateReader，杜絕直接依賴底層
 ```
 
 ### 1. `TemplateRegistryPort` 與 `TemplateReader`
 - **`TemplateRegistryPort`**：宣告寫入與註冊介面（僅限啟動時載入器呼叫）。
 - **`TemplateReader`**：純唯讀查詢介面（`findItem`、`findMob`、`findShopByRoomId`、`findQuestByTriggerMob`）。
-- **優點**：所有業務服務（如 `DrpgBattleService`、`ShopCommand`、`MozhuMinesQuestListener`）只依賴唯讀的 `TemplateReader`，杜絕任何業務邏輯在運行時意外污染或修改靜態模板！
+- **優點**：所有業務服務只依賴唯讀的 `TemplateReader`，杜絕任何業務邏輯在運行時意外污染或修改靜態模板。
 
 ---
 
 ## 🔍 四、開機自我校驗防護網 (DataIntegrityValidator)
 
-為了防止策劃或開發者在 JSON 寫錯一個 ID（例如房間出口指向不存在的房間、怪物掉落未定義的物品），專案內建 **`DataIntegrityValidator`**，在 Spring Boot 啟動時自動進行全面稽核：
+為了防止 JSON 中寫錯 ID 導致執行期崩潰，專案內建 **`DataIntegrityValidator`**，在 Spring Boot 啟動時自動進行 9 大範疇稽核：
 
-1. **房間出口連通性驗證**：檢查每間房的 `exits` 指向的 `targetId` 是否真實存在，嚴防「走進虛空」。
-2. **物品掉落完整性驗證**：檢查怪物 `mobPool` 與寶箱掉落物 ID 是否在全域物品庫中已註冊。
-3. **裝備槽位完整性驗證**：確保所有可穿戴裝備皆具備明確的 `equipSlot` 枚舉，杜絕前端中文名稱推測。
-4. **技能五行與標籤驗證**：確認所有技能具備合法的 `DamageType` 與冷卻數值。
+1. **物品範疇 (Items)**：校驗全域物品格式、數值邊界與品質。裝備未宣告 `equipSlot` 時記錄為警告（`warning`）。
+2. **怪物範疇 (Mobs)**：檢查怪物掉落物 ID、穿戴裝備 ID、種族存在性與技能合法性。
+3. **房間範疇 (Rooms)**：驗證房間 `exits` 指向目標真實存在，怪物刷新模板已定義，嚴防「走進虛空」。
+4. **商店範疇 (Shops)**：驗證貨棧販售物品 ID 於全域物品庫中已註冊。
+5. **夥伴範疇 (Companions)**：校驗初始夥伴五維屬性、預設站位與配置技能真實存在。
+6. **陣法範疇 (Formations)**：驗證陣法 `minAliveCount`、孔位加成與必要職業（`requiredClasses`）合法性。
+7. **地牢範疇 (Dungeons)**：驗證地牢二維圖例、尺寸、`exitRoomId` 營地中繼點與怪物池存在性。
+8. **技能範疇 (Skills)**：校驗技能模板橋接、`overclockTier` 等級與合法 `DamageType` 枚舉。
+9. **開局物資範疇 (Starting Kits)**：驗證主角預設開局裝備與物資 ID 合法性。
 
-若有任何關鍵錯誤，驗證器會直接在控制台拋出致命警告，將 Bug 扼殺在編譯與啟動階段！
+> 📌 **【錯誤阻斷等級】**：  
+> 缺少非關鍵欄位（如裝備未指定 slot）記錄為 `warning`；若存在斷鏈引用（如不存在的出口、掉落物、怪物 ID）或無效 `DamageType` 記錄為 `error`，並於 `failFast = true` 時拋出 `DataValidationException` 阻斷應用啟動！
 
 ---
 
@@ -107,29 +108,13 @@ sequenceDiagram
 | :--- | :--- | :--- |
 | **模板快取庫** | `com.example.htmlmud.template.TemplateRepository` | JSON 解析、快取持有與模板註冊 |
 | **唯讀讀取埠** | `com.example.htmlmud.template.TemplateReader` | 業務層純唯讀存取介面（依賴反轉） |
-| **資料校驗器** | `com.example.htmlmud.template.DataIntegrityValidator` | 開機完整性自檢（死鏈、引用合法性） |
+| **資料校驗器** | `com.example.htmlmud.template.DataIntegrityValidator` | 開機 9 大範疇完整性自檢（死鏈、引用合法性） |
 | **資料目錄** | `src/main/resources/data/**/*.json` | 全專案宣告式靜態設定真相源 |
 
 ---
 
-## 🚀 六、未來架構演進與現代化擴充規劃 (Future Roadmap & Scalability)【待深入討論／長線演進藍圖】
+## 🚀 六、未來架構演進規劃 (Roadmap)【待深入討論／長線演進藍圖】
 
-作為專案第一紅線的基石，資料驅動架構將持續向現代商業引擎（如 Unreal / Unity ScriptableObject）的靈活性演進：
-
-### 1. 🎯 現代遊戲機制深化 (Modern Gameplay & Depth)
-- **靜態啟動快取與可視化編輯器標準協議 (Static Boot Cache & Editor Protocol)**：
-  遵循純單機單體架構，全域設定檔於啟動時一次性掃描載入至不可變記憶體快取，確保確定性與零副作用。提供 OpenAPI / JSON Schema 規範，方便串接第三方 Web 編輯器（如 Tiled）或策劃試算表，一鍵匯出為標準專案 JSON。
-
-### 2. 🛡️ 穩定性與狀態防禦 (Robustness & Resilience)
-- **JSON Schema 語法嚴格校驗層 (JSON Schema Validation)【已決議待實作】**：
-  引入標準 JSON Schema（draft-07）對每一類設定檔進行語法樹檢查。JSON Schema 負責單檔靜態型別與必填宣告；跨檔案 ID 引用、地牢矩陣尺寸與圖例一致性等語意校驗由 `DataIntegrityValidator` 負責。若缺少關鍵欄位（如 `exitRoomId`、`poiseDamage`）或數值越界，在建構與啟動階段精確指出檔案名稱與行號，將錯誤消滅於執行前。
-- **孤島與環狀引線死鎖防禦**：升級 `DataIntegrityValidator`，增加圖論拓撲環路檢測（Cycle Detection），防止房間出口形成死鎖迷宮或階梯指向循環黑洞。
-
-### 3. ⚡ 效能與啟動最佳化 (Performance & Validation)
-- **純記憶體索引與開機自我校驗**：
-  在 `TemplateRepository` 啟動階段完成全量 JSON 拓撲掃描與反序列化，建立雙向別名與索引表，於單元測試中由 `DataIntegrityValidator` 進行完整性防禦，執行期 0 次重複磁碟 I/O。
-
-### 4. 🚫 過度設計正式除役宣告 (Decommissioned Over-Engineering Scope)
-- ❌ **非中斷動態熱重載 (Live Hot-Reloading / WatchService)**：已依 D4-4 正式除役，維持啟動時確定性一次載入與唯讀快取。
-- ❌ **二進位預編譯快取 (MessagePack / FlatBuffers)**：已除役，維持標準可讀 JSON 檔案驅動。
-- ❌ **第三方動態 Mod 載入器**：已除役，所有資料完全由 `src/main/resources/data/**/*.json` 單一真相源驅動。
+1. **靜態啟動快取與可視化編輯器標準協議**：提供 OpenAPI / JSON Schema 規範，串接第三方編輯器。
+2. **JSON Schema 語法嚴格校驗層【已決議待實作】**：引入標準 JSON Schema（draft-07）對每一類設定檔進行靜態型別與必填宣告檢查。
+3. **純記憶體索引與開機自我校驗**：啟動階段完成全量 JSON 拓撲掃描與反序列化，執行期 0 次重複磁碟 I/O。

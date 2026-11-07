@@ -11,28 +11,30 @@
 1. **嚴格矩陣拓撲**：地牢由 `width x height`（預設 10x10）字元二維陣列構成，以 `[y][x]` 索引（原點 `[0,0]` 位於西北角）。
 2. **世界觀符號化**：圖例全面對齊 Level 1《世界觀聖經》，地貌涵蓋黑色煞石礦脈、外神卵鞘組織黏膜與壞死神經管道。
 3. **動態探索封裝**：玩家即時狀態（探索迷霧 `visited`、座標 `x, y`、朝向 `facing`）由後端 `DungeonPosition` 獨立管理，不污染地圖模板。
+4. **地塊互動判定**：現行機關、靈泉與寶箱互動由 `DungeonCommand.java` 依據 `TileType`（`SPRING`, `TRAP`, `DOOR`, `TREASURE`, `EVENT`, `BOSS`）與名稱敘事即時觸發與判定。
 
 ---
 
-## 📐 二、地牢 JSON 結構定義 (Schema)
+## 📐 二、地牢 JSON 結構定義 (DungeonFloorJson)
+
+> 💡 **契約對齊**：對齊 `DungeonFloorLoader.java` 與 `DungeonTile.TileType` 真實 10 大地貌枚舉。
 
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "DrpgDungeonTemplate",
+  "title": "DungeonFloorJson",
   "type": "object",
   "required": ["floorId", "name", "width", "height", "startCoord", "startFacing", "exitRoomId", "layout", "legend", "encounters"],
   "properties": {
-    "floorId": { "type": "string", "description": "地牢樓層唯一識別碼，如 mozhu_mines_b1f（相容別名：id）" },
-    "zoneId": { "type": "string", "description": "所屬大地圖區域（選填）" },
+    "floorId": { "type": "string", "description": "地牢樓層唯一識別碼，如 mozhu_mines_b1f, taiyin_tomb_b1f" },
     "name": { "type": "string", "description": "地牢顯示名稱" },
-    "description": { "type": "string", "description": "樓層世界觀背景描述（相容別名：loreDescription）" },
+    "description": { "type": "string", "description": "樓層世界觀背景描述（相容 loreDescription）" },
     "width": { "type": "integer", "default": 10 },
     "height": { "type": "integer", "default": 10 },
     "startCoord": {
       "type": "object",
       "required": ["x", "y"],
-      "description": "初始出生座標（相容別名：startPosition）",
+      "description": "初始出生座標",
       "properties": {
         "x": { "type": "integer" },
         "y": { "type": "integer" }
@@ -43,7 +45,7 @@
     "encounters": {
       "type": "object",
       "required": ["dangerRate", "mobs"],
-      "description": "遇敵規則配置（相容別名：encounterRate / encounterPool）",
+      "description": "遇敵規則配置",
       "properties": {
         "dangerRate": { "type": "integer", "description": "遇敵危險度百分比 (例如 15 代表 15%)" },
         "mobs": {
@@ -62,24 +64,36 @@
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["WALL", "FLOOR", "DOOR", "TREASURE", "CHEST", "EVENT", "TRAP", "STAIRS_UP", "STAIRS_DOWN", "ELITE", "BOSS"]
+            "enum": ["WALL", "FLOOR", "DOOR", "TREASURE", "TRAP", "SPRING", "STAIRS_DOWN", "STAIRS_UP", "EVENT", "BOSS"],
+            "description": "對齊 DungeonTile.TileType 真實 10 項地貌枚舉"
           },
           "name": { "type": "string" },
-          "description": { "type": "string", "description": "地貌描述（相容別名：loreDescription）" },
+          "description": { "type": "string", "description": "地貌描述（相容 loreDescription）" },
           "passable": { "type": "boolean" },
           "eventId": { "type": "string", "description": "互動事件或首領事件 ID" },
-          "checkType": {
-            "type": "string",
-            "enum": ["NONE", "DEX", "STR", "TOOL", "SPRING"],
-            "default": "NONE",
-            "description": "機關地塊檢定類型：DEX (身法閃避暗弩), STR (根骨破拆石門), TOOL (工具拆解), SPRING (靈泉全員全回補)"
-          },
-          "checkDc": { "type": "integer", "description": "檢定難度門檻 (DC)" },
           "drops": {
             "type": "array",
             "items": { "type": "string" },
             "description": "寶箱/採集點固定或機率掉落物 ID 清單"
           }
+        }
+      }
+    },
+    "tileOverrides": {
+      "type": "array",
+      "description": "指定座標之地貌屬性覆蓋清單",
+      "items": {
+        "type": "object",
+        "required": ["x", "y", "type"],
+        "properties": {
+          "x": { "type": "integer" },
+          "y": { "type": "integer" },
+          "type": { "type": "string", "enum": ["WALL", "FLOOR", "DOOR", "TREASURE", "TRAP", "SPRING", "STAIRS_DOWN", "STAIRS_UP", "EVENT", "BOSS"] },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "passable": { "type": "boolean" },
+          "eventId": { "type": "string" },
+          "drops": { "type": "array", "items": { "type": "string" } }
         }
       }
     },
@@ -189,6 +203,39 @@
       "mozhu_mines:corrupted_servant",
       "mozhu_mines:shao_crystal_beast"
     ]
+  }
+}
+```
+
+---
+
+## 🔮 四、長線演進藍圖：結構化機關檢定與擴充圖例【待深入討論／長線演進藍圖】
+
+> ⚠️ **架構邊界備忘**：
+> 1. 現行 `DungeonFloorLoader.java` 與 `DungeonTile.java` 以 10 大核心地貌枚舉（`WALL`, `FLOOR`, `DOOR`, `TREASURE`, `TRAP`, `SPRING`, `STAIRS_DOWN`, `STAIRS_UP`, `EVENT`, `BOSS`）為準。
+> 2. 樓層級擴充別名（`zoneId`, `startPosition`, `encounterRate`, `encounterPool`）、擴充圖例枚舉（`CHEST`, `ELITE`）以及結構化五維屬性檢定欄位（`checkType`: `DEX`, `STR`, `TOOL` 及 `checkDc`）列為長線演進藍圖。
+
+```json
+{
+  "zoneId": "zone_mozhu_mountain",
+  "startPosition": { "x": 1, "y": 8 },
+  "encounterRate": 15,
+  "encounterPool": ["mozhu_mines:corrupted_servant", "mozhu_mines:shao_crystal_beast"],
+  "legend": {
+    "C": {
+      "type": "CHEST",
+      "name": "符咒封印秘寶箱",
+      "passable": true,
+      "checkType": "TOOL",
+      "checkDc": 14,
+      "drops": ["quest:ancient_jade_key"]
+    },
+    "M": {
+      "type": "ELITE",
+      "name": "外神異化巡查使",
+      "passable": false,
+      "eventId": "event:elite_patrol"
+    }
   }
 }
 ```

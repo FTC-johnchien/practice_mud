@@ -26,6 +26,29 @@
   padding-bottom: 8px;
 }
 
+.town-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.town-top-btn {
+  background: #161f30;
+  border: 1px solid #2d3b55;
+  color: #e2e8f0;
+  font-size: var(--font-xs);
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.town-top-btn:hover {
+  background: #2563eb;
+  border-color: #60a5fa;
+  color: #fff;
+}
+
 .town-header {
   display: flex;
   align-items: center;
@@ -88,6 +111,171 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.town-stage-left.town-facilities-column {
+  flex: 1.35;
+  width: auto;
+  min-width: 320px;
+  overflow-y: auto;
+}
+
+/* ==========================================================================
+   六大仙俠機能設施網格與卡牌 (Town Hub Facilities)
+   ========================================================================== */
+
+.town-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.facility-card {
+  background: rgba(22, 31, 48, 0.85);
+  border: 1px solid #2d3b55;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.facility-card:hover {
+  border-color: #38bdf8;
+  background: rgba(30, 41, 59, 0.95);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.facility-card.facility-glitch {
+  border-color: #a855f7;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.25);
+  animation: glitch-pulse 3s infinite alternate;
+}
+
+@keyframes glitch-pulse {
+  0% { box-shadow: 0 0 8px rgba(168, 85, 247, 0.2); }
+  50% { box-shadow: 0 0 14px rgba(168, 85, 247, 0.45); }
+  100% { box-shadow: 0 0 8px rgba(168, 85, 247, 0.2); }
+}
+
+.facility-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.facility-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.facility-icon {
+  font-size: 20px;
+}
+
+.facility-name {
+  font-size: var(--font-sm);
+  font-weight: bold;
+  color: #f1f5f9;
+}
+
+.facility-glitch-badge {
+  font-size: 10px;
+  color: #c084fc;
+  background: rgba(168, 85, 247, 0.2);
+  border: 1px solid rgba(168, 85, 247, 0.5);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-weight: bold;
+}
+
+.facility-desc {
+  font-size: var(--font-xs);
+  color: #94a3b8;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.facility-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.facility-act-btn {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #e2e8f0;
+  border-radius: 5px;
+  padding: 6px 10px;
+  font-size: var(--font-xs);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.facility-act-btn:hover {
+  background: #2563eb;
+  border-color: #60a5fa;
+  color: #fff;
+}
+
+.facility-act-btn.btn-primary {
+  background: #047857;
+  border-color: #10b981;
+  color: #ecfdf5;
+}
+
+.facility-act-btn.btn-primary:hover {
+  background: #059669;
+  border-color: #34d399;
+}
+
+.facility-act-btn.btn-dungeon {
+  background: #831843;
+  border-color: #f43f5e;
+  color: #fff1f2;
+}
+
+.facility-act-btn.btn-dungeon:hover {
+  background: #9d174d;
+  border-color: #fb7185;
+}
+
+.facility-sub-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.facility-sub-btn {
+  flex: 1;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  color: #94a3b8;
+  font-size: 11px;
+  padding: 3px 4px;
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.facility-sub-btn:hover {
+  background: #1e293b;
+  color: #38bdf8;
+  border-color: #38bdf8;
 }
 
 .town-stage-right {

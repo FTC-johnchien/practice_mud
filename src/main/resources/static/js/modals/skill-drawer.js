@@ -79,11 +79,11 @@ export function renderSkillDrawer() {
 
     const tabsHtml = `
       <div class="drawer-category-tabs">
-        <button class="drawer-tab ${activeTab === 'ALL' ? 'active' : ''}" onclick="window.switchSkillDrawerTab('ALL')">全部</button>
-        <button class="drawer-tab ${activeTab === 'WEAPON' ? 'active' : ''}" onclick="window.switchSkillDrawerTab('WEAPON')">⚔️ 武學</button>
-        <button class="drawer-tab ${activeTab === 'CLASS' ? 'active' : ''}" onclick="window.switchSkillDrawerTab('CLASS')">🛡️ 職業</button>
-        <button class="drawer-tab ${activeTab === 'SPELL' ? 'active' : ''}" onclick="window.switchSkillDrawerTab('SPELL')">🔮 法術</button>
-        <button class="drawer-tab ${activeTab === 'COMBO' ? 'active' : ''}" onclick="window.switchSkillDrawerTab('COMBO')">🌟 合擊</button>
+        <button class="drawer-tab ${activeTab === 'ALL' ? 'active' : ''}" data-action="switch-skill-drawer-tab" data-tab="ALL">全部</button>
+        <button class="drawer-tab ${activeTab === 'WEAPON' ? 'active' : ''}" data-action="switch-skill-drawer-tab" data-tab="WEAPON">⚔️ 武學</button>
+        <button class="drawer-tab ${activeTab === 'CLASS' ? 'active' : ''}" data-action="switch-skill-drawer-tab" data-tab="CLASS">🛡️ 職業</button>
+        <button class="drawer-tab ${activeTab === 'SPELL' ? 'active' : ''}" data-action="switch-skill-drawer-tab" data-tab="SPELL">🔮 法術</button>
+        <button class="drawer-tab ${activeTab === 'COMBO' ? 'active' : ''}" data-action="switch-skill-drawer-tab" data-tab="COMBO">🌟 合擊</button>
       </div>
     `;
 
@@ -102,7 +102,7 @@ export function renderSkillDrawer() {
       <div class="drawer-skills-container">
         ${skillsHtml}
       </div>
-      <button class="drawer-close-btn" onclick="window.closeSkillDrawer ? window.closeSkillDrawer() : null" title="關閉技能盤 (Esc)">✕</button>
+      <button class="drawer-close-btn" data-action="close-skill-drawer" title="關閉技能盤 (Esc)">✕</button>
     `;
   } else {
     // 隊員與技能樹未變，僅 In-place 更新數值與狀態，不銷毀 DOM 節點
@@ -195,7 +195,7 @@ export function switchSkillDrawerTab(tab) {
   if (drawer) {
     const tabs = drawer.querySelectorAll('.drawer-category-tabs .drawer-tab');
     tabs.forEach(t => {
-      const isTarget = t.getAttribute('onclick')?.includes(`'${tab}'`);
+      const isTarget = t.getAttribute('data-tab') === tab;
       t.classList.toggle('active', Boolean(isTarget));
     });
   }
@@ -276,6 +276,20 @@ eventBus.on('ui:refreshSkillDrawer', () => {
   if (lastBattle && lastBattle.inBattle) return;
   renderSkillDrawer();
 });
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest('[data-action]');
+    if (!target) return;
+    const action = target.getAttribute('data-action');
+    if (action === 'switch-skill-drawer-tab') {
+      const tab = target.getAttribute('data-tab');
+      switchSkillDrawerTab(tab);
+    } else if (action === 'close-skill-drawer') {
+      closeSkillDrawer();
+    }
+  });
+}
 
 // 相容掛載至 window
 if (typeof window !== 'undefined') {

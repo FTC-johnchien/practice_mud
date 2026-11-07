@@ -191,7 +191,11 @@ export function triggerInspectAction() {
 }
 
 export function triggerRestAction() {
-  sendCmd('rest');
+  if (store.get('mode') === 'TOWN') {
+    sendCmd('camp_rest');
+  } else {
+    sendCmd('rest');
+  }
 }
 
 /**
@@ -273,7 +277,7 @@ export function updateContextActionBar(mode, inBattle) {
     if (dungeonActions) dungeonActions.classList.add('hidden');
     if (townActions) townActions.classList.remove('hidden');
     if (hintText) {
-      hintText.innerText = '🏮 城鎮休整中 ‧ WASD/羅盤移動 ‧ 點擊生靈交談 ‧ rest: 打坐 ‧ look: 環顧 ‧ C: 選單 ‧ B: 行囊';
+      hintText.innerText = '🏮 營地整備中 ‧ 點擊六大設施整備/出征 ‧ 點擊生靈交談/招募 ‧ R: 營地調息 ‧ C: 選單 ‧ B: 行囊';
     }
   } else {
     if (battleActions) battleActions.classList.add('hidden');
@@ -357,7 +361,7 @@ export function updateDrpgView(payload) {
  * 初始化全局鍵盤監聽事件 (WASD、探索/戰鬥快捷鍵)
  */
 export function initKeyboardControls() {
-  const inputEl = document.getElementById('cmd-input');
+  const inputEl = document.getElementById('dev-cmd-input');
   const modeBadge = document.getElementById('control-mode-badge');
 
   function updateModeBadge(inInput) {
@@ -750,6 +754,28 @@ export function initEventDelegation() {
         if (window.triggerRestAction) window.triggerRestAction();
         else sendCmd('rest');
         break;
+      case 'open-facility': {
+        const facId = target.getAttribute('data-facility-id');
+        if (facId) {
+          sendCmd('town_facility ' + facId, true);
+        }
+        break;
+      }
+      case 'camp-rest':
+        sendCmd('camp_rest');
+        break;
+      case 'enter-dungeon': {
+        const dungeonId = target.getAttribute('data-dungeon-id') || 'mozhu_mines_b1f';
+        sendCmd('dungeon enter ' + dungeonId);
+        break;
+      }
+      case 'open-menu': {
+        const menu = target.getAttribute('data-menu');
+        if (menu && typeof window.openMainMenu === 'function') {
+          window.openMainMenu(menu);
+        }
+        break;
+      }
       case 'filter-log': {
         const cat = target.getAttribute('data-cat');
         if (cat) filterLog(cat);
@@ -778,8 +804,48 @@ export function initEventDelegation() {
   });
 }
 
+export function onTownHub(hubData) {
+  if (!hubData) return;
+  if (typeof window.renderTownHub === 'function') {
+    window.renderTownHub(hubData);
+  }
+}
+
+export function onCampRestResult(data) {
+  if (!data) return;
+  if (data.message && typeof window.appendHtml === 'function') {
+    window.appendHtml(data.message, '#34d399');
+  }
+}
+
+export function onOpenFacility(data) {
+  if (!data || !data.facilityId) return;
+  const facId = data.facilityId;
+  switch (facId) {
+    case 'fac_forge':
+      if (typeof window.openMainMenu === 'function') window.openMainMenu('EQUIP');
+      break;
+    case 'fac_chip_lab':
+      if (typeof window.openMainMenu === 'function') window.openMainMenu('SKILLS');
+      break;
+    case 'fac_dojo':
+      if (typeof window.openMainMenu === 'function') window.openMainMenu('TACTICS');
+      break;
+    case 'fac_market':
+      sendCmd('shop', true);
+      break;
+    case 'fac_dungeon_portal':
+      break;
+    default:
+      break;
+  }
+}
+
 // 頁面載入完成後初始化與全域函式掛載 (維持 100% 向後相容)
 if (typeof window !== 'undefined') {
+  window.onTownHub = onTownHub;
+  window.onCampRestResult = onCampRestResult;
+  window.onOpenFacility = onOpenFacility;
   window.GameConstants = constants;
   window.uiUtils = uiUtils;
   window.escapeHtml = uiUtils.escapeHtml;

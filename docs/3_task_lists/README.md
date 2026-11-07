@@ -2,7 +2,7 @@
 
 > **文檔層級**：Level 3 — Task Lists (實作進度與待辦管理中樞)  
 > **體系定位**：**核心模組 1:1 鏡像、跨模組總綱與 17 專精技能樹採聚合映射**。任何 Level 2 規格變更，皆在此處對應的模組清單中紀錄進度與追加待辦；Level 4 看板微任務均由本清單抽取。  
-> **全局測試基準**：全專案 395 項單元與整合測試（2026-10-29 驗證基準，實時狀態以執行 `.\test.ps1` 為準）100% 綠燈守護。
+> **全局測試基準**：全專案 416+ 項單元與整合測試（實時狀態以執行 `.\test.ps1` 為準）100% 綠燈守護。
 
 > [!IMPORTANT]
 > **三大層級遞進治理與使用者審批鐵律 (Mandatory Cascading Governance & User Approval Rules)**：
@@ -38,7 +38,7 @@
 | **FE1** | 核心狀態與管線 | [`FE1_CORE_STATE_AND_PIPELINE.md`](../2_specifications/frontend/FE1_CORE_STATE_AND_PIPELINE.md) | [**`FE1_CORE_STATE_TASKS.md`**](frontend/FE1_CORE_STATE_TASKS.md) | 90% 🟢 | `app.js`, `core/state-store.js`, `websocket.js` |
 | **FE2** | DRPG 視口與雷達 | [`FE2_DRPG_VIEWPORT_RENDERER.md`](../2_specifications/frontend/FE2_DRPG_VIEWPORT_RENDERER.md) | [**`FE2_DRPG_VIEWPORT_TASKS.md`**](frontend/FE2_DRPG_VIEWPORT_TASKS.md) | 90% 🟢 | `panels/dungeon-panel.js` |
 | **FE3** | 戰鬥擂台與特效 | [`FE3_BATTLE_ARENA_AND_FX.md`](../2_specifications/frontend/FE3_BATTLE_ARENA_AND_FX.md) | [**`FE3_BATTLE_ARENA_TASKS.md`**](frontend/FE3_BATTLE_ARENA_TASKS.md) | 95% 🟢 | `panels/battle-panel.js`, `fx/battle-fx-director.js`, `fx/floating-text.js` |
-| **FE4** | 營地設施與動作列 | [`FE4_TOWN_HUB_AND_ACTION_BAR.md`](../2_specifications/frontend/FE4_TOWN_HUB_AND_ACTION_BAR.md) | [**`FE4_TOWN_HUB_TASKS.md`**](frontend/FE4_TOWN_HUB_TASKS.md) | 85% 🟢 | `panels/town-panel.js`, `index.html`（舊動作列面板檔【歷史／已除役】） |
+| **FE4** | 營地設施與動作列 | [`FE4_TOWN_HUB_AND_ACTION_BAR.md`](../2_specifications/frontend/FE4_TOWN_HUB_AND_ACTION_BAR.md) | [**`FE4_TOWN_HUB_TASKS.md`**](frontend/FE4_TOWN_HUB_TASKS.md) | 95% 🟢 | `panels/town-panel.js`, `index.html`（舊動作列面板檔【歷史／已除役】） |
 | **FE5** | 小隊裝備與彈窗 | [`FE5_PARTY_EQUIPMENT_AND_MODALS.md`](../2_specifications/frontend/FE5_PARTY_EQUIPMENT_AND_MODALS.md) | [**`FE5_PARTY_EQUIPMENT_TASKS.md`**](frontend/FE5_PARTY_EQUIPMENT_TASKS.md) | 90% 🟢 | `modals/party-modal.js`, `modals/save-modal.js`, `modals/victory-modal.js` |
 | **FE6** | 七層樣式串流 | [`FE6_CSS_TOKENS_AND_THEMES.md`](../2_specifications/frontend/FE6_CSS_TOKENS_AND_THEMES.md) | [**`FE6_CSS_TOKENS_TASKS.md`**](frontend/FE6_CSS_TOKENS_TASKS.md) | 95% 🟢 | `style-01-tokens-and-shell.css` ~ `style-07-battle-fx.css` |
 | **GUIDE** | 前端佈局與視圖切換全景手冊 | [`FRONTEND_LAYOUT_GUIDE.md`](../2_specifications/frontend/FRONTEND_LAYOUT_GUIDE.md) | [**`FE1_CORE_STATE_TASKS.md`**](frontend/FE1_CORE_STATE_TASKS.md)<br>[**`FE4_TOWN_HUB_TASKS.md`**](frontend/FE4_TOWN_HUB_TASKS.md) | 95% 🟢 | `index.html`, `app.js` (左右雙主區佈局與換邊機制) |
@@ -53,7 +53,7 @@
 | **DUNGEON** | 地牢資料架構 | [`DUNGEON_SCHEMA.md`](../2_specifications/data_schemas/DUNGEON_SCHEMA.md) | [**`DUNGEON_SCHEMA_TASKS.md`**](data_schemas/DUNGEON_SCHEMA_TASKS.md) | 95% 🟢 | `data/dungeons/*.json` |
 | **ITEM** | 裝備與詞綴架構 | [`ITEM_SCHEMA.md`](../2_specifications/data_schemas/ITEM_SCHEMA.md) | [**`ITEM_SCHEMA_TASKS.md`**](data_schemas/ITEM_SCHEMA_TASKS.md) | 95% 🟢 | `data/global/items/`, `quest_items.json` |
 | **SKILL** | 賽博戰技架構 | [`SKILL_SCHEMA.md`](../2_specifications/data_schemas/SKILL_SCHEMA.md) | [**`SKILL_SCHEMA_TASKS.md`**](data_schemas/SKILL_SCHEMA_TASKS.md) | 90% 🟢 | `data/party/party_skills.json` |
-| **SKILL_TREES** | 四大淵源 17 專精樹與合體技體系 | [`2_specifications/skills/`](../2_specifications/skills/README.md)（含 `SYNERGY_AND_COMBOS.md` 與 `TREE_01` ~ `TREE_17` 共 19 檔） | [**`SKILL_SCHEMA_TASKS.md`**](data_schemas/SKILL_SCHEMA_TASKS.md)<br>[**`M5_SKILL_AND_PROGRESSION_TASKS.md`**](backend/M5_SKILL_AND_PROGRESSION_TASKS.md) | 90% 🟢 | `party/party_skills.json`, `party/synergy_combos.json` |
+| **SKILL_TREES** | 四大淵源 17 專精樹與合體技體系 | [`2_specifications/skills/`](../2_specifications/skills/README.md)（含 `SYNERGY_AND_COMBOS.md` 與 `TREE_01` ~ `TREE_17` 共 19 檔） | [**`SKILL_SCHEMA_TASKS.md`**](data_schemas/SKILL_SCHEMA_TASKS.md)<br>[**`M5_SKILL_AND_PROGRESSION_TASKS.md`**](backend/M5_SKILL_AND_PROGRESSION_TASKS.md) | 90% 🟢 | `data/party/party_skills.json` |
 
 ---
 
@@ -63,7 +63,7 @@
 
 | # | Level 1 需求核心主題 | 權威來源 (SSoT) | 承接之 Level 2 規格模組與章節 | 對應之 Level 3 實作任務清單 | 關鍵測試與防禦依據 |
 |---|---|---|---|---|---|
-| **R1** | **世界觀序章與特工晶片加載**<br>（黑山羊卵鞘、千星特工、85/15非侵入敘事） | [`WORLD_AND_LORE_BIBLE.md`](../1_requirements/WORLD_AND_LORE_BIBLE.md)<br>§1~§5 | [`M1_TOWN_HUB_AND_FACILITIES.md`](../2_specifications/backend/M1_TOWN_HUB_AND_FACILITIES.md) §7<br>[`FE4_TOWN_HUB_AND_ACTION_BAR.md`](../2_specifications/frontend/FE4_TOWN_HUB_AND_ACTION_BAR.md) §2 | [`M1_TOWN_HUB_TASKS.md`](backend/M1_TOWN_HUB_TASKS.md) (Task M1-3, M1-4)<br>[`FE4_TOWN_HUB_TASKS.md`](frontend/FE4_TOWN_HUB_TASKS.md) (Task FE4-2) | `CognitiveProxyServiceTest` |
+| **R1** | **世界觀序章與特工晶片加載**<br>（森羅星生命體／黑山羊卵鞘表象、千星聯合科技特工、85/15非侵入敘事；玩家正式開局細節列為【待深入討論】） | [`WORLD_AND_LORE_BIBLE.md`](../1_requirements/WORLD_AND_LORE_BIBLE.md)<br>§1~§5 | [`M1_TOWN_HUB_AND_FACILITIES.md`](../2_specifications/backend/M1_TOWN_HUB_AND_FACILITIES.md) §7<br>[`FE4_TOWN_HUB_AND_ACTION_BAR.md`](../2_specifications/frontend/FE4_TOWN_HUB_AND_ACTION_BAR.md) §2 | [`M1_TOWN_HUB_TASKS.md`](backend/M1_TOWN_HUB_TASKS.md) (Task M1-3, M1-4)<br>[`FE4_TOWN_HUB_TASKS.md`](frontend/FE4_TOWN_HUB_TASKS.md) (Task FE4-2) | `CognitiveProxyServiceTest` |
 | **R2** | **純單機 DRPG 典範轉移**<br>（廢除 MUD 指令與房間移動，改純選單與按鈕） | [`GAMEPLAY_CORE_LOOPS.md`](../1_requirements/GAMEPLAY_CORE_LOOPS.md) §5<br>[`UI_UX_REQUIREMENTS.md`](../1_requirements/UI_UX_REQUIREMENTS.md) §1 | [`M1_TOWN_HUB_AND_FACILITIES.md`](../2_specifications/backend/M1_TOWN_HUB_AND_FACILITIES.md) §1<br>[`M2_DRPG_DUNGEON.md`](../2_specifications/backend/M2_DRPG_DUNGEON.md) §1<br>[`FE1_CORE_STATE_AND_PIPELINE.md`](../2_specifications/frontend/FE1_CORE_STATE_AND_PIPELINE.md) §1 | [`M1_TOWN_HUB_TASKS.md`](backend/M1_TOWN_HUB_TASKS.md) (M1-BROADCAST-PURGE)<br>[`M2_DRPG_DUNGEON_TASKS.md`](backend/M2_DRPG_DUNGEON_TASKS.md) (M2-PURE-SP)<br>[`FE1_CORE_STATE_TASKS.md`](frontend/FE1_CORE_STATE_TASKS.md) | `ArchitectureGuardrailsTest`<br>`SessionTakeoverAndSingletonProtagonistTest` |
 | **R3** | **安全營地六大機能設施與休整**<br>（百煉堂/藏經閣/演武場/外門集市/客棧/礦道） | [`GAMEPLAY_CORE_LOOPS.md`](../1_requirements/GAMEPLAY_CORE_LOOPS.md) §2<br>§5 (調息休整) | [`M1_TOWN_HUB_AND_FACILITIES.md`](../2_specifications/backend/M1_TOWN_HUB_AND_FACILITIES.md) §2<br>[`FE4_TOWN_HUB_AND_ACTION_BAR.md`](../2_specifications/frontend/FE4_TOWN_HUB_AND_ACTION_BAR.md) §2 | [`M1_TOWN_HUB_TASKS.md`](backend/M1_TOWN_HUB_TASKS.md) (M1-CAMP-REST, Task M1-1, M1-2)<br>[`FE4_TOWN_HUB_TASKS.md`](frontend/FE4_TOWN_HUB_TASKS.md) (Task FE4-1, FE4-3) | `TownHubServiceTest`<br>`TownFacilityCommandTest` |
 | **R4** | **第一人稱迷霧走格探索、火把與機關**<br>（3D透視視口、火把暗度暈影、陷阱寶箱撤離） | [`GAMEPLAY_CORE_LOOPS.md`](../1_requirements/GAMEPLAY_CORE_LOOPS.md) §3<br>[`UI_UX_REQUIREMENTS.md`](../1_requirements/UI_UX_REQUIREMENTS.md) §2, §4 | [`M2_DRPG_DUNGEON.md`](../2_specifications/backend/M2_DRPG_DUNGEON.md) §2, §3<br>[`FE2_DRPG_VIEWPORT_RENDERER.md`](../2_specifications/frontend/FE2_DRPG_VIEWPORT_RENDERER.md) §2<br>[`DUNGEON_SCHEMA.md`](../2_specifications/data_schemas/DUNGEON_SCHEMA.md) §2 | [`M2_DRPG_DUNGEON_TASKS.md`](backend/M2_DRPG_DUNGEON_TASKS.md)<br>[`FE2_DRPG_VIEWPORT_TASKS.md`](frontend/FE2_DRPG_VIEWPORT_TASKS.md)<br>[`DUNGEON_SCHEMA_TASKS.md`](data_schemas/DUNGEON_SCHEMA_TASKS.md) | `DungeonTorchAndTrapTest`<br>`MozhuMinesDungeonIntegrationTest` |
@@ -80,7 +80,7 @@
 ## 🧭 五、全域演進中樞與歷史封存庫指針
 
 - **全域架構裁決與審查豁免基準**：👉 [**`ARCHITECTURAL_DECISIONS.md`**](../2_specifications/ARCHITECTURAL_DECISIONS.md)（已拍板定案之核心設計裁決、治理基準與外部 AI 審查豁免清單）
-- **第二階段：程式碼與文件深度對齊專項清單（待執行）**：👉 [**`CODE_DOCS_ALIGNMENT_V2_TASKS.md`**](CODE_DOCS_ALIGNMENT_V2_TASKS.md)（P0 實質功能斷層修補、營地中樞前端接線與 L2/L3/L4 規格誠實化校準 12 步清單）
+- **第二階段：程式碼與文件深度對齊專項清單（結案存檔）**：👉 [**`CODE_DOCS_ALIGNMENT_V2_TASKS.md`**](../0_archive/alignment_history/CODE_DOCS_ALIGNMENT_V2_TASKS.md)（已 100% 結案之 P0 實質功能斷層修補、營地中樞前端接線與 L2/L3/L4 規格誠實化校準 12 步清單）
 - **第一階段：文件與程式碼一致性對齊清單（結案存檔）**：👉 [**`CODE_DOCS_ALIGNMENT_TASKS.md`**](../0_archive/alignment_history/CODE_DOCS_ALIGNMENT_TASKS.md)（已 100% 結案之文檔、資料與現行代碼對齊專項清單）
 - **代碼模組化收斂與重構清單（結案存檔）**：👉 [**`CODE_CONVERGENCE_AND_REFACTORING_TASKS.md`**](../0_archive/alignment_history/CODE_CONVERGENCE_AND_REFACTORING_TASKS.md)（已 100% 完工之 Package-by-Feature 重構工程）
 - **宏觀演進總覽**：👉 [`FUTURE_IMPROVEMENTS.md`](FUTURE_IMPROVEMENTS.md)（跨領域優先序矩陣與長程路線圖）
