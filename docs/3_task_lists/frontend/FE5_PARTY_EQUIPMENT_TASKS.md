@@ -44,5 +44,5 @@
   - **目標**：`party-equipment-tab.js` 已實作道基五維 `[+1]` 潛能點分配按鈕（發送 `party stat add`）且營地 `#town-perception-badge` 已顯示晶片加載度；本任務剩餘聚焦於在小隊總覽／隊員面板同步顯示特工晶片加載度進度條，並配合後端隊長初始 5 點自由潛能點進行端到端驗收。
   - **驗收標準**：隊員面板加點與加載度進度條數值與後端狀態同步，測試全綠。
 - [ ] **Task FE5-2 (VS-01-LOOT-CHIP / ACTIVE-TASK-4): 結算金色 3D 翻牌呈現加密晶片**
-  - **目標**：擊敗首領後，`victory-modal.js` 金色 3D 翻牌專屬動畫呈現 `item_chip_qianxing_tracker`。
-  - **驗收標準**：翻牌動畫流暢，展示晶片 12Hz 閃爍特徵。
+  - **目標**：擊敗首領後，`victory-modal.js` 結算翻牌視窗正確識別並以傳說品質（`.quality-legendary`）金色翻牌光暈呈現 `item_chip_qianxing_tracker`（千星科技加密追蹤晶片）及其物品敘事文本。
+  - **驗收標準**：金色翻牌動效與傳說品質樣式正常渲染（不採用高頻閃爍動畫，並相容 `prefers-reduced-motion` 減弱動效設定）。

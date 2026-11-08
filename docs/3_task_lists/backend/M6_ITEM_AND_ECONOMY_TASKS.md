@@ -41,16 +41,16 @@
   - 金幣全域由小隊統一託管，商店購買直接從小隊行囊扣款，消除個人錢包割裂。
 - [x] **M6-POISE-BREAK-POWER (削韌破防強度裝備屬性)**
   - 武器裝備支援 `poiseBreakPower`，戰鬥中直接增強隊員對敵方罡氣的破防打擊效力。
-- [x] **M6-QUEST-CHIP-DATA (千星加密追蹤晶片資料實裝)**
-  - 在 `src/main/resources/data/global/items/quest/quest_items.json` 正式建立 `item_chip_qianxing_tracker`（千星聯合科技加密特工晶片，`LEGENDARY` 傳說品質，`slot: ACCESSORY_2`、`attackSpeed: 8`、`poiseBreakPower: 12`）定義。
+- [x] **M6-QUEST-CHIP-DATA (千星加密追蹤晶片資料與首領掉落配置實裝)**
+  - 在 `src/main/resources/data/global/items/quest/quest_items.json` 正式建立 `item_chip_qianxing_tracker`（千星聯合科技加密特工晶片，`LEGENDARY` 傳說品質，`slot: ACCESSORY_2`、`attackSpeed: 8`、`poiseBreakPower: 12`）定義，並於 `src/main/resources/data/zones/mozhu_mines/mobs.json` 之 `boss_song_tianheng` 掉落表配置 `global:item_chip_qianxing_tracker`（`chance: 1.0`）。
 
 ---
 
 ## ⏳ 三、未竟待辦與演進項目 (Pending Backlog)
 
-- [ ] **Task M6-1 (VS-01-LOOT-CHIP / ACTIVE-TASK-4): 首領掉落任務晶片與隨機詞綴結算驗收**
-  - **目標**：首領擊敗後由 `DrpgRewardService` 必定掉落 `item_chip_qianxing_tracker`，其餘武器隨機掛載前後綴詞條。
-  - **驗收標準**：`victory-modal.js` 正確展示金色晶片與詞綴裝備，測試全綠。
+- [ ] **Task M6-1 (VS-01-LOOT-CHIP / ACTIVE-TASK-4): 首領戰利品結算流程、隨機詞綴掛載與前端翻牌視窗端到端驗收**
+  - **目標**：在既有 `quest_items.json` 晶片定義與 `boss_song_tianheng` 必掉配置基礎上，完成首領擊敗後 `DrpgRewardService` 戰利品結算派發、隨機前後綴詞條掛載與前端結算視窗呈現之端到端驗收。
+  - **驗收標準**：`victory-modal.js` 正確展示金色晶片與隨機詞綴裝備，端到端與單元測試全綠。
 - [ ] **Task M6-2 (WORKSHOP-REFORGE-AND-UPGRADE)【已決議待實作】：百煉堂裝備分解、數值強化與道韻洗練重鑄**
   - **目標**：在營地百煉堂消耗靈石與煞晶素材，提供裝備基礎屬性強化（`UPGRADE` / Refinement，如強化 +1~+9 提升攻擊力與護甲），以及洗練前後綴詞條數值或替換詞綴。
   - **驗收標準**：強化與重鑄後數值在 `affixPool` 定義範圍內合理浮動，存讀檔一致。

@@ -2,7 +2,7 @@
 
 > **文檔層級**：Level 3 — Task Lists (模組實作進度清單)  
 > **對應規格**：👉 [`docs/2_specifications/frontend/FE4_TOWN_HUB_AND_ACTION_BAR.md`](../../2_specifications/frontend/FE4_TOWN_HUB_AND_ACTION_BAR.md)  
-> **核心職責**：管理城鎮設施卡片式選單展示、快捷休整按鈕與全域 8 鍵自適應動作列面板。  
+> **核心職責**：管理城鎮六大機能設施卡牌選單（`#town-facilities-grid`）、駐留生靈互動列表（`#town-npcs-list`）、靈識感知徽章（`#town-perception-badge`）與底部三態情境自適應動作列（`.bottom-control-panel`）。  
 > **當前完成度**：95% 🟢
 
 ---
@@ -33,9 +33,9 @@
 
 ## ⏳ 三、未竟待辦與演進項目 (Pending Backlog)
 
-- [ ] **Task FE4-4 (UI-LAYOUT-MOBILE-TABS-AND-PC-3COL)【待深入討論／長線演進藍圖】：手機直向底部 5 分頁常駐導航列與 PC 三欄版面演進**
-  - **目標**：依據 L1 UI/UX 規範與待辦議程，評估在維持當前單一視圖容器的基礎上，引進手機直向底部 5 分頁常駐導航列，以及 PC 寬螢幕三欄沉浸式戰鬥/探索版面。
-  - **驗收標準**：提出響應式版面重構提案，不破壞現有單檔 JS 模組化設計。
+- [ ] **Task FE4-4 (UI-LAYOUT-MOBILE-TABS-AND-PC-3COL)【待深入討論／長線演進藍圖】：手機直向底部 5 分頁常駐導航列與 PC 三欄版面演進提案**
+  - **目標**：本項為待決策之長線版面演進提案（对应 `FUTURE_IMPROVEMENTS.md` 之 `UI-LAYOUT-DISCUSS`, P3）。在專案擁有者未拍板變更前，現行版面一律以 L2 `FE4_TOWN_HUB_AND_ACTION_BAR.md` §四「桌面左右雙主區（支援換邊）、窄螢幕（`899px` / `800px`）垂直單欄」為唯一實作與驗收基準。
+  - **驗收標準**：若未來啟動本提案，需先完成 L1/L2 版面規格審批（決定沿用雙主區或切換為三欄／底部分頁），再行制定響應式驗收條件。
 - [ ] **Task FE4-5 (NPC-DIALOGUE-MODAL)【已決議待實作】：NPC 沉浸式分支對話彈窗 (.npc-dialogue-modal)**
   - **目標**：依據 L2 規格 §二，實作獨立 NPC 劇情分支對話彈窗，支援立繪展示、對話樹分支選擇與情報解鎖。
   - **驗收標準**：點擊 NPC 卡片交談按鈕可正確喚出分支對話彈窗，派發對應命令並推進對話歷程。

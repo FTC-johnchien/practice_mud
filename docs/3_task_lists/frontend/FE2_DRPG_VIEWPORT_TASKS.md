@@ -2,7 +2,7 @@
 
 > **文檔層級**：Level 3 — Task Lists (模組實作進度清單)  
 > **對應規格**：👉 [`docs/2_specifications/frontend/FE2_DRPG_VIEWPORT_RENDERER.md`](../../2_specifications/frontend/FE2_DRPG_VIEWPORT_RENDERER.md)  
-> **核心職責**：管理第一人稱偽 3D/2.5D 深度透視視口、暗黑迷霧雷達、前方景致文字卡、八方步進羅盤與火把光影濾鏡。  
+> **核心職責**：管理地牢探索面板（`#dungeon-radar-panel`）、2D 暗黑迷霧雷達（`#drpg-grid`）、正前方三步景致文字探查卡（`#drpg-forward-inspect`）、九宮格步進羅盤（`.compass-grid`）與火把光明度計量條（第一人稱 Canvas 走廊畫布列為長線演進藍圖）。  
 > **當前完成度**：90% 🟢
 
 ---
@@ -10,24 +10,24 @@
 ## 🧭 一、程式碼單一真相源 (Single Source of Truth)
 
 - **核心檔案路徑**：
-  - `src/main/resources/static/js/panels/dungeon-panel.js`（透視視口與雷達地圖渲染器）
-  - `src/main/resources/static/css/style-01-tokens-and-shell.css`（地牢視口與迷霧特效樣式，舊樣式檔名 `style-03-dungeon-view.css`【歷史／已除役】）
+  - `src/main/resources/static/js/panels/dungeon-panel.js`（2D 迷霧雷達、視口/全圖模式切換與前方文字探查卡渲染器）
+  - `src/main/resources/static/css/style-01-tokens-and-shell.css`（地牢雷達面板與網格樣式，舊樣式檔名 `style-03-dungeon-view.css`【歷史／已除役】）
 
 ---
 
 ## 🏆 二、已完成實作項目 (Completed)
 
-- [x] **FE2-DEPTH-RAYCAST (前方景深文字與透視)**
-  - 實作前進 3 步景致深度渲染，支援射線阻擋遮擋（WALL 遮蔽後方視線）。
-- [x] **FE2-FOG-RADAR (10x10 暗黑迷霧雷達)**
-  - 玩家即時踩格揭開迷霧，動態標記已探索區塊 (`visited`)、當前座標與面朝方向箭頭。
-- [x] **FE2-TORCH-VIGNETTE (火把光明度暈影特效)**
-  - 光照度降低時動態疊加周邊暗黑光暈（Vignette）與漆黑煞氣粒子效果。
+- [x] **FE2-FORWARD-INSPECT-CARD (正前方三步探查文字卡呈現)**
+  - 接收後端依視野與牆體遮擋計算之正前方探查結果，於 `#drpg-forward-inspect` 即時渲染前方三步地貌景致與事件提示文字。
+- [x] **FE2-FOG-RADAR (10x10 暗黑迷霧雷達與視口/全圖切換)**
+  - 玩家即時踩格揭開迷霧，於 `#drpg-grid` 動態標記已探索區塊 (`visited`)、當前座標、面朝方向箭頭與地塊類型圖示，並支援左右換邊與視口／全圖模式切換。
+- [x] **FE2-TORCH-AND-DANGER-BARS (火把光明度與警戒靈壓計量條)**
+  - 於 `#drpg-floor-info` 動態渲染 `dangerLevel` 警戒靈壓條、`torchLight` 火把光明度進度條與 `🔥 點火` 互動按鈕（`data-action="dungeon-torch"`）。
 
 ---
 
 ## ⏳ 三、未竟待辦與演進項目 (Pending Backlog)
 
-- [ ] **Task FE2-1 (CANVAS-PERSPECTIVE-UPGRADE): 畫布深度幾何走廊渲染**
-  - **目標**：以 HTML5 Canvas 渲染第一人稱復古線框/色塊幾何走廊，取代純 CSS 邊框堆疊，帶來真實 DRPG 穿行體感。
-  - **驗收標準**：轉身與步進具備順滑過渡動畫（150ms 內），無卡頓掉幀。
+- [ ] **Task FE2-1 (CANVAS-PERSPECTIVE-UPGRADE)【待深入討論／長線演進藍圖】：第一人稱畫布幾何走廊透視渲染 (`#viewport-canvas`)**
+  - **目標**：依據 L2 規格長線藍圖，在現有 2D 雷達與文字探查卡基礎上，評估新增 HTML5 Canvas（`#viewport-canvas`）渲染第一人稱三步景深幾何走廊與火把暗角暈影濾鏡。
+  - **驗收標準**：正確依據前方三步地塊類型繪製走廊牆面與門扉，且相容 `@media (prefers-reduced-motion: reduce)` 減弱動效模式。

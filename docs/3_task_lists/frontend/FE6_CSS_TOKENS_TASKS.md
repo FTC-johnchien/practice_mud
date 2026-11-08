@@ -27,12 +27,12 @@
 - [x] **FE6-SEVEN-TIER-STREAM (七層結構建立)**
   - 確立清晰層次：Tokens/Shell $\to$ Arena $\to$ Actions $\to$ Main Menu $\to$ Hub $\to$ Shop/Responsive $\to$ FX，無循環依賴。
 - [x] **FE6-THEME-TOKENS (賽博克蘇魯修仙主題 Token)**
-  - 確立暗紫黑底、科技青藍、靈煞赤紅與天道金等標準 CSS 變數，字級下限不低於 13px。
+  - 於 `:root` 確立暗紫黑底、科技青藍、靈煞赤紅與天道金等標準 CSS 變數，並定義全域最小字級基準 Token `--font-xs: 13px`（部分歷史緊湊角標與輔助標籤之 `9px~12px` 細節列為非阻擋漸進收斂項）。
 
 ---
 
 ## ⏳ 三、未竟待辦與演進項目 (Pending Backlog)
 
-- [ ] **Task FE6-1 (CRT-SCANLINE-OVERLAY): 復古賽博 CRT 掃描線光影選用開關**
-  - **目標**：在設定面板提供開關，可於視口疊加輕微 CRT 掃描線與微幅曲面色差光暈，增強沉浸感。
-  - **驗收標準**：開關即時切換生效，關閉時零額外 GPU 繪製開銷。
+- [ ] **Task FE6-1 (CRT-SCANLINE-OVERLAY)【待深入討論／長線演進藍圖】：復古賽博 CRT 掃描線光影選用開關**
+  - **目標**：在設定面板提供選用開關（預設關閉，狀態持久化於 `localStorage`），開啟時於視口疊加輕微 CRT 掃描線濾鏡。
+  - **驗收標準**：開關即時切換生效、關閉時零額外繪製開銷，且於 `@media (prefers-reduced-motion: reduce)` 下預設停用。

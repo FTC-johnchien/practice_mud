@@ -2,7 +2,7 @@
 
 > **文檔層級**：Level 3 — Task Lists (模組實作進度清單)  
 > **對應規格**：👉 [`docs/2_specifications/frontend/FE3_BATTLE_ARENA_AND_FX.md`](../../2_specifications/frontend/FE3_BATTLE_ARENA_AND_FX.md)  
-> **核心職責**：管理戰鬥主舞台敵我陣列渲染、ATB 蓄力動態進度條、罡氣 Poise 條、首領多階段血條節點、彩色 FCT 戰鬥浮動文字與震盪光效。  
+> **核心職責**：管理戰鬥主舞台敵我陣列渲染、敵方蓄力施法詠唱條（`.enemy-cast-track`）、罡氣 Poise 條、首領多階段血條節點、彩色 FCT 戰鬥浮動文字與震盪光效。  
 > **當前完成度**：95% 🟢
 
 ---
@@ -32,6 +32,6 @@
 
 ## ⏳ 三、未竟待辦與演進項目 (Pending Backlog)
 
-- [ ] **Task FE3-1 (ANIMATED-SPRITE-BATTLE): 怪物動態呼吸與幀動畫支援**
-  - **目標**：怪物頭像支援 CSS 呼吸縮放與受擊抖動粒子，取代靜態矩形頭像。
-  - **驗收標準**：爆擊受擊時產生 120ms 強烈側震，視覺爽快感倍增。
+- [ ] **Task FE3-1 (ANIMATED-SPRITE-BATTLE)【待深入討論／長線演進藍圖】：怪物動態呼吸與受擊反饋動效擴充**
+  - **目標**：為敵方單位卡片頭像擴充待機 CSS 呼吸縮放與受擊狀態視覺反饋。
+  - **驗收標準**：待機與受擊狀態正確套用對應 CSS 類別，且於 `@media (prefers-reduced-motion: reduce)` 模式下自動停用高頻位移抖動。

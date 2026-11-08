@@ -3,7 +3,7 @@
 
 [![Java](https://img.shields.io/badge/Java-21%20%2F%2025-orange.svg)](https://openjdk.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-green.svg)](https://spring.io/projects/spring-boot)
-[![Tests](https://img.shields.io/badge/Tests-376%20Passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-400%2B%20Passed-brightgreen.svg)]()
 [![Architecture](https://img.shields.io/badge/Architecture-Pure%20Singleplayer%20DRPG%20%26%20100%25%20Data--Driven-blue.svg)]()
 
 > **遊戲簡介**：  
@@ -42,7 +42,7 @@
 
 ### 3. 執行全量測試驗證
 ```powershell
-# 執行全套單元、整合與架構看門狗測試 (目前基準: 373 項 100% 綠燈通過)
+# 執行全套單元、整合與架構看門狗測試 (目前基準: Surefire 407 項 / 靜態 @Test 416 項，實時狀態以 .\test.ps1 為準)
 .\test.ps1
 ```
 
@@ -50,7 +50,7 @@
 
 ## 📚 專案工程文檔導覽體系 (Documentation Map)
 
-本專案嚴格遵循現代軟體工程與高沉浸 RPG 開發規範，所有系統規格與任務實施統一託管於 [`docs/`](./docs/) 目錄下，劃分為 **4 大遞進層級**：
+本專案嚴格遵循現代軟體工程與高沉浸 RPG 開發規範，所有系統規格與任務實施統一託管於 [`docs/`](./docs/) 目錄下，劃分為 **4 大遞進層級**（版本交付紀錄見專案根目錄 [`CHANGELOG.md`](./CHANGELOG.md)）：
 
 ```text
 docs/
@@ -62,21 +62,24 @@ docs/
 │
 ├── 2_specifications/            # Level 2: 模組架構與技術規格層 (How & Architecture)
 │   ├── ARCHITECTURE_SUMMARY.md   # 頂層技術架構總覽 (Java 25 虛擬執行緒、Spring Boot)
+│   ├── ARCHITECTURAL_DECISIONS.md # 全域架構裁決與審查豁免基準
 │   ├── MODULES_MAP.md            # 全功能模組拼圖與拓撲邊界 (後端9+1、前端6)
 │   ├── backend/                  # 後端 9+1 大業務模組技術規格手冊 (M1 ~ M9)
 │   ├── frontend/                 # 前端 6 大表現模組技術規格手冊 (FE1 ~ FE6)
 │   └── data_schemas/             # 資料驅動拓撲與 JSON Schema 模板
 │
 ├── 3_task_lists/                # Level 3: 全局任務清單與演進路線層 (Roadmap & Backlog)
+│   ├── README.md                 # 全模組 1:1 實作進度總覽看板與需求追溯矩陣
 │   ├── FUTURE_IMPROVEMENTS.md    # 宏觀演進戰略總表 (含五大核心目標中長程內容拓展藍圖)
-│   ├── future_improvements_history.md # 歷史已完成驗收之架構改善庫 (Phase 0~25)
-│   └── CHANGELOG.md              # 歷史版本交付變更記錄 (單一權威來源)
+│   ├── backend/                  # 後端 M1 ~ M9 模組實作進度清單
+│   ├── frontend/                 # 前端 FE1 ~ FE6 模組實作進度清單
+│   └── data_schemas/             # 資料契約與技能樹實作進度清單
 │
 ├── 4_active_tasks/              # Level 4: 當前焦點與微任務看板層 (Current Iteration & Sprint)
 │   ├── ACTIVE_TASKS.md           # 當前單一焦點微任務看板 (單一權威來源)
 │   └── SPRINT_GOAL.md            # 當前衝刺目標對齊聲明 (防偏離校準錨點)
 │
-└── 0_archive/                   # 封存歷史參考資料 (Historical References & Legacy Architecture)
+└── 0_archive/                   # 封存歷史參考資料 (含 future_improvements_history.md 與 alignment_history/)
 ```
 
 👉 **深入查閱各模組規格與架構詳情，請參閱：[`docs/README.md`](./docs/README.md)**
@@ -90,4 +93,4 @@ docs/
 2. **純單機單體架構 (Single-Player Monolith)**：
    小隊行囊 (`party.getInventory()`) 為全遊戲唯一背包；主角即隊長；前端以單一全景狀態契約 (`DrpgStateDto`) 與結構化動作協定 (`ActionCommand`) 與後端通訊。
 3. **機制運行而非特例驗證 (Mechanism Testing)**：
-   測試驗證專注於遊戲機制的邊界防禦與演算法，全專案 373+ 項單元與整合測試保持 100% 全天候綠燈通過。
+   測試驗證專注於遊戲機制的邊界防禦與演算法，全專案 400+ 項單元與整合測試（實時基準以執行 `.\test.ps1` 為準）保持 100% 全天候綠燈通過。

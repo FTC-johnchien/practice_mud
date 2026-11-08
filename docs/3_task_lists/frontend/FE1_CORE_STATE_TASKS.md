@@ -24,12 +24,12 @@
 - [x] **FE1-GLOBAL-DELEGATION (全域 data-action 委派)**
   - 在 `app.js` 實裝集中式事件委派，消除元素內聯 `onclick`，符合嚴格內容安全策略 (CSP)。
 - [x] **FE1-DEV-CONSOLE (文字輸入框下架與終端轉向)**
-  - 下架底部文字指令輸入框 (`#cmd-input-container`) 與操作列按鈕 (`toggle-cmd-input`)，轉向按 `~` 呼出的開發者終端 (`#dev-console`)。
+  - 下架底部文字指令輸入框 (`#cmd-input-container`) 與操作列按鈕 (`toggle-cmd-input`)，轉向按 `~` 呼出的開發者終端彈窗 (`#dev-console-modal` 與輸入框 `#dev-cmd-input`)。
 
 ---
 
 ## ⏳ 三、未竟待辦與演進項目 (Pending Backlog)
 
-- [ ] **Task FE1-1 (FE-LEGACY-CLEANUP): 前端歷史腳本 (`mud-core.js`/`mud-ui.js`) 依賴鏈調研與安全除役 (P3)**
-  - **目標**：透過無頭測試與瀏覽器 DevTools 逐行掃描歷史腳本在開發者終端與視窗縮放中的呼叫點，進行平滑替換除役。
-  - **驗收標準**：控制台無任何全域變數污染或報錯。
+- [ ] **Task FE1-1 (FE-LEGACY-CLEANUP)【待深入討論／長線演進藍圖】：前端歷史腳本 (`mud-core.js`/`mud-ui.js`) 依賴鏈調研與安全除役 (P3)**
+  - **目標**：繼 `ALIGN2-04` 將 `mud-core.js` / `mud-ui.js` 收斂為統一導流 `message-log-panel.js` 之相容代理層後，進一步評估將 `websocket.js` 訊息分發直接對接 `message-log-panel.js`，徹底移除歷史代理腳本引用。
+  - **驗收標準**：重開分頁接管會話、切換視圖與開啟 `#dev-console-modal` 時，瀏覽器 DevTools Console 零 `ReferenceError` / `TypeError`，且 `window` 不殘留歷史全域函式。

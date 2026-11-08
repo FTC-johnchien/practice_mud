@@ -17,17 +17,21 @@
   - [`SkillDefinition.java`](../../../src/main/java/com/example/htmlmud/progression/SkillDefinition.java)（大一統技能核心定義）
   - [`PartyMemberSkill.java`](../../../src/main/java/com/example/htmlmud/party/PartyMemberSkill.java)（賽博流派、超頻階級、ComboRole）
   - [`XpProgressionService.java`](../../../src/main/java/com/example/htmlmud/progression/XpProgressionService.java)（修為經驗與等級計算）
+  - [`ComboResolver.java`](../../../src/main/java/com/example/htmlmud/combat/ComboResolver.java)（小隊多人合擊與動態陣法終結技解算器）
+  - [`FormationFinisherClassifier.java`](../../../src/main/java/com/example/htmlmud/combat/FormationFinisherClassifier.java)（15 大 5 人動態小隊終結技分類器）
 - **關聯驗證測試**：
   - [`CyberSkillAndItemAffixTest.java`](../../../src/test/java/com/example/htmlmud/CyberSkillAndItemAffixTest.java)（賽博技能流派與超頻 100% 綠燈）
   - [`UnifiedSkillModelTest.java`](../../../src/test/java/com/example/htmlmud/UnifiedSkillModelTest.java)（大一統技能模型 100% 綠燈）
   - [`XpProgressionServiceTest.java`](../../../src/test/java/com/example/htmlmud/XpProgressionServiceTest.java)（9/9 綠燈）
+  - [`FormationFinisherClassifierTest.java`](../../../src/test/java/com/example/htmlmud/FormationFinisherClassifierTest.java)（15 大動態終結技窮盡分類驗證 100% 綠燈）
+  - [`CrossComboAndFormationResonanceTest.java`](../../../src/test/java/com/example/htmlmud/CrossComboAndFormationResonanceTest.java)（跨流派連攜與陣法共鳴終結技 100% 綠燈）
 
 ---
 
 ## 🏆 二、已完成實作項目 (Completed)
 
 - [x] **M5-PKG-ENCAPSULATION (Package-by-Feature 獨立封裝 / Phase 3 Step R3.6)**
-  - 建立一級套件 `com.example.htmlmud.progression`，將 `SkillDefinition`、`XpProgressionService`、`XpService`、`DrpgSkillRules`、`MudSkillRules`、`SkillBridgeRule`、`SkillType`、`SkillCategory`、`SkillEntry` 全面自雜湊目錄移出歸整，全專案 416+ 項測試 100% 綠燈通過。
+  - 建立一級套件 `com.example.htmlmud.progression`，將 `SkillDefinition`、`XpProgressionService`、`XpService`、`DrpgSkillRules`、`MudSkillRules`、`SkillBridgeRule`、`SkillType`、`SkillCategory`、`SkillEntry` 全面自雜湊目錄移出歸整（完成時歷史基準 416 項 `@Test` 綠燈，實時狀態以 `.\test.ps1` 為準）。
 - [x] **M5-UNIFIED-SKILL (技能核心大一統)**
   - 徹底消除 MUD 與 DRPG 雙軌技能定義，物理刪除 `SkillBridgeService`，全系統統一運行於 `UnifiedSkill`。
 - [x] **M5-ORIGIN-SCHOOLS (四大道統淵源與 17 專精樹)**
@@ -50,13 +54,13 @@
 - [ ] **Task M5-4 (17-TREES-SKILL-INGESTION-AND-TIER4-ULTIMATES)【待深入討論／長線演進藍圖】：17 專精樹 Tier 1~4 戰技與大絕招資料庫擴充**
   - **目標**：依據 L1《CYBERPUNK_CULTIVATION_SPEC.md》與 L2《M5_SKILL_AND_PROGRESSION.md》，在 `party_skills.json` 完整擴充 17 專精樹的 Tier 1~4 主動戰技（涵蓋【萬劍歸宗·太白凌虛大殺劫】、【子彈時間·天衍特工時停獵殺】等元嬰大絕招），嚴格落實「仙俠先行 × 底層真相揭示（cyberLore）」。
   - **驗收標準**：`WorldDataIntegrityTest` 綠燈通過，所有新技能在戰鬥中施放前搖、傷害倍率、削韌值、打斷標籤與冷卻時間均符合規格。
-- [ ] **Task M5-5 (DYNAMIC-FORMATION-FINISHER-RESOLVER)【待深入討論／長線演進藍圖】：小隊分層合體技、四象領域與 5 人動態終結技解算器**
-  - **目標**：在 `ComboResolver.java` 實裝分層解算架構：
+- [ ] **Task M5-5 (DYNAMIC-FORMATION-FINISHER-RESOLVER)【待深入討論／長線演進藍圖】：小隊分層合體技、四象領域與 5 人動態終結技解算器擴充**
+  - **現況與目標**：目前 `FormationFinisherClassifier.java` 與 `ComboResolver.executeFormationFinisher` 雖已實作基礎 15 大 5 人終結技分類與跨流派共鳴（見 `FormationFinisherClassifierTest`、`CrossComboAndFormationResonanceTest`），惟完整分層合擊架構仍待擴充與驗收：
     1. **法則反應引擎**：自動解算任意雙樹相剋裂變（水火蒸發 2.0x、火木擴散 DoT、引力聚怪、電磁穿甲、血肉木馬掠奪）。
-    2. **傳奇名牌合體技**：解算 16 大雙星合璧（如太極水火、乾坤碎嶽、星隕高斯重力炮）與 8 大三才殺招（如萬毒天雨、天星地煞、千星瞬影）。
+    2. **傳奇名牌合體技**：完整資料化 16 大雙星合璧（如太極水火、乾坤碎嶽、星隕高斯重力炮）與 8 大三才殺招（如萬毒天雨、天星地煞、千星瞬影）。
     3. **四象天道領域展開**：解算 5 大 4 樹極限領域（五行太乙萬劍、造物神殿、天衍神念時停、黑山羊肉相、四極降魔）。
-    4. **5 人動態終結技**：動態掃描 5 人出戰成分之 15 大全窮盡形態（4 純系、6 雙曜、4 三才、1 萬象），純依隊伍流派體系決定，不限 3+2/2+3 比例，並聯動主角【萬象核心插槽】自由調和陣眼。
-  - **驗收標準**：撰寫 `DynamicComboResolverTest` 驗證 2P 雙星反應、3P 三才裂變、4P 四象領域與 15 大 5P 終結技均能精準觸發，數值增益與特效標記無誤。
+    4. **萬象核心插槽聯動**：聯動 `Task M5-6` 主角【萬象核心插槽】自由調和 15 大 5 人終結技之陣眼體系歸屬。
+  - **驗收標準**：擴充 `CrossComboAndFormationResonanceTest` 或新增 `DynamicComboResolverTest` 驗證 2P 雙星反應、3P 三才裂變、4P 四象領域與 15 大 5P 終結技插槽聯動均能精準觸發。
 - [ ] **Task M5-6 (PASSIVE-SOCKET-SERVICE)【待深入討論／長線演進藍圖】：道骨晶片插槽與營地零成本洗點服務**
   - **目標**：實裝主角萬象核心插槽與隊友副修道骨插槽資料模型 (`SocketService.java`)，在營地【雜役演武道場】與【靈台藏經閣】提供無損自由插拔洗點。
   - **驗收標準**：更換道骨插槽後立即同步至 `PartyMember` 戰鬥屬性，存讀檔狀態正常持久化。
