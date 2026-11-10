@@ -36,3 +36,6 @@
 - [ ] **Task FE6-1 (CRT-SCANLINE-OVERLAY)【待深入討論／長線演進藍圖】：復古賽博 CRT 掃描線光影選用開關**
   - **目標**：在設定面板提供選用開關（預設關閉，狀態持久化於 `localStorage`），開啟時於視口疊加輕微 CRT 掃描線濾鏡。
   - **驗收標準**：開關即時切換生效、關閉時零額外繪製開銷，且於 `@media (prefers-reduced-motion: reduce)` 下預設停用。
+- [ ] **Task FE6-2 (LEGACY-COMPACT-FONT-CONVERGENCE)【待深入討論／長線演進藍圖】：歷史緊湊角標與輔助標籤（9px~12px）字級漸進收斂與例外規範**
+  - **目標**：承接 `FUTURE_IMPROVEMENTS.md` 之 `UI-01`，盤點 `style-01-tokens-and-shell.css` 與 `style-02-combat-arena.css` 等樣式表中殘留之 `9px~12px` 宣告，將正文字級統一收斂至 `--font-xs: 13px` 以上，或針對純裝飾性微型角標／快速鍵提示明訂例外範圍。
+  - **驗收標準**：非裝飾性正文與面板數值 100% 採用 `--font-xs`（`13px`）以上 Token，視覺排版不溢位。

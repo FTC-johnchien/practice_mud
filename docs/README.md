@@ -64,7 +64,6 @@ docs/
 │
 ├── 3_task_lists/                # Level 3: 模組實作清單與路線圖層 (1:1 鏡像對齊 Level 2)
 │   ├── README.md                # 📊 全模組 1:1 實作進度儀表板 (進度中樞與完成度總表)
-│   ├── CODE_DOCS_ALIGNMENT_V2_TASKS.md # 第二階段：程式碼與 L2/L3/L4 深度對齊專項清單
 │   ├── FUTURE_IMPROVEMENTS.md   # 宏觀演進戰略總表 (優先序矩陣與演進路徑)
 │   ├── backend/                 # 後端 10 大模組實作與驗收清單 (M1~M9, M3.1)
 │   ├── frontend/                # 前端 6 大表現模組實作與驗收清單 (FE1~FE6)
@@ -81,7 +80,7 @@ docs/
 │   └── 背景.txt / 畫面佈局.txt... # 原始小說世界觀與企劃素材
 │
 └── 0_archive/                   # 封存歷史參考資料 (Historical References & Legacy Manuals)
-    ├── alignment_history/        # 歷史四層級深度對齊審查清單封存庫 (含 CODE_CONVERGENCE_AND_REFACTORING_TASKS.md 等)
+    ├── alignment_history/        # 歷史四層級深度對齊審查清單封存庫 (含 CODE_DOCS_ALIGNMENT_V2_TASKS.md 等)
     └── future_improvements_history.md # 歷史已完成落地之架構改善庫 (Phase 0~25)
 ```
 

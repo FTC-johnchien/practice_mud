@@ -22,7 +22,7 @@
 ## 🏆 二、已完成實作項目 (Completed)
 
 - [x] **M9-PKG-ENCAPSULATION (Package-by-Feature 獨立封裝 / Phase 3 Step R3.9)**
-  - 建立一級套件 `com.example.htmlmud.pipeline`，將狀態廣播服務 `GameStateBroadcastService`、指令分發核心 `CommandDispatcher`、分發埠 `CommandDispatcherPort`、網路處理器 `MudWebSocketHandler` 與會話註冊表 `SessionRegistry` 統一收斂至獨立套件，全專案 395 項測試 100% 綠燈通過。
+  - 建立一級套件 `com.example.htmlmud.pipeline`，將狀態廣播服務 `GameStateBroadcastService`、指令分發核心 `CommandDispatcher`、分發埠 `CommandDispatcherPort`、網路處理器 `MudWebSocketHandler` 與會話註冊表 `SessionRegistry` 統一收斂至獨立套件（完成時歷史基準 395 項測試綠燈，實時狀態以 `.\test.ps1` 為準）。
 - [x] **M9-SESSION-TAKEOVER (多開分頁優雅接管)**
   - 當玩家在多瀏覽器分頁開啟連線時，後端自動將唯一主角代理接管至新連線，踢除舊連線，杜絕存檔覆寫競爭。
 - [x] **M9-DRPG-DTO-PIPELINE (全景單一狀態契約)**
@@ -41,5 +41,5 @@
   - **目標**：徹底消除外部 AI 審查反覆提出之「MUD 歷史遺留命名混淆」問題，將 `MudWebSocketHandler.java` 安全重構更名為 `DrpgWebSocketHandler.java`，同步更新 Spring WebSocket 路由配置、前端連線註解與測試類別。
   - **驗收標準**：
     1. 類別名稱正式由 `MudWebSocketHandler` 更名為 `DrpgWebSocketHandler`，完全清除 `com.example.htmlmud.pipeline` 中的 MUD 字樣。
-    2. 全專案 395 項測試維持 100% 綠燈零回歸通過。
+    2. 全專案單元與整合測試（以 `.\test.ps1` 實時執行為準）維持 100% 綠燈零回歸通過。
     3. L2《`M9_STATE_PIPELINE_AND_EVENTS.md`》與相應手冊代表類別名稱同步更新。

@@ -25,7 +25,7 @@
 ## 🏆 二、已完成實作項目 (Completed)
 
 - [x] **M3-PKG-ENCAPSULATION (Package-by-Feature 獨立封裝 / Phase 3 Step R3.8)**
-  - 建立一級套件 `com.example.htmlmud.combat`，將戰鬥核心迴圈 `DrpgCombatLoop`、`CombatRules`、`ComboResolver`、`BattleContext`、`DrpgBattleService`、`BuffSettlementService`、戰鬥事件與 DTO 等 40 份類別全面收斂至獨立套件，全專案 395 項測試 100% 綠燈通過。
+  - 建立一級套件 `com.example.htmlmud.combat`，將戰鬥核心迴圈 `DrpgCombatLoop`、`CombatRules`、`ComboResolver`、`BattleContext`、`DrpgBattleService`、`BuffSettlementService`、戰鬥事件與 DTO 等 40 份類別全面收斂至獨立套件（完成時歷史基準 395 項測試綠燈，實時狀態以 `.\test.ps1` 為準）。
 - [x] **M3-POISE-BREAK (罡氣削韌與破防重創)**
   - 實作 `CombatRules.applyPoiseBreakCrit`：目標罡氣歸零 (`isPoiseBroken`) 享受 100% 致命暴擊與 1.5 倍傷害。
 - [x] **M3-REACT-INTERRUPT (敵方行動預告與即時打斷)**

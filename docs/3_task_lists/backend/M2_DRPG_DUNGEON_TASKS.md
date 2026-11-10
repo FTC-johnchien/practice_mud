@@ -26,7 +26,7 @@
 ## 🏆 二、已完成實作項目 (Completed)
 
 - [x] **M2-PKG-ENCAPSULATION (Package-by-Feature 獨立封裝 / Phase 3 Step R3.7)**
-  - 建立一級套件 `com.example.htmlmud.dungeon`，將 `DungeonManager`、`DungeonFloorLoader`、`DungeonNavigator`、`DungeonFloor`、`DungeonPosition`、`DungeonTile`、`GridCoord`、`GridDirection`、`Direction`、`StepResult`、`DrpgStateDto` 統一歸整至獨立套件，全專案 395 項測試 100% 綠燈通過。
+  - 建立一級套件 `com.example.htmlmud.dungeon`，將 `DungeonManager`、`DungeonFloorLoader`、`DungeonNavigator`、`DungeonFloor`、`DungeonPosition`、`DungeonTile`、`GridCoord`、`GridDirection`、`Direction`、`StepResult`、`DrpgStateDto` 統一歸整至獨立套件（完成時歷史基準 395 項測試綠燈，實時狀態以 `.\test.ps1` 為準）。
 - [x] **M2-CORE-MAP (10x10 地牢矩陣載入器)**
   - 實作 `DungeonFloorLoader`，由 JSON 資料驅動解析 layout 矩陣、Legend 圖例、遇敵配置與出口 `exitRoomId`。
 - [x] **M2-TORCH-SYSTEM (火把照明度核心計量)**
